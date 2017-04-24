@@ -12,11 +12,11 @@ data amountFilled[]
 
 data controller
 
-event Order(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed)
+event Order(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed, gasPrice)
 
-event Cancel(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed, v, r, s)
+event Cancel(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, gasPrice, user:address:indexed, v, r, s)
 
-event Trade(maker:address:indexed, taker:address, tokenX:address:indexed, tokenY:address:indexed, amount, fxpPrice, tradeHash)
+event Trade(maker:address:indexed, taker:address, tokenX:address:indexed, tokenY:address:indexed, amount, fxpPrice, tradeHash, gasPrice)
 
 ### Off-chain trading contract:
     # Maker can create an order by hashing the order details then signing it and broadcasting the order and signed order
@@ -30,78 +30,76 @@ event Trade(maker:address:indexed, taker:address, tokenX:address:indexed, tokenY
 def init():
     self.controller = 0x0
 
-def ok():
+def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, takerAmount, fxpPrice, expiration, gasPriceLimit):
+    refund()
+    if (!isCallerWhitelisted()):
+        MUTEX.acquire()
+
+    orderHash = sha3([maker, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 7)
+    if(!checkSig(maker, orderHash, v, r, s)):
+        if(!isCallerWhitelisted()):
+            MUTEX.release()
+        return(0)
+    if(block.timestamp > expiration):
+        if(!isCallerWhitelisted()):
+            MUTEX.release()
+        return(-1)
+    if(!checkHasAbilityToSpend(maker, tokenX, orderSize) || !checkHasAbilityToSpend(msg.sender, tokenY, safeFxpMul(takerAmount, fxpPrice))):
+        if(!isCallerWhitelisted()):
+            MUTEX.release()
+        return(-2)
+    if(safeAdd(self.amountFilled[orderHash], takerAmount) > orderSize):
+        if(!isCallerWhitelisted()):
+            MUTEX.release()
+        return(-3)
+    if(tx.gasprice > gasPriceLimit):
+        if(!isCallerWhitelisted()):
+            MUTEX.release()
+        return(-4)
+
+    self.amountFilled[orderHash] += takerAmount
+    # fxpPrice is in units of y per x
+    # amount of x * fxpPrice = amount of y
+    # amount of x * y / x = amount of y
+    if(!tokenX.transferFrom(maker, msg.sender, takerAmount) || !tokenY.transferFrom(msg.sender, maker, safeFxpMul(takerAmount, fxpPrice))):
+        throw()
+    log(type = Trade, maker, msg.sender, tokenX, tokenY, amount, fxpPrice, orderHash, gasPriceLimit)
+    if(!isCallerWhitelisted()):
+        MUTEX.release()
     return(1)
-# def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, takerAmount, fxpPrice, expiration, gasPriceLimit):
-#     refund()
-#     if (!isCallerWhitelisted()):
-#         MUTEX.acquire()
 
-#     orderHash = sha3([maker, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 7)
-#     if(!checkSig(maker, orderHash, v, r, s)):
-#         if(!isCallerWhitelisted()):
-#             MUTEX.release()
-#         return(0)
-#     if(block.timestamp > expiration):
-#         if(!isCallerWhitelisted()):
-#             MUTEX.release()
-#         return(-1)
-#     if(!checkHasAbilityToSpend(maker, tokenX, orderSize) || !checkHasAbilityToSpend(msg.sender, tokenY, safeFxpMul(takerAmount, fxpPrice))):
-#         if(!isCallerWhitelisted()):
-#             MUTEX.release()
-#         return(-2)
-#     if(safeAdd(self.amountFilled[orderHash], takerAmount) > orderSize):
-#         if(!isCallerWhitelisted()):
-#             MUTEX.release()
-#         return(-3)
-#     if(tx.gasPrice > gasPriceLimit):
-#         if(!isCallerWhitelisted()):
-#             MUTEX.release()
-#         return(-4)
+# fxpPrice is tokens of y per token of x
+# selling tokenX, getting tokenY [aka buying tokenY in exchange for tokenX]
+# so fxpPrice is saying "I think x is worth n of token y per one x"
+# with USD as y and ETH as x it could be "I think eth is worth 14 of token y per eth [token x] or I'm selling eth for $14 per"
+def onChainOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration, gasPriceLimit):
+    refund()
+    orderHash = sha3([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 7)
+    log(type = Order, tokenX, orderSize, tokenY, fxpPrice, expiration, msg.sender, gasPriceLimit)
+    return(orderHash)
 
-#     self.amountFilled[orderHash] += takerAmount
-#     # fxpPrice is in units of y per x
-#     # amount of x * fxpPrice = amount of y
-#     # amount of x * y / x = amount of y
-#     if(!tokenX.transferFrom(maker, msg.sender, takerAmount) || !tokenY.transferFrom(msg.sender, maker, safeFxpMul(takerAmount, fxpPrice))):
-#         throw()
-#     log(type = Trade, maker, msg.sender, tokenX, tokenY, amount, fxpPrice, orderHash, gasPriceLimit)
-#     if(!isCallerWhitelisted()):
-#         MUTEX.release()
-#     return(1)
+def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration, gasPriceLimit, v, r, s):
+    refund()
+    if (!isCallerWhitelisted()):
+        MUTEX.acquire()
 
-# # fxpPrice is tokens of y per token of x
-# # selling tokenX, getting tokenY [aka buying tokenY in exchange for tokenX]
-# # so fxpPrice is saying "I think x is worth n of token y per one x"
-# # with USD as y and ETH as x it could be "I think eth is worth 14 of token y per eth [token x] or I'm selling eth for $14 per"
-# def onChainOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration, gasPriceLimit):
-#     refund()
-#     orderHash = sha3([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 7)
-#     log(type = Order, tokenX, orderSize, tokenY, fxpPrice, expiration, msg.sender, gasPriceLimit)
-#     return(orderHash)
+    orderHash = sha3([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 7)
+    if(ecrecover(orderHash, v, r, s) != msg.sender):
+        throw()
+    self.amountFilled[orderHash] = orderSize
+    log(type = Cancel, tokenX, orderSize, tokenY, fxpPrice, expiration, gasPriceLimit, msg.sender, v, r, s)
 
-# def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration, gasPriceLimit, v, r, s):
-#     refund()
-#     if (!isCallerWhitelisted()):
-#         MUTEX.acquire()
+    if(!isCallerWhitelisted()):
+        MUTEX.release()
+    return(1)
 
-#     orderHash = sha3([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 6)
-#     if(ecrecover(orderHash, v, r, s) != msg.sender):
-#         throw()
-#     self.amountFilled[orderHash] = orderSize
-#     log(type = Cancel, tokenX, orderSize, tokenY, fxpPrice, expiration, gasPriceLimit, msg.sender, v, r, s)
+def getAmountFilled(orderHash):
+    refund()
+    return(self.amountFilled[orderHash])
 
-#     if(!isCallerWhitelisted()):
-#         MUTEX.release()
-#     return(1)
+macro checkSig($signer, $hash, $v, $r, $s):
+    ecrecover($hash, $v, $r, $s) == $signer
 
-# def getAmountFilled(orderHash):
-#     refund()
-#     return(self.amountFilled[orderHash])
-
-# macro checkSig($signer, $hash, $v, $r, $s):
-#     ecrecover($hash, $v, $r, $s) == $signer
-
-# # maker should call approve first [taker also needs to preapprove fund withdrawals]
-# macro checkHasAbilityToSpend($owner, $token, $amount):
-#     token.allowance($owner, $self) >= $amount
+# maker should call approve first [taker also needs to preapprove fund withdrawals]
+macro checkHasAbilityToSpend($owner, $token, $amount):
+    token.allowance($owner, $self) >= $amount
