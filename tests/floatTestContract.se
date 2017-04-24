@@ -1,9 +1,40 @@
+inset('../src/macros/float.sem')
+
+def add(x, y):
+    z = safeAdd(x, y)
+    return(z)
+
+def subtract(x, y):
+    z = safeSub(x, y)
+    return(z)
+
+def multiply(x, y):
+    z = safeMul(x, y)
+    return(z)
+
+def fxpMultiply(x, y):
+    z = safeFxpMul(x, y)
+    return(z)
+
+def divide(x, y):
+    z = safeDiv(x, y)
+    return(z)
+
+def fxpDivide(x, y):
+    z = safeFxpDiv(x, y)
+    return(z)
+
+def fix(x):
+    return(fix(x))
+
+def unfix(x):
+    return(unfix(x))
+
 macro safeAdd($x, $y):
     if(!safeToAdd($x, $y)):
         ~invalid()
     $x + $y
 
-# used to safely subtract two positive numbers with a positive result desired
 macro safeSub($x, $y):
     if(!safeToSubtract($x, $y)):
         ~invalid()
@@ -29,6 +60,12 @@ macro safeFxpDiv($x, $y):
         ~invalid()
     $x * 10 ** 18 / $y
 
+macro unfix($x):
+    $x / 10 ** 18
+
+macro fix($x):
+    $x * 10 ** 18
+
 macro safeToAdd($a, $b):
     $c = $a + $b
     ($c >= $a && $c >= $b)
@@ -39,9 +76,3 @@ macro safeToSubtract($a, $b):
 macro safeToMultiply($a, $b):
     $c = $a * $b
     ($a == 0 || ($c / $a) == $b)
-
-macro unfix($x):
-    $x / 10 ** 18
-
-macro fix($x):
-    $x * 10 ** 18
