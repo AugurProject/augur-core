@@ -182,9 +182,6 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     events[0] = event
     checkSubcurrencyIsValid(currency)
     wallet = create('wallet.se')
-    #winningOutcomeAddress = getOneWinningOutcomeContractAddr if 1 and getTwoWinningOutcomeContractAddrFromWhitelist if 2
-    if(!wallet.setWinningOutcomeContractAddressInitialize(currency, winningOutcomeAddress)):
-        throw()
     shareContracts = array(numOutcomes)
     i = 0
     while i < numOutcomes:

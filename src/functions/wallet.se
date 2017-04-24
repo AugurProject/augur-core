@@ -20,15 +20,8 @@ def initialize(currency):
         self.currency = currency
     return(1)
 
-def setWinningOutcomeContractAddressInitialize(currency, addr):
-    if(!self.currency):
-        self.currency = currency
-        self.winningOutcomeContract = addr
-    return(1)
-
 def transfer(receiver: address, value: uint256):
-    if(msg.sender != self.winningOutcomeContract):
-        self.controller.checkWhitelist(msg.sender)
+    self.controller.checkWhitelist(msg.sender)
     if(receiver == 0 or value <= 0):
         throw()
     if(!self.currency.transfer(receiver, value)):

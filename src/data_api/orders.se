@@ -1,5 +1,6 @@
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
+inset('../macros/float.sem')
 inset('../macros/refund.sem')
 
 ### Storage of all data associated with orders
@@ -12,6 +13,8 @@ data orders[](id, type, market, amount, price, owner, block, outcome, sharesEscr
 data bestOrder[][](bid, ask)
 
 data controller
+
+macro MIN_ORDER_VALUE: 10000000000000000
 
 def init():
     self.controller = 0x0
@@ -64,11 +67,11 @@ def saveOrder(orderID, type, market, amount, price, sender, outcome, money, shar
     #    best trade
     if(type == 1):
         bestBidPrice = self.orders[self.bestOrder[market][outcome].bid].price
-        if(price > bestBidPrice):
+        if(price > bestBidPrice or self.orders[self.bestOrder[market][outcome].bid].amount < safeFxpDiv(MIN_ORDER_VALUE, bestBidPrice)):
             self.bestOrder[market][outcome].bid = orderID
     else:
         bestAskPrice = self.orders[self.bestOrder[market][outcome].ask].price
-        if(price > bestAskPrice):
+        if(price > bestAskPrice or self.orders[self.bestOrder[market][outcome].ask].amount < safeFxpDiv(MIN_ORDER_VALUE, bestAskPrice)):
             self.bestOrder[market][outcome].ask = orderID
     return(1)
 
