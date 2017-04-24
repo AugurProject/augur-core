@@ -408,6 +408,7 @@ class ContractLoader(object):
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
 
+
         if(compiled_directory != None and os.path.isfile(compiled_directory+'contracts.dill') == True):
             dill_file = open(compiled_directory+'contracts.dill', 'rb')
             self.__contracts = dill.load(dill_file)
@@ -415,32 +416,31 @@ class ContractLoader(object):
             print('Contract loading successful')
 
         if(recompile or os.path.isfile(compiled_directory+'contracts.dill') == False):
-            controller_file = self.__find_file_by_name(serpent_files, controller)
-            if controller_file == None:
-                raise LoadContractsError('Controller not found!')
+            for file in serpent_files:
+                if os.path.basename(file) == controller:
+                    print('Creating controller..')
+                    self.__contracts['controller'] = self.__state.abi_contract(file)
+                    controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
+                    assert len(controller_addr) == 42
+                    print('Updating externs...')
+                    update_externs(self.__temp_dir.temp_source_dir, controller_addr)
+                    print('Finished.')
+                    self.__state.mine()
+                    break
+            else:
+                raise LoadContractsError('Controller not found! {}', controller)
 
-            print('Creating controller..')
-            self.__contracts['controller'] = self.__state.abi_contract(controller_file)
-            controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
-            assert len(controller_addr) == 42
-            print('Updating externs...')
-            update_externs(self.__temp_dir.temp_source_dir, controller_addr)
-            print('Finished.')
-            self.__state.mine()
-
-            for contract_name in special:
-                contract_file = self.__find_file_by_name(serpent_files, contract_name)
-                if contract_file == None:
-                    raise LoadContractsError('{} not found!', contract_name)
-
-                name = path_to_name(contract_file)
-                print(name)
-                self.__contracts[name] = self.__state.abi_contract(contract_file)
-                address = self.__contracts[name].address
-                self.controller.setValue(name.ljust(32, '\x00'), address)
-                self.controller.addToWhitelist(address)
-                self.__state.mine()
-                print('Contract creation successful:', name)
+            for contract in special:
+                for file in serpent_files:
+                    if os.path.basename(file) == contract:
+                        name = path_to_name(file)
+                        print(name)
+                        self.__contracts[name] = self.__state.abi_contract(file)
+                        address = self.__contracts[name].address
+                        self.controller.setValue(name.ljust(32, '\x00'), address)
+                        self.controller.addToWhitelist(address)
+                        self.__state.mine()
+                        print('Contract creation successful:', name)
 
             for file in serpent_files:
                 name = path_to_name(file)
