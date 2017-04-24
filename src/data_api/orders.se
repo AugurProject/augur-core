@@ -32,6 +32,9 @@ def commitOrder(hash):
     self.orderCommits[msg.sender].block = block.number
     return(1)
 
+def getInfo(sender):
+    return([self.orderCommits[sender].block, self.orderCommits[sender].hash, block.number]: arr)
+
 def checkHash(orderHash, sender):
     if(self.orderCommits[sender].hash != orderHash or block.number <= self.orderCommits[sender].block):
         return(-1)

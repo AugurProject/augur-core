@@ -1,0 +1,8 @@
+def getBalance():
+    return(msg.sender.balance)
+
+def getSender():
+    return(msg.sender)
+
+def getit(x):
+    return(x)
