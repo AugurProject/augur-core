@@ -22,7 +22,7 @@ FXP = self.controller.lookup('fxpFunctions')
 extern fxpFunctions: [fxExp:[int256]:int256, fxLog:[int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
-extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
+extern mutex: [acquire:[]:int256, release:[]:int256]
 
 inset('../macros/refund.sem')
 inset('../macros/periodStage.sem')

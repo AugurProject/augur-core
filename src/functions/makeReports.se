@@ -52,7 +52,7 @@ THRESHOLD = self.controller.lookup('reportingThreshold')
 extern reportingThreshold: [calculateNumberOfEventsAReporterHasToReportOnAtMinimum:[int256,int256,int256]:int256, calculateReportTargetForEvent:[int256,int256,int256,int256]:int256, calculateReportingThreshold:[int256,int256,int256,int256]:int256, findLazyReportersAndLeechers:[int256,int256,int256,int256,int256,int256]:int256[], getEventCouldveReportedOn:[int256,int256,int256,int256]:int256, getEventsToReportOn:[int256,int256,int256,int256,int256]:int256[], setReportingThreshold:[int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
-extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
+extern mutex: [acquire:[]:int256, release:[]:int256]
 
 VALIDATEREPORTS = self.controller.lookup('validateReport')
 extern validateReport: [validateReport:[int256,int256,int256,int256,int256,int256,int256]:int256]
@@ -147,7 +147,7 @@ macro checkSubmitReportPreconditions():
     #    logReturn(makeReportsLogReturn, -7)
     # ensures user has collected fees for last reporting period
     if(!CONSENSUS.getRepCollected(branch, msg.sender, votePeriod - 1) and COLLECTFEES.collectRep(branch, msg.sender, value = msg.value) < 0):
-            MUTEX.release()
+        MUTEX.release()
         logReturn(makeReportsLogReturn, -8)
     # actual submitting of fxpReport and ethicality
     validatedFxpReport = VALIDATEREPORTS.validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight)

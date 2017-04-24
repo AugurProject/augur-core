@@ -25,7 +25,7 @@ ROUNDTWO = self.controller.lookup('roundTwo')
 extern roundTwo: [ok:[]:int256, resolve:[int256,int256]:int256, roundTwoPostBond:[int256,int256,int256,int256]:int256, roundTwoResolve:[int256,int256,int256,int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
-extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
+extern mutex: [acquire:[]:int256, release:[]:int256]
 
 ROUNDTWOLIBRARY = self.controller.lookup('roundTwoPenalizeLibrary')
 extern roundTwoPenalizeLibrary: [calculateRepChange:[int256,int256,int256,int256,int256,int256,int256]:int256, handleEthicsAndBondRepRedistribution:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256[]]

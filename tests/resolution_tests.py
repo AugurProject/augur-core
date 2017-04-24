@@ -21,20 +21,15 @@ HALF = ONE/2
 
 def test_refund(contracts, state, t):
     print contracts.orders.commitOrder(5, value=500, sender=t.k2)
-    contracts._ContractLoader__state.mine(20)
+    contracts.state.mine(20)
     print contracts.orders.checkHash(5, t.a2)
-    print contracts.orders.getInfo(t.a2)
-
-def test_x(contracts, state, t):
-    print contracts.orders.checkHash(5, t.k2)
 
 if __name__ == '__main__':
     src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
     contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'], '', 0)
-    state = contracts._ContractLoader__state
+    state = contracts.state
     t = contracts._ContractLoader__tester
     test_refund(contracts, state, t)
-    test_x(contracts, state, t)
 
     # functions/binaryMarketResolve.se
     # functions/nonBinaryMarketResolve.se

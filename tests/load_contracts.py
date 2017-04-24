@@ -412,12 +412,6 @@ class ContractLoader(object):
             dill_file = open(compiled_directory+'contracts.dill', 'rb')
             self.__contracts = dill.load(dill_file)
             dill_file.close()
-            dill_file = open(compiled_directory+'state.dill', 'rb')
-            self.__state = dill.load(dill_file)
-            dill_file.close()
-            dill_file = open(compiled_directory+'tester.dill', 'rb')
-            self.__tester = dill.load(dill_file)
-            dill_file.close()
             print('Contract loading successful')
 
         if(recompile or os.path.isfile(compiled_directory+'contracts.dill') == False):
@@ -471,15 +465,8 @@ class ContractLoader(object):
 
             if(compiled_directory != None):
                 output = open(compiled_directory+'contracts.dill', 'wb')
+                self.__contracts['state'] = self.__state
                 dill.dump(self.__contracts, output)
-                output.close()
-
-                output = open(compiled_directory+'state.dill', 'wb')
-                dill.dump(self.__state, output)
-                output.close()
-
-                output = open(compiled_directory+'tester.dill', 'wb')
-                dill.dump(self.__tester, output)
                 output.close()
 
     def __getattr__(self, name):
@@ -518,15 +505,8 @@ class ContractLoader(object):
         self.__state.mine()
         if(self.__compiled_directory != None):
             output = open(self.__compiled_directory+'contracts.dill', 'wb')
+            self.__contracts['state'] = self.__state
             dill.dump(self.__contracts, output)
-            output.close()
-
-            output = open(compiled_directory+'state.dill', 'wb')
-            dill.dump(self.__state, output)
-            output.close()
-
-            output = open(compiled_directory+'tester.dill', 'wb')
-            dill.dump(self.__tester, output)
             output.close()
 
     def get_address(self, name):
