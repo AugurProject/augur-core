@@ -63,3 +63,14 @@ def reputationFaucet(branch):
     CONSENSUSDATA.setRepCollected(branch, msg.sender, penalizedUpTo)
     log(type=fundedAccount, branch, msg.sender, fix(10000), fix(47), block.timestamp)
     return(1)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

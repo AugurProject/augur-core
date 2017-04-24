@@ -183,3 +183,14 @@ macro returnRoundTwoBond():
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
     BACKSTOPS.setBondReturned(event)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

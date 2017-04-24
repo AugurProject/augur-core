@@ -27,3 +27,14 @@ def transfer(receiver: address, value: uint256):
     if(!self.currency.transfer(receiver, value)):
         throw()
     return(1)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

@@ -165,3 +165,14 @@ macro handleFirstResolverBond():
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), FIRST_RESOLVE_BOND) && REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), FIRST_RESOLVE_BOND)
     else:
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), FIRST_RESOLVE_BOND) && REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, resolverBondPoster), FIRST_RESOLVE_BOND)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

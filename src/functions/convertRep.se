@@ -213,3 +213,14 @@ macro checkRepConversionInvariants():
         MUTEX.release()
         return(-5)
     checkConversionDuringForkInvariants()
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

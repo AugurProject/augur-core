@@ -351,3 +351,14 @@ def setExtraBondPoster(event, poster):
 
 def getExtraBondPoster(event):
     return(self.Events[event].extraBondPoster)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

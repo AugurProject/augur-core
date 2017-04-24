@@ -107,3 +107,14 @@ def fxExp(x):
 def fxLog(x):
     refund()
     return(fxLog(x))
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

@@ -283,3 +283,14 @@ macro placeBid():
         $paidOrderCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $cost)
         if(!$paidOrderCost):
             throw()
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

@@ -165,3 +165,14 @@ macro countAsPenalized():
 macro updateAfterRep():
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
     EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

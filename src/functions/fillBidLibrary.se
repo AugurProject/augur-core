@@ -230,3 +230,14 @@ macro checkTradePreconditions():
     if(block.number <= order[6]):
         MUTEX.release()
         return([-2]: arr)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

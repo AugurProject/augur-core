@@ -87,3 +87,14 @@ macro redistributeRepFromNotReporting():
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, sender), repChange)
     # sends that rep to the branch rep pool
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repChange)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

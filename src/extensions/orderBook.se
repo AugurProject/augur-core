@@ -79,3 +79,14 @@ def getAccountOrderBook(marketID, account):
                 numAccountOrders += 1
         i += 1
     return(slice(orderBook, items=0, items=ORDER_FIELDS*numAccountOrders): arr)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

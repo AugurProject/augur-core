@@ -122,3 +122,14 @@ macro resolveCustomForkResolution():
         return(1)
     else:
         return(0)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

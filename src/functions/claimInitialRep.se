@@ -152,3 +152,14 @@ macro removeRepFromThoseWhoReportedWrong():
     else:
         # send to new branch's redistribution pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repDecrease)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)
