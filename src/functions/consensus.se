@@ -81,9 +81,7 @@ def init():
 
 def penalizeWrong(branch, event):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
 
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
@@ -126,38 +124,38 @@ def penalizeWrong(branch, event):
     # once penalized for all events actually get rid of net rep lost and send it to the branch for redistribution
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         sendRedistributedRepToBranch()
-    MUTEX.unsetMutex()
+    MUTEX.release()
     logReturn(consensusLogReturn, 1)
 
 macro checkPenalizeWrongPreconditions():
     if(EVENTS.getEventBranch(event) != branch):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(consensusLogReturn, -7)
     if(repBalance < ONE):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(consensusLogReturn, 0)
     p = proportionCorrect(event, 0)
     if(roundTwo and outcome != 0):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(consensusLogReturn, -1)
     atFirstHalfOfPeriod()
     tooLateToPenalize = (block.timestamp / periodLength - 2) != lastPeriod
     if(tooLateToPenalize):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(consensusLogReturn, -2)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(consensusLogReturn, -3)
     if(EVENTS.getForked(event)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(consensusLogReturn, -4)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     eventNotResolvedAndNeedsToBe = !EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event) == lastPeriod)
     if(eventNotResolvedAndNeedsToBe and CLOSEMARKET.closeMarket(EVENTS.getMarket(event, 0), msg.sender) != 1):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(consensusLogReturn, -5)
     if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriod - 1)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(consensusLogReturn, -6)
 
 macro countAsPenalized():

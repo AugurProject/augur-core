@@ -105,9 +105,7 @@ def init():
             # say you lost rep in round 1, if it was an invalid round 2 you have incentive to convert to dormant
             # say you gained rep in round 1, if it was an invalid round 2 you have incentive _to_ not convert to dormant or send rep b/c you want to keep it
 def convertToDormantRep(branch, fxpValue):
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     checkInvariants(msg.sender)
     refund()
     # auto increment vote period if needed
@@ -123,11 +121,11 @@ def convertToDormantRep(branch, fxpValue):
 
     if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(0)
 
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
@@ -141,7 +139,7 @@ def convertToDormantRep(branch, fxpValue):
     if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderDormantBalance, fxpValue) or !REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, senderIndex, fxpValue)):
         throw()
     REPORTING.adjustActiveRep(branch, -fxpValue)
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 # Convert dormant rep to active rep
@@ -152,9 +150,7 @@ def convertToDormantRep(branch, fxpValue):
     # -4: couldn't catchup automatically
     # -5: not enough rep
 def convertToActiveRep(branch, fxpValue):
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     senderBalance = REPORTING.balanceOfReporter(branch, msg.sender)
@@ -164,7 +160,7 @@ def convertToActiveRep(branch, fxpValue):
     if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderActiveBalance, fxpValue) or !REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, senderIndex, fxpValue)):
         throw()
     REPORTING.adjustActiveRep(branch, fxpValue)
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 macro checkInvariants($account):
@@ -182,11 +178,11 @@ macro checkInvariants($account):
 
     if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(0)
 
 macro checkConversionDuringForkInvariants():
@@ -211,9 +207,9 @@ macro checkRepConversionInvariants():
         else:
             REPORTING.addReporter(branch, msg.sender)
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-1)
     if(senderBalance < fxpValue or fxpValue <= 0):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-5)
     checkConversionDuringForkInvariants()

@@ -118,12 +118,10 @@ def init():
     # -2: invalid new trading fee
 def updateTradingFee(market, fxpTradingFee):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     branch = MARKETS.getBranch(market)
     if(msg.sender != INFO.getCreator(market)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
     currency = INFO.getCurrency(market)
@@ -131,12 +129,12 @@ def updateTradingFee(market, fxpTradingFee):
     oldCreationFee = safeFxpMul(safeFxpDiv(POINT_ZERO_SIX * baseReporters, oldFee), BRANCHES.getCurrencyRate(branch, currency))
     newCreationFee = safeFxpMul(safeFxpDiv(POINT_ZERO_SIX * baseReporters, fxpTradingFee), BRANCHES.getCurrencyRate(branch, currency))
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > oldFee):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-2)
     if(!currency.transferFrom(msg.sender, BRANCHES.getBranchWallet(branch, currency), newCreationFee - oldCreationFee) or !MARKETS.setTradingFee(market, fxpTradingFee)):
         throw()
     log(type = tradingFeeUpdated, market, fxpTradingFee)
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 # Anyone can post an "Early Resolution Bond"
@@ -155,17 +153,15 @@ def updateTradingFee(market, fxpTradingFee):
     # -4: event isn't in a regular reporting cycle yet
 def pushMarketForward(branch, market):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
 
     periodLength = BRANCHES.getPeriodLength(branch)
     currentPeriod = block.timestamp / periodLength
     if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-2)
     if(MARKETS.getBranch(market) != branch):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(0)
     event = MARKETS.getMarketEvent(market, 0)
     if(eventCreatedPriorToFork(event)):
@@ -175,7 +171,7 @@ def pushMarketForward(branch, market):
     beingReportedOnNow = (expiration / periodLength == block.timestamp / periodLength)
     alreadyPushedForward = EVENTS.getRejectedPeriod(event) or expiration != EVENTS.getOriginalExpiration(event)
     if(alreadyPushedForward or beingReportedOnNow or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-3)
     if(EXPEVENTS.getEvent(branch, expiration / periodLength, EXPEVENTS.getEventIndex(branch, expiration / periodLength, event)) != event):
         return(-4)
@@ -198,5 +194,5 @@ def pushMarketForward(branch, market):
     payEarlyResolutionBond = INFO.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), bond)
     if(!payEarlyResolutionBond or !EVENTS.setEarlyResolutionBond(event, bond)):
         throw()
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)

@@ -94,9 +94,7 @@ def makeHash(salt, fxpReport, event, sender, ethics):
 # Error -4: not caught up on penalizations [>1 period behind] and auto catchup failed
 def submitReportHash(event, reportHash, saltyEncryptedHash):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -115,24 +113,24 @@ def submitReportHash(event, reportHash, saltyEncryptedHash):
     shaHash = shaHash / 57896044618658091106304 * ONE
     # shaHash must be <= to the threshold for that user to be able to fxpReport on the given event
     if(shaHash > reportingThresholdForUser):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(makeReportsLogReturn, -3)
     EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
     EXPEVENTS.setSaltyEncryptedHash(branch, votePeriod, msg.sender, saltyEncryptedHash, event)
-    MUTEX.unsetMutex()
+    MUTEX.release()
     logReturn(makeReportsLogReturn, 1)
 
 ### Helper macros and functions:
 macro checkSubmitReportHashPreconditions():
     if(!eventIndex and (!event or eventID != event)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(makeReportsLogReturn, -1)
     atFirstHalfOfPeriod()
     if(delta > 1 and CATCHUP.penalizationCatchup(branch, msg.sender) != 1):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(makeReportsLogReturn, -4)
     if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(makeReportsLogReturn, 0)
     # if first fxpReport of period, num events not set
     if(!EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)):

@@ -64,7 +64,7 @@ def fillAsk(orderID, amountTakerWants):
     order = array(ORDER_FIELDS)
     order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
     if(!order[0]):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return([0]: arr)
     type = order[1]
     market = order[2]
@@ -85,7 +85,7 @@ def fillAsk(orderID, amountTakerWants):
     orderInfo[3] = msg.sender
     orderHash = sha3(orderInfo, items = 4)
     if(ORDERS.checkHash(orderHash, msg.sender) == -1):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return([-1]: arr)
     maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market, 0))
     minValue = 0
@@ -219,9 +219,9 @@ macro accountForRegularBuyerBiddingWithCash():
 
 macro checkTradePreconditions():
     if(owner == msg.sender):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return([-3]: arr)
     # Make sure the order has been mined, obvious HFT prevention
     if(block.number <= order[6]):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return([-2]: arr)

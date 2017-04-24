@@ -1,11 +1,11 @@
 macro atSecondHalfOfPeriod():
     residual = block.timestamp % periodLength
     if(residual <= periodLength / 2):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-2)
 
 macro atFirstHalfOfPeriod():
     residual = block.timestamp % periodLength
     if(residual > periodLength / 2):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-2)

@@ -132,10 +132,8 @@ def init():
 # need at least 1.2M gas @ gas price to cover resolution & 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation
 def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
-    if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+    if (!isCallerWhitelisted()):
+        MUTEX.acquire()
 
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
@@ -178,7 +176,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     # if it's already been created return 0
     if(INFO.getCreator(market)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-4)
     events = array(1)
     events[0] = event
@@ -196,7 +194,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
 
     log(type = marketCreated, market)
     if(!isCallerWhitelisted()):
-        MUTEX.unsetMutex()
+        MUTEX.release()
     return(market)
 
 # initialize market and send money to pay for resolution
@@ -224,11 +222,11 @@ macro checkMarketCreationPreconditions():
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
     if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > MAX_FEE or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-1)
     if(expirationDate < block.timestamp):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-2)
     if(!BRANCHES.getCurrencyActive(branch, currency)):
         return(-5)

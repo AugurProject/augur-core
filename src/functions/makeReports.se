@@ -93,9 +93,7 @@ def init():
     # -8: fees couldn't be collected
 def submitReport(event, salt, fxpReport, fxpEthics):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
 
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
@@ -109,7 +107,7 @@ def submitReport(event, salt, fxpReport, fxpEthics):
 
     saveUsersReportAndHandleEthicality()
     coverGasCostIfPossible()
-    MUTEX.unsetMutex()
+    MUTEX.release()
     logReturn(makeReportsLogReturn, 1)
 
 def makeHash(salt, fxpReport, event, sender, ethics):
@@ -128,33 +126,33 @@ macro checkSubmitReportPreconditions():
     if(roundTwo or forkedOverThisEvent):
         weight = balance
     if(balance < ONE):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(makeReportsLogReturn, 0)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(makeReportsLogReturn, -1)
     atSecondHalfOfPeriod()
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
     if(self.makeHash(salt, fxpReport, event, msg.sender, fxpEthics) != realHash or !realHash):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(makeReportsLogReturn, -3)
     if(fxpEthics != ONE and fxpEthics != 0):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(makeReportsLogReturn, -5)
     if(EVENTS.getOutcome(event) != 0):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(makeReportsLogReturn, -6)
     # commented out for easy testing
     # if(block.timestamp / periodLength != ((block.timestamp + 2 * TWENTY_FOUR_HR) / periodLength)):
     #    logReturn(makeReportsLogReturn, -7)
     # ensures user has collected fees for last reporting period
     if(!CONSENSUS.getRepCollected(branch, msg.sender, votePeriod - 1) and COLLECTFEES.collectRep(branch, msg.sender, value = msg.value) < 0):
-        MUTEX.unsetMutex()
+            MUTEX.release()
         logReturn(makeReportsLogReturn, -8)
     # actual submitting of fxpReport and ethicality
     validatedFxpReport = VALIDATEREPORTS.validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight)
     if(validatedFxpReport == -4):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(makeReportsLogReturn, -4)
 
 macro saveUsersReportAndHandleEthicality():

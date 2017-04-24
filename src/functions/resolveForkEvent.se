@@ -69,15 +69,13 @@ def init():
 
 def resolveForkedEvent(branch, event):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     # checks for orig. branch
     if(EVENTS.getEventBranch(event) != branch or BRANCHES.getEventForkedOver(branch) != event or !branch or !event):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(0)
     if(!EVENTS.getForked(event)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-1)
     if(EVENTS.getOutcome(event)):
         return(-3)
@@ -86,11 +84,11 @@ def resolveForkedEvent(branch, event):
         EVENTS.setForkDone(event)
         EVENTS.setCreationTime(event)
         CONSENSUSDATA.doRefund(msg.sender, event)
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(1)
     # fork not done yet
     else:
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(0)
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won

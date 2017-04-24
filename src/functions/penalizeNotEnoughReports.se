@@ -57,9 +57,7 @@ def init():
 
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
 
     expectedEventsForReporterIncludingRequired = 0
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
@@ -84,16 +82,16 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     redistributeNotEnoughReportsRep()
     # refund gas cost for the sender
     CONSENSUS.doRefund(msg.sender, reporter)
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 macro checkProveReporterDidntReportEnoughPreconditions():
     if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-1)
     atFirstHalfOfPeriod()
     if(EVENTS.getEventBranch(eventExample) != branch):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-3)
 
 macro ensureReporterCouldveReportedOnMoreButDidnt():
@@ -102,7 +100,7 @@ macro ensureReporterCouldveReportedOnMoreButDidnt():
     couldveReported = THRESHOLD.getEventCouldveReportedOn(branch, lastPeriod, reporter, eventExample)
     reportedOnLessThanShouldve = expectedEventsForReporterIncludingRequired / 2 > safeMul(numReportsSubmitted, ONE) and couldveReported
     if(!reportedOnLessThanShouldve):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-4)
 
 macro redistributeNotEnoughReportsRep():
@@ -111,7 +109,7 @@ macro redistributeNotEnoughReportsRep():
     oldRep = safeFxpMul(originalRep, POINT_NINE)
     repChange = safeAdd(oldRep, newRep) - originalRep
     if(repChange > 0):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(1)
     repBalance = REPORTING.getRepBalance(branch, reporter)
     if(repBalance + repChange <= 0):

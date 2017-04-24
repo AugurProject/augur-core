@@ -113,9 +113,7 @@ def init():
 
 def trade(orderID, amountTakerWants):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     if(amountTakerWants <= 0):
         throw()
     type = ORDERS.getType(orderID)
@@ -127,6 +125,6 @@ def trade(orderID, amountTakerWants):
         returnValue = FILLASK.fillAsk(orderID, amountTakerWants, call = delegate, outitems = 2)
     else:
         throw()
-    MUTEX.unsetMutex()
+    MUTEX.release()
     log(type=tradeLogArrayReturn, returnValue)
     return(returnValue: arr)
