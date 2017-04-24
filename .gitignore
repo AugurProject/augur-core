@@ -1,4 +1,4 @@
-data.dill
+*.dill
 .~c9_invoke_*
 # Byte-compiled / optimized / DLL files
 __pycache__/
