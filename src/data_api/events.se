@@ -116,7 +116,11 @@ def setEventPushedUp(event, val):
 
 # @return fxp
 def getForkOutcome(event):
-    return(self.Events[event].forkOutcome)
+    whitelist = self.controller.checkWhitelist(msg.sender)
+    if(msg.sender == INFO.getCreator(event) or whitelist):
+        return(self.Events[event].forkOutcome)
+    else:
+        log(type = logOutcome, event, self.Events[event].forkOutcome)
 
 def setForkOutcome(event, value):
     self.controller.checkWhitelist(msg.sender)
