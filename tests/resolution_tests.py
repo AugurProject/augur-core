@@ -20,9 +20,24 @@ HALF = ONE/2
 #     return gas_used
 
 def test_refund(contracts, state, t):
-    print contracts.orders.commitOrder(5, value=500, sender=t.k2)
+    balanceBefore = state.block.get_balance(t.a2)
+    print contracts.orders.commitOrder(5, value=500*10**18, sender=t.k2)
+    balanceAfter = state.block.get_balance(t.a2)
+    assert(isclose(balanceBefore, balanceAfter) == True)
+
     contracts.state.mine(20)
     print contracts.orders.checkHash(5, t.a2)
+    print contracts.controller.addToWhitelist(t.a0, sender=t.k0)
+    print contracts.controller.checkWhitelist(t.a0, sender=t.k1)
+    # print contracts.controller.checkWhitelist(t.a0)
+    print contracts.backstops.setDisputedOverEthics(5, sender=t.k0)
+
+def nearly_equal(a, b, sig_fig=8):
+    return(a == b or int(a * 10**sig_fig) == int(b * 10**sig_fig))
+
+def isclose(a, b, rel_tol=1e-10, abs_tol=0.0):
+    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
 
 if __name__ == '__main__':
     src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
@@ -44,7 +59,6 @@ if __name__ == '__main__':
 
     print "DONE TESTING"
 
-# state.block.get_balance(address)
 ### Useful for controller testing
     # from ethereum import tester as t
     # import ethereum

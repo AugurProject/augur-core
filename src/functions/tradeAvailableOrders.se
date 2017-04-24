@@ -6,6 +6,8 @@ extern trade: [trade:[int256,int256]:int256[]]
 
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
+inset('../macros/refund.sem')
+
 data controller
 
 event tradeAvailableOrdersLogArrayReturn(returnArray: arr)
