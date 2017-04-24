@@ -31,7 +31,7 @@ REPORTING = self.controller.lookup('reporting')
 extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOfReporter:[int256,int256]:int256, claimInitialRepFromRepContract:[]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReportedOnNonFinalRoundTwoEvent:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setInitialReporters:[int256]:int256, setRep:[int256,int256,int256]:int256, setReportedOnNonFinalRoundTwoEvent:[int256,int256,int256]:int256, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, totalSupply:[int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
-extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
+extern mutex: [acquire:[]:int256, release:[]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 

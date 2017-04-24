@@ -42,7 +42,7 @@ EXPEVENTS = self.controller.lookup('expiringEvents')
 extern expiringEvents: [addEvent:[int256,int256,int256,int256,int256,int256,int256]:int256, addReportToReportsSubmitted:[int256,int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodFeeValue:[int256,int256,int256]:int256, countReportAsSubmitted:[int256,int256,int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getActiveReporters:[int256,int256,int256,int256]:int256[], getAfterFork:[int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256,int256]:int256, getEventWeight:[int256,int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getFeeValue:[int256,int256]:int256, getLesserReportNum:[int256,int256,int256]:int256, getNumActiveReporters:[int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsSubmitted:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepWeight:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportsCommitted:[int256,int256,int256]:int256, getRequired:[int256,int256,int256]:int256, getSaltyEncryptedHash:[int256,int256,int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setEventWeight:[int256,int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepWeight:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setSaltyEncryptedHash:[int256,int256,int256,int256,int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
-extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
+extern mutex: [acquire:[]:int256, release:[]:int256]
 
 FXP = self.controller.lookup('fxpFunctions')
 extern fxpFunctions: [fxExp:[int256]:int256, fxLog:[int256]:int256]
@@ -182,9 +182,6 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     events[0] = event
     checkSubcurrencyIsValid(currency)
     wallet = create('wallet.se')
-    #winningOutcomeAddress = getOneWinningOutcomeContractAddr if 1 and getTwoWinningOutcomeContractAddrFromWhitelist if 2
-    if(!wallet.setWinningOutcomeContractAddressInitialize(currency, winningOutcomeAddress)):
-        throw()
     shareContracts = array(numOutcomes)
     i = 0
     while i < numOutcomes:

@@ -1,7 +1,7 @@
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
-extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
+extern mutex: [acquire:[]:int256, release:[]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
@@ -30,12 +30,12 @@ event Trade(maker:address:indexed, taker:address, tokenX:address:indexed, tokenY
 def init():
     self.controller = 0x0
 
-def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, takerAmount, fxpPrice, expiration):
+def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, takerAmount, fxpPrice, expiration, gasPriceLimit):
     refund()
     if (!isCallerWhitelisted()):
         MUTEX.acquire()
 
-    orderHash = sha3([maker, tokenX, tokenY, orderSize, fxpPrice, expiration], items = 6)
+    orderHash = sha3([maker, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 7)
     if(!checkSig(maker, orderHash, v, r, s)):
         if(!isCallerWhitelisted()):
             MUTEX.release()
@@ -52,6 +52,10 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
         if(!isCallerWhitelisted()):
             MUTEX.release()
         return(-3)
+    if(tx.gasPrice > gasPriceLimit):
+        if(!isCallerWhitelisted()):
+            MUTEX.release()
+        return(-4)
 
     self.amountFilled[orderHash] += takerAmount
     # fxpPrice is in units of y per x
@@ -59,7 +63,7 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
     # amount of x * y / x = amount of y
     if(!tokenX.transferFrom(maker, msg.sender, takerAmount) || !tokenY.transferFrom(msg.sender, maker, safeFxpMul(takerAmount, fxpPrice))):
         throw()
-    log(type = Trade, maker, msg.sender, tokenX, tokenY, amount, fxpPrice, orderHash)
+    log(type = Trade, maker, msg.sender, tokenX, tokenY, amount, fxpPrice, orderHash, gasPriceLimit)
     if(!isCallerWhitelisted()):
         MUTEX.release()
     return(1)
@@ -68,22 +72,22 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
 # selling tokenX, getting tokenY [aka buying tokenY in exchange for tokenX]
 # so fxpPrice is saying "I think x is worth n of token y per one x"
 # with USD as y and ETH as x it could be "I think eth is worth 14 of token y per eth [token x] or I'm selling eth for $14 per"
-def onChainOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration):
+def onChainOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration, gasPriceLimit):
     refund()
-    orderHash = sha3([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration], items = 6)
-    log(type = Order, tokenX, orderSize, tokenY, fxpPrice, expiration, msg.sender)
+    orderHash = sha3([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 7)
+    log(type = Order, tokenX, orderSize, tokenY, fxpPrice, expiration, msg.sender, gasPriceLimit)
     return(orderHash)
 
-def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration, v, r, s):
+def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration, gasPriceLimit, v, r, s):
     refund()
     if (!isCallerWhitelisted()):
         MUTEX.acquire()
 
-    orderHash = sha3([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration], items = 6)
+    orderHash = sha3([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 6)
     if(ecrecover(orderHash, v, r, s) != msg.sender):
         throw()
     self.amountFilled[orderHash] = orderSize
-    log(type = Cancel, tokenX, orderSize, tokenY, fxpPrice, expiration, msg.sender, v, r, s)
+    log(type = Cancel, tokenX, orderSize, tokenY, fxpPrice, expiration, gasPriceLimit, msg.sender, v, r, s)
 
     if(!isCallerWhitelisted()):
         MUTEX.release()

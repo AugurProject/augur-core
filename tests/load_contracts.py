@@ -21,6 +21,7 @@
 from __future__ import print_function
 import argparse
 import os
+import os.path
 import errno
 import re
 from binascii import hexlify
@@ -398,6 +399,7 @@ class ContractLoader(object):
     """
     def __init__(self, source_dir, controller, special, compiled_directory=None, recompile=0):
         self.__state = ethereum.tester.state()
+        self.__tester = ethereum.tester
         ethereum.tester.gas_limit = 4100000
         self.__contracts = {}
         self.__temp_dir = TempDirCopy(source_dir)
@@ -406,13 +408,13 @@ class ContractLoader(object):
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
 
-        if(compiled_directory != None):
-            dill_file = open(compiled_directory+'data.dill', 'rb')
+        if(compiled_directory != None and os.path.isfile(compiled_directory+'contracts.dill') == True):
+            dill_file = open(compiled_directory+'contracts.dill', 'rb')
             self.__contracts = dill.load(dill_file)
             dill_file.close()
             print('Contract loading successful')
 
-        if(recompile):
+        if(recompile or os.path.isfile(compiled_directory+'contracts.dill') == False):
             controller_file = __find_file_by_name(serpent_files, controller)
             if controller_file == None:
                 raise LoadContractsError('Controller not found!')
@@ -460,7 +462,8 @@ class ContractLoader(object):
                 self.controller.addToWhitelist(self.__contracts[name].address)
 
             if(compiled_directory != None):
-                output = open(compiled_directory+'data.dill', 'wb')
+                output = open(compiled_directory+'contracts.dill', 'wb')
+                self.__contracts['state'] = self.__state
                 dill.dump(self.__contracts, output)
                 output.close()
 
@@ -499,7 +502,8 @@ class ContractLoader(object):
         self.controller.addToWhitelist(self.__contracts[name].address)
         self.__state.mine()
         if(self.__compiled_directory != None):
-            output = open(self.__compiled_directory+'data.dill', 'wb')
+            output = open(self.__compiled_directory+'contracts.dill', 'wb')
+            self.__contracts['state'] = self.__state
             dill.dump(self.__contracts, output)
             output.close()
 

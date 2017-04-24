@@ -30,13 +30,13 @@ EVENTS = self.controller.lookup('events')
 extern events: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, addReportersPaidSoFar:[int256]:int256, getBond:[int256]:int256, getChallenged:[int256]:int256, getCreationTime:[int256]:int256, getEarlyResolutionBond:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getEventPushedUp:[int256]:int256, getEventResolution:[int256]:bytes, getExpiration:[int256]:int256, getExtraBond:[int256]:int256, getExtraBondPoster:[int256]:int256, getFirstPreliminaryOutcome:[int256]:int256, getForkEthicality:[int256]:int256, getForkOutcome:[int256]:int256, getForkResolveAddress:[int256]:int256, getForked:[int256]:int256, getForkedDone:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMinValue:[int256]:int256, getMode:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPast24:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getReportersPaidSoFar:[int256]:int256, getReportingThreshold:[int256]:int256, getResolutionAddress:[int256]:int256, getResolutionLength:[int256]:int256, getResolveBondPoster:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, setBond:[int256,int256]:int256, setBranch:[int256,int256]:int256, setChallenged:[int256]:int256, setCreationTime:[int256]:int256, setEarlyResolutionBond:[int256,int256]:int256, setEthics:[int256,int256]:int256, setEventPushedUp:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setExtraBond:[int256,int256]:int256, setExtraBondPoster:[int256,int256]:int256, setFirstPreliminaryOutcome:[int256,int256]:int256, setForkDone:[int256]:int256, setForkEthicality:[int256,int256]:int256, setForkOutcome:[int256,int256]:int256, setForked:[int256]:int256, setMode:[int256,int256]:int256, setOriginalExpiration:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setRejected:[int256,int256]:int256, setThreshold:[int256,int256]:int256, setUncaughtOutcome:[int256,int256]:int256]
 
 ORDERS = self.controller.lookup('orders')
-extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
+extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getInfo:[int256]:int256[], getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
 
 INFO = self.controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
-extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
+extern mutex: [acquire:[]:int256, release:[]:int256]
 
 ### This allows you to place orders on the book and cancel them
 
@@ -63,7 +63,6 @@ macro FAILURE: 0
 macro SUCCESS: 1
 
 macro MIN_ORDER_VALUE: 10000000000000000
-macro MAX_ORDER_VALUE: 1569275433846670190958947355801916604025L
 
 #
 # Buy / Sell actions: puts orders on the book
@@ -207,7 +206,7 @@ macro placeAsk():
             $minValue = EVENTS.getMinValue($event)
         $price = $fxpPrice - $minValue
         $cost = safeFxpMul($fxpAmount, $price)
-        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
+        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE):
             MUTEX.release()
             return(-1)
         $fill = min($sharesHeld, $fxpAmount)
@@ -224,7 +223,7 @@ macro placeAsk():
             $maxValue = EVENTS.getMaxValue($event)
         $costPerShareShorting = $maxValue - $fxpPrice
         $orderCost = safeFxpMul($fxpAmount, $costPerShareShorting)
-        if($costPerShareShorting > $cumulativeScale or $orderCost < MIN_ORDER_VALUE or $orderCost >= MAX_ORDER_VALUE):
+        if($costPerShareShorting > $cumulativeScale or $orderCost < MIN_ORDER_VALUE):
             MUTEX.release()
             return(-1)
         $moneyEscrowed += $orderCost
@@ -256,7 +255,7 @@ macro placeBid():
             $minValue = EVENTS.getMinValue($event)
         $price = $fxpPrice - $minValue
         $cost = safeFxpMul($fxpAmount, $price)
-        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
+        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE):
             MUTEX.release()
             return(-1)
         $fill = min($sharesHeld, $fxpAmount)
@@ -278,7 +277,7 @@ macro placeBid():
         $price = $fxpPrice - $minValue
         $cost = safeFxpMul($fxpAmount, $price)
         $moneyEscrowed += $cost
-        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
+        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE):
             MUTEX.release()
             return(-1)
         $paidOrderCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $cost)
