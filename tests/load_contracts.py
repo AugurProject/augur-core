@@ -415,7 +415,7 @@ class ContractLoader(object):
             print('Contract loading successful')
 
         if(recompile or os.path.isfile(compiled_directory+'contracts.dill') == False):
-            controller_file = __find_file_by_name(serpent_files, controller)
+            controller_file = self.__find_file_by_name(serpent_files, controller)
             if controller_file == None:
                 raise LoadContractsError('Controller not found!')
 

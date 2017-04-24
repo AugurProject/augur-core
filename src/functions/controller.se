@@ -47,6 +47,7 @@ def init():
     self.owner = msg.sender
     self.ownerBranch = 1010101
     self.mode = "dev"
+    self.whitelist[self] = 1
 
 def ok():
     return(1)
@@ -198,4 +199,8 @@ def lookup(key):
 
 # def suicide(address, to, proposalIndex):
 #     address.suicideFunds(to)
+#     return(1)
+
+# def updateController(address, newController, proposalIndex):
+#     address.updateController(newController)
 #     return(1)

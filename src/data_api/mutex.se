@@ -8,14 +8,12 @@ def init():
     self.controller = 0x0
 
 def acquire():
-    if (self.mutex == 1):
+    if(self.mutex == 1):
         throw()
-    self.controller.checkWhitelist(msg.sender)
     self.mutex = 1
     return(1)
 
 def release():
-    self.controller.checkWhitelist(msg.sender)
     self.mutex = 0
     return(1)
 

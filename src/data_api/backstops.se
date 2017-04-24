@@ -180,9 +180,11 @@ def setForkBondPoster(event, poster):
     self.forking[event].bondPoster = poster
     return(1)
 
-# todo add to all contracts with checks that whoever calling it is appropriate
-#def setController(newController):
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
 
-# todo add to all contracts with checks that whoever calling it is appropriate
-#def suicideFunds(to):
-    # suicide(to, self.balance)
+def suicideFunds(to):
+    suicide(to, self.balance)
