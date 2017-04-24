@@ -103,7 +103,7 @@ def withdrawEther(to: address, value: uint256):
     if(!initiatedTimestamp):
         self.initiated[msg.sender] = block.timestamp
         return(2)
-    if((self.initiated[msg.sender] + 3 * TWENTY_FOUR_HR) < block.timestamp):
+    if((self.initiated[msg.sender] + 3 * TWENTY_FOUR_HR) > block.timestamp):
         throw()
     self.accounts[msg.sender].balance -= value
     self.totalSupply -= value
