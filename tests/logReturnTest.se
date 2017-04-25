@@ -1,0 +1,14 @@
+inset('../src/macros/logReturn.sem')
+
+event tradeLogReturn(returnValue)
+event tradeLogArrayReturn(returnArray: arr)
+
+def testLogReturn(x):
+    logReturn(tradeLogReturn, x)
+
+def testLogArrayReturn(x: arr):
+    logReturn(tradeLogArrayReturn, x)
+
+def testLogReturnContractCall(y):
+    x = self.testLogReturn(y)
+    return(x)

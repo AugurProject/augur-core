@@ -397,7 +397,7 @@ class ContractLoader(object):
     print(contracts['bar'].bar())
     contracts.cleanup()
     """
-    def __init__(self, source_dir, controller, special, compiled_directory=None, recompile=0):
+    def __init__(self, source_dir, controller, dependencies, compiled_directory=None, recompile=0):
         self.__state = ethereum.tester.state()
         self.__tester = ethereum.tester
         ethereum.tester.gas_limit = 4100000
@@ -430,7 +430,7 @@ class ContractLoader(object):
             else:
                 raise LoadContractsError('Controller not found! {}', controller)
 
-            for contract in special:
+            for contract in dependencies:
                 for file in serpent_files:
                     if os.path.basename(file) == contract:
                         name = path_to_name(file)

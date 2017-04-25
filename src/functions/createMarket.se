@@ -80,10 +80,6 @@ macro checkSubcurrencyIsValid($contract):
     transferFrom = $contract.transferFrom(self, msg.sender, 0)
     approve = $contract.approve(self, 0)
 
-macro checkForkResolveContractIsValid($contract):
-    resolve = $contract.resolveFork(1)
-
-
 ### Allows creation of events and markets and manipulating them
 
 # Create an event. Events are the basic units / questions that are reported on in Augur by reporters
