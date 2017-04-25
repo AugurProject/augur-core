@@ -169,6 +169,8 @@ def updateCurrencyRate(branch, currency, rate, rateContract):
 # currency rate should be a number in fixed point 10**18
 def getCurrencyRate(branch, currency):
     currencyIndex = self.Branches[branch].currencyToIndex[currency]
+    if(self.Branches[branch].currencies[currencyIndex].contract != currency):
+        return(0)
     rate = self.Branches[branch].currencies[currencyIndex].rate
     if(rate):
         return(self.Branches[branch].currencies[currencyIndex].rate)

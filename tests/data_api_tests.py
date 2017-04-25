@@ -360,13 +360,13 @@ def test_branches(contracts, s, t):
             assert(c.getBranchCurrency(branch1, 1) == repAddr), "REP currency should still be defined"
         # now with whitelist
         assert(c.getBranchCurrency(branch1, 1) == repAddr)
-        # print c.getCurrencyRate(branch1, repAddr)
+        assert(c.getCurrencyRate(branch1, repAddr) == rate)
         assert(c.removeLastCurrency(branch1) == 1)
         assert(c.getNumCurrencies(branch1) == 1)
         assert(c.getCurrencyByContract(branch1, repAddr) == 0)
         assert(c.getBranchWallet(branch1, repAddr) == 0)
         assert(c.getBranchCurrency(branch1, 1) == 0)
-        # print c.getCurrencyRate(branch1, repAddr)
+        assert(c.getCurrencyRate(branch1, repAddr) == 0)
 
     test_defaults()
     test_currency()
