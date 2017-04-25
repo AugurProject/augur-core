@@ -13,7 +13,8 @@ ONE = 10**18
 TWO = 2*ONE
 HALF = ONE/2
 
-def test_backstops(c, s, t):
+def test_backstops(contracts, s, t):
+    c = contracts.backstops
     event1 = 1234
     event2 = 5678
     branch1 = 1010101
@@ -199,13 +200,22 @@ def test_backstops(c, s, t):
             assert(isinstance(exc, t.TransactionFailed)), "setRoundTwo should throw if msg.sender isn't whitelisted"
             assert(c.getRoundTwo(event2) == 0), "roundTwo was modifed when it shouldn't have been"
 
-    # def test_roundTwoRefund():
-    #     initialAddress1Balance = s.block.get_balance(t.a2)
-    #      
-    #     print initialAddress1Balance
-    #     c.setRoundTwoRefund(event1, 10)
-    #     c.doRoundTwoRefund(t.a1, event1)
-    #     print s.block.get_balance(t.a2)
+    def test_roundTwoRefund():
+        assert(c.setRoundTwoRefund(event1, 10) == 1), "setRoundTwoRefund not being successfully called"
+        try:
+            raise Exception(c.doRoundTwoRefund(t.a1, event1))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "doRefund didn't throw when event had no funds to send"
+
+    def test_misc():
+        try:
+            raise Exception(c.setController(t.a2, sender=t.k2))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "setController didn't throw when a non-controller sender attempted to set a new controller"
+        try:
+            raise Exception(c.suicideFunds(t.a2, sender=t.k2))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "suicideFunds didn't throw when a non-controller sender attempted to set a new controller"
 
     test_disputedOverEthics()
     test_forkBondPoster()
@@ -223,9 +233,144 @@ def test_backstops(c, s, t):
     test_originalVotePeriod()
     test_bondReturned()
     test_roundTwo()
-    # test_roundTwoRefund()
-
+    test_roundTwoRefund()
+    test_misc()
     print "data_api/backstops.se unit tests completed"
+
+def test_branches(contracts, s, t):
+    c = contracts.branches
+    branch1 = 1010101
+    branch2 = 2020202
+    period1 = c.getVotePeriod(branch1)
+    period2 = period1 + 1
+    address1 = long(t.a1.encode("hex"), 16)
+    address2 = long(t.a2.encode("hex"), 16)
+    repAddr = long(contracts.repContract.address.encode("hex"), 16)
+    rate = 1000000000000000000
+
+    def test_defaults():
+        assert(c.getNumBranches() == 1), "should only be 1 branch"
+        assert(c.getBranchByNum(0) == branch1), "branch at index 0 should be the default branch"
+        assert(c.getBranches() == [branch1]), "Expected an array with only the default branch returned"
+        assert(c.getBranchesStartingAt(0) == [branch1]), "Expected an array with only the default branch returned"
+        assert(c.getNumMarketsBranch(branch1) == 0), "there should be 0 markets on the branch"
+        assert(c.getMarketIDsInBranch(branch1, 0, 5) == [0, 0, 0, 0, 0]), "Markets returned when there should be no markets on the branch"
+        assert(c.getCreationDate(branch1) == s.block.timestamp), "creationDate not the expected timestamp"
+        assert(c.getOracleOnly(branch1) == 0), "oracleOnly should be set to 0"
+        assert(c.getBaseReporters(branch1) == 6), "baseReporters should be 6"
+        assert(c.getMinTradingFee(branch1) == 200000000000000000), "minTradeFees should be .2%"
+        assert(c.getVotePeriod(branch1) == round((s.block.timestamp / 15) - 1)), "Voteperiod wasn't the expected period"
+        assert(c.getPeriodLength(branch1) == 15), "period length should be 15"
+        assert(c.getForkPeriod(branch1) == 0), "ForkPeriod should be 0"
+        assert(c.getEventForkedOver(branch1) == 0), "eventForkedOver should be 0"
+        assert(c.getNumCurrencies(branch1) == 1), "should be only 1 currency on the first branch"
+        assert(c.getBranchCurrency(branch1, 0) != 0), "branch currency shouldn't be set to 0"
+        cashCurrency = c.getBranchCurrency(branch1, 0)
+        assert(c.getCurrencyActive(branch1, cashCurrency) == 1), "cash contract wasn't active by default"
+        assert(c.getCurrencyByContract(branch1, cashCurrency) == 0), "cash contract wasn't the first currency on the branch"
+        assert(c.getCurrencyRate(branch1, cashCurrency) == rate), "cash exchange rate should be 1"
+        assert(c.getInitialBalance(branch1, c.getVotePeriod(branch1), cashCurrency) == 0), "the initial balance should be 0"
+        assert(c.getBranchWallet(branch1, cashCurrency) != 0), "A wallet wasn't defined for cash currency"
+        assert(c.getParent(branch1) == 0), "default branch parent should be set to 0"
+        assert(c.getMostRecentChild(branch1) == 0), "default most recent child for default branch should be 0"
+        assert(c.getParentPeriod(branch1) == 0), "parentPeriod of default branch should be 0"
+
+    def test_currency():
+        # adjust the number of currencies, then adjust it back
+        try:
+            # should fail if not whitelisted...
+            assert(c.getNumCurrencies(branch1) == 1), "numCurrencies should be 1 at this point"
+            raise Exception(c.updateNumCurrencies(branch1, 3, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "updateNumCurrencies should throw if msg.sender isn't whitelisted"
+            assert(c.getNumCurrencies(branch1) == 1), "numCurrencies was modified when it shouldn't have been"
+        # now with whitelist
+        assert(c.getNumCurrencies(branch1) == 1)
+        assert(c.updateNumCurrencies(branch1, 5) == 1)
+        assert(c.getNumCurrencies(branch1) == 5)
+        assert(c.updateNumCurrencies(branch1, 1) == 1)
+        assert(c.getNumCurrencies(branch1) == 1)
+        # add a currency
+        try:
+            # should fail if not whitelisted...
+            assert(c.getNumCurrencies(branch1) == 1), "numCurrencies should be 1 at this point"
+            raise Exception(c.addCurrency(branch1, repAddr, rate, 0, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "addCurrency should throw if msg.sender isn't whitelisted"
+            assert(c.getNumCurrencies(branch1) == 1), "numCurrencies was modified when it shouldn't have been"
+        # now with whitelist
+        assert(c.addCurrency(branch1, repAddr, rate, 0) == 1)
+        assert(c.getNumCurrencies(branch1) == 2)
+        assert(c.getBranchWallet(branch1, repAddr) != 0)
+        assert(c.getCurrencyByContract(branch1, repAddr) == 1)
+        assert(c.getCurrencyRate(branch1, repAddr) == rate)
+        # disable and reactivate currency
+        try:
+            # should fail if not whitelisted...
+            assert(c.getCurrencyActive(branch1, repAddr) == 1), "REP currency should be active at this point"
+            raise Exception(c.disableCurrency(branch1, repAddr, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "disableCurrency should throw if msg.sender isn't whitelisted"
+            assert(c.getCurrencyActive(branch1, repAddr) == 1), "REP currency should be active still"
+        # now with whitelist
+        assert(c.getCurrencyActive(branch1, repAddr) == 1)
+        assert(c.disableCurrency(branch1, repAddr) == 1)
+        assert(c.getCurrencyActive(branch1, repAddr) == 0)
+        try:
+            # should fail if not whitelisted...
+            assert(c.getCurrencyActive(branch1, repAddr) == 0), "REP currency should be inactive at this point"
+            raise Exception(c.reactivateCurrency(branch1, repAddr, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "reactivateCurrency should throw if msg.sender isn't whitelisted"
+            assert(c.getCurrencyActive(branch1, repAddr) == 0), "REP currency should be inactive still"
+        # now with whitelist
+        assert(c.reactivateCurrency(branch1, repAddr) == 1)
+        assert(c.getCurrencyActive(branch1, repAddr) == 1)
+        # modify a currencyRate
+        assert(c.getCurrencyRate(branch1, repAddr) == rate)
+        try:
+            # should fail if not whitelisted...
+            assert(c.getCurrencyRate(branch1, repAddr) == rate), "REP currency should have a rate of 1"
+            raise Exception(c.updateCurrencyRate(branch1, repAddr, (rate + 1), 0, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "updateCurrencyRate should throw if msg.sender isn't whitelisted"
+            assert(c.getCurrencyRate(branch1, repAddr) == rate), "REP currency should still have a rate of 1"
+        # now with whitelist
+        assert(c.updateCurrencyRate(branch1, repAddr, (rate + 1), 0) == 1)
+        assert(c.getCurrencyRate(branch1, repAddr) == (rate + 1))
+        # replace currency
+        try:
+            # should fail if not whitelisted...
+            assert(c.getCurrencyRate(branch1, repAddr) == (rate + 1)), "REP currency should have a modified rate"
+            raise Exception(c.replaceCurrency(branch1, 1, repAddr, rate, 0, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "replaceCurrency should throw if msg.sender isn't whitelisted"
+            assert(c.getCurrencyRate(branch1, repAddr) == (rate + 1)), "REP currency should still have a modified rate"
+        # now with whitelist
+        assert(c.replaceCurrency(branch1, 1, repAddr, rate, 0) == 1)
+        assert(c.getCurrencyRate(branch1, repAddr) == rate)
+        assert(c.getNumCurrencies(branch1) == 2)
+        # remove last currency
+        try:
+            # should fail if not whitelisted...
+            assert(c.getBranchCurrency(branch1, 1) == repAddr), "REP currency should still be defined"
+            raise Exception(c.removeLastCurrency(branch1, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "removeLastCurrency should throw if msg.sender isn't whitelisted"
+            assert(c.getBranchCurrency(branch1, 1) == repAddr), "REP currency should still be defined"
+        # now with whitelist
+        assert(c.getBranchCurrency(branch1, 1) == repAddr)
+        # print c.getCurrencyRate(branch1, repAddr)
+        assert(c.removeLastCurrency(branch1) == 1)
+        assert(c.getNumCurrencies(branch1) == 1)
+        assert(c.getCurrencyByContract(branch1, repAddr) == 0)
+        assert(c.getBranchWallet(branch1, repAddr) == 0)
+        assert(c.getBranchCurrency(branch1, 1) == 0)
+        # print c.getCurrencyRate(branch1, repAddr)
+
+    test_defaults()
+    test_currency()
+    print "data_api/branches.se unit tests completed"
 
 if __name__ == '__main__':
     src = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'src')
@@ -233,9 +378,8 @@ if __name__ == '__main__':
     state = contracts.state
     t = contracts._ContractLoader__tester
     print "BEGIN TESTING DATA_API"
-    test_backstops(contracts.backstops, state, t)
-    # data_api/backstops.se
-    # data_api/branches.se
+    test_backstops(contracts, state, t)
+    test_branches(contracts, state, t)
     # data_api/consensusData.se
     # data_api/events.se
     # data_api/expiringEvents.se
