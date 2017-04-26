@@ -109,7 +109,7 @@ def penalizeWrong(branch, event):
     if(roundTwo and !penalizedOnEvent and reportValue):
         countAsPenalized()
         REPORTING.setReportedOnNonFinalRoundTwoEvent(branch, event, msg.sender)
-        # count it again if user reported on it the first time
+        # count it again if user reported on it the first time as in the next period the user will be penalized for this if they reported incorrectly
         EXPEVENTS.addReportToReportsSubmitted(branch, currentVotePeriod, msg.sender)
     # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in
     elif(!penalizedOnEvent and reportValue and rejected and EVENTS.getRejectedPeriod(event) == lastPeriod):
