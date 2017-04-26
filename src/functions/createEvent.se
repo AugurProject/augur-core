@@ -105,35 +105,15 @@ macro checkForkResolveContractIsValid($contract):
 def init():
     self.controller = 0x0
 
-def checkEventCreationPreconditions(branch, periodLength, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
-    if(msg.sender != self):
-        throw()
-    if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp or !resolutionAddress):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
-        return(-1)
-    if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE or (fxpMaxValue + fxpMinValue) < fxpMaxValue):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
-        return(-2)
-    if(numOutcomes < 2 or numOutcomes > 8):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
-        return(-3)
-    parent = BRANCHES.getParent(branch)
-    parentLastForked = BRANCHES.getForkPeriod(parent)
-    fortyEightHourPeriodWhereNoEventsCanExpireOnNewFork = parentLastForked + 1
-    whenEventExpires = expDate / periodLength
-    if(whenEventExpires == fortyEightHourPeriodWhereNoEventsCanExpireOnNewFork):
-        return(-4)
-    if(!BRANCHES.getCurrencyActive(branch, currency)):
-        return(-5)
-    checkForkResolveContractIsValid(forkResolveAddress)
+def publicCreateEvent(branch, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
+    MUTEX.acquire()
+    result = self.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress)
+    MUTEX.release()
+    return result
 
 def createEvent(branch, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
     refund()
-    if(!isCallerWhitelisted()):
-        MUTEX.acquire()
+    isCallerWhitelisted()
 
     periodLength = BRANCHES.getPeriodLength(branch)
     self.checkEventCreationPreconditions(branch, periodLength, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress)
@@ -150,8 +130,6 @@ def createEvent(branch, description: str, expDate, fxpMinValue, fxpMaxValue, num
     mcopy(eventInfo + 8 * 32, description, len(description))
     event = ripemd160(eventInfo, chars = len(eventInfo))
     if(INFO.getCreator(event)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(0)
 
     # checkSubcurrencyIsValid(currency)
@@ -182,11 +160,28 @@ def createEvent(branch, description: str, expDate, fxpMinValue, fxpMaxValue, num
             EVENTS.setExpiration(event, block.timestamp)
             EVENTS.setBond(event, validityBond)
             EVENTS.addPast24(period)
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(event)
     else:
         throw()
+
+def checkEventCreationPreconditions(branch, periodLength, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
+    if(msg.sender != self):
+        throw()
+    if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp or !resolutionAddress):
+        return(-1)
+    if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE or (fxpMaxValue + fxpMinValue) < fxpMaxValue):
+        return(-2)
+    if(numOutcomes < 2 or numOutcomes > 8):
+        return(-3)
+    parent = BRANCHES.getParent(branch)
+    parentLastForked = BRANCHES.getForkPeriod(parent)
+    fortyEightHourPeriodWhereNoEventsCanExpireOnNewFork = parentLastForked + 1
+    whenEventExpires = expDate / periodLength
+    if(whenEventExpires == fortyEightHourPeriodWhereNoEventsCanExpireOnNewFork):
+        return(-4)
+    if(!BRANCHES.getCurrencyActive(branch, currency)):
+        return(-5)
+    checkForkResolveContractIsValid(forkResolveAddress)
 
 def setController(newController):
     if(msg.sender != self.controller):
