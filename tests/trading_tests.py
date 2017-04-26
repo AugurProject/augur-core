@@ -143,7 +143,7 @@ def test_cash(c, s, t):
 
 if __name__ == '__main__':
     src = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'src')
-    contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'], '', 0)
+    contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
     # contracts.recompile('cash')
     state = contracts.state
     t = contracts._ContractLoader__tester
