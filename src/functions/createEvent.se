@@ -158,7 +158,7 @@ def createEvent(sender: address, branch, description: str, expDate, fxpMinValue,
             validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
             if(!currency.transferFrom(sender, wallet, validityBond)):
                 throw()
-            EVENTS.setExpiration(event, block.timestamp)
+            EVENTS.setExpiration(event, expDate)
             EVENTS.setBond(event, validityBond)
             EVENTS.addPast24(period)
         return(event)
