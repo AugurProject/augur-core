@@ -55,7 +55,7 @@ inset('../macros/refund.sem')
 # mostRecentChild is the most recent child of a branch
 # currencyActive is whether new markets can be made in that currency
 # forkTime is the block timestamp when a fork of this branch was last created
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild, currencyActive[], forkTime)
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild, currencyActive[], forkTime)
 
 # keeps track of a list of all branches
 data branchList[]
@@ -196,9 +196,6 @@ def setBaseReporters(branch, num):
     self.Branches[branch].baseReporters = num
     return(1)
 
-def getOracleOnly(branch):
-    return(self.Branches[branch].oracleOnly)
-
 def getVotePeriod(branch):
     return(self.Branches[branch].currentVotePeriod)
 
@@ -273,7 +270,7 @@ def setMostRecentChild(parent, child):
     return(1)
 
 # check that msg.sender is one of our function contracts
-def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, ethContract, mostRecentChild):
+def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, parentPeriod, parent, ethContract, mostRecentChild):
     self.controller.checkWhitelist(msg.sender)
     if(!self.Branches[ID].periodLength):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
@@ -283,7 +280,6 @@ def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, orac
         self.branchListCount += 1
         self.Branches[ID].creationDate = block.timestamp
         self.Branches[ID].parentPeriod = parentPeriod
-        self.Branches[ID].oracleOnly = oracleOnly
         self.Branches[ID].parent = parent
         self.Branches[ID].baseReporters = self.Branches[parent].baseReporters
         self.Branches[ID].mostRecentChild = mostRecentChild

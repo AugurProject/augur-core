@@ -51,9 +51,8 @@ event completeSetsLogReturn(sender: indexed, market: indexed, type: indexed, ret
 # cost 850k gas
 # Errors:
     # 0: invalid market/doesn't exist
-    # -1: oracle only branch [no trading allowed]
-    # -2: not enough money
-    # -3: not a large enough amount
+    # -1: not enough money
+    # -2: not a large enough amount
 def init():
     self.controller = 0x0
 
@@ -123,16 +122,13 @@ macro checkBuyCompleteSetsPreconditions():
     if(!MARKETS.getMarketNumOutcomes(market)):
         MUTEX.release()
         logReturn(completeSetsLogReturn, 0)
-    if(BRANCHES.getOracleOnly(branch)):
-        MUTEX.release()
-        logReturn(completeSetsLogReturn, -1)
     if(fxpAmount <= 0):
         MUTEX.release()
-        logReturn(completeSetsLogReturn, -3)
+        logReturn(completeSetsLogReturn, -2)
     # send money from user acc. to market address/account
     if(!INFO.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), cost)):
         MUTEX.release()
-        logReturn(completeSetsLogReturn, -2)
+        logReturn(completeSetsLogReturn, -1)
 
 macro checkSellCompleteSetsPreconditions():
     if(fxpAmount <= 0):
