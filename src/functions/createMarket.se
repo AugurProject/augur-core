@@ -59,8 +59,7 @@ inset('../macros/eventHelpers.sem')
 
 data controller
 
-event marketCreated(market)
-event tradingFeeUpdated(market, fxpTradingFee)
+event marketCreated(sender: indexed, marketID: indexed, topic: indexed, branch, fxpMarketCreationFee, timestamp)
 
 macro POINT_ZERO_THREE: 553402322211286528
 macro COST_PER_REPORTER: 3500000
@@ -73,12 +72,12 @@ macro 10_PERCENT_RATE: 100000000000000000
 # may want to reconfirm this again
 macro COST_FOR_MARKET_RESOLUTION: 1000000
 
-macro checkSubcurrencyIsValid($contract):
-    allowance = $contract.allowance(msg.sender, self)
-    balance = $contract.balanceOf(self)
-    transfer = $contract.transfer(msg.sender, 0)
-    transferFrom = $contract.transferFrom(self, msg.sender, 0)
-    approve = $contract.approve(self, 0)
+# macro checkSubcurrencyIsValid($contract):
+#     allowance = $contract.allowance(msg.sender, self)
+#     balance = $contract.balanceOf(self)
+#     transfer = $contract.transfer(msg.sender, 0)
+#     transferFrom = $contract.transferFrom(self, msg.sender, 0)
+#     approve = $contract.approve(self, 0)
 
 macro checkForkResolveContractIsValid($contract):
     resolve = $contract.resolveFork(1)
@@ -112,6 +111,12 @@ macro checkForkResolveContractIsValid($contract):
 def init():
     self.controller = 0x0
 
+def publicCreateMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
+    MUTEX.acquire()
+    result = self.createMarket(msg.sender, branch, description, fxpTradingFee, event, tag1, tag2, tag3, extraInfo, currency)
+    MUTEX.release()
+    return result
+
 # Create a market. Markets are the basic _tradable_ units / questions that are traded on in Augur
 # @param branch is the branch of the market
 # @param description is the description for a market
@@ -131,9 +136,8 @@ def init():
 # .05 eth to create
 # need at least 1.2M gas @ gas price to cover resolution & 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation
-def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
+def createMarket(sender: address, branch, description: str, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
+    isCallerWhitelisted()
 
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
@@ -180,7 +184,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
         return(-4)
     events = array(1)
     events[0] = event
-    checkSubcurrencyIsValid(currency)
+    # checkSubcurrencyIsValid(currency)
     wallet = create('wallet.se')
     shareContracts = array(numOutcomes)
     i = 0
@@ -189,7 +193,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
         i += 1
     makeMarket()
 
-    log(type = marketCreated, market)
+    log(type = marketCreated, msg.sender, marketID, tag1, branch, fxpCreationFee, block.timestamp)
     if(!isCallerWhitelisted()):
         MUTEX.release()
     return(market)

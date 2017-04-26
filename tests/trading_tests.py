@@ -46,11 +46,11 @@ def parseCapturedLogs(captured):
 #         c.placeOrder(1, fxpAmount, fxpPrice, )
 #     test_placeOrder()
 
-def test_Cash():
+def test_Cash(path):
     t = ethereum.tester
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('../src/functions/cash.se')
+    c = s.abi_contract(path)
     address1 = long(t.a1.encode("hex"), 16)
     address2 = long(t.a2.encode("hex"), 16)
     initialEtherBalance2 = s.block.get_balance(t.a2)
@@ -156,9 +156,6 @@ def test_Cash():
     test_commitSuicide()
 
 def test_CreateEvent(contracts, s, t):
-    c = contracts.createEvent
-    address1 = long(t.a1.encode("hex"), 16)
-    address2 = long(t.a2.encode("hex"), 16)
     def test_checkEventCreationPreconditions():
         branch = 1010101
         periodLength = 9000
@@ -172,7 +169,7 @@ def test_CreateEvent(contracts, s, t):
         currency = contracts.cash.address
         forkResolveAddress = contracts.forkResolution.address
         try:
-            c.checkEventCreationPreconditions(branch, periodLength, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
+            contracts.createEvent.checkEventCreationPreconditions(branch, periodLength, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "checkEventCreationPreconditions should throw when createEvent contract is not the caller"
     def test_createEvent():
@@ -195,11 +192,29 @@ def test_CreateEvent(contracts, s, t):
     test_createEvent()
 
 def test_CreateMarket(contracts, s, t):
-    c = contracts.createEvent
-    address1 = long(t.a1.encode("hex"), 16)
-    address2 = long(t.a2.encode("hex"), 16)
     def test_createMarket():
-        pass
+        assert(contracts.cash.depositEther(value=fix(10000), sender=t.k1) == 1), "Convert ether to cash"
+        assert(contracts.cash.approve(contracts.createEvent.address, fix(10000), sender=t.k1) == 1), "Approve createEvent contract to spend cash (for validity bond)"
+        assert(contracts.cash.approve(contracts.createMarket.address, fix(10000), sender=t.k1) == 1), "Approve createMarket contract to spend cash"
+        branch = 1010101
+        assert(contracts.reputationFaucet.reputationFaucet(branch, sender=t.k1) == 1), "Hit Reputation faucet"
+        description = "test binary event"
+        expDate = 3000000001
+        fxpMinValue = fix(1)
+        fxpMaxValue = fix(2)
+        numOutcomes = 2
+        resolution = "http://lmgtfy.com"
+        resolutionAddress = t.a2
+        currency = contracts.cash.address
+        forkResolveAddress = contracts.forkResolution.address
+        eventID = contracts.createEvent.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
+        assert(eventID > 0), "Event created"
+        tag1 = 123
+        tag2 = 456
+        tag3 = 789
+        extraInfo = "rabble rabble rabble"
+        import ipdb; ipdb.set_trace()
+        print "createMarket:", contracts.createMarket.createMarket(branch, description, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1)
     test_createMarket()
 
 def runtests():
@@ -207,8 +222,9 @@ def runtests():
     contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
     state = contracts._ContractLoader__state
     t = contracts._ContractLoader__tester
-    test_Cash()
-    test_CreateEvent(contracts, state, t)
+    test_Cash(os.path.join(src, 'functions', 'cash.se'))
+    # test_CreateEvent(contracts, state, t)
+    test_CreateMarket(contracts, state, t)
 
 if __name__ == '__main__':
     runtests()
