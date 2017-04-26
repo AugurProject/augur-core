@@ -30,7 +30,6 @@ import sys
 from serpent import mk_signature
 import tempfile
 import warnings
-import dill
 import ethereum.tester
 import socket
 import select
