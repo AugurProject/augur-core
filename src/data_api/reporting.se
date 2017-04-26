@@ -213,6 +213,8 @@ def claimInitialRepFromRepContract():
         throw()
     if(!REPCONTRACT.transferFrom(sender, 0x0000000000000000000000000000000000000000, dormantRep)):
         throw()
+    if(self.Reporting[branch].repIDtoIndex[sender]):
+        throw()
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
     self.Reporting[branch].reputation[reporterIndex].reporterID = sender
