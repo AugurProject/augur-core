@@ -27,199 +27,147 @@ extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToB
 REPCONTRACT = self.controller.lookup('repContract')
 extern repContract: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, getRidOfDustForLaunch:[]:int256, getSeeded:[]:uint256, name:[]:uint256, setSaleDistribution:[address[],uint256[]]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
+inset('../macros/float.sem')
 inset('../macros/refund.sem')
 
 # Storage of all data associated with reporters
-    # Reporting index is the branch
-    # Reputation index is the index of the reporter
-    # RepIDtoIndex returns a reporter's reputation[] index given their reputationID as the key
-    # total rep is all the rep in augur
-    # active rep is the fxpAmount which is actually active
-    # fork is the child branch of a parent which forked
-    # fxpDormant rep stores fxpDormant rep values
-    # reportedOnNonFinalRoundTwoEvent is the eventID if a person reported on a round 2 event before it was in the second round [i.e. the first reporting backstop], they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event, set this to 0 once the event is final
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, reportedOnNonFinalRoundTwoEvent[])
+    # Reporting is a map of branch ID to branch details
+    # activeRep is a map of reporter address to attorep
+    # dormantRep is a map of reporter address to attorep. NOTE: address 0x0000000000000000000000000000000000000000 contains REP that needs to be redistributed
+    # totalActiveRep is all of the active attorep in augur
+    # totalDormantRep is all of the dormant attorep in augur (totalActiveRep + totalDormantRep is all REP in Augur)
+    # reporterLocks is a map of reporter address to reporting period that the reporter is locked for.  If the reporter is not locked (value = 0) then the reporter is free to deactivate their rep.  If the reporter is locked then the reporter is unable to deactivate their REP.
+data Reporting[](activeRep[], dormantRep[], totalActiveRep, totalDormantRep, reporterLocks[])
 
 data controller
 
 def init():
     self.controller = 0x0
     REPCONTRACT = self.controller.lookup('repContract')
-    self.Reporting[1010101].repIDtoIndex[1010101] = 0
     redistributionRep = REPCONTRACT.balanceOf(0x0000000000000000000000000000000000000000)
-    self.Reporting[1010101].reputation[0].repValue = redistributionRep
-    self.Reporting[1010101].reputation[0].reporterID = 1010101
-    self.Reporting[1010101].dormantRep[0].reporterID = 1010101
-    self.Reporting[1010101].numberReporters = 2
-    self.Reporting[1010101].repIDtoIndex[msg.sender] = 1
-    self.Reporting[1010101].reputation[1].repValue = 0
-    self.Reporting[1010101].reputation[1].reporterID = msg.sender
-    self.Reporting[1010101].dormantRep[1].reporterID = msg.sender
-    self.Reporting[1010101].repIDtoIndex[msg.sender] = 1
-    self.Reporting[1010101].activeRep += redistributionRep
-    self.Reporting[1010101].totalRep += redistributionRep
+    self.privateIncreaseDormantRep(1010101, 0x0000000000000000000000000000000000000000, redistributionRep)
 
-def getReportedOnNonFinalRoundTwoEvent(branch, reporter):
-    return(self.Reporting[branch].reportedOnNonFinalRoundTwoEvent[reporter])
+#######
+# FIXME: TODO: NOTE: DELETE ME!!!
+#######
+def giveAwayFreeRep(branch, reporterAddress, attorep):
+    self.privateIncreaseDormantRep(branch, reporterAddress, attorep)
+#######
+# FIXME: TODO: NOTE: DELETE ME!!!
+#######
 
-def setReportedOnNonFinalRoundTwoEvent(branch, event, reporter):
+def isReporterLocked(branch, reporterAddress):
+    return(self.Reporting[branch].reporterLocks[reporterAddress] != 0)
+
+def lockReporter(branch, reporterAddress, reportingPeriod):
     self.controller.checkWhitelist(msg.sender)
-    self.Reporting[branch].reportedOnNonFinalRoundTwoEvent[reporter] = event
+    self.Reporting[branch].reporterLocks[reporterAddress] = reportingPeriod
     return(1)
 
-# @return fxp
-def getActiveRep(branch):
-    return(self.Reporting[branch].activeRep)
-
-def adjustActiveRep(branch, fxpAmount):
+def unlockReporter(branch, reporterAddress):
     self.controller.checkWhitelist(msg.sender)
-    self.Reporting[branch].activeRep += fxpAmount
+    # TODO: figure out if we need to assert that they weren't already unlocked
+    self.Reporting[branch].reporterLocks[reporterAddress] = 0
     return(1)
 
-# @return fxp
-def getRepByIndex(branch, repIndex):
-    return(self.Reporting[branch].reputation[repIndex].repValue)
+def activateRepFor(branch, reporterAddress, attorepToActivate):
+    self.controller.checkWhitelist(msg.sender)
+    self.privateDecreaseDormantRep(branch, reporterAddress, attorepToActivate)
+    self.privateIncreaseActiveRep(branch, reporterAddress, attorepToActivate)
+    return(1)
 
-# @return fxp
-def getRepBalance(branch, address):
-    repIndex = self.Reporting[branch].repIDtoIndex[address]
-    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
+# TODO: figure out what other constraints there are on rep deactivation and consider migrating those constraints to this contract
+def deactivateRepFor(branch, reporterAddress, attorepToDeactivate):
+    self.controller.checkWhitelist(msg.sender)
+    if (self.Reputation.reporterLocks[reporterAddress] != 0):
         throw()
-    return(self.Reporting[branch].reputation[repIndex].repValue)
+    self.privateDecreaseActiveRep(branch, reporterAddress, attorepToDeactivate)
+    self.privateIncreaseDormantRep(branch, reporterAddress, attorepToDeactivate)
+    return(1)
 
-def getDormantRepByIndex(branch, repIndex):
-    return(self.Reporting[branch].dormantRep[repIndex].repValue)
+def getActiveRepBalance(branch, reporterAddress):
+    return(self.Reporting[branch].activeRep[reporterAddress])
 
-# getDormantRepBalance
-# @return fxp
-def balanceOfReporter(branch, address):
-    repIndex = self.Reporting[branch].repIDtoIndex[address]
-    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
-        return(0)
-    return(self.Reporting[branch].dormantRep[repIndex].repValue)
+def getDormantRepBalance(branch, reporterAddress):
+    return(self.Reporting[branch].dormantRep[reporterAddress])
 
-# return total supply of fxpDormant rep
-# @return fxp
-def totalSupply(branch):
-    return(self.Reporting[branch].totalRep - self.Reporting[branch].activeRep)
+def getTotalActiveRep(branch):
+    return(self.Reporting[branch].totalActiveRep)
 
-def getReporterID(branch, index):
-    return(self.Reporting[branch].reputation[index].reporterID)
+def getTotalDormantRep(branch):
+    return(self.Reporting[branch].totalDormantRep)
 
 def getTotalRep(branch):
-    return(self.Reporting[branch].totalRep)
+    return(self.Reporting[branch].totalActiveRep + self.Reporting[branch].totalDormantRep)
 
-# will return 0s for array values after it's looped through all the ones you
-# have an actual balance in
-def getReputation(address):
-    branchListCount = BRANCHES.getNumBranches()
-    if(address):
-        branches = array(2 * branchListCount)
-        branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outitems = branchListCount)
-        i = 0
-        b = 0
-        while(i < branchListCount):
-            branch = branchList[i]
-            balance = self.getRepBalance(branch, address)
-            if(balance != 0):
-                branches[b] = branch
-                branches[b + 1] = balance
-                b += 2
-            i += 1
-    else:
+# TODO: add an offset and a limit so the contract doesn't become unusable if there are many branches
+# TODO: remove dependency on BRANCH here, instead take in an array of branches to get reputation for and leave it up to the caller to come up with that array, this also solves the above problem
+def getReputation(reporterAddress):
+    # TODO: figure out what this means for address 0x0000000000000000000000000000000000000000
+    if (!address):
         address = msg.sender
-        branches = array(2 * branchListCount)
-        branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outitems = branchListCount)
-        i = 0
-        b = 0
-        while(i < branchListCount):
-            branch = branchList[i]
-            balance = self.getRepBalance(branch, address)
-            if(balance != 0):
-                branches[b] = branch
-                branches[b + 1] = balance
-                b += 2
-            i += 1
+    branchListCount = BRANCHES.getNumBranches()
+    branches = array(2 * branchListCount)
+    branchList = array(branchListCount)
+    branchList = BRANCHES.getBranches(outitems = branchListCount)
+    i = 0
+    b = 0
+    while(i < branchListCount):
+        branch = branchList[i]
+        balance = self.getActiveRepBalance(branch, reporterAddress)
+        if(balance != 0):
+            branches[b] = branch
+            branches[b + 1] = balance
+            b += 2
+        i += 1
     return(branches: arr)
 
 def getNumberReporters(branch):
     return(self.Reporting[branch].numberReporters)
 
-def repIDToIndex(branch, repID):
-    repIndex = self.Reporting[branch].repIDtoIndex[repID]
-    return(repIndex)
-
-def setInitialReporters(branch):
+def initializeBranch(originalBranch, newBranch):
     self.controller.checkWhitelist(msg.sender)
-    # add branch as a "reporter"
-    self.Reporting[branch].numberReporters = 1
-    self.Reporting[branch].repIDtoIndex[branch] = 0
-    self.Reporting[branch].reputation[0].repValue = 0
-    self.Reporting[branch].reputation[0].reporterID = branch
-    self.Reporting[branch].dormantRep[0].reporterID = branch
+    return(self.migrateReporterToNewBranch(originalBranch, newBranch, 0x0000000000000000000000000000000000000000))
+
+# FIXME: sometimes when this is called, it is called with the event ID as `reporterAddress`, resulting in +1 reporter that will never report
+# TODO: figure out how we avoid double-transfering REP to new branches and see if we can bring that logic into this contract.  at the moment, this method is the only one that allows this contract to get into a bad state
+# TODO: look for exploit around multiple calls of this function that could result in adding the same reporter multiple times
+def migrateReporterToNewBranch(originalBranch, newBranch, reporterAddress):
+    self.controller.checkWhitelist(msg.sender)
+    originalActiveRep = self.Reporting[originalBranch].activeRep[reporterAddress]
+    originalDormantRep = self.Reporting[originalBranch].dormantRep[reporterAddress]
+    self.privateIncreaseActiveRep(newBranch, reporterAddress, originalActiveRep)
+    self.privateIncreaseDormantRep(newBranch, reporterAddress, originalDormantRep)
     return(1)
 
-def addReporter(branch, sender, fxpAmount, fxpDormant, fxpRepToBonderOrBranch):
+def penalizeReporter(branch, reporterAddress, attorep):
     self.controller.checkWhitelist(msg.sender)
-    reporterIndex = self.Reporting[branch].numberReporters
-    self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
-    self.Reporting[branch].reputation[reporterIndex].repValue = fxpAmount
-    self.Reporting[branch].reputation[reporterIndex].reporterID = sender
-    self.Reporting[branch].dormantRep[reporterIndex].reporterID = sender
-    self.Reporting[branch].dormantRep[reporterIndex].repValue = fxpDormant
-    self.Reporting[branch].activeRep += fxpAmount + fxpRepToBonderOrBranch
-    self.Reporting[branch].totalRep += fxpAmount + fxpDormant + fxpRepToBonderOrBranch
-    self.Reporting[branch].numberReporters += 1
+    self.privateDecreaseActiveRep(branch, reporterAddress, attorep)
+    self.privateIncreaseDormantRep(branch, 0x0000000000000000000000000000000000000000, attorep)
     return(1)
 
-def addRep(branch, index, fxpValue):
-    self.controller.checkWhitelist(msg.sender)
-    self.Reporting[branch].reputation[index].repValue += fxpValue
-    return(1)
+def transferRep(branch, destinationReporterAddress, attorep):
+    return(self.transferRepFrom(branch, msg.sender, destinationReporterAddress, attorep))
 
-def subtractRep(branch, index, fxpValue):
+def transferRepFrom(branch, sourceReporterAddress, destinationReporterAddress, attorep):
     self.controller.checkWhitelist(msg.sender)
-    self.Reporting[branch].reputation[index].repValue -= fxpValue
-    return(1)
-
-### Test Faucet Function that needs to be removed at launch TODO
-def setRep(branch, index, fxpNewRep):
-    self.controller.checkWhitelist(msg.sender)
-    oldRep = self.Reporting[branch].reputation[index].repValue
-    self.Reporting[branch].reputation[index].repValue = fxpNewRep
-    self.Reporting[branch].activeRep += fxpNewRep - oldRep
-    self.Reporting[branch].totalRep += fxpNewRep - oldRep
-    return(1)
-
-def addDormantRep(branch, index, fxpValue):
-    self.controller.checkWhitelist(msg.sender)
-    self.Reporting[branch].dormantRep[index].repValue += fxpValue
-    return(1)
-
-def subtractDormantRep(branch, index, fxpValue):
-    self.controller.checkWhitelist(msg.sender)
-    self.Reporting[branch].dormantRep[index].repValue -= fxpValue
+    self.privateDecreaseDormantRep(branch, sourceReporterAddress, attorep)
+    self.privateIncreaseDormantRep(branch, destinationReporterAddress, attorep)
     return(1)
 
 def claimInitialRepFromRepContract():
+    # TODO: add MUTEX
+    # TODO: figure out if there are any problems with claiming rep after the first branch
     branch = 1010101
-    sender = msg.sender
-    dormantRep = REPCONTRACT.balanceOf(sender)
-    if(!dormantRep):
+    reporterAddress = msg.sender
+    attorep = REPCONTRACT.balanceOf(reporterAddress)
+    if(!attorep):
         throw()
-    if(dormantRep != REPCONTRACT.allowance(sender, self)):
+    if(attorep != REPCONTRACT.allowance(reporterAddress, self)):
         throw()
-    if(!REPCONTRACT.transferFrom(sender, 0x0000000000000000000000000000000000000000, dormantRep)):
+    if(!REPCONTRACT.transferFrom(reporterAddress, 0x0000000000000000000000000000000000000000, attorep)):
         throw()
-    reporterIndex = self.Reporting[branch].numberReporters
-    self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
-    self.Reporting[branch].reputation[reporterIndex].reporterID = sender
-    self.Reporting[branch].dormantRep[reporterIndex].reporterID = sender
-    self.Reporting[branch].dormantRep[reporterIndex].repValue = dormantRep
-    self.Reporting[branch].totalRep += dormantRep
-    self.Reporting[branch].numberReporters += 1
+    self.privateIncreaseDormantRep(branch, reporterAddress, attorep)
     return(1)
 
 def setController(newController):
@@ -232,3 +180,35 @@ def suicideFunds(to):
     if(msg.sender != self.controller):
         throw()
     suicide(to)
+
+macro privateOnly():
+    if (msg.sender != self):
+        throw()
+
+def privateIncreaseActiveRep(branch, reporterAddress, attorep):
+    privateOnly()
+    startingActiveRep = self.Reporting[branch].activeRep[reporterAddress]
+    startingTotalActiveRep = self.Reporting[branch].totalActiveRep
+    self.Reporting[branch].activeRep[reporterAddress] = safeAdd(startingActiveRep, attorep)
+    self.Reporting[branch].totalActiveRep = safeAdd(startingTotalActiveRep, attorep)
+
+def privateDecreaseActiveRep(branch, reporterAddress, attorep):
+    privateOnly()
+    startingActiveRep = self.Reporting[branch].activeRep[reporterAddress]
+    startingTotalActiveRep = self.Reporting[branch].totalActiveRep
+    self.Reporting[branch].activeRep[reporterAddress] = safeSub(startingActiveRep, attorep)
+    self.Reporting[branch].totalActiveRep = safeSub(startingTotalActiveRep, attorep)
+
+def privateIncreaseDormantRep(branch, reporterAddress, attorep):
+    privateOnly()
+    startingDormantRep = self.Reporting[branch].dormantRep[reporterAddress]
+    startingTotalDormantRep = self.Reporting[branch].totalDormantRep
+    self.Reporting[branch].dormantRep[reporterAddress] = safeAdd(startingDormantRep, attorep)
+    self.Reporting[branch].totalDormantRep = safeAdd(startingTotalDormantRep, attorep)
+
+def privateDecreaseDormantRep(branch, reporterAddress, attorep):
+    privateOnly()
+    startingDormantRep = self.Reporting[branch].dormantRep[reporterAddress]
+    startingTotalDormantRep = self.Reporting[branch].totalDormantRep
+    self.Reporting[branch].dormantRep[reporterAddress] = safeSub(startingDormantRep, attorep)
+    self.Reporting[branch].totalDormantRep = safeSub(startingTotalDormantRep, attorep)
