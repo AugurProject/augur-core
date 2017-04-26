@@ -2,9 +2,12 @@ data banana
 
 data controller
 
+extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
 def init():
     self.controller = 0x0
 
 def ok():
-    x = 3
-    return([x]: arr)
+    x = create('functions/cash.se')
+    y = x.allowance(msg.sender, self, gas = 30000)
+    return(y)

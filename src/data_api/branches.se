@@ -63,13 +63,6 @@ data branchListCount
 
 data controller
 
-macro checkSubcurrencyIsValid($contract):
-    allowance = $contract.allowance(msg.sender, self, gas = 30000)
-    balance = $contract.balanceOf(self, gas = 30000)
-    transfer = $contract.transfer(msg.sender, 0, gas = 30000)
-    transferFrom = $contract.transferFrom(self, msg.sender, 0, gas = 30000)
-    approve = $contract.approve(self, 0, gas = 30000)
-
 def init():
     self.controller = 0x0
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
@@ -81,7 +74,6 @@ def init():
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
     ethContract = self.controller.lookup("cash")
-    checkSubcurrencyIsValid(ethContract)
     self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].contract = ethContract
     self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].rate = ONE
     self.Branches[1010101].currencyToIndex[ethContract] = self.Branches[1010101].numCurrencies
@@ -101,7 +93,6 @@ def updateNumCurrencies(branch, num):
 # rateContract _or_ rate should be given
 def addCurrency(branch, currency, rate, rateContract):
     self.controller.checkWhitelist(msg.sender)
-    checkSubcurrencyIsValid(currency)
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract = currency
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rate = rate
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rateContract = rateContract
@@ -110,7 +101,6 @@ def addCurrency(branch, currency, rate, rateContract):
     self.Branches[branch].numCurrencies += 1
     noWalletExists = !self.Branches[branch].contract[currency]
     if(noWalletExists):
-        checkSubcurrencyIsValid(currency)
         wallet = create('../functions/wallet.se')
         wallet.initialize(currency)
         self.Branches[branch].contract[currency] = wallet
@@ -130,7 +120,6 @@ def reactivateCurrency(branch, currency):
 
 def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContract):
     self.controller.checkWhitelist(msg.sender)
-    checkSubcurrencyIsValid(newCurrency)
     self.Branches[branch].currencyActive[self.Branches[branch].currencies[oldCurrencyIndex].contract] = 0
     self.Branches[branch].currencyToIndex[self.Branches[branch].currencies[oldCurrencyIndex].contract] = 0
     self.Branches[branch].currencies[oldCurrencyIndex].contract = newCurrency
@@ -140,7 +129,6 @@ def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContr
     self.Branches[branch].currencyToIndex[newCurrency] = oldCurrencyIndex
     noWalletExists = !self.Branches[branch].contract[newCurrency]
     if(noWalletExists):
-        checkSubcurrencyIsValid(newCurrency)
         wallet = create('../functions/wallet.se')
         wallet.initialize(newCurrency)
         self.Branches[branch].contract[newCurrency] = wallet
@@ -168,6 +156,8 @@ def updateCurrencyRate(branch, currency, rate, rateContract):
 # currency rate should be a number in fixed point 10**18
 def getCurrencyRate(branch, currency):
     currencyIndex = self.Branches[branch].currencyToIndex[currency]
+    if(self.Branches[branch].currencies[currencyIndex].contract != currency):
+        return(0)
     rate = self.Branches[branch].currencies[currencyIndex].rate
     if(rate):
         return(self.Branches[branch].currencies[currencyIndex].rate)
@@ -297,7 +287,6 @@ def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, orac
         self.Branches[ID].parent = parent
         self.Branches[ID].baseReporters = self.Branches[parent].baseReporters
         self.Branches[ID].mostRecentChild = mostRecentChild
-        checkSubcurrencyIsValid(ethContract)
         self.Branches[ID].currencies[self.Branches[ID].numCurrencies].contract = ethContract
         self.Branches[ID].currencies[self.Branches[ID].numCurrencies].rate = ONE
         self.Branches[ID].currencyToIndex[ethContract] = self.Branches[ID].numCurrencies

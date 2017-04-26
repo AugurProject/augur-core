@@ -139,7 +139,7 @@ def test_float():
     test_divide()
     test_fxp_divide()
 
-def testLogReturn():
+def test_logReturn():
     s = test.state()
     c = s.abi_contract('logReturnTest.se')
     def test_logReturn():
@@ -156,6 +156,9 @@ def testLogReturn():
             assert(logged["_event_type"] == u'tradeLogArrayeturn')
             assert(logged["returnArray"] == [5, 10, 15])
     test_logReturn()
+
+def test_binaryMarketResolve(controller, state, t):
+
 
 # def test_controller(contracts, state, t):
     ### Useful for controller testing
@@ -180,7 +183,7 @@ if __name__ == '__main__':
     test_refund(contracts, state, t)
     test_float()
     test_logReturn()
-    # test_binaryMarketResolve(contracts, state, t)
+    test_binaryMarketResolve(contracts, state, t)
     # test_nonBinaryMarketResolve(contracts, state, t)
     # test_resolveForkEvent(contracts, state, t)
     # test_binaryForkResolve(contracts, state, t)
