@@ -59,8 +59,7 @@ inset('../macros/eventHelpers.sem')
 
 data controller
 
-event marketCreated(market)
-event tradingFeeUpdated(market, fxpTradingFee)
+event tradingFeeUpdated(sender: indexed, branch: indexed, marketID: indexed, fxpTradingFee, timestamp)
 
 macro POINT_ZERO_THREE: 553402322211286528
 macro COST_PER_REPORTER: 3500000
@@ -133,7 +132,7 @@ def updateTradingFee(market, fxpTradingFee):
         return(-2)
     if(!currency.transferFrom(msg.sender, BRANCHES.getBranchWallet(branch, currency), newCreationFee - oldCreationFee) or !MARKETS.setTradingFee(market, fxpTradingFee)):
         throw()
-    log(type = tradingFeeUpdated, market, fxpTradingFee)
+    log(type = tradingFeeUpdated, msg.sender, branch, market, fxpTradingFee, block.timestamp)
     MUTEX.release()
     return(1)
 
