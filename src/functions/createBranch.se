@@ -53,14 +53,14 @@ macro MAX_FEE: 10**17
 def init():
     self.controller = 0x0
 
-def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, oracleOnly, mostRecentChildBranch):
+def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, mostRecentChildBranch):
     refund()
     if (!isCallerWhitelisted()):
         MUTEX.acquire()
 
     checkBranchCreationPreconditions()
     parentPeriod = BRANCHES.getVotePeriod(parent)
-    branchInfo = string(7 * 32 + len(description))
+    branchInfo = string(6 * 32 + len(description))
     branchInfo[0] = msg.sender
     # creation fee
     branchInfo[1] = 47 * ONE
@@ -69,13 +69,12 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     branchInfo[3] = block.timestamp
     branchInfo[4] = parent
     branchInfo[5] = fxpMinTradingFee
-    branchInfo[6] = oracleOnly
-    mcopy(branchInfo + 7 * 32, description, len(description))
+    mcopy(branchInfo + 6 * 32, description, len(description))
     # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
     branch = ripemd160(branchInfo, chars = len(branchInfo))
     currentVotePeriod = (block.timestamp / periodLength) - 1
     ethContract = self.controller.lookup("cash")
-    BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, ethContract, mostRecentChildBranch)
+    BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, parentPeriod, parent, ethContract, mostRecentChildBranch)
     # pay creation fee, initialize branch info
     parentEthContract = BRANCHES.getBranchCurrency(parent, 0)
     feePaid = parentEthContract.transferFrom(msg.sender, BRANCHES.getBranchWallet(parent, parentEthContract), 47 * ONE)
@@ -95,7 +94,7 @@ macro checkBranchCreationPreconditions():
         if(!isCallerWhitelisted()):
             MUTEX.release()
         return(-1)
-    if(fxpMinTradingFee <= 0 or fxpMinTradingFee > MAX_FEE or (oracleOnly != 0 and oracleOnly != 1)):
+    if(fxpMinTradingFee <= 0 or fxpMinTradingFee > MAX_FEE):
         if(!isCallerWhitelisted()):
             MUTEX.release()
         return(-1)

@@ -73,13 +73,6 @@ macro 10_PERCENT_RATE: 100000000000000000
 # may want to reconfirm this again
 macro COST_FOR_MARKET_RESOLUTION: 1000000
 
-macro checkSubcurrencyIsValid($contract):
-    allowance = $contract.allowance(msg.sender, self)
-    balance = $contract.balanceOf(self)
-    transfer = $contract.transfer(msg.sender, 0)
-    transferFrom = $contract.transferFrom(self, msg.sender, 0)
-    approve = $contract.approve(self, 0)
-
 macro checkForkResolveContractIsValid($contract):
     resolve = $contract.resolveFork(1)
 

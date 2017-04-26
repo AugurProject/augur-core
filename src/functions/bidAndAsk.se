@@ -69,7 +69,6 @@ macro MIN_ORDER_VALUE: 10000000000000000
 # Errors:
     #  0: market doesn't exist
     # -1: fxpAmount/fxpPrice bad
-    # -2: oracle only branch
 #
 # costs 532k gas
 
@@ -183,9 +182,6 @@ macro checkOrderPreconditions():
     if(!$branch):
         MUTEX.release()
         return(0)
-    if(BRANCHES.getOracleOnly($branch)):
-        MUTEX.release()
-        return(-2)
 
 macro placeAsk():
     # Check if there are any "crossed orders" (i.e., bid orders

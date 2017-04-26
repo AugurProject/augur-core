@@ -25,7 +25,7 @@ macro safeDiv($x, $y):
     $x / $y
 
 macro safeFxpDiv($x, $y):
-    if($y == 0):
+    if($y == 0 or !safeToMultiply($x, 10 ** 18)):
         ~invalid()
     $x * 10 ** 18 / $y
 

@@ -86,8 +86,6 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     # send the bond to the branch
     if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
         throw()
-    # remove from events in # to report on calc for last period
-    EXPEVENTS.removeEvent(branch, votePeriod)
     # makes event required reporting in round 2 (the next period) as well
     EXPEVENTS.setEventRequired(branch, votePeriod + 1, event)
     # push event into next period

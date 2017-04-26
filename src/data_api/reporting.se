@@ -149,9 +149,6 @@ def getNumberReporters(branch):
 
 def repIDToIndex(branch, repID):
     repIndex = self.Reporting[branch].repIDtoIndex[repID]
-    # means repID didn't matchup with 0 index reporterID
-    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != repID):
-        throw()
     return(repIndex)
 
 def setInitialReporters(branch):

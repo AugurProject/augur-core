@@ -55,20 +55,13 @@ inset('../macros/refund.sem')
 # mostRecentChild is the most recent child of a branch
 # currencyActive is whether new markets can be made in that currency
 # forkTime is the block timestamp when a fork of this branch was last created
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild, currencyActive[], forkTime)
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild, currencyActive[], forkTime)
 
 # keeps track of a list of all branches
 data branchList[]
 data branchListCount
 
 data controller
-
-macro checkSubcurrencyIsValid($contract):
-    allowance = $contract.allowance(msg.sender, self, gas = 30000)
-    balance = $contract.balanceOf(self, gas = 30000)
-    transfer = $contract.transfer(msg.sender, 0, gas = 30000)
-    transferFrom = $contract.transferFrom(self, msg.sender, 0, gas = 30000)
-    approve = $contract.approve(self, 0, gas = 30000)
 
 def init():
     self.controller = 0x0
@@ -82,7 +75,6 @@ def init():
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
     ethContract = self.controller.lookup("cash")
-    checkSubcurrencyIsValid(ethContract)
     self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].contract = ethContract
     self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].rate = ONE
     self.Branches[1010101].currencyToIndex[ethContract] = self.Branches[1010101].numCurrencies
@@ -102,7 +94,6 @@ def updateNumCurrencies(branch, num):
 # rateContract _or_ rate should be given
 def addCurrency(branch, currency, rate, rateContract):
     self.controller.checkWhitelist(msg.sender)
-    checkSubcurrencyIsValid(currency)
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract = currency
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rate = rate
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rateContract = rateContract
@@ -111,7 +102,6 @@ def addCurrency(branch, currency, rate, rateContract):
     self.Branches[branch].numCurrencies += 1
     noWalletExists = !self.Branches[branch].contract[currency]
     if(noWalletExists):
-        checkSubcurrencyIsValid(currency)
         wallet = create('../functions/wallet.se')
         wallet.initialize(currency)
         self.Branches[branch].contract[currency] = wallet
@@ -131,7 +121,6 @@ def reactivateCurrency(branch, currency):
 
 def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContract):
     self.controller.checkWhitelist(msg.sender)
-    checkSubcurrencyIsValid(newCurrency)
     self.Branches[branch].currencyActive[self.Branches[branch].currencies[oldCurrencyIndex].contract] = 0
     self.Branches[branch].currencyToIndex[self.Branches[branch].currencies[oldCurrencyIndex].contract] = 0
     self.Branches[branch].currencies[oldCurrencyIndex].contract = newCurrency
@@ -141,7 +130,6 @@ def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContr
     self.Branches[branch].currencyToIndex[newCurrency] = oldCurrencyIndex
     noWalletExists = !self.Branches[branch].contract[newCurrency]
     if(noWalletExists):
-        checkSubcurrencyIsValid(newCurrency)
         wallet = create('../functions/wallet.se')
         wallet.initialize(newCurrency)
         self.Branches[branch].contract[newCurrency] = wallet
@@ -208,9 +196,6 @@ def setBaseReporters(branch, num):
     self.controller.checkWhitelist(msg.sender)
     self.Branches[branch].baseReporters = num
     return(1)
-
-def getOracleOnly(branch):
-    return(self.Branches[branch].oracleOnly)
 
 def getVotePeriod(branch):
     return(self.Branches[branch].currentVotePeriod)
@@ -286,7 +271,7 @@ def setMostRecentChild(parent, child):
     return(1)
 
 # check that msg.sender is one of our function contracts
-def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, ethContract, mostRecentChild):
+def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, parentPeriod, parent, ethContract, mostRecentChild):
     self.controller.checkWhitelist(msg.sender)
     if(!self.Branches[ID].periodLength):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
@@ -296,11 +281,9 @@ def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, orac
         self.branchListCount += 1
         self.Branches[ID].creationDate = block.timestamp
         self.Branches[ID].parentPeriod = parentPeriod
-        self.Branches[ID].oracleOnly = oracleOnly
         self.Branches[ID].parent = parent
         self.Branches[ID].baseReporters = self.Branches[parent].baseReporters
         self.Branches[ID].mostRecentChild = mostRecentChild
-        checkSubcurrencyIsValid(ethContract)
         self.Branches[ID].currencies[self.Branches[ID].numCurrencies].contract = ethContract
         self.Branches[ID].currencies[self.Branches[ID].numCurrencies].rate = ONE
         self.Branches[ID].currencyToIndex[ethContract] = self.Branches[ID].numCurrencies
