@@ -398,7 +398,7 @@ class ContractLoader(object):
     def __init__(self, source_dir, controller, special):
         self.__state = ethereum.tester.state()
         self.__tester = ethereum.tester
-        ethereum.tester.gas_limit = 4100000
+        ethereum.tester.gas_limit = 4200000
         self.__contracts = {}
         self.__temp_dir = TempDirCopy(source_dir)
         self.__source_dir = source_dir
