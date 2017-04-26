@@ -30,6 +30,9 @@ extern mutex: [acquire:[]:int256, release:[]:int256]
 ROUNDTWOLIBRARY = self.controller.lookup('roundTwoPenalizeLibrary')
 extern roundTwoPenalizeLibrary: [calculateRepChange:[int256,int256,int256,int256,int256,int256,int256]:int256, handleEthicsAndBondRepRedistribution:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256[]]
 
+REPCHANGELIBRARY = self.controller.lookup('repChangeLib')
+extern repChangeLib: [calculateRepChange:[int256,int256,int256,int256,int256,int256,int256]:int256, setController:[int256]:int256, suicideFunds:[int256]:_]
+
 inset('../macros/refund.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/redistributeRep.sem')
@@ -64,115 +67,112 @@ macro MIN_BOND: 200 * ONE
 def init():
     self.controller = 0x0
 
-def ok():
+def penalizeRoundTwoWrong(branch, event):
+    refund()
+    MUTEX.acquire()
+    lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
+    lastPenalizationPeriod = lastPeriodVotedOn - 1
+    lastPeriod = lastPeriodVotedOn
+    periodLength = BRANCHES.getPeriodLength(branch)
+    newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender)
+    repBalance = REPORTING.getRepBalance(branch, msg.sender)
+    oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriodVotedOn, msg.sender)
+    forkEvent = BRANCHES.getEventForkedOver(branch)
+    uncaught = EVENTS.getUncaughtOutcome(event)
+    outcome = catch(uncaught)
+    if(scalar(event) or categorical(event)):
+        outcome = uncaught
+    reportValue = EXPEVENTS.getReport(branch, lastPeriodVotedOn, event, msg.sender)
+    ethics = EXPEVENTS.getEthicReport(branch, lastPeriodVotedOn, event, msg.sender)
+    oldReport = EXPEVENTS.getReport(branch, lastPenalizationPeriod, event, msg.sender)
+    oldEthics = EXPEVENTS.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriodVotedOn, BRANCHES.getBranchCurrency(branch, 0)) / EXPIRING.getNumberEvents(branch, lastPeriodVotedOn)
+    bond = safeAdd(averageAdjudicationCost, safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2)))
+    bond = min(bond, MIN_BOND)
+    ethical = EVENTS.getEthics(event)
+    p = proportionCorrect(event, 0)
+    checkPenalizeWrongRoundTwoPreconditions()
+
+    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriodVotedOn, msg.sender)
+    repChange = 0
+    # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
+    # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
+    final = BACKSTOPS.getFinal(event)
+    roundTwo = BACKSTOPS.getRoundTwo(event)
+    penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+    reported = (reportValue or oldReport)
+    rejected = EVENTS.getRejected(event)
+    # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in
+    if(final and !penalizedOnEvent and reported and rejected and EVENTS.getRejectedPeriod(event) == lastPeriodVotedOn):
+        CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+        if(reportValue):
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
+        if(oldReport):
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
+    elif(final and roundTwo and eventCreatedPriorToFork(event) && event != forkEvent && !penalizedOnEvent && reported):
+        CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+        if(reportValue):
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
+        if(oldReport):
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
+    elif(final and (roundTwo or event == forkEvent) and !penalizedOnEvent and reported and outcome !=0):
+        # Do the first rep redistribution based on first report and final outcome if reported first time
+        CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+        if(oldReport):
+            repChange = REPCHANGELIBRARY.calculateRepChange(oldReport, POINT_TWO, oldRep, p, event, outcome, numReportedOn, call = delegate)
+            x = array(2)
+            x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegate, outitems=2)
+            newAfterRep = x[0]
+            repBalance = x[1]
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
+        # Do the second (for each user) based on second report and final outcome
+        if(reportValue):
+            repChange = REPCHANGELIBRARY.calculateRepChange(reportValue, POINT_ONE / 4, oldRep, p, event, outcome, numReportedOn, call = delegate)
+            x = array(2)
+            x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_ONE / 4, ethics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegate, outitems=2)
+            newAfterRep = x[0]
+            repBalance = x[1]
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
+    else:
+        MUTEX.release()
+        return(-7)
+    # once penalized for all events actually get rid of net rep lost
+    if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
+        sendRedistributedRepToBranch()
+        return(1)
+    MUTEX.release()
     return(1)
 
-# def penalizeRoundTwoWrong(branch, event):
-#     refund()
-#     MUTEX.acquire()
-#     lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
-#     lastPenalizationPeriod = lastPeriodVotedOn - 1
-#     lastPeriod = lastPeriodVotedOn
-#     periodLength = BRANCHES.getPeriodLength(branch)
-#     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender)
-#     repBalance = REPORTING.getRepBalance(branch, msg.sender)
-#     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriodVotedOn, msg.sender)
-#     forkEvent = BRANCHES.getEventForkedOver(branch)
-#     uncaught = EVENTS.getUncaughtOutcome(event)
-#     outcome = catch(uncaught)
-#     if(scalar(event) or categorical(event)):
-#         outcome = uncaught
-#     reportValue = EXPEVENTS.getReport(branch, lastPeriodVotedOn, event, msg.sender)
-#     ethics = EXPEVENTS.getEthicReport(branch, lastPeriodVotedOn, event, msg.sender)
-#     oldReport = EXPEVENTS.getReport(branch, lastPenalizationPeriod, event, msg.sender)
-#     oldEthics = EXPEVENTS.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
-#     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriodVotedOn, BRANCHES.getBranchCurrency(branch, 0)) / EXPIRING.getNumberEvents(branch, lastPeriodVotedOn)
-#     bond = safeAdd(averageAdjudicationCost, safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2)))
-#     bond = min(bond, MIN_BOND)
-#     ethical = EVENTS.getEthics(event)
-#     p = proportionCorrect(event, 0)
-#     checkPenalizeWrongRoundTwoPreconditions()
+macro checkPenalizeWrongRoundTwoPreconditions():
+    if(repBalance < ONE):
+        MUTEX.release()
+        return(0)
+    if(EVENTS.getEventBranch(event) != branch):
+        MUTEX.release()
+        return(-6)
+    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
+    atFirstHalfOfPeriod()
+    if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
+        MUTEX.release()
+        return(-1)
+    # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
+    if(!EVENTS.getOutcome(event) and !ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriodVotedOn, event), msg.sender)):
+        MUTEX.release()
+        return(-3)
+    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
+        MUTEX.release()
+        return(-4)
+    if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
+        MUTEX.release()
+        return(-5)
 
-#     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriodVotedOn, msg.sender)
-#     repChange = 0
-#     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
-#     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
-#     final = BACKSTOPS.getFinal(event)
-#     roundTwo = BACKSTOPS.getRoundTwo(event)
-#     penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriodVotedOn, msg.sender, event)
-#     reported = (reportValue or oldReport)
-#     rejected = EVENTS.getRejected(event)
-#     # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in
-#     if(final and !penalizedOnEvent and reported and rejected and EVENTS.getRejectedPeriod(event) == lastPeriodVotedOn):
-#         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
-#         if(reportValue):
-#             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
-#         if(oldReport):
-#             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
-#     elif(final and roundTwo and eventCreatedPriorToFork(event) && event != forkEvent && !penalizedOnEvent && reported):
-#         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
-#         if(reportValue):
-#             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
-#         if(oldReport):
-#             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
-#     elif(final and (roundTwo or event == forkEvent) and !penalizedOnEvent and reported and outcome !=0):
-#         # Do the first rep redistribution based on first report and final outcome if reported first time
-#         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
-#         if(oldReport):
-#             repChange = ROUNDTWOLIBRARY.calculateRepChange(oldReport, POINT_TWO, oldRep, p, event, outcome, numReportedOn)
-#             x = array(2)
-#             x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegate, outitems=2)
-#             newAfterRep = x[0]
-#             repBalance = x[1]
-#             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
-#         # Do the second (for each user) based on second report and final outcome
-#         if(reportValue):
-#             repChange = ROUNDTWOLIBRARY.calculateRepChange(reportValue, POINT_ONE / 4, oldRep, p, event, outcome, numReportedOn)
-#             x = array(2)
-#             x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_ONE / 4, ethics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegate, outitems=2)
-#             newAfterRep = x[0]
-#             repBalance = x[1]
-#             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
-#     else:
-#         MUTEX.release()
-#         return(-7)
-#     # once penalized for all events actually get rid of net rep lost
-#     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
-#         sendRedistributedRepToBranch()
-#         return(1)
-#     MUTEX.release()
-#     return(1)
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
 
-# macro checkPenalizeWrongRoundTwoPreconditions():
-#     if(repBalance < ONE):
-#         MUTEX.release()
-#         return(0)
-#     if(EVENTS.getEventBranch(event) != branch):
-#         MUTEX.release()
-#         return(-6)
-#     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-#     atFirstHalfOfPeriod()
-#     if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
-#         MUTEX.release()
-#         return(-1)
-#     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-#     if(!EVENTS.getOutcome(event) and !ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriodVotedOn, event), msg.sender)):
-#         MUTEX.release()
-#         return(-3)
-#     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
-#         MUTEX.release()
-#         return(-4)
-#     if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
-#         MUTEX.release()
-#         return(-5)
-
-# def setController(newController):
-#     if(msg.sender != self.controller):
-#         throw()
-#     self.controller = newController
-#     return(1)
-
-# def suicideFunds(to):
-#     if(msg.sender != self.controller):
-#         throw()
-#     suicide(to)
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)
