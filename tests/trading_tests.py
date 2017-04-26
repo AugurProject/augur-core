@@ -46,12 +46,11 @@ def parseCapturedLogs(captured):
 #         c.placeOrder(1, fxpAmount, fxpPrice, )
 #     test_placeOrder()
 
-def test_Cash(contracts, s, t):
-    # t = ethereum.tester
-    # t.gas_limit = 100000000
-    # s = t.state()
-    # c = s.abi_contract('../src/functions/cash.se')
-    c = contracts.cash
+def test_Cash():
+    t = ethereum.tester
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('../src/functions/cash.se')
     address1 = long(t.a1.encode("hex"), 16)
     address2 = long(t.a2.encode("hex"), 16)
     initialEtherBalance2 = s.block.get_balance(t.a2)
@@ -208,8 +207,7 @@ def runtests():
     contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
     state = contracts._ContractLoader__state
     t = contracts._ContractLoader__tester
-    # test_Cash(contracts, state, t)
-    # test_BidAndAsk(contracts, state, t)
+    test_Cash()
     test_CreateEvent(contracts, state, t)
 
 if __name__ == '__main__':
