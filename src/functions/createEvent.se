@@ -113,6 +113,7 @@ def publicCreateEvent(branch, description: str, expDate, fxpMinValue, fxpMaxValu
     return result
 
 def createEvent(sender: address, branch, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
+    refund()
     isCallerWhitelisted()
 
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -167,20 +168,32 @@ def createEvent(sender: address, branch, description: str, expDate, fxpMinValue,
 def checkEventCreationPreconditions(branch, periodLength, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
     if(msg.sender != self):
         throw()
-    if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp or !resolutionAddress):
-        return(-1)
-    if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE or (fxpMaxValue + fxpMinValue) < fxpMaxValue):
-        return(-2)
+    if(!periodLength):
+        throw()
+    if(!len(description)):
+        throw()
+    if(!len(resolution)):
+        throw()
+    if(expDate < block.timestamp):
+        throw()
+    if (!resolutionAddress):
+        throw()
+    if(fxpMaxValue < fxpMinValue):
+        throw()
+    if((fxpMaxValue - fxpMinValue) < ONE):
+        throw()
+    if((fxpMaxValue + fxpMinValue) < fxpMaxValue):
+        throw()
     if(numOutcomes < 2 or numOutcomes > 8):
-        return(-3)
+        throw()
     parent = BRANCHES.getParent(branch)
     parentLastForked = BRANCHES.getForkPeriod(parent)
     fortyEightHourPeriodWhereNoEventsCanExpireOnNewFork = parentLastForked + 1
     whenEventExpires = expDate / periodLength
     if(whenEventExpires == fortyEightHourPeriodWhereNoEventsCanExpireOnNewFork):
-        return(-4)
+        throw()
     if(!BRANCHES.getCurrencyActive(branch, currency)):
-        return(-5)
+        throw()
     checkForkResolveContractIsValid(forkResolveAddress)
 
 def setController(newController):

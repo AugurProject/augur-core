@@ -87,6 +87,28 @@ def placeOrder(type, fxpAmount, fxpPrice, market, outcome):
     MUTEX.release()
     logReturn(bidAndAskLogReturn, FAILURE)
 
+def refundOrder(type, sharesEscrowed, moneyEscrowed, market, outcome):
+    if(msg.sender != self):
+        throw()
+    # Issue refunds
+    # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
+    if(type == BID and sharesEscrowed):
+        i = 1
+        while(i < MARKETS.getMarketNumOutcomes(market)):
+            if(i != outcome):
+                MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
+            i += 1
+    # shares refund if has shares escrowed for this outcome
+    elif(type == ASK and sharesEscrowed):
+        MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
+    else:
+        throw()
+    # Return to user moneyEscrowed that wasn't filled yet
+    if(moneyEscrowed):
+        refunded = INFO.getWallet(market).transfer(msg.sender, moneyEscrowed)
+        if(!refunded):
+            throw()
+
 #
 # Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
 # @returns 1 if success, 0 if failure
@@ -97,16 +119,31 @@ def cancel(orderID):
     MUTEX.acquire()
 
     # user can cancel anytime
-    # Get order
-    fetchOrderCancelInfo()
+    # Get info for the order to cancel
+    order = array(ORDER_FIELDS)
+    order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
+    if(!order[0]):
+        MUTEX.release()
+        return(0)
+    type = order[1]
+    market = order[2]
+    fxpAmount = order[3]
+    fxpPrice = order[4]
+    owner = order[5]
+    outcome = order[7]
+    moneyEscrowed = order[8]
+    sharesEscrowed = order[9]
+
     # Check the owner
     if(msg.sender != owner):
         MUTEX.release()
         logReturn(bidAndAskLogReturn, FAILURE)
 
     # Clear the order first
-    removeOrder(orderID, market)
-    refundOrder()
+    # removeOrder(orderID, market)
+    ORDERS.removeOrder(orderID)
+    MARKETS.removeOrderFromMarket(market, orderID)
+    self.refundOrder(type, sharesEscrowed, moneyEscrowed, market, outcome)
     # Log cancellation
     log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, orderID, outcome, type, moneyEscrowed, sharesEscrowed)
     MUTEX.release()
@@ -139,45 +176,6 @@ macro saveOrder($type, $fxpAmount, $fxpPrice, $market, $outcome, $sender):
     log(type = logAddTx, $market, $sender, $type, $fxpPrice, $initialAmount, $outcome, $orderID, $moneyEscrowed, $sharesEscrowed)
     MUTEX.release()
     logReturn(bidAndAskLogReturn, $orderID)
-
-macro refundOrder():
-    # Issue refunds
-    # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
-    if(type == BID and sharesEscrowed):
-        i = 1
-        while(i < MARKETS.getMarketNumOutcomes(market)):
-            if(i != outcome):
-                MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
-            i += 1
-    # shares refund if has shares escrowed for this outcome
-    elif(type == ASK and sharesEscrowed):
-        MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
-    else:
-        throw()
-    # Return to user moneyEscrowed that wasn't filled yet
-    if(moneyEscrowed):
-        refunded = INFO.getWallet(market).transfer(msg.sender, moneyEscrowed)
-        if(!refunded):
-            throw()
-
-macro removeOrder($orderID, $market):
-    ORDERS.removeOrder($orderID)
-    MARKETS.removeOrderFromMarket($market, $orderID)
-
-macro fetchOrderCancelInfo():
-    order = array(ORDER_FIELDS)
-    order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
-    if(!order[0]):
-        MUTEX.release()
-        return(0)
-    type = order[1]
-    market = order[2]
-    fxpAmount = order[3]
-    fxpPrice = order[4]
-    owner = order[5]
-    outcome = order[7]
-    moneyEscrowed = order[8]
-    sharesEscrowed = order[9]
 
 macro checkOrderPreconditions():
     if(!$branch):

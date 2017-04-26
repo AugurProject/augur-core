@@ -155,6 +155,7 @@ def test_Cash(path):
     test_approve()
     test_commitSuicide()
 
+# TODO update create event tests pending final review of contract
 def test_CreateEvent(contracts, s, t):
     def test_checkEventCreationPreconditions():
         branch = 1010101
@@ -186,11 +187,12 @@ def test_CreateEvent(contracts, s, t):
         resolutionAddress = t.a2
         currency = contracts.cash.address
         forkResolveAddress = contracts.forkResolution.address
-        eventID = contracts.createEvent.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
+        eventID = contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
         assert(eventID > 0), "Event created"
     test_checkEventCreationPreconditions()
     test_createEvent()
 
+# TODO update create market tests pending final review of contract
 def test_CreateMarket(contracts, s, t):
     def test_createMarket():
         assert(contracts.cash.depositEther(value=fix(10000), sender=t.k1) == 1), "Convert ether to cash"
@@ -207,14 +209,15 @@ def test_CreateMarket(contracts, s, t):
         resolutionAddress = t.a2
         currency = contracts.cash.address
         forkResolveAddress = contracts.forkResolution.address
-        eventID = contracts.createEvent.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
+        import ipdb; ipdb.set_trace()
+        eventID = contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
         assert(eventID > 0), "Event created"
+        fxpTradingFee = 200000000000000001
         tag1 = 123
         tag2 = 456
         tag3 = 789
         extraInfo = "rabble rabble rabble"
-        import ipdb; ipdb.set_trace()
-        print "createMarket:", contracts.createMarket.createMarket(branch, description, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1)
+        print "createMarket:", contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1, value=fix(10000))
     test_createMarket()
 
 def runtests():

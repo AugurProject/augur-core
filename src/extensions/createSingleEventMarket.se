@@ -47,7 +47,7 @@ def publicCreateSingleEventMarket(branch, description: str, expDate, fxpMinValue
 def createSingleEventMarket(sender: address, branch, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, fxpTradingFee, tag1, tag2, tag3, fxpMakerFees, extraInfo: str):
     isCallerWhitelisted()
     eventID = CREATEEVENT.createEvent(msg.sender, branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution)
-    marketID = CREATEMARKET.createMarket(msg.sender, branch, fxpTradingFee, eventID, tag1, tag2, tag3, fxpMakerFees, extraInfo)
+    marketID = CREATEMARKET.createMarket(msg.sender, branch, fxpTradingFee, eventID, tag1, tag2, tag3, fxpMakerFees, extraInfo, value=msg.value)
     return(marketID)
 
 def setController(newController):
