@@ -220,6 +220,9 @@ def returnTags(market):
     tags[2] = self.Markets[market].tag3
     return(tags: arr)
 
+def getTopic(market):
+    return(self.Markets[market].tag1)
+
 # @return fxp
 def getTotalSharesPurchased(market):
     total = 0
@@ -317,9 +320,6 @@ def getPrevID(market, order):
 
 def getTotalOrders(marketID):
     return(self.Markets[marketID].totalOrders)
-
-def getSender():
-    return(msg.sender)
 
 def setController(newController):
     if(msg.sender != self.controller):
