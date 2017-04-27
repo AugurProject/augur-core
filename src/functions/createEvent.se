@@ -132,7 +132,6 @@ def createEvent(sender: address, branch, description: str, expDate, fxpMinValue,
     if(INFO.getCreator(event)):
         return(0)
 
-    # checkSubcurrencyIsValid(currency)
     wallet = create('wallet.se')
     if(!wallet.initialize(currency)):
         throw()

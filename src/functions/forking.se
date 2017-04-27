@@ -147,7 +147,7 @@ macro checkForkPreconditions():
         return(0)
 
 macro makeFork():
-    newBranch = CREATEBRANCH.createSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch), 0)
+    newBranch = CREATEBRANCH.createSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), 0)
     BRANCHES.setMostRecentChild(branch, newBranch)
     period = BRANCHES.getVotePeriod(newBranch)
     EXPEVENTS.setEventRequired(newBranch, period + 1, event)

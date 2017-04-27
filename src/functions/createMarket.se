@@ -72,17 +72,6 @@ macro 10_PERCENT_RATE: 100000000000000000
 # may want to reconfirm this again
 macro COST_FOR_MARKET_RESOLUTION: 1000000
 
-# macro checkSubcurrencyIsValid($contract):
-#     allowance = $contract.allowance(msg.sender, self)
-#     balance = $contract.balanceOf(self)
-#     transfer = $contract.transfer(msg.sender, 0)
-#     transferFrom = $contract.transferFrom(self, msg.sender, 0)
-#     approve = $contract.approve(self, 0)
-
-macro checkForkResolveContractIsValid($contract):
-    resolve = $contract.resolveFork(1)
-
-
 ### Allows creation of events and markets and manipulating them
 
 # Create an event. Events are the basic units / questions that are reported on in Augur by reporters
@@ -184,7 +173,6 @@ def createMarket(sender: address, branch, description: str, fxpTradingFee, event
         return(-4)
     events = array(1)
     events[0] = event
-    # checkSubcurrencyIsValid(currency)
     wallet = create('wallet.se')
     shareContracts = array(numOutcomes)
     i = 0
@@ -212,7 +200,7 @@ macro makeMarket():
     currency = INFO.getCurrency(events[0])
     $bondPrincipal = EVENTS.getBond(events[0])
     $time = (expirationDate - block.timestamp) * ONE / SECONDS_PER_YEAR
-    $amountToPay = $bondPrincipal*FXP.fxExp(safeFxpMul($time, 10_PERCENT_RATE)) - $bondPrincipal
+    $amountToPay = safeFxpMul($bondPrincipal, FXP.fxExp(safeFxpMul($time, 10_PERCENT_RATE))) - $bondPrincipal
     $paidEventBondPoster = currency.transferFrom(msg.sender, INFO.getCreator(events[0]), $amountToPay)
     if($payCosts and $infoSet and $initializedMarket and $makeBranchAndEventAwareOfNewMarket and $paidEventBondPoster):
         1

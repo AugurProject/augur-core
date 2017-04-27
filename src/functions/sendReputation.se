@@ -92,7 +92,7 @@ def init():
     self.controller = 0x0
 
 def sendRepFrom(branch, from, receiver, fxpValue):
-    # checkInvariants(from)
+    checkInvariants(from)
     if (!isCallerWhitelisted()):
         MUTEX.acquire()
 
@@ -148,7 +148,7 @@ def claimRep():
         MUTEX.release()
     return(1)
 
-# Allows spender to withdraw from your dormant rep account
+# Allows spender to withdraw from your rep account
 def approve(branch, spender, fxpValue):
     if (!isCallerWhitelisted()):
         MUTEX.acquire()

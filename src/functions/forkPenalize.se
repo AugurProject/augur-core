@@ -23,6 +23,9 @@ extern consensusData: [decreaseDenominator:[int256,int256,int256]:int256, doRefu
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256]
 
+REPCHANGELIBRARY = self.controller.lookup('repChangeLib')
+extern repChangeLib: [calculateRepChange:[int256,int256,int256,int256,int256,int256,int256]:int256, setController:[int256]:int256, suicideFunds:[int256]:_]
+
 inset('../macros/refund.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/redistributeRep.sem')
@@ -112,7 +115,7 @@ macro penalizeOrRewardReporter():
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     if(!penalizedOnEvent and reportValue and outcome != 0):
-        calculateRepChange(reportValue, ONE)
+        repChange = REPCHANGELIBRARY.calculateRepChange(reportValue, ONE, oldRep, p, event, outcome, numReportedOn, call = delegate)
         handleEthicsAndBondRepRedistribution(numReportedOn)
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
