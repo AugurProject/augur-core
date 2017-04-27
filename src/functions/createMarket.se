@@ -68,7 +68,7 @@ macro MAX_FEE: 10 ** 17
 macro THREE_DAYS: 259200
 macro FIRST_RESOLVE_BOND: 11 * ONE
 macro SECONDS_PER_YEAR: 31557600
-macro 10_PERCENT_RATE: 100000000000000000
+macro TEN_PERCENT_RATE: 100000000000000000
 # may want to reconfirm this again
 macro COST_FOR_MARKET_RESOLUTION: 1000000
 
@@ -110,7 +110,7 @@ def publicCreateMarket(branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo
 # need at least 1.2M gas @ gas price to cover resolution & 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation
 def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
-    isCallerWhitelisted()
+    self.controller.checkWhitelist(msg.sender)
 
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
@@ -126,7 +126,7 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
     # market's trading period is the same as the last expiring event in the market
     expirationDate = EVENTS.getExpiration(event)
     futurePeriod = expirationDate / periodLength
-    self.checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event, expirationDate, currency)
+    self.checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event, expirationDate, currency, value = msg.value)
 
     # scalars
     fxpMaxValue = EVENTS.getMaxValue(event)
@@ -147,12 +147,10 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
     marketinfo[2] = expirationDate
     marketinfo[3] = descriptionLength
     mcopy(marketinfo + 4*32, description, chars = descriptionLength)
-    market = ripemd160(marketInfo, chars = len(marketInfo))
+    market = ripemd160(marketinfo, chars = len(marketinfo))
     # if it's already been created return 0
     if(INFO.getCreator(market)):
         return(-4)
-    events = array(1)
-    events[0] = event
     # checkSubcurrencyIsValid(currency)
     wallet = create('wallet.se')
     shareContracts = array(numOutcomes)
@@ -160,9 +158,10 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
     while i < numOutcomes:
         shareContracts[i] = create('shareTokens.se')
         i += 1
-    makeMarket()
 
-    log(type = marketCreated, sender, marketID, tag1, branch, fxpCreationFee, block.timestamp)
+    self.makeMarket(sender, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, expirationDate, shareContracts, value = msg.value)
+
+    log(type = marketCreated, sender, market, tag1, branch, fxpCreationFee, block.timestamp)
     return(market)
 
 def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event, expirationDate, currency):
@@ -173,6 +172,7 @@ def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event,
         throw()
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch)):
         throw()
+    # FIXME MAX_FEE < min trading fee, so this always fails
     # if(fxpTradingFee > MAX_FEE):
     #     throw()
     if(EVENTS.getEventBranch(event) != branch):
@@ -188,25 +188,31 @@ def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event,
     return(1)
 
 # initialize market and send money to pay for resolution
-macro makeMarket():
-    $payCosts = currency.transferFrom(sender, INFO.getWallet(branch), creationFee)
-    $infoSet = INFO.setInfo(market, description, sender, creationFee, currency, wallet)
-
-    $initializedMarket = MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value, creationFee, expirationDate, shareContracts, value = msg.value)
-    $makeBranchAndEventAwareOfNewMarket = BRANCHES.addMarketToBranch(branch, market) and EVENTS.addMarket(event, market)
-
+def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo: str, expirationDate, shareContracts: arr):
+    if(msg.sender != self):
+        throw()
+    if(!currency.transferFrom(sender, INFO.getWallet(branch), fxpCreationFee)):
+        throw()
+    if(!INFO.setInfo(market, text(""), sender, fxpCreationFee, currency, wallet)):
+        throw()
+    events = array(1)
+    events[0] = event
+    if(!MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value, fxpCreationFee, expirationDate, shareContracts, value = msg.value)):
+        throw()
+    if(!BRANCHES.addMarketToBranch(branch, market)):
+        throw()
+    if(!EVENTS.addMarket(event, market)):
+        throw()
     # event creation bond pay w/ markets
         # A = P*e^rt
         # so A - P gives us amount to return to person
-    currency = INFO.getCurrency(events[0])
-    $bondPrincipal = EVENTS.getBond(events[0])
-    $time = (expirationDate - block.timestamp) * ONE / SECONDS_PER_YEAR
-    $amountToPay = $bondPrincipal*FXP.fxExp(safeFxpMul($time, 10_PERCENT_RATE)) - $bondPrincipal
-    $paidEventBondPoster = currency.transferFrom(sender, INFO.getCreator(events[0]), $amountToPay)
-    if($payCosts and $infoSet and $initializedMarket and $makeBranchAndEventAwareOfNewMarket and $paidEventBondPoster):
-        1
-    else:
-        throw()
+    eventCurrency = INFO.getCurrency(event)
+    bondPrincipal = EVENTS.getBond(event)
+    time = (expirationDate - block.timestamp) * ONE / SECONDS_PER_YEAR
+    amountToPay = bondPrincipal * FXP.fxExp(safeFxpMul(time, TEN_PERCENT_RATE)) - bondPrincipal
+    # if(!eventCurrency.transferFrom(sender, INFO.getCreator(event), amountToPay)):
+    #     throw()
+    return(1)
 
 def setController(newController):
     if(msg.sender != self.controller):
