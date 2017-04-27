@@ -1,4 +1,3 @@
-from __future__ import division
 import ethereum
 from ethereum import tester as test
 from load_contracts import ContractLoader
@@ -7,11 +6,16 @@ import random
 import os
 import time
 import binascii
+import iocapture
 from pprint import pprint
+import json
 
 ONE = 10**18
 TWO = 2*ONE
 HALF = ONE/2
+
+def parseCapturedLogs(captured):
+    return json.loads(captured.stdout.replace("'", '"').replace('u"', '"'))
 
 def nearly_equal(a, b, sig_fig=8):
     return(a == b or int(a * 10**sig_fig) == int(b * 10**sig_fig))
@@ -40,13 +44,13 @@ def test_refund(contracts, state, t):
     test_caller_whitelisted()
     test_throw()
 
-def test_float(contracts, state, t):
+def test_float():
     s = test.state()
     c = s.abi_contract('floatTestContract.se')
     def test_add():
-        assert(c.add(5, 10)==10)
+        assert(c.add(5, 10)==15)
         assert(c.add(500, 100)==600)
-        assert(c.add(2**200, 2**20)==2**220)
+        assert(c.add(2**200, 2**20)==2**200 + 2**20)
         try:
             raise Exception(c.add(5, -10))
         except Exception as exc:
@@ -75,26 +79,86 @@ def test_float(contracts, state, t):
             raise Exception(c.subtract(0, 1))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
-    # def test_multiply():
-    #     assert(c.multiply(2**200, 50) = (2**200))
-    #     assert(c.multiply(500, 50))
-    #     assert(c.multiply(2**222, 47))
-    #     assert(c.multiply(0, 47))
-    #     try:
-    #         raise Exception(c.multiply(5, -10))
-    #     except Exception as exc:
-    #         assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
-    #     try:
-    #         raise Exception(c.multiply(-15, 11))
-    #     except Exception as exc:
-    #         assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
-    #     try:
-    #         raise Exception(c.multiply(0, 1))
-    #     except Exception as exc:
-    #         assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
+    def test_multiply():
+        assert(c.multiply(2**200, 50) == (2**200 * 50))
+        assert(c.multiply(500, 50) == 25000)
+        assert(c.multiply(2**222, 47) == 2**222 * 47)
+        assert(c.multiply(0, 47) == 0)
+        try:
+            raise Exception(c.multiply(2**255-1, 3))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
+        try:
+            raise Exception(c.multiply(2**255-1, -10))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
+    def test_fxp_multiply():
+        assert(c.fxpMultiply(3*ONE, 5*ONE) == 15*ONE)
+        assert(c.fxpMultiply(500*ONE, ONE*50) == 25000*ONE)
+        assert(c.fxpMultiply(-44*ONE, 2*ONE) == -88*ONE)
+        assert(c.fxpMultiply(0, 47*ONE) == 0)
+        try:
+            raise Exception(c.fxpMultiply(2**255-1*ONE, 3*ONE))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
+        try:
+            raise Exception(c.fxpMultiply(2**255-1, -10*ONE))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
+    def test_divide():
+        assert(c.divide(2**200, 50) == (2**200 / 50))
+        assert(c.divide(500, 50) == 10)
+        assert(c.divide(2**222, 47) == 2**222 / 47)
+        assert(c.divide(0, 47) == 0)
+        try:
+            raise Exception(c.divide(2**255-1, 0))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
+        try:
+            raise Exception(c.divide(2**22-1, 0))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
+    def test_fxp_divide():
+        assert(c.fxpDivide(3*ONE, 5*ONE) == 3*ONE/5)
+        assert(c.fxpDivide(500*ONE, ONE*50) == 10*ONE)
+        assert(c.fxpDivide(-44*ONE, 2*ONE) == -22*ONE)
+        assert(c.fxpDivide(0, 47*ONE) == 0)
+        try:
+            raise Exception(c.fxpDivide(30*ONE, 0))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
+        try:
+            raise Exception(c.fxpDivide(2**250, -10*ONE))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
+
     test_add()
     test_subtract()
-    # test_multiply()
+    test_multiply()
+    test_fxp_multiply()
+    test_divide()
+    test_fxp_divide()
+
+def test_logReturn():
+    s = test.state()
+    c = s.abi_contract('logReturnTest.se')
+    def test_logReturn():
+        assert(c.testLogReturnContractCall(444) == 444)
+        assert(c.testLogReturnContractCall(-444) == -444)
+        with iocapture.capture() as captured:
+            retval = c.testLogReturn(5)
+            logged = parseCapturedLogs(captured)
+            assert(logged["_event_type"] == u'tradeLogReturn')
+            assert(logged["returnValue"] == 5)
+        with iocapture.capture() as captured:
+            retval = c.testLogArrayReturn([5, 10, 15])
+            logged = parseCapturedLogs(captured)
+            assert(logged["_event_type"] == u'tradeLogArrayeturn')
+            assert(logged["returnArray"] == [5, 10, 15])
+    test_logReturn()
+
+def test_binaryMarketResolve(controller, state, t):
+
 
 # def test_controller(contracts, state, t):
     ### Useful for controller testing
@@ -113,13 +177,13 @@ def test_float(contracts, state, t):
 
 if __name__ == '__main__':
     src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
-    contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'], '', 1)
-    state = contracts.state
+    contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
+    state = contracts._ContractLoader__state
     t = contracts._ContractLoader__tester
     test_refund(contracts, state, t)
-    test_float(contracts, state, t)
-    # test_logReturn(contracts, state, t)
-    # test_binaryMarketResolve(contracts, state, t)
+    test_float()
+    test_logReturn()
+    test_binaryMarketResolve(contracts, state, t)
     # test_nonBinaryMarketResolve(contracts, state, t)
     # test_resolveForkEvent(contracts, state, t)
     # test_binaryForkResolve(contracts, state, t)

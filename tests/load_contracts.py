@@ -398,7 +398,7 @@ class ContractLoader(object):
     def __init__(self, source_dir, controller, special):
         self.__state = ethereum.tester.state()
         self.__tester = ethereum.tester
-        ethereum.tester.gas_limit = 4100000
+        ethereum.tester.gas_limit = 4200000
         self.__contracts = {}
         self.__temp_dir = TempDirCopy(source_dir)
         self.__source_dir = source_dir
@@ -410,7 +410,6 @@ class ContractLoader(object):
                 print('Creating controller..')
                 self.__contracts['controller'] = self.__state.abi_contract(file)
                 controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
-                assert len(controller_addr) == 42
                 print('Updating externs...')
                 update_externs(self.__temp_dir.temp_source_dir, controller_addr)
                 print('Finished.')

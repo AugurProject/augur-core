@@ -29,7 +29,7 @@ inset('../macros/float.sem')
 
 data controller
 
-macro FIRST_RESOLVE_BOND: 10 * ONE
+macro FIRST_RESOLVE_BOND: 11 * ONE
 macro INDETERMINATE: 1500000000000000000
 
 ### Serves to resolve events
