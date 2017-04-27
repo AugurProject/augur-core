@@ -189,6 +189,12 @@ def test_CreateEvent(contracts, s, t):
         forkResolveAddress = contracts.forkResolution.address
         eventID = contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
         assert(eventID > 0), "Event created"
+        assert(contracts.info.getDescription(eventID) == description), "Description matches input"
+        assert(contracts.events.getExpiration(eventID) == expDate), "Expiration date matches input"
+        assert(contracts.events.getMinValue(eventID) == fxpMinValue), "Min value matches input"
+        assert(contracts.events.getMaxValue(eventID) == fxpMaxValue), "Max value matches input"
+        assert(contracts.events.getNumOutcomes(eventID) == numOutcomes), "Number of outcomes matches input"
+        assert(contracts.events.getEventResolution(eventID) == resolution), "Resolution matches input"
     test_checkEventCreationPreconditions()
     test_createEvent()
 
@@ -209,15 +215,19 @@ def test_CreateMarket(contracts, s, t):
         resolutionAddress = t.a2
         currency = contracts.cash.address
         forkResolveAddress = contracts.forkResolution.address
-        import ipdb; ipdb.set_trace()
         eventID = contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
-        assert(eventID > 0), "Event created"
         fxpTradingFee = 200000000000000001
         tag1 = 123
         tag2 = 456
         tag3 = 789
         extraInfo = "rabble rabble rabble"
-        print "createMarket:", contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1, value=fix(10000))
+        marketID = contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1, value=fix(10000))
+        assert(marketID > 0)
+        assert(contracts.markets.getTradingFee(marketID) == fxpTradingFee), "Trading fee matches input"
+        assert(contracts.markets.getMarketEvent(marketID, 0) == eventID), "Market event matches input"
+        assert(contracts.markets.returnTags(marketID) == [tag1, tag2, tag3]), "Tags array matches input"
+        assert(contracts.markets.getTopic(marketID)), "Topic matches input tag1"
+        assert(contracts.markets.getExtraInfo(marketID) == extraInfo), "Extra info matches input"
     test_createMarket()
 
 def runtests():
@@ -226,7 +236,7 @@ def runtests():
     state = contracts._ContractLoader__state
     t = contracts._ContractLoader__tester
     test_Cash(os.path.join(src, 'functions', 'cash.se'))
-    # test_CreateEvent(contracts, state, t)
+    test_CreateEvent(contracts, state, t)
     test_CreateMarket(contracts, state, t)
 
 if __name__ == '__main__':
