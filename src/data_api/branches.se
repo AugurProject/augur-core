@@ -71,6 +71,7 @@ def init():
     self.Branches[1010101].fxpMinTradingFee = 200000000000000000
     self.branchListCount = 1
     self.branchList[0] = 1010101
+    self.Branches[1010101].creationDate = block.timestamp
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
     ethContract = self.controller.lookup("cash")
@@ -136,12 +137,12 @@ def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContr
 
 def removeLastCurrency(branch):
     self.controller.checkWhitelist(msg.sender)
-    self.Branches[branch].currencyToIndex[self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract] = 0
-    self.Branches[branch].contract[self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract] = 0
-    self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract = 0
-    self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rate = 0
-    self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rateContract = 0
-    self.Branches[branch].currencyActive[self.Branches[branch].numCurrencies] = 0
+    self.Branches[branch].currencyToIndex[self.Branches[branch].currencies[self.Branches[branch].numCurrencies - 1].contract] = 0
+    self.Branches[branch].contract[self.Branches[branch].currencies[self.Branches[branch].numCurrencies - 1].contract] = 0
+    self.Branches[branch].currencies[self.Branches[branch].numCurrencies - 1].contract = 0
+    self.Branches[branch].currencies[self.Branches[branch].numCurrencies - 1].rate = 0
+    self.Branches[branch].currencies[self.Branches[branch].numCurrencies - 1].rateContract = 0
+    self.Branches[branch].currencyActive[self.Branches[branch].numCurrencies - 1] = 0
     self.Branches[branch].numCurrencies -= 1
     return(1)
 
