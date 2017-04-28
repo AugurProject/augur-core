@@ -38,6 +38,7 @@ def init():
 
 # Calculates the amount of rep to be redistributed
 def calculateRepChange(report, maxPenalty, oldRep, p, event, outcome, numReportedOn):
+    self.controller.checkWhitelist(msg.sender)
     adjustForNonBinaryResolution()
     wrong = report > safeAdd(outcome, POINT_ZERO_ONE) or report < (outcome - POINT_ZERO_ONE)
     penaltyPerEvent = 0

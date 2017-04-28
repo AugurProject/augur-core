@@ -76,16 +76,6 @@ macro MAX_REPORT_THRESHOLD: 10^54
 def init():
     self.controller = 0x0
 
-def makeHash(salt, fxpReport, event, sender, ethics):
-    hashInfo = array(5)
-    hashInfo[0] = sender
-    hashInfo[1] = salt
-    hashInfo[2] = fxpReport
-    hashInfo[3] = event
-    hashInfo[4] = ethics
-    reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
-    return(reportHash)
-
 # Allows a user to submit the hash of their fxpReport / commit
 # Error: 0: not caught up on rep redistributions/penalizations so should be done first [only 1 period behind] - if reported last period and called collectfees then call the penalization functions in consensus, if didn't report last period or didn't call collectfees last period then call penalizationCatchup [however this should be automatically done, if it fails it'll return -4]
 # Error -1: invalid event
@@ -95,15 +85,6 @@ def makeHash(salt, fxpReport, event, sender, ethics):
 def submitReportHash(event, reportHash, saltyEncryptedHash):
     refund()
     MUTEX.acquire()
-    branch = EVENTS.getBranch(event)
-    votePeriod = BRANCHES.getVotePeriod(branch)
-    periodLength = BRANCHES.getPeriodLength(branch)
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
-    lastPeriod = votePeriod - 1
-    delta = lastPeriod - lastPeriodPenalized
-    eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
-    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    checkSubmitReportHashPreconditions()
 
     reportingThresholdForUser = calculateReportingThreshold()
     # do abs to ensure pos. and between 0 and 1

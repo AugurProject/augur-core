@@ -48,11 +48,10 @@ def init():
 
 def reputationFaucet(branch):
     refund()
-    if(REPORTING.repIDToIndex(branch, msg.sender) != 0 or REPORTING.getReporterID(branch, 0) == msg.sender):
+    if(REPORTING.getRepBalance(branch, msg.sender)):
         index = REPORTING.repIDToIndex(branch, msg.sender)
-    else:
-        index = REPORTING.getNumberReporters(branch)
-        REPORTING.addReporter(branch, msg.sender, 0, 0, 0)
+    index = REPORTING.getNumberReporters(branch)
+    REPORTING.addReporter(branch, msg.sender, 0, 0, 0)
     REPORTING.setRep(branch, index, fix(47))
     periodLength = BRANCHES.getPeriodLength(branch)
     if(block.timestamp % periodLength <= periodLength / 2):

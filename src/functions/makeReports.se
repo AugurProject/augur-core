@@ -99,6 +99,15 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     balance = REPORTING.getRepBalance(branch, msg.sender)
     votePeriod = BRANCHES.getVotePeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
+
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
+    lastPeriod = votePeriod - 1
+    delta = lastPeriod - lastPeriodPenalized
+    eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
+    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
+    checkSubmitReportHashPreconditions()
+
+
     forkedOverThisEvent = 0
     roundTwo = BACKSTOPS.getRoundTwo(event)
     weight = 1
@@ -109,16 +118,22 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     coverGasCostIfPossible()
     MUTEX.release()
     logReturn(makeReportsLogReturn, 1)
-
-def makeHash(salt, fxpReport, event, sender, ethics):
-    hashInfo = array(5)
-    hashInfo[0] = sender
-    hashInfo[1] = salt
-    hashInfo[2] = fxpReport
-    hashInfo[3] = event
-    hashInfo[4] = ethics
-    reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
-    return(reportHash)
+    
+### Helper macros and functions:
+macro checkSubmitReportHashPreconditions():
+    if(!eventIndex and (!event or eventID != event)):
+        MUTEX.release()
+        logReturn(makeReportsLogReturn, -1)
+    atFirstHalfOfPeriod()
+    if(delta > 1 and CATCHUP.penalizationCatchup(branch, msg.sender) != 1):
+        MUTEX.release()
+        logReturn(makeReportsLogReturn, -4)
+    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
+        MUTEX.release()
+        logReturn(makeReportsLogReturn, 0)
+    # if first fxpReport of period, num events not set
+    if(!EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)):
+        EXPEVENTS.setNumEventsToReportOn(branch)
 
 macro checkSubmitReportPreconditions():
     if(BRANCHES.getEventForkedOver(BRANCHES.getParent(branch)) == event):
@@ -132,8 +147,7 @@ macro checkSubmitReportPreconditions():
         MUTEX.release()
         logReturn(makeReportsLogReturn, -1)
     atSecondHalfOfPeriod()
-    realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
-    if(self.makeHash(salt, fxpReport, event, msg.sender, fxpEthics) != realHash or !realHash):
+    if():
         MUTEX.release()
         logReturn(makeReportsLogReturn, -3)
     if(fxpEthics != ONE and fxpEthics != 0):
