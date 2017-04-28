@@ -122,7 +122,7 @@ def getEventsToReportOn(branch, period, sender, start, end):
         i += 1
     return(slice(events, items = 0, items = numEventsToReportOn): arr)
 
-# In the rare possibility that less than 3 reporters get randomly selected to report on a market in a given commit period, on the last day, we can change the sha3 threshold, UI calls this.
+# In the rare possibility that no one has reported on a market in a given commit period, on the last day, we can change the sha3 threshold, UI calls this.
 # Returns 1 if the event's reporting threshold has been set
 # Errors: 0 if the event can't be reported on
 def setReportingThreshold(event):
@@ -133,9 +133,8 @@ def setReportingThreshold(event):
     periodLength = BRANCHES.getPeriodLength(branch)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     inCurrentVotePeriod = (currentVotePeriod == EVENTS.getExpiration(event) / periodLength)
-    reportsCommitted = EXPEVENTS.getReportsCommitted(branch, currentVotePeriod, event)
-    periodHalfEndsInLessThanADay = ((block.timestamp + TWENTY_FOUR_HR) % periodLength) > (periodLength / 2)
-    if(!inCurrentVotePeriod or !periodHalfEndsInLessThanADay or reportsCommitted >= 3 or eventCreatedPriorToFork(event) or !EVENTS.getChallenged(event)):
+    periodHalfEndsInLessThanADay = (block.timestamp + TWENTY_FOUR_HR*3) / periodLength > currentVotePeriod
+    if(!inCurrentVotePeriod or !periodHalfEndsInLessThanADay or EVENTS.getUncaughtOutcome(event) or eventCreatedPriorToFork(event) or !EVENTS.getChallenged(event)):
         return(0)
     EVENTS.setThreshold(event, MAX_THRESHOLD)
     return(1)
@@ -246,7 +245,7 @@ macro abs($a):
     if($a < 0):
         $a = -$a
     $a
-    
+
 def setController(newController):
     if(msg.sender != self.controller):
         throw()
