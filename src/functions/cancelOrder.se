@@ -37,6 +37,12 @@ extern mutex: [acquire:[]:int256, release:[]:int256]
 # Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
+inset('../macros/refund.sem')
+inset('../macros/logReturn.sem')
+inset('../macros/float.sem')
+
+data controller
+
 event logCancel(market: indexed, sender: indexed, fxpPrice, fxpAmount, orderID, outcome, type, cashRefund, sharesRefund, timestamp)
 event cancelOrderLogReturn(returnValue)
 
