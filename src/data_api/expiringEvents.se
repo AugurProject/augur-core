@@ -38,7 +38,6 @@ inset('../macros/eventHelpers.sem')
     # Events is 0 indexed and stores the events in a period [this allows the client to loop through and detect which events a given user should report on]
     # eventToIndex returns an event index for a given eventid
     # requiredEvents states whether a given event is required to be reported on or not [a round2 backstop or a fork event are both required]
-    # committed takes an event id and maps to how many reports committed it has
     # subsidy is money for paying back a user for calculating the targeted num of reports for an event
     # eventWeight is number of reports on an event in a round 1 event, total rep reported on it in a backstop 1 or fork event
     # repEvent is the amount of rep that has reported on an event
@@ -50,21 +49,19 @@ inset('../macros/eventHelpers.sem')
     # numEventsToReportOn is the number of events available for reporting on [not including required events] * base number of reporters per event [this is multiplied by a user's periodRepWeight to figure out how many events they should be reporting on in a given period]
     # feeValue is the value of all fees for all markets that have events expiring in this period denominated in wei
     # afterFork is the number of events created for a fork period or 2 periods after that provided the events were created after the fork was initiated
-data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], committed[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, feeValue, afterFork)
+data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, feeValue, afterFork)
 
 # This keeps track of info in a period for the reporters, it takes a branch and votePeriod as params, respectively
     # Before rep is the amount of active rep a user has before any penalizations for reporting incorrectly
     # After rep is the amount of active rep a user has after all the modifications to their rep at the end of a period [it's initially equal to the before rep]
     # Period dormant rep is how much rep a user has dormant at the start of a period
-    # Report hash stores the hash of a report&salt a user submitted for a given report [takes reporter, event as params]
-    # Salty encrypted hash stores an encrypted concatenation of the salt and a report: it allows users to easily migrate across devices [takes reporter, event as params]
     # Report is the report a reporter submitted for a given event [takes reporter, event as params]
     # Ethics is the ethicality a reporter submitted for a given event [takes reporter, event as params]
     # numReportsSubmitted is the number of a reports a reporter has submitted for this period
     # periodRepWeight is a weighting used to calculate how many events a reporter should report on in a given period
     # numberOfActiveReporters is number of reporters active in this reporting period who are able to claim fees for reporting
     # reporters is a 0 indexed array of the active reporters
-data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportHash[][], saltyEncryptedHash[][], report[][], ethics[][], numReportsSubmitted[], periodRepWeight[], numberOfActiveReporters, reporters[])
+data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], report[][], ethics[][], numReportsSubmitted[], periodRepWeight[], numberOfActiveReporters, reporters[])
 
 # This takes a period and event as params (e.g self.modeItems[period][event]) and stores mode data for categorical & scalar event reports
     # reportValue takes a possible reported value [say .72 in fixed point] as a key and the value is how many reports that event has, or in the case of a backstop, how much rep has reported on that event
@@ -79,14 +76,6 @@ macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 
 def init():
     self.controller = 0x0
-
-def getSaltyEncryptedHash(branch, period, reporter, event):
-    return(self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event])
-
-def setSaltyEncryptedHash(branch, period, reporter, saltyEncryptedHash, event):
-    self.controller.checkWhitelist(msg.sender)
-    self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event] = saltyEncryptedHash
-    return(1)
 
 # Refunds cost to calculate number of reports for an event
 def refundCost(to, branch, period, event):
@@ -107,9 +96,6 @@ def setPeriodRepWeight(branch, votePeriod, sender, value):
     self.controller.checkWhitelist(msg.sender)
     self.reporterPeriodInfo[branch][votePeriod].periodRepWeight[sender] = value
     return(1)
-
-def getReportHash(branch, period, reporter, event):
-    return(self.reporterPeriodInfo[branch][period].reportHash[reporter][event])
 
 def setEthicReport(branch, period, event, ethics, sender):
     self.controller.checkWhitelist(msg.sender)
@@ -231,9 +217,6 @@ def getEventsRange(branch, period, start, end):
         i += 1
     return(events: arr)
 
-def getReportsCommitted(branch, period, event):
-    return(self.periodEventInfo[branch][period].committed[event])
-
 def getEventIndex(branch, period, event):
     return(self.periodEventInfo[branch][period].eventToIndex[event])
 
@@ -300,12 +283,6 @@ def adjustPeriodFeeValue(branch, expIndex, amount):
     self.periodEventInfo[branch][expIndex].feeValue += amount
     return(1)
 
-def setReportHash(branch, period, reporter, reportHash, event):
-    self.controller.checkWhitelist(msg.sender)
-    self.reporterPeriodInfo[branch][period].reportHash[reporter][event] = reportHash
-    self.periodEventInfo[branch][period].committed[event] += 1
-    return(1)
-
 # called in case an event doesn't get reported on at all in a period
 def moveEvent(branch, event):
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -363,14 +340,14 @@ def setLesserReportNum(branch, period, event, num):
     return(1)
 
 def getActiveReporters(branch, period, from, to):
-        if(to == 0):
-            to = self.reporterPeriodInfo[branch][period].numberOfActiveReporters
-        i = from
-        reporters = array((to - from))
-        while i < to:
-            reporters[i] = self.reporterPeriodInfo[branch][period].reporters[i]
-            i += 1
-        return(reporters: arr)
+    if(to == 0):
+        to = self.reporterPeriodInfo[branch][period].numberOfActiveReporters
+    i = from
+    reporters = array((to - from))
+    while i < to:
+        reporters[i] = self.reporterPeriodInfo[branch][period].reporters[i]
+        i += 1
+    return(reporters: arr)
 
 def getNumActiveReporters(branch, period):
     return(self.reporterPeriodInfo[branch][period].numberOfActiveReporters)

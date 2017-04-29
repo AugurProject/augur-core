@@ -41,6 +41,7 @@ def init():
     self.controller = 0x0
 
 def handleEthicsAndBondRepRedistribution(maxPenalty, ethics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn):
+    self.controller.checkWhitelist(msg.sender)
     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and maxPenalty percent of their rep respectively
     if(ethics != ethicCatch(ethical) and repChange >= 0 and BACKSTOPS.getDisputedOverEthics(event)):
         if(numReportedOn < 10):

@@ -55,6 +55,7 @@ def init():
     self.controller = 0x0
 
 def scalarOrCategoricalForkResolve(branch, event, bond, periodLength, votingPeriodEvent, winner):
+    self.controller.checkWhitelist(msg.sender)
     mode = 0
     ethical = 0
     # original parent won
