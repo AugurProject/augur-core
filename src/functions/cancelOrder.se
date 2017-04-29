@@ -38,13 +38,11 @@ extern mutex: [acquire:[]:int256, release:[]:int256]
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/logReturn.sem')
 inset('../macros/float.sem')
 
 data controller
 
-event logCancel(market: indexed, sender: indexed, fxpPrice, fxpAmount, orderID, outcome, type, cashRefund, sharesRefund, timestamp)
-event cancelOrderLogReturn(returnValue)
+event logCancelOrder(market: indexed, sender: indexed, fxpPrice, fxpAmount, orderID, outcome, type, cashRefund, sharesRefund, timestamp)
 
 # Order types
 macro BID: 1
@@ -58,7 +56,7 @@ def publicCancelOrder(orderID):
     MUTEX.acquire()
     self.cancelOrder(msg.sender, orderID)
     MUTEX.release()
-    logReturn(cancelOrderLogReturn, 1)
+    return(1)
 
 #
 # Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
@@ -94,7 +92,7 @@ def cancelOrder(sender: address, orderID):
     self.refundOrder(sender, type, sharesEscrowed, moneyEscrowed, market, outcome)
 
     # Log cancellation
-    log(type = logCancel, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, moneyEscrowed, sharesEscrowed, block.timestamp)
+    log(type = logCancelOrder, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, moneyEscrowed, sharesEscrowed, block.timestamp)
     return(1)
 
 # Issue refunds
