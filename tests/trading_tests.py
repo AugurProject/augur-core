@@ -40,11 +40,11 @@ def parseCapturedLogs(captured):
     return json.loads(captured.stdout.replace("'", '"').replace("L", "").replace('u"', '"'))
 
 def createBinaryEvent(contracts, s, t):
-    assert(contracts.cash.depositEther(value=fix(10000), sender=t.k1) == 1), "Convert ether to cash"
-    assert(contracts.cash.approve(contracts.createEvent.address, fix(10000), sender=t.k1) == 1), "Approve createEvent contract to spend cash (for validity bond)"
-    assert(contracts.cash.approve(contracts.createMarket.address, fix(10000), sender=t.k1) == 1), "Approve createMarket contract to spend cash"
+    contracts.cash.depositEther(value=fix(10000), sender=t.k1)
+    contracts.cash.approve(contracts.createEvent.address, fix(10000), sender=t.k1)
+    contracts.cash.approve(contracts.createMarket.address, fix(10000), sender=t.k1)
     branch = 1010101
-    assert(contracts.reputationFaucet.reputationFaucet(branch, sender=t.k1) == 1), "Hit Reputation faucet"
+    contracts.reputationFaucet.reputationFaucet(branch, sender=t.k1)
     description = "test binary event"
     expDate = randint(3000000002, 4000000000)
     fxpMinValue = fix(1)
@@ -57,11 +57,13 @@ def createBinaryEvent(contracts, s, t):
     return contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
 
 def createBinaryMarket(contracts, s, t, eventID):
+    branch = 1010101
     fxpTradingFee = 200000000000000001
     tag1 = 123
     tag2 = 456
     tag3 = 789
     extraInfo = "rabble rabble rabble"
+    currency = contracts.cash.address
     return contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1, value=fix(10000))
 
 def test_MakeOrder(contracts, s, t):
