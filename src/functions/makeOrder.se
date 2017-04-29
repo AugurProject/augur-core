@@ -41,13 +41,11 @@ extern mutex: [acquire:[]:int256, release:[]:int256]
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/logReturn.sem')
 inset('../macros/float.sem')
 
 data controller
 
-event logAddTx(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, outcome, orderID, moneyEscrowed, sharesEscrowed, timestamp, tradeGroupID)
-event makeOrderLogReturn(returnValue)
+event logMakeOrder(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, outcome, orderID, moneyEscrowed, sharesEscrowed, timestamp, tradeGroupID)
 
 # Order types
 macro BID: 1
@@ -74,7 +72,7 @@ def publicMakeOrder(type, fxpAmount, fxpPrice, market, outcome, tradeGroupID):
     MUTEX.acquire()
     orderID = self.makeOrder(msg.sender, type, fxpAmount, fxpPrice, market, outcome, tradeGroupID)
     MUTEX.release()
-    logReturn(makeOrderLogReturn, orderID)
+    return(orderID)
 
 def makeOrder(sender: address, type, fxpAmount, fxpPrice, market, outcome, tradeGroupID):
     refund()
@@ -102,7 +100,7 @@ def makeOrder(sender: address, type, fxpAmount, fxpPrice, market, outcome, trade
     # Update market
     MARKETS.addOrder(market, orderID)
 
-    log(type = logAddTx, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, moneyEscrowed, sharesEscrowed, block.timestamp, tradeGroupID)
+    log(type = logMakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, moneyEscrowed, sharesEscrowed, block.timestamp, tradeGroupID)
     return(orderID)
 
 def placeAsk(sender: address, type, fxpAmount, fxpPrice, market, outcome):
@@ -110,8 +108,8 @@ def placeAsk(sender: address, type, fxpAmount, fxpPrice, market, outcome):
     if(msg.sender != self):
         throw()
 
-    # Check if there are any "crossed orders" (i.e., bid orders
-    # at a price greater than or equal to the sell price).
+    # Check if there are any "crossed orders" (i.e., bid orders at a price
+    # greater than or equal to the sell price).
     bestBidID = ORDERS.getBestBid(market, outcome)
     bestBidPrice = ORDERS.getPrice(bestBidID)
     if(bestBidID and fxpPrice <= bestBidPrice and ORDERS.getAmount(bestBidID) >= safeFxpDiv(MIN_ORDER_VALUE, bestBidPrice)):
@@ -139,7 +137,8 @@ def placeAsk(sender: address, type, fxpAmount, fxpPrice, market, outcome):
         sharesEscrowed += fill
         MARKETS.modifyParticipantShares(market, sender, outcome, -fill, 0)
 
-    # Take max minus price they want to sell at for the remainder of the amount that wasn't able to be used up above
+    # Take max minus price they want to sell at for the remainder of the amount
+    # that wasn't able to be used up above
     if(fxpAmount):
         maxValue = 0
         if(EVENTS.getNumOutcomes(event) > 2):
@@ -151,9 +150,7 @@ def placeAsk(sender: address, type, fxpAmount, fxpPrice, market, outcome):
         if(costPerShareShorting > cumulativeScale or orderCost < MIN_ORDER_VALUE):
             throw()
         moneyEscrowed += orderCost
-        paidOrderCost = INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), orderCost)
-        if(!paidOrderCost):
-            throw()
+        INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), orderCost)
 
     return([moneyEscrowed, sharesEscrowed]: arr)
 
@@ -162,8 +159,8 @@ def placeBid(sender: address, type, fxpAmount, fxpPrice, market, outcome):
     if(msg.sender != self):
         throw()
 
-    # Check if there are any "crossed orders" (i.e., ask orders
-    # at a price less than or equal to the buy price).
+    # Check if there are any "crossed orders" (i.e., ask orders at a price less
+    # than or equal to the buy price).
     bestAskID = ORDERS.getBestAsk(market, outcome)
     bestAskPrice = ORDERS.getPrice(bestAskID)
     if(bestAskID != 0 and fxpPrice >= bestAskPrice and ORDERS.getAmount(bestAskID) >= safeFxpDiv(MIN_ORDER_VALUE, bestAskPrice)):
@@ -174,22 +171,24 @@ def placeBid(sender: address, type, fxpAmount, fxpPrice, market, outcome):
     event = MARKETS.getMarketEvent(market, 0)
     cumulativeScale = MARKETS.getCumulativeScale(market)
 
-    # If user owns n minus the one outcome we're buying escrow no money but escrow their shares in all the other outcomes.
+    # If user owns n minus the one outcome we're buying escrow no money but
+    # escrow their shares in all the other outcomes.
     sharesHeld = -1
     i = 1
-    while(i < MARKETS.getMarketNumOutcomes(market)):
+    while(i <= MARKETS.getMarketNumOutcomes(market)):
         if(i != outcome):
             sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), sharesHeld)
         i += 1
-    if(sharesHeld):
-        minValue = 0
+    if(sharesHeld > 0):
         if(EVENTS.getNumOutcomes(event) > 2):
             minValue = ONE
         else:
             minValue = EVENTS.getMinValue(event)
         price = fxpPrice - minValue
         cost = safeFxpMul(fxpAmount, price)
-        if(price > cumulativeScale or cost < MIN_ORDER_VALUE):
+        if(price > cumulativeScale):
+            throw()
+        if(cost < MIN_ORDER_VALUE):
             throw()
         fill = min(sharesHeld, fxpAmount)
         fxpAmount -= fill
@@ -200,9 +199,9 @@ def placeBid(sender: address, type, fxpAmount, fxpPrice, market, outcome):
                 MARKETS.modifyParticipantShares(market, sender, i, -fill, 0)
             i += 1
 
-    # Take money in escrow for price - min for the remainder of amount that wasn't able to be used up above. Make sure price - min isn't more than range
+    # Take money in escrow for price - min for the remainder of amount that wasn't
+    # able to be used up above. Make sure price - min isn't more than range
     if(fxpAmount):
-        minValue = 0
         if(EVENTS.getNumOutcomes(event) > 2):
             minValue = ONE
         else:
@@ -210,11 +209,11 @@ def placeBid(sender: address, type, fxpAmount, fxpPrice, market, outcome):
         price = fxpPrice - minValue
         cost = safeFxpMul(fxpAmount, price)
         moneyEscrowed += cost
-        if(price > cumulativeScale or cost < MIN_ORDER_VALUE):
+        if(price > cumulativeScale):
             throw()
-        paidOrderCost = INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), cost)
-        if(!paidOrderCost):
+        if(cost < MIN_ORDER_VALUE):
             throw()
+        INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), cost)
 
     return([moneyEscrowed, sharesEscrowed]: arr)
 
