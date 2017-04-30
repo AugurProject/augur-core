@@ -117,7 +117,7 @@ def test_Cash(path):
     def test_transfer():
         with iocapture.capture() as captured:
             retval = c.transfer(t.a2, 5, sender=t.k1)
-            logged = parseCapturedLogs(captured)
+            logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "transfer 5 cash to a2"
         assert(logged["_event_type"] == "Transfer")
         assert(logged["to"] == address2)
@@ -136,7 +136,7 @@ def test_Cash(path):
             assert(isinstance(exc, ethereum.abi.ValueOutOfBounds)), "negative transfer should throw"
         with iocapture.capture() as captured:
             retval = c.transfer(t.a2, 0, sender=t.k1)
-            logged = parseCapturedLogs(captured)
+            logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "transferFrom should succeed"
         assert(logged["_event_type"] == "Transfer")
         assert(logged["to"] == address2)
@@ -154,7 +154,7 @@ def test_Cash(path):
         assert(c.allowance(t.a1, t.a2) == 0), "initial allowance is 0"
         with iocapture.capture() as captured:
             retval = c.approve(t.a2, 10, sender=t.k1)
-            logged = parseCapturedLogs(captured)
+            logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "approve a2 to spend 10 cash from a1"
         assert(logged["_event_type"] == "Approval")
         assert(logged["owner"] == address1)
@@ -163,7 +163,7 @@ def test_Cash(path):
         assert(c.allowance(t.a1, t.a2) == 10), "allowance is 10 after approval"
         with iocapture.capture() as captured:
             retval = c.transferFrom(t.a1, t.a2, 7, sender=t.k2)
-            logged = parseCapturedLogs(captured)
+            logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "transferFrom should succeed"
         assert(logged["_event_type"] == "Transfer")
         assert(logged["to"] == address2)
