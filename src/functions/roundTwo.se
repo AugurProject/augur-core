@@ -60,9 +60,6 @@ macro MIN_BOND: 200 * ONE
 def init():
     self.controller = 0x0
 
-def ok():
-    return(2)
-
 def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     MUTEX.acquire()
     votePeriod = BRANCHES.getVotePeriod(branch)

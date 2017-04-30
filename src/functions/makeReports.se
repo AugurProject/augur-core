@@ -93,7 +93,7 @@ def init():
     # -9: invalid event
     # -10: not caught up on penalizations [>1 period behind] and auto catchup failed
     # -11: not able to fxpReport on this event
-def submitReport(event, salt, fxpReport, fxpEthics):
+def submitReport(event, fxpReport, fxpEthics):
     refund()
     MUTEX.acquire()
 

@@ -84,7 +84,7 @@ def getRepByIndex(branch, repIndex):
 def getRepBalance(branch, address):
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
-        throw()
+        return(0)
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 def getDormantRepByIndex(branch, repIndex):
