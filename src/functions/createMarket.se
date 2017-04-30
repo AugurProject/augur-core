@@ -138,9 +138,11 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
     marketinfo[3] = descriptionLength
     mcopy(marketinfo + 4*32, description, chars = descriptionLength)
     market = ripemd160(marketinfo, chars = len(marketinfo))
-    # if it's already been created return 0
+
+    # if it's already been created, throw
     if(INFO.getCreator(market)):
-        return(-4)
+        throw()
+
     wallet = create('wallet.se')
     shareContracts = array(numOutcomes)
     i = 0

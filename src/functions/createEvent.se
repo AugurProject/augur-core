@@ -111,7 +111,7 @@ def publicCreateEvent(branch, description: str, expDate, fxpMinValue, fxpMaxValu
 
 def createEvent(sender: address, branch, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
     refund()
-    isCallerWhitelisted()
+    self.controller.checkWhitelist(msg.sender)
 
     periodLength = BRANCHES.getPeriodLength(branch)
     self.checkEventCreationPreconditions(branch, periodLength, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress)

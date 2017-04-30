@@ -1,0 +1,229 @@
+# This software (Augur) allows buying and selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation OU
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+MARKETS = self.controller.lookup('markets')
+extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, returnTags:[int256]:int256[], setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]
+
+EVENTS = self.controller.lookup('events')
+extern events: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, addReportersPaidSoFar:[int256]:int256, getBond:[int256]:int256, getChallenged:[int256]:int256, getCreationTime:[int256]:int256, getEarlyResolutionBond:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getEventPushedUp:[int256]:int256, getEventResolution:[int256]:bytes, getExpiration:[int256]:int256, getExtraBond:[int256]:int256, getExtraBondPoster:[int256]:int256, getFirstPreliminaryOutcome:[int256]:int256, getForkEthicality:[int256]:int256, getForkOutcome:[int256]:int256, getForkResolveAddress:[int256]:int256, getForked:[int256]:int256, getForkedDone:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMinValue:[int256]:int256, getMode:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPast24:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getReportersPaidSoFar:[int256]:int256, getReportingThreshold:[int256]:int256, getResolutionAddress:[int256]:int256, getResolutionLength:[int256]:int256, getResolveBondPoster:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, setBond:[int256,int256]:int256, setBranch:[int256,int256]:int256, setChallenged:[int256]:int256, setCreationTime:[int256]:int256, setEarlyResolutionBond:[int256,int256]:int256, setEthics:[int256,int256]:int256, setEventPushedUp:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setExtraBond:[int256,int256]:int256, setExtraBondPoster:[int256,int256]:int256, setFirstPreliminaryOutcome:[int256,int256]:int256, setForkDone:[int256]:int256, setForkEthicality:[int256,int256]:int256, setForkOutcome:[int256,int256]:int256, setForked:[int256]:int256, setMode:[int256,int256]:int256, setOriginalExpiration:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setRejected:[int256,int256]:int256, setThreshold:[int256,int256]:int256, setUncaughtOutcome:[int256,int256]:int256]
+
+ORDERS = self.controller.lookup('orders')
+extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getInfo:[int256]:int256[], getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
+
+INFO = self.controller.lookup('info')
+extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256]
+
+MUTEX = self.controller.lookup('mutex')
+extern mutex: [acquire:[]:int256, release:[]:int256]
+
+### This allows you to place orders on the book
+
+# Warning: subcurrencies/tokens are untrusted contracts
+extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
+inset('../macros/refund.sem')
+inset('../macros/float.sem')
+
+data controller
+
+event logMakeOrder(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, outcome, orderID, moneyEscrowed, sharesEscrowed, timestamp, tradeGroupID)
+
+# Order types
+macro BID: 1
+macro ASK: 2
+
+macro MIN_ORDER_VALUE: 10000000000000000
+
+#
+# Bid / Ask actions: puts orders on the book
+# Errors:
+    #  0: market doesn't exist
+    # -1: fxpAmount/fxpPrice bad
+#
+# costs 532k gas
+
+# price is always in 10**18 fxp, amount is in the market's currency # of decimals, e.g. for 9 10**9 is 1 share [so buy 10**9 complete sets and it'll cost you 1 full unit of that currency or buy 10**9 at a fxpPrice of 10**18 it'll cost you 1 full unit of the currency]
+# price is the exact price you want to buy/sell at [which may not be the cost, for example to short a binary market it'll cost 1-price, to go long it'll cost price]
+# smallest order value is 0.00000001
+def init():
+    self.controller = 0x0
+
+def publicMakeOrder(type, fxpAmount, fxpPrice, market, outcome, tradeGroupID):
+    refund()
+    MUTEX.acquire()
+    orderID = self.makeOrder(msg.sender, type, fxpAmount, fxpPrice, market, outcome, tradeGroupID)
+    MUTEX.release()
+    return(orderID)
+
+def makeOrder(sender: address, type, fxpAmount, fxpPrice, market, outcome, tradeGroupID):
+    refund()
+    self.controller.checkWhitelist(msg.sender)
+
+    if(!MARKETS.getBranch(market)):
+        throw()
+
+    if(type == ASK):
+        escrow = self.placeAsk(sender, type, fxpAmount, fxpPrice, market, outcome, outitems = 2)
+    elif(type == BID):
+        escrow = self.placeBid(sender, type, fxpAmount, fxpPrice, market, outcome, outitems = 2)
+    else:
+        throw()
+
+    moneyEscrowed = escrow[0]
+    sharesEscrowed = escrow[1]
+
+    order = [type, market, fxpAmount, fxpPrice, sender, block.number, outcome, moneyEscrowed, sharesEscrowed]
+    orderID = sha3(order, items = 9)
+    if(ORDERS.getID(orderID)):
+        throw()
+    ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, moneyEscrowed, sharesEscrowed)
+
+    # Update market
+    MARKETS.addOrder(market, orderID)
+
+    log(type = logMakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, moneyEscrowed, sharesEscrowed, block.timestamp, tradeGroupID)
+    return(orderID)
+
+def placeAsk(sender: address, type, fxpAmount, fxpPrice, market, outcome):
+    refund()
+    if(msg.sender != self):
+        throw()
+
+    # Check if there are any "crossed orders" (i.e., bid orders at a price
+    # greater than or equal to the sell price).
+    bestBidID = ORDERS.getBestBid(market, outcome)
+    bestBidPrice = ORDERS.getPrice(bestBidID)
+    if(bestBidID and fxpPrice <= bestBidPrice and ORDERS.getAmount(bestBidID) >= safeFxpDiv(MIN_ORDER_VALUE, bestBidPrice)):
+        throw()
+
+    moneyEscrowed = 0
+    sharesEscrowed = 0
+    event = MARKETS.getMarketEvent(market, 0)
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+
+    # Take shares in escrow if user has shares
+    sharesHeld = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
+    if(sharesHeld):
+        minValue = 0
+        if(EVENTS.getNumOutcomes(event) > 2):
+            minValue = ONE
+        else:
+            minValue = EVENTS.getMinValue(event)
+        price = fxpPrice - minValue
+        cost = safeFxpMul(fxpAmount, price)
+        if(price > cumulativeScale or cost < MIN_ORDER_VALUE):
+            throw()
+        fill = min(sharesHeld, fxpAmount)
+        fxpAmount -= fill
+        sharesEscrowed += fill
+        MARKETS.modifyParticipantShares(market, sender, outcome, -fill, 0)
+
+    # Take max minus price they want to sell at for the remainder of the amount
+    # that wasn't able to be used up above
+    if(fxpAmount):
+        maxValue = 0
+        if(EVENTS.getNumOutcomes(event) > 2):
+            maxValue = ONE
+        else:
+            maxValue = EVENTS.getMaxValue(event)
+        costPerShareShorting = maxValue - fxpPrice
+        orderCost = safeFxpMul(fxpAmount, costPerShareShorting)
+        if(costPerShareShorting > cumulativeScale or orderCost < MIN_ORDER_VALUE):
+            throw()
+        moneyEscrowed += orderCost
+        INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), orderCost)
+
+    return([moneyEscrowed, sharesEscrowed]: arr)
+
+def placeBid(sender: address, type, fxpAmount, fxpPrice, market, outcome):
+    refund()
+    if(msg.sender != self):
+        throw()
+
+    # Check if there are any "crossed orders" (i.e., ask orders at a price less
+    # than or equal to the buy price).
+    bestAskID = ORDERS.getBestAsk(market, outcome)
+    bestAskPrice = ORDERS.getPrice(bestAskID)
+    if(bestAskID != 0 and fxpPrice >= bestAskPrice and ORDERS.getAmount(bestAskID) >= safeFxpDiv(MIN_ORDER_VALUE, bestAskPrice)):
+        throw()
+
+    moneyEscrowed = 0
+    sharesEscrowed = 0
+    event = MARKETS.getMarketEvent(market, 0)
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+
+    # If user owns n minus the one outcome we're buying escrow no money but
+    # escrow their shares in all the other outcomes.
+    sharesHeld = -1
+    i = 1
+    while(i <= MARKETS.getMarketNumOutcomes(market)):
+        if(i != outcome):
+            sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), sharesHeld)
+        i += 1
+    if(sharesHeld > 0):
+        if(EVENTS.getNumOutcomes(event) > 2):
+            minValue = ONE
+        else:
+            minValue = EVENTS.getMinValue(event)
+        price = fxpPrice - minValue
+        cost = safeFxpMul(fxpAmount, price)
+        if(price > cumulativeScale):
+            throw()
+        if(cost < MIN_ORDER_VALUE):
+            throw()
+        fill = min(sharesHeld, fxpAmount)
+        fxpAmount -= fill
+        sharesEscrowed += fill
+        i = 1
+        while(i < MARKETS.getMarketNumOutcomes(market)):
+            if(i != outcome):
+                MARKETS.modifyParticipantShares(market, sender, i, -fill, 0)
+            i += 1
+
+    # Take money in escrow for price - min for the remainder of amount that wasn't
+    # able to be used up above. Make sure price - min isn't more than range
+    if(fxpAmount):
+        if(EVENTS.getNumOutcomes(event) > 2):
+            minValue = ONE
+        else:
+            minValue = EVENTS.getMinValue(event)
+        price = fxpPrice - minValue
+        cost = safeFxpMul(fxpAmount, price)
+        moneyEscrowed += cost
+        if(price > cumulativeScale):
+            throw()
+        if(cost < MIN_ORDER_VALUE):
+            throw()
+        INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), cost)
+
+    return([moneyEscrowed, sharesEscrowed]: arr)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)
