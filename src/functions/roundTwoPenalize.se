@@ -120,7 +120,7 @@ def penalizeRoundTwoWrong(branch, event):
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
         if(oldReport):
             repChange = REPCHANGELIBRARY.calculateRepChange(oldReport, POINT_TWO, oldRep, p, event, outcome, numReportedOn, call = delegate)
-            x = array(2)
+            x = array(2)W
             x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegate, outitems=2)
             newAfterRep = x[0]
             repBalance = x[1]
@@ -168,11 +168,11 @@ macro checkPenalizeWrongRoundTwoPreconditions():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

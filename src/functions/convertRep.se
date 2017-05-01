@@ -133,11 +133,11 @@ def convertToDormantRep(branch, fxpValue):
     senderDormantBalance = REPORTING.balanceOfReporter(branch, msg.sender)
     reportedOnRoundTwoEvent = REPORTING.getReportedOnNonFinalRoundTwoEvent(branch, msg.sender)
     if(reportedOnRoundTwoEvent && !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
-        throw()
+        ~invalid()
     checkRepConversionInvariants()
 
     if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderDormantBalance, fxpValue) or !REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, senderIndex, fxpValue)):
-        throw()
+        ~invalid()
     REPORTING.adjustActiveRep(branch, -fxpValue)
     MUTEX.release()
     return(1)
@@ -158,7 +158,7 @@ def convertToActiveRep(branch, fxpValue):
     checkRepConversionInvariants()
 
     if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderActiveBalance, fxpValue) or !REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, senderIndex, fxpValue)):
-        throw()
+        ~invalid()
     REPORTING.adjustActiveRep(branch, fxpValue)
     MUTEX.release()
     return(1)
@@ -191,7 +191,7 @@ macro checkConversionDuringForkInvariants():
     # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow converting rep on the parent branch until they claim it
     if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, msg.sender)) != msg.sender):
         if(!CLAIMINITIALREP.claimInitialRep(branch, child, call = delegate)):
-            throw()
+            ~invalid()
 
 macro checkRepConversionInvariants():
     # if the sender's rep. account doesn't exist, make one
@@ -203,7 +203,7 @@ macro checkRepConversionInvariants():
         reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, msg.sender))
         if(parent && !tooLate && reporterWasInOldBranch):
             if(!CLAIMINITIALREP.claimInitialRep(parent, branch, call = delegate)):
-                throw()
+                ~invalid()
         else:
             REPORTING.addReporter(branch, msg.sender)
         if(!isCallerWhitelisted()):
@@ -216,11 +216,11 @@ macro checkRepConversionInvariants():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

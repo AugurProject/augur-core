@@ -9,7 +9,7 @@ def init():
 
 def acquire():
     if(self.mutex == 1):
-        throw()
+        ~invalid()
     self.mutex = 1
     return(1)
 
@@ -17,16 +17,13 @@ def release():
     self.mutex = 0
     return(1)
 
-macro throw():
-    jump(-2**256)
-
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

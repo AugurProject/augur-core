@@ -133,7 +133,7 @@ macro resolveEventsInMarket():
     elif(categorical(event) and !EVENTS.getMode(event)):
         resolution = NONBINARYRESOLVE.resolveCategoricalOrScalar(ONE, ONE * EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
     else:
-        throw()
+        ~invalid()
     if(resolution == -1):
         if(!isCallerWhitelisted()):
             MUTEX.release()
@@ -146,34 +146,34 @@ def closeChallengeBond(event):
     forkPeriod = BRANCHES.getForkPeriod(branch)
     bondAmount = EVENTS.getExtraBond(event)
     if(BRANCHES.getVotePeriod(branch) <= votePeriod or !EVENTS.getChallenged(event)):
-        throw()
+        ~invalid()
     # sets bond as paid back
     EVENTS.setExtraBond(event, 0)
     if(BACKSTOPS.getRoundTwo(event)):
         # return bond
         if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bondAmount)):
-            throw()
+            ~invalid()
     if(!EVENTS.getOutcome(event)):
-        throw()
+        ~invalid()
     if(EVENTS.getFirstPreliminaryOutcome(event) == EVENTS.getOutcome(event)):
         # lose bond
         branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(event))
         if(!INFO.getWallet(event).transfer(branchWallet, bondAmount)):
-            throw()
+            ~invalid()
     # outcome is different
     else:
         # return bond [and in resolve event contract give half of validity bond to extra bond poster as a reward for being correct]
         if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bondAmount)):
-            throw()
+            ~invalid()
     return(1)
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

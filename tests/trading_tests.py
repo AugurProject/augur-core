@@ -318,7 +318,6 @@ def test_CompleteSets(contracts, s, t):
         assert(logCompleteSets["numOutcomes"] == contracts.events.getNumOutcomes(eventID)), "Logged numOutcomes should match event's number of outcomes"
         assert(logCompleteSets["fxpFee"] > 0), "Logged fees should be > 0"
         assert(logCompleteSets["market"] == marketID), "Logged market should match input"
-        print "outcome 1:", contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
         assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1) == fix(1)), "Should have 1 share of outcome 1"
         assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2) == fix(1)), "Should have 1 share of outcome 2"
         assert(marketInitialTotalShares - contracts.markets.getTotalSharesPurchased(marketID) == 2*fxpAmount), "Decrease in total shares purchased for this market should be 18"

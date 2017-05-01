@@ -105,7 +105,7 @@ def scalarOrCategoricalForkResolve(branch, event, bond, periodLength, votingPeri
             amount = EVENTS.getEarlyResolutionBond(event)
             branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(market))
             if(amount && !INFO.getWallet(market).transfer(branchWallet, amount)):
-                throw()
+                ~invalid()
         MARKETS.setTradingPeriod(market, MARKETS.getOriginalTradingPeriod(market))
         MARKETS.setPushedForward(market, 0, msg.sender)
         EXPEVENTS.setEventWeight(branch, votingPeriodEvent, event, 0)
@@ -126,27 +126,27 @@ def scalarOrCategoricalForkResolve(branch, event, bond, periodLength, votingPeri
         if(EVENTS.getChallenged(event) && !BACKSTOPS.getRoundTwo(event) && EVENTS.getFirstPreliminaryOutcome(event) != EVENTS.getOutcome(event)):
             # pay half of validity bond to challenger
             if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bond / 2)):
-                throw()
+                ~invalid()
             bond -= bond / 2
         branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(event))
         # give $event bond money to reporters
         if(!INFO.getWallet(event).transfer(branchWallet, bond)):
-            throw()
+            ~invalid()
     else:
         bond = EVENTS.getBond(event)
         if(EVENTS.getChallenged(event) && !BACKSTOPS.getRoundTwo(event) && EVENTS.getFirstPreliminaryOutcome(event) != EVENTS.getOutcome(event)):
             # pay half of validity bond to challenger
             if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bond / 2)):
-                throw()
+                ~invalid()
             bond -= bond / 2
         # return bond as a normal event resolution
         if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
-            throw()
+            ~invalid()
         market = EVENTS.getMarket(event, 0)
         if(MARKETS.getPushedForward(market)):
             amount = EVENTS.getEarlyResolutionBond(event)
             if(amount && !INFO.getWallet(market).transfer(MARKETS.getBondsMan(market), amount)):
-                throw()
+                ~invalid()
         if(EVENTS.getEventPushedUp(event)):
             # delete old event from future events exp
             period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
@@ -170,11 +170,11 @@ macro handleFirstResolverBond():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

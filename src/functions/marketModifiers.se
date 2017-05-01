@@ -124,7 +124,7 @@ def updateTradingFee(market, fxpTradingFee):
         MUTEX.release()
         return(-2)
     if(!currency.transferFrom(msg.sender, BRANCHES.getBranchWallet(branch, currency), newCreationFee - oldCreationFee) or !MARKETS.setTradingFee(market, fxpTradingFee)):
-        throw()
+        ~invalid()
     log(type = tradingFeeUpdated, msg.sender, branch, market, fxpTradingFee, block.timestamp)
     MUTEX.release()
     return(1)
@@ -185,17 +185,17 @@ def pushMarketForward(branch, market):
     bond = safeFxpMul(MARKETS.getTradingFee(market), MARKETS.getTotalSharesPurchased(market)) / 2
     payEarlyResolutionBond = INFO.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), bond)
     if(!payEarlyResolutionBond or !EVENTS.setEarlyResolutionBond(event, bond)):
-        throw()
+        ~invalid()
     MUTEX.release()
     return(1)
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

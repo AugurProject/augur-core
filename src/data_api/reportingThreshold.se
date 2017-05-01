@@ -72,7 +72,7 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
         return(0)
     atFirstHalfOfPeriod()
     if(currentVotePeriod < votePeriod):
-        throw()
+        ~invalid()
     # todo we should prob switch this to when we send fees don't add to a market but rather the event associated w/ the market, then assign reporters based on fees on event / total fees for all events, this'll save cost and be more appropriate for what we actually want
     if(numMarkets > MARKETS_COUNTING_TOWARDS_SHARE_VALUE):
         numMarkets = MARKETS_COUNTING_TOWARDS_SHARE_VALUE
@@ -248,11 +248,11 @@ macro abs($a):
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

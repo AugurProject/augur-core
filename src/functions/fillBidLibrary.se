@@ -117,7 +117,7 @@ def fillBid(orderID, amountTakerWants):
     # transfer range * askerMoneyFilled to the market from asker for the amount of shares in askerMoneyFilled, for askerSharesFilled the asker simply has sent their shares to the bidder and thus doesn't have to put up money
     askerHasntPaidMarket = askerMoneyFilled && !INFO.getCurrency(market).transferFrom(msg.sender, market, safeFxpMul(cumulativeScale, askerMoneyFilled))
     if(bidderHasntPaidMarket or askerHasntPaidMarket or askerNotPaid):
-        throw()
+        ~invalid()
     sellTakerCompleteSetsIfAny()
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
     log(type = logPrice, market, msg.sender, owner, ASK, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
@@ -140,14 +140,14 @@ macro sellMakersCompleteSets():
         # send funds from the market to the user acc.
         fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), sharesHeld), cumulativeScale)
         if(!INFO.getWallet(market).transfer(owner, safeSub(cost, fee))):
-            throw()
+            ~invalid()
         # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
         notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
         if(notVotingOnYet):
             MARKETS.modifySharesValue(market, safeFxpMul(-sharesHeld, cumulativeScale))
         currency = INFO.getCurrency(market)
         if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-            throw()
+            ~invalid()
 
 macro sellTakerCompleteSetsIfAny():
     sharesHeld = -1
@@ -158,7 +158,7 @@ macro sellTakerCompleteSetsIfAny():
     # Sell the asker's [msg.sender] complete sets if they have any
     if(sharesHeld):
         if(!COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)):
-            throw()
+            ~invalid()
 
 macro accountForBidderClosingShort():
     if(sharesEscrowed):
@@ -186,7 +186,7 @@ macro updateBidOrderWithFillInfo():
     value = safeFxpMul(sumOfFills, price)
     # must fill at least 0.00000001 in value
     if(value < MIN_TRADE_VALUE):
-        throw()
+        ~invalid()
     # Update order amount or remove
     if(sumOfFills < amount):
         ORDERS.fillOrder(orderID, sumOfFills, safeFxpMul(bidderMoneyFilled, safeSub(price, minValue)), bidderSharesFilled)
@@ -218,7 +218,7 @@ macro accountForShortSelling():
             fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), askerMoneyFilled), cumulativeScale)
             feesInWei = safeFxpMul(BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
             if(!feesInWei):
-                throw()
+                ~invalid()
             MARKETS.addFees(market, feesInWei)
             EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
 
@@ -233,11 +233,11 @@ macro checkTradePreconditions():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)
