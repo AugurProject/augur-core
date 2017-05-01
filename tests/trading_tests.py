@@ -252,7 +252,7 @@ def test_CreateMarket(contracts, s, t):
         assert(marketID > 0)
         assert(contracts.markets.getTradingFee(marketID) == fxpTradingFee), "Trading fee matches input"
         assert(contracts.markets.getMarketEvent(marketID, 0) == eventID), "Market event matches input"
-        assert(contracts.markets.returnTags(marketID) == [tag1, tag2, tag3]), "Tags array matches input"
+        assert(contracts.markets.getTags(marketID) == [tag1, tag2, tag3]), "Tags array matches input"
         assert(contracts.markets.getTopic(marketID)), "Topic matches input tag1"
         assert(contracts.markets.getExtraInfo(marketID) == extraInfo), "Extra info matches input"
     test_publicCreateMarket()

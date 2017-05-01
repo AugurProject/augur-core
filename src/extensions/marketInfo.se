@@ -50,7 +50,7 @@ def getMarketInfo(marketID, account):
     marketInfo[9] = MARKETS.getVolume(marketID)
     marketInfo[10] = INFO.getCreationFee(marketID)
     marketInfo[11] = INFO.getCreator(marketID)
-    tags = MARKETS.returnTags(marketID, outitems=3)
+    tags = MARKETS.getTags(marketID, outitems=3)
     marketInfo[12] = tags[0]
     marketInfo[13] = tags[1]
     marketInfo[14] = tags[2]

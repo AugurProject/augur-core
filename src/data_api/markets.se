@@ -198,7 +198,7 @@ def getGasSubsidy(market):
 def getSharesValue(market):
     return(self.Markets[market].sharesValue)
 
-def returnTags(market):
+def getTags(market):
     tags = array(3)
     tags[0] = self.Markets[market].tag1
     tags[1] = self.Markets[market].tag2
