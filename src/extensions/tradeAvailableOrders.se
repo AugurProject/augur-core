@@ -1,3 +1,5 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
 ORDERS = self.controller.lookup('orders')
 extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getInfo:[int256]:int256[], getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
 

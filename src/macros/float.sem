@@ -1,3 +1,5 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
 macro safeAdd($x, $y):
     if(!safeToAdd($x, $y)):
         ~invalid()
