@@ -140,7 +140,7 @@ macro keepEventInOriginalBranch():
 
     # return bond if it's a round 2 event and make it not one anymore
     if(BACKSTOPS.getRoundTwo(event) && !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
-        throw()
+        ~invalid()
     # if should've resolved in past periods
     if(expPeriod <= currentVotePeriod):
         # should only be put into vote period if it's not in early resolve / first wave portion anymore
@@ -168,7 +168,7 @@ macro moveEventToWinningBranch():
     originalPeriod = EVENTS.getOriginalExpiration(event) / BRANCHES.getPeriodLength(branch)
     # return bond if it's a round 2 event and make it not one anymore
     if(BACKSTOPS.getRoundTwo(event) && !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
-        throw()
+        ~invalid()
     # move event to fork
     # and place it into the next reporting period w/ outcomes to 0
     if(expPeriod <= currentVotePeriod):
@@ -231,11 +231,11 @@ macro resolveCustomForkResolution():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

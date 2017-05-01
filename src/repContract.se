@@ -51,7 +51,7 @@ macro ONE:
 macro refund():
     if(msg.value > 0):
         if(!send(msg.sender, msg.value)):
-            throw()
+            ~invalid()
 
 data controller
 
@@ -71,9 +71,9 @@ def any():
 def transfer(receiver: address, fxpValue: uint256):
     senderBalance = self.reputation[msg.sender]
     if(senderBalance < fxpValue or !self.seeded or stillCreating()):
-        throw()
+        ~invalid()
     if(!safeToSubtract(self.reputation[msg.sender], fxpValue) or !safeToAdd(self.reputation[receiver], fxpValue)):
-        throw()
+        ~invalid()
     self.reputation[msg.sender] -= fxpValue
     self.reputation[receiver] += fxpValue
     log(type = Transfer, msg.sender, receiver, fxpValue)
@@ -85,9 +85,9 @@ def transfer(receiver: address, fxpValue: uint256):
 def transferFrom(from: address, receiver: address, fxpValue: uint256):
     senderBalance = self.reputation[from]
     if(senderBalance < fxpValue or fxpValue > self.approvedToSpend[from][msg.sender] or !self.seeded or stillCreating()):
-        throw()
+        ~invalid()
     if(!safeToSubtract(self.reputation[from], fxpValue) or !safeToAdd(self.reputation[receiver], fxpValue)):
-        throw()
+        ~invalid()
     self.approvedToSpend[from][msg.sender] -= fxpValue
     self.reputation[from] -= fxpValue
     self.reputation[receiver] += fxpValue
@@ -105,11 +105,11 @@ def setSaleDistribution(addresses: address[], balances: uint256[]):
     i = 0
     numberOfAddresses = len(addresses)
     if(numberOfAddresses != len(balances)):
-        throw()
+        ~invalid()
     if(self.seeded or !stillCreating()):
-        throw()
+        ~invalid()
     if(msg.sender != self.creator):
-        throw()
+        ~invalid()
     while(i < numberOfAddresses):
         if(!self.reputation[addresses[i]] && !self.seeded):
             self.reputation[addresses[i]] = balances[i]
@@ -119,18 +119,18 @@ def setSaleDistribution(addresses: address[], balances: uint256[]):
     if(self.totalSupply == 11000000 * ONE):
         self.seeded = 1
     if(self.totalSupply > 11000000 * ONE):
-        throw()
+        ~invalid()
     return(1: uint256)
 
 def getRidOfDustForLaunch():
     if(msg.sender != 0x668Fc8D2004379275357c8D8e2502E19153AdEEe):
-        throw()
+        ~invalid()
     if(self.reputation[0x0000000000000000000000000000000000000000]):
         self.totalSupply -= self.reputation[0x0000000000000000000000000000000000000000]
         self.reputation[0x0000000000000000000000000000000000000000] = 0
         return(1)
     else:
-        throw()
+        ~invalid()
 
 # Returns amount spender can withdraw from owner
 def allowance(owner: address, spender: address):
@@ -157,9 +157,6 @@ def getSeeded():
 
 macro stillCreating():
     block.timestamp < (self.creation + 15000)
-
-macro throw():
-   ~jump(2**256)
 
 # safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):

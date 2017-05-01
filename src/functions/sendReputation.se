@@ -102,11 +102,11 @@ def sendRepFrom(branch, from, receiver, fxpValue):
     receiverBalance = REPORTING.getRepBalance(branch, receiver)
     reportedOnRoundTwoEvent = REPORTING.getReportedOnNonFinalRoundTwoEvent(branch, from)
     if(reportedOnRoundTwoEvent && !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
-        throw()
+        ~invalid()
     checkSendRepInvariants()
 
     if(!safeToSubtract(senderBalance, fxpValue) or !REPORTING.subtractRep(branch, senderIndex, fxpValue) or !safeToAdd(receiverBalance, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
-        throw()
+        ~invalid()
     log(type = Transfer, from, receiver, fxpValue)
     if(!isCallerWhitelisted()):
         MUTEX.release()
@@ -132,7 +132,7 @@ def transferFrom(branch, from, receiver, fxpValue):
     checkSendRepInvariants()
 
     if(!safeToSubtract(senderBalance, fxpValue) or !REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !safeToAdd(receiverBalance, fxpValue) or !REPORTING.addDormantRep(branch, receiverIndex, fxpValue)):
-      throw()
+      ~invalid()
     log(type=Transfer, from, receiver, fxpValue)
     if(!isCallerWhitelisted()):
         MUTEX.release()
@@ -143,7 +143,7 @@ def claimRep():
         MUTEX.acquire()
     balance = REPCONTRACT.balanceOf(msg.sender)
     if(!REPCONTRACT.transferFrom(msg.sender, 0, balance) or !REPORTING.addReporter(1010101, msg.sender, 0, balance, 0)):
-        throw()
+        ~invalid()
     if(!isCallerWhitelisted()):
         MUTEX.release()
     return(1)
@@ -199,7 +199,7 @@ macro checkSendRepInvariants():
         reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, from))
         if(parent && !tooLate && reporterWasInOldBranch):
             if(!CLAIMINITIALREP.claimInitialRep(parent, branch, call = delegate)):
-                throw()
+                ~invalid()
         else:
             REPORTING.addReporter(branch, from)
         if(!isCallerWhitelisted()):
@@ -213,7 +213,7 @@ macro checkSendRepInvariants():
     # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the sender claims it
     if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
         if(!CLAIMINITIALREP.claimInitialRep(branch, child, call = delegate)):
-            throw()
+            ~invalid()
 
     if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
         if(!isCallerWhitelisted()):
@@ -224,11 +224,11 @@ macro checkSendRepInvariants():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

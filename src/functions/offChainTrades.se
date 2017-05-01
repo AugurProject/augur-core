@@ -62,7 +62,7 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
     # amount of x * fxpPrice = amount of y
     # amount of x * y / x = amount of y
     if(!tokenX.transferFrom(maker, msg.sender, takerAmount) || !tokenY.transferFrom(msg.sender, maker, safeFxpMul(takerAmount, fxpPrice))):
-        throw()
+        ~invalid()
     log(type = Trade, maker, msg.sender, tokenX, tokenY, amount, fxpPrice, orderHash, gasPriceLimit)
     if(!isCallerWhitelisted()):
         MUTEX.release()
@@ -85,7 +85,7 @@ def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiratio
 
     orderHash = sha3([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 7)
     if(ecrecover(orderHash, v, r, s) != msg.sender):
-        throw()
+        ~invalid()
     self.amountFilled[orderHash] = orderSize
     log(type = Cancel, tokenX, orderSize, tokenY, fxpPrice, expiration, gasPriceLimit, msg.sender, v, r, s)
 
@@ -106,11 +106,11 @@ macro checkHasAbilityToSpend($owner, $token, $amount):
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

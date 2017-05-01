@@ -71,7 +71,7 @@ def cancelOrder(sender: address, orderID):
     # Get info for the order to cancel
     order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
     if(!order[0]):
-        throw()
+        ~invalid()
     type = order[1]
     market = order[2]
     fxpAmount = order[3]
@@ -83,7 +83,7 @@ def cancelOrder(sender: address, orderID):
 
     # Check the owner
     if(sender != owner):
-        throw()
+        ~invalid()
 
     # Clear the order first
     ORDERS.removeOrder(orderID)
@@ -99,7 +99,7 @@ def cancelOrder(sender: address, orderID):
 def refundOrder(sender: address, type, sharesEscrowed, moneyEscrowed, market, outcome):
     refund()
     if(msg.sender != self):
-        throw()
+        ~invalid()
 
     # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
     if(type == BID and sharesEscrowed):
@@ -114,23 +114,23 @@ def refundOrder(sender: address, type, sharesEscrowed, moneyEscrowed, market, ou
         MARKETS.modifyParticipantShares(market, sender, outcome, sharesEscrowed, 0)
 
     else:
-        throw()
+        ~invalid()
 
     # Return to user moneyEscrowed that wasn't filled yet
     if(moneyEscrowed):
         refunded = INFO.getWallet(market).transfer(sender, moneyEscrowed)
         if(!refunded):
-            throw()
+            ~invalid()
 
     return(1)
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

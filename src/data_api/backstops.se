@@ -94,7 +94,7 @@ def setOriginalEthicality(event, ethicality):
 def increaseBondPaid(event, amount):
     self.controller.checkWhitelist(msg.sender)
     if(amount + self.roundTwo[event].bondPaid < self.roundTwo[event].bondPaid):
-        throw()
+        ~invalid()
     self.roundTwo[event].bondPaid += amount
     return(1)
 
@@ -172,7 +172,7 @@ def setRoundTwoRefund(event, amount):
 def doRoundTwoRefund(sender, event):
     self.controller.checkWhitelist(msg.sender)
     if(!send(sender, self.roundTwo[event].refund)):
-        throw()
+        ~invalid()
     return(1)
 
 def setForkBondPoster(event, poster):
@@ -182,11 +182,11 @@ def setForkBondPoster(event, poster):
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

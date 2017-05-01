@@ -34,7 +34,7 @@ def test_refund(contracts, state, t):
             raise Exception(contracts.backstops.setDisputedOverEthics(5, sender=t.k1))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that checks whitelist should fail from a non-whitelisted address"
-    def test_throw():
+    def test_~invalid():
         contracts.mutex.acquire()
         try:
             raise Exception(contracts.mutex.acquire())
@@ -42,7 +42,7 @@ def test_refund(contracts, state, t):
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
     test_refund_funds()
     test_caller_whitelisted()
-    test_throw()
+    test_~invalid()
 
 def test_float():
     s = test.state()

@@ -56,7 +56,7 @@ macro MIN_BOND: 200 * ONE
     # -1: branch is in the middle of a fork
     # -2: not enough money
     # -3: event has no votes so far
-    # throw()s if not enough msg.value to cover resolution cost or not a large enough bond
+    # ~invalid()s if not enough msg.value to cover resolution cost or not a large enough bond
 def init():
     self.controller = 0x0
 
@@ -79,10 +79,10 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
         return(0)
     # pays money to cover resolution cost
     if(!send(BACKSTOPS, msg.value)):
-        throw()
+        ~invalid()
     # send the bond to the branch
     if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
-        throw()
+        ~invalid()
     # makes event required reporting in round 2 (the next period) as well
     EXPEVENTS.setEventRequired(branch, votePeriod + 1, event)
     # push event into next period
@@ -120,7 +120,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     refund()
     MUTEX.acquire()
     if(!branch):
-        throw()
+        ~invalid()
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = EVENTS.getExpiration(event) / periodLength
     market = EVENTS.getMarket(event, 0)
@@ -196,7 +196,7 @@ macro loseBond():
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
     # and set final outcome / event bond, etc
     if(!self.resolve(branch, event)):
-        throw()
+        ~invalid()
     # rep redistribution from original period/orig. outcome stands, rep redistribution from round 2 happens as usual as well
     BACKSTOPS.setFinal(event)
     BACKSTOPS.setBondReturned(event)
@@ -216,7 +216,7 @@ macro returnBond():
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
     # and set final outcome / event bond, etc
     if(!self.resolve(branch, event)):
-        throw()
+        ~invalid()
     # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rep redistribution for the round 2 reporting
     BACKSTOPS.setFinal(event)
     BACKSTOPS.setBondReturned(event)
@@ -227,11 +227,11 @@ macro noVotes():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

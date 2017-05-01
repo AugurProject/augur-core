@@ -187,10 +187,10 @@ def addFees(market, fxpAmount):
     if(notVotingOnYet):
         currency = INFO.getCurrency(market)
         if(!currency.transferFrom(msg.sender, BRANCHES.getBranchWallet(branch, currency), amount)):
-            throw()
+            ~invalid()
         amountInWei = safeFxpMul(fxpAmount, BRANCHES.getCurrencyRate(branch, currency))
         if(!amountInWei):
-            throw()
+            ~invalid()
         MARKETS.addFees(market, amountInWei)
         EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), amountInWei)
         return(1)
@@ -201,14 +201,14 @@ macro payExtraBond():
     baseReporters = BRANCHES.getBaseReporters(branch)
     amount = safeFxpDiv(5*COST_PER_REPORTER * baseReporters * tx.gasprice, WEI_TO_ETH)
     if(!currency.transferFrom(msg.sender, INFO.getWallet(event), amount)):
-        throw()
+        ~invalid()
     EVENTS.setExtraBond(event, amount)
     EVENTS.setExtraBondPoster(event, msg.sender)
 
 macro addEvent():
     # cost for calculating num. of reports for an event
     if(!send(EXPEVENTS, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice)):
-        throw()
+        ~invalid()
     forkPeriod = BRANCHES.getForkPeriod(branch)
     afterFork = 0
     if(futurePeriod == (forkPeriod + 1) or futurePeriod == (forkPeriod + 2)):
@@ -217,11 +217,11 @@ macro addEvent():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

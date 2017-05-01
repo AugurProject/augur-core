@@ -108,7 +108,7 @@ def removeOrder(id):
 def fillOrder(orderID, fill, money, shares):
     self.controller.checkWhitelist(msg.sender)
     if(fill > self.orders[orderID].amount or money > self.orders[orderID].moneyEscrowed or shares > self.orders[orderID].sharesEscrowed):
-        throw()
+        ~invalid()
     self.orders[orderID].amount -= fill
     self.orders[orderID].moneyEscrowed -= money
     self.orders[orderID].sharesEscrowed -= shares
@@ -133,11 +133,11 @@ def getType(id):
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

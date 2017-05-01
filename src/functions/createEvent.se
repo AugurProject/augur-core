@@ -132,7 +132,7 @@ def createEvent(sender: address, branch, description: str, expDate, fxpMinValue,
 
     wallet = create('wallet.se')
     if(!wallet.initialize(currency)):
-        throw()
+        ~invalid()
     REPORTING.addReporter(branch, event, 0, 0, 0)
 
     firstResolveBondPaid = 0
@@ -150,55 +150,55 @@ def createEvent(sender: address, branch, description: str, expDate, fxpMinValue,
             baseReporters = BRANCHES.getBaseReporters(branch)
             minFee = safeFxpMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
             if(!minFee):
-                throw()
+                ~invalid()
             validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
             if(!currency.transferFrom(sender, wallet, validityBond)):
-                throw()
+                ~invalid()
             EVENTS.setExpiration(event, expDate)
             EVENTS.setBond(event, validityBond)
             EVENTS.addPast24(period)
         return(event)
     else:
-        throw()
+        ~invalid()
 
 def checkEventCreationPreconditions(branch, periodLength, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
     if(msg.sender != self):
-        throw()
+        ~invalid()
     if(!periodLength):
-        throw()
+        ~invalid()
     if(!len(description)):
-        throw()
+        ~invalid()
     if(!len(resolution)):
-        throw()
+        ~invalid()
     if(expDate < block.timestamp):
-        throw()
+        ~invalid()
     if (!resolutionAddress):
-        throw()
+        ~invalid()
     if(fxpMaxValue < fxpMinValue):
-        throw()
+        ~invalid()
     if((fxpMaxValue - fxpMinValue) < ONE):
-        throw()
+        ~invalid()
     if((fxpMaxValue + fxpMinValue) < fxpMaxValue):
-        throw()
+        ~invalid()
     if(numOutcomes < 2 or numOutcomes > 8):
-        throw()
+        ~invalid()
     parent = BRANCHES.getParent(branch)
     parentLastForked = BRANCHES.getForkPeriod(parent)
     fortyEightHourPeriodWhereNoEventsCanExpireOnNewFork = parentLastForked + 1
     whenEventExpires = expDate / periodLength
     if(whenEventExpires == fortyEightHourPeriodWhereNoEventsCanExpireOnNewFork):
-        throw()
+        ~invalid()
     if(!BRANCHES.getCurrencyActive(branch, currency)):
-        throw()
+        ~invalid()
     checkForkResolveContractIsValid(forkResolveAddress)
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

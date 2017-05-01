@@ -115,7 +115,7 @@ def trade(orderID, amountTakerWants):
     refund()
     MUTEX.acquire()
     if(amountTakerWants <= 0):
-        throw()
+        ~invalid()
     type = ORDERS.getType(orderID)
     returnValue = array(2)
     # Fill orders
@@ -124,18 +124,18 @@ def trade(orderID, amountTakerWants):
     elif(type == ASK):
         returnValue = FILLASK.fillAsk(orderID, amountTakerWants, call = delegate, outitems = 2)
     else:
-        throw()
+        ~invalid()
     MUTEX.release()
     log(type=tradeLogArrayReturn, returnValue)
     return(returnValue: arr)
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

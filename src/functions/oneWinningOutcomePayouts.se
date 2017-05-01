@@ -53,17 +53,17 @@ macro transferMoney():
     fee = safeFxpMul(MARKETS.getTradingFee(market), value)
     if(value != 0 && fee != 0):
         if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-            throw()
+            ~invalid()
         if(!INFO.getWallet(market).transfer(sender, safeSub(value, fee))):
-            throw()
+            ~invalid()
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

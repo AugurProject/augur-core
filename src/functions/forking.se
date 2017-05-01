@@ -110,13 +110,13 @@ def fork(event, branch, forkedOverEthicality):
     checkForkPreconditions()
 
     if(!send(CONSENSUSDATA, msg.value)):
-        throw()
+        ~invalid()
     bond = safeFxpDiv(POINT_ZERO_ONE, REPORTING.getTotalRep(branch))
     BACKSTOPS.setBondAmount(event, bond)
     # lose fork bond in branch 1
     # results same as roundtwobond, let it resolve as that on original network
     if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
-        throw()
+        ~invalid()
     # on branch 2 fork bond isn't lost
     # on fork bond isn't lost, gets paid up to 2x from "liars"
     # make the fork
@@ -186,11 +186,11 @@ macro returnRoundTwoBond():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)
