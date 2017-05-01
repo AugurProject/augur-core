@@ -120,7 +120,7 @@ def penalizeRoundTwoWrong(branch, event):
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
         if(oldReport):
             repChange = REPCHANGELIBRARY.calculateRepChange(oldReport, POINT_TWO, oldRep, p, event, outcome, numReportedOn, call = delegate)
-            x = array(2)W
+            x = array(2)
             x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegate, outitems=2)
             newAfterRep = x[0]
             repBalance = x[1]
