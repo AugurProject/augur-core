@@ -50,20 +50,20 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
             fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
             if(shareValue != 0 && fee != 0):
                 if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-                    throw()
+                    ~invalid()
                 if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
-                    throw()
+                    ~invalid()
         # high side (of the scalar part)
         elif(n == 1):
             shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
             fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
             if(shareValue != 0 && fee != 0):
                 if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-                    throw()
+                    ~invalid()
                 if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
-                    throw()
+                    ~invalid()
         else:
-            throw()
+            ~invalid()
         n += 1
     return(1)
 
@@ -74,11 +74,11 @@ macro normalizePrices():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

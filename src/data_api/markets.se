@@ -71,7 +71,11 @@ def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, 
     self.controller.checkWhitelist(msg.sender)
     # add event list to the market
     save(self.Markets[market].events[0], events, items = len(events))
-    save(self.Markets[market].shareContracts[0], shareContracts, items = numOutcomes)
+    # save(self.Markets[market].shareContracts[0], shareContracts, items = numOutcomes)
+    i = 0
+    while i < numOutcomes:
+        self.Markets[market].shareContracts[i + 1] = shareContracts[i]
+        i += 1
     self.Markets[market].lenEvents = len(events)
     save(self.Markets[market].extraInfo[0], extraInfo, chars = len(extraInfo))
     self.Markets[market].extraInfoLen = len(extraInfo)
@@ -83,8 +87,8 @@ def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, 
     self.Markets[market].numOutcomes = numOutcomes
     self.Markets[market].tag1 = tag1
     self.Markets[market].tag2 = tag2
-    self.Markets[market].gasSubsidy = gasSubsidy
     self.Markets[market].tag3 = tag3
+    self.Markets[market].gasSubsidy = gasSubsidy
     self.Markets[market].fees = fxpCreationFee
     self.Markets[market].lastExpDate = lastExpDate
     self.addToMarketsHash(branch, market)
@@ -186,7 +190,7 @@ def refundClosing(market, to):
     subsidy = self.Markets[market].gasSubsidy
     self.Markets[market].gasSubsidy -= subsidy
     if(!send(to, subsidy)):
-        throw()
+        ~invalid()
     return(1)
 
 def setTradingPeriod(market, period):
@@ -240,7 +244,14 @@ def getMarketEvents(market):
     return(load(self.Markets[market].events[0], items = self.Markets[market].lenEvents): arr)
 
 def getMarketShareContracts(market):
-    return(load(self.Markets[market].shareContracts[0], items = self.Markets[market].numOutcomes): arr)
+    numOutcomes = self.Markets[market].numOutcomes
+    shareContracts = array(numOutcomes)
+    i = 0
+    while i < numOutcomes:
+        shareContracts[i] = self.Markets[market].shareContracts[i + 1]
+        i += 1
+    return(shareContracts: arr)
+    # return(load(self.Markets[market].shareContracts[0], items = self.Markets[market].numOutcomes): arr)
 
 # @return fxp
 def getSharesPurchased(market, outcome):
@@ -259,6 +270,8 @@ def getVolume(market):
 
 # @return fxp
 def getParticipantSharesPurchased(market, trader, outcome):
+    # numOutcomes = self.Markets[market].numOutcomes
+    # return(self.getMarketShareContracts(market, outitems=numOutcomes)[outcome].balanceOf(trader))
     return(self.Markets[market].shareContracts[outcome].balanceOf(trader))
 
 def getNumEvents(market):
@@ -323,11 +336,11 @@ def getTotalOrders(marketID):
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

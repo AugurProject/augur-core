@@ -84,7 +84,7 @@ def getRepByIndex(branch, repIndex):
 def getRepBalance(branch, address):
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
-        throw()
+        return(0)
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 def getDormantRepByIndex(branch, repIndex):
@@ -150,7 +150,7 @@ def getNumberReporters(branch):
 def repIDToIndex(branch, repID):
     repIndex = self.Reporting[branch].repIDtoIndex[repID]
     if(self.Reporting[branch].reputation[repIndex].reporterID != repID):
-        throw()
+        ~invalid()
     return(repIndex)
 
 def setInitialReporters(branch):
@@ -210,13 +210,13 @@ def claimInitialRepFromRepContract():
     sender = msg.sender
     dormantRep = REPCONTRACT.balanceOf(sender)
     if(!dormantRep):
-        throw()
+        ~invalid()
     if(dormantRep != REPCONTRACT.allowance(sender, self)):
-        throw()
+        ~invalid()
     if(!REPCONTRACT.transferFrom(sender, 0x0000000000000000000000000000000000000000, dormantRep)):
-        throw()
+        ~invalid()
     if(self.Reporting[branch].repIDtoIndex[sender]):
-        throw()
+        ~invalid()
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
     self.Reporting[branch].reputation[reporterIndex].reporterID = sender
@@ -228,11 +228,11 @@ def claimInitialRepFromRepContract():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

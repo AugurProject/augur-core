@@ -79,7 +79,7 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, mos
     parentEthContract = BRANCHES.getBranchCurrency(parent, 0)
     feePaid = parentEthContract.transferFrom(msg.sender, BRANCHES.getBranchWallet(parent, parentEthContract), 47 * ONE)
     if(!feePaid or !INFO.setInfo(branch, description, msg.sender, 47 * ONE, 0, 0) or !REPORTING.setInitialReporters(branch)):
-        throw()
+        ~invalid()
     if(!isCallerWhitelisted()):
         MUTEX.release()
     return(branch)
@@ -101,11 +101,11 @@ macro checkBranchCreationPreconditions():
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

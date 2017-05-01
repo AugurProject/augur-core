@@ -139,7 +139,7 @@ macro prepareInfoForConsensus():
         CONSENSUS.doRefund(sender, sender)
     # need to pay not reporting bond
     if(msg.value <= safeMul(500000, tx.gasprice)):
-        throw()
+        ~invalid()
     balance = REPORTING.getRepBalance(branch, sender)
     dormantRep = REPORTING.balanceOfReporter(branch, sender)
     # Record rep for next report period before any redistributions
@@ -148,15 +148,15 @@ macro prepareInfoForConsensus():
     EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, sender)
     CONSENSUS.setRefund(sender, msg.value)
     if(!send(CONSENSUS, msg.value)):
-        throw()
+        ~invalid()
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

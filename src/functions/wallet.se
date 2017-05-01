@@ -23,18 +23,18 @@ def initialize(currency):
 def transfer(receiver: address, value: uint256):
     self.controller.checkWhitelist(msg.sender)
     if(receiver == 0 or value <= 0):
-        throw()
+        ~invalid()
     if(!self.currency.transfer(receiver, value)):
-        throw()
+        ~invalid()
     return(1)
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

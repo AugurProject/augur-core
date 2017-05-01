@@ -81,7 +81,7 @@ def init():
 def refundCost(to, branch, period, event):
     self.controller.checkWhitelist(msg.sender)
     if(!send(to, self.periodEventInfo[branch][period].subsidy[event])):
-        throw()
+        ~invalid()
     return(1)
 
 # @return fxp
@@ -357,11 +357,11 @@ def getAfterFork(branch, votePeriod):
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)

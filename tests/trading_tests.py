@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
 Trading tests:
-functions/bidAndAsk.se
+functions/bidAndAsk.se -> makeOrder.se + cancelOrder.se
 functions/cash.se
 functions/claimMarketProceeds.se
 functions/completeSets.se
@@ -24,6 +24,7 @@ import ethereum
 import os
 import json
 import iocapture
+from random import randint
 from load_contracts import ContractLoader
 
 def fix(n):
@@ -35,16 +36,42 @@ def unfix(n):
 def hex2str(h):
     return hex(h)[2:-1]
 
-def parseCapturedLogs(captured):
-    return json.loads(captured.stdout.replace("'", '"').replace("L", "").replace('u"', '"'))
+def parseCapturedLogs(logs):
+    arrayOfLogs = logs.strip().split("\n")
+    arrayOfParsedLogs = []
+    for log in arrayOfLogs:
+        parsedLog = json.loads(log.replace("'", '"').replace("L", "").replace('u"', '"'))
+        arrayOfParsedLogs.append(parsedLog)
+    if len(arrayOfParsedLogs) == 0:
+        return arrayOfParsedLogs[0]
+    return arrayOfParsedLogs
 
-# def test_BidAndAsk(c, s, t):
-#     address1 = long(t.a1.encode("hex"), 16)
-#     address2 = long(t.a2.encode("hex"), 16)
-#     def test_placeOrder():
-#         fxpAmount = 100
-#         c.placeOrder(1, fxpAmount, fxpPrice, )
-#     test_placeOrder()
+def createBinaryEvent(contracts, s, t):
+    contracts.cash.depositEther(value=fix(10000), sender=t.k1)
+    contracts.cash.approve(contracts.createEvent.address, fix(10000), sender=t.k1)
+    branch = 1010101
+    contracts.reputationFaucet.reputationFaucet(branch, sender=t.k1)
+    description = "test binary event"
+    expDate = randint(3000000002, 4000000000)
+    fxpMinValue = fix(1)
+    fxpMaxValue = fix(2)
+    numOutcomes = 2
+    resolution = "http://lmgtfy.com"
+    resolutionAddress = t.a2
+    currency = contracts.cash.address
+    forkResolveAddress = contracts.forkResolution.address
+    return contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
+
+def createBinaryMarket(contracts, s, t, eventID):
+    contracts.cash.approve(contracts.createMarket.address, fix(10000), sender=t.k1)
+    branch = 1010101
+    fxpTradingFee = 200000000000000001
+    tag1 = 123
+    tag2 = 456
+    tag3 = 789
+    extraInfo = "rabble rabble rabble"
+    currency = contracts.cash.address
+    return contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1, value=fix(10000))
 
 def test_Cash(path):
     t = ethereum.tester
@@ -90,7 +117,7 @@ def test_Cash(path):
     def test_transfer():
         with iocapture.capture() as captured:
             retval = c.transfer(t.a2, 5, sender=t.k1)
-            logged = parseCapturedLogs(captured)
+            logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "transfer 5 cash to a2"
         assert(logged["_event_type"] == "Transfer")
         assert(logged["to"] == address2)
@@ -109,7 +136,7 @@ def test_Cash(path):
             assert(isinstance(exc, ethereum.abi.ValueOutOfBounds)), "negative transfer should throw"
         with iocapture.capture() as captured:
             retval = c.transfer(t.a2, 0, sender=t.k1)
-            logged = parseCapturedLogs(captured)
+            logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "transferFrom should succeed"
         assert(logged["_event_type"] == "Transfer")
         assert(logged["to"] == address2)
@@ -127,7 +154,7 @@ def test_Cash(path):
         assert(c.allowance(t.a1, t.a2) == 0), "initial allowance is 0"
         with iocapture.capture() as captured:
             retval = c.approve(t.a2, 10, sender=t.k1)
-            logged = parseCapturedLogs(captured)
+            logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "approve a2 to spend 10 cash from a1"
         assert(logged["_event_type"] == "Approval")
         assert(logged["owner"] == address1)
@@ -136,7 +163,7 @@ def test_Cash(path):
         assert(c.allowance(t.a1, t.a2) == 10), "allowance is 10 after approval"
         with iocapture.capture() as captured:
             retval = c.transferFrom(t.a1, t.a2, 7, sender=t.k2)
-            logged = parseCapturedLogs(captured)
+            logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "transferFrom should succeed"
         assert(logged["_event_type"] == "Transfer")
         assert(logged["to"] == address2)
@@ -173,7 +200,7 @@ def test_CreateEvent(contracts, s, t):
             contracts.createEvent.checkEventCreationPreconditions(branch, periodLength, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "checkEventCreationPreconditions should throw when createEvent contract is not the caller"
-    def test_createEvent():
+    def test_publicCreateEvent():
         assert(contracts.cash.depositEther(value=fix(10000), sender=t.k1) == 1), "Convert ether to cash"
         assert(contracts.cash.approve(contracts.createEvent.address, fix(10000), sender=t.k1) == 1), "Approve createEvent contract to spend cash (for validity bond)"
         branch = 1010101
@@ -196,11 +223,11 @@ def test_CreateEvent(contracts, s, t):
         assert(contracts.events.getNumOutcomes(eventID) == numOutcomes), "Number of outcomes matches input"
         assert(contracts.events.getEventResolution(eventID) == resolution), "Resolution matches input"
     test_checkEventCreationPreconditions()
-    test_createEvent()
+    test_publicCreateEvent()
 
 # TODO update create market tests pending final review of contract
 def test_CreateMarket(contracts, s, t):
-    def test_createMarket():
+    def test_publicCreateMarket():
         assert(contracts.cash.depositEther(value=fix(10000), sender=t.k1) == 1), "Convert ether to cash"
         assert(contracts.cash.approve(contracts.createEvent.address, fix(10000), sender=t.k1) == 1), "Approve createEvent contract to spend cash (for validity bond)"
         assert(contracts.cash.approve(contracts.createMarket.address, fix(10000), sender=t.k1) == 1), "Approve createMarket contract to spend cash"
@@ -228,7 +255,90 @@ def test_CreateMarket(contracts, s, t):
         assert(contracts.markets.returnTags(marketID) == [tag1, tag2, tag3]), "Tags array matches input"
         assert(contracts.markets.getTopic(marketID)), "Topic matches input tag1"
         assert(contracts.markets.getExtraInfo(marketID) == extraInfo), "Extra info matches input"
-    test_createMarket()
+    test_publicCreateMarket()
+
+def test_MakeOrder(contracts, s, t):
+    address1 = long(t.a1.encode("hex"), 16)
+    def test_publicMakeOrder():
+        def test_bid():
+            orderType = 1                   # bid
+            fxpAmount = 1000000000000000000 # fixed-point 1
+            fxpPrice = 1500000000000000000  # fixed-point 1.5
+            outcomeID = 2
+            tradeGroupID = 42
+            eventID = createBinaryEvent(contracts, s, t)
+            marketID = createBinaryMarket(contracts, s, t, eventID)
+            assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
+            makerInitialCash = contracts.cash.balanceOf(t.a1)
+            marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+            with iocapture.capture() as captured:
+                orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+                logged = captured.stdout
+            logMakeOrder = parseCapturedLogs(logged)[-1]
+            assert(orderID != 0), "Order ID should be non-zero"
+            order = contracts.orders.getOrder(orderID)
+            assert(len(order) == 10), "Order array length should be 10"
+            assert(order[0] == orderID), "order[0] should be the order ID"
+            assert(order[1] == orderType), "order[1] should be the order type"
+            assert(order[2] == marketID), "order[2] should be the market ID"
+            assert(order[3] == fxpAmount), "order[3] should be the amount of the order"
+            assert(order[4] == fxpPrice), "order[4] should be the order's price"
+            assert(order[5] == address1), "order[5] should be the sender's address"
+            assert(order[6] == contracts._ContractLoader__state.block.number), "order[6] should be the current block number"
+            assert(order[7] == outcomeID), "order[6] should be the outcome ID"
+            assert(order[8] == int(unfix(fxpAmount*(fxpPrice - contracts.events.getMinValue(eventID))))), "order[8] should be the amount of money escrowed"
+            assert(order[9] == 0), "order[9] should be the number of shares escrowed"
+            assert(makerInitialCash - contracts.cash.balanceOf(t.a1) == order[8]), "Decrease in maker's cash balance should equal money escrowed"
+            assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == order[8]), "Increase in market's cash balance should equal money escrowed"
+            assert(logMakeOrder["_event_type"] == "logMakeOrder"), "Should emit an logMakeOrder event"
+            assert(logMakeOrder["tradeGroupID"] == tradeGroupID), "Logged tradeGroupID should match input"
+            assert(logMakeOrder["moneyEscrowed"] == order[8]), "Logged moneyEscrowed should match amount in order"
+            assert(logMakeOrder["sharesEscrowed"] == order[9]), "Logged sharesEscrowed should match amount in order"
+            assert(logMakeOrder["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match the current block timestamp"
+            assert(logMakeOrder["orderID"] == orderID), "Logged orderID should match returned orderID"
+            assert(logMakeOrder["outcome"] == outcomeID), "Logged outcome should match input"
+            assert(logMakeOrder["market"] == marketID), "Logged market should match input"
+            assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
+        def test_ask():
+            orderType = 2                   # ask
+            fxpAmount = 1000000000000000000 # fixed-point 1
+            fxpPrice = 1500000000000000000  # fixed-point 1.5
+            outcomeID = 2
+            tradeGroupID = 42
+            eventID = createBinaryEvent(contracts, s, t)
+            marketID = createBinaryMarket(contracts, s, t, eventID)
+            assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
+            makerInitialCash = contracts.cash.balanceOf(t.a1)
+            marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+            with iocapture.capture() as captured:
+                orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+                logged = captured.stdout
+            logMakeOrder = parseCapturedLogs(logged)[-1]
+            assert(orderID != 0), "Order ID should be non-zero"
+            order = contracts.orders.getOrder(orderID)
+            assert(len(order) == 10), "Order array length should be 10"
+            assert(order[0] == orderID), "order[0] should be the order ID"
+            assert(order[1] == orderType), "order[1] should be the order type"
+            assert(order[2] == marketID), "order[2] should be the market ID"
+            assert(order[3] == fxpAmount), "order[3] should be the amount of the order"
+            assert(order[4] == fxpPrice), "order[4] should be the order's price"
+            assert(order[5] == address1), "order[5] should be the sender's address"
+            assert(order[6] == contracts._ContractLoader__state.block.number), "order[6] should be the current block number"
+            assert(order[7] == outcomeID), "order[6] should be the outcome ID"
+            assert(order[8] == int(unfix(fxpAmount*(fxpPrice - contracts.events.getMinValue(eventID))))), "order[8] should be the amount of money escrowed"
+            assert(order[9] == 0), "order[9] should be the number of shares escrowed"
+            assert(logMakeOrder["_event_type"] == "logMakeOrder"), "Should emit an logMakeOrder event"
+            assert(logMakeOrder["tradeGroupID"] == tradeGroupID), "Logged tradeGroupID should match input"
+            assert(logMakeOrder["moneyEscrowed"] == order[8]), "Logged moneyEscrowed should match amount in order"
+            assert(logMakeOrder["sharesEscrowed"] == order[9]), "Logged sharesEscrowed should match amount in order"
+            assert(logMakeOrder["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match the current block timestamp"
+            assert(logMakeOrder["orderID"] == orderID), "Logged orderID should match returned orderID"
+            assert(logMakeOrder["outcome"] == outcomeID), "Logged outcome should match input"
+            assert(logMakeOrder["market"] == marketID), "Logged market should match input"
+            assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
+        test_bid()
+        test_ask()
+    test_publicMakeOrder()
 
 def runtests():
     src = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'src')
@@ -238,6 +348,7 @@ def runtests():
     test_Cash(os.path.join(src, 'functions', 'cash.se'))
     test_CreateEvent(contracts, state, t)
     test_CreateMarket(contracts, state, t)
+    test_MakeOrder(contracts, state, t)
 
 if __name__ == '__main__':
     runtests()

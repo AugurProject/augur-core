@@ -8,12 +8,10 @@ macro TWENTY_FOUR_HR: 86400
 
 macro WEI_TO_ETH: 10 ** 18
 
-macro throw():
-    jump(-2**256)
 
 macro refund():
     if(msg.value > 0 and !send(msg.sender, msg.value)):
-        throw()
+        ~invalid()
 
 macro isCallerWhitelisted():
     inWhitelist = self.controller.checkWhitelist(msg.sender)

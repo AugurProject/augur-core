@@ -89,15 +89,15 @@ def addToWhitelist(address):
 #     if(self.removeFromWhitelist(original) && self.addToWhitelist(new)):
 #         return(1)
 #     else:
-#         throw()
+#         ~invalid()
 
 # def proposeUpdate(updateDataHash, expirationTime):
 #     if(repBalance(msg.sender) < 100):
-#         throw()
+#         ~invalid()
 #     proposalIndex = self.numberOfProposedChanges
 #     self.proposedChanges[proposalIndex].updateDataHash = updateDataHash
 #     if(block.timestamp < expirationTime):
-#         throw()
+#         ~invalid()
 #     self.proposedChanges[proposalIndex].proposalExpirationDate = expirationTime
 #     self.numberOfProposedChanges += 1
 #     return(proposalIndex)
@@ -167,7 +167,7 @@ def lookup(key):
 #     ~calldatacopy(msgData + 28, 0, size)
 #     dataHash = sha3(msgData, items = arraySize)
 #     if(dataHash != self.committedVotes[committedVoteIndex]):
-#         throw()
+#         ~invalid()
 
 # macro confirmValidPermissions():
 #     if(!self.firstCallUsed && msg.sender == owner):
@@ -175,16 +175,16 @@ def lookup(key):
 #     else:
 #         if(mode == "full version"):
 #             if(safeFxpDiv(self.proposedChanges[proposalIndex].repInFavor, self.proposedChanges[proposalIndex].repVoted) < POINT_SIX):
-#                 throw()
+#                 ~invalid()
 #         elif(mode == "hybrid"):
 #             # in hybrid mode if < 1/4th of rep is in favor of an update it is vetoed
 #             if(msg.sender != owner or safeFxpDiv(self.proposedChanges[proposalIndex].repInFavor, self.proposedChanges[proposalIndex].repVoted) < ONE_FOURTH):
-#                 throw()
+#                 ~invalid()
 #         elif(mode == "dev"):
 #             if(msg.sender != owner):
-#                 throw()
+#                 ~invalid()
 #         else:
-#             throw()
+#             ~invalid()
 #         1
 
 # macro confirmNotTooEarly():
