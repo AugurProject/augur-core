@@ -55,9 +55,9 @@ def transfer(to: address, value: uint256):
     self.controller.checkWhitelist(msg.sender)
     senderBalance = self.accounts[msg.sender].balance
     if(senderBalance < value):
-        throw()
+        ~invalid()
     if(!safeToSubtract(senderBalance, value) or !safeToAdd(self.accounts[to].balance, value)):
-        throw()
+        ~invalid()
     # Update balances
     self.accounts[msg.sender].balance -= value
     self.accounts[to].balance += value
@@ -73,9 +73,9 @@ def transferFrom(from: address, to: address, value: uint256):
     self.controller.checkWhitelist(msg.sender)
     senderBalance = self.accounts[from].balance
     if(senderBalance < value or value > self.accounts[from].spenders[msg.sender].maxValue):
-        throw()
+        ~invalid()
     if(!safeToSubtract(senderBalance, value) or !safeToAdd(self.accounts[to].balance, value)):
-        throw()
+        ~invalid()
     self.accounts[from].spenders[msg.sender].maxValue -= value
     # Update balances
     self.accounts[from].balance -= value
@@ -121,7 +121,7 @@ def getSymbol():
 def changeTokens(trader, amount):
     self.controller.checkWhitelist(msg.sender)
     if(self.accounts[trader].balance + amount < 0):
-        throw()
+        ~invalid()
     self.accounts[trader].balance += amount
     return(1)
 
@@ -139,11 +139,11 @@ macro safeToSubtract($a, $b):
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)
