@@ -137,10 +137,10 @@ def pushMarketForward(branch, market):
     if(MARKETS.getBranch(market) != branch):
         MUTEX.release()
         return(0)
-    event = MARKETS.getMarketEvent(market)
+    event = MARKETS.getMarketEvent(market, 0)
     if(eventCreatedPriorToFork(event)):
         return(-1)
-    event = MARKETS.getMarketEvent(market)
+    event = MARKETS.getMarketEvent(market, 0)
     expiration = EVENTS.getExpiration(event)
     beingReportedOnNow = (expiration / periodLength == block.timestamp / periodLength)
     alreadyPushedForward = EVENTS.getRejectedPeriod(event) or expiration != EVENTS.getOriginalExpiration(event)
