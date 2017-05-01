@@ -711,6 +711,78 @@ def test_mutex(contracts, s, t):
     assert(c.release() == 1), "release shoud return 1 and release the mutex"
     print("data_api/mutex.se unit tests completed")
 
+def test_expiringEvents(contracts, s, t):
+    c = contracts.expiringEvents
+    branch1 = 1010101
+    period1 = contracts.branches.getVotePeriod(branch1)
+    event1 = 1234
+    cashAddr = long(contracts.cash.address.encode("hex"), 16)
+    cashWallet = contracts.branches.getBranchWallet(branch1, cashAddr)
+    address0 = long(t.a0.encode("hex"), 16)
+    address1 = long(t.a1.encode("hex"), 16)
+    ONE = 10**18
+    subsidy1 = 15*ONE
+
+    def test_addEvent():
+        assert(c.getEvents(branch1, period1) == [])
+        assert(c.getEventsRange(branch1, period1, 0, 5) == [0, 0, 0, 0, 0])
+        assert(c.getNumberEvents(branch1, period1) == 0)
+        assert(c.getEventIndex(branch1, period1, event1) == 0)
+        assert(c.getEvent(branch1, period1, 0) == 0)
+        assert(c.getNumRemoved(branch1, period1) == 0)
+        assert(c.addEvent(branch1, period1, event1, subsidy1, cashAddr, cashWallet, 0) == 1)
+        assert(c.getEvents(branch1, period1) == [event1])
+        assert(c.getEventsRange(branch1, period1, 0, 5) == [event1, 0, 0, 0, 0])
+        assert(c.getNumberEvents(branch1, period1) == 1)
+        assert(c.getEventIndex(branch1, period1, event1) == 0)
+        assert(c.getEvent(branch1, period1, 0) == event1)
+        assert(c.getNumRemoved(branch1, period1) == 0)
+
+    def test_rep():
+        assert(c.getBeforeRep(branch1, period1, address0) == 0)
+        assert(c.getBeforeRep(branch1, period1, address1) == 0)
+        assert(c.getPeriodDormantRep(branch1, period1, address0) == 0)
+        assert(c.getPeriodDormantRep(branch1, period1, address1) == 0)
+        assert(c.getNumActiveReporters(branch1, period1) == 0)
+        assert(c.getActiveReporters(branch1, period1) == [])
+        assert(c.setBeforeRep(branch1, period1, 100, address0) == 100)
+        assert(c.setBeforeRep(branch1, period1, 100, address1) == 100)
+        assert(c.setPeriodDormantRep(branch1, period1, 200, address0) == 200)
+        assert(c.setPeriodDormantRep(branch1, period1, 200, address1) == 200)
+        assert(c.getBeforeRep(branch1, period1, address0) == 100)
+        assert(c.getBeforeRep(branch1, period1, address1) == 100)
+        assert(c.getPeriodDormantRep(branch1, period1, address0) == 200)
+        assert(c.getPeriodDormantRep(branch1, period1, address1) == 200)
+        assert(c.getNumActiveReporters(branch1, period1) == 2)
+        assert(c.getActiveReporters(branch1, period1) == [address0, address1])
+
+    # getNumberEvents - getEvent - addEvent - deleteEvent - removeEvent - getNumRemoved
+    # getEvents - getEventsRange - getEventIndex
+
+    # refundCost - getSubsidy
+    # getPeriodRepWeight - setPeriodRepWeight
+    # setEthicReport - getEthicReport
+    # getLesserReportNum - setLesserReportNum
+    # getReport - setReport
+    # getBeforeRep - getAfterRep - setBeforeRep - setAfterRep
+    # setPeriodDormantRep - getPeriodDormantRep
+    # getActiveReporters - getNumActiveReporters
+    # getEventWeight - setEventWeight
+    # getNumRoundTwo - addRoundTwo
+    # getRequired - getNumRequired - setEventRequired
+
+    # setNumEventsToReportOn - getNumEventsToReportOn
+    # getFeeValue - adjustPeriodFeeValue
+
+    # addToWeightOfReport - getWeightOfReport
+    # getCurrentMode - setCurrentMode - setCurrentModeItems - getCurrentModeItems
+    # getAfterFork - moveEvent
+    # addReportToReportsSubmitted - getNumReportsSubmitted - countReportAsSubmitted
+    test_addEvent()
+    test_rep()
+    print("data_api/expiringEvents.se unit tests completed")
+
+
 if __name__ == '__main__':
     src = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'src')
     contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
@@ -721,9 +793,9 @@ if __name__ == '__main__':
     test_branches(contracts, state, t)
     test_consensusData(contracts, state, t)
     test_events(contracts, state, t)
+    test_expiringEvents(contracts, state, t)
     test_info(contracts, state, t)
     test_mutex(contracts, state, t)
-    # data_api/expiringEvents.se
     # data_api/fxpFunctions.se
     # data_api/info.se
     # data_api/markets.se
