@@ -66,7 +66,7 @@ def publicCreateMarket(branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo
 # Create a market. Markets are the basic _tradable_ units / questions that are traded on in Augur
 # @param branch is the branch of the market
 # @param fxpTradingFee is percent in fixedPoint
-# @param events array is the list of events in a market [only 1 for now]
+# @param event is the event to create the market around
 # @params tag1, tag2, and tag3 are the tags describing a market
 # @param fxpMakerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
 # @param extraInfo is a string of any extra info associated with a market
@@ -147,9 +147,8 @@ def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event,
         ~invalid()
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch)):
         ~invalid()
-    # FIXME MAX_FEE < min trading fee, so this always fails
-    # if(fxpTradingFee > MAX_FEE):
-    #     ~invalid()
+    if(fxpTradingFee > MAX_FEE):
+        ~invalid()
     if(EVENTS.getEventBranch(event) != branch):
         ~invalid()
     if(!INFO.getCreator(event)):
@@ -170,9 +169,7 @@ def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet
         ~invalid()
     if(!INFO.setInfo(market, text(""), sender, fxpCreationFee, currency, wallet)):
         ~invalid()
-    events = array(1)
-    events[0] = event
-    if(!MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value, fxpCreationFee, expirationDate, shareContracts, value = msg.value)):
+    if(!MARKETS.initializeMarket(market, event, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value, fxpCreationFee, expirationDate, shareContracts, value = msg.value)):
         ~invalid()
     if(!BRANCHES.addMarketToBranch(branch, market)):
         ~invalid()

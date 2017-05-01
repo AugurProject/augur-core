@@ -55,7 +55,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
     totalLen = totalMarkets*16
     m = 0
     while m < totalMarkets:
-        eventID = MARKETS.getMarketEvent(marketIDs[m], 0)
+        eventID = MARKETS.getMarketEvent(marketIDs[m])
         descriptionLengths[m] = INFO.getDescriptionLength(eventID)
         totalLen += descriptionLengths[m]
         m += 1
@@ -80,7 +80,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
         marketsInfo[c + 8] = tags[2]
         marketsInfo[c + 9] = MARKETS.getLastExpDate(marketID)
         marketsInfo[c + 10] = MARKETS.getFees(marketID)
-        eventID = MARKETS.getMarketEvent(marketID, 0)
+        eventID = MARKETS.getMarketEvent(marketID)
         marketsInfo[c + 11] = eventID
         marketsInfo[c + 12] = EVENTS.getMinValue(eventID)
         marketsInfo[c + 13] = EVENTS.getMaxValue(eventID)

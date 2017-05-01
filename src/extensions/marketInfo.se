@@ -32,7 +32,7 @@ def init():
 def getMarketInfo(marketID, account):
     refund()
     index = BASE_FIELDS
-    eventID = MARKETS.getMarketEvent(marketID, 0)
+    eventID = MARKETS.getMarketEvent(marketID)
     descriptionLength = INFO.getDescriptionLength(eventID)
     resolutionLength = EVENTS.getResolutionLength(eventID)
     extraInfoLength = MARKETS.getExtraInfoLength(marketID)
@@ -117,7 +117,7 @@ def batchGetMarketInfo(marketIDs: arr, account):
     i = 0
     while i < numMarkets:
         marketID = marketIDs[i]
-        eventID = MARKETS.getMarketEvent(marketID, 0)
+        eventID = MARKETS.getMarketEvent(marketID)
         descriptionLength = INFO.getDescriptionLength(eventID)
         resolutionLength = EVENTS.getResolutionLength(eventID)
         extraInfoLength = MARKETS.getExtraInfoLength(marketID)

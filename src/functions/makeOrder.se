@@ -99,7 +99,7 @@ def placeAsk(sender: address, type, fxpAmount, fxpPrice, market, outcome):
 
     moneyEscrowed = 0
     sharesEscrowed = 0
-    event = MARKETS.getMarketEvent(market, 0)
+    event = MARKETS.getMarketEvent(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
 
     # Take shares in escrow if user has shares
@@ -150,7 +150,7 @@ def placeBid(sender: address, type, fxpAmount, fxpPrice, market, outcome):
 
     moneyEscrowed = 0
     sharesEscrowed = 0
-    event = MARKETS.getMarketEvent(market, 0)
+    event = MARKETS.getMarketEvent(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
 
     # If user owns n minus the one outcome we're buying escrow no money but

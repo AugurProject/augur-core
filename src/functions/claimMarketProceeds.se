@@ -51,7 +51,7 @@ def init():
 def claimProceeds(market):
     refund()
     MUTEX.acquire()
-    event = MARKETS.getMarketEvent(market, 0)
+    event = MARKETS.getMarketEvent(market)
     winningOutcomes = array(MAX_WINNING_OUTCOMES)
     winningOutcomes = MARKET.getWinningOutcomes(market, outitems = MAX_WINNING_OUTCOMES)
     success = 0

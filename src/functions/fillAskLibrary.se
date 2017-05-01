@@ -89,13 +89,13 @@ def fillAsk(orderID, amountTakerWants):
     if(ORDERS.checkHash(orderHash, msg.sender) == -1):
         MUTEX.release()
         return([-1]: arr)
-    maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market, 0))
+    maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market))
     minValue = 0
     # for categorical events the min is one
-    if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent(market, 0)) > 2):
+    if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent(market)) > 2):
         minValue = ONE
     else:
-        minValue = EVENTS.getMinValue(MARKETS.getMarketEvent(market, 0))
+        minValue = EVENTS.getMinValue(MARKETS.getMarketEvent(market))
     sumOfFills = 0
     # all in shares including the money here
     askerSharesFilled = 0
