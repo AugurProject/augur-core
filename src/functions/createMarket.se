@@ -95,7 +95,7 @@ def publicCreateMarket(branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo
     # -4: market already exists
     # -5: currency isn't an approved branch currency
     # -6: didn't pay enough for market resolution gas cost
-    # throw()s if not enough money to create the market and place event in the appropriate reporting period
+    # ~invalid()s if not enough money to create the market and place event in the appropriate reporting period
 # .05 eth to create
 # need at least 1.2M gas @ gas price to cover resolution & 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation
@@ -109,7 +109,7 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
     minFee = safeFxpMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
     creationFee = max(minFee, creationFee)
     if(!creationFee):
-        throw()
+        ~invalid()
     period = block.timestamp / TWENTY_FOUR_HR
     numOutcomes = EVENTS.getNumOutcomes(event)
     cumulativeScale = 0
@@ -141,9 +141,11 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
 
     # if it's already been created, throw
     if(INFO.getCreator(market)):
-        throw()
+        ~invalid()
 
     wallet = create('wallet.se')
+    wallet.initialize(currency)
+
     shareContracts = array(numOutcomes)
     i = 0
     while i < numOutcomes:
@@ -158,42 +160,42 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
 def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event, expirationDate, currency):
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
     if(msg.sender != self):
-        throw()
+        ~invalid()
     if(!periodLength):
-        throw()
+        ~invalid()
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch)):
-        throw()
+        ~invalid()
     # FIXME MAX_FEE < min trading fee, so this always fails
     # if(fxpTradingFee > MAX_FEE):
-    #     throw()
+    #     ~invalid()
     if(EVENTS.getEventBranch(event) != branch):
-        throw()
+        ~invalid()
     if(!INFO.getCreator(event)):
-        throw()
+        ~invalid()
     if(expirationDate < block.timestamp):
-        throw()
+        ~invalid()
     if(!BRANCHES.getCurrencyActive(branch, currency)):
-        throw()
+        ~invalid()
     if(msg.value < safeMul(COST_FOR_MARKET_RESOLUTION, tx.gasprice)):
-        throw()
+        ~invalid()
     return(1)
 
 # initialize market and send money to pay for resolution
 def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo: str, expirationDate, shareContracts: arr):
     if(msg.sender != self):
-        throw()
+        ~invalid()
     if(!currency.transferFrom(sender, INFO.getWallet(branch), fxpCreationFee)):
-        throw()
+        ~invalid()
     if(!INFO.setInfo(market, text(""), sender, fxpCreationFee, currency, wallet)):
-        throw()
+        ~invalid()
     events = array(1)
     events[0] = event
     if(!MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value, fxpCreationFee, expirationDate, shareContracts, value = msg.value)):
-        throw()
+        ~invalid()
     if(!BRANCHES.addMarketToBranch(branch, market)):
-        throw()
+        ~invalid()
     if(!EVENTS.addMarket(event, market)):
-        throw()
+        ~invalid()
     # event creation bond pay w/ markets
         # A = P*e^rt
         # so A - P gives us amount to return to person
@@ -202,16 +204,16 @@ def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet
     time = (expirationDate - block.timestamp) * ONE / SECONDS_PER_YEAR
     amountToPay = safeFxpMul(bondPrincipal, FXP.fxExp(safeFxpMul(time, TEN_PERCENT_RATE))) - bondPrincipal
     if(!eventCurrency.transferFrom(sender, INFO.getCreator(event), amountToPay)):
-        throw()
+        ~invalid()
     return(1)
 
 def setController(newController):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     self.controller = newController
     return(1)
 
 def suicideFunds(to):
     if(msg.sender != self.controller):
-        throw()
+        ~invalid()
     suicide(to)
