@@ -113,8 +113,8 @@ def createEvent(sender: address, branch, description: str, expDate, fxpMinValue,
         return(0)
 
     wallet = create('wallet.se')
-    if(!wallet.initialize(currency)):
-        ~invalid()
+    wallet.initialize(currency)
+
     REPORTING.addReporter(branch, event, 0, 0, 0)
 
     firstResolveBondPaid = 0

@@ -257,13 +257,80 @@ def test_CreateMarket(contracts, s, t):
         assert(contracts.markets.getExtraInfo(marketID) == extraInfo), "Extra info matches input"
     test_publicCreateMarket()
 
+def buyCompleteSets(contracts, s, t, marketID, fxpAmount):
+    assert(contracts.cash.approve(contracts.completeSets.address, fix(10000), sender=t.k1) == 1), "Approve completeSets contract to spend cash"
+    with iocapture.capture() as captured:
+        result = contracts.completeSets.publicBuyCompleteSets(marketID, fxpAmount, sender=t.k1)
+        logged = captured.stdout
+    logCompleteSets = parseCapturedLogs(logged)[-1]
+    assert(logCompleteSets["_event_type"] == "logCompleteSets"), "Should emit a logCompleteSets event"
+    assert(logCompleteSets["sender"] == long(t.a1.encode("hex"), 16)), "Logged sender should match input"
+    assert(logCompleteSets["type"] == 1), "Logged type should be 1 (buy)"
+    assert(logCompleteSets["fxpAmount"] == fxpAmount), "Logged fxpAmount should match input"
+    assert(logCompleteSets["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match input"
+    assert(logCompleteSets["numOutcomes"] == contracts.markets.getMarketNumOutcomes(marketID)), "Logged numOutcomes should market's number of outcomes"
+    assert(logCompleteSets["market"] == marketID), "Logged market should match input"
+
+def test_CompleteSets(contracts, s, t):
+    address1 = long(t.a1.encode("hex"), 16)
+    def test_publicBuyCompleteSets():
+        eventID = createBinaryEvent(contracts, s, t)
+        marketID = createBinaryMarket(contracts, s, t, eventID)
+        fxpAmount = fix(10)
+        senderInitialCash = contracts.cash.balanceOf(t.a1)
+        marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
+        assert(contracts.cash.approve(contracts.completeSets.address, fix(10000), sender=t.k1) == 1), "Approve completeSets contract to spend cash"
+        with iocapture.capture() as captured:
+            result = contracts.completeSets.publicBuyCompleteSets(marketID, fxpAmount, sender=t.k1)
+            logged = captured.stdout
+        logCompleteSets = parseCapturedLogs(logged)[-1]
+        assert(logCompleteSets["_event_type"] == "logCompleteSets"), "Should emit a logCompleteSets event"
+        assert(logCompleteSets["sender"] == address1), "Logged sender should match input"
+        assert(logCompleteSets["type"] == 1), "Logged type should be 1 (buy)"
+        assert(logCompleteSets["fxpAmount"] == fxpAmount), "Logged fxpAmount should match input"
+        assert(logCompleteSets["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match input"
+        assert(logCompleteSets["numOutcomes"] == contracts.events.getNumOutcomes(eventID)), "Logged numOutcomes should match event's number of outcomes"
+        assert(logCompleteSets["fxpFee"] == 0), "Logged fee should be 0"
+        assert(logCompleteSets["market"] == marketID), "Logged market should match input"
+        assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1) == fxpAmount), "Should have 10 shares of outcome 1"
+        assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2) == fxpAmount), "Should have 10 shares of outcome 2"
+        assert(senderInitialCash - contracts.cash.balanceOf(t.a1) == fxpAmount), "Decrease in sender's cash should equal 10"
+        assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == fxpAmount), "Increase in market's cash should equal 10"
+        assert(contracts.markets.getTotalSharesPurchased(marketID) - marketInitialTotalShares == 2*fxpAmount), "Increase in total shares purchased for this market should be 18"
+    def test_publicSellCompleteSets():
+        eventID = createBinaryEvent(contracts, s, t)
+        marketID = createBinaryMarket(contracts, s, t, eventID)
+        buyCompleteSets(contracts, s, t, marketID, fix(10))
+        fxpAmount = fix(9)
+        senderInitialCash = contracts.cash.balanceOf(t.a1)
+        marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
+        with iocapture.capture() as captured:
+            result = contracts.completeSets.publicSellCompleteSets(marketID, fxpAmount, sender=t.k1)
+            logged = captured.stdout
+        logCompleteSets = parseCapturedLogs(logged)[-1]
+        assert(logCompleteSets["_event_type"] == "logCompleteSets"), "Should emit a logCompleteSets event"
+        assert(logCompleteSets["sender"] == address1), "Logged sender should match input"
+        assert(logCompleteSets["type"] == 2), "Logged type should be 2 (sell)"
+        assert(logCompleteSets["fxpAmount"] == fxpAmount), "Logged fxpAmount should match input"
+        assert(logCompleteSets["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match input"
+        assert(logCompleteSets["numOutcomes"] == contracts.events.getNumOutcomes(eventID)), "Logged numOutcomes should match event's number of outcomes"
+        assert(logCompleteSets["fxpFee"] > 0), "Logged fees should be > 0"
+        assert(logCompleteSets["market"] == marketID), "Logged market should match input"
+        assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1) == fix(1)), "Should have 1 share of outcome 1"
+        assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2) == fix(1)), "Should have 1 share of outcome 2"
+        assert(marketInitialTotalShares - contracts.markets.getTotalSharesPurchased(marketID) == 2*fxpAmount), "Decrease in total shares purchased for this market should be 18"
+    test_publicBuyCompleteSets()
+    test_publicSellCompleteSets()
+
 def test_MakeOrder(contracts, s, t):
     address1 = long(t.a1.encode("hex"), 16)
     def test_publicMakeOrder():
         def test_bid():
             orderType = 1                   # bid
             fxpAmount = 1000000000000000000 # fixed-point 1
-            fxpPrice = 1500000000000000000  # fixed-point 1.5
+            fxpPrice = 1600000000000000000  # fixed-point 1.6
             outcomeID = 2
             tradeGroupID = 42
             eventID = createBinaryEvent(contracts, s, t)
@@ -290,7 +357,7 @@ def test_MakeOrder(contracts, s, t):
             assert(order[9] == 0), "order[9] should be the number of shares escrowed"
             assert(makerInitialCash - contracts.cash.balanceOf(t.a1) == order[8]), "Decrease in maker's cash balance should equal money escrowed"
             assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == order[8]), "Increase in market's cash balance should equal money escrowed"
-            assert(logMakeOrder["_event_type"] == "logMakeOrder"), "Should emit an logMakeOrder event"
+            assert(logMakeOrder["_event_type"] == "logMakeOrder"), "Should emit a logMakeOrder event"
             assert(logMakeOrder["tradeGroupID"] == tradeGroupID), "Logged tradeGroupID should match input"
             assert(logMakeOrder["moneyEscrowed"] == order[8]), "Logged moneyEscrowed should match amount in order"
             assert(logMakeOrder["sharesEscrowed"] == order[9]), "Logged sharesEscrowed should match amount in order"
@@ -299,10 +366,10 @@ def test_MakeOrder(contracts, s, t):
             assert(logMakeOrder["outcome"] == outcomeID), "Logged outcome should match input"
             assert(logMakeOrder["market"] == marketID), "Logged market should match input"
             assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
-        def test_ask():
+        def test_ask_withoutShares():
             orderType = 2                   # ask
             fxpAmount = 1000000000000000000 # fixed-point 1
-            fxpPrice = 1500000000000000000  # fixed-point 1.5
+            fxpPrice = 1600000000000000000  # fixed-point 1.6
             outcomeID = 2
             tradeGroupID = 42
             eventID = createBinaryEvent(contracts, s, t)
@@ -325,9 +392,11 @@ def test_MakeOrder(contracts, s, t):
             assert(order[5] == address1), "order[5] should be the sender's address"
             assert(order[6] == contracts._ContractLoader__state.block.number), "order[6] should be the current block number"
             assert(order[7] == outcomeID), "order[6] should be the outcome ID"
-            assert(order[8] == int(unfix(fxpAmount*(fxpPrice - contracts.events.getMinValue(eventID))))), "order[8] should be the amount of money escrowed"
+            assert(order[8] == int(unfix(fxpAmount*(contracts.events.getMaxValue(eventID) - fxpPrice)))), "order[8] should be the amount of money escrowed"
             assert(order[9] == 0), "order[9] should be the number of shares escrowed"
-            assert(logMakeOrder["_event_type"] == "logMakeOrder"), "Should emit an logMakeOrder event"
+            assert(makerInitialCash - contracts.cash.balanceOf(t.a1) == order[8]), "Decrease in maker's cash balance should equal money escrowed"
+            assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == order[8]), "Increase in market's cash balance should equal money escrowed"
+            assert(logMakeOrder["_event_type"] == "logMakeOrder"), "Should emit a logMakeOrder event"
             assert(logMakeOrder["tradeGroupID"] == tradeGroupID), "Logged tradeGroupID should match input"
             assert(logMakeOrder["moneyEscrowed"] == order[8]), "Logged moneyEscrowed should match amount in order"
             assert(logMakeOrder["sharesEscrowed"] == order[9]), "Logged sharesEscrowed should match amount in order"
@@ -336,8 +405,11 @@ def test_MakeOrder(contracts, s, t):
             assert(logMakeOrder["outcome"] == outcomeID), "Logged outcome should match input"
             assert(logMakeOrder["market"] == marketID), "Logged market should match input"
             assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
+        def test_ask_withShares():
+            pass # need buyCompleteSets
         test_bid()
-        test_ask()
+        test_ask_withoutShares()
+        test_ask_withShares
     test_publicMakeOrder()
 
 def runtests():
@@ -349,6 +421,7 @@ def runtests():
     test_CreateEvent(contracts, state, t)
     test_CreateMarket(contracts, state, t)
     test_MakeOrder(contracts, state, t)
+    test_CompleteSets(contracts, state, t)
 
 if __name__ == '__main__':
     runtests()
