@@ -701,6 +701,16 @@ def test_info(contracts, s, t):
     test_setInfo()
     print("data_api/info.se unit tests completed")
 
+def test_mutex(contracts, s, t):
+    c = contracts.mutex
+    assert(c.acquire() == 1), "acquire should return 1 if the mutex isn't already set."
+    try:
+        raise Exception(c.acquire())
+    except Exception as exc:
+        assert(isinstance(exc, t.TransactionFailed)), "mutex should already be set so attempting to call acquire again should fail"
+    assert(c.release() == 1), "release shoud return 1 and release the mutex"
+    print("data_api/mutex.se unit tests completed")
+
 if __name__ == '__main__':
     src = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'src')
     contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
@@ -712,6 +722,7 @@ if __name__ == '__main__':
     test_consensusData(contracts, state, t)
     test_events(contracts, state, t)
     test_info(contracts, state, t)
+    test_mutex(contracts, state, t)
     # data_api/expiringEvents.se
     # data_api/fxpFunctions.se
     # data_api/info.se
