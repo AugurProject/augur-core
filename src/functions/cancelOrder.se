@@ -86,7 +86,7 @@ def refundOrder(sender: address, type, sharesEscrowed, moneyEscrowed, market, ou
     # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
     if(type == BID and sharesEscrowed):
         i = 1
-        while(i < MARKETS.getMarketNumOutcomes(market)):
+        while(i <= MARKETS.getMarketNumOutcomes(market)):
             if(i != outcome):
                 MARKETS.modifyParticipantShares(market, sender, outcome, sharesEscrowed, 0)
             i += 1

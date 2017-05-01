@@ -176,7 +176,7 @@ def placeBid(sender: address, type, fxpAmount, fxpPrice, market, outcome):
         fxpAmount -= fill
         sharesEscrowed += fill
         i = 1
-        while(i < MARKETS.getMarketNumOutcomes(market)):
+        while(i <= MARKETS.getMarketNumOutcomes(market)):
             if(i != outcome):
                 MARKETS.modifyParticipantShares(market, sender, i, -fill, 0)
             i += 1
