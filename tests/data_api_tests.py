@@ -257,7 +257,7 @@ def test_branches(contracts, s, t):
         assert(c.getMarketIDsInBranch(branch1, 0, 5) == [0, 0, 0, 0, 0]), "Markets returned when there should be no markets on the branch"
         assert(c.getCreationDate(branch1) == s.block.timestamp), "creationDate not the expected timestamp"
         assert(c.getBaseReporters(branch1) == 6), "baseReporters should be 6"
-        assert(c.getMinTradingFee(branch1) == 200000000000000000), "minTradeFees should be .2%"
+        assert(c.getMinTradingFee(branch1) == 2000000000000000), "minTradeFees should be .2%"
         assert(c.getVotePeriod(branch1) == round((s.block.timestamp / 15) - 1)), "Voteperiod wasn't the expected period"
         assert(c.getPeriodLength(branch1) == 15), "period length should be 15"
         assert(c.getForkPeriod(branch1) == 0), "ForkPeriod should be 0"
@@ -714,12 +714,19 @@ def test_mutex(contracts, s, t):
 def test_expiringEvents(contracts, s, t):
     c = contracts.expiringEvents
     branch1 = 1010101
-    period1 = contracts.branches.getVotePeriod(branch1)
-    event1 = 1234
+    period0 = contracts.branches.getVotePeriod(branch1) - 1
+    period1 = period0 + 1
+    period2 = period1 + 1
+    event1 = 123456789
+    event2 = 987654321
+    event3 = 333333333
+    report0 = 1234567890
+    report1 = 9876543210
     cashAddr = long(contracts.cash.address.encode("hex"), 16)
     cashWallet = contracts.branches.getBranchWallet(branch1, cashAddr)
     address0 = long(t.a0.encode("hex"), 16)
     address1 = long(t.a1.encode("hex"), 16)
+    address2 = long(t.a2.encode("hex"), 16)
     ONE = 10**18
     subsidy1 = 15*ONE
 
@@ -729,14 +736,22 @@ def test_expiringEvents(contracts, s, t):
         assert(c.getNumberEvents(branch1, period1) == 0)
         assert(c.getEventIndex(branch1, period1, event1) == 0)
         assert(c.getEvent(branch1, period1, 0) == 0)
-        assert(c.getNumRemoved(branch1, period1) == 0)
         assert(c.addEvent(branch1, period1, event1, subsidy1, cashAddr, cashWallet, 0) == 1)
-        assert(c.getEvents(branch1, period1) == [event1])
-        assert(c.getEventsRange(branch1, period1, 0, 5) == [event1, 0, 0, 0, 0])
-        assert(c.getNumberEvents(branch1, period1) == 1)
+        assert(contracts.events.initializeEvent(event1, branch1, period1, ONE, ONE*2, 2, "https://someresolution.eth", address0, address1, address2) == 1)
+        assert(c.addEvent(branch1, period1, event2, subsidy1, cashAddr, cashWallet, 0) == 1)
+        assert(contracts.events.initializeEvent(event2, branch1, period1, ONE, ONE*4, 4, "https://someresolution.eth", address0, address1, address2) == 1)
+        assert(c.getEvents(branch1, period1) == [event1, event2])
+        assert(c.getEventsRange(branch1, period1, 0, 5) == [event1, event2, 0, 0, 0])
+        assert(c.getNumberEvents(branch1, period1) == 2)
         assert(c.getEventIndex(branch1, period1, event1) == 0)
+        assert(c.getEventIndex(branch1, period1, event2) == 1)
         assert(c.getEvent(branch1, period1, 0) == event1)
-        assert(c.getNumRemoved(branch1, period1) == 0)
+        assert(c.getEvent(branch1, period1, 1) == event2)
+
+    def test_fees():
+        assert(c.getFeeValue(branch1, period1) == 0)
+        assert(c.adjustPeriodFeeValue(branch1, period1, 100) == 1)
+        assert(c.getFeeValue(branch1, period1) == 100)
 
     def test_rep():
         assert(c.getBeforeRep(branch1, period1, address0) == 0)
@@ -745,41 +760,117 @@ def test_expiringEvents(contracts, s, t):
         assert(c.getPeriodDormantRep(branch1, period1, address1) == 0)
         assert(c.getNumActiveReporters(branch1, period1) == 0)
         assert(c.getActiveReporters(branch1, period1) == [])
+        assert(c.getAfterRep(branch1, period1, address0) == 0)
+        assert(c.getAfterRep(branch1, period1, address1) == 0)
         assert(c.setBeforeRep(branch1, period1, 100, address0) == 100)
         assert(c.setBeforeRep(branch1, period1, 100, address1) == 100)
         assert(c.setPeriodDormantRep(branch1, period1, 200, address0) == 200)
         assert(c.setPeriodDormantRep(branch1, period1, 200, address1) == 200)
+        assert(c.setAfterRep(branch1, period1, 100, address0) == 100)
+        assert(c.setAfterRep(branch1, period1, 100, address1) == 100)
         assert(c.getBeforeRep(branch1, period1, address0) == 100)
         assert(c.getBeforeRep(branch1, period1, address1) == 100)
         assert(c.getPeriodDormantRep(branch1, period1, address0) == 200)
         assert(c.getPeriodDormantRep(branch1, period1, address1) == 200)
+        assert(c.getAfterRep(branch1, period1, address0) == 100)
+        assert(c.getAfterRep(branch1, period1, address1) == 100)
         assert(c.getNumActiveReporters(branch1, period1) == 2)
         assert(c.getActiveReporters(branch1, period1) == [address0, address1])
 
-    # getNumberEvents - getEvent - addEvent - deleteEvent - removeEvent - getNumRemoved
-    # getEvents - getEventsRange - getEventIndex
+    def test_reporting():
+        assert(c.getPeriodRepWeight(branch1, period1, address0) == 0)
+        assert(c.setPeriodRepWeight(branch1, period1, address0, 10) == 1)
+        assert(c.getPeriodRepWeight(branch1, period1, address0) == 10)
+
+        assert(c.getEventWeight(branch1, period1, event1) == 0)
+        assert(c.setEventWeight(branch1, period1, event1, 50) == 1)
+        assert(c.getEventWeight(branch1, period1, event1) == 50)
+
+        assert(c.getReport(branch1, period1, event1, address0) == 0)
+        assert(c.setReport(branch1, period1, event1, report0, address0) == 1)
+        assert(c.getReport(branch1, period1, event1, address0) == report0)
+
+        assert(c.getEthicReport(branch1, period1, event1, address0) == 0)
+        assert(c.setEthicReport(branch1, period1, event1, ONE, address0) == 1)
+        assert(c.getEthicReport(branch1, period1, event1, address0) == ONE)
+
+        assert(c.getNumReportsSubmitted(branch1, period1, address0) == 0)
+        assert(c.addReportToReportsSubmitted(branch1, period1, address0) == 1)
+        assert(c.getNumReportsSubmitted(branch1, period1, address0) == 1)
+        assert(c.getEventWeight(branch1, period1, event1) == 50)
+        assert(c.countReportAsSubmitted(branch1, period1, event1, address0, 50) == 1)
+        assert(c.getNumReportsSubmitted(branch1, period1, address0) == 2)
+        assert(c.getEventWeight(branch1, period1, event1) == 100)
+
+        assert(c.getWeightOfReport(period1, event1, report0) == 0)
+        assert(c.addToWeightOfReport(period1, event1, report0, 100) == 1)
+        assert(c.getWeightOfReport(period1, event1, report0) == 100)
+
+        assert(c.getLesserReportNum(branch1, period1, event1) == 0)
+        assert(c.setLesserReportNum(branch1, period1, event1, 5) == 1)
+        assert(c.getLesserReportNum(branch1, period1, event1) == 5)
+
+        assert(c.getNumEventsToReportOn(branch1, period1) == 0)
+        assert(c.setNumEventsToReportOn(branch1) == 1)
+        assert(c.getNumEventsToReportOn(branch1, period1) == 12)
+
+        assert(c.getCurrentMode(period1, event2) == 0)
+        assert(c.getCurrentModeItems(period1, event2) == 0)
+
+        assert(c.setCurrentMode(period1, event2, 100) == 1)
+        assert(c.setReport(branch1, period1, event2, report1, address0) == 1)
+        assert(c.addToWeightOfReport(period1, event2, report1, 100) == 1)
+        assert(c.setCurrentModeItems(period1, event2, report1) == 1)
+
+        assert(c.getCurrentMode(period1, event2) == 100)
+        assert(c.getCurrentModeItems(period1, event2) == 100)
+
+        assert(c.getNumRoundTwo(branch1, period1) == 0)
+        assert(c.addRoundTwo(branch1, period1) == 1)
+        assert(c.getNumRoundTwo(branch1, period1) == 1)
+
+    # def test_eventModification():
+    #     assert(c.addEvent(branch1, period0, event3, subsidy1, cashAddr, cashWallet, 0) == 1)
+    #     assert(contracts.events.initializeEvent(event3, branch1, period0, ONE, ONE*4, 4, "https://someresolution.eth", address0, address1, address2) == 1)
+    #     assert(c.getEvents(branch1, period1) == [event1, event2])
+    #     assert(c.getEvents(branch1, period0) == [event3])
+    #     assert(c.getEvent(branch1, period1, 0) == event1)
+    #     assert(c.getEvent(branch1, period1, 1) == event2)
+    #     assert(c.getEvent(branch1, period0, 0) == event3)
+    #     assert(c.getNumberEvents(branch1, period1) == 2)
+    #     assert(c.getNumberEvents(branch1, period0) == 1)
+    #     assert(c.getNumRemoved(branch1, period1) == 0)
+    #
+    #     assert(c.moveEvent(branch1, event3) == 1)
+    #
+    #     assert(c.getEvents(branch1, period2) == [event3])
+    #     assert(c.getEvent(branch1, period2, 0) == event3)
+    #
+    #     assert(c.deleteEvent(branch1, period2, event3) == 1)
+    #     assert(c.getEvent(branch1, period2, 0) == 0)
+    #
+    #     assert(c.removeEvent(branch1, period1) == 1)
+    #     assert(c.getNumRemoved(branch1, period1) == 1)
+    #
+    #     assert(c.getRequired(event2, period1, branch1) == 0)
+    #     assert(c.getNumRequired(branch1, period1) == 0)
+    #
+    #     assert(c.setEventRequired(branch1, period1, event2) == 1)
+    #     # confirm it returns 0 if we already have this event set to required
+    #     assert(c.setEventRequired(branch1, period1, event2) == 0)
+    #
+    #     assert(c.getRequired(event2, period1, branch1) == 1)
+    #     assert(c.getNumRequired(branch1, period1) == 1)
 
     # refundCost - getSubsidy
-    # getPeriodRepWeight - setPeriodRepWeight
-    # setEthicReport - getEthicReport
-    # getLesserReportNum - setLesserReportNum
-    # getReport - setReport
-    # getBeforeRep - getAfterRep - setBeforeRep - setAfterRep
-    # setPeriodDormantRep - getPeriodDormantRep
-    # getActiveReporters - getNumActiveReporters
-    # getEventWeight - setEventWeight
-    # getNumRoundTwo - addRoundTwo
-    # getRequired - getNumRequired - setEventRequired
+    # need to expand this and do a fork event for testing...
+    # assert(c.getAfterFork(branch1, period1) == 0)
 
-    # setNumEventsToReportOn - getNumEventsToReportOn
-    # getFeeValue - adjustPeriodFeeValue
-
-    # addToWeightOfReport - getWeightOfReport
-    # getCurrentMode - setCurrentMode - setCurrentModeItems - getCurrentModeItems
-    # getAfterFork - moveEvent
-    # addReportToReportsSubmitted - getNumReportsSubmitted - countReportAsSubmitted
     test_addEvent()
+    test_fees()
     test_rep()
+    test_reporting()
+    # test_eventModification()
     print("data_api/expiringEvents.se unit tests completed")
 
 

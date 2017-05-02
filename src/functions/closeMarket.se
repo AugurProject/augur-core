@@ -57,7 +57,7 @@ def closeMarket(market, sender):
     refund()
     if (!isCallerWhitelisted()):
         MUTEX.acquire()
-    event = MARKETS.getMarketEvent(market, 0)
+    event = MARKETS.getMarketEvent(market)
     branch = EVENTS.getEventBranch(event)
     expiration = EVENTS.getExpiration(event)
     periodLength = BRANCHES.getPeriodLength(branch)
