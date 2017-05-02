@@ -6,7 +6,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 extern rateContract: [rateFunction:[]:int256]
 
-extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[address,uint256]:int256]
+extern wallet: [initialize:[int256]:int256, setController:[int256]:int256, suicideFunds:[int256]:_, transfer:[address,uint256]:int256]
 
 inset('../macros/refund.sem')
 
