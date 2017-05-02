@@ -1,3 +1,5 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
 inset('../macros/refund.sem')
 
 macro fxExp2Small($x):

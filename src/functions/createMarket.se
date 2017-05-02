@@ -1,22 +1,4 @@
-# This software (Augur) allows buying and selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-# Any questions please contact joey@augur.net
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
@@ -84,7 +66,7 @@ def publicCreateMarket(branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo
 # Create a market. Markets are the basic _tradable_ units / questions that are traded on in Augur
 # @param branch is the branch of the market
 # @param fxpTradingFee is percent in fixedPoint
-# @param events array is the list of events in a market [only 1 for now]
+# @param event is the event to create the market around
 # @params tag1, tag2, and tag3 are the tags describing a market
 # @param fxpMakerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
 # @param extraInfo is a string of any extra info associated with a market
@@ -144,6 +126,8 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
         ~invalid()
 
     wallet = create('wallet.se')
+    wallet.initialize(currency)
+
     shareContracts = array(numOutcomes)
     i = 0
     while i < numOutcomes:
@@ -163,9 +147,8 @@ def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event,
         ~invalid()
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch)):
         ~invalid()
-    # FIXME MAX_FEE < min trading fee, so this always fails
-    # if(fxpTradingFee > MAX_FEE):
-    #     ~invalid()
+    if(fxpTradingFee > MAX_FEE):
+        ~invalid()
     if(EVENTS.getEventBranch(event) != branch):
         ~invalid()
     if(!INFO.getCreator(event)):
@@ -186,9 +169,7 @@ def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet
         ~invalid()
     if(!INFO.setInfo(market, text(""), sender, fxpCreationFee, currency, wallet)):
         ~invalid()
-    events = array(1)
-    events[0] = event
-    if(!MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value, fxpCreationFee, expirationDate, shareContracts, value = msg.value)):
+    if(!MARKETS.initializeMarket(market, event, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value, fxpCreationFee, expirationDate, shareContracts, value = msg.value)):
         ~invalid()
     if(!BRANCHES.addMarketToBranch(branch, market)):
         ~invalid()

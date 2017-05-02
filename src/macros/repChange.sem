@@ -1,3 +1,5 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
 # Calculates the amount of rep to be redistributed
 macro calculateRepChange($report, $maxPenalty):
     adjustForNonBinaryResolution()

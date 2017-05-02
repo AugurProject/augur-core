@@ -1,3 +1,5 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
 ### Handles reporter penalization on forked events
 
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]

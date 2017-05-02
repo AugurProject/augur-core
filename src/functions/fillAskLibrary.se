@@ -1,3 +1,5 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
 BRANCHES = self.controller.lookup('branches')
@@ -87,13 +89,13 @@ def fillAsk(orderID, amountTakerWants):
     if(ORDERS.checkHash(orderHash, msg.sender) == -1):
         MUTEX.release()
         return([-1]: arr)
-    maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market, 0))
+    maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market))
     minValue = 0
     # for categorical events the min is one
-    if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent(market, 0)) > 2):
+    if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent(market)) > 2):
         minValue = ONE
     else:
-        minValue = EVENTS.getMinValue(MARKETS.getMarketEvent(market, 0))
+        minValue = EVENTS.getMinValue(MARKETS.getMarketEvent(market))
     sumOfFills = 0
     # all in shares including the money here
     askerSharesFilled = 0
@@ -123,12 +125,12 @@ def fillAsk(orderID, amountTakerWants):
 macro sellMakersCompleteSets():
     sharesHeld = -1
     i = 1
-    while(i < MARKETS.getMarketNumOutcomes(market)):
+    while(i <= MARKETS.getMarketNumOutcomes(market)):
         sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, owner, i), sharesHeld)
         i += 1
     if(sharesHeld):
         i = 1
-        while(i < MARKETS.getMarketNumOutcomes(market)):
+        while(i <= MARKETS.getMarketNumOutcomes(market)):
             MARKETS.modifyShares(market, i, -sharesHeld)
             MARKETS.modifyParticipantShares(market, owner, i, -sharesHeld, 0)
             i += 1
@@ -148,7 +150,7 @@ macro sellMakersCompleteSets():
 macro sellTakerCompleteSetsIfAny():
     sharesHeld = -1
     i = 1
-    while(i < MARKETS.getMarketNumOutcomes(market)):
+    while(i <= MARKETS.getMarketNumOutcomes(market)):
         sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, msg.sender, i), sharesHeld)
         i += 1
     # Sell the asker's [msg.sender] complete sets if they have any

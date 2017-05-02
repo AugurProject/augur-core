@@ -1,3 +1,5 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
 # Returns the proportion of reporters who reported correctly on a given binary $event
 # Returns 0 if no outcome
 macro proportionCorrect($event, $forkEvent):

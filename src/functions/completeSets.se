@@ -1,22 +1,4 @@
-# This software (Augur) allows buying and selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-# Any questions please contact joey@augur.net
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
@@ -38,40 +20,62 @@ extern mutex: [acquire:[]:int256, release:[]:int256]
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/logReturn.sem')
 inset('../macros/float.sem')
 
 data controller
 
-event completeSetsLogReturn(sender: indexed, market: indexed, type: indexed, returnValue, numOutcomes)
+event logCompleteSets(sender: indexed, market: indexed, type: indexed, fxpAmount, numOutcomes, fxpFee, timestamp)
 
 ### Allows users to buy/sell sets of every outcome, so 500 complete sets in a 3 outcome market is 500 of outcome 1, 2, and 3 each respectively
 
 # Buys fxpAmount of every outcome
 # cost 850k gas
-# Errors:
-    # 0: invalid market/doesn't exist
-    # -1: not enough money
-    # -2: not a large enough amount
 def init():
     self.controller = 0x0
 
-def buyCompleteSets(market, fxpAmount):
+def publicBuyCompleteSets(market, fxpAmount):
     refund()
     MUTEX.acquire()
+    self.buyCompleteSets(msg.sender, market, fxpAmount)
+    MUTEX.release()
+    return(1)
+
+def publicSellCompleteSets(market, fxpAmount):
+    refund()
+    MUTEX.acquire()
+    self.sellCompleteSets(msg.sender, market, fxpAmount)
+    MUTEX.release()
+    return(1)
+
+def buyCompleteSets(sender: address, market, fxpAmount):
+    refund()
+    self.controller.checkWhitelist(msg.sender)
+
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
     cost = safeFxpMul(fxpAmount, cumulativeScale)
-    checkBuyCompleteSetsPreconditions()
-    n = 1
+
+    # Check preconditions
+    if(!MARKETS.getMarketNumOutcomes(market)):
+        ~invalid()
+    if(fxpAmount <= 0):
+        ~invalid()
+
+    # send money from user acc. to market address/account
+    if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), cost)):
+        ~invalid()
+
     # send shares of the event to user address and increment the number issued in the market for each outcome
+    n = 1
     while(n <= numOutcomes):
         MARKETS.modifyShares(market, n, fxpAmount)
-        MARKETS.modifyParticipantShares(market, msg.sender, n, fxpAmount, 0)
+        MARKETS.modifyParticipantShares(market, sender, n, fxpAmount, 0)
         n += 1
+
     # if still before voting period has started count the share value
-    # also account for fees paid to branch here even though paid upon selling / resolution so we can assign reporters appropriately
+    # also account for fees paid to branch here even though paid upon selling
+    # / resolution so we can assign reporters appropriately
     notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
     if(notVotingOnYet):
         MARKETS.modifySharesValue(market, safeFxpMul(fxpAmount, cumulativeScale))
@@ -82,65 +86,53 @@ def buyCompleteSets(market, fxpAmount):
         MARKETS.addFees(market, feesInWei)
         EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
 
-    MUTEX.release()
-    logReturn(completeSetsLogReturn, 1)
+    log(type = logCompleteSets, sender, market, 1, fxpAmount, numOutcomes, 0, block.timestamp)
+    return(1)
 
 # Sells fxpAmount of every outcome [if user owns it]
 # cost 850k gas
-# Errors:
-    # -1: user doesn't own enough shares
-    # -2: user hasn't specified a large enough amount
-def sellCompleteSets(market, fxpAmount):
+def sellCompleteSets(sender: address, market, fxpAmount):
     refund()
-    MUTEX.acquire()
+    self.controller.checkWhitelist(msg.sender)
+
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
     cost = safeFxpMul(fxpAmount, cumulativeScale)
-    checkSellCompleteSetsPreconditions()
 
-    # Takes shares away from participant and decreases the fxpAmount issued in the market since we're exchanging complete sets
+    # Check preconditions
+    if(fxpAmount <= 0):
+        ~invalid()
+    n = 1
+    while(n <= numOutcomes):
+        if(MARKETS.getParticipantSharesPurchased(market, sender, n) < fxpAmount):
+            ~invalid()
+        n += 1
+
+    # Takes shares away from participant and decreases the amount issued in the
+    # market since we're exchanging complete sets
+    n = 1
     while(n <= numOutcomes):
         MARKETS.modifyShares(market, n, -fxpAmount)
-        MARKETS.modifyParticipantShares(market, msg.sender, n, -fxpAmount, 0)
+        MARKETS.modifyParticipantShares(market, sender, n, -fxpAmount, 0)
         n += 1
+
     # send funds from the market to the user acc.
     fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAmount), cumulativeScale)
-    if(!INFO.getWallet(market).transfer(msg.sender, safeSub(cost, fee))):
+    if(!INFO.getWallet(market).transfer(sender, safeSub(cost, fee))):
         ~invalid()
-    # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
+
+    # if still before voting period has started count it in the share value for
+    # the period and market to target # of reporters to be higher in markets w/
+    # more outstanding value
     notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
     if(notVotingOnYet):
         MARKETS.modifySharesValue(market, safeFxpMul(-fxpAmount, cumulativeScale))
-    currency = INFO.getCurrency(market)
     if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
         ~invalid()
-    MUTEX.release()
-    logReturn(completeSetsLogReturn, 1)
 
-macro checkBuyCompleteSetsPreconditions():
-    if(!MARKETS.getMarketNumOutcomes(market)):
-        MUTEX.release()
-        logReturn(completeSetsLogReturn, 0)
-    if(fxpAmount <= 0):
-        MUTEX.release()
-        logReturn(completeSetsLogReturn, -2)
-    # send money from user acc. to market address/account
-    if(!INFO.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), cost)):
-        MUTEX.release()
-        logReturn(completeSetsLogReturn, -1)
-
-macro checkSellCompleteSetsPreconditions():
-    if(fxpAmount <= 0):
-        MUTEX.release()
-        logReturn(completeSetsLogReturn, -2)
-    n = 1
-    while(n <= numOutcomes):
-        if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < fxpAmount):
-            MUTEX.release()
-            logReturn(completeSetsLogReturn, -1)
-        n += 1
-    n = 1
+    log(type = logCompleteSets, sender, market, 2, fxpAmount, numOutcomes, fee, block.timestamp)
+    return(1)
 
 def setController(newController):
     if(msg.sender != self.controller):

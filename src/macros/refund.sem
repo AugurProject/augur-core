@@ -1,3 +1,5 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
 macro ONE: 10**18
 
 macro ONE_HALF: 500000000000000000

@@ -1,23 +1,4 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-#
-#    This program is free software: you can redistribute it &&/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-# Any questions please contact joey@augur.net
+#Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
@@ -51,7 +32,7 @@ def init():
 def getMarketInfo(marketID, account):
     refund()
     index = BASE_FIELDS
-    eventID = MARKETS.getMarketEvent(marketID, 0)
+    eventID = MARKETS.getMarketEvent(marketID)
     descriptionLength = INFO.getDescriptionLength(eventID)
     resolutionLength = EVENTS.getResolutionLength(eventID)
     extraInfoLength = MARKETS.getExtraInfoLength(marketID)
@@ -69,7 +50,7 @@ def getMarketInfo(marketID, account):
     marketInfo[9] = MARKETS.getVolume(marketID)
     marketInfo[10] = INFO.getCreationFee(marketID)
     marketInfo[11] = INFO.getCreator(marketID)
-    tags = MARKETS.returnTags(marketID, outitems=3)
+    tags = MARKETS.getTags(marketID, outitems=3)
     marketInfo[12] = tags[0]
     marketInfo[13] = tags[1]
     marketInfo[14] = tags[2]
@@ -136,7 +117,7 @@ def batchGetMarketInfo(marketIDs: arr, account):
     i = 0
     while i < numMarkets:
         marketID = marketIDs[i]
-        eventID = MARKETS.getMarketEvent(marketID, 0)
+        eventID = MARKETS.getMarketEvent(marketID)
         descriptionLength = INFO.getDescriptionLength(eventID)
         resolutionLength = EVENTS.getResolutionLength(eventID)
         extraInfoLength = MARKETS.getExtraInfoLength(marketID)

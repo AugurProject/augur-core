@@ -1,3 +1,5 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
 macro atSecondHalfOfPeriod():
     residual = block.timestamp % periodLength
     if(residual <= periodLength / 2):

@@ -1,22 +1,4 @@
-# This software (Augur) allows buying and selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-# Any questions please contact joey@augur.net
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
@@ -30,9 +12,7 @@ extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint25
 inset('../macros/refund.sem')
 
 # Markets' index is the market, markets stores data about markets [which are able to be traded on] in augur
-    # Events is a 0 indexed array of events in the market in the format of
-        # [1, event, event, 2, event, 3, event, event, event]
-        # 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
+    # Event is the event in the market
     # Sharespurchased keeps track of the number of shares purchased for each outcome
         # sharesPurchased index states starts at 1 - (same for participants[].shares[] array)
     # Participants is an array of participants, their addresses as keys and the shares in each outcome they've purchased of an event as the values
@@ -57,7 +37,7 @@ inset('../macros/refund.sem')
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded fxpPrice for a given outcome in a market
     # shareContracts stores the erc-20 token contract address for each outcome in the market
-data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, orderIDs[](id, nextID, prevID), lastOrder, totalOrders, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[])
+data Markets[](event, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, orderIDs[](id, nextID, prevID), lastOrder, totalOrders, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
@@ -67,16 +47,14 @@ data controller
 def init():
     self.controller = 0x0
 
-def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
+def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
     self.controller.checkWhitelist(msg.sender)
     # add event list to the market
-    save(self.Markets[market].events[0], events, items = len(events))
-    # save(self.Markets[market].shareContracts[0], shareContracts, items = numOutcomes)
+    self.Markets[market].event = event
     i = 0
     while i < numOutcomes:
         self.Markets[market].shareContracts[i + 1] = shareContracts[i]
         i += 1
-    self.Markets[market].lenEvents = len(events)
     save(self.Markets[market].extraInfo[0], extraInfo, chars = len(extraInfo))
     self.Markets[market].extraInfoLen = len(extraInfo)
     self.Markets[market].tradingPeriod = tradingPeriod
@@ -217,7 +195,7 @@ def getGasSubsidy(market):
 def getSharesValue(market):
     return(self.Markets[market].sharesValue)
 
-def returnTags(market):
+def getTags(market):
     tags = array(3)
     tags[0] = self.Markets[market].tag1
     tags[1] = self.Markets[market].tag2
@@ -237,11 +215,8 @@ def getTotalSharesPurchased(market):
         i += 1
     return(total)
 
-def getMarketEvent(market, index):
-    return(self.Markets[market].events[index])
-
-def getMarketEvents(market):
-    return(load(self.Markets[market].events[0], items = self.Markets[market].lenEvents): arr)
+def getMarketEvent(market):
+    return(self.Markets[market].event)
 
 def getMarketShareContracts(market):
     numOutcomes = self.Markets[market].numOutcomes
@@ -251,7 +226,6 @@ def getMarketShareContracts(market):
         shareContracts[i] = self.Markets[market].shareContracts[i + 1]
         i += 1
     return(shareContracts: arr)
-    # return(load(self.Markets[market].shareContracts[0], items = self.Markets[market].numOutcomes): arr)
 
 # @return fxp
 def getSharesPurchased(market, outcome):
@@ -270,12 +244,7 @@ def getVolume(market):
 
 # @return fxp
 def getParticipantSharesPurchased(market, trader, outcome):
-    # numOutcomes = self.Markets[market].numOutcomes
-    # return(self.getMarketShareContracts(market, outitems=numOutcomes)[outcome].balanceOf(trader))
     return(self.Markets[market].shareContracts[outcome].balanceOf(trader))
-
-def getNumEvents(market):
-    return(self.Markets[market].lenEvents)
 
 # @return fxp
 def getCumulativeScale(market):

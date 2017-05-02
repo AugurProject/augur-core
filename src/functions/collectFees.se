@@ -1,3 +1,5 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
 ### Used to allow users to collect fees from reporting
 
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
