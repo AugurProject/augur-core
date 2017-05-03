@@ -406,10 +406,96 @@ def test_MakeOrder(contracts, s, t):
             assert(logMakeOrder["market"] == marketID), "Logged market should match input"
             assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
         def test_ask_withShares():
-            pass # need buyCompleteSets
+            orderType = 2                   # ask
+            fxpAmount = 1000000000000000000 # fixed-point 1
+            fxpPrice = 1600000000000000000  # fixed-point 1.6
+            outcomeID = 2
+            tradeGroupID = 42
+            eventID = createBinaryEvent(contracts, s, t)
+            marketID = createBinaryMarket(contracts, s, t, eventID)
+            buyCompleteSets(contracts, s, t, marketID, fix(10))
+            fxpAmount = fix(9)
+            makerInitialCash = contracts.cash.balanceOf(t.a1)
+            makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
+            marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+            marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
+            with iocapture.capture() as captured:
+                orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+                logged = captured.stdout
+            logMakeOrder = parseCapturedLogs(logged)[-1]
+            assert(orderID != 0), "Order ID should be non-zero"
+            order = contracts.orders.getOrder(orderID)
+            assert(len(order) == 10), "Order array length should be 10"
+            assert(order[0] == orderID), "order[0] should be the order ID"
+            assert(order[1] == orderType), "order[1] should be the order type"
+            assert(order[2] == marketID), "order[2] should be the market ID"
+            assert(order[3] == fxpAmount), "order[3] should be the amount of the order"
+            assert(order[4] == fxpPrice), "order[4] should be the order's price"
+            assert(order[5] == address1), "order[5] should be the sender's address"
+            assert(order[6] == contracts._ContractLoader__state.block.number), "order[6] should be the current block number"
+            assert(order[7] == outcomeID), "order[6] should be the outcome ID"
+            assert(order[8] == 0), "order[8] should be the amount of money escrowed"
+            assert(order[9] == fxpAmount), "order[9] should be the number of shares escrowed"
+            assert(makerInitialCash == contracts.cash.balanceOf(t.a1)), "Maker's cash balance should be unchanged"
+            assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == marketInitialCash), "Market's cash balance should be unchanged"
+            assert(makerInitialShares - contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID) == fxpAmount), "Decrease in participant shares purchased should be equal to order amount"
+            assert(marketInitialTotalShares == contracts.markets.getTotalSharesPurchased(marketID)), "Market's total shares purchased should be unchanged"
+            assert(logMakeOrder["_event_type"] == "logMakeOrder"), "Should emit a logMakeOrder event"
+            assert(logMakeOrder["tradeGroupID"] == tradeGroupID), "Logged tradeGroupID should match input"
+            assert(logMakeOrder["moneyEscrowed"] == order[8]), "Logged moneyEscrowed should match amount in order"
+            assert(logMakeOrder["sharesEscrowed"] == order[9]), "Logged sharesEscrowed should match amount in order"
+            assert(logMakeOrder["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match the current block timestamp"
+            assert(logMakeOrder["orderID"] == orderID), "Logged orderID should match returned orderID"
+            assert(logMakeOrder["outcome"] == outcomeID), "Logged outcome should match input"
+            assert(logMakeOrder["market"] == marketID), "Logged market should match input"
+            assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
+        def test_ask_withPartialShares():
+            orderType = 2                   # ask
+            fxpAmount = 1000000000000000000 # fixed-point 1
+            fxpPrice = 1600000000000000000  # fixed-point 1.6
+            outcomeID = 2
+            tradeGroupID = 42
+            eventID = createBinaryEvent(contracts, s, t)
+            marketID = createBinaryMarket(contracts, s, t, eventID)
+            buyCompleteSets(contracts, s, t, marketID, fix(10))
+            fxpAmount = fix(12)
+            makerInitialCash = contracts.cash.balanceOf(t.a1)
+            makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
+            marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+            marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
+            with iocapture.capture() as captured:
+                orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+                logged = captured.stdout
+            logMakeOrder = parseCapturedLogs(logged)[-1]
+            assert(orderID != 0), "Order ID should be non-zero"
+            order = contracts.orders.getOrder(orderID)
+            assert(len(order) == 10), "Order array length should be 10"
+            assert(order[0] == orderID), "order[0] should be the order ID"
+            assert(order[1] == orderType), "order[1] should be the order type"
+            assert(order[2] == marketID), "order[2] should be the market ID"
+            assert(order[3] == fxpAmount), "order[3] should be the amount of the order"
+            assert(order[4] == fxpPrice), "order[4] should be the order's price"
+            assert(order[5] == address1), "order[5] should be the sender's address"
+            assert(order[6] == contracts._ContractLoader__state.block.number), "order[6] should be the current block number"
+            assert(order[7] == outcomeID), "order[6] should be the outcome ID"
+            assert(order[8] == int(unfix(fix(2)*(contracts.events.getMaxValue(eventID) - fxpPrice)))), "order[8] should be the amount of money escrowed"
+            assert(order[9] == fix(10)), "order[9] should be the number of shares escrowed"
+            import ipdb; ipdb.set_trace()
+            assert(makerInitialCash - contracts.cash.balanceOf(t.a1) == order[8]), "Decrease in maker's cash balance should equal money escrowed"
+            assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == order[8]), "Increase in market's cash balance should equal money escrowed"
+            assert(logMakeOrder["_event_type"] == "logMakeOrder"), "Should emit a logMakeOrder event"
+            assert(logMakeOrder["tradeGroupID"] == tradeGroupID), "Logged tradeGroupID should match input"
+            assert(logMakeOrder["moneyEscrowed"] == order[8]), "Logged moneyEscrowed should match amount in order"
+            assert(logMakeOrder["sharesEscrowed"] == order[9]), "Logged sharesEscrowed should match amount in order"
+            assert(logMakeOrder["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match the current block timestamp"
+            assert(logMakeOrder["orderID"] == orderID), "Logged orderID should match returned orderID"
+            assert(logMakeOrder["outcome"] == outcomeID), "Logged outcome should match input"
+            assert(logMakeOrder["market"] == marketID), "Logged market should match input"
+            assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
         test_bid()
         test_ask_withoutShares()
-        test_ask_withShares
+        test_ask_withShares()
+        test_ask_withPartialShares()
     test_publicMakeOrder()
 
 def runtests():
@@ -420,8 +506,8 @@ def runtests():
     test_Cash(os.path.join(src, 'functions', 'cash.se'))
     test_CreateEvent(contracts, state, t)
     test_CreateMarket(contracts, state, t)
-    test_MakeOrder(contracts, state, t)
     test_CompleteSets(contracts, state, t)
+    test_MakeOrder(contracts, state, t)
 
 if __name__ == '__main__':
     runtests()
