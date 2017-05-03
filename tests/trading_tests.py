@@ -65,7 +65,7 @@ def createBinaryEvent(contracts, s, t):
 def createBinaryMarket(contracts, s, t, eventID):
     contracts.cash.approve(contracts.createMarket.address, fix(10000), sender=t.k1)
     branch = 1010101
-    fxpTradingFee = 200000000000000001
+    fxpTradingFee = 20000000000000001
     tag1 = 123
     tag2 = 456
     tag3 = 789
@@ -243,7 +243,7 @@ def test_CreateMarket(contracts, s, t):
         currency = contracts.cash.address
         forkResolveAddress = contracts.forkResolution.address
         eventID = contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
-        fxpTradingFee = 200000000000000001
+        fxpTradingFee = 20000000000000001
         tag1 = 123
         tag2 = 456
         tag3 = 789

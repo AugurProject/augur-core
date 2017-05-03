@@ -46,7 +46,6 @@ event marketCreated(sender: indexed, marketID: indexed, topic: indexed, branch, 
 macro POINT_ZERO_THREE: 553402322211286528
 macro COST_PER_REPORTER: 3500000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
-macro MAX_FEE: 10 ** 17
 macro THREE_DAYS: 259200
 macro FIRST_RESOLVE_BOND: 11 * ONE
 macro SECONDS_PER_YEAR: 31557600
@@ -146,8 +145,6 @@ def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event,
     if(!periodLength):
         ~invalid()
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch)):
-        ~invalid()
-    if(fxpTradingFee > MAX_FEE):
         ~invalid()
     if(EVENTS.getEventBranch(event) != branch):
         ~invalid()
