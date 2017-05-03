@@ -27,7 +27,7 @@ inset('../macros/float.sem')
 
 data controller
 
-event logMakeOrder(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, outcome, orderID, moneyEscrowed, sharesEscrowed, timestamp, tradeGroupID)
+event logMakeOrder(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, timestamp, tradeGroupID)
 
 # Order types
 macro BID: 1
@@ -70,19 +70,19 @@ def makeOrder(sender: address, type, fxpAmount, fxpPrice, market, outcome, trade
     else:
         ~invalid()
 
-    moneyEscrowed = escrow[0]
-    sharesEscrowed = escrow[1]
+    fxpMoneyEscrowed = escrow[0]
+    fxpSharesEscrowed = escrow[1]
 
-    order = [type, market, fxpAmount, fxpPrice, sender, block.number, outcome, moneyEscrowed, sharesEscrowed]
+    order = [type, market, fxpAmount, fxpPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
     orderID = sha3(order, items = 9)
     if(ORDERS.getID(orderID)):
         ~invalid()
-    ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, moneyEscrowed, sharesEscrowed)
+    ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
 
     # Update market
     MARKETS.addOrder(market, orderID)
 
-    log(type = logMakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, moneyEscrowed, sharesEscrowed, block.timestamp, tradeGroupID)
+    log(type = logMakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp, tradeGroupID)
     return(orderID)
 
 def placeAsk(sender: address, fxpAmount, fxpPrice, market, outcome):
@@ -90,27 +90,26 @@ def placeAsk(sender: address, fxpAmount, fxpPrice, market, outcome):
     if(msg.sender != self):
         ~invalid()
 
-    moneyEscrowed = 0
-    sharesEscrowed = 0
+    fxpMoneyEscrowed = 0
+    fxpSharesEscrowed = 0
     event = MARKETS.getMarketEvent(market)
-    cumulativeScale = MARKETS.getCumulativeScale(market)
+    fxpCumulativeScale = MARKETS.getCumulativeScale(market)
 
     # Take shares in escrow if user has shares
-    sharesHeld = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
-    if(sharesHeld):
-        minValue = 0
+    fxpSharesHeld = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
+    if(fxpSharesHeld):
         if(EVENTS.getNumOutcomes(event) > 2):
-            minValue = ONE
+            fxpMinValue = ONE
         else:
-            minValue = EVENTS.getMinValue(event)
-        price = fxpPrice - minValue
-        cost = safeFxpMul(fxpAmount, price)
-        if(price > cumulativeScale or cost < MIN_ORDER_VALUE):
+            fxpMinValue = EVENTS.getMinValue(event)
+        fxpAdjustedPrice = fxpPrice - fxpMinValue
+        fxpCost = safeFxpMul(fxpAmount, fxpAdjustedPrice)
+        if(fxpAdjustedPrice > fxpCumulativeScale or fxpCost < MIN_ORDER_VALUE):
             ~invalid()
-        fill = min(sharesHeld, fxpAmount)
-        fxpAmount -= fill
-        sharesEscrowed += fill
-        MARKETS.modifyParticipantShares(market, sender, outcome, -fill, 0)
+        fxpFill = min(fxpSharesHeld, fxpAmount)
+        fxpAmount -= fxpFill
+        fxpSharesEscrowed += fxpFill
+        MARKETS.modifyParticipantShares(market, sender, outcome, -fxpFill, 0)
 
     # Take max minus price they want to sell at for the remainder of the amount
     # that wasn't able to be used up above
@@ -122,68 +121,68 @@ def placeAsk(sender: address, fxpAmount, fxpPrice, market, outcome):
             maxValue = EVENTS.getMaxValue(event)
         costPerShareShorting = maxValue - fxpPrice
         orderCost = safeFxpMul(fxpAmount, costPerShareShorting)
-        if(costPerShareShorting > cumulativeScale or orderCost < MIN_ORDER_VALUE):
+        if(costPerShareShorting > fxpCumulativeScale or orderCost < MIN_ORDER_VALUE):
             ~invalid()
-        moneyEscrowed += orderCost
+        fxpMoneyEscrowed += orderCost
         INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), orderCost)
 
-    return([moneyEscrowed, sharesEscrowed]: arr)
+    return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
 def placeBid(sender: address, fxpAmount, fxpPrice, market, outcome):
     refund()
     if(msg.sender != self):
         ~invalid()
 
-    moneyEscrowed = 0
-    sharesEscrowed = 0
+    fxpMoneyEscrowed = 0
+    fxpSharesEscrowed = 0
     event = MARKETS.getMarketEvent(market)
-    cumulativeScale = MARKETS.getCumulativeScale(market)
+    fxpCumulativeScale = MARKETS.getCumulativeScale(market)
 
     # If user owns n minus the one outcome we're buying escrow no money but
     # escrow their shares in all the other outcomes.
-    sharesHeld = -1
+    fxpSharesHeld = -1
     i = 1
     while(i <= MARKETS.getMarketNumOutcomes(market)):
         if(i != outcome):
-            sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), sharesHeld)
+            fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), fxpSharesHeld)
         i += 1
-    if(sharesHeld > 0):
+    if(fxpSharesHeld > 0):
         if(EVENTS.getNumOutcomes(event) > 2):
-            minValue = ONE
+            fxpMinValue = ONE
         else:
-            minValue = EVENTS.getMinValue(event)
-        price = fxpPrice - minValue
-        cost = safeFxpMul(fxpAmount, price)
-        if(price > cumulativeScale):
+            fxpMinValue = EVENTS.getMinValue(event)
+        fxpAdjustedPrice = fxpPrice - fxpMinValue
+        fxpCost = safeFxpMul(fxpAmount, fxpAdjustedPrice)
+        if(fxpAdjustedPrice > fxpCumulativeScale):
             ~invalid()
-        if(cost < MIN_ORDER_VALUE):
+        if(fxpCost < MIN_ORDER_VALUE):
             ~invalid()
-        fill = min(sharesHeld, fxpAmount)
-        fxpAmount -= fill
-        sharesEscrowed += fill
+        fxpFill = min(fxpSharesHeld, fxpAmount)
+        fxpAmount -= fxpFill
+        fxpSharesEscrowed += fxpFill
         i = 1
         while(i <= MARKETS.getMarketNumOutcomes(market)):
             if(i != outcome):
-                MARKETS.modifyParticipantShares(market, sender, i, -fill, 0)
+                MARKETS.modifyParticipantShares(market, sender, i, -fxpFill, 0)
             i += 1
 
     # Take money in escrow for price - min for the remainder of amount that wasn't
     # able to be used up above. Make sure price - min isn't more than range
     if(fxpAmount):
         if(EVENTS.getNumOutcomes(event) > 2):
-            minValue = ONE
+            fxpMinValue = ONE
         else:
-            minValue = EVENTS.getMinValue(event)
-        price = fxpPrice - minValue
-        cost = safeFxpMul(fxpAmount, price)
-        moneyEscrowed += cost
-        if(price > cumulativeScale):
+            fxpMinValue = EVENTS.getMinValue(event)
+        fxpAdjustedPrice = fxpPrice - fxpMinValue
+        fxpCost = safeFxpMul(fxpAmount, fxpAdjustedPrice)
+        fxpMoneyEscrowed += fxpCost
+        if(fxpAdjustedPrice > fxpCumulativeScale):
             ~invalid()
-        if(cost < MIN_ORDER_VALUE):
+        if(fxpCost < MIN_ORDER_VALUE):
             ~invalid()
-        INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), cost)
+        INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), fxpCost)
 
-    return([moneyEscrowed, sharesEscrowed]: arr)
+    return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
 def setController(newController):
     if(msg.sender != self.controller):
