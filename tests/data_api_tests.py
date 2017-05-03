@@ -26,7 +26,7 @@ def test_backstops(contracts, s, t):
 
     def test_disputedOverEthics():
         assert(c.getDisputedOverEthics(event1) == 0), "disputedOverEthics isn't defaulted to 0"
-        c.setDisputedOverEthics(event1)
+        assert(c.setDisputedOverEthics(event1) == 1), "setDisputedOverEthics wasn't executed successfully"
         assert(c.getDisputedOverEthics(event1) == 1), "setDisputedOverEthics didn't set event properly"
         # try:
         #     assert(c.getDisputedOverEthics(event2) == 0), "disputedOverEthics isn't defaulted to 0"
@@ -714,12 +714,14 @@ def test_mutex(contracts, s, t):
 def test_expiringEvents(contracts, s, t):
     c = contracts.expiringEvents
     branch1 = 1010101
+    branch2 = 2020202
     period0 = contracts.branches.getVotePeriod(branch1) - 1
     period1 = period0 + 1
     period2 = period1 + 1
     event1 = 123456789
     event2 = 987654321
     event3 = 333333333
+    event4 = 444444444
     report0 = 1234567890
     report1 = 9876543210
     cashAddr = long(contracts.cash.address.encode("hex"), 16)
@@ -762,12 +764,14 @@ def test_expiringEvents(contracts, s, t):
         assert(c.getActiveReporters(branch1, period1) == [])
         assert(c.getAfterRep(branch1, period1, address0) == 0)
         assert(c.getAfterRep(branch1, period1, address1) == 0)
+
         assert(c.setBeforeRep(branch1, period1, 100, address0) == 100)
         assert(c.setBeforeRep(branch1, period1, 100, address1) == 100)
         assert(c.setPeriodDormantRep(branch1, period1, 200, address0) == 200)
         assert(c.setPeriodDormantRep(branch1, period1, 200, address1) == 200)
         assert(c.setAfterRep(branch1, period1, 100, address0) == 100)
         assert(c.setAfterRep(branch1, period1, 100, address1) == 100)
+
         assert(c.getBeforeRep(branch1, period1, address0) == 100)
         assert(c.getBeforeRep(branch1, period1, address1) == 100)
         assert(c.getPeriodDormantRep(branch1, period1, address0) == 200)
@@ -829,49 +833,139 @@ def test_expiringEvents(contracts, s, t):
         assert(c.addRoundTwo(branch1, period1) == 1)
         assert(c.getNumRoundTwo(branch1, period1) == 1)
 
-    # def test_eventModification():
-    #     assert(c.addEvent(branch1, period0, event3, subsidy1, cashAddr, cashWallet, 0) == 1)
-    #     assert(contracts.events.initializeEvent(event3, branch1, period0, ONE, ONE*4, 4, "https://someresolution.eth", address0, address1, address2) == 1)
-    #     assert(c.getEvents(branch1, period1) == [event1, event2])
-    #     assert(c.getEvents(branch1, period0) == [event3])
-    #     assert(c.getEvent(branch1, period1, 0) == event1)
-    #     assert(c.getEvent(branch1, period1, 1) == event2)
-    #     assert(c.getEvent(branch1, period0, 0) == event3)
-    #     assert(c.getNumberEvents(branch1, period1) == 2)
-    #     assert(c.getNumberEvents(branch1, period0) == 1)
-    #     assert(c.getNumRemoved(branch1, period1) == 0)
-    #
-    #     assert(c.moveEvent(branch1, event3) == 1)
-    #
-    #     assert(c.getEvents(branch1, period2) == [event3])
-    #     assert(c.getEvent(branch1, period2, 0) == event3)
-    #
-    #     assert(c.deleteEvent(branch1, period2, event3) == 1)
-    #     assert(c.getEvent(branch1, period2, 0) == 0)
-    #
-    #     assert(c.removeEvent(branch1, period1) == 1)
-    #     assert(c.getNumRemoved(branch1, period1) == 1)
-    #
-    #     assert(c.getRequired(event2, period1, branch1) == 0)
-    #     assert(c.getNumRequired(branch1, period1) == 0)
-    #
-    #     assert(c.setEventRequired(branch1, period1, event2) == 1)
-    #     # confirm it returns 0 if we already have this event set to required
-    #     assert(c.setEventRequired(branch1, period1, event2) == 0)
-    #
-    #     assert(c.getRequired(event2, period1, branch1) == 1)
-    #     assert(c.getNumRequired(branch1, period1) == 1)
+    def test_eventModification():
+        assert(c.addEvent(branch2, period0, event3, subsidy1, cashAddr, cashWallet, 0) == 1)
+        assert(contracts.events.initializeEvent(event3, branch2, period0, ONE, ONE*4, 4, "https://someresolution.eth", address0, address1, address2) == 1)
+        assert(c.getEvents(branch1, period1) == [event1, event2])
+        assert(c.getEvents(branch2, period0) == [event3])
+        assert(c.getEvent(branch1, period1, 0) == event1)
+        assert(c.getEvent(branch1, period1, 1) == event2)
+        assert(c.getEvent(branch2, period0, 0) == event3)
+        assert(c.getNumberEvents(branch1, period1) == 2)
+        assert(c.getNumberEvents(branch2, period0) == 1)
+
+        assert(c.moveEvent(branch2, event3) == 1)
+        assert(c.moveEvent(branch1, event2) == 0)
+
+        assert(c.getEvents(branch2, period2) == [event3])
+        assert(c.getEvent(branch2, period2, 0) == event3)
+        assert(c.getEvent(branch2, period0, 0) == event3)
+
+        assert(c.deleteEvent(branch2, period0, event3) == 1)
+        assert(c.getEvent(branch2, period0, 0) == 0)
+
+        assert(c.getNumRemoved(branch1, period1) == 0)
+        assert(c.removeEvent(branch1, period1) == 1)
+        assert(c.getNumRemoved(branch1, period1) == 1)
+
+        assert(c.getRequired(event2, period1, branch1) == 0)
+        assert(c.getNumRequired(branch1, period1) == 0)
+
+        assert(c.setEventRequired(branch1, period1, event2) == 1)
+        # confirm it returns 0 if we already have this event set to required
+        assert(c.setEventRequired(branch1, period1, event2) == 0)
+
+        assert(c.getRequired(event2, period1, branch1) == 1)
+        assert(c.getNumRequired(branch1, period1) == 1)
+
+        assert(c.getAfterFork(branch1, period1) == 0)
+        # assert(c.getAfterFork(branch1, period2) == 1)
 
     # refundCost - getSubsidy
-    # need to expand this and do a fork event for testing...
-    # assert(c.getAfterFork(branch1, period1) == 0)
 
     test_addEvent()
     test_fees()
     test_rep()
     test_reporting()
-    # test_eventModification()
+    test_eventModification()
     print("data_api/expiringEvents.se unit tests completed")
+
+def test_orders(contracts, s, t):
+    c = contracts.orders
+    market1 = 1111111111
+    address0 = long(t.a0.encode("hex"), 16)
+    address1 = long(t.a1.encode("hex"), 16)
+    address2 = long(t.a2.encode("hex"), 16)
+    order1 = 123456789
+    order2 = 987654321
+    ONE = 10**18
+    pointFive = 10**17*5
+
+    def test_hashcommit():
+        order = c.makeOrderHash(market1, 1, 1)
+        assert(order != 0)
+        assert(c.commitOrder(order) == 1)
+        assert(c.checkHash(order, address0) == -1)
+        # move the block.number up 1
+        s.block.mine(1)
+        assert(c.checkHash(order, address0) == 1)
+
+    def test_saveOrder():
+        assert(c.getBestBid(market1, 1) == 0)
+        assert(c.getBestAsk(market1, 1) == 0)
+        # orderID, type, market, amount, price, sender, outcome, money, shares
+        assert(c.saveOrder(order1, 1, market1, ONE*10, pointFive, address0, 1, 0, ONE*10) == 1)
+        assert(c.saveOrder(order2, 2, market1, ONE*10, pointFive, address1, 1, ONE*5, 0) == 1)
+
+        assert(c.getOrder(order1) == [order1, 1, market1, ONE*10, pointFive, address0, s.block.number, 1, 0, ONE*10])
+        assert(c.getOrder(order2) == [order2, 2, market1, ONE*10, pointFive, address1, s.block.number, 1, ONE*5, 0])
+
+        assert(c.getAmount(order1) == ONE*10)
+        assert(c.getAmount(order2) == ONE*10)
+
+        assert(c.getID(order1) == order1)
+        assert(c.getID(order2) == order2)
+
+        assert(c.getPrice(order1) == pointFive)
+        assert(c.getPrice(order2) == pointFive)
+
+        assert(c.getOrderOwner(order1) == address0)
+        assert(c.getOrderOwner(order2) == address1)
+
+        assert(c.getType(order1) == 1)
+        assert(c.getType(order2) == 2)
+
+        assert(c.getBestBid(market1, 1) == order1)
+        assert(c.getBestAsk(market1, 1) == order2)
+
+    def test_fillOrder():
+        # orderID, fill, money, shares
+        try:
+            raise Exception(c.fillOrder(order1, ONE*20, 0, 0))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed))
+        try:
+            raise Exception(c.fillOrder(order1, ONE*10, 0, ONE*20))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed))
+        try:
+            raise Exception(c.fillOrder(order1, ONE*10, ONE*20, 0))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed))
+        # fully fill
+        assert(c.fillOrder(order1, ONE*10, 0, ONE*10) == 1)
+        # prove all
+        assert(c.getOrder(order1) == [order1, 1, market1, 0, pointFive, address0, s.block.number, 1, 0, 0])
+        # test partial fill
+        assert(c.fillOrder(order2, ONE*6, ONE*3, 0) == 1)
+        # confirm partial fill
+        assert(c.getOrder(order2) == [order2, 2, market1, ONE*4, pointFive, address1, s.block.number, 1, ONE*2, 0])
+        # fill rest of order2
+        assert(c.fillOrder(order2, ONE*4, ONE*2, 0) == 1)
+        assert(c.getOrder(order2) == [order2, 2, market1, 0, pointFive, address1, s.block.number, 1, 0, 0])
+
+    def test_removeOrder():
+        order3 = 321321321
+        assert(c.saveOrder(order3, 1, market1, ONE*10, pointFive, address0, 2, 0, ONE*10) == 1)
+        assert(c.getOrder(order3) == [order3, 1, market1, ONE*10, pointFive, address0, s.block.number, 2, 0, ONE*10])
+        assert(c.removeOrder(order3) == 1)
+        assert(c.getOrder(order3) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+    test_hashcommit()
+    test_saveOrder()
+    test_fillOrder()
+    test_removeOrder()
+    print("data_api/orders.se unit tests completed")
 
 
 if __name__ == '__main__':
@@ -887,10 +981,9 @@ if __name__ == '__main__':
     test_expiringEvents(contracts, state, t)
     test_info(contracts, state, t)
     test_mutex(contracts, state, t)
+    test_orders(contracts, state, t)
     # data_api/fxpFunctions.se
-    # data_api/info.se
     # data_api/markets.se
-    # data_api/mutex.se
     # data_api/orders.se
     # data_api/register.se
     # data_api/reporting.se
