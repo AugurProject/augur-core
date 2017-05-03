@@ -3,7 +3,7 @@
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
-extern mutex: [acquire:[]:int256, release:[]:int256]
+extern mutex: [acquire:[]:int256, release:[]:int256, setController:[int256]:int256, suicideFunds:[int256]:_]
 
 ### Token wrapper for shares
 
