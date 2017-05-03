@@ -11,8 +11,6 @@ inset('../macros/refund.sem')
 data orderCommits[](hash, block)
 # orderID is index
 data orders[](id, type, market, amount, price, owner, block, outcome, sharesEscrowed, moneyEscrowed)
-# indices are marketID and outcomeID
-data bestOrder[][](bid, ask)
 
 data controller
 
@@ -43,12 +41,6 @@ def checkHash(orderHash, sender):
     else:
         return(1)
 
-def getBestBid(market, outcome):
-    return(self.bestOrder[market][outcome].bid)
-
-def getBestAsk(market, outcome):
-    return(self.bestOrder[market][outcome].ask)
-
 def saveOrder(orderID, type, market, amount, price, sender, outcome, money, shares):
     self.controller.checkWhitelist(msg.sender)
     self.orders[orderID].id = orderID
@@ -61,20 +53,6 @@ def saveOrder(orderID, type, market, amount, price, sender, outcome, money, shar
     self.orders[orderID].outcome = outcome
     self.orders[orderID].moneyEscrowed = money
     self.orders[orderID].sharesEscrowed = shares
-
-    # Update best bid and ask trade IDs:
-    #  - if this outcome's best trade is set, but this trade price is better,
-    #    then this trade ID is the new best trade
-    #  - if this outcome's best trade is unset, then this trade ID is the new
-    #    best trade
-    if(type == 1):
-        bestBidPrice = self.orders[self.bestOrder[market][outcome].bid].price
-        if(price > bestBidPrice or self.orders[self.bestOrder[market][outcome].bid].amount < safeFxpDiv(MIN_ORDER_VALUE, bestBidPrice)):
-            self.bestOrder[market][outcome].bid = orderID
-    else:
-        bestAskPrice = self.orders[self.bestOrder[market][outcome].ask].price
-        if(price > bestAskPrice or self.orders[self.bestOrder[market][outcome].ask].amount < safeFxpDiv(MIN_ORDER_VALUE, bestAskPrice)):
-            self.bestOrder[market][outcome].ask = orderID
     return(1)
 
 def getOrder(id):
