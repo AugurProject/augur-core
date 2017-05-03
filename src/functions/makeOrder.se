@@ -37,10 +37,6 @@ macro MIN_ORDER_VALUE: 10000000000000000
 
 #
 # Bid / Ask actions: puts orders on the book
-# Errors:
-    #  0: market doesn't exist
-    # -1: fxpAmount/fxpPrice bad
-#
 # costs 532k gas
 
 # price is always in 10**18 fxp, amount is in the market's currency # of decimals, e.g. for 9 10**9 is 1 share [so buy 10**9 complete sets and it'll cost you 1 full unit of that currency or buy 10**9 at a fxpPrice of 10**18 it'll cost you 1 full unit of the currency]
