@@ -43,16 +43,13 @@ def publicCancelOrder(orderID):
 #
 # Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
 # @returns 1 if success, throws on failure
-#
-# 200k gas
 def cancelOrder(sender: address, orderID):
     refund()
     self.controller.checkWhitelist(msg.sender)
     if(orderID == 0):
         ~invalid()
 
-    # user can cancel anytime
-    # Get info for the order to cancel
+    # Look up the order the sender wants to cancel
     order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
     type = order[1]
     market = order[2]
@@ -63,7 +60,7 @@ def cancelOrder(sender: address, orderID):
     fxpMoneyEscrowed = order[8]
     fxpSharesEscrowed = order[9]
 
-    # Check that the order ID is correct, the type is bid or ask,
+    # Check that the order ID is correct, the type is bid (1) or ask (2),
     # and that the sender owns the order
     if(order[0] != orderID):
         ~invalid()
@@ -83,7 +80,7 @@ def cancelOrder(sender: address, orderID):
     return(1)
 
 # Issue refunds
-def refundOrder(sender: address, type, fxpSharesEscrowed, fxpMoneyEscrowed, market, outcome):
+def refundOrder(sender: address, type: uint256, fxpSharesEscrowed: uint256, fxpMoneyEscrowed: uint256, market: address, outcome: uint256):
     refund()
     if(msg.sender != self):
         ~invalid()
@@ -104,8 +101,7 @@ def refundOrder(sender: address, type, fxpSharesEscrowed, fxpMoneyEscrowed, mark
 
     # Return to user moneyEscrowed that wasn't filled yet
     if(fxpMoneyEscrowed > 0):
-        if(!INFO.getWallet(market).transfer(sender, fxpMoneyEscrowed)):
-            ~invalid()
+        INFO.getWallet(market).transfer(sender, fxpMoneyEscrowed)
 
     return(1)
 
