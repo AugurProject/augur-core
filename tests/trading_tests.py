@@ -330,9 +330,9 @@ def test_CompleteSets(contracts, s, t):
             except Exception as exc:
                 assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicBuyCompleteSets should fail if market ID is invalid"
             try:
-                raise Exception(contracts.completeSets.publicBuyCompleteSets(marketID, -1*fxpAmount, sender=t.k1))
+                raise Exception(contracts.completeSets.publicBuyCompleteSets(marketID, fix(-10), sender=t.k1))
             except Exception as exc:
-                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicBuyCompleteSets should fail if fxpAmount is negative"
+                assert(isinstance(exc, ethereum.abi.ValueOutOfBounds)), "publicBuyCompleteSets should throw ValueOutOfBounds exception if fxpAmount is negative"
             try:
                 raise Exception(contracts.completeSets.publicBuyCompleteSets(marketID, 0, sender=t.k1))
             except Exception as exc:
@@ -367,6 +367,39 @@ def test_CompleteSets(contracts, s, t):
         assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1) == fix(1)), "Should have 1 share of outcome 1"
         assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2) == fix(1)), "Should have 1 share of outcome 2"
         assert(marketInitialTotalShares - contracts.markets.getTotalSharesPurchased(marketID) == 2*fxpAmount), "Decrease in total shares purchased for this market should be 18"
+        def test_exceptions():
+            contracts._ContractLoader__state.mine(1)
+            eventID = createBinaryEvent(contracts, s, t)
+            marketID = createBinaryMarket(contracts, s, t, eventID)
+            fxpAmount = fix(10)
+            buyCompleteSets(contracts, s, t, marketID, fxpAmount)
+
+            # Permissions exceptions
+            contracts._ContractLoader__state.mine(1)
+            try:
+                raise Exception(contracts.completeSets.sellCompleteSets(t.a1, marketID, fxpAmount, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "sellCompleteSets should fail if called from a non-whitelisted account (account 1)"
+
+            # sellCompleteSets exceptions
+            contracts._ContractLoader__state.mine(1)
+            try:
+                raise Exception(contracts.completeSets.publicSellCompleteSets(marketID + 1, fxpAmount, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicSellCompleteSets should fail if market ID is invalid"
+            try:
+                raise Exception(contracts.completeSets.publicSellCompleteSets(marketID, fix(-10), sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.abi.ValueOutOfBounds)), "publicSellCompleteSets should throw ValueOutOfBounds exception if fxpAmount is negative"
+            try:
+                raise Exception(contracts.completeSets.publicSellCompleteSets(marketID, 0, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicSellCompleteSets should fail if fxpAmount is zero"
+            try:
+                raise Exception(contracts.completeSets.publicSellCompleteSets(marketID, fxpAmount + 1, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicSellCompleteSets should fail if the sender has insufficient shares in any outcome"
+        test_exceptions()
     test_publicBuyCompleteSets()
     test_publicSellCompleteSets()
 

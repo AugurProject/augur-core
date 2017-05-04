@@ -116,7 +116,6 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
             fxpMaxValue = ONE
         else:
             fxpMaxValue = EVENTS.getMaxValue(event)
-        # FIXME what if fxpPrice > fxpMaxValue?
         fxpCostPerShareShorting = fxpMaxValue - fxpPrice
         fxpOrderCost = safeFxpMul(fxpAmount, fxpCostPerShareShorting)
         if(fxpCostPerShareShorting > fxpCumulativeScale):
