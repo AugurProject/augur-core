@@ -7,11 +7,23 @@ import random
 import os
 import time
 import binascii
+import iocapture
+import json
 from pprint import pprint
 
 ONE = 10**18
 TWO = 2*ONE
 HALF = ONE/2
+
+def parseCapturedLogs(logs):
+    arrayOfLogs = logs.strip().split("\n")
+    arrayOfParsedLogs = []
+    for log in arrayOfLogs:
+        parsedLog = json.loads(log.replace("'", '"').replace("L", "").replace('u"', '"'))
+        arrayOfParsedLogs.append(parsedLog)
+    if len(arrayOfParsedLogs) == 0:
+        return arrayOfParsedLogs[0]
+    return arrayOfParsedLogs
 
 def test_backstops(contracts, s, t):
     c = contracts.backstops
@@ -897,7 +909,7 @@ def test_orders(contracts, s, t):
         assert(c.commitOrder(order) == 1)
         assert(c.checkHash(order, address0) == -1)
         # move the block.number up 1
-        s.block.mine(1)
+        s.mine(1)
         assert(c.checkHash(order, address0) == 1)
 
     def test_saveOrder():
@@ -967,6 +979,55 @@ def test_orders(contracts, s, t):
     test_removeOrder()
     print("data_api/orders.se unit tests completed")
 
+def test_register(contracts, s, t):
+    c = contracts.register
+    address0 = long(t.a0.encode("hex"), 16)
+    with iocapture.capture() as captured:
+        retVal = c.register()
+        log = parseCapturedLogs(captured.stdout)[-1]
+    assert(retVal == 1), "register should return 1"
+    assert(log["_event_type"] == "registration"), "eventType should be 'registration' for the log created by register"
+    assert(log["timestamp"] == s.block.timestamp), "timestamp should be set to block.timestamp"
+    assert(log["sender"] == address0), "sender should be address0"
+
+    print("data_api/register.se unit tests completed")
+
+def test_topics(contracts, s, t):
+    c = contracts.topics
+    branch1 = 1010101
+    topic1 = 'augur'
+    topic2 = 'predictions'
+    longTopic1 = long(topic1.encode('hex'), 16)
+    longTopic2 = long(topic2.encode('hex'), 16)
+    ONE = 10**18
+
+    def test_defaults():
+        assert(c.getNumTopicsInBranch(branch1) == 0)
+        assert(c.getTopicsInBranch(branch1, 0, 5) == [])
+        assert(c.getTopicsInfo(branch1, 0, 5) == [])
+        assert(c.getTopicPopularity(branch1, topic1) == 0)
+
+    def test_updateTopicPopularity():
+        assert(c.updateTopicPopularity(branch1, topic1, ONE) == 1)
+        assert(c.getTopicPopularity(branch1, topic1) == ONE)
+        assert(c.getNumTopicsInBranch(branch1) == 1)
+        assert(c.getTopicsInBranch(branch1, 0, 5) == [longTopic1])
+        assert(c.getTopicsInfo(branch1, 0, 5) == [longTopic1, ONE])
+        assert(c.getTopicPopularity(branch1, topic2) == 0)
+        assert(c.updateTopicPopularity(branch1, topic2, ONE*4) == 1)
+        assert(c.getTopicPopularity(branch1, topic2) == ONE*4)
+        assert(c.getNumTopicsInBranch(branch1) == 2)
+        assert(c.getTopicsInBranch(branch1, 0, 5) == [longTopic1, longTopic2])
+        assert(c.getTopicsInfo(branch1, 0, 5) == [longTopic1, ONE, longTopic2, ONE*4])
+        assert(c.updateTopicPopularity(branch1, topic1, ONE*2) == 1)
+        assert(c.updateTopicPopularity(branch1, topic2, -ONE) == 1)
+        assert(c.getTopicPopularity(branch1, topic1) == ONE*3)
+        assert(c.getTopicPopularity(branch1, topic2) == ONE*3)
+        assert(c.getTopicsInfo(branch1, 0, 5) == [longTopic1, ONE*3, longTopic2, ONE*3])
+
+    test_defaults()
+    test_updateTopicPopularity()
+    print("data_api/topics.se unit tests completed")
 
 if __name__ == '__main__':
     src = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'src')
@@ -982,10 +1043,10 @@ if __name__ == '__main__':
     test_info(contracts, state, t)
     test_mutex(contracts, state, t)
     test_orders(contracts, state, t)
+    test_register(contracts, state, t)
+    test_topics(contracts, state, t)
     # data_api/fxpFunctions.se
     # data_api/markets.se
-    # data_api/orders.se
-    # data_api/register.se
     # data_api/reporting.se
     # data_api/reportingThreshold.se
     # data_api/topics.se
