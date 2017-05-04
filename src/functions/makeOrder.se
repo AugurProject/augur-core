@@ -45,14 +45,14 @@ macro MIN_ORDER_VALUE: 10000000000000000
 def init():
     self.controller = 0x0
 
-def publicMakeOrder(type, fxpAmount, fxpPrice, market, outcome, tradeGroupID):
+def publicMakeOrder(type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, tradeGroupID):
     refund()
     MUTEX.acquire()
     orderID = self.makeOrder(msg.sender, type, fxpAmount, fxpPrice, market, outcome, tradeGroupID)
     MUTEX.release()
     return(orderID)
 
-def makeOrder(sender: address, type, fxpAmount, fxpPrice, market, outcome, tradeGroupID):
+def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, tradeGroupID):
     refund()
     self.controller.checkWhitelist(msg.sender)
 
@@ -81,7 +81,7 @@ def makeOrder(sender: address, type, fxpAmount, fxpPrice, market, outcome, trade
     log(type = logMakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp, tradeGroupID)
     return(orderID)
 
-def placeAsk(sender: address, fxpAmount, fxpPrice, market, outcome):
+def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):
     refund()
     if(msg.sender != self):
         ~invalid()
@@ -129,7 +129,7 @@ def placeAsk(sender: address, fxpAmount, fxpPrice, market, outcome):
 
     return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
-def placeBid(sender: address, fxpAmount, fxpPrice, market, outcome):
+def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):
     refund()
     if(msg.sender != self):
         ~invalid()
