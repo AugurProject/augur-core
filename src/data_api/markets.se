@@ -274,7 +274,6 @@ def getOrderIDs(marketID):
         orderIDs[i] = self.Markets[marketID].orderIDs[orderID].id
         orderID = self.Markets[marketID].orderIDs[orderID].prevID
         i += 1
-
     if(orderIDs):
         return(orderIDs: arr)
     return([FAILURE]: arr)

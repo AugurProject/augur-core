@@ -148,7 +148,7 @@ def checkWhitelist(address):
     if(self.whitelist[address] or msg.sender == self.owner):
         return(1)
     else:
-        return(0)
+        ~invalid()
 
 def lookup(key):
     return(self.registry[key].value)
