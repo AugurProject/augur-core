@@ -33,21 +33,21 @@ event logCompleteSets(sender: indexed, market: indexed, type: indexed, fxpAmount
 def init():
     self.controller = 0x0
 
-def publicBuyCompleteSets(market, fxpAmount):
+def publicBuyCompleteSets(market: address, fxpAmount: uint256):
     refund()
     MUTEX.acquire()
     self.buyCompleteSets(msg.sender, market, fxpAmount)
     MUTEX.release()
     return(1)
 
-def publicSellCompleteSets(market, fxpAmount):
+def publicSellCompleteSets(market: address, fxpAmount: uint256):
     refund()
     MUTEX.acquire()
     self.sellCompleteSets(msg.sender, market, fxpAmount)
     MUTEX.release()
     return(1)
 
-def buyCompleteSets(sender: address, market, fxpAmount):
+def buyCompleteSets(sender: address, market: address, fxpAmount: uint256):
     refund()
     self.controller.checkWhitelist(msg.sender)
 
@@ -91,7 +91,7 @@ def buyCompleteSets(sender: address, market, fxpAmount):
 
 # Sells fxpAmount of every outcome [if user owns it]
 # cost 850k gas
-def sellCompleteSets(sender: address, market, fxpAmount):
+def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
     refund()
     self.controller.checkWhitelist(msg.sender)
 
@@ -134,13 +134,13 @@ def sellCompleteSets(sender: address, market, fxpAmount):
     log(type = logCompleteSets, sender, market, 2, fxpAmount, numOutcomes, fee, block.timestamp)
     return(1)
 
-def setController(newController):
+def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-def suicideFunds(to):
+def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)
