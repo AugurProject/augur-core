@@ -48,12 +48,12 @@ def publicCancelOrder(orderID):
 def cancelOrder(sender: address, orderID):
     refund()
     self.controller.checkWhitelist(msg.sender)
+    if(orderID == 0):
+        ~invalid()
 
     # user can cancel anytime
     # Get info for the order to cancel
     order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
-    if(!order[0]):
-        ~invalid()
     type = order[1]
     market = order[2]
     fxpAmount = order[3]
@@ -63,7 +63,12 @@ def cancelOrder(sender: address, orderID):
     fxpMoneyEscrowed = order[8]
     fxpSharesEscrowed = order[9]
 
-    # Check the owner
+    # Check that the order ID is correct, the type is bid or ask,
+    # and that the sender owns the order
+    if(order[0] != orderID):
+        ~invalid()
+    if(type != BID and type != ASK):
+        ~invalid()
     if(sender != owner):
         ~invalid()
 
@@ -81,9 +86,6 @@ def cancelOrder(sender: address, orderID):
 def refundOrder(sender: address, type, fxpSharesEscrowed, fxpMoneyEscrowed, market, outcome):
     refund()
     if(msg.sender != self):
-        ~invalid()
-
-    if(type != BID and type != ASK):
         ~invalid()
 
     if(fxpSharesEscrowed > 0):
