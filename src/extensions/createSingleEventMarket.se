@@ -3,13 +3,13 @@
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
 CREATEMARKET = self.controller.lookup('createMarket')
-extern createMarket: [createMarket:[address,int256,bytes,int256,int256,int256,int256,int256,bytes,int256]:int256]
+extern createMarket: [checkMarketCreationPreconditions:[int256,int256,int256,int256,int256,int256]:int256, createMarket:[address,int256,int256,int256,int256,int256,int256,bytes,int256]:int256, makeMarket:[address,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256[]]:int256, publicCreateMarket:[int256,int256,int256,int256,int256,int256,bytes,int256]:int256, setController:[int256]:int256, suicideFunds:[int256]:_]
 
 CREATEEVENT = self.controller.lookup('createEvent')
-extern createEvent: [createEvent:[address,int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256]:int256]
+extern createEvent: [checkEventCreationPreconditions:[int256,int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256]:_, createEvent:[address,int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, publicCreateEvent:[int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, setController:[int256]:int256, suicideFunds:[int256]:_]
 
 MUTEX = self.controller.lookup('mutex')
-extern mutex: [acquire:[]:int256, release:[]:int256]
+extern mutex: [acquire:[]:int256, release:[]:int256, setController:[int256]:int256, suicideFunds:[int256]:_]
 
 # using isCallerWhitelisted
 inset('../macros/refund.sem')
