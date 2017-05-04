@@ -309,6 +309,40 @@ def test_CompleteSets(contracts, s, t):
         assert(senderInitialCash - contracts.cash.balanceOf(t.a1) == fxpAmount), "Decrease in sender's cash should equal 10"
         assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == fxpAmount), "Increase in market's cash should equal 10"
         assert(contracts.markets.getTotalSharesPurchased(marketID) - marketInitialTotalShares == 2*fxpAmount), "Increase in total shares purchased for this market should be 18"
+        def test_exceptions():
+            contracts._ContractLoader__state.mine(1)
+            eventID = createBinaryEvent(contracts, s, t)
+            marketID = createBinaryMarket(contracts, s, t, eventID)
+            fxpAmount = fix(10)
+            assert(contracts.cash.approve(contracts.completeSets.address, fxpAmount, sender=t.k1) == 1), "Approve completeSets contract to spend cash"
+
+            # Permissions exceptions
+            contracts._ContractLoader__state.mine(1)
+            try:
+                raise Exception(contracts.completeSets.buyCompleteSets(t.a1, marketID, fxpAmount, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "buyCompleteSets should fail if called from a non-whitelisted account (account 1)"
+
+            # buyCompleteSets exceptions
+            contracts._ContractLoader__state.mine(1)
+            try:
+                raise Exception(contracts.completeSets.publicBuyCompleteSets(marketID + 1, fxpAmount, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicBuyCompleteSets should fail if market ID is invalid"
+            try:
+                raise Exception(contracts.completeSets.publicBuyCompleteSets(marketID, -1*fxpAmount, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicBuyCompleteSets should fail if fxpAmount is negative"
+            try:
+                raise Exception(contracts.completeSets.publicBuyCompleteSets(marketID, 0, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicBuyCompleteSets should fail if fxpAmount is zero"
+            assert(contracts.cash.approve(contracts.completeSets.address, fxpAmount - 1, sender=t.k1) == 1), "Approve completeSets contract to spend slightly less cash than needed"
+            try:
+                raise Exception(contracts.completeSets.publicBuyCompleteSets(marketID, fxpAmount, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicBuyCompleteSets should fail if the completeSets contract is not approved for the full amount needed"
+        test_exceptions()
     def test_publicSellCompleteSets():
         contracts._ContractLoader__state.mine(1)
         eventID = createBinaryEvent(contracts, s, t)

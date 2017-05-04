@@ -28,11 +28,10 @@ event logCompleteSets(sender: indexed, market: indexed, type: indexed, fxpAmount
 
 ### Allows users to buy/sell sets of every outcome, so 500 complete sets in a 3 outcome market is 500 of outcome 1, 2, and 3 each respectively
 
-# Buys fxpAmount of every outcome
-# cost 850k gas
 def init():
     self.controller = 0x0
 
+# Buys fxpAmount shares of every outcome in the specified market
 def publicBuyCompleteSets(market: address, fxpAmount: uint256):
     refund()
     MUTEX.acquire()
@@ -40,6 +39,7 @@ def publicBuyCompleteSets(market: address, fxpAmount: uint256):
     MUTEX.release()
     return(1)
 
+# Sells fxpAmount shares of every outcome in the specified market
 def publicSellCompleteSets(market: address, fxpAmount: uint256):
     refund()
     MUTEX.acquire()
@@ -57,16 +57,17 @@ def buyCompleteSets(sender: address, market: address, fxpAmount: uint256):
     cost = safeFxpMul(fxpAmount, cumulativeScale)
 
     # Check preconditions
+    if(fxpAmount == 0):
+        ~invalid()
     if(!MARKETS.getMarketNumOutcomes(market)):
         ~invalid()
-    if(fxpAmount <= 0):
-        ~invalid()
 
-    # send money from user acc. to market address/account
+    # Send money from the user's account to the market's address/account
     if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), cost)):
         ~invalid()
 
-    # send shares of the event to user address and increment the number issued in the market for each outcome
+    # Send shares of the event to the user's address, and increment the number
+    # issued in the market for each outcome
     n = 1
     while(n <= numOutcomes):
         MARKETS.modifyShares(market, n, fxpAmount)
@@ -90,7 +91,6 @@ def buyCompleteSets(sender: address, market: address, fxpAmount: uint256):
     return(1)
 
 # Sells fxpAmount of every outcome [if user owns it]
-# cost 850k gas
 def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
     refund()
     self.controller.checkWhitelist(msg.sender)
@@ -101,7 +101,7 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
     cost = safeFxpMul(fxpAmount, cumulativeScale)
 
     # Check preconditions
-    if(fxpAmount <= 0):
+    if(fxpAmount == 0):
         ~invalid()
     n = 1
     while(n <= numOutcomes):
@@ -117,7 +117,7 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
         MARKETS.modifyParticipantShares(market, sender, n, -fxpAmount, 0)
         n += 1
 
-    # send funds from the market to the user acc.
+    # Send funds from the market to the user's account
     fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAmount), cumulativeScale)
     if(!INFO.getWallet(market).transfer(sender, safeSub(cost, fee))):
         ~invalid()
