@@ -60,8 +60,8 @@ def cancelOrder(sender: address, orderID):
     fxpPrice = order[4]
     owner = order[5]
     outcome = order[7]
-    moneyEscrowed = order[8]
-    sharesEscrowed = order[9]
+    fxpMoneyEscrowed = order[8]
+    fxpSharesEscrowed = order[9]
 
     # Check the owner
     if(sender != owner):
@@ -71,37 +71,38 @@ def cancelOrder(sender: address, orderID):
     ORDERS.removeOrder(orderID)
     MARKETS.removeOrderFromMarket(market, orderID)
 
-    self.refundOrder(sender, type, sharesEscrowed, moneyEscrowed, market, outcome)
+    self.refundOrder(sender, type, fxpSharesEscrowed, fxpMoneyEscrowed, market, outcome)
 
     # Log cancellation
-    log(type = logCancelOrder, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, moneyEscrowed, sharesEscrowed, block.timestamp)
+    log(type = logCancelOrder, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp)
     return(1)
 
 # Issue refunds
-def refundOrder(sender: address, type, sharesEscrowed, moneyEscrowed, market, outcome):
+def refundOrder(sender: address, type, fxpSharesEscrowed, fxpMoneyEscrowed, market, outcome):
     refund()
     if(msg.sender != self):
         ~invalid()
 
-    # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
-    if(type == BID and sharesEscrowed):
-        i = 1
-        while(i <= MARKETS.getMarketNumOutcomes(market)):
-            if(i != outcome):
-                MARKETS.modifyParticipantShares(market, sender, outcome, sharesEscrowed, 0)
-            i += 1
-
-    # Shares refund if has shares escrowed for this outcome
-    elif(type == ASK and sharesEscrowed):
-        MARKETS.modifyParticipantShares(market, sender, outcome, sharesEscrowed, 0)
-
-    else:
+    if(type != BID and type != ASK):
         ~invalid()
 
+    if(fxpSharesEscrowed > 0):
+
+        # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
+        if(type == BID):
+            i = 1
+            while(i <= MARKETS.getMarketNumOutcomes(market)):
+                if(i != outcome):
+                    MARKETS.modifyParticipantShares(market, sender, outcome, fxpSharesEscrowed, 0)
+                i += 1
+
+        # Shares refund if has shares escrowed for this outcome
+        elif(type == ASK):
+            MARKETS.modifyParticipantShares(market, sender, outcome, fxpSharesEscrowed, 0)
+
     # Return to user moneyEscrowed that wasn't filled yet
-    if(moneyEscrowed):
-        refunded = INFO.getWallet(market).transfer(sender, moneyEscrowed)
-        if(!refunded):
+    if(fxpMoneyEscrowed > 0):
+        if(!INFO.getWallet(market).transfer(sender, fxpMoneyEscrowed)):
             ~invalid()
 
     return(1)
