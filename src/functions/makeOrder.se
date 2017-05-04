@@ -124,7 +124,8 @@ def placeAsk(sender: address, fxpAmount, fxpPrice, market, outcome):
         if(fxpOrderCost < MIN_ORDER_VALUE):
             ~invalid()
         fxpMoneyEscrowed += fxpOrderCost
-        INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), fxpOrderCost)
+        if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), fxpOrderCost)):
+            ~invalid()
 
     return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
@@ -180,7 +181,8 @@ def placeBid(sender: address, fxpAmount, fxpPrice, market, outcome):
             ~invalid()
         if(fxpCost < MIN_ORDER_VALUE):
             ~invalid()
-        INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), fxpCost)
+        if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), fxpCost)):
+            ~invalid()
 
     return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 

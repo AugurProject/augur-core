@@ -101,7 +101,8 @@ def refundOrder(sender: address, type: uint256, fxpSharesEscrowed: uint256, fxpM
 
     # Return to user moneyEscrowed that wasn't filled yet
     if(fxpMoneyEscrowed > 0):
-        INFO.getWallet(market).transfer(sender, fxpMoneyEscrowed)
+        if(!INFO.getWallet(market).transfer(sender, fxpMoneyEscrowed)):
+            ~invalid()
 
     return(1)
 
