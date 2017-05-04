@@ -64,8 +64,7 @@ macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 # Errors:
     # 0 fork not done yet
     # -1 event not fork event
-    # -2 wrong branch
-    # -3 already resolved
+    # -2 already resolved
 def init():
     self.controller = 0x0
 
@@ -80,7 +79,7 @@ def resolveForkedEvent(branch, event):
         MUTEX.release()
         return(-1)
     if(EVENTS.getOutcome(event)):
-        return(-3)
+        return(-2)
     forkResolved = self.resolveForkEvent(branch, event)
     if(forkResolved):
         EVENTS.setForkDone(event)
