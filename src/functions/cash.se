@@ -20,8 +20,11 @@ data decimals
 data initiated[]
 data controller
 
-event Transfer(from:indexed, to:indexed, value)
-event Approval(owner:indexed, spender:indexed, value)
+event Transfer(from: indexed, to: indexed, value)
+event Approval(owner: indexed, spender: indexed, value)
+event DepositEther(sender: indexed, value, balance, timestamp)
+event WithdrawEther(sender: indexed, value, balance, timestamp)
+event InitiateWithdrawEther(sender: indexed, value, balance, timestamp)
 
 def init():
     self.controller = 0x0
@@ -68,6 +71,7 @@ def depositEther():
         ~invalid()
     self.accounts[msg.sender].balance += amount
     self.totalSupply += amount
+    log(type = DepositEther, msg.sender, amount, self.accounts[msg.sender].balance, block.timestamp)
     return(1)
 
 # Withdraw ether to an address
@@ -85,6 +89,7 @@ def withdrawEther(to: address, value: uint256):
         ~invalid()
     if(!initiatedTimestamp):
         self.initiated[msg.sender] = block.timestamp
+        log(type = InitiateWithdrawEther, msg.sender, value, self.accounts[msg.sender].balance, block.timestamp)
         return(2)
     if((initiatedTimestamp + 3 * TWENTY_FOUR_HR) > block.timestamp):
         ~invalid()
@@ -93,6 +98,7 @@ def withdrawEther(to: address, value: uint256):
     if(!send(to, value)):
         ~invalid()
     self.initiated[msg.sender] = 0
+    log(type = WithdrawEther, msg.sender, value, self.accounts[msg.sender].balance, block.timestamp)
     return(1)
 
 # Returns amount spender can withdraw from owner
