@@ -713,6 +713,85 @@ def test_info(contracts, s, t):
     test_setInfo()
     print("data_api/info.se unit tests completed")
 
+def test_markets(contracts, s, t):
+    c = contracts.markets
+    branch1 = 1010101
+    market1 = 1111111111
+    event1 = 12345678901
+    period1 = contracts.branches.getVotePeriod(branch1)
+    gasSubsidy1 = 10**14*234
+    creationFee1 = 10**14*340
+    twoPercent = 10**16*2
+    expirationDate1 = s.block.timestamp + 15
+    shareContract1 = s.abi_contract('shareContract')
+    shareContract2 = s.abi_contract('shareContract')
+    shareAddr1 = long(shareContract1.address.encode('hex'), 16)
+    shareAddr2 = long(shareContract2.address.encode('hex'), 16)
+    shareContracts = [shareContract1.address, shareContract2.address]
+
+    def test_marketInialization():
+        assert(c.getMarketsHash(branch1) == 0)
+        assert(c.initializeMarket(market1, event1, period1, twoPercent, branch1, 'one', 'two', 'three', 10**18, 2, 'this is extra information', gasSubsidy1, creationFee1, expirationDate1, shareContracts) == 1)
+        assert(c.getMarketsHash(branch1) != 0)
+        assert(c.getBranch(market1) == branch1)
+        assert(c.getMarketEvent(market1) == event1)
+        assert(c.getLastExpDate(market1) == expirationDate1)
+        assert(c.getTags(market1) == [long('one'.encode('hex'), 16), long('two'.encode('hex'), 16), long('three'.encode('hex'), 16)])
+        assert(c.getTopic(market1) == long('one'.encode('hex'), 16))
+        assert(c.getFees(market1) == creationFee1)
+        assert(c.getTradingFee(market1) == twoPercent)
+    # initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
+    #
+    # setWinningOutcomes(market, outcomes: arr):
+    # setTradingFee(market, fee):
+    # setPushedForward(market, bool, sender):
+    # setPrice(market, outcome, fxpPrice):
+    # setTradingPeriod(market, period):
+    #
+    # modifyShares(market, outcome, fxpAmount):
+    # modifySharesValue(market, fxpAmount):
+    # modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
+    #
+    # addOrder(market, orderID):
+    # addToMarketsHash(branch, newHash):
+    # addFees(market, fxpAmount):
+    #
+    # removeOrderFromMarket(marketID, orderID):
+    # refundClosing(market, to):
+    #
+    # getMarketsHash(branch):
+    # getLastExpDate(market):
+    # getLastOutcomePrice(market, outcome):
+    # getFees(market):
+    # getGasSubsidy(market):
+    # getSharesValue(market):
+    # getTags(market):
+    # getTopic(market):
+    # getTotalSharesPurchased(market):
+    # getMarketEvent(market):
+    # getMarketShareContracts(market):
+    # getSharesPurchased(market, outcome):
+    # getExtraInfoLength(market):
+    # getExtraInfo(market):
+    # getVolume(market):
+    # getParticipantSharesPurchased(market, trader, outcome):
+    # getCumulativeScale(market):
+    # getMarketNumOutcomes(market):
+    # getTradingPeriod(market):
+    # getOriginalTradingPeriod(market):
+    # getTradingFee(market):
+    # getBranch(market):
+    # getOrderIDs(marketID):
+    # getWinningOutcomes(market):
+    # getOneWinningOutcome(market, num):
+    # getPushedForward(market):
+    # getBondsMan(market):
+    # getLastOrder(market):
+    # getPrevID(market, order):
+    # getTotalOrders(marketID):
+    test_marketInialization()
+    print("data_api/markets.se unit tests complete")
+
 def test_mutex(contracts, s, t):
     c = contracts.mutex
     assert(c.acquire() == 1), "acquire should return 1 if the mutex isn't already set."
@@ -913,9 +992,6 @@ def test_orders(contracts, s, t):
         assert(c.checkHash(order, address0) == 1)
 
     def test_saveOrder():
-        assert(c.getBestBid(market1, 1) == 0)
-        assert(c.getBestAsk(market1, 1) == 0)
-        # orderID, type, market, amount, price, sender, outcome, money, shares
         assert(c.saveOrder(order1, 1, market1, ONE*10, pointFive, address0, 1, 0, ONE*10) == 1)
         assert(c.saveOrder(order2, 2, market1, ONE*10, pointFive, address1, 1, ONE*5, 0) == 1)
 
@@ -936,9 +1012,6 @@ def test_orders(contracts, s, t):
 
         assert(c.getType(order1) == 1)
         assert(c.getType(order2) == 2)
-
-        assert(c.getBestBid(market1, 1) == order1)
-        assert(c.getBestAsk(market1, 1) == order2)
 
     def test_fillOrder():
         # orderID, fill, money, shares
@@ -1041,6 +1114,7 @@ if __name__ == '__main__':
     test_events(contracts, state, t)
     test_expiringEvents(contracts, state, t)
     test_info(contracts, state, t)
+    test_markets(contracts, state, t)
     test_mutex(contracts, state, t)
     test_orders(contracts, state, t)
     test_register(contracts, state, t)
@@ -1049,5 +1123,4 @@ if __name__ == '__main__':
     # data_api/markets.se
     # data_api/reporting.se
     # data_api/reportingThreshold.se
-    # data_api/topics.se
     print "FINISH TESTING DATA_API"
