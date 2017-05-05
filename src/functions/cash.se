@@ -5,6 +5,7 @@ extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
 
 inset('../macros/refund.sem')
+inset('../macros/float.sem')
 
 data accounts[2**160](balance, spenders[2**160](maxValue))
 
@@ -125,13 +126,6 @@ def getSymbol():
 def getInitiated():
     refund()
     return(self.initiated[msg.sender])
-
-macro safeToAdd($a, $b):
-    $c = $a + $b
-    ($c >= $a && $c >= $b)
-
-macro safeToSubtract($a, $b):
-    ($b <= $a && (($a - $b) <= $a))
 
 def setController(newController: address):
     if(msg.sender != self.controller):
