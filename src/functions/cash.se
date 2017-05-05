@@ -126,12 +126,6 @@ def getInitiated():
     refund()
     return(self.initiated[msg.sender])
 
-def commitSuicide():
-    refund()
-    self.controller.checkWhitelist(msg.sender)
-    suicide(msg.sender)
-    return(1)
-
 macro safeToAdd($a, $b):
     $c = $a + $b
     ($c >= $a && $c >= $b)
