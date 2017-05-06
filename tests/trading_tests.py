@@ -50,7 +50,7 @@ def parseCapturedLogs(logs):
 
 def createBinaryEvent(contracts, s, t):
     global eventCreationCounter
-    contracts.cash.depositEther(value=fix(10000), sender=t.k1)
+    contracts.cash.publicDepositEther(value=fix(10000), sender=t.k1)
     contracts.cash.approve(contracts.createEvent.address, fix(10000), sender=t.k1)
     branch = 1010101
     contracts.reputationFaucet.reputationFaucet(branch, sender=t.k1)
@@ -85,37 +85,37 @@ def test_Cash(contracts, s, t):
         assert(hex2str(contracts.cash.getName()) == '4361736800000000000000000000000000000000000000000000000000000000'), "currency name"
         assert(contracts.cash.getDecimals() == 18), "number of decimals"
         assert(hex2str(contracts.cash.getSymbol()) == '4341534800000000000000000000000000000000000000000000000000000000'), "currency symbol"
-    def test_depositEther():
+    def test_publicDepositEther():
         contracts._ContractLoader__state.mine(1)
-        assert(contracts.cash.depositEther(value=100, sender=t.k1) == 1), "deposit ether"
+        assert(contracts.cash.publicDepositEther(value=100, sender=t.k1) == 1), "deposit ether"
         assert(contracts.cash.balanceOf(t.a1) == 100), "balance equal to deposit"
         assert(contracts.cash.totalSupply() == 100), "totalSupply equal to deposit"
-    def test_withdrawEther():
+    def test_publicWithdrawEther():
         contracts._ContractLoader__state.mine(1)
         assert(contracts.cash.getInitiated(sender=t.k1) == 0), "withdraw not initiated"
         try:
-            raise Exception(contracts.cash.withdrawEther(t.a2, 110, sender=t.k1))
+            raise Exception(contracts.cash.publicWithdrawEther(t.a2, 110, sender=t.k1))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "withdraw should throw due to insufficient funds"
-        assert(contracts.cash.withdrawEther(t.a2, 30, sender=t.k1)), "initiate withdrawal"
+        assert(contracts.cash.publicWithdrawEther(t.a2, 30, sender=t.k1)), "initiate withdrawal"
         assert(contracts.cash.getInitiated(sender=t.k1) == contracts._ContractLoader__state.block.timestamp), "withdraw initiated"
         try:
-            raise Exception(contracts.cash.withdrawEther(t.a2, 30, sender=t.k1))
+            raise Exception(contracts.cash.publicWithdrawEther(t.a2, 30, sender=t.k1))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "withdraw should throw (3 days haven't passed)"
         contracts._ContractLoader__state.block.timestamp += 259199
         try:
-            raise Exception(contracts.cash.withdrawEther(t.a2, 30, sender=t.k1))
+            raise Exception(contracts.cash.publicWithdrawEther(t.a2, 30, sender=t.k1))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "withdraw should throw (3 days still haven't passed)"
         contracts._ContractLoader__state.block.timestamp += 1
-        assert(contracts.cash.withdrawEther(t.a2, 30, sender=t.k1)), "withdraw should succeed"
+        assert(contracts.cash.publicWithdrawEther(t.a2, 30, sender=t.k1)), "withdraw should succeed"
         assert(contracts.cash.balanceOf(t.a1) == 70), "decrease sender's balance by 30"
         assert(contracts.cash.balanceOf(t.a2) == 0), "receiver's cash balance still equals 0"
         assert(contracts._ContractLoader__state.block.get_balance(t.a2) - initialEtherBalance2 == 30), "receiver's ether balance increased by 30"
         assert(contracts.cash.totalSupply() == 70), "total supply decreased by 30"
         try:
-            raise Exception(contracts.cash.withdrawEther(t.a2, -10, sender=t.k1))
+            raise Exception(contracts.cash.publicWithdrawEther(t.a2, -10, sender=t.k1))
         except Exception as exc:
             assert(isinstance(exc, ethereum.abi.ValueOutOfBounds)), "negative withdraw should throw"
         assert(contracts.cash.getInitiated(sender=t.k1) == 0), "withdraw no longer initiated"
@@ -184,32 +184,18 @@ def test_Cash(contracts, s, t):
     def test_exceptions():
         contracts._ContractLoader__state.mine(1)
         fxpAmount = fix(10)
-        fxpTransferAmount = fix(2)
-        import ipdb; ipdb.set_trace()
-        assert(contracts.cash.depositEther(value=fix(10000), sender=t.k1) == 1), "Deposit Ether for account 1"
+        fxpWithdrawAmount = fix(2)
         try:
-            raise Exception(contracts.cash.internalTransfer(t.a1, t.a2, fxpTransferAmount, sender=t.k1))
+            raise Exception(contracts.cash.depositEther(t.a1, value=fxpAmount, sender=t.k1), "deposit ether")
         except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "internalTransfer should fail if called from a non-whitelisted account (account 1)"
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "depositEther should fail if called from a non-whitelisted account (account 1)"
+        assert(contracts.cash.publicDepositEther(value=fxpAmount, sender=t.k1) == 1), "publicDepositEther should succeed"
         try:
-            raise Exception(contracts.cash.internalTransferFrom(t.a1, t.a1, t.a2, fxpTransferAmount, sender=t.k1))
+            raise Exception(contracts.cash.withdrawEther(t.a1, t.a1, fxpWithdrawAmount, sender=t.k1))
         except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "internalTransferFrom should fail if called from a non-whitelisted account (account 1)"
-        try:
-            raise Exception(contracts.cash.internalApprove(t.a1, t.a1, fxpTransferAmount, sender=t.k1))
-        except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "internalApprove should fail if called from a non-whitelisted account (account 1)"
-        try:
-            raise Exception(contracts.cash.internalDepositEther(t.a1, sender=t.k1))
-        except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "internalDepositEther should fail if called from a non-whitelisted account (account 1)"
-        try:
-            raise Exception(contracts.cash.internalWithdrawEther(t.a1, t.a1, fxpTransferAmount, sender=t.k1))
-        except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "internalWithdrawEther should fail if called from a non-whitelisted account (account 1)"
-    test_init()
-    test_depositEther()
-    test_withdrawEther()
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "withdrawEther should fail if called from a non-whitelisted account (account 1)"
+    test_publicDepositEther()
+    test_publicWithdrawEther()
     test_transfer()
     test_transferFrom()
     test_approve()
@@ -318,18 +304,6 @@ def test_ShareTokens(contracts, s, t):
         fxpTransferAmount = fix(2)
         assert(contracts.shareTokens.createTokens(t.a1, fxpAmount, sender=t.k0) == 1), "Create share tokens for address 1"
         try:
-            raise Exception(contracts.shareTokens.internalTransfer(t.a1, t.a2, fxpTransferAmount, sender=t.k1))
-        except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "internalTransfer should fail if called from a non-whitelisted account (account 1)"
-        try:
-            raise Exception(contracts.shareTokens.internalTransferFrom(t.a1, t.a1, t.a2, fxpTransferAmount, sender=t.k1))
-        except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "internalTransferFrom should fail if called from a non-whitelisted account (account 1)"
-        try:
-            raise Exception(contracts.shareTokens.internalApprove(t.a1, t.a1, fxpTransferAmount, sender=t.k1))
-        except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "internalApprove should fail if called from a non-whitelisted account (account 1)"
-        try:
             raise Exception(contracts.shareTokens.createTokens(t.a1, fxpTransferAmount, sender=t.k1))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "createTokens should fail if called from a non-whitelisted account (account 1)"
@@ -367,7 +341,7 @@ def test_CreateEvent(contracts, s, t):
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "checkEventCreationPreconditions should throw when createEvent contract is not the caller"
     def test_publicCreateEvent():
         contracts._ContractLoader__state.mine(1)
-        assert(contracts.cash.depositEther(value=fix(10000), sender=t.k1) == 1), "Convert ether to cash"
+        assert(contracts.cash.publicDepositEther(value=fix(10000), sender=t.k1) == 1), "Convert ether to cash"
         assert(contracts.cash.approve(contracts.createEvent.address, fix(10000), sender=t.k1) == 1), "Approve createEvent contract to spend cash (for validity bond)"
         branch = 1010101
         assert(contracts.reputationFaucet.reputationFaucet(branch, sender=t.k1) == 1), "Hit Reputation faucet"
@@ -395,7 +369,7 @@ def test_CreateEvent(contracts, s, t):
 def test_CreateMarket(contracts, s, t):
     def test_publicCreateMarket():
         contracts._ContractLoader__state.mine(1)
-        assert(contracts.cash.depositEther(value=fix(10000), sender=t.k1) == 1), "Convert ether to cash"
+        assert(contracts.cash.publicDepositEther(value=fix(10000), sender=t.k1) == 1), "Convert ether to cash"
         assert(contracts.cash.approve(contracts.createEvent.address, fix(10000), sender=t.k1) == 1), "Approve createEvent contract to spend cash (for validity bond)"
         assert(contracts.cash.approve(contracts.createMarket.address, fix(10000), sender=t.k1) == 1), "Approve createMarket contract to spend cash"
         branch = 1010101
