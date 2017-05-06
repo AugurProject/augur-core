@@ -6,7 +6,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 extern rateContract: [rateFunction:[]:int256]
 
-extern wallet: [initialize:[int256]:int256, setController:[int256]:int256, suicideFunds:[int256]:_, transfer:[address,uint256]:int256]
+extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, transfer:[address,uint256]:int256]
 
 inset('../macros/refund.sem')
 
@@ -311,13 +311,13 @@ def getForkPeriod(branch):
 def getForkTime(branch):
     return(self.Branches[branch].forkTime)
 
-def setController(newController):
+def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-def suicideFunds(to):
+def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)

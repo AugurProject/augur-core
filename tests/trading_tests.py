@@ -309,6 +309,40 @@ def test_CompleteSets(contracts, s, t):
         assert(senderInitialCash - contracts.cash.balanceOf(t.a1) == fxpAmount), "Decrease in sender's cash should equal 10"
         assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == fxpAmount), "Increase in market's cash should equal 10"
         assert(contracts.markets.getTotalSharesPurchased(marketID) - marketInitialTotalShares == 2*fxpAmount), "Increase in total shares purchased for this market should be 18"
+        def test_exceptions():
+            contracts._ContractLoader__state.mine(1)
+            eventID = createBinaryEvent(contracts, s, t)
+            marketID = createBinaryMarket(contracts, s, t, eventID)
+            fxpAmount = fix(10)
+            assert(contracts.cash.approve(contracts.completeSets.address, fxpAmount, sender=t.k1) == 1), "Approve completeSets contract to spend cash"
+
+            # Permissions exceptions
+            contracts._ContractLoader__state.mine(1)
+            try:
+                raise Exception(contracts.completeSets.buyCompleteSets(t.a1, marketID, fxpAmount, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "buyCompleteSets should fail if called from a non-whitelisted account (account 1)"
+
+            # buyCompleteSets exceptions
+            contracts._ContractLoader__state.mine(1)
+            try:
+                raise Exception(contracts.completeSets.publicBuyCompleteSets(marketID + 1, fxpAmount, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicBuyCompleteSets should fail if market ID is invalid"
+            try:
+                raise Exception(contracts.completeSets.publicBuyCompleteSets(marketID, fix(-10), sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.abi.ValueOutOfBounds)), "publicBuyCompleteSets should throw ValueOutOfBounds exception if fxpAmount is negative"
+            try:
+                raise Exception(contracts.completeSets.publicBuyCompleteSets(marketID, 0, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicBuyCompleteSets should fail if fxpAmount is zero"
+            assert(contracts.cash.approve(contracts.completeSets.address, fxpAmount - 1, sender=t.k1) == 1), "Approve completeSets contract to spend slightly less cash than needed"
+            try:
+                raise Exception(contracts.completeSets.publicBuyCompleteSets(marketID, fxpAmount, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicBuyCompleteSets should fail if the completeSets contract is not approved for the full amount needed"
+        test_exceptions()
     def test_publicSellCompleteSets():
         contracts._ContractLoader__state.mine(1)
         eventID = createBinaryEvent(contracts, s, t)
@@ -333,6 +367,39 @@ def test_CompleteSets(contracts, s, t):
         assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1) == fix(1)), "Should have 1 share of outcome 1"
         assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2) == fix(1)), "Should have 1 share of outcome 2"
         assert(marketInitialTotalShares - contracts.markets.getTotalSharesPurchased(marketID) == 2*fxpAmount), "Decrease in total shares purchased for this market should be 18"
+        def test_exceptions():
+            contracts._ContractLoader__state.mine(1)
+            eventID = createBinaryEvent(contracts, s, t)
+            marketID = createBinaryMarket(contracts, s, t, eventID)
+            fxpAmount = fix(10)
+            buyCompleteSets(contracts, s, t, marketID, fxpAmount)
+
+            # Permissions exceptions
+            contracts._ContractLoader__state.mine(1)
+            try:
+                raise Exception(contracts.completeSets.sellCompleteSets(t.a1, marketID, fxpAmount, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "sellCompleteSets should fail if called from a non-whitelisted account (account 1)"
+
+            # sellCompleteSets exceptions
+            contracts._ContractLoader__state.mine(1)
+            try:
+                raise Exception(contracts.completeSets.publicSellCompleteSets(marketID + 1, fxpAmount, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicSellCompleteSets should fail if market ID is invalid"
+            try:
+                raise Exception(contracts.completeSets.publicSellCompleteSets(marketID, fix(-10), sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.abi.ValueOutOfBounds)), "publicSellCompleteSets should throw ValueOutOfBounds exception if fxpAmount is negative"
+            try:
+                raise Exception(contracts.completeSets.publicSellCompleteSets(marketID, 0, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicSellCompleteSets should fail if fxpAmount is zero"
+            try:
+                raise Exception(contracts.completeSets.publicSellCompleteSets(marketID, fxpAmount + 1, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicSellCompleteSets should fail if the sender has insufficient shares in any outcome"
+        test_exceptions()
     test_publicBuyCompleteSets()
     test_publicSellCompleteSets()
 
@@ -595,6 +662,105 @@ def test_MakeOrder(contracts, s, t):
         test_exceptions()
     test_publicMakeOrder()
 
+def test_CancelOrder(contracts, s, t):
+    address1 = long(t.a1.encode("hex"), 16)
+    def test_publicCancelOrder():
+        def test_cancelBid():
+            contracts._ContractLoader__state.mine(1)
+            orderType = 1                   # bid
+            fxpAmount = 1000000000000000000 # fixed-point 1
+            fxpPrice = 1600000000000000000  # fixed-point 1.6
+            outcomeID = 2
+            tradeGroupID = 42
+            eventID = createBinaryEvent(contracts, s, t)
+            marketID = createBinaryMarket(contracts, s, t, eventID)
+            assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
+            makerInitialCash = contracts.cash.balanceOf(t.a1)
+            makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
+            marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+            marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
+            orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+            assert(orderID != 0), "Order ID should be non-zero"
+            assert(contracts.orders.getOrder(orderID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
+            assert(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k1) == 1), "publicCancelOrder should succeed"
+            assert(contracts.orders.getOrder(orderID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+            assert(makerInitialCash == contracts.cash.balanceOf(t.a1)), "Maker's cash should be the same as before the order was placed"
+            assert(marketInitialCash == contracts.cash.balanceOf(contracts.info.getWallet(marketID))), "Market's cash balance should be the same as before the order was placed"
+            assert(makerInitialShares == contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)), "Maker's shares should be unchanged"
+            assert(marketInitialTotalShares == contracts.markets.getTotalSharesPurchased(marketID)), "Market's total shares should be unchanged"
+        def test_cancelAsk():
+            contracts._ContractLoader__state.mine(1)
+            orderType = 2                   # ask
+            fxpAmount = 1000000000000000000 # fixed-point 1
+            fxpPrice = 1600000000000000000  # fixed-point 1.6
+            outcomeID = 2
+            tradeGroupID = 42
+            eventID = createBinaryEvent(contracts, s, t)
+            marketID = createBinaryMarket(contracts, s, t, eventID)
+            assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
+            makerInitialCash = contracts.cash.balanceOf(t.a1)
+            makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
+            marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+            marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
+            orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+            assert(orderID != 0), "Order ID should be non-zero"
+            assert(contracts.orders.getOrder(orderID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
+            assert(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k1) == 1), "publicCancelOrder should succeed"
+            assert(contracts.orders.getOrder(orderID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+            assert(makerInitialCash == contracts.cash.balanceOf(t.a1)), "Maker's cash should be the same as before the order was placed"
+            assert(marketInitialCash == contracts.cash.balanceOf(contracts.info.getWallet(marketID))), "Market's cash balance should be the same as before the order was placed"
+            assert(makerInitialShares == contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)), "Maker's shares should be unchanged"
+            assert(marketInitialTotalShares == contracts.markets.getTotalSharesPurchased(marketID)), "Market's total shares should be unchanged"
+        def test_exceptions():
+            contracts._ContractLoader__state.mine(1)
+            orderType = 1                   # bid
+            fxpAmount = 1000000000000000000 # fixed-point 1
+            fxpPrice = 1600000000000000000  # fixed-point 1.6
+            outcomeID = 2
+            tradeGroupID = 42
+            eventID = createBinaryEvent(contracts, s, t)
+            marketID = createBinaryMarket(contracts, s, t, eventID)
+            assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
+            makerInitialCash = contracts.cash.balanceOf(t.a1)
+            marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+            orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+            assert(orderID != 0), "Order ID should be non-zero"
+
+            # Permissions exceptions
+            contracts._ContractLoader__state.mine(1)
+            try:
+                raise Exception(contracts.cancelOrder.cancelOrder(t.a1, orderID, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "cancelOrder should fail if called from a non-whitelisted account (account 1)"
+            try:
+                raise Exception(contracts.cancelOrder.refundOrder(t.a1, orderType, 0, fxpAmount, marketID, outcomeID, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "refundOrder should fail if called directly"
+
+            # cancelOrder exceptions
+            contracts._ContractLoader__state.mine(1)
+            try:
+                raise Exception(contracts.cancelOrder.publicCancelOrder(0, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicCancelOrder should fail if order ID is zero"
+            try:
+                raise Exception(contracts.cancelOrder.publicCancelOrder(orderID + 1, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicCancelOrder should fail if order does not exist"
+            try:
+                raise Exception(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k2))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicCancelOrder should fail if sender does not own the order"
+            assert(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k1) == 1), "publicCancelOrder should succeed"
+            try:
+                raise Exception(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k1))
+            except Exception as exc:
+                assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicCancelOrder should fail if the order has already been cancelled"
+        test_cancelBid()
+        test_cancelAsk()
+        test_exceptions()
+    test_publicCancelOrder()
+
 def runtests():
     src = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'src')
     contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
@@ -605,6 +771,7 @@ def runtests():
     test_CreateMarket(contracts, state, t)
     test_CompleteSets(contracts, state, t)
     test_MakeOrder(contracts, state, t)
+    test_CancelOrder(contracts, state, t)
 
 if __name__ == '__main__':
     runtests()
