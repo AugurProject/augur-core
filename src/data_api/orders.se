@@ -10,7 +10,7 @@ inset('../macros/refund.sem')
 # traderID is index
 data orderCommits[](hash, block)
 # orderID is index
-data orders[](id, type, market, amount, price, owner, block, outcome, sharesEscrowed, moneyEscrowed)
+data orders[](id, type, market, fxpAmount, fxpPrice, owner, block, outcome, fxpSharesEscrowed, fxpMoneyEscrowed)
 
 data controller
 
@@ -41,18 +41,18 @@ def checkHash(orderHash, sender):
     else:
         return(1)
 
-def saveOrder(orderID, type, market, amount, price, sender, outcome, money, shares):
+def saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed):
     self.controller.checkWhitelist(msg.sender)
     self.orders[orderID].id = orderID
     self.orders[orderID].type = type
     self.orders[orderID].market = market
-    self.orders[orderID].amount = amount
-    self.orders[orderID].price = price
+    self.orders[orderID].fxpAmount = fxpAmount
+    self.orders[orderID].fxpPrice = fxpPrice
     self.orders[orderID].owner = sender
     self.orders[orderID].block = block.number
     self.orders[orderID].outcome = outcome
-    self.orders[orderID].moneyEscrowed = money
-    self.orders[orderID].sharesEscrowed = shares
+    self.orders[orderID].fxpMoneyEscrowed = fxpMoneyEscrowed
+    self.orders[orderID].fxpSharesEscrowed = fxpSharesEscrowed
     return(1)
 
 def getOrder(id):
@@ -60,13 +60,13 @@ def getOrder(id):
     order[0] = self.orders[id].id
     order[1] = self.orders[id].type
     order[2] = self.orders[id].market
-    order[3] = self.orders[id].amount
-    order[4] = self.orders[id].price
+    order[3] = self.orders[id].fxpAmount
+    order[4] = self.orders[id].fxpPrice
     order[5] = self.orders[id].owner
     order[6] = self.orders[id].block
     order[7] = self.orders[id].outcome
-    order[8] = self.orders[id].moneyEscrowed
-    order[9] = self.orders[id].sharesEscrowed
+    order[8] = self.orders[id].fxpMoneyEscrowed
+    order[9] = self.orders[id].fxpSharesEscrowed
     if(order):
         return(order: arr)
     return([0]: arr)
@@ -76,34 +76,34 @@ def removeOrder(id):
     self.orders[id].id = 0
     self.orders[id].type = 0
     self.orders[id].market = 0
-    self.orders[id].amount = 0
-    self.orders[id].price = 0
+    self.orders[id].fxpAmount = 0
+    self.orders[id].fxpPrice = 0
     self.orders[id].owner = 0
     self.orders[id].block = 0
     self.orders[id].outcome = 0
-    self.orders[id].moneyEscrowed = 0
-    self.orders[id].sharesEscrowed = 0
+    self.orders[id].fxpMoneyEscrowed = 0
+    self.orders[id].fxpSharesEscrowed = 0
     return(1)
 
 def fillOrder(orderID, fill, money, shares):
     self.controller.checkWhitelist(msg.sender)
-    if(fill > self.orders[orderID].amount or money > self.orders[orderID].moneyEscrowed or shares > self.orders[orderID].sharesEscrowed):
+    if(fill > self.orders[orderID].fxpAmount or money > self.orders[orderID].fxpMoneyEscrowed or shares > self.orders[orderID].fxpSharesEscrowed):
         ~invalid()
-    self.orders[orderID].amount -= fill
-    self.orders[orderID].moneyEscrowed -= money
-    self.orders[orderID].sharesEscrowed -= shares
+    self.orders[orderID].fxpAmount -= fill
+    self.orders[orderID].fxpMoneyEscrowed -= money
+    self.orders[orderID].fxpSharesEscrowed -= shares
     return(1)
 
 # @return fxp
 def getAmount(id):
-    return(self.orders[id].amount)
+    return(self.orders[id].fxpAmount)
 
 def getID(orderID):
     return(self.orders[orderID].id)
 
 # @return fxp
 def getPrice(id):
-    return(self.orders[id].price)
+    return(self.orders[id].fxpPrice)
 
 def getOrderOwner(id):
     return(self.orders[id].owner)
@@ -111,13 +111,13 @@ def getOrderOwner(id):
 def getType(id):
     return(self.orders[id].type)
 
-def setController(newController):
+def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-def suicideFunds(to):
+def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)
