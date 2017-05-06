@@ -1,9 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256, isWhitelisted:[int256]:int256]
-
-MUTEX = self.controller.lookup('mutex')
-extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256], isWhitelisted:[int256]:int256]
 
 ### Token wrapper for shares
 
@@ -37,39 +34,7 @@ def init():
 
 def transfer(to: address, value: uint256):
     refund()
-    if(!self.controller.isWhitelisted(msg.sender)):
-        MUTEX.acquire()
-    self.internalTransfer(msg.sender, to, value)
-    if(!self.controller.isWhitelisted(msg.sender)):
-        MUTEX.release()
-    return(1)
-
-def transferFrom(from: address, to: address, value: uint256):
-    refund()
-    if(!self.controller.isWhitelisted(msg.sender)):
-        MUTEX.acquire()
-    self.internalTransferFrom(msg.sender, from, to, value)
-    if(!self.controller.isWhitelisted(msg.sender)):
-        MUTEX.release()
-    return(1)
-
-def approve(spender: address, value: uint256):
-    refund()
-    if(!self.controller.isWhitelisted(msg.sender)):
-        MUTEX.acquire()
-    self.internalApprove(msg.sender, spender, value)
-    if(!self.controller.isWhitelisted(msg.sender)):
-        MUTEX.release()
-    return(1)
-
-######################
-# Internal functions #
-######################
-
-def internalTransfer(sender: address, to: address, value: uint256):
-    refund()
-    self.controller.checkWhitelist(msg.sender)
-    senderBalance = self.accounts[sender].balance
+    senderBalance = self.accounts[msg.sender].balance
     if(senderBalance < value):
         ~invalid()
     if(!safeToSubtract(senderBalance, value)):
@@ -77,41 +42,43 @@ def internalTransfer(sender: address, to: address, value: uint256):
     if(!safeToAdd(self.accounts[to].balance, value)):
         ~invalid()
     # Update balances
-    self.accounts[sender].balance -= value
+    self.accounts[msg.sender].balance -= value
     self.accounts[to].balance += value
-    log(type = Transfer, sender, to, value)
+    log(type = Transfer, msg.sender, to, value)
     return(1)
 
-def internalTransferFrom(sender: address, from: address, to: address, value: uint256):
+def transferFrom(from: address, to: address, value: uint256):
     refund()
-    self.controller.checkWhitelist(msg.sender)
     senderBalance = self.accounts[from].balance
     if(senderBalance < value):
         ~invalid()
-    if(value > self.accounts[from].spenders[sender].maxValue):
+    if(value > self.accounts[from].spenders[msg.sender].maxValue):
         ~invalid()
     if(!safeToSubtract(senderBalance, value)):
         ~invalid()
     if(!safeToAdd(self.accounts[to].balance, value)):
         ~invalid()
-    self.accounts[from].spenders[sender].maxValue -= value
+    self.accounts[from].spenders[msg.sender].maxValue -= value
     # Update balances
     self.accounts[from].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, from, to, value)
     return(1)
 
-def internalApprove(sender: address, spender: address, value: uint256):
+def approve(spender: address, value: uint256):
     refund()
-    self.controller.checkWhitelist(msg.sender)
-    self.accounts[sender].spenders[spender].maxValue = value
-    log(type=Approval, sender, spender, value)
+    self.accounts[msg.sender].spenders[spender].maxValue = value
+    log(type=Approval, msg.sender, spender, value)
     return(1)
+
+######################
+# Internal functions #
+######################
 
 # Special functions for token (share) creation/destruction
 
 def createTokens(owner: address, fxpValue: uint256):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(fxpValue <= 0):
         ~invalid()
     self.accounts[owner].balance += fxpValue
@@ -119,7 +86,7 @@ def createTokens(owner: address, fxpValue: uint256):
     return(1)
 
 def destroyTokens(owner: address, fxpValue: uint256):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(fxpValue <= 0):
         ~invalid()
     if(self.accounts[owner].balance < fxpValue):
@@ -174,13 +141,13 @@ def suicideFunds(to: address):
 ##############
 
 def changeTokens(trader, amount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(self.accounts[trader].balance + amount < 0):
         ~invalid()
     self.accounts[trader].balance += amount
     return(1)
 
 def modifySupply(amount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.totalSupply += amount
     return(1)
