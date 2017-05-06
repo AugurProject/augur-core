@@ -172,6 +172,7 @@ macro accountForBidderClosingShort():
         i = 1
         while(i <= MARKETS.getMarketNumOutcomes(market)):
             if(i != outcome):
+                # CREATE/DESTROY SHARES
                 MARKETS.modifyParticipantShares(market, owner, i, fill, 0)
             i += 1
 
@@ -209,6 +210,7 @@ macro accountForShortSelling():
         i = 1
         while(i <= MARKETS.getMarketNumOutcomes(market)):
             MARKETS.modifyShares(market, i, remainderToFill)
+            # CREATE/DESTROY SHARES
             MARKETS.modifyParticipantShares(market, msg.sender, i, remainderToFill, 0)
             i += 1
         askerMoneyFilled = remainderToFill
