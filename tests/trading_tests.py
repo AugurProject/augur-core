@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 '''
 Trading tests:
-functions/bidAndAsk.se -> makeOrder.se + cancelOrder.se
-functions/cash.se
-functions/claimMarketProceeds.se
-functions/completeSets.se
-functions/createEvent.se
-functions/createMarket.se
-functions/fillAskLibrary.se
-functions/fillBidLibrary.se
-functions/marketModifiers.se
-functions/offChainTrades.se
-functions/oneWinningOutcomePayouts.se
-functions/shareTokens.se
-functions/trade.se
-functions/tradeAvailableOrders.se
-functions/twoWinningOutcomePayouts.se
-functions/wallet.se
++ functions/createEvent.se
++ functions/createMarket.se
++ functions/cash.se
++ functions/makeOrder.se
++ functions/completeSets.se
++ functions/cancelOrder.se
++ functions/shareTokens.se
+- functions/wallet.se
+- functions/fillAskLibrary.se
+- functions/fillBidLibrary.se
+- functions/trade.se
+- functions/tradeAvailableOrders.se
+- functions/marketModifiers.se
+- functions/offChainTrades.se
+- functions/claimMarketProceeds.se
+- functions/oneWinningOutcomePayouts.se
+- functions/twoWinningOutcomePayouts.se
 '''
 
 from __future__ import division
@@ -143,7 +144,7 @@ def test_Cash(path):
         with iocapture.capture() as captured:
             retval = c.transfer(t.a2, 0, sender=t.k1)
             logged = parseCapturedLogs(captured.stdout)[-1]
-        assert(retval == 1), "transferFrom should succeed"
+        assert(retval == 1), "transfer should succeed"
         assert(logged["_event_type"] == "Transfer")
         assert(logged["to"] == address2)
         assert(logged["from"] == address1)
@@ -176,18 +177,149 @@ def test_Cash(path):
         assert(logged["to"] == address2)
         assert(logged["from"] == address1)
         assert(logged["value"] == 7)
-    def test_commitSuicide():
+    def test_suicideFunds():
         try:
-            raise Exception(c.commitSuicide(sender=t.k1))
+            raise Exception(c.suicideFunds(t.a1, sender=t.k1))
         except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "commit suicide should fail from non-whitelisted address"
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "suicideFunds should fail when attempted by non-controller address"
     test_init()
     test_depositEther()
     test_withdrawEther()
     test_transfer()
     test_transferFrom()
     test_approve()
-    test_commitSuicide()
+    test_suicideFunds()
+
+def test_ShareTokens(contracts, s, t):
+    address1 = long(t.a1.encode("hex"), 16)
+    address2 = long(t.a2.encode("hex"), 16)
+    # assert(contracts.controller.addToWhitelist(t.a1, sender=t.k0) == 1), "Whitelist address 1"
+    def test_init():
+        assert(hex2str(contracts.shareTokens.getName()) == '5368617265730000000000000000000000000000000000000000000000000000'), "currency name"
+        assert(contracts.shareTokens.getDecimals() == 18), "number of decimals"
+        assert(hex2str(contracts.shareTokens.getSymbol()) == '5348415245000000000000000000000000000000000000000000000000000000'), "currency symbol"
+    def test_createTokens():
+        contracts._ContractLoader__state.mine(1)
+        fxpAmount = fix(10)
+        initialTotalSupply = contracts.shareTokens.totalSupply()
+        initialBalance = contracts.shareTokens.balanceOf(t.a1)
+        assert(contracts.shareTokens.createTokens(t.a1, fxpAmount, sender=t.k0) == 1), "Create share tokens for address 1"
+        assert(contracts.shareTokens.totalSupply() - initialTotalSupply == fxpAmount), "Total supply increase should equal the number of tokens created"
+        assert(contracts.shareTokens.balanceOf(t.a1) - initialBalance == fxpAmount), "Address 1 token balance increase should equal the number of tokens created"
+    def test_destroyTokens():
+        contracts._ContractLoader__state.mine(1)
+        fxpAmount = fix(10)
+        initialTotalSupply = contracts.shareTokens.totalSupply()
+        initialBalance = contracts.shareTokens.balanceOf(t.a1)
+        assert(contracts.shareTokens.destroyTokens(t.a1, fxpAmount, sender=t.k0) == 1), "Destroy share tokens owned by address 1"
+        assert(initialTotalSupply - contracts.shareTokens.totalSupply() == fxpAmount), "Total supply decrease should equal the number of tokens destroyed"
+        assert(initialBalance - contracts.shareTokens.balanceOf(t.a1) == fxpAmount), "Address 1 token balance decrease should equal the number of tokens destroyed"
+    def test_transfer():
+        contracts._ContractLoader__state.mine(1)
+        fxpAmount = fix(10)
+        fxpTransferAmount = fix(2)
+        assert(contracts.shareTokens.createTokens(t.a1, fxpAmount, sender=t.k0) == 1), "Create share tokens for address 1"
+        initialTotalSupply = contracts.shareTokens.totalSupply()
+        initialBalance1 = contracts.shareTokens.balanceOf(t.a1)
+        initialBalance2 = contracts.shareTokens.balanceOf(t.a2)
+        with iocapture.capture() as captured:
+            retval = contracts.shareTokens.transfer(t.a2, fxpTransferAmount, sender=t.k1)
+            logged = captured.stdout
+        logged = parseCapturedLogs(logged)[-1]
+        assert(retval == 1), "transfer should succeed"
+        assert(logged["_event_type"] == "Transfer")
+        assert(logged["to"] == address2)
+        assert(logged["from"] == address1)
+        assert(logged["value"] == fxpTransferAmount)
+        afterTransferBalance1 = contracts.shareTokens.balanceOf(t.a1)
+        afterTransferBalance2 = contracts.shareTokens.balanceOf(t.a2)
+        assert(initialBalance1 - afterTransferBalance1 == fxpTransferAmount), "Decrease in address 1's balance should equal amount transferred"
+        assert(afterTransferBalance2 - initialBalance2 == fxpTransferAmount), "Increase in address 2's balance should equal amount transferred"
+        assert(contracts.shareTokens.totalSupply() == initialTotalSupply), "Total supply should be unchanged"
+        try:
+            raise Exception(contracts.shareTokens.transfer(t.a2, fix(70), sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "transfer should throw if insufficient funds"
+        try:
+            raise Exception(contracts.shareTokens.transfer(t.a2, -5, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.abi.ValueOutOfBounds)), "negative transfer should throw"
+        with iocapture.capture() as captured:
+            retval = contracts.shareTokens.transfer(t.a2, 0, sender=t.k1)
+            logged = captured.stdout
+        logged = parseCapturedLogs(logged)[-1]
+        assert(retval == 1), "transfer with 0 value should succeed"
+        assert(logged["_event_type"] == "Transfer")
+        assert(logged["to"] == address2)
+        assert(logged["from"] == address1)
+        assert(logged["value"] == 0)
+        assert(contracts.shareTokens.balanceOf(t.a1) == afterTransferBalance1), "Balance of a1 should be unchanged"
+        assert(contracts.shareTokens.balanceOf(t.a2) == afterTransferBalance2), "Balance of a2 should be unchanged"
+        assert(contracts.shareTokens.totalSupply() == initialTotalSupply), "Total supply should be unchanged"
+    def test_transferFrom():
+        try:
+            raise Exception(contracts.shareTokens.transferFrom(t.a1, t.a2, 7, sender=t.k2))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "transferFrom should throw, msg.sender is not approved"
+    def test_approve():
+        contracts._ContractLoader__state.mine(1)
+        assert(contracts.shareTokens.allowance(t.a1, t.a2) == 0), "initial allowance is 0"
+        with iocapture.capture() as captured:
+            retval = contracts.shareTokens.approve(t.a2, 10, sender=t.k1)
+            logged = parseCapturedLogs(captured.stdout)[-1]
+        assert(retval == 1), "approve a2 to spend 10 cash from a1"
+        assert(logged["_event_type"] == "Approval")
+        assert(logged["owner"] == address1)
+        assert(logged["spender"] == address2)
+        assert(logged["value"] == 10)
+        print "allowance:", contracts.shareTokens.allowance(t.a1, t.a2)
+        assert(contracts.shareTokens.allowance(t.a1, t.a2) == 10), "allowance is 10 after approval"
+        with iocapture.capture() as captured:
+            retval = contracts.shareTokens.transferFrom(t.a1, t.a2, 7, sender=t.k2)
+            logged = parseCapturedLogs(captured.stdout)[-1]
+        assert(retval == 1), "transferFrom should succeed"
+        assert(logged["_event_type"] == "Transfer")
+        assert(logged["to"] == address2)
+        assert(logged["from"] == address1)
+        assert(logged["value"] == 7)
+    def test_suicideFunds():
+        try:
+            raise Exception(contracts.shareTokens.suicideFunds(t.a1, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "suicideFunds should fail when attempted by non-controller address"
+    def test_exceptions():
+        contracts._ContractLoader__state.mine(1)
+        fxpAmount = fix(10)
+        fxpTransferAmount = fix(2)
+        assert(contracts.shareTokens.createTokens(t.a1, fxpAmount, sender=t.k0) == 1), "Create share tokens for address 1"
+        try:
+            raise Exception(contracts.shareTokens.internalTransfer(t.a1, t.a2, fxpTransferAmount, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "internalTransfer should fail if called from a non-whitelisted account (account 1)"
+        try:
+            raise Exception(contracts.shareTokens.internalTransferFrom(t.a1, t.a1, t.a2, fxpTransferAmount, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "internalTransferFrom should fail if called from a non-whitelisted account (account 1)"
+        try:
+            raise Exception(contracts.shareTokens.internalApprove(t.a1, t.a1, fxpTransferAmount, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "internalApprove should fail if called from a non-whitelisted account (account 1)"
+        try:
+            raise Exception(contracts.shareTokens.createTokens(t.a1, fxpTransferAmount, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "createTokens should fail if called from a non-whitelisted account (account 1)"
+        try:
+            raise Exception(contracts.shareTokens.destroyTokens(t.a1, fxpTransferAmount, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "destroyTokens should fail if called from a non-whitelisted account (account 1)"
+    test_init()
+    test_createTokens()
+    test_destroyTokens()
+    test_transfer()
+    test_transferFrom()
+    test_approve()
+    test_suicideFunds()
+    test_exceptions()
 
 # TODO update create event tests pending final review of contract
 def test_CreateEvent(contracts, s, t):
@@ -767,6 +899,7 @@ def runtests():
     state = contracts._ContractLoader__state
     t = contracts._ContractLoader__tester
     test_Cash(os.path.join(src, 'functions', 'cash.se'))
+    test_ShareTokens(contracts, state, t)
     test_CreateEvent(contracts, state, t)
     test_CreateMarket(contracts, state, t)
     test_CompleteSets(contracts, state, t)
