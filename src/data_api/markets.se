@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256, isWhitelisted:[int256]:int256]
 
 TOPICS = self.controller.lookup('topics')
 extern topics: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], setController:[address]:int256, suicideFunds:[address]:_, updateTopicPopularity:[int256,int256,int256]:int256]
