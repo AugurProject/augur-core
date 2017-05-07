@@ -1,10 +1,17 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
+
+MUTEX = self.controller.lookup('mutex')
+extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
+
+MUTEX = self.controller.lookup('mutex')
+extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
 
 inset('../macros/refund.sem')
+inset('../macros/float.sem')
 
 data accounts[2**160](balance, spenders[2**160](maxValue))
 
@@ -19,8 +26,11 @@ data decimals
 data initiated[]
 data controller
 
-event Transfer(from:indexed, to:indexed, value)
-event Approval(owner:indexed, spender:indexed, value)
+event Transfer(from: indexed, to: indexed, value)
+event Approval(owner: indexed, spender: indexed, value)
+event DepositEther(sender: indexed, value, balance, timestamp)
+event WithdrawEther(sender: indexed, value, balance, timestamp)
+event InitiateWithdrawEther(sender: indexed, value, balance, timestamp)
 
 def init():
     self.controller = 0x0
@@ -28,12 +38,18 @@ def init():
     self.symbol = "CASH"
     self.decimals = 18
 
+####################
+# Public functions #
+####################
+
 def transfer(to: address, value: uint256):
     refund()
     senderBalance = self.accounts[msg.sender].balance
     if(senderBalance < value):
         ~invalid()
-    if(!safeToSubtract(senderBalance, value) or !safeToAdd(self.accounts[to].balance, value)):
+    if(!safeToSubtract(senderBalance, value)):
+        ~invalid()
+    if(!safeToAdd(self.accounts[to].balance, value)):
         ~invalid()
     # Update balances
     self.accounts[msg.sender].balance -= value
@@ -44,9 +60,13 @@ def transfer(to: address, value: uint256):
 def transferFrom(from: address, to: address, value: uint256):
     refund()
     senderBalance = self.accounts[from].balance
-    if(senderBalance < value or value > self.accounts[from].spenders[msg.sender].maxValue):
+    if(senderBalance < value):
         ~invalid()
-    if(!safeToSubtract(senderBalance, value) or !safeToAdd(self.accounts[to].balance, value)):
+    if(value > self.accounts[from].spenders[msg.sender].maxValue):
+        ~invalid()
+    if(!safeToSubtract(senderBalance, value)):
+        ~invalid()
+    if(!safeToAdd(self.accounts[to].balance, value)):
         ~invalid()
     self.accounts[from].spenders[msg.sender].maxValue -= value
     # Update balances
@@ -61,38 +81,65 @@ def approve(spender: address, value: uint256):
     log(type=Approval, msg.sender, spender, value)
     return(1)
 
-def depositEther():
-    amount = msg.value
-    if(!safeToAdd(amount, self.accounts[msg.sender].balance) or !safeToAdd(amount, self.totalSupply)):
-        ~invalid()
-    self.accounts[msg.sender].balance += amount
-    self.totalSupply += amount
+def publicDepositEther():
+    MUTEX.acquire()
+    self.depositEther(msg.sender, value = msg.value)
+    MUTEX.release()
     return(1)
 
-# Withdraw ether to an address
-# Returns 2 if withdrawal is initiated [then must wait 3 days]
-# Returns 1 if withdrawal is successful
-# Errors:
-    # 0: Not enough money
-def withdrawEther(to: address, value: uint256):
+def publicWithdrawEther(to: address, value: uint256):
     refund()
+    MUTEX.acquire()
+    self.withdrawEther(msg.sender, to, value)
+    MUTEX.release()
+    return(1)
+
+######################
+# Internal functions #
+######################
+
+def depositEther(sender: address):
+    refund()
+    self.controller.assertIsWhitelisted(msg.sender)
+    amount = msg.value
+    if(!safeToAdd(amount, self.accounts[sender].balance)):
+        ~invalid()
+    if(!safeToAdd(amount, self.totalSupply)):
+        ~invalid()
+    self.accounts[sender].balance += amount
+    self.totalSupply += amount
+    log(type = DepositEther, sender, amount, self.accounts[sender].balance, block.timestamp)
+    return(1)
+
+def withdrawEther(sender: address, to: address, value: uint256):
+    refund()
+    self.controller.assertIsWhitelisted(msg.sender)
     # TODO: add support for emergency stop
-    initiatedTimestamp = self.initiated[msg.sender]
-    if(self.accounts[msg.sender].balance < value):
-        return(0)
-    if(!safeToSubtract(self.accounts[msg.sender].balance, value) or !safeToSubtract(self.totalSupply, value)):
+    initiatedTimestamp = self.initiated[sender]
+    if(self.accounts[sender].balance < value):
+        ~invalid()
+    if(!safeToSubtract(self.accounts[sender].balance, value)):
+        ~invalid()
+    if(!safeToSubtract(self.totalSupply, value)):
         ~invalid()
     if(!initiatedTimestamp):
-        self.initiated[msg.sender] = block.timestamp
+        self.initiated[sender] = block.timestamp
+        log(type = InitiateWithdrawEther, sender, value, self.accounts[sender].balance, block.timestamp)
         return(2)
-    if((initiatedTimestamp + 3 * TWENTY_FOUR_HR) > block.timestamp):
-        ~invalid()
-    self.accounts[msg.sender].balance -= value
-    self.totalSupply -= value
-    if(!send(to, value)):
-        ~invalid()
-    self.initiated[msg.sender] = 0
-    return(1)
+    else:
+        if((initiatedTimestamp + 3 * TWENTY_FOUR_HR) > block.timestamp):
+            ~invalid()
+        self.accounts[sender].balance -= value
+        self.totalSupply -= value
+        if(!send(to, value)):
+            ~invalid()
+        self.initiated[sender] = 0
+        log(type = WithdrawEther, sender, value, self.accounts[sender].balance, block.timestamp)
+        return(1)
+
+####################
+# Getter functions #
+####################
 
 # Returns amount spender can withdraw from owner
 # @return fxp
@@ -126,26 +173,17 @@ def getInitiated():
     refund()
     return(self.initiated[msg.sender])
 
-def commitSuicide():
-    refund()
-    self.controller.checkWhitelist(msg.sender)
-    suicide(msg.sender)
-    return(1)
+########################
+# Controller functions #
+########################
 
-macro safeToAdd($a, $b):
-    $c = $a + $b
-    ($c >= $a && $c >= $b)
-
-macro safeToSubtract($a, $b):
-    ($b <= $a && (($a - $b) <= $a))
-
-def setController(newController):
+def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-def suicideFunds(to):
+def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)

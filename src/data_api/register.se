@@ -2,7 +2,7 @@
 
 inset('../macros/refund.sem')
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 event registration(sender: indexed, timestamp)
 
@@ -16,13 +16,13 @@ def register():
     log(type=registration, msg.sender, block.timestamp)
     return(1)
 
-def setController(newController):
+def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-def suicideFunds(to):
+def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)

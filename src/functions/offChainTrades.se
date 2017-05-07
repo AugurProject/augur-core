@@ -1,9 +1,9 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
-extern mutex: [acquire:[]:int256, release:[]:int256, setController:[int256]:int256, suicideFunds:[int256]:_]
+extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
@@ -106,13 +106,13 @@ macro checkSig($signer, $hash, $v, $r, $s):
 macro checkHasAbilityToSpend($owner, $token, $amount):
     token.allowance($owner, $self) >= $amount
 
-def setController(newController):
+def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-def suicideFunds(to):
+def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)

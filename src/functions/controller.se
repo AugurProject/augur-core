@@ -144,7 +144,7 @@ def addToWhitelist(address):
 # def getHasReported(reporter):
 #     return(self.hasReported[reporter])
 
-def checkWhitelist(address):
+def assertIsWhitelisted(address):
     if(self.whitelist[address] or msg.sender == self.owner):
         return(1)
     else:

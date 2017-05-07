@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 inset('../macros/refund.sem')
 
@@ -19,7 +19,7 @@ def init():
 
 def updateTopicPopularity(branch, topic, fxpAmount):
     refund()
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(self.Topics[branch].popularity[topic] == 0):
         self.Topics[branch].topics[self.Topics[branch].numTopics] = topic
         self.Topics[branch].numTopics += 1
@@ -65,13 +65,13 @@ def getTopicPopularity(branch, topic):
 def getNumTopicsInBranch(branch):
     return(self.Topics[branch].numTopics)
 
-def setController(newController):
+def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-def suicideFunds(to):
+def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)

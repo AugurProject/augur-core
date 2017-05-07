@@ -1,3 +1,5 @@
+sudo: required
+
 language: python
 
 notifications:
@@ -6,27 +8,13 @@ notifications:
 python:
   - "2.7_with_system_site_packages"
 
-branches:
-  only:
-    - scaling
-
-addons:
-  apt:
-    packages:
-    - libmpc-dev
-    - libmpfr-dev
-    - libmpfr4
-    - libgmp-dev
-    - libblas-dev
-    - liblapack-dev
-    - gfortran
-    - python-numpy
-    - python-scipy
+before_install:
+  - git clone https://github.com/ethereum/serpent
+  - cd serpent && make && sudo make install && sudo python setup.py install && cd ..
 
 install:
   - pip install -U pip
-  - travis_wait travis_retry pip install -r requirements.txt
-  - travis_retry pip install -r test_requirements.txt
+  - pip install ethereum -r test_requirements.txt
 
 script:
-  - ./runtests.sh
+  - py.test tests/trading_tests.py

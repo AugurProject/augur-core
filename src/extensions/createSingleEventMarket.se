@@ -1,15 +1,15 @@
 #Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 CREATEMARKET = self.controller.lookup('createMarket')
-extern createMarket: [checkMarketCreationPreconditions:[int256,int256,int256,int256,int256,int256]:int256, createMarket:[address,int256,int256,int256,int256,int256,int256,bytes,int256]:int256, makeMarket:[address,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256[]]:int256, publicCreateMarket:[int256,int256,int256,int256,int256,int256,bytes,int256]:int256, setController:[int256]:int256, suicideFunds:[int256]:_]
+extern createMarket: [checkMarketCreationPreconditions:[int256,int256,int256,int256,int256,int256]:int256, createMarket:[address,int256,int256,int256,int256,int256,int256,bytes,int256]:int256, makeMarket:[address,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256[]]:int256, publicCreateMarket:[int256,int256,int256,int256,int256,int256,bytes,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 CREATEEVENT = self.controller.lookup('createEvent')
-extern createEvent: [checkEventCreationPreconditions:[int256,int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256]:_, createEvent:[address,int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, publicCreateEvent:[int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, setController:[int256]:int256, suicideFunds:[int256]:_]
+extern createEvent: [checkEventCreationPreconditions:[int256,int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256]:_, createEvent:[address,int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, publicCreateEvent:[int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 MUTEX = self.controller.lookup('mutex')
-extern mutex: [acquire:[]:int256, release:[]:int256, setController:[int256]:int256, suicideFunds:[int256]:_]
+extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 # using isCallerWhitelisted
 inset('../macros/refund.sem')
@@ -31,13 +31,13 @@ def createSingleEventMarket(sender: address, branch, description: str, expDate, 
     marketID = CREATEMARKET.createMarket(msg.sender, branch, fxpTradingFee, eventID, tag1, tag2, tag3, fxpMakerFees, extraInfo, value=msg.value)
     return(marketID)
 
-def setController(newController):
+def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-def suicideFunds(to):
+def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)

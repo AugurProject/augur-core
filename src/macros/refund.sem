@@ -16,7 +16,7 @@ macro refund():
         ~invalid()
 
 macro isCallerWhitelisted():
-    inWhitelist = self.controller.checkWhitelist(msg.sender)
+    inWhitelist = self.controller.assertIsWhitelisted(msg.sender)
     if(inWhitelist):
         1
     else:

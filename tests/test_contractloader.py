@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
 import os
-from load_contracts import ContractLoader
+import sys
 
-SRC = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'src')
+ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
+sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
 
-c = ContractLoader(SRC, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
+from upload_contracts import ContractLoader
+
+contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])

@@ -4,14 +4,11 @@
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 inset('../macros/refund.sem')
 
 data currency
-
-data winningOutcomeContract
-
 data controller
 
 def init():
@@ -23,20 +20,22 @@ def initialize(currency):
     return(1)
 
 def transfer(receiver: address, value: uint256):
-    self.controller.checkWhitelist(msg.sender)
-    if(receiver == 0 or value <= 0):
+    self.controller.assertIsWhitelisted(msg.sender)
+    if(!receiver):
+        ~invalid()
+    if(value <= 0):
         ~invalid()
     if(!self.currency.transfer(receiver, value)):
         ~invalid()
     return(1)
 
-def setController(newController):
+def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-def suicideFunds(to):
+def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)

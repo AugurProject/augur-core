@@ -1,9 +1,9 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 INFO = self.controller.lookup('info')
-extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setController:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256, suicideFunds:[int256]:_]
+extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setController:[address]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256, suicideFunds:[address]:_]
 
 inset('../macros/refund.sem')
 
@@ -53,7 +53,7 @@ def getCreationTime(event):
     return(self.Events[event].creationTime)
 
 def setCreationTime(event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].creationTime = block.timestamp
     return(1)
 
@@ -64,7 +64,7 @@ def getChallenged(event):
     return(self.Events[event].challenged)
 
 def setChallenged(event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].challenged = 1
     return(1)
 
@@ -73,7 +73,7 @@ def getFirstPreliminaryOutcome(event):
     return(self.Events[event].firstPreliminaryOutcome)
 
 def setFirstPreliminaryOutcome(event, outcome):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].firstPreliminaryOutcome = outcome
     return(1)
 
@@ -81,7 +81,7 @@ def getReportersPaidSoFar(event):
     return(self.Events[event].reportersPaidSoFarForEvent)
 
 def addReportersPaidSoFar(event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].reportersPaidSoFarForEvent += 1
     return(1)
 
@@ -92,20 +92,20 @@ def getResolutionAddress(event):
     return(self.Events[event].resolutionAddress)
 
 def setEventPushedUp(event, val):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].pushedUp = val
     return(1)
 
 # @return fxp
 def getForkOutcome(event):
-    whitelist = self.controller.checkWhitelist(msg.sender)
+    whitelist = self.controller.assertIsWhitelisted(msg.sender)
     if(msg.sender == INFO.getCreator(event) or whitelist):
         return(self.Events[event].forkOutcome)
     else:
         log(type = logOutcome, event, self.Events[event].forkOutcome)
 
 def setForkOutcome(event, value):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].forkOutcome = value
     return(1)
 
@@ -114,7 +114,7 @@ def getForkEthicality(event):
     return(self.Events[event].forkEthicality)
 
 def setForkEthicality(event, value):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].forkEthicality = value
     return(1)
 
@@ -122,12 +122,12 @@ def getForked(event):
     return(self.Events[event].forked)
 
 def setForked(event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].forked = 1
     return(1)
 
 def setForkDone(event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].forkOver = 1
     return(1)
 
@@ -157,7 +157,7 @@ def getPast24(period):
     return(self.past24Hours[period])
 
 def addPast24(period):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.past24Hours[period] += 1
     return(1)
 
@@ -168,28 +168,28 @@ def getOriginalExpiration(event):
     return(self.Events[event].originalExp)
 
 def setOriginalExpiration(event, date):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].originalExp = date
     return(1)
 
 def setExpiration(event, date):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].expirationDate = date
     return(1)
 
 def setBranch(event, branch):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].branch = branch
     return(1)
 
 def setExtraBond(event, extraBond):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].extraBond = extraBond
     return(1)
 
 # @return fxp
 def getOutcome(event):
-    whitelist = self.controller.checkWhitelist(msg.sender)
+    whitelist = self.controller.assertIsWhitelisted(msg.sender)
     if(msg.sender == INFO.getCreator(event) or whitelist):
         return(self.Events[event].outcome)
     else:
@@ -200,7 +200,7 @@ def getEthics(event):
     return(self.Events[event].ethical)
 
 def setEthics(event, ethicality):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].ethical = ethicality
     return(ethicality)
 
@@ -216,17 +216,17 @@ def getNumOutcomes(event):
     return(self.Events[event].numOutcomes)
 
 def setUncaughtOutcome(event, outcome):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].uncaughtOutcome = outcome
     return(1)
 
 # @return fxp
 def getUncaughtOutcome(event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     return(self.Events[event].uncaughtOutcome)
 
 def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, resolveBondPoster, forkResolveAddress):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(!self.Events[ID].expirationDate):
         self.Events[ID].branch = branch
         self.Events[ID].expirationDate = expirationDate
@@ -246,7 +246,7 @@ def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
         return(0)
 
 def setBond(event, bond):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].bond = bond
     return(1)
 
@@ -254,12 +254,12 @@ def getEarlyResolutionBond(event):
     return(self.Events[event].earlyResolutionBond)
 
 def setEarlyResolutionBond(event, bond):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].earlyResolutionBond = bond
     return(1)
 
 def addMarket(event, market):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].markets[self.Events[event].numMarkets] = market
     self.Events[event].numMarkets += 1
     return(1)
@@ -290,7 +290,7 @@ def getNumMarkets(event):
     return(self.Events[event].numMarkets)
 
 def setOutcome(ID, outcome):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[ID].outcome = outcome
     return(1)
 
@@ -299,23 +299,23 @@ def getReportingThreshold(event):
     return(self.Events[event].threshold)
 
 def setThreshold(event, threshold):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].threshold = threshold
     return(1)
 
 # @return fxp
 def getMode(event):
-    whitelist = self.controller.checkWhitelist(msg.sender)
+    whitelist = self.controller.assertIsWhitelisted(msg.sender)
     if(msg.sender == INFO.getCreator(event) or whitelist):
         return(self.Events[event].mode)
 
 def setMode(event, mode):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].mode = mode
     return(1)
 
 def setRejected(event, period):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].rejected = 1
     self.Events[event].rejectedPeriod = period
     return(1)
@@ -327,20 +327,20 @@ def getRejectedPeriod(event):
     return(self.Events[event].rejectedPeriod)
 
 def setExtraBondPoster(event, poster):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Events[event].extraBondPoster = poster
     return(1)
 
 def getExtraBondPoster(event):
     return(self.Events[event].extraBondPoster)
 
-def setController(newController):
+def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-def suicideFunds(to):
+def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)

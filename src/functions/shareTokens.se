@@ -1,13 +1,11 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
-MUTEX = self.controller.lookup('mutex')
-extern mutex: [acquire:[]:int256, release:[]:int256, setController:[int256]:int256, suicideFunds:[int256]:_]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 ### Token wrapper for shares
 
 inset('../macros/refund.sem')
+inset('../macros/float.sem')
 
 data accounts[2**160](balance, spenders[2**160](maxValue))
 
@@ -30,58 +28,81 @@ def init():
     self.symbol = "SHARE"
     self.decimals = 18
 
+####################
+# Public functions #
+####################
+
 def transfer(to: address, value: uint256):
     refund()
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
-    self.controller.checkWhitelist(msg.sender)
     senderBalance = self.accounts[msg.sender].balance
     if(senderBalance < value):
         ~invalid()
-    if(!safeToSubtract(senderBalance, value) or !safeToAdd(self.accounts[to].balance, value)):
+    if(!safeToSubtract(senderBalance, value)):
+        ~invalid()
+    if(!safeToAdd(self.accounts[to].balance, value)):
         ~invalid()
     # Update balances
     self.accounts[msg.sender].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, msg.sender, to, value)
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(1)
 
 def transferFrom(from: address, to: address, value: uint256):
     refund()
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
-    self.controller.checkWhitelist(msg.sender)
     senderBalance = self.accounts[from].balance
-    if(senderBalance < value or value > self.accounts[from].spenders[msg.sender].maxValue):
+    if(senderBalance < value):
         ~invalid()
-    if(!safeToSubtract(senderBalance, value) or !safeToAdd(self.accounts[to].balance, value)):
+    if(value > self.accounts[from].spenders[msg.sender].maxValue):
+        ~invalid()
+    if(!safeToSubtract(senderBalance, value)):
+        ~invalid()
+    if(!safeToAdd(self.accounts[to].balance, value)):
         ~invalid()
     self.accounts[from].spenders[msg.sender].maxValue -= value
     # Update balances
     self.accounts[from].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, from, to, value)
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(1)
 
 def approve(spender: address, value: uint256):
     refund()
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
-
     self.accounts[msg.sender].spenders[spender].maxValue = value
     log(type=Approval, msg.sender, spender, value)
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(1)
+
+######################
+# Internal functions #
+######################
+
+# Special functions for token (share) creation/destruction
+
+def createTokens(owner: address, fxpValue: uint256):
+    self.controller.assertIsWhitelisted(msg.sender)
+    if(fxpValue <= 0):
+        ~invalid()
+    self.accounts[owner].balance += fxpValue
+    self.totalSupply += fxpValue
+    return(1)
+
+def destroyTokens(owner: address, fxpValue: uint256):
+    self.controller.assertIsWhitelisted(msg.sender)
+    if(fxpValue <= 0):
+        ~invalid()
+    if(self.accounts[owner].balance < fxpValue):
+        ~invalid()
+    self.accounts[owner].balance -= fxpValue
+    self.totalSupply -= fxpValue
+    return(1)
+
+####################
+# Getter functions #
+####################
 
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(owner: address, spender: address):
-    return(self.accounts[address].spenders[spender].maxValue)
+    return(self.accounts[owner].spenders[spender].maxValue)
 
 # @return fxp
 def totalSupply():
@@ -100,32 +121,33 @@ def getDecimals():
 def getSymbol():
     return(self.symbol)
 
+########################
+# Controller functions #
+########################
+
+def setController(newController: address):
+    if(msg.sender != self.controller):
+        ~invalid()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to: address):
+    if(msg.sender != self.controller):
+        ~invalid()
+    suicide(to)
+
+##############
+# Deprecated #
+##############
+
 def changeTokens(trader, amount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(self.accounts[trader].balance + amount < 0):
         ~invalid()
     self.accounts[trader].balance += amount
     return(1)
 
 def modifySupply(amount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.totalSupply += amount
     return(1)
-
-macro safeToAdd($a, $b):
-    $c = $a + $b
-    ($c >= $a && $c >= $b)
-
-macro safeToSubtract($a, $b):
-    ($b <= $a && (($a - $b) <= $a))
-
-def setController(newController):
-    if(msg.sender != self.controller):
-        ~invalid()
-    self.controller = newController
-    return(1)
-
-def suicideFunds(to):
-    if(msg.sender != self.controller):
-        ~invalid()
-    suicide(to)
