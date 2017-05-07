@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 inset('../macros/float.sem')
 inset('../macros/refund.sem')
@@ -26,7 +26,7 @@ def makeOrderHash(market, outcome, direction):
     orderInfo[1] = outcome
     orderInfo[2] = direction
     orderInfo[3] = msg.sender
-    orderHash = sha3(orderInfo, items = 4)
+    orderHash = ripemd160(orderInfo, items = 4)
     return(orderHash)
 
 def commitOrder(hash):
@@ -42,7 +42,7 @@ def checkHash(orderHash, sender):
         return(1)
 
 def saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.orders[orderID].id = orderID
     self.orders[orderID].type = type
     self.orders[orderID].market = market
@@ -72,7 +72,7 @@ def getOrder(id):
     return([0]: arr)
 
 def removeOrder(id):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.orders[id].id = 0
     self.orders[id].type = 0
     self.orders[id].market = 0
@@ -86,7 +86,7 @@ def removeOrder(id):
     return(1)
 
 def fillOrder(orderID, fill, money, shares):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(fill > self.orders[orderID].fxpAmount or money > self.orders[orderID].fxpMoneyEscrowed or shares > self.orders[orderID].fxpSharesEscrowed):
         ~invalid()
     self.orders[orderID].fxpAmount -= fill

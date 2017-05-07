@@ -1,6 +1,6 @@
 #Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 CREATEMARKET = self.controller.lookup('createMarket')
 extern createMarket: [checkMarketCreationPreconditions:[int256,int256,int256,int256,int256,int256]:int256, createMarket:[address,int256,int256,int256,int256,int256,int256,bytes,int256]:int256, makeMarket:[address,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256[]]:int256, publicCreateMarket:[int256,int256,int256,int256,int256,int256,bytes,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]

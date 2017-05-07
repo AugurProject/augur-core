@@ -93,7 +93,7 @@ macro fxLog2($x):
 macro fxLog($x):
     fxLog2($x) * 0xDE0B6B3A7640000 / 0x14057B7EF767814F
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 # Calculates the exponential function given a fixed point [base 10^18] number, so e^x
 data controller

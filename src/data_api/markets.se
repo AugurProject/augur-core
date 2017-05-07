@@ -1,13 +1,13 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 TOPICS = self.controller.lookup('topics')
 extern topics: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], setController:[address]:int256, suicideFunds:[address]:_, updateTopicPopularity:[int256,int256,int256]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, changeTokens:[int256,int256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, modifySupply:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
+extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, changeTokens:[int256,int256]:int256, createTokens:[address,uint256]:int256, destroyTokens:[address,uint256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, modifySupply:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
 
 inset('../macros/refund.sem')
 
@@ -48,7 +48,7 @@ def init():
     self.controller = 0x0
 
 def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     # add event list to the market
     self.Markets[market].event = event
     i = 0
@@ -73,18 +73,18 @@ def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, 
     return(1)
 
 def modifyShares(market, outcome, fxpAmount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Markets[market].sharesPurchased[outcome] += fxpAmount
     self.Markets[market].shareContracts[outcome].modifySupply(fxpAmount)
     return(1)
 
 def modifySharesValue(market, fxpAmount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Markets[market].sharesValue += fxpAmount
     return(1)
 
 def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Markets[market].shareContracts[outcome].changeTokens(trader, fxpAmount)
     if(actualTrade):
         if(fxpAmount < 0):
@@ -94,7 +94,7 @@ def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
     return(1)
 
 def addOrder(market, orderID):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     lastID = self.Markets[market].lastOrder
     self.Markets[market].orderIDs[lastID].nextID = orderID
     self.Markets[market].orderIDs[orderID].prevID = self.Markets[market].lastOrder
@@ -104,24 +104,24 @@ def addOrder(market, orderID):
     return(1)
 
 def setWinningOutcomes(market, outcomes: arr):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     # largest # of winning outcomes is 8
     save(self.Markets[market].winningOutcomes[0], outcomes, items = len(outcomes))
     return(1)
 
 def setTradingFee(market, fee):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Markets[market].fxpTradingFee = fee
     return(fee)
 
 def setPushedForward(market, bool, sender):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Markets[market].pushingForward = bool
     self.Markets[market].bondsMan = sender
     return(1)
 
 def removeOrderFromMarket(marketID, orderID):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     prevID = self.Markets[marketID].orderIDs[orderID].prevID
     nextID = self.Markets[marketID].orderIDs[orderID].nextID
     # if the order had a previous and next order it connects them directly, remove this orderID from the sequence/middle
@@ -144,7 +144,7 @@ def removeOrderFromMarket(marketID, orderID):
     return(1)
 
 def addToMarketsHash(branch, newHash):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     x = array(2)
     x[0] = self.marketsHash[branch]
     x[1] = newHash
@@ -152,19 +152,19 @@ def addToMarketsHash(branch, newHash):
     return(1)
 
 def addFees(market, fxpAmount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(self.Markets[market].fees + fxpAmount > self.Markets[market].fees):
         self.Markets[market].fees += fxpAmount
     return(1)
 
 def setPrice(market, outcome, fxpPrice):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Markets[market].prices[outcome] = fxpPrice
     return(1)
 
 # refund closing cost for a market
 def refundClosing(market, to):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     subsidy = self.Markets[market].gasSubsidy
     self.Markets[market].gasSubsidy -= subsidy
     if(!send(to, subsidy)):
@@ -279,12 +279,12 @@ def getOrderIDs(marketID):
     return([FAILURE]: arr)
 
 def getWinningOutcomes(market):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     # largest # of winning outcomes is 8
     return(load(self.Markets[market].winningOutcomes[0], items = 8): arr)
 
 def getOneWinningOutcome(market, num):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     return(self.Markets[market].winningOutcomes[num])
 
 def getPushedForward(market):
