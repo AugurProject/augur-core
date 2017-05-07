@@ -52,8 +52,6 @@ def claimProceeds(market):
     refund()
     MUTEX.acquire()
     event = MARKETS.getMarketEvent(market)
-    winningOutcomes = array(MAX_WINNING_OUTCOMES)
-    winningOutcomes = MARKET.getWinningOutcomes(market, outitems = MAX_WINNING_OUTCOMES)
     success = 0
     periodLength = BRANCHES.getPeriodLength(MARKETS.getBranch(market))
     currentPeriodMinus3Days = (block.timestamp - THREE_DAYS) / periodLength
@@ -63,20 +61,19 @@ def claimProceeds(market):
         MUTEX.release()
         return(-1)
     # market not resolved
-    if(!winningOutcomes[0]):
+    if(!MARKETS.getResolved(market)):
         MUTEX.release()
         return(0)
-    scalar = winningOutcomes[1]
     if(scalar):
-        success = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
+        success = CLOSETWO.twoOutcomes(market, event, msg.sender)
     else:
         ethical = ethicCatch(EVENTS.getEthics(event))
         # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
-        if(categorical(event) and (EVENTS.getMode(event) == ONE_HALF or !ethical)):
-            success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
+        if(categorical(event) and (EVENTS.getOutcome(event) == ONE_HALF or !ethical)):
+            success = CLOSEONE.oneOutcome(market, event, msg.sender, 1, EVENTS.getNumOutcomes(event))
         # claims winnings for a regular binary or categorical market
         else:
-            success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, EVENTS.getNumOutcomes(event))
+            success = CLOSEONE.oneOutcome(market, event, msg.sender, 0, EVENTS.getNumOutcomes(event))
     MUTEX.release()
     return(success)
 

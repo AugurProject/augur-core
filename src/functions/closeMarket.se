@@ -67,9 +67,6 @@ def closeMarket(market, sender):
     checkCloseMarketPreconditions()
 
     resolveEventsInMarket()
-    winningOutcomes = array(8)
-    winningOutcomes = DETERMINEOUTCOMES.determineWinningOutcomes(event, outitems = 8)
-    MARKETS.setWinningOutcomes(market, winningOutcomes)
     # refunds closing cost
     MARKETS.refundClosing(market, sender)
     # send fees in market to branch
@@ -77,6 +74,7 @@ def closeMarket(market, sender):
     marketWallet = INFO.getWallet(market)
     marketWallet.transfer(BRANCHES.getBranchWallet(branch, marketCurrency), marketCurrency.balanceOf(marketWallet) - safeFxpMul(MARKETS.getSharesPurchased(market, 1), MARKETS.getCumulativeScale(market)))
 
+    MARKETS.setResolved(market)
     if(!isCallerWhitelisted()):
         MUTEX.release()
     logReturn(closeMarketLogReturn, 1)
@@ -87,7 +85,7 @@ macro checkCloseMarketPreconditions():
         if(!isCallerWhitelisted()):
             MUTEX.release()
         logReturn(closeMarketLogReturn, 0)
-    if(MARKETS.getOneWinningOutcome(market, 0)):
+    if(MARKETS.getResolved(market)):
         if(!isCallerWhitelisted()):
             MUTEX.release()
         logReturn(closeMarketLogReturn, -1)

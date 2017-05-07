@@ -20,11 +20,11 @@ inset('../macros/float.sem')
 
 data controller
 
-# Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D with a scalar]
+# Payout traders in markets
 def init():
     self.controller = 0x0
 
-def twoOutcomes(market, winningOutcome: arr, event, sender):
+def twoOutcomes(market, event, sender):
     self.controller.assertIsWhitelisted(msg.sender)
     # fetch outcome and min/max values for the scalar
     outcome = EVENTS.getOutcome(event)
@@ -41,32 +41,29 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     if(safeAdd(pricePerShare1, pricePerShare2) != ONE):
         normalizePrices()
     # for each winning outcome get rid of shares and send money to the trader
-    n = 0
     cumulativeScale = MARKETS.getCumulativeScale(market)
-    while(winningOutcome[n] != 0):
-        sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, winningOutcome[n])
-        MARKETS.modifyParticipantShares(market, sender, winningOutcome[n], -sharesOwned, 0)
-        # low side
-        if(n == 0):
-            shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
-            fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-            if(shareValue != 0 && fee != 0):
-                if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-                    ~invalid()
-                if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
-                    ~invalid()
-        # high side (of the scalar part)
-        elif(n == 1):
-            shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
-            fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-            if(shareValue != 0 && fee != 0):
-                if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-                    ~invalid()
-                if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
-                    ~invalid()
-        else:
+
+    # low side
+    sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, 1)
+    MARKETS.modifyParticipantShares(market, sender, 1, -sharesOwned, 0)
+    shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
+    fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
+    if(shareValue != 0 && fee != 0):
+        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
             ~invalid()
-        n += 1
+        if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
+            ~invalid()
+
+    # high side (of the scalar part)
+    sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, 2)
+    MARKETS.modifyParticipantShares(market, sender, 2, -sharesOwned, 0)
+    shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
+    fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
+    if(shareValue != 0 && fee != 0):
+        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+            ~invalid()
+        if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
+            ~invalid()
     return(1)
 
 macro normalizePrices():
@@ -84,3 +81,4 @@ def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)
+
