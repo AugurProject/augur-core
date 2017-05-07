@@ -86,11 +86,6 @@ def scalarOrCategoricalForkResolve(branch, event, bond, periodLength, votingPeri
     branch = winner
     EVENTS.setMode(event, mode)
     EVENTS.setEthics(event, ethical)
-    scaledMax = EVENTS.getMaxValue(event)
-    scaledMin = EVENTS.getMinValue(event)
-    if(categorical(event)):
-        scaledMin = ONE
-        scaledMax = ONE * EVENTS.getNumOutcomes(event)
     fxpOutcome = safeFxpMul(mode, (scaledMax - scaledMin)) + scaledMin
     if(categorical(event)):
         fxpOutcome = round(fxpOutcome)
