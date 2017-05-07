@@ -131,7 +131,7 @@ def pushMarketForward(branch, market):
 
     periodLength = BRANCHES.getPeriodLength(branch)
     currentPeriod = block.timestamp / periodLength
-    if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):
+    if(MARKETS.getMarketResolved(market) or MARKETS.getPushedForward(market)):
         MUTEX.release()
         return(-2)
     if(MARKETS.getBranch(market) != branch):
