@@ -70,7 +70,7 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
     fxpSharesEscrowed = escrow[1]
 
     order = [type, market, fxpAmount, fxpPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
-    orderID = sha3(order, items = 9)
+    orderID = ripemd160(order, items = 9)
     if(ORDERS.getID(orderID)):
         ~invalid()
     ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
