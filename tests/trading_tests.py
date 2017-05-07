@@ -22,13 +22,17 @@
 from __future__ import division
 import ethereum
 import os
+import sys
 import json
 import iocapture
-from load_contracts import ContractLoader
 
-HERE = os.path.dirname(os.path.realpath(__file__))
+ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
+sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
 
-contracts = ContractLoader(os.path.join(HERE, os.pardir, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
+from upload_contracts import ContractLoader
+
+contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
+
 eventCreationCounter = 0
 
 def fix(n):
