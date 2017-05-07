@@ -461,6 +461,7 @@ def test_CreateEvent():
         assert(contracts.events.getMaxValue(eventID) == fxpMaxValue), "Max value matches input"
         assert(contracts.events.getNumOutcomes(eventID) == numOutcomes), "Number of outcomes matches input"
         assert(contracts.events.getEventResolution(eventID) == resolution), "Resolution matches input"
+        assert(hex2str(contracts.events.getEventType(eventID)) == "62696e6172790000000000000000000000000000000000000000000000000000"), "Event type is binary"
     test_checkEventCreationPreconditions()
     test_publicCreateEvent()
 
