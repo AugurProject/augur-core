@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-'''
-Trading tests:
+"""Trading tests:
 + functions/createEvent.se
 + functions/createMarket.se
 + functions/cash.se
@@ -8,7 +7,7 @@ Trading tests:
 + functions/completeSets.se
 + functions/cancelOrder.se
 + functions/shareTokens.se
-- functions/wallet.se
++ functions/wallet.se
 - functions/fillAskLibrary.se
 - functions/fillBidLibrary.se
 - functions/trade.se
@@ -18,8 +17,8 @@ Trading tests:
 - functions/claimMarketProceeds.se
 - functions/oneWinningOutcomePayouts.se
 - functions/twoWinningOutcomePayouts.se
-'''
 
+"""
 from __future__ import division
 import ethereum
 import os
@@ -27,6 +26,9 @@ import json
 import iocapture
 from load_contracts import ContractLoader
 
+HERE = os.path.dirname(os.path.realpath(__file__))
+
+contracts = ContractLoader(os.path.join(HERE, os.pardir, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
 eventCreationCounter = 0
 
 def fix(n):
@@ -48,8 +50,10 @@ def parseCapturedLogs(logs):
         return arrayOfParsedLogs[0]
     return arrayOfParsedLogs
 
-def createBinaryEvent(contracts, s, t):
+def createBinaryEvent():
     global eventCreationCounter
+    global contracts
+    t = contracts._ContractLoader__tester
     contracts.cash.publicDepositEther(value=fix(10000), sender=t.k1)
     contracts.cash.approve(contracts.createEvent.address, fix(10000), sender=t.k1)
     branch = 1010101
@@ -66,7 +70,9 @@ def createBinaryEvent(contracts, s, t):
     forkResolveAddress = contracts.forkResolution.address
     return contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
 
-def createBinaryMarket(contracts, s, t, eventID):
+def createBinaryMarket(eventID):
+    global contracts
+    t = contracts._ContractLoader__tester
     contracts.cash.approve(contracts.createMarket.address, fix(10000), sender=t.k1)
     branch = 1010101
     fxpTradingFee = 20000000000000001
@@ -77,7 +83,25 @@ def createBinaryMarket(contracts, s, t, eventID):
     currency = contracts.cash.address
     return contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1, value=fix(10000))
 
-def test_Cash(contracts, s, t):
+def buyCompleteSets(marketID, fxpAmount):
+    global contracts
+    t = contracts._ContractLoader__tester
+    assert(contracts.cash.approve(contracts.completeSets.address, fix(10000), sender=t.k1) == 1), "Approve completeSets contract to spend cash"
+    with iocapture.capture() as captured:
+        result = contracts.completeSets.publicBuyCompleteSets(marketID, fxpAmount, sender=t.k1)
+        logged = captured.stdout
+    logCompleteSets = parseCapturedLogs(logged)[-1]
+    assert(logCompleteSets["_event_type"] == "logCompleteSets"), "Should emit a logCompleteSets event"
+    assert(logCompleteSets["sender"] == long(t.a1.encode("hex"), 16)), "Logged sender should match input"
+    assert(logCompleteSets["type"] == 1), "Logged type should be 1 (buy)"
+    assert(logCompleteSets["fxpAmount"] == fxpAmount), "Logged fxpAmount should match input"
+    assert(logCompleteSets["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match input"
+    assert(logCompleteSets["numOutcomes"] == contracts.markets.getMarketNumOutcomes(marketID)), "Logged numOutcomes should market's number of outcomes"
+    assert(logCompleteSets["market"] == marketID), "Logged market should match input"
+
+def test_Cash():
+    global contracts
+    t = contracts._ContractLoader__tester
     address1 = long(t.a1.encode("hex"), 16)
     address2 = long(t.a2.encode("hex"), 16)
     initialEtherBalance2 = contracts._ContractLoader__state.block.get_balance(t.a2)
@@ -176,6 +200,11 @@ def test_Cash(contracts, s, t):
         assert(logged["to"] == address2)
         assert(logged["from"] == address1)
         assert(logged["value"] == 7)
+    def test_setController():
+        try:
+            raise Exception(contracts.wallet.setController(t.a1, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "setController should fail when attempted by non-controller address"
     def test_suicideFunds():
         try:
             raise Exception(contracts.cash.suicideFunds(t.a1, sender=t.k1))
@@ -199,10 +228,13 @@ def test_Cash(contracts, s, t):
     test_transfer()
     test_transferFrom()
     test_approve()
+    test_setController()
     test_suicideFunds()
     test_exceptions()
 
-def test_ShareTokens(contracts, s, t):
+def test_ShareTokens():
+    global contracts
+    t = contracts._ContractLoader__tester
     address1 = long(t.a1.encode("hex"), 16)
     address2 = long(t.a2.encode("hex"), 16)
     def test_init():
@@ -293,6 +325,11 @@ def test_ShareTokens(contracts, s, t):
         assert(logged["to"] == address2)
         assert(logged["from"] == address1)
         assert(logged["value"] == 7)
+    def test_setController():
+        try:
+            raise Exception(contracts.wallet.setController(t.a1, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "setController should fail when attempted by non-controller address"
     def test_suicideFunds():
         try:
             raise Exception(contracts.shareTokens.suicideFunds(t.a1, sender=t.k1))
@@ -317,11 +354,69 @@ def test_ShareTokens(contracts, s, t):
     test_transfer()
     test_transferFrom()
     test_approve()
+    test_setController()
     test_suicideFunds()
     test_exceptions()
 
+def test_Wallet():
+    global contracts
+    t = contracts._ContractLoader__tester
+    def test_initialize():
+        contracts._ContractLoader__state.mine(1)
+        assert(contracts.wallet.initialize(contracts.cash.address, sender=t.k1) == 1), "Should initialize wallet with cash currency"
+    def test_transfer():
+        contracts._ContractLoader__state.mine(1)
+        fxpValue = fix(100)
+        assert(contracts.wallet.initialize(contracts.cash.address, sender=t.k1) == 1), "Should initialize wallet with cash currency"
+        initialBalanceWallet = contracts.cash.balanceOf(contracts.wallet.address)
+        initialBalance2 = contracts.cash.balanceOf(t.a2)
+        assert(contracts.cash.publicDepositEther(value=fxpValue, sender=t.k2) == 1), "Should deposit ether to account 2"
+        assert(contracts.cash.balanceOf(contracts.wallet.address) == initialBalanceWallet), "Wallet balance unchanged"
+        assert(contracts.cash.balanceOf(t.a2) - initialBalance2 == fxpValue), "Account 2 balance increase equal to deposit"
+        assert(contracts.cash.transfer(contracts.wallet.address, fxpValue, sender=t.k2) == 1), "Should transfer ether to wallet address"
+        assert(contracts.cash.balanceOf(contracts.wallet.address) - initialBalanceWallet == fxpValue), "Wallet balance increase equal to deposit"
+        assert(contracts.cash.balanceOf(t.a2) == initialBalance2), "Account 2 balance unchanged"
+        fxpTransferValue = contracts.cash.balanceOf(contracts.wallet.address)
+        try:
+            raise Exception(contracts.wallet.transfer(t.a2, fxpTransferValue, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "transfer should fail when attempted by non-whitelisted address"
+        try:
+            raise Exception(contracts.wallet.transfer(t.a2, 0, sender=t.k0))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "transfer should fail if value is zero"
+        try:
+            raise Exception(contracts.wallet.transfer(t.a2, -1, sender=t.k0))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.abi.ValueOutOfBounds)), "transfer should fail if value is negative"
+        try:
+            raise Exception(contracts.wallet.transfer(0, fxpTransferValue, sender=t.k0))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "transfer should fail if receiver address is zero"
+        assert(contracts.wallet.transfer(t.a1, fxpTransferValue, sender=t.k0) == 1), "transfer should succeed"
+        try:
+            raise Exception(contracts.wallet.transfer(t.a2, fxpTransferValue, sender=t.k0))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "transfer should fail if insufficient balance"
+    def test_setController():
+        try:
+            raise Exception(contracts.wallet.setController(t.a1, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "setController should fail when attempted by non-controller address"
+    def test_suicideFunds():
+        try:
+            raise Exception(contracts.wallet.suicideFunds(t.a1, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "suicideFunds should fail when attempted by non-controller address"
+    test_initialize()
+    test_transfer()
+    test_setController()
+    test_suicideFunds()
+
 # TODO update create event tests pending final review of contract
-def test_CreateEvent(contracts, s, t):
+def test_CreateEvent():
+    global contracts
+    t = contracts._ContractLoader__tester
     def test_checkEventCreationPreconditions():
         contracts._ContractLoader__state.mine(1)
         branch = 1010101
@@ -366,7 +461,9 @@ def test_CreateEvent(contracts, s, t):
     test_publicCreateEvent()
 
 # TODO update create market tests pending final review of contract
-def test_CreateMarket(contracts, s, t):
+def test_CreateMarket():
+    global contracts
+    t = contracts._ContractLoader__tester
     def test_publicCreateMarket():
         contracts._ContractLoader__state.mine(1)
         assert(contracts.cash.publicDepositEther(value=fix(10000), sender=t.k1) == 1), "Convert ether to cash"
@@ -398,26 +495,14 @@ def test_CreateMarket(contracts, s, t):
         assert(contracts.markets.getExtraInfo(marketID) == extraInfo), "Extra info matches input"
     test_publicCreateMarket()
 
-def buyCompleteSets(contracts, s, t, marketID, fxpAmount):
-    assert(contracts.cash.approve(contracts.completeSets.address, fix(10000), sender=t.k1) == 1), "Approve completeSets contract to spend cash"
-    with iocapture.capture() as captured:
-        result = contracts.completeSets.publicBuyCompleteSets(marketID, fxpAmount, sender=t.k1)
-        logged = captured.stdout
-    logCompleteSets = parseCapturedLogs(logged)[-1]
-    assert(logCompleteSets["_event_type"] == "logCompleteSets"), "Should emit a logCompleteSets event"
-    assert(logCompleteSets["sender"] == long(t.a1.encode("hex"), 16)), "Logged sender should match input"
-    assert(logCompleteSets["type"] == 1), "Logged type should be 1 (buy)"
-    assert(logCompleteSets["fxpAmount"] == fxpAmount), "Logged fxpAmount should match input"
-    assert(logCompleteSets["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match input"
-    assert(logCompleteSets["numOutcomes"] == contracts.markets.getMarketNumOutcomes(marketID)), "Logged numOutcomes should market's number of outcomes"
-    assert(logCompleteSets["market"] == marketID), "Logged market should match input"
-
-def test_CompleteSets(contracts, s, t):
+def test_CompleteSets():
+    global contracts
+    t = contracts._ContractLoader__tester
     address1 = long(t.a1.encode("hex"), 16)
     def test_publicBuyCompleteSets():
         contracts._ContractLoader__state.mine(1)
-        eventID = createBinaryEvent(contracts, s, t)
-        marketID = createBinaryMarket(contracts, s, t, eventID)
+        eventID = createBinaryEvent()
+        marketID = createBinaryMarket(eventID)
         fxpAmount = fix(10)
         senderInitialCash = contracts.cash.balanceOf(t.a1)
         marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -442,8 +527,8 @@ def test_CompleteSets(contracts, s, t):
         assert(contracts.markets.getTotalSharesPurchased(marketID) - marketInitialTotalShares == 2*fxpAmount), "Increase in total shares purchased for this market should be 18"
         def test_exceptions():
             contracts._ContractLoader__state.mine(1)
-            eventID = createBinaryEvent(contracts, s, t)
-            marketID = createBinaryMarket(contracts, s, t, eventID)
+            eventID = createBinaryEvent()
+            marketID = createBinaryMarket(eventID)
             fxpAmount = fix(10)
             assert(contracts.cash.approve(contracts.completeSets.address, fxpAmount, sender=t.k1) == 1), "Approve completeSets contract to spend cash"
 
@@ -476,9 +561,9 @@ def test_CompleteSets(contracts, s, t):
         test_exceptions()
     def test_publicSellCompleteSets():
         contracts._ContractLoader__state.mine(1)
-        eventID = createBinaryEvent(contracts, s, t)
-        marketID = createBinaryMarket(contracts, s, t, eventID)
-        buyCompleteSets(contracts, s, t, marketID, fix(10))
+        eventID = createBinaryEvent()
+        marketID = createBinaryMarket(eventID)
+        buyCompleteSets(marketID, fix(10))
         fxpAmount = fix(9)
         senderInitialCash = contracts.cash.balanceOf(t.a1)
         marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -500,10 +585,10 @@ def test_CompleteSets(contracts, s, t):
         assert(marketInitialTotalShares - contracts.markets.getTotalSharesPurchased(marketID) == 2*fxpAmount), "Decrease in total shares purchased for this market should be 18"
         def test_exceptions():
             contracts._ContractLoader__state.mine(1)
-            eventID = createBinaryEvent(contracts, s, t)
-            marketID = createBinaryMarket(contracts, s, t, eventID)
+            eventID = createBinaryEvent()
+            marketID = createBinaryMarket(eventID)
             fxpAmount = fix(10)
-            buyCompleteSets(contracts, s, t, marketID, fxpAmount)
+            buyCompleteSets(marketID, fxpAmount)
 
             # Permissions exceptions
             contracts._ContractLoader__state.mine(1)
@@ -534,7 +619,9 @@ def test_CompleteSets(contracts, s, t):
     test_publicBuyCompleteSets()
     test_publicSellCompleteSets()
 
-def test_MakeOrder(contracts, s, t):
+def test_MakeOrder():
+    global contracts
+    t = contracts._ContractLoader__tester
     address1 = long(t.a1.encode("hex"), 16)
     def test_publicMakeOrder():
         def test_bid():
@@ -544,8 +631,8 @@ def test_MakeOrder(contracts, s, t):
             fxpPrice = 1600000000000000000  # fixed-point 1.6
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent(contracts, s, t)
-            marketID = createBinaryMarket(contracts, s, t, eventID)
+            eventID = createBinaryEvent()
+            marketID = createBinaryMarket(eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -586,8 +673,8 @@ def test_MakeOrder(contracts, s, t):
             fxpPrice = 1600000000000000000  # fixed-point 1.6
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent(contracts, s, t)
-            marketID = createBinaryMarket(contracts, s, t, eventID)
+            eventID = createBinaryEvent()
+            marketID = createBinaryMarket(eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -626,9 +713,9 @@ def test_MakeOrder(contracts, s, t):
             fxpPrice = 1600000000000000000  # fixed-point 1.6
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent(contracts, s, t)
-            marketID = createBinaryMarket(contracts, s, t, eventID)
-            buyCompleteSets(contracts, s, t, marketID, fix(10))
+            eventID = createBinaryEvent()
+            marketID = createBinaryMarket(eventID)
+            buyCompleteSets(marketID, fix(10))
             fxpAmount = fix(9)
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
@@ -671,9 +758,9 @@ def test_MakeOrder(contracts, s, t):
             fxpPrice = 1600000000000000000  # fixed-point 1.6
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent(contracts, s, t)
-            marketID = createBinaryMarket(contracts, s, t, eventID)
-            buyCompleteSets(contracts, s, t, marketID, fix(10))
+            eventID = createBinaryEvent()
+            marketID = createBinaryMarket(eventID)
+            buyCompleteSets(marketID, fix(10))
             fxpAmount = fix(12)
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
@@ -714,8 +801,8 @@ def test_MakeOrder(contracts, s, t):
             fxpPrice = 1600000000000000000  # fixed-point 1.6
             outcomeID = 1
             tradeGroupID = 42
-            eventID = createBinaryEvent(contracts, s, t)
-            marketID = createBinaryMarket(contracts, s, t, eventID)
+            eventID = createBinaryEvent()
+            marketID = createBinaryMarket(eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -767,7 +854,7 @@ def test_MakeOrder(contracts, s, t):
                 raise Exception(contracts.makeOrder.publicMakeOrder(2, 1, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1))
             except Exception as exc:
                 assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicMakeOrder ask (without shares) should fail if order cost is below than the minimum order value"
-            buyCompleteSets(contracts, s, t, marketID, fix(1))
+            buyCompleteSets(marketID, fix(1))
             contracts._ContractLoader__state.mine(1)
             try:
                 raise Exception(contracts.makeOrder.publicMakeOrder(2, fxpAmount, fix(3), marketID, outcomeID, tradeGroupID, sender=t.k1))
@@ -793,7 +880,9 @@ def test_MakeOrder(contracts, s, t):
         test_exceptions()
     test_publicMakeOrder()
 
-def test_CancelOrder(contracts, s, t):
+def test_CancelOrder():
+    global contracts
+    t = contracts._ContractLoader__tester
     address1 = long(t.a1.encode("hex"), 16)
     def test_publicCancelOrder():
         def test_cancelBid():
@@ -803,8 +892,8 @@ def test_CancelOrder(contracts, s, t):
             fxpPrice = 1600000000000000000  # fixed-point 1.6
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent(contracts, s, t)
-            marketID = createBinaryMarket(contracts, s, t, eventID)
+            eventID = createBinaryEvent()
+            marketID = createBinaryMarket(eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
@@ -826,8 +915,8 @@ def test_CancelOrder(contracts, s, t):
             fxpPrice = 1600000000000000000  # fixed-point 1.6
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent(contracts, s, t)
-            marketID = createBinaryMarket(contracts, s, t, eventID)
+            eventID = createBinaryEvent()
+            marketID = createBinaryMarket(eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
@@ -849,8 +938,8 @@ def test_CancelOrder(contracts, s, t):
             fxpPrice = 1600000000000000000  # fixed-point 1.6
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent(contracts, s, t)
-            marketID = createBinaryMarket(contracts, s, t, eventID)
+            eventID = createBinaryEvent()
+            marketID = createBinaryMarket(eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -893,17 +982,14 @@ def test_CancelOrder(contracts, s, t):
     test_publicCancelOrder()
 
 def runtests():
-    src = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'src')
-    contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
-    state = contracts._ContractLoader__state
-    t = contracts._ContractLoader__tester
-    test_Cash(contracts, state, t)
-    test_ShareTokens(contracts, state, t)
-    test_CreateEvent(contracts, state, t)
-    test_CreateMarket(contracts, state, t)
-    test_CompleteSets(contracts, state, t)
-    test_MakeOrder(contracts, state, t)
-    test_CancelOrder(contracts, state, t)
+    test_Cash()
+    test_ShareTokens()
+    test_CreateEvent()
+    test_CreateMarket()
+    test_CompleteSets()
+    test_MakeOrder()
+    test_CancelOrder()
+    test_Wallet()
 
 if __name__ == '__main__':
     runtests()
