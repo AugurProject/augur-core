@@ -2,6 +2,9 @@
 
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
+MUTEX = self.controller.lookup('mutex')
+extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
+
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
 
 inset('../macros/refund.sem')
