@@ -83,7 +83,7 @@ def sendRepFrom(branch, from, receiver, fxpValue):
     senderBalance = REPORTING.getRepBalance(branch, from)
     receiverBalance = REPORTING.getRepBalance(branch, receiver)
     reportedOnRoundTwoEvent = REPORTING.getReportedOnNonFinalRoundTwoEvent(branch, from)
-    if(reportedOnRoundTwoEvent && !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
+    if(reportedOnRoundTwoEvent and !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
         ~invalid()
     checkSendRepInvariants()
 
@@ -179,7 +179,7 @@ macro checkSendRepInvariants():
         # if it's a forked or new branch have 1 month to claim, so a user cant make a new account on a new branch without at least trying to claim rep if this is a fork and the reporter was in the old branch [but hasn't claimed rep on the new child branch yet]
         parent = BRANCHES.getParent(branch)
         reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, from))
-        if(parent && !tooLate && reporterWasInOldBranch):
+        if(parent and !tooLate and reporterWasInOldBranch):
             if(!CLAIMINITIALREP.claimInitialRep(parent, branch, call = delegate)):
                 ~invalid()
         else:
@@ -188,12 +188,12 @@ macro checkSendRepInvariants():
             MUTEX.release()
         return(-1)
     # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the receiver claims it
-    if(REPORTING.getReporterID(branch, receiverIndex) != receiver or (child && !tooLateForChild && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, receiver)) != receiver)):
+    if(REPORTING.getReporterID(branch, receiverIndex) != receiver or (child and !tooLateForChild and REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, receiver)) != receiver)):
         if(!isCallerWhitelisted()):
             MUTEX.release()
         return(-3)
     # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the sender claims it
-    if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
+    if(!tooLateForChild and child and REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
         if(!CLAIMINITIALREP.claimInitialRep(branch, child, call = delegate)):
             ~invalid()
 

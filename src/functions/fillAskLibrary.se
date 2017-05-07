@@ -180,7 +180,7 @@ macro accountForAskWithShares():
         askerSharesFilled = fill
 
 macro accountForShortAsk():
-    if(amountTakerWants && moneyEscrowed):
+    if(amountTakerWants and moneyEscrowed):
         fill = min(safeFxpDiv(moneyEscrowed, safeSub(maxValue, price)), amountTakerWants)
         amountTakerWants = safeSub(amountTakerWants, fill)
         sumOfFills = safeAdd(sumOfFills, fill)

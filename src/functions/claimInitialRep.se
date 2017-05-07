@@ -97,7 +97,7 @@ def claimInitialRep(parent, branch):
     return(1)
 
 macro checkRepClaimPreconditions():
-    if(BRANCHES.getParent(branch) != parent && parent && branch):
+    if(BRANCHES.getParent(branch) != parent and parent and branch):
         MUTEX.release()
         return(-1)
     tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)

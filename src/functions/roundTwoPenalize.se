@@ -111,7 +111,7 @@ def penalizeRoundTwoWrong(branch, event):
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
         if(oldReport):
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
-    elif(final and roundTwo and eventCreatedPriorToFork(event) && event != forkEvent && !penalizedOnEvent && reported):
+    elif(final and roundTwo and eventCreatedPriorToFork(event) and event != forkEvent and !penalizedOnEvent and reported):
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
         if(reportValue):
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)

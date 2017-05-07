@@ -99,7 +99,7 @@ def putEventIntoReportingPeriod(event):
     if(eventCreatedPriorToFork(event)):
         return(-1)
 
-    if(!EVENTS.getChallenged(event) && !EVENTS.getFirstPreliminaryOutcome(event) && block.timestamp > (EVENTS.getExpiration(event) + THREE_DAYS)):
+    if(!EVENTS.getChallenged(event) and !EVENTS.getFirstPreliminaryOutcome(event) and block.timestamp > (EVENTS.getExpiration(event) + THREE_DAYS)):
         addEvent()
         EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setChallenged(event)
@@ -128,7 +128,7 @@ def challengeInitialResolution(event):
     if(eventCreatedPriorToFork(event)):
         return(-1)
 
-    if(!EVENTS.getChallenged(event) && block.timestamp < (EVENTS.getExpiration(event) + 2 * THREE_DAYS) && EVENTS.getFirstPreliminaryOutcome(event)):
+    if(!EVENTS.getChallenged(event) and block.timestamp < (EVENTS.getExpiration(event) + 2 * THREE_DAYS) and EVENTS.getFirstPreliminaryOutcome(event)):
         addEvent()
         EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setChallenged(event)
@@ -147,7 +147,7 @@ def challengeInitialResolution(event):
 def resolveEarly(event, outcome):
     if(!isCallerWhitelisted()):
         MUTEX.acquire()
-    if(msg.sender == EVENTS.getResolutionAddress(event) && block.timestamp > EVENTS.getExpiration(event) && block.timestamp < (EVENTS.getExpiration(event) + THREE_DAYS)):
+    if(msg.sender == EVENTS.getResolutionAddress(event) and block.timestamp > EVENTS.getExpiration(event) and block.timestamp < (EVENTS.getExpiration(event) + THREE_DAYS)):
         # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
         if(outcome == 0):
             outcome = 1

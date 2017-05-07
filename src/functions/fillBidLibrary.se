@@ -113,11 +113,11 @@ def fillBid(orderID, amountTakerWants):
     MARKETS.modifyParticipantShares(market, owner, outcome, sumOfFills, 0)
     sellMakersCompleteSets()
     # transfer (price - minValue) * bidderSharesFilled to market from bidder since market hasnt been paid yet after complete sets selling. The bidder has already paid for bidderMoneyFilled by escrowing their money
-    bidderHasntPaidMarket = bidderSharesFilled && !INFO.getCurrency(market).transferFrom(owner, market, safeFxpMul(safeSub(price, minValue), bidderSharesFilled))
+    bidderHasntPaidMarket = bidderSharesFilled and !INFO.getCurrency(market).transferFrom(owner, market, safeFxpMul(safeSub(price, minValue), bidderSharesFilled))
     # Transfer money from person who bid to the person here who is selling/asker [bidder has already sent/escrowed the cash to/with the market when submitting bid so this comes from the market]
     askerNotPaid = !INFO.getWallet(market).transfer(msg.sender, safeFxpMul(safeSub(price, minValue), sumOfFills))
     # transfer range * askerMoneyFilled to the market from asker for the amount of shares in askerMoneyFilled, for askerSharesFilled the asker simply has sent their shares to the bidder and thus doesn't have to put up money
-    askerHasntPaidMarket = askerMoneyFilled && !INFO.getCurrency(market).transferFrom(msg.sender, market, safeFxpMul(cumulativeScale, askerMoneyFilled))
+    askerHasntPaidMarket = askerMoneyFilled and !INFO.getCurrency(market).transferFrom(msg.sender, market, safeFxpMul(cumulativeScale, askerMoneyFilled))
     if(bidderHasntPaidMarket or askerHasntPaidMarket or askerNotPaid):
         ~invalid()
     sellTakerCompleteSetsIfAny()
@@ -177,7 +177,7 @@ macro accountForBidderClosingShort():
             i += 1
 
 macro accountForRegularBidWithMoney():
-    if(amountTakerWants && moneyEscrowed):
+    if(amountTakerWants and moneyEscrowed):
         fill = min(safeFxpDiv(moneyEscrowed, safeSub(price, minValue)), amountTakerWants)
         amountTakerWants = safeSub(amountTakerWants, fill)
         sumOfFills = safeAdd(sumOfFills, fill)

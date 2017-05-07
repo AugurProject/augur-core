@@ -78,7 +78,7 @@ def closeMarket(market, sender):
 
 macro checkCloseMarketPreconditions():
     # as long as resolved and not challenged we can then resolve, i.e. if not challenged and > 6 days then can take prelim outcome and make it final outcome
-    if(period <= votingPeriodEvent || (!EVENTS.getChallenged(event) && block.timestamp < expiration + SIX_DAYS)):
+    if(period <= votingPeriodEvent or (!EVENTS.getChallenged(event) and block.timestamp < expiration + SIX_DAYS)):
         if(!isCallerWhitelisted()):
             MUTEX.release()
         logReturn(closeMarketLogReturn, 0)
@@ -86,7 +86,7 @@ macro checkCloseMarketPreconditions():
         if(!isCallerWhitelisted()):
             MUTEX.release()
         logReturn(closeMarketLogReturn, -1)
-    if(!EVENTS.getUncaughtOutcome(event) && !EVENTS.getFirstPreliminaryOutcome(event)):
+    if(!EVENTS.getUncaughtOutcome(event) and !EVENTS.getFirstPreliminaryOutcome(event)):
         if(!isCallerWhitelisted()):
             MUTEX.release()
         logReturn(closeMarketLogReturn, -2)
