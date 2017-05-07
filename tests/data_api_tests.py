@@ -1,13 +1,19 @@
 #!/usr/bin/env python
+
 from __future__ import division
 from ethereum import tester as t
-from load_contracts import ContractLoader
 import math
 import random
 import os
+import sys
 import time
 import binascii
 from pprint import pprint
+
+ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
+sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
+
+from upload_contracts import ContractLoader
 
 ONE = 10**18
 TWO = 2*ONE

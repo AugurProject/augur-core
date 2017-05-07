@@ -1,4 +1,2 @@
-dill>=0.2.6
 ethereum
 serpent>=1.19
-iocapture>=0.1.2
