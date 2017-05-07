@@ -110,7 +110,7 @@ def createEvent(sender: address, branch, description: str, expDate, fxpMinValue,
     mcopy(eventInfo + 8 * 32, description, len(description))
     event = ripemd160(eventInfo, chars = len(eventInfo))
     if(INFO.getCreator(event)):
-        return(0)
+        ~invalid()
 
     wallet = create('wallet.se')
     wallet.initialize(currency)
