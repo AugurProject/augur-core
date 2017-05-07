@@ -1,0 +1,89 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
+
+MUTEX = self.controller.lookup('mutex')
+extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
+
+ORDERS = self.controller.lookup('orders')
+extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
+
+FILLASK = self.controller.lookup('fillAskLibrary')
+extern fillAskLibrary: [fillAsk:[int256,int256]:int256[], setController:[address]:int256, suicideFunds:[address]:_]
+
+FILLBID = self.controller.lookup('fillBidLibrary')
+extern fillBidLibrary: [fillBid:[int256,int256]:int256[], setController:[address]:int256, suicideFunds:[address]:_]
+
+extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
+inset('../macros/refund.sem')
+inset('../macros/float.sem')
+
+data controller
+
+event logPrice(market: indexed, sender: indexed, owner: indexed, type, price, amount, timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
+event tradeLogReturn(returnValue)
+event tradeLogArrayReturn(returnArray: arr)
+
+macro MIN_TRADE_VALUE: 10000000000000000
+
+# Trade types
+macro BID: 1
+macro ASK: 2
+
+# Field counts
+macro ORDER_FIELDS: 10
+
+### Allows users to take orders off the book (i.e. fill orders)
+
+# Trade scenarios:
+# Note: all [] scenarios are typical, if a user somehow gets an extra complete set it'll also be sold when doing a order, typically complete sets only sold when closing out a position or closing out a short
+# - Buying and have all but one and bidding, seller doesn't have outcome and is taking [complete set fee charged on buyer b/c selling complete sets].
+# - Buying and have all but one and bidding, seller has outcome and is taking [complete set fee charged on buyer].
+# - Buying and don't own anything and bidding, seller doesn't have outcome and is taking [no complete set fee charged b/c none sold].
+# - Buying and don't own anything and bidding, seller has outcome and is taking [no complete set fee charged b/c none sold].
+# - Buying and have all but one and taking, seller doesn't have outcome and is asking [complete set fee charged on buyer].
+# - Buying and have all but one and taking, seller has outcome and is asking [complete set fee charged on buyer].
+# - Buying and don't own anything and taking, seller doesn't have outcome and is asking [no complete set fee charged].
+# - Buying and don't own anything and taking, seller has outcome and is asking [no complete set fee charged].
+#
+# publicTakeOrder [allows a user to pick up/fill orders off the book]
+#
+# amountTakerWants is amount of shares the taker wants to fill
+# picks orders off the book
+# @return fxp
+def init():
+    self.controller = 0x0
+
+def publicTakeOrder(orderID: address, amountTakerWants: uint256):
+    refund()
+    MUTEX.acquire()
+    result = self.takeOrder(msg.sender, orderID, amountTakerWants, call = delegate, outitems = 2)
+    MUTEX.release()
+    return(result: arr)
+
+def takeOrder(sender: address, orderID: address, amountTakerWants: uint256):
+    refund()
+    self.controller.assertIsWhitelisted(msg.sender)
+    if(amountTakerWants <= 0):
+        ~invalid()
+    type = ORDERS.getType(orderID)
+    # Fill orders
+    if(type == BID):
+        result = FILLBID.fillBid(sender, orderID, amountTakerWants, call = delegate, outitems = 2)
+    elif(type == ASK):
+        result = FILLASK.fillAsk(sender, orderID, amountTakerWants, call = delegate, outitems = 2)
+    else:
+        ~invalid()
+    return(result: arr)
+
+def setController(newController: address):
+    if(msg.sender != self.controller):
+        ~invalid()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to: address):
+    if(msg.sender != self.controller):
+        ~invalid()
+    suicide(to)
