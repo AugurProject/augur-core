@@ -450,7 +450,7 @@ def test_CreateEvent():
         currency = contracts.cash.address
         forkResolveAddress = contracts.forkResolution.address
         eventID = contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
-        assert(eventID > 0), "Event created"
+        assert(eventID != 0), "Event created"
         assert(contracts.info.getDescription(eventID) == description), "Description matches input"
         assert(contracts.events.getExpiration(eventID) == expDate), "Expiration date matches input"
         assert(contracts.events.getMinValue(eventID) == fxpMinValue), "Min value matches input"
@@ -487,7 +487,7 @@ def test_CreateMarket():
         tag3 = 789
         extraInfo = "rabble rabble rabble"
         marketID = contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1, value=fix(10000))
-        assert(marketID > 0)
+        assert(marketID != 0)
         assert(contracts.markets.getTradingFee(marketID) == fxpTradingFee), "Trading fee matches input"
         assert(contracts.markets.getMarketEvent(marketID) == eventID), "Market event matches input"
         assert(contracts.markets.getTags(marketID) == [tag1, tag2, tag3]), "Tags array matches input"
@@ -867,7 +867,7 @@ def test_MakeOrder():
 
             # makeOrder exceptions (post-placeBid/Ask)
             contracts._ContractLoader__state.mine(1)
-            assert(contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1) > 0), "Order ID should be non-zero"
+            assert(contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1) != 0), "Order ID should be non-zero"
             try:
                 raise Exception(contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1))
             except Exception as exc:
