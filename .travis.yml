@@ -1,3 +1,5 @@
+sudo: required
+
 language: python
 
 notifications:
@@ -6,10 +8,13 @@ notifications:
 python:
   - "2.7_with_system_site_packages"
 
+before_install:
+  - git clone https://github.com/ethereum/serpent
+  - cd serpent && make && sudo make install && sudo python setup.py install
+
 install:
   - pip install -U pip
-  - pip install -r requirements.txt
-  - pip install -r test_requirements.txt
+  - pip install ethereum -r test_requirements.txt
 
 script:
   - py.test tests/trading_tests.py
