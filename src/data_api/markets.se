@@ -30,6 +30,7 @@ inset('../macros/refund.sem')
     # lastOrder is the last order that was placed in a given market
     # totalOrders is the total number of orders ever placed in a given market
     # tags are the subject tags / categories / keywords for a given market
+    # resolved states that a market is resolved
     # extraInfo is any extra info that didn't fit well in the regular description
     # sharesValue is the value of the shares traded in a given market
     # gasSubsidy is paid by the creator to pay for closing the market [closing is just setting the winning outcomes and allowing people to withdraw funds if they own winning shares]
@@ -37,7 +38,7 @@ inset('../macros/refund.sem')
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded fxpPrice for a given outcome in a market
     # shareContracts stores the erc-20 token contract address for each outcome in the market
-data Markets[](event, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, orderIDs[](id, nextID, prevID), lastOrder, totalOrders, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[])
+data Markets[](event, sharesPurchased[], participants[](shares[]), resolved, cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, orderIDs[](id, nextID, prevID), lastOrder, totalOrders, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
@@ -103,10 +104,11 @@ def addOrder(market, orderID):
     self.Markets[market].totalOrders += 1
     return(1)
 
-def setWinningOutcomes(market, outcomes: arr):
-    self.controller.assertIsWhitelisted(msg.sender)
-    # largest # of winning outcomes is 8
-    save(self.Markets[market].winningOutcomes[0], outcomes, items = len(outcomes))
+def getMarketResolved(market):
+    return(self.Markets[market].resolved)
+
+def setMarketResolved(market):
+    self.Markets[market].resolved = 1
     return(1)
 
 def setTradingFee(market, fee):
@@ -277,15 +279,6 @@ def getOrderIDs(marketID):
     if(orderIDs):
         return(orderIDs: arr)
     return([FAILURE]: arr)
-
-def getWinningOutcomes(market):
-    self.controller.assertIsWhitelisted(msg.sender)
-    # largest # of winning outcomes is 8
-    return(load(self.Markets[market].winningOutcomes[0], items = 8): arr)
-
-def getOneWinningOutcome(market, num):
-    self.controller.assertIsWhitelisted(msg.sender)
-    return(self.Markets[market].winningOutcomes[num])
 
 def getPushedForward(market):
     return(self.Markets[market].pushingForward)
