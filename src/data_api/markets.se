@@ -104,10 +104,10 @@ def addOrder(market, orderID):
     self.Markets[market].totalOrders += 1
     return(1)
 
-def getResolved(market):
+def getMarketResolved(market):
     return(self.Markets[market].resolved)
 
-def setResolved(market):
+def setMarketResolved(market):
     self.Markets[market].resolved = 1
     return(1)
 
