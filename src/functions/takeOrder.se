@@ -58,9 +58,9 @@ def init():
 def publicTakeOrder(orderID: address, amountTakerWants: uint256):
     refund()
     MUTEX.acquire()
-    result = self.takeOrder(msg.sender, orderID, amountTakerWants, call = delegate, outitems = 2)
+    amountRemaining = self.takeOrder(msg.sender, orderID, amountTakerWants, call = delegate)
     MUTEX.release()
-    return(result: arr)
+    return(amountRemaining: uint256)
 
 def takeOrder(sender: address, orderID: address, amountTakerWants: uint256):
     refund()
@@ -70,12 +70,12 @@ def takeOrder(sender: address, orderID: address, amountTakerWants: uint256):
     type = ORDERS.getType(orderID)
     # Fill orders
     if(type == BID):
-        result = FILLBID.fillBid(sender, orderID, amountTakerWants, call = delegate, outitems = 2)
+        amountRemaining = FILLBID.fillBid(sender, orderID, amountTakerWants, call = delegate)
     elif(type == ASK):
-        result = FILLASK.fillAsk(sender, orderID, amountTakerWants, call = delegate, outitems = 2)
+        amountRemaining = FILLASK.fillAsk(sender, orderID, amountTakerWants, call = delegate)
     else:
         ~invalid()
-    return(result: arr)
+    return(amountRemaining: uint256)
 
 def setController(newController: address):
     if(msg.sender != self.controller):
