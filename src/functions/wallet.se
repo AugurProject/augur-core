@@ -9,9 +9,6 @@ extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 inset('../macros/refund.sem')
 
 data currency
-
-data winningOutcomeContract
-
 data controller
 
 def init():
