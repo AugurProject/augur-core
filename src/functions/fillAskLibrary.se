@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 BRANCHES = self.controller.lookup('branches')
 extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setController:[address]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, suicideFunds:[address]:_, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
@@ -61,7 +61,7 @@ def init():
     # Bidder owns all shares except the one they're buying and will pay price - minValue for the shares they're buying
     # Or bidder will pay price - minValue for their shares
 def fillAsk(orderID, amountTakerWants):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     # Get order
     order = array(ORDER_FIELDS)
     order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
@@ -132,6 +132,7 @@ macro sellMakersCompleteSets():
         i = 1
         while(i <= MARKETS.getMarketNumOutcomes(market)):
             MARKETS.modifyShares(market, i, -sharesHeld)
+            # CREATE/DESTROY SHARES
             MARKETS.modifyParticipantShares(market, owner, i, -sharesHeld, 0)
             i += 1
         cost = safeFxpMul(sharesHeld, cumulativeScale)
@@ -189,6 +190,7 @@ macro accountForShortAsk():
         while i < MARKETS.getMarketNumOutcomes(market):
             if(i != outcome):
                 MARKETS.modifyShares(market, i, fill)
+                # CREATE/DESTROY SHARES
                 MARKETS.modifyParticipantShares(market, owner, i, fill, 0)
             i += 1
         # if still before voting period has started count the share value

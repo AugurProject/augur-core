@@ -6,7 +6,7 @@ extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, f
 TRADE = self.controller.lookup('trade')
 extern trade: [setController:[address]:int256, suicideFunds:[address]:_, trade:[int256,int256]:int256[]]
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 inset('../macros/refund.sem')
 

@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 BRANCHES = self.controller.lookup('branches')
 extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setController:[address]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, suicideFunds:[address]:_, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
@@ -61,7 +61,7 @@ def init():
 
 # Refunds cost to calculate number of reports for an event
 def refundCost(to, branch, period, event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(!send(to, self.periodEventInfo[branch][period].subsidy[event])):
         ~invalid()
     return(1)
@@ -75,23 +75,23 @@ def getPeriodRepWeight(branch, votePeriod, sender):
     return(self.reporterPeriodInfo[branch][votePeriod].periodRepWeight[sender])
 
 def setPeriodRepWeight(branch, votePeriod, sender, value):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.reporterPeriodInfo[branch][votePeriod].periodRepWeight[sender] = value
     return(1)
 
 def setEthicReport(branch, period, event, ethics, sender):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.reporterPeriodInfo[branch][period].ethics[sender][event] = ethics
     return(1)
 
 def setReport(branch, period, event, report, sender):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.reporterPeriodInfo[branch][period].report[sender][event] = report
     return(1)
 
 # @return fxp
 def setBeforeRep(branch, period, rep, sender):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.reporterPeriodInfo[branch][period].beforeRep[sender] = rep
     self.reporterPeriodInfo[branch][period].reporters[self.reporterPeriodInfo[branch][period].numberOfActiveReporters] = sender
     self.reporterPeriodInfo[branch][period].numberOfActiveReporters += 1
@@ -99,13 +99,13 @@ def setBeforeRep(branch, period, rep, sender):
 
 # @return fxp
 def setAfterRep(branch, period, rep, sender):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.reporterPeriodInfo[branch][period].afterRep[sender] = rep
     return(rep)
 
 # @return fxp
 def setPeriodDormantRep(branch, period, rep, sender):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.reporterPeriodInfo[branch][period].periodDormantRep[sender] = rep
     return(rep)
 
@@ -131,7 +131,7 @@ def getEthicReport(branch, period, event, sender):
 
 # @return fxp
 def getReport(branch, period, event, sender):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     return(self.reporterPeriodInfo[branch][period].report[sender][event])
 
 # @return fxp
@@ -157,7 +157,7 @@ def getNumRoundTwo(branch, period):
     return(self.periodEventInfo[branch][period].roundTwoNumEvents)
 
 def addRoundTwo(branch, period):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.periodEventInfo[branch][period].roundTwoNumEvents += 1
     return(1)
 
@@ -169,7 +169,7 @@ def getNumRequired(branch, period):
 
 # Return 0 means already required
 def setEventRequired(branch, period, event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(!self.periodEventInfo[branch][period].requiredEvents[event]):
         self.periodEventInfo[branch][period].requiredEvents[event] = 1
         self.periodEventInfo[branch][period].numReqEvents += 1
@@ -205,7 +205,7 @@ def getEventIndex(branch, period, event):
 # gets number of available events to report on multiplied by base reporters per event as a minimum, not counting required or removed events
 # -1: voting not started
 def setNumEventsToReportOn(branch):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     period = BRANCHES.getVotePeriod(branch)
     eventsInPeriod = self.periodEventInfo[branch][period].numberEvents
     numberOfRequiredEvents = self.periodEventInfo[branch][period].numReqEvents
@@ -235,7 +235,7 @@ def getEvent(branch, period, eventIndex):
 
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, event, subsidy, currency, wallet, afterFork):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     numberEvents = self.periodEventInfo[branch][futurePeriod].numberEvents
     self.periodEventInfo[branch][futurePeriod].events[numberEvents] = event
     self.periodEventInfo[branch][futurePeriod].eventToIndex[event] = numberEvents
@@ -246,14 +246,14 @@ def addEvent(branch, futurePeriod, event, subsidy, currency, wallet, afterFork):
     return(1)
 
 def deleteEvent(branch, period, event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     i = self.periodEventInfo[branch][period].eventToIndex[event]
     self.periodEventInfo[branch][period].events[i] = 0
     self.periodEventInfo[branch][period].eventToIndex[event] = 0
     return(1)
 
 def removeEvent(branch, period):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.periodEventInfo[branch][period].numberRemoved += 1
     return(1)
 
@@ -261,7 +261,7 @@ def getNumRemoved(branch, period):
     return(self.periodEventInfo[branch][period].numberRemoved)
 
 def adjustPeriodFeeValue(branch, expIndex, amount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.periodEventInfo[branch][expIndex].feeValue += amount
     return(1)
 
@@ -285,39 +285,39 @@ def moveEvent(branch, event):
         return(0)
 
 def addToWeightOfReport(period, event, report, amount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.modeItems[period][event].reportValue[report] += amount
     return(1)
 
 def setCurrentMode(period, event, mode):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.modeItems[period][event].currentMode = mode
     return(1)
 
 # basically setting current mode's weight
 def setCurrentModeItems(period, event, modeReport):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.modeItems[period][event].currentModeItems = self.modeItems[period][event].reportValue[modeReport]
     return(1)
 
 def setEventWeight(branch, votePeriod, event, num):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.periodEventInfo[branch][votePeriod].eventWeight[event] = num
     return(1)
 
 def countReportAsSubmitted(branch, votePeriod, event, sender, weight):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.periodEventInfo[branch][votePeriod].eventWeight[event] += weight
     self.reporterPeriodInfo[branch][votePeriod].numReportsSubmitted[sender] += 1
     return(1)
 
 def addReportToReportsSubmitted(branch, period, user):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.reporterPeriodInfo[branch][period].numReportsSubmitted[user] += 1
     return(1)
 
 def setLesserReportNum(branch, period, event, num):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.periodEventInfo[branch][period].lesserReportNum[event] = num
     return(1)
 

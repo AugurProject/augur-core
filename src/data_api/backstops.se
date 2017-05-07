@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 inset('../macros/refund.sem')
 
@@ -88,97 +88,97 @@ def getRoundTwo(event):
     return(self.roundTwo[event].roundTwo)
 
 def setOriginalEthicality(event, ethicality):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.roundTwo[event].originalEthicality = ethicality
     return(1)
 
 # increases how much of round 2 bond has been paid back
 def increaseBondPaid(event, amount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(amount + self.roundTwo[event].bondPaid < self.roundTwo[event].bondPaid):
         ~invalid()
     self.roundTwo[event].bondPaid += amount
     return(1)
 
 def setResolved(branch, forkPeriod, winner):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.resolved[branch][forkPeriod] = winner
     return(1)
 
 # sets bond amount for a fork bond
 def setBondAmount(event, amount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.forking[event].bondAmount = amount
     return(1)
 
 def setBondPoster(event, bondPoster):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.roundTwo[event].bondPoster = bondPoster
     return(1)
 
 def setFinal(event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.roundTwo[event].final = 1
     return(1)
 
 def setOriginalOutcome(event, originalOutcome):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.roundTwo[event].originalOutcome = originalOutcome
     return(1)
 
 def setOriginalBranch(event, branch):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.forking[event].originalBranch = branch
     return(1)
 
 def setMoved(event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.forking[event].moved = 1
     return(1)
 
 def setBondReturned(event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.roundTwo[event].bondReturned = 1
     return(1)
 
 def setRoundTwo(event, roundTwo):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.roundTwo[event].roundTwo = roundTwo
     return(1)
 
 def setOriginalVotePeriod(event, period):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.roundTwo[event].originalVotePeriod = period
     return(1)
 
 def setForkedOverEthicality(event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.forking[event].forkedOverEthicality = 1
     return(1)
 
 def adjForkBondPaid(event, amount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.forking[event].bondPaid += amount
     return(1)
 
 def setDisputedOverEthics(event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.roundTwo[event].disputedOverEthics = 1
     return(1)
 
 def setRoundTwoRefund(event, amount):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.roundTwo[event].refund = amount
     return(1)
 
 def doRoundTwoRefund(sender, event):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(!send(sender, self.roundTwo[event].refund)):
         ~invalid()
     return(1)
 
 def setForkBondPoster(event, poster):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.forking[event].bondPoster = poster
     return(1)
 

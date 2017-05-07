@@ -2,7 +2,7 @@
 
 inset('../macros/refund.sem')
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 event registration(sender: indexed, timestamp)
 

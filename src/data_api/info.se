@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 inset('../macros/refund.sem')
 
@@ -40,14 +40,14 @@ def getWallet(ID):
     return(self.Info[ID].wallet)
 
 def setCurrencyAndWallet(ID, currency, wallet):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     self.Info[ID].currency = currency
     self.Info[ID].wallet = wallet
     return(1)
 
 # @return 1 if success, 0 if creator already exists
 def setInfo(ID, description: str, creator, fxpFee, currency, wallet):
-    self.controller.checkWhitelist(msg.sender)
+    self.controller.assertIsWhitelisted(msg.sender)
     if(!self.Info[ID].creator):
         save(self.Info[ID].description[0], description, chars = len(description))
         self.Info[ID].descriptionLength = len(description)
