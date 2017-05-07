@@ -1,14 +1,21 @@
+#!/usr/bin/env python
+
 import ethereum
 from ethereum import tester as test
-from load_contracts import ContractLoader
 import math
 import random
 import os
+import sys
 import time
 import binascii
 import iocapture
 from pprint import pprint
 import json
+
+ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
+sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
+
+from upload_contracts import ContractLoader
 
 ONE = 10**18
 TWO = 2*ONE
@@ -34,7 +41,7 @@ def test_refund(contracts, state, t):
             raise Exception(contracts.backstops.setDisputedOverEthics(5, sender=t.k1))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that checks whitelist should fail from a non-whitelisted address"
-    def test_~invalid():
+    def test_invalid():
         contracts.mutex.acquire()
         try:
             raise Exception(contracts.mutex.acquire())
@@ -42,7 +49,7 @@ def test_refund(contracts, state, t):
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
     test_refund_funds()
     test_caller_whitelisted()
-    test_~invalid()
+    test_invalid()
 
 def test_float():
     s = test.state()
@@ -158,7 +165,7 @@ def test_logReturn():
     test_logReturn()
 
 def test_binaryMarketResolve(controller, state, t):
-
+    pass
 
 # def test_controller(contracts, state, t):
     ### Useful for controller testing
