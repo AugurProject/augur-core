@@ -34,7 +34,7 @@ inset('../macros/refund.sem')
 # creationTime is the block timestamp when a given event is created
 # forkResolveAddress is the address for an event to use to resolve a fork, it's an optional parameter so may be 0 if the event chooses to use the default fork resolution, that contract address should whitelist forking.se
 # extraBondPoster is the address that posted the extra bond for challenging the first wave of resolution
-data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged, resolveBondPoster, earlyResolutionBond, creationTime, forkResolveAddress, extraBondPoster)
+data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged, resolveBondPoster, earlyResolutionBond, creationTime, forkResolveAddress, extraBondPoster, type)
 
 # Keeps track of number of events created in the past 24 hours
 data past24Hours[]
@@ -225,22 +225,31 @@ def getUncaughtOutcome(event):
     self.controller.assertIsWhitelisted(msg.sender)
     return(self.Events[event].uncaughtOutcome)
 
-def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, resolveBondPoster, forkResolveAddress):
+def getEventType(event):
+    return(self.Events[event].type)
+
+def initializeEvent(id, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, resolveBondPoster, forkResolveAddress):
     self.controller.assertIsWhitelisted(msg.sender)
-    if(!self.Events[ID].expirationDate):
-        self.Events[ID].branch = branch
-        self.Events[ID].expirationDate = expirationDate
-        self.Events[ID].originalExp = expirationDate
-        self.Events[ID].fxpMinValue = fxpMinValue
-        self.Events[ID].fxpMaxValue = fxpMaxValue
-        self.Events[ID].numOutcomes = numOutcomes
-        self.Events[ID].resolveBondPoster = resolveBondPoster
+    if(!self.Events[id].expirationDate):
+        self.Events[id].branch = branch
+        self.Events[id].expirationDate = expirationDate
+        self.Events[id].originalExp = expirationDate
+        self.Events[id].fxpMinValue = fxpMinValue
+        self.Events[id].fxpMaxValue = fxpMaxValue
+        self.Events[id].numOutcomes = numOutcomes
+        self.Events[id].resolveBondPoster = resolveBondPoster
         resolutionSourceLength = len(resolution)
-        self.Events[ID].resolutionSourceLength = resolutionSourceLength
-        save(self.Events[ID].resolutionSource[0], resolution, chars=resolutionSourceLength)
-        self.Events[ID].creationTime = block.timestamp
-        self.Events[ID].resolutionAddress = resolutionAddress
-        self.Events[ID].forkResolveAddress = forkResolveAddress
+        self.Events[id].resolutionSourceLength = resolutionSourceLength
+        save(self.Events[id].resolutionSource[0], resolution, chars=resolutionSourceLength)
+        self.Events[id].creationTime = block.timestamp
+        self.Events[id].resolutionAddress = resolutionAddress
+        self.Events[id].forkResolveAddress = forkResolveAddress
+        if(numOutcomes > 2):
+            self.Events[id].type = "categorical"
+        elif(fxpMinValue == ONE and fxpMaxValue == TWO):
+            self.Events[id].type = "binary"
+        else:
+            self.Events[id].type = "scalar"
         return(1)
     else:
         return(0)
