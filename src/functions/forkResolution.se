@@ -105,8 +105,6 @@ def resolveFork(branch):
     winner = BACKSTOPS.getResolved(branch, forkPeriod)
     if(winner):
         ~invalid()
-    if(BACKSTOPS.getResolved(branch, forkPeriod)):
-        ~invalid()
     if(currentPeriod < (forkPeriod + 2)):
         if(!isCallerWhitelisted()):
             MUTEX.release()

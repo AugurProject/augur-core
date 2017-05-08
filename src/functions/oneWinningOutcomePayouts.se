@@ -34,7 +34,7 @@ def oneOutcome(market, event, sender, categoricalPointFive, numOutcomes):
             MARKETS.modifyParticipantShares(market, sender, i + 1, -sharesOwned, 0)
             value = safeDiv(sharesOwned, numOutcomes)
             fee = safeFxpMul(MARKETS.getTradingFee(market), value)
-            if(value != 0 && fee != 0):
+            if(value != 0 and fee != 0):
                 if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                     ~invalid()
                 if(!INFO.getWallet(market).transfer(sender, safeSub(value, fee))):
@@ -46,7 +46,7 @@ def oneOutcome(market, event, sender, categoricalPointFive, numOutcomes):
         MARKETS.modifyParticipantShares(market, sender, outcome, -sharesOwned, 0)
         value = sharesOwned
         fee = safeFxpMul(MARKETS.getTradingFee(market), value)
-        if(value != 0 && fee != 0):
+        if(value != 0 and fee != 0):
             if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                 ~invalid()
             if(!INFO.getWallet(market).transfer(sender, safeSub(value, fee))):

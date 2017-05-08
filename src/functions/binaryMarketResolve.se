@@ -47,7 +47,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
     prelimOutcome = EVENTS.getFirstPreliminaryOutcome(event)
     ethics = EVENTS.getEthics(event)
     ethical = ethicCatch(ethics)
-    elif(prelimOutcome && !fxpOutcome):
+    elif(prelimOutcome and !fxpOutcome):
         # if prelimOutcome is indeterminate, ethics doesn't matter b/c it's the same result [money returned at even odds]
         ethical = ONE
         fxpOutcome = prelimOutcome
@@ -68,7 +68,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         if(MARKETS.getPushedForward($market)):
             $amount = EVENTS.getEarlyResolutionBond($event)
             $branchWallet = BRANCHES.getBranchWallet($branch, INFO.getCurrency($market))
-            if($amount && !INFO.getWallet($market).transfer($branchWallet, $amount)):
+            if($amount and !INFO.getWallet($market).transfer($branchWallet, $amount)):
                 ~invalid()
         MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
         MARKETS.setPushedForward($market, 0, msg.sender)
@@ -106,7 +106,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             ~invalid()
         if(MARKETS.getPushedForward($market)):
             $amount = EVENTS.getEarlyResolutionBond($event)
-            if($amount && !INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), $amount)):
+            if($amount and !INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), $amount)):
                 ~invalid()
         if(EVENTS.getEventPushedUp($event)):
             # delete old event from future events exp
@@ -121,13 +121,13 @@ macro handleFirstResolverBond():
     $resolverBondPoster = EVENTS.getResolveBondPoster($event)
     # if different outcome then first resolver bond goes to reporters, any other normal case it is returned
     if(EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
-        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $branch), FIRST_RESOLVE_BOND)
+        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) and REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $branch), FIRST_RESOLVE_BOND)
     else:
-        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $resolverBondPoster), FIRST_RESOLVE_BOND)
+        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) and REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $resolverBondPoster), FIRST_RESOLVE_BOND)
 
 macro payHalfOfValidityBondToChallengerIfNeeded():
     $bond = EVENTS.getBond($event)
-    if(EVENTS.getChallenged($event) && !BACKSTOPS.getRoundTwo($event) && EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
+    if(EVENTS.getChallenged($event) and !BACKSTOPS.getRoundTwo($event) and EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
         # pay half of validity bond to challenger
         if(!INFO.getWallet($event).transfer(EVENTS.getExtraBondPoster($event), $bond / 2)):
             ~invalid()

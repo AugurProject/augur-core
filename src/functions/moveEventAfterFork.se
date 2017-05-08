@@ -141,7 +141,7 @@ macro keepEventInOriginalBranch():
     EVENTS.setCreationTime(event)
 
     # return bond if it's a round 2 event and make it not one anymore
-    if(BACKSTOPS.getRoundTwo(event) && !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
+    if(BACKSTOPS.getRoundTwo(event) and !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
         ~invalid()
     # if should've resolved in past periods
     if(expPeriod <= currentVotePeriod):
@@ -169,7 +169,7 @@ macro moveEventToWinningBranch():
     EVENTS.setCreationTime(event)
     originalPeriod = EVENTS.getOriginalExpiration(event) / BRANCHES.getPeriodLength(branch)
     # return bond if it's a round 2 event and make it not one anymore
-    if(BACKSTOPS.getRoundTwo(event) && !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
+    if(BACKSTOPS.getRoundTwo(event) and !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
         ~invalid()
     # move event to fork
     # and place it into the next reporting period w/ outcomes to 0

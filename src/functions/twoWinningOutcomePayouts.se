@@ -48,7 +48,7 @@ def twoOutcomes(market, event, sender):
     MARKETS.modifyParticipantShares(market, sender, 1, -sharesOwned, 0)
     shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
     fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-    if(shareValue != 0 && fee != 0):
+    if(shareValue != 0 and fee != 0):
         if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
             ~invalid()
         if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
@@ -59,7 +59,7 @@ def twoOutcomes(market, event, sender):
     MARKETS.modifyParticipantShares(market, sender, 2, -sharesOwned, 0)
     shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
     fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-    if(shareValue != 0 && fee != 0):
+    if(shareValue != 0 and fee != 0):
         if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
             ~invalid()
         if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):

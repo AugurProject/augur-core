@@ -46,7 +46,7 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
         if(!isCallerWhitelisted()):
             MUTEX.release()
         return(-1)
-    if(!checkHasAbilityToSpend(maker, tokenX, orderSize) || !checkHasAbilityToSpend(msg.sender, tokenY, safeFxpMul(takerAmount, fxpPrice))):
+    if(!checkHasAbilityToSpend(maker, tokenX, orderSize) or !checkHasAbilityToSpend(msg.sender, tokenY, safeFxpMul(takerAmount, fxpPrice))):
         if(!isCallerWhitelisted()):
             MUTEX.release()
         return(-2)
@@ -63,7 +63,7 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
     # fxpPrice is in units of y per x
     # amount of x * fxpPrice = amount of y
     # amount of x * y / x = amount of y
-    if(!tokenX.transferFrom(maker, msg.sender, takerAmount) || !tokenY.transferFrom(msg.sender, maker, safeFxpMul(takerAmount, fxpPrice))):
+    if(!tokenX.transferFrom(maker, msg.sender, takerAmount) or !tokenY.transferFrom(msg.sender, maker, safeFxpMul(takerAmount, fxpPrice))):
         ~invalid()
     log(type = Trade, maker, msg.sender, tokenX, tokenY, amount, fxpPrice, orderHash, gasPriceLimit)
     if(!isCallerWhitelisted()):

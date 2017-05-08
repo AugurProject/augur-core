@@ -111,66 +111,6 @@ def updateTradingFee(market, fxpTradingFee):
     MUTEX.release()
     return(1)
 
-# Anyone can post an "Early Resolution Bond"
-# This bond is equal to 0.5 * marketFee * marketValue
-# This amount is the amount needed to pay the reporters in case this was frivolous.
-# The market goes up for early resolution and reporters place claim to what is truth, however for early resolution, they have an additional option: 'Market is not ready to resolve'
-    # this addl option is just the normal indeterminate (except here it's a bit of a special case, see below)
-# In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
-    # and market remains with old expiration dateevent
-# In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
-# Errors:
-    # 0: invalid branch
-    # -1: not allowed for events during a fork scenario for events that were created before the fork until the fork is over
-    # -2: market already closed or already pushed forward
-    # -3: event has already been pushed forward, is being reported on now, or has an outcome already
-    # -4: event isn't in a regular reporting cycle yet
-def pushMarketForward(branch, market):
-    refund()
-    MUTEX.acquire()
-
-    periodLength = BRANCHES.getPeriodLength(branch)
-    currentPeriod = block.timestamp / periodLength
-    if(MARKETS.getMarketResolved(market) or MARKETS.getPushedForward(market)):
-        MUTEX.release()
-        return(-2)
-    if(MARKETS.getBranch(market) != branch):
-        MUTEX.release()
-        return(0)
-    event = MARKETS.getMarketEvent(market)
-    if(eventCreatedPriorToFork(event)):
-        return(-1)
-    event = MARKETS.getMarketEvent(market)
-    expiration = EVENTS.getExpiration(event)
-    beingReportedOnNow = (expiration / periodLength == block.timestamp / periodLength)
-    alreadyPushedForward = EVENTS.getRejectedPeriod(event) or expiration != EVENTS.getOriginalExpiration(event)
-    if(alreadyPushedForward or beingReportedOnNow or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event)):
-        MUTEX.release()
-        return(-3)
-    if(EXPEVENTS.getEvent(branch, expiration / periodLength, EXPEVENTS.getEventIndex(branch, expiration / periodLength, event)) != event):
-        return(-4)
-    # push into next vote period
-    period = block.timestamp / periodLength
-    forkPeriod = BRANCHES.getForkPeriod(branch)
-    afterFork = 0
-    if(period == (forkPeriod + 1) or period == (forkPeriod + 2)):
-        afterFork = 1
-    currency = INFO.getCurrency(event)
-    wallet = INFO.getWallet(event)
-    EXPEVENTS.addEvent(branch, period, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
-
-    # set event expiration date to be after the current reporting period ends
-    EVENTS.setExpiration(event, block.timestamp)
-    MARKETS.setTradingPeriod(market, period)
-    MARKETS.setPushedForward(market, 1, msg.sender)
-    EVENTS.setEventPushedUp(event, 1)
-    bond = safeFxpMul(MARKETS.getTradingFee(market), MARKETS.getTotalSharesPurchased(market)) / 2
-    payEarlyResolutionBond = INFO.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), bond)
-    if(!payEarlyResolutionBond or !EVENTS.setEarlyResolutionBond(event, bond)):
-        ~invalid()
-    MUTEX.release()
-    return(1)
-
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()

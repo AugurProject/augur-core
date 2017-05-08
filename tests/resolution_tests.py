@@ -164,8 +164,9 @@ def test_logReturn():
             assert(logged["returnArray"] == [5, 10, 15])
     test_logReturn()
 
-def test_binaryMarketResolve(controller, state, t):
-    pass
+def test_eventBondResolution(controller, state, t):
+    s = test.state()
+    c = s.abi_contract('floatTestContract.se')
 
 # def test_controller(contracts, state, t):
     ### Useful for controller testing
@@ -190,11 +191,7 @@ if __name__ == '__main__':
     test_refund(contracts, state, t)
     test_float()
     test_logReturn()
-    test_binaryMarketResolve(contracts, state, t)
-    # test_nonBinaryMarketResolve(contracts, state, t)
-    # test_resolveForkEvent(contracts, state, t)
-    # test_binaryForkResolve(contracts, state, t)
-    # test_nonBinaryForkResolve(contracts, state, t)
+    test_eventBondResolution(contracts, state, t)
     # test_closeMarket(contracts, state, t)
     # test_controller(contracts, state, t)
     print "DONE TESTING RESOLUTION TESTS"
