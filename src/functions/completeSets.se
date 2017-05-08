@@ -70,8 +70,7 @@ def buyCompleteSets(sender: address, market: address, fxpAmount: uint256):
     # issued in the market for each outcome
     n = 1
     while(n <= numOutcomes):
-        MARKETS.modifyShares(market, n, fxpAmount)
-        MARKETS.modifyParticipantShares(market, sender, n, fxpAmount, 0)
+        MARKETS.getOutcomeShareContract(market, n).createShares(sender, fxpAmount)
         n += 1
 
     # if still before voting period has started count the share value
@@ -113,8 +112,7 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
     # market since we're exchanging complete sets
     n = 1
     while(n <= numOutcomes):
-        MARKETS.modifyShares(market, n, -fxpAmount)
-        MARKETS.modifyParticipantShares(market, sender, n, -fxpAmount, 0)
+        MARKETS.getOutcomeShareContract(market, n).destroyShares(sender, fxpAmount)
         n += 1
 
     # Send funds from the market to the user's account

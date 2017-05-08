@@ -94,10 +94,7 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
     # Take shares in escrow if user has shares
     fxpSharesHeld = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
     if(fxpSharesHeld):
-        if(EVENTS.getNumOutcomes(event) > 2):
-            fxpMinValue = ONE
-        else:
-            fxpMinValue = EVENTS.getMinValue(event)
+        fxpMinValue = EVENTS.getMinValue(event)
         fxpCostPerShare = fxpPrice - fxpMinValue
         fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
         if(fxpCostPerShare > fxpCumulativeScale):
@@ -107,15 +104,13 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
         fxpFill = min(fxpSharesHeld, fxpAmount)
         fxpAmount -= fxpFill
         fxpSharesEscrowed += fxpFill
-        MARKETS.modifyParticipantShares(market, sender, outcome, -fxpFill, 0)
+        # TODO should this be a transfer to market / escrow account?
+        MARKETS.getOutcomeShareContract(market, outcome).destroyShares(sender, fxpFill)
 
     # Take max minus price they want to sell at for the remainder of the amount
     # that wasn't able to be used up above
     if(fxpAmount):
-        if(EVENTS.getNumOutcomes(event) > 2):
-            fxpMaxValue = ONE
-        else:
-            fxpMaxValue = EVENTS.getMaxValue(event)
+        fxpMaxValue = EVENTS.getMaxValue(event)
         fxpCostPerShareShorting = fxpMaxValue - fxpPrice
         fxpOrderCost = safeFxpMul(fxpAmount, fxpCostPerShareShorting)
         if(fxpCostPerShareShorting > fxpCumulativeScale):
@@ -147,10 +142,7 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
             fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), fxpSharesHeld)
         i += 1
     if(fxpSharesHeld > 0):
-        if(EVENTS.getNumOutcomes(event) > 2):
-            fxpMinValue = ONE
-        else:
-            fxpMinValue = EVENTS.getMinValue(event)
+        fxpMinValue = EVENTS.getMinValue(event)
         fxpCostPerShare = fxpPrice - fxpMinValue
         fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
         if(fxpCostPerShare > fxpCumulativeScale):
@@ -163,16 +155,14 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
         i = 1
         while(i <= MARKETS.getMarketNumOutcomes(market)):
             if(i != outcome):
-                MARKETS.modifyParticipantShares(market, sender, i, -fxpFill, 0)
+                # TODO should this be a transfer to market / escrow account?
+                MARKETS.getOutcomeShareContract(market, i).destroyShares(sender, fxpFill)
             i += 1
 
     # Take money in escrow for price - min for the remainder of amount that wasn't
     # able to be used up above. Make sure price - min isn't more than range
     if(fxpAmount):
-        if(EVENTS.getNumOutcomes(event) > 2):
-            fxpMinValue = ONE
-        else:
-            fxpMinValue = EVENTS.getMinValue(event)
+        fxpMinValue = EVENTS.getMinValue(event)
         fxpCostPerShare = fxpPrice - fxpMinValue
         fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
         fxpMoneyEscrowed += fxpCost
