@@ -245,27 +245,27 @@ def test_ShareTokens():
         assert(hex2str(contracts.shareTokens.getName()) == '5368617265730000000000000000000000000000000000000000000000000000'), "currency name"
         assert(contracts.shareTokens.getDecimals() == 18), "number of decimals"
         assert(hex2str(contracts.shareTokens.getSymbol()) == '5348415245000000000000000000000000000000000000000000000000000000'), "currency symbol"
-    def test_createTokens():
+    def test_createShares():
         contracts._ContractLoader__state.mine(1)
         fxpAmount = fix(10)
         initialTotalSupply = contracts.shareTokens.totalSupply()
         initialBalance = contracts.shareTokens.balanceOf(t.a1)
-        assert(contracts.shareTokens.createTokens(t.a1, fxpAmount, sender=t.k0) == 1), "Create share tokens for address 1"
+        assert(contracts.shareTokens.createShares(t.a1, fxpAmount, sender=t.k0) == 1), "Create share tokens for address 1"
         assert(contracts.shareTokens.totalSupply() - initialTotalSupply == fxpAmount), "Total supply increase should equal the number of tokens created"
         assert(contracts.shareTokens.balanceOf(t.a1) - initialBalance == fxpAmount), "Address 1 token balance increase should equal the number of tokens created"
-    def test_destroyTokens():
+    def test_destroyShares():
         contracts._ContractLoader__state.mine(1)
         fxpAmount = fix(10)
         initialTotalSupply = contracts.shareTokens.totalSupply()
         initialBalance = contracts.shareTokens.balanceOf(t.a1)
-        assert(contracts.shareTokens.destroyTokens(t.a1, fxpAmount, sender=t.k0) == 1), "Destroy share tokens owned by address 1"
+        assert(contracts.shareTokens.destroyShares(t.a1, fxpAmount, sender=t.k0) == 1), "Destroy share tokens owned by address 1"
         assert(initialTotalSupply - contracts.shareTokens.totalSupply() == fxpAmount), "Total supply decrease should equal the number of tokens destroyed"
         assert(initialBalance - contracts.shareTokens.balanceOf(t.a1) == fxpAmount), "Address 1 token balance decrease should equal the number of tokens destroyed"
     def test_transfer():
         contracts._ContractLoader__state.mine(1)
         fxpAmount = fix(10)
         fxpTransferAmount = fix(2)
-        assert(contracts.shareTokens.createTokens(t.a1, fxpAmount, sender=t.k0) == 1), "Create share tokens for address 1"
+        assert(contracts.shareTokens.createShares(t.a1, fxpAmount, sender=t.k0) == 1), "Create share tokens for address 1"
         initialTotalSupply = contracts.shareTokens.totalSupply()
         initialBalance1 = contracts.shareTokens.balanceOf(t.a1)
         initialBalance2 = contracts.shareTokens.balanceOf(t.a2)
@@ -343,18 +343,18 @@ def test_ShareTokens():
         contracts._ContractLoader__state.mine(1)
         fxpAmount = fix(10)
         fxpTransferAmount = fix(2)
-        assert(contracts.shareTokens.createTokens(t.a1, fxpAmount, sender=t.k0) == 1), "Create share tokens for address 1"
+        assert(contracts.shareTokens.createShares(t.a1, fxpAmount, sender=t.k0) == 1), "Create share tokens for address 1"
         try:
-            raise Exception(contracts.shareTokens.createTokens(t.a1, fxpTransferAmount, sender=t.k1))
+            raise Exception(contracts.shareTokens.createShares(t.a1, fxpTransferAmount, sender=t.k1))
         except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "createTokens should fail if called from a non-whitelisted account (account 1)"
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "createShares should fail if called from a non-whitelisted account (account 1)"
         try:
-            raise Exception(contracts.shareTokens.destroyTokens(t.a1, fxpTransferAmount, sender=t.k1))
+            raise Exception(contracts.shareTokens.destroyShares(t.a1, fxpTransferAmount, sender=t.k1))
         except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "destroyTokens should fail if called from a non-whitelisted account (account 1)"
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "destroyShares should fail if called from a non-whitelisted account (account 1)"
     test_init()
-    test_createTokens()
-    test_destroyTokens()
+    test_createShares()
+    test_destroyShares()
     test_transfer()
     test_transferFrom()
     test_approve()
@@ -747,7 +747,7 @@ def test_MakeOrder():
             assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == marketInitialCash), "Market's cash balance should be unchanged"
             assert(makerInitialShares - contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID) == fxpAmount), "Decrease in participant shares purchased should be equal to order amount"
             assert(marketInitialTotalShares == contracts.markets.getTotalSharesPurchased(marketID)), "Market's total shares purchased should be unchanged"
-            assert(logMakeOrder["_event_type"] == "logMakeOrder"), "Should emit a logMakeOrder event"
+            assert(logMakeOrder["_event_type"] == "MakeOrder"), "Should emit a MakeOrder event"
             assert(logMakeOrder["tradeGroupID"] == tradeGroupID), "Logged tradeGroupID should match input"
             assert(logMakeOrder["fxpMoneyEscrowed"] == order[8]), "Logged fxpMoneyEscrowed should match amount in order"
             assert(logMakeOrder["fxpSharesEscrowed"] == order[9]), "Logged fxpSharesEscrowed should match amount in order"
@@ -790,7 +790,7 @@ def test_MakeOrder():
             assert(order[9] == fix(10)), "order[9] should be the number of shares escrowed"
             assert(makerInitialCash - contracts.cash.balanceOf(t.a1) == order[8]), "Decrease in maker's cash balance should equal money escrowed"
             assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == order[8]), "Increase in market's cash balance should equal money escrowed"
-            assert(logMakeOrder["_event_type"] == "logMakeOrder"), "Should emit a logMakeOrder event"
+            assert(logMakeOrder["_event_type"] == "MakeOrder"), "Should emit a MakeOrder event"
             assert(logMakeOrder["tradeGroupID"] == tradeGroupID), "Logged tradeGroupID should match input"
             assert(logMakeOrder["fxpMoneyEscrowed"] == order[8]), "Logged fxpMoneyEscrowed should match amount in order"
             assert(logMakeOrder["fxpSharesEscrowed"] == order[9]), "Logged fxpSharesEscrowed should match amount in order"
