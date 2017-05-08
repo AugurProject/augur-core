@@ -4,7 +4,7 @@ ORDERS = self.controller.lookup('orders')
 extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 TAKEORDER = self.controller.lookup('takeOrder')
-extern takeOrder: [setController:[address]:int256, suicideFunds:[address]:_, publicTakeOrder:[address,uint256]:uint256]
+extern takeOrder: [publicTakeOrder:[address,uint256]:uint256, setController:[address]:int256, suicideFunds:[address]:_, takeOrder:[address,address,uint256]:uint256]
 
 extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 

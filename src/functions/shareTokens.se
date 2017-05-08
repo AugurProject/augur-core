@@ -45,7 +45,7 @@ def transfer(to: address, value: uint256):
     self.accounts[msg.sender].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, msg.sender, to, value)
-    return(1: uint256)
+    return(1)
 
 def transferFrom(from: address, to: address, value: uint256):
     refund()
@@ -63,13 +63,13 @@ def transferFrom(from: address, to: address, value: uint256):
     self.accounts[from].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, from, to, value)
-    return(1: uint256)
+    return(1)
 
 def approve(spender: address, value: uint256):
     refund()
     self.accounts[msg.sender].spenders[spender].maxValue = value
     log(type=Approval, msg.sender, spender, value)
-    return(1: uint256)
+    return(1)
 
 ######################
 # Internal functions #
@@ -84,7 +84,7 @@ def createShares(owner: address, fxpValue: uint256):
         ~invalid()
     self.accounts[owner].balance += fxpValue
     self.totalSupply += fxpValue
-    return(1: uint256)
+    return(1)
 
 def destroyShares(owner: address, fxpValue: uint256):
     refund()
@@ -95,7 +95,7 @@ def destroyShares(owner: address, fxpValue: uint256):
         ~invalid()
     self.accounts[owner].balance -= fxpValue
     self.totalSupply -= fxpValue
-    return(1: uint256)
+    return(1)
 
 ####################
 # Getter functions #
@@ -105,17 +105,17 @@ def destroyShares(owner: address, fxpValue: uint256):
 # @return fxp
 def allowance(owner: address, spender: address):
     refund()
-    return(self.accounts[owner].spenders[spender].maxValue: uint256)
+    return(self.accounts[owner].spenders[spender].maxValue)
 
 # @return fxp
 def totalSupply():
     refund()
-    return(self.totalSupply: uint256)
+    return(self.totalSupply)
 
 # @return fxp
 def balanceOf(address: address):
     refund()
-    return(self.accounts[address].balance: uint256)
+    return(self.accounts[address].balance)
 
 def getName():
     refund()

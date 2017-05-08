@@ -9,10 +9,10 @@ ORDERS = self.controller.lookup('orders')
 extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 FILLASK = self.controller.lookup('fillAskLibrary')
-extern fillAskLibrary: [fillAsk:[int256,int256]:int256[], setController:[address]:int256, suicideFunds:[address]:_]
+extern fillAskLibrary: [fillAsk:[address,address,uint256]:uint256, setController:[address]:int256, suicideFunds:[address]:_]
 
 FILLBID = self.controller.lookup('fillBidLibrary')
-extern fillBidLibrary: [fillBid:[int256,int256]:int256[], setController:[address]:int256, suicideFunds:[address]:_]
+extern fillBidLibrary: [fillBid:[address,address,uint256]:uint256, setController:[address]:int256, suicideFunds:[address]:_]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
