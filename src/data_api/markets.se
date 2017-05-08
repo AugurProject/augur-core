@@ -7,7 +7,7 @@ extern topics: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, changeTokens:[int256,int256]:int256, createTokens:[address,uint256]:int256, destroyTokens:[address,uint256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, modifySupply:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
+extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, changeTokens:[int256,int256]:int256, createShares:[address,uint256]:int256, destroyShares:[address,uint256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, modifySupply:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
 
 inset('../macros/refund.sem')
 
@@ -73,6 +73,7 @@ def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, 
     self.addToMarketsHash(branch, market)
     return(1)
 
+# TODO remove
 def modifyShares(market, outcome, fxpAmount):
     self.controller.assertIsWhitelisted(msg.sender)
     self.Markets[market].sharesPurchased[outcome] += fxpAmount
@@ -84,6 +85,13 @@ def modifySharesValue(market, fxpAmount):
     self.Markets[market].sharesValue += fxpAmount
     return(1)
 
+def modifyMarketVolume(market, fxpAmount):
+    self.controller.assertIsWhitelisted(msg.sender)
+    self.Markets[market].volume += fxpAmount
+    TOPICS.updateTopicPopularity(self.Markets[market].branch, self.Markets[market].tag1, fxpAmount)
+    return(1)
+
+# TODO remove
 def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
     self.controller.assertIsWhitelisted(msg.sender)
     self.Markets[market].shareContracts[outcome].changeTokens(trader, fxpAmount)
@@ -228,6 +236,9 @@ def getMarketShareContracts(market):
         shareContracts[i] = self.Markets[market].shareContracts[i + 1]
         i += 1
     return(shareContracts: arr)
+
+def getOutcomeShareContract(market, outcome):
+    return(self.Markets[market].shareContracts[outcome])
 
 # @return fxp
 def getSharesPurchased(market, outcome):
