@@ -23,11 +23,11 @@ data decimals
 data initiated[]
 data controller
 
-event Transfer(from: indexed, to: indexed, value)
-event Approval(owner: indexed, spender: indexed, value)
-event DepositEther(sender: indexed, value, balance, timestamp)
-event WithdrawEther(sender: indexed, value, balance, timestamp)
-event InitiateWithdrawEther(sender: indexed, value, balance, timestamp)
+event Transfer(from: address: indexed, to: address: indexed, value: uint256)
+event Approval(owner: address: indexed, spender: address: indexed, value: uint256)
+event DepositEther(sender: address: indexed, value: uint256, balance: uint256, timestamp: uint256)
+event WithdrawEther(sender: address: indexed, value: uint256, balance: uint256, timestamp: uint256)
+event InitiateWithdrawEther(sender: address: indexed, value: uint256, balance: uint256, timestamp: uint256)
 
 def init():
     self.controller = 0x0
@@ -52,7 +52,7 @@ def transfer(to: address, value: uint256):
     self.accounts[msg.sender].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, msg.sender, to, value)
-    return(1)
+    return(1: uint256)
 
 def transferFrom(from: address, to: address, value: uint256):
     refund()
@@ -70,26 +70,26 @@ def transferFrom(from: address, to: address, value: uint256):
     self.accounts[from].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, from, to, value)
-    return(1)
+    return(1: uint256)
 
 def approve(spender: address, value: uint256):
     refund()
     self.accounts[msg.sender].spenders[spender].maxValue = value
     log(type=Approval, msg.sender, spender, value)
-    return(1)
+    return(1: uint256)
 
 def publicDepositEther():
     MUTEX.acquire()
     self.depositEther(msg.sender, value = msg.value)
     MUTEX.release()
-    return(1)
+    return(1: uint256)
 
 def publicWithdrawEther(to: address, value: uint256):
     refund()
     MUTEX.acquire()
     self.withdrawEther(msg.sender, to, value)
     MUTEX.release()
-    return(1)
+    return(1: uint256)
 
 ######################
 # Internal functions #
@@ -106,7 +106,7 @@ def depositEther(sender: address):
     self.accounts[sender].balance += amount
     self.totalSupply += amount
     log(type = DepositEther, sender, amount, self.accounts[sender].balance, block.timestamp)
-    return(1)
+    return(1: uint256)
 
 def withdrawEther(sender: address, to: address, value: uint256):
     refund()
@@ -122,7 +122,7 @@ def withdrawEther(sender: address, to: address, value: uint256):
     if(!initiatedTimestamp):
         self.initiated[sender] = block.timestamp
         log(type = InitiateWithdrawEther, sender, value, self.accounts[sender].balance, block.timestamp)
-        return(2)
+        return(2: uint256)
     else:
         if((initiatedTimestamp + 3 * TWENTY_FOUR_HR) > block.timestamp):
             ~invalid()
@@ -132,7 +132,7 @@ def withdrawEther(sender: address, to: address, value: uint256):
             ~invalid()
         self.initiated[sender] = 0
         log(type = WithdrawEther, sender, value, self.accounts[sender].balance, block.timestamp)
-        return(1)
+        return(1: uint256)
 
 ####################
 # Getter functions #
@@ -168,7 +168,7 @@ def getSymbol():
 
 def getInitiated():
     refund()
-    return(self.initiated[msg.sender])
+    return(self.initiated[msg.sender]: uint256)
 
 ########################
 # Controller functions #
@@ -178,7 +178,7 @@ def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
-    return(1)
+    return(1: uint256)
 
 def suicideFunds(to: address):
     if(msg.sender != self.controller):

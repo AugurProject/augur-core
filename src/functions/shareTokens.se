@@ -19,8 +19,8 @@ data symbol
 # amount of decimals per unit of shares
 data decimals
 
-event Transfer(from:indexed, to:indexed, value)
-event Approval(owner:indexed, spender:indexed, value)
+event Transfer(from: address: indexed, to: address: indexed, value: uint256)
+event Approval(owner: address: indexed, spender: address: indexed, value: uint256)
 
 def init():
     self.controller = 0x0
@@ -45,7 +45,7 @@ def transfer(to: address, value: uint256):
     self.accounts[msg.sender].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, msg.sender, to, value)
-    return(1)
+    return(1: uint256)
 
 def transferFrom(from: address, to: address, value: uint256):
     refund()
@@ -63,13 +63,13 @@ def transferFrom(from: address, to: address, value: uint256):
     self.accounts[from].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, from, to, value)
-    return(1)
+    return(1: uint256)
 
 def approve(spender: address, value: uint256):
     refund()
     self.accounts[msg.sender].spenders[spender].maxValue = value
     log(type=Approval, msg.sender, spender, value)
-    return(1)
+    return(1: uint256)
 
 ######################
 # Internal functions #
@@ -84,7 +84,7 @@ def createShares(owner: address, fxpValue: uint256):
         ~invalid()
     self.accounts[owner].balance += fxpValue
     self.totalSupply += fxpValue
-    return(1)
+    return(1: uint256)
 
 def destroyShares(owner: address, fxpValue: uint256):
     refund()
@@ -95,7 +95,7 @@ def destroyShares(owner: address, fxpValue: uint256):
         ~invalid()
     self.accounts[owner].balance -= fxpValue
     self.totalSupply -= fxpValue
-    return(1)
+    return(1: uint256)
 
 ####################
 # Getter functions #
