@@ -154,8 +154,8 @@ def test_Cash():
             logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "transfer 5 cash to a2"
         assert(logged["_event_type"] == "Transfer")
-        assert(logged["to"] == address2)
-        assert(logged["from"] == address1)
+        assert(long(logged["to"], 16) == address2)
+        assert(long(logged["from"], 16) == address1)
         assert(logged["value"] == 5)
         assert(contracts.cash.balanceOf(t.a1) == 65), "balance of a1 decreased by 5"
         assert(contracts.cash.balanceOf(t.a2) == 5), "balance of a2 increased by 5"
@@ -173,8 +173,8 @@ def test_Cash():
             logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "transfer should succeed"
         assert(logged["_event_type"] == "Transfer")
-        assert(logged["to"] == address2)
-        assert(logged["from"] == address1)
+        assert(long(logged["to"], 16) == address2)
+        assert(long(logged["from"], 16) == address1)
         assert(logged["value"] == 0)
         assert(contracts.cash.balanceOf(t.a1) == 65), "balance of a1 unchanged"
         assert(contracts.cash.balanceOf(t.a2) == 5), "balance of a2 unchanged"
@@ -192,8 +192,8 @@ def test_Cash():
             logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "approve a2 to spend 10 cash from a1"
         assert(logged["_event_type"] == "Approval")
-        assert(logged["owner"] == address1)
-        assert(logged["spender"] == address2)
+        assert(long(logged["owner"], 16) == address1)
+        assert(long(logged["spender"], 16) == address2)
         assert(logged["value"] == 10)
         assert(contracts.cash.allowance(t.a1, t.a2) == 10), "allowance is 10 after approval"
         with iocapture.capture() as captured:
@@ -201,8 +201,8 @@ def test_Cash():
             logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "transferFrom should succeed"
         assert(logged["_event_type"] == "Transfer")
-        assert(logged["to"] == address2)
-        assert(logged["from"] == address1)
+        assert(long(logged["to"], 16) == address2)
+        assert(long(logged["from"], 16) == address1)
         assert(logged["value"] == 7)
     def test_setController():
         try:
@@ -275,8 +275,8 @@ def test_ShareTokens():
         logged = parseCapturedLogs(logged)[-1]
         assert(retval == 1), "transfer should succeed"
         assert(logged["_event_type"] == "Transfer")
-        assert(logged["to"] == address2)
-        assert(logged["from"] == address1)
+        assert(long(logged["to"], 16) == address2)
+        assert(long(logged["from"], 16) == address1)
         assert(logged["value"] == fxpTransferAmount)
         afterTransferBalance1 = contracts.shareTokens.balanceOf(t.a1)
         afterTransferBalance2 = contracts.shareTokens.balanceOf(t.a2)
@@ -297,8 +297,8 @@ def test_ShareTokens():
         logged = parseCapturedLogs(logged)[-1]
         assert(retval == 1), "transfer with 0 value should succeed"
         assert(logged["_event_type"] == "Transfer")
-        assert(logged["to"] == address2)
-        assert(logged["from"] == address1)
+        assert(long(logged["to"], 16) == address2)
+        assert(long(logged["from"], 16) == address1)
         assert(logged["value"] == 0)
         assert(contracts.shareTokens.balanceOf(t.a1) == afterTransferBalance1), "Balance of a1 should be unchanged"
         assert(contracts.shareTokens.balanceOf(t.a2) == afterTransferBalance2), "Balance of a2 should be unchanged"
@@ -316,8 +316,8 @@ def test_ShareTokens():
             logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "approve a2 to spend 10 cash from a1"
         assert(logged["_event_type"] == "Approval")
-        assert(logged["owner"] == address1)
-        assert(logged["spender"] == address2)
+        assert(long(logged["owner"], 16) == address1)
+        assert(long(logged["spender"], 16) == address2)
         assert(logged["value"] == 10)
         print "allowance:", contracts.shareTokens.allowance(t.a1, t.a2)
         assert(contracts.shareTokens.allowance(t.a1, t.a2) == 10), "allowance is 10 after approval"
@@ -326,8 +326,8 @@ def test_ShareTokens():
             logged = parseCapturedLogs(captured.stdout)[-1]
         assert(retval == 1), "transferFrom should succeed"
         assert(logged["_event_type"] == "Transfer")
-        assert(logged["to"] == address2)
-        assert(logged["from"] == address1)
+        assert(long(logged["to"], 16) == address2)
+        assert(long(logged["from"], 16) == address1)
         assert(logged["value"] == 7)
     def test_setController():
         try:
