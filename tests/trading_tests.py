@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""Trading tests:
+"""
+Trading tests:
 + functions/createEvent.se
 + functions/createMarket.se
 + functions/cash.se
@@ -20,10 +21,10 @@
 
 """
 from __future__ import division
-import ethereum
 import os
 import sys
 import json
+import ethereum
 import iocapture
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
@@ -32,6 +33,27 @@ sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
 from upload_contracts import ContractLoader
 
 contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
+
+shareTokenContractTranslator = ethereum.abi.ContractTranslator('[{"constant": false, "type": "function", "name": "allowance(address,address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "address", "name": "spender"}]}, {"constant": false, "type": "function", "name": "approve(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "spender"}, {"type": "uint256", "name": "value"}]}, {"constant": false, "type": "function", "name": "balanceOf(address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "address"}]}, {"constant": false, "type": "function", "name": "changeTokens(int256,int256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "int256", "name": "trader"}, {"type": "int256", "name": "amount"}]}, {"constant": false, "type": "function", "name": "createShares(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "uint256", "name": "fxpValue"}]}, {"constant": false, "type": "function", "name": "destroyShares(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "uint256", "name": "fxpValue"}]}, {"constant": false, "type": "function", "name": "getDecimals()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "getName()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "getSymbol()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "modifySupply(int256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "int256", "name": "amount"}]}, {"constant": false, "type": "function", "name": "setController(address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "newController"}]}, {"constant": false, "type": "function", "name": "suicideFunds(address)", "outputs": [], "inputs": [{"type": "address", "name": "to"}]}, {"constant": false, "type": "function", "name": "totalSupply()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "transfer(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "to"}, {"type": "uint256", "name": "value"}]}, {"constant": false, "type": "function", "name": "transferFrom(address,address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "from"}, {"type": "address", "name": "to"}, {"type": "uint256", "name": "value"}]}, {"inputs": [{"indexed": true, "type": "address", "name": "owner"}, {"indexed": true, "type": "address", "name": "spender"}, {"indexed": false, "type": "uint256", "name": "value"}], "type": "event", "name": "Approval(address,address,uint256)"}, {"inputs": [{"indexed": true, "type": "address", "name": "from"}, {"indexed": true, "type": "address", "name": "to"}, {"indexed": false, "type": "uint256", "name": "value"}], "type": "event", "name": "Transfer(address,address,uint256)"}, {"inputs": [{"indexed": false, "type": "int256", "name": "from"}, {"indexed": false, "type": "int256", "name": "to"}, {"indexed": false, "type": "int256", "name": "value"}, {"indexed": false, "type": "int256", "name": "senderBalance"}, {"indexed": false, "type": "int256", "name": "sender"}, {"indexed": false, "type": "int256", "name": "spenderMaxValue"}], "type": "event", "name": "echo(int256,int256,int256,int256,int256,int256)"}]')
+
+outcomeShareContractWrapper = contracts._ContractLoader__state.abi_contract("""
+extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, changeTokens:[int256,int256]:int256, createShares:[address,uint256]:int256, destroyShares:[address,uint256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, modifySupply:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
+
+def approve(shareContract: address, spender: address, value: uint256):
+    return(shareContract.approve(spender, value))
+
+def allowance(shareContract: address, owner: address, spender: address):
+    return(shareContract.allowance(owner, spender))
+
+def transferFrom(shareContract: address, from: address, to: address, value: uint256):
+    return(shareContract.transferFrom(from, to, value))
+
+def totalSupply(shareContract: address):
+    return(shareContract.totalSupply())
+
+def balanceOf(shareContract: address, address: address):
+    return(shareContract.balanceOf(address))
+""")
 
 eventCreationCounter = 0
 
@@ -95,7 +117,7 @@ def buyCompleteSets(marketID, fxpAmount):
         result = contracts.completeSets.publicBuyCompleteSets(marketID, fxpAmount, sender=t.k1)
         logged = captured.stdout
     logCompleteSets = parseCapturedLogs(logged)[-1]
-    assert(logCompleteSets["_event_type"] == "logCompleteSets"), "Should emit a logCompleteSets event"
+    assert(logCompleteSets["_event_type"] == "CompleteSets"), "Should emit a CompleteSets event"
     assert(logCompleteSets["sender"] == long(t.a1.encode("hex"), 16)), "Logged sender should match input"
     assert(logCompleteSets["type"] == 1), "Logged type should be 1 (buy)"
     assert(logCompleteSets["fxpAmount"] == fxpAmount), "Logged fxpAmount should match input"
@@ -517,7 +539,7 @@ def test_CompleteSets():
             result = contracts.completeSets.publicBuyCompleteSets(marketID, fxpAmount, sender=t.k1)
             logged = captured.stdout
         logCompleteSets = parseCapturedLogs(logged)[-1]
-        assert(logCompleteSets["_event_type"] == "logCompleteSets"), "Should emit a logCompleteSets event"
+        assert(logCompleteSets["_event_type"] == "CompleteSets"), "Should emit a CompleteSets event"
         assert(logCompleteSets["sender"] == address1), "Logged sender should match input"
         assert(logCompleteSets["type"] == 1), "Logged type should be 1 (buy)"
         assert(logCompleteSets["fxpAmount"] == fxpAmount), "Logged fxpAmount should match input"
@@ -577,7 +599,7 @@ def test_CompleteSets():
             result = contracts.completeSets.publicSellCompleteSets(marketID, fxpAmount, sender=t.k1)
             logged = captured.stdout
         logCompleteSets = parseCapturedLogs(logged)[-1]
-        assert(logCompleteSets["_event_type"] == "logCompleteSets"), "Should emit a logCompleteSets event"
+        assert(logCompleteSets["_event_type"] == "CompleteSets"), "Should emit a CompleteSets event"
         assert(logCompleteSets["sender"] == address1), "Logged sender should match input"
         assert(logCompleteSets["type"] == 2), "Logged type should be 2 (sell)"
         assert(logCompleteSets["fxpAmount"] == fxpAmount), "Logged fxpAmount should match input"
@@ -712,6 +734,8 @@ def test_MakeOrder():
             assert(logMakeOrder["market"] == marketID), "Logged market should match input"
             assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
         def test_ask_withShares():
+            global shareTokenContractTranslator
+            global outcomeShareContractWrapper
             contracts._ContractLoader__state.mine(1)
             orderType = 2                   # ask
             fxpAmount = 1000000000000000000 # fixed-point 1
@@ -722,10 +746,15 @@ def test_MakeOrder():
             marketID = createBinaryMarket(eventID)
             buyCompleteSets(marketID, fix(10))
             fxpAmount = fix(9)
+            fxpAllowance = fix(12)
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
             marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
             marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
+            outcomeShareContract = contracts.markets.getOutcomeShareContract(marketID, outcomeID)
+            abiEncodedData = shareTokenContractTranslator.encode("approve", [contracts.makeOrder.address, fxpAllowance])
+            assert(int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve makeOrder contract to spend shares from the user's account (account 1)"
+            assert(outcomeShareContractWrapper.allowance(outcomeShareContract, t.a1, contracts.makeOrder.address) == fxpAllowance), "makeOrder contract's allowance should be equal to the amount approved"
             with iocapture.capture() as captured:
                 orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
                 logged = captured.stdout
@@ -757,6 +786,8 @@ def test_MakeOrder():
             assert(logMakeOrder["market"] == marketID), "Logged market should match input"
             assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
         def test_ask_withPartialShares():
+            global shareTokenContractTranslator
+            global outcomeShareContractWrapper
             contracts._ContractLoader__state.mine(1)
             orderType = 2                   # ask
             fxpAmount = 1000000000000000000 # fixed-point 1
@@ -767,10 +798,15 @@ def test_MakeOrder():
             marketID = createBinaryMarket(eventID)
             buyCompleteSets(marketID, fix(10))
             fxpAmount = fix(12)
+            fxpAllowance = fix(12)
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
             marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
             marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
+            outcomeShareContract = contracts.markets.getOutcomeShareContract(marketID, outcomeID)
+            abiEncodedData = shareTokenContractTranslator.encode("approve", [contracts.makeOrder.address, fxpAllowance])
+            assert(int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve makeOrder contract to spend shares from the user's account (account 1)"
+            assert(outcomeShareContractWrapper.allowance(outcomeShareContract, t.a1, contracts.makeOrder.address) == fxpAllowance), "makeOrder contract's allowance should be equal to the amount approved"
             with iocapture.capture() as captured:
                 orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
                 logged = captured.stdout

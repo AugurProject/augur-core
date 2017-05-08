@@ -105,7 +105,6 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
         fxpFill = min(fxpSharesHeld, fxpAmount)
         fxpAmount -= fxpFill
         fxpSharesEscrowed += fxpFill
-        # MARKETS.getOutcomeShareContract(market, outcome).destroyShares(sender, fxpFill)
         MARKETS.getOutcomeShareContract(market, outcome).transferFrom(sender, MARKETS.getOutcomeShareWallet(market, outcome), fxpFill)
 
     # Take max minus price they want to sell at for the remainder of the amount
@@ -159,7 +158,6 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
         i = 1
         while(i <= MARKETS.getMarketNumOutcomes(market)):
             if(i != outcome):
-                # MARKETS.getOutcomeShareContract(market, i).destroyShares(sender, fxpFill)
                 MARKETS.getOutcomeShareContract(market, i).transferFrom(sender, MARKETS.getOutcomeShareWallet(market, i), fxpFill)
             i += 1
 
