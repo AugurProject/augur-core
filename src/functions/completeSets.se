@@ -26,7 +26,7 @@ inset('../macros/float.sem')
 
 data controller
 
-event logCompleteSets(sender: indexed, market: indexed, type: indexed, fxpAmount, numOutcomes, fxpFee, timestamp)
+event CompleteSets(sender: indexed, market: indexed, type: indexed, fxpAmount, numOutcomes, fxpFee, timestamp)
 
 ### Allows users to buy/sell sets of every outcome, so 500 complete sets in a 3 outcome market is 500 of outcome 1, 2, and 3 each respectively
 
@@ -88,7 +88,7 @@ def buyCompleteSets(sender: address, market: address, fxpAmount: uint256):
         MARKETS.addFees(market, feesInWei)
         EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
 
-    log(type = logCompleteSets, sender, market, 1, fxpAmount, numOutcomes, 0, block.timestamp)
+    log(type = CompleteSets, sender, market, 1, fxpAmount, numOutcomes, 0, block.timestamp)
     return(1)
 
 # Sells fxpAmount of every outcome [if user owns it]
@@ -131,7 +131,7 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
     if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
         ~invalid()
 
-    log(type = logCompleteSets, sender, market, 2, fxpAmount, numOutcomes, fee, block.timestamp)
+    log(type = CompleteSets, sender, market, 2, fxpAmount, numOutcomes, fee, block.timestamp)
     return(1)
 
 def setController(newController: address):
