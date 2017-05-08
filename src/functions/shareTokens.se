@@ -75,9 +75,9 @@ def approve(spender: address, value: uint256):
 # Internal functions #
 ######################
 
-# Special functions for token (share) creation/destruction
+# Special functions for share (token) creation and destruction
 
-def createTokens(owner: address, fxpValue: uint256):
+def createShares(owner: address, fxpValue: uint256):
     self.controller.assertIsWhitelisted(msg.sender)
     if(fxpValue <= 0):
         ~invalid()
@@ -85,7 +85,7 @@ def createTokens(owner: address, fxpValue: uint256):
     self.totalSupply += fxpValue
     return(1)
 
-def destroyTokens(owner: address, fxpValue: uint256):
+def destroyShares(owner: address, fxpValue: uint256):
     self.controller.assertIsWhitelisted(msg.sender)
     if(fxpValue <= 0):
         ~invalid()
