@@ -23,6 +23,8 @@ extern expiringEvents: [addEvent:[int256,int256,int256,int256,int256,int256,int2
 COMPLETESETS = self.controller.lookup('completeSets')
 extern completeSets: [buyCompleteSets:[address,address,uint256]:int256, publicBuyCompleteSets:[address,uint256]:int256, publicSellCompleteSets:[address,uint256]:int256, sellCompleteSets:[address,address,uint256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
+extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, changeTokens:[int256,int256]:int256, createShares:[address,uint256]:int256, destroyShares:[address,uint256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, modifySupply:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
+
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
@@ -30,16 +32,16 @@ inset('../macros/float.sem')
 
 data controller
 
-event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
+event FillBid(market: indexed, sender: indexed, owner: indexed, type, fxpPrice, fxpAmount, timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
 
 macro MIN_TRADE_VALUE: 10000000000000000
+
 # Trade types
 macro BID: 1
 macro ASK: 2
+
 # Field counts
 macro ORDER_FIELDS: 10
-# Boolean success/failure
-macro SUCCESS: 1
 
 def init():
     self.controller = 0x0
@@ -51,7 +53,7 @@ def init():
 #  - Or asker has shares and expects to be paid price - minValue for them
 #  - Bidder owns all shares except the one theyre buying and has escrowed them and wants to pay price - minValue for the share and then sell the complete set for range thus getting maxValue - price at the end
 #  - Or bidder has escrowed price - minValue for their shares
-def fillBid(sender: address, orderID: address, amountTakerWants: uint256):
+def fillBid(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
 
@@ -60,13 +62,12 @@ def fillBid(sender: address, orderID: address, amountTakerWants: uint256):
     order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
     type = order[1]
     market = order[2]
-    creator = INFO.getCreator(market)
-    amount = order[3]
-    price = order[4]
+    fxpAmount = order[3]
+    fxpPrice = order[4]
     owner = order[5]
     outcome = order[7]
-    moneyEscrowed = order[8]
-    sharesEscrowed = order[9]
+    fxpMoneyEscrowed = order[8]
+    fxpSharesEscrowed = order[9]
 
     # Check trade preconditions
     if(!order[0]):
@@ -78,7 +79,7 @@ def fillBid(sender: address, orderID: address, amountTakerWants: uint256):
         ~invalid()
 
     branch = MARKETS.getBranch(market)
-    cumulativeScale = MARKETS.getCumulativeScale(market)
+    fxpCumulativeScale = MARKETS.getCumulativeScale(market)
     orderInfo = array(4)
     orderInfo[0] = market
     orderInfo[1] = outcome
@@ -87,145 +88,140 @@ def fillBid(sender: address, orderID: address, amountTakerWants: uint256):
     orderHash = ripemd160(orderInfo, items = 4)
     if(ORDERS.checkHash(orderHash, sender) == -1):
         ~invalid()
-    maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market))
 
-    # FIXME use explicit type field
-    # For categorical events the min is one
-    if(EVENTS.getEventType(MARKETS.getMarketEvent(market)) == "categorical"):
-        minValue = ONE
-    else:
-        minValue = EVENTS.getMinValue(MARKETS.getMarketEvent(market))
+    event = MARKETS.getMarketEvent(market)
+    fxpMaxValue = EVENTS.getMaxValue(event)
+    fxpMinValue = EVENTS.getMinValue(event)
 
-    sumOfFills = 0
+    fxpSumOfFills = 0
 
-    # All in shares including the money filled here [money filled means shares that were filled via exchanging money as opposed to shares already owned by either respective party]
-    askerSharesFilled = 0
-    askerMoneyFilled = 0
-    bidderSharesFilled = 0
-    bidderMoneyFilled = 0
+    # All in shares including the money filled here
+    # [money filled means shares that were filled via exchanging money as opposed to shares already owned by either respective party]
+    fxpAskerSharesFilled = 0
+    fxpAskerMoneyFilled = 0
+    fxpBidderSharesFilled = 0
+    fxpBidderMoneyFilled = 0
 
     # Account for bidder closing short
-    if(sharesEscrowed):
-        fill = min(sharesEscrowed, amountTakerWants)
-        amountTakerWants = safeSub(amountTakerWants, fill)
-        sumOfFills = safeAdd(sumOfFills, fill)
-        bidderSharesFilled = fill
-        # send shares [amount is fill] escrowed by bidder back to bidder
+    if(fxpSharesEscrowed):
+        fxpFill = min(fxpSharesEscrowed, fxpAmountTakerWants)
+        fxpAmountTakerWants = safeSub(fxpAmountTakerWants, fxpFill)
+        fxpSumOfFills = safeAdd(fxpSumOfFills, fxpFill)
+        fxpBidderSharesFilled = fxpFill
+        # Return bidder's fxpFill shares held in the market's escrow (shares) wallet
         i = 1
         while(i <= MARKETS.getMarketNumOutcomes(market)):
             if(i != outcome):
-                # CREATE/DESTROY SHARES
-                MARKETS.modifyParticipantShares(market, owner, i, fill, 0)
+                # MARKETS.getOutcomeShareContract(market, i).createShares(owner, fxpFill)
+                # Transfer fxpFill shares from market's escrow (shares) wallet to owner
+                MARKETS.getOutcomeShareWallet(market, i).transfer(owner, fxpFill)
             i += 1
 
     # Account for regular bid with money
-    if(amountTakerWants and moneyEscrowed):
-        fill = min(safeFxpDiv(moneyEscrowed, safeSub(price, minValue)), amountTakerWants)
-        amountTakerWants = safeSub(amountTakerWants, fill)
-        sumOfFills = safeAdd(sumOfFills, fill)
-        bidderMoneyFilled = fill
+    if(fxpAmountTakerWants and fxpMoneyEscrowed):
+        fxpFill = min(safeFxpDiv(fxpMoneyEscrowed, safeSub(fxpPrice, fxpMinValue)), fxpAmountTakerWants)
+        fxpAmountTakerWants = safeSub(fxpAmountTakerWants, fxpFill)
+        fxpSumOfFills = safeAdd(fxpSumOfFills, fxpFill)
+        fxpBidderMoneyFilled = fxpFill
 
     # Update bid order with fill info
-    remainderToFill = sumOfFills
-    # Calculate value
-    value = safeFxpMul(sumOfFills, price)
-    # must fill at least 0.00000001 in value
-    if(value < MIN_TRADE_VALUE):
+    fxpRemainderToFill = fxpSumOfFills
+
+    # Calculate value: must fill at least 0.00000001 in value
+    if(safeFxpMul(fxpSumOfFills, fxpPrice) < MIN_TRADE_VALUE):
         ~invalid()
+
     # Update order amount or remove
-    if(sumOfFills < amount):
-        ORDERS.fillOrder(orderID, sumOfFills, safeFxpMul(bidderMoneyFilled, safeSub(price, minValue)), bidderSharesFilled)
+    if(fxpSumOfFills < fxpAmount):
+        ORDERS.fillOrder(orderID, fxpSumOfFills, safeFxpMul(fxpBidderMoneyFilled, safeSub(fxpPrice, fxpMinValue)), fxpBidderSharesFilled)
     else:
         ORDERS.removeOrder(orderID)
         MARKETS.removeOrderFromMarket(market, orderID)
 
     # Account for regular seller filling bid
-    balance = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
-    # sender owns shares of outcome
-    if(balance):
-        fill = min(balance, remainderToFill)
-        askerSharesFilled = fill
-        remainderToFill = safeSub(remainderToFill, fill)
+    fxpBalance = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
+    # Sender owns shares of outcome
+    if(fxpBalance > 0):
+        fxpFill = min(fxpBalance, fxpRemainderToFill)
+        fxpAskerSharesFilled = fxpFill
+        fxpRemainderToFill = safeSub(fxpRemainderToFill, fxpFill)
 
     # Account for short selling
-    if(remainderToFill):
-        # Issue asker complete sets for remainder amount and dont charge yet
+    if(fxpRemainderToFill > 0):
+        # Issue taker complete sets for remainder amount and don't charge yet
         i = 1
         while(i <= MARKETS.getMarketNumOutcomes(market)):
-            MARKETS.modifyShares(market, i, remainderToFill)
-            # CREATE/DESTROY SHARES
-            MARKETS.modifyParticipantShares(market, sender, i, remainderToFill, 0)
+            MARKETS.getOutcomeShareContract(market, i).createShares(sender, fxpRemainderToFill)
             i += 1
-        askerMoneyFilled = remainderToFill
-        remainderToFill = 0
+        fxpAskerMoneyFilled = fxpRemainderToFill
+        fxpRemainderToFill = 0
         # If still before voting period has started count the share value
         notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
         if(notVotingOnYet):
-            MARKETS.modifySharesValue(market, safeFxpMul(askerMoneyFilled, cumulativeScale))
-            fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), askerMoneyFilled), cumulativeScale)
+            MARKETS.modifySharesValue(market, safeFxpMul(fxpAskerMoneyFilled, fxpCumulativeScale))
+            fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAskerMoneyFilled), fxpCumulativeScale)
             feesInWei = safeFxpMul(BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
             if(!feesInWei):
                 ~invalid()
             MARKETS.addFees(market, feesInWei)
             EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
 
-    # Send bidder shares from asker
-    MARKETS.modifyParticipantShares(market, sender, outcome, -sumOfFills, 1)
-    MARKETS.modifyParticipantShares(market, owner, outcome, sumOfFills, 0)
+    # Send bidder shares from market's escrow (shares) wallet
+    MARKETS.getOutcomeShareWallet(market, outcome).transfer(sender, fxpSumOfFills)
+    # MARKETS.modifyParticipantShares(market, sender, outcome, -fxpSumOfFills, 1)
+    # MARKETS.modifyParticipantShares(market, owner, outcome, fxpSumOfFills, 0)
 
     # Sell maker's complete sets
-    sharesHeld = -1
+    fxpSharesHeld = -1
     i = 1
     while(i <= MARKETS.getMarketNumOutcomes(market)):
-        sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, owner, i), sharesHeld)
+        fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, owner, i), fxpSharesHeld)
         i += 1
-    if(sharesHeld):
+    if(fxpSharesHeld > 0):
         i = 1
         while(i <= MARKETS.getMarketNumOutcomes(market)):
-            MARKETS.modifyShares(market, i, -sharesHeld)
-            MARKETS.modifyParticipantShares(market, owner, i, -sharesHeld, 0)
+            MARKETS.getOutcomeShareContract(market, i).destroyShares(owner, fxpSharesHeld)
             i += 1
-        cost = safeFxpMul(sharesHeld, cumulativeScale)
-        # send funds from the market to the user acc.
-        fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), sharesHeld), cumulativeScale)
-        if(!INFO.getWallet(market).transfer(owner, safeSub(cost, fee))):
+        fxpCost = safeFxpMul(fxpSharesHeld, fxpCumulativeScale)
+        # Send funds from the market to the user's account
+        fxpFee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpSharesHeld), fxpCumulativeScale)
+        if(!INFO.getWallet(market).transfer(owner, safeSub(fxpCost, fxpFee))):
             ~invalid()
-        # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
+        # If still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
         notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
         if(notVotingOnYet):
-            MARKETS.modifySharesValue(market, safeFxpMul(-sharesHeld, cumulativeScale))
-        currency = INFO.getCurrency(market)
-        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+            MARKETS.modifySharesValue(market, safeFxpMul(-fxpSharesHeld, fxpCumulativeScale))
+        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fxpFee, 2))):
             ~invalid()
 
-    # Transfer (price - minValue) * bidderSharesFilled to market from bidder since market hasnt been paid yet after complete sets selling. The bidder has already paid for bidderMoneyFilled by escrowing their money
-    bidderHasntPaidMarket = bidderSharesFilled && !INFO.getCurrency(market).transferFrom(owner, market, safeFxpMul(safeSub(price, minValue), bidderSharesFilled))
+    # Transfer (price - minValue) * fxpBidderSharesFilled to market from bidder since market hasnt been paid yet after complete sets selling. The bidder has already paid for fxpBidderMoneyFilled by escrowing their money
+    if(fxpBidderSharesFilled):
+        if(!INFO.getCurrency(market).transferFrom(owner, market, safeFxpMul(safeSub(fxpPrice, minValue), fxpBidderSharesFilled))):
+            ~invalid()
 
     # Transfer money from person who bid to the person here who is selling/asker [bidder has already sent/escrowed the cash to/with the market when submitting bid so this comes from the market]
-    askerNotPaid = !INFO.getWallet(market).transfer(sender, safeFxpMul(safeSub(price, minValue), sumOfFills))
-
-    # Transfer range * askerMoneyFilled to the market from asker for the amount of shares in askerMoneyFilled, for askerSharesFilled the asker simply has sent their shares to the bidder and thus doesn't have to put up money
-    askerHasntPaidMarket = askerMoneyFilled && !INFO.getCurrency(market).transferFrom(sender, market, safeFxpMul(cumulativeScale, askerMoneyFilled))
-    if(bidderHasntPaidMarket or askerHasntPaidMarket or askerNotPaid):
+    if(!INFO.getWallet(market).transfer(sender, safeFxpMul(safeSub(fxpPrice, minValue), fxpSumOfFills))):
         ~invalid()
-    # sellTakerCompleteSetsIfAny()
 
-    # Sell taker's complete sets (if any)
-    sharesHeld = -1
-    i = 1
-    while(i <= MARKETS.getMarketNumOutcomes(market)):
-        sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), sharesHeld)
-        i += 1
-    # Sell the asker's [sender's] complete sets if they have any
-    if(sharesHeld):
-        if(!COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)):
+    # Transfer range * fxpAskerMoneyFilled to the market from asker for the amount of shares in fxpAskerMoneyFilled, for fxpAskerSharesFilled the asker simply has sent their shares to the bidder and thus doesn't have to put up money
+    if(fxpAskerMoneyFilled):
+        if(!INFO.getCurrency(market).transferFrom(sender, market, safeFxpMul(fxpCumulativeScale, fxpAskerMoneyFilled))):
             ~invalid()
 
-    # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
-    log(type = logPrice, market, sender, owner, ASK, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
+    # Sell taker's complete sets if they have any
+    fxpSharesHeld = -1
+    i = 1
+    while(i <= MARKETS.getMarketNumOutcomes(market)):
+        fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), fxpSharesHeld)
+        i += 1
+    if(fxpSharesHeld > 0):
+        COMPLETESETS.sellCompleteSets(sender, market, fxpSharesHeld)
 
-    MARKETS.setPrice(market, outcome, price)
-    return(amountTakerWants: uint256)
+    # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
+    log(type = FillBid, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+
+    MARKETS.setPrice(market, outcome, fxpPrice)
+    return(fxpAmountTakerWants: uint256)
 
 def setController(newController: address):
     if(msg.sender != self.controller):
