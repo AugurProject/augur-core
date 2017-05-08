@@ -128,12 +128,15 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
     wallet.initialize(currency)
 
     shareContracts = array(numOutcomes)
+    shareWallets = array(numOutcomes)
     i = 0
     while i < numOutcomes:
         shareContracts[i] = create('shareTokens.se')
+        shareWallets[i] = create('wallet.se')
+        shareWallets[i].initialize(shareContracts[i])
         i += 1
 
-    self.makeMarket(sender, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, expirationDate, shareContracts, value = msg.value)
+    self.makeMarket(sender, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, expirationDate, shareContracts, shareWallets, value = msg.value)
 
     log(type = marketCreated, sender, market, tag1, branch, fxpCreationFee, block.timestamp)
     return(market)
@@ -159,14 +162,14 @@ def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event,
     return(1)
 
 # initialize market and send money to pay for resolution
-def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo: str, expirationDate, shareContracts: arr):
+def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo: str, expirationDate, shareContracts: arr, shareWallets: arr):
     if(msg.sender != self):
         ~invalid()
     if(!currency.transferFrom(sender, INFO.getWallet(branch), fxpCreationFee)):
         ~invalid()
     if(!INFO.setInfo(market, text(""), sender, fxpCreationFee, currency, wallet)):
         ~invalid()
-    if(!MARKETS.initializeMarket(market, event, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value, fxpCreationFee, expirationDate, shareContracts, value = msg.value)):
+    if(!MARKETS.initializeMarket(market, event, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value, fxpCreationFee, expirationDate, shareContracts, shareWallets, value = msg.value)):
         ~invalid()
     if(!BRANCHES.addMarketToBranch(branch, market)):
         ~invalid()

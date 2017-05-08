@@ -38,7 +38,7 @@ inset('../macros/refund.sem')
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded fxpPrice for a given outcome in a market
     # shareContracts stores the erc-20 token contract address for each outcome in the market
-data Markets[](event, sharesPurchased[], participants[](shares[]), resolved, cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, orderIDs[](id, nextID, prevID), lastOrder, totalOrders, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[])
+data Markets[](event, sharesPurchased[], participants[](shares[]), resolved, cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, orderIDs[](id, nextID, prevID), lastOrder, totalOrders, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[], shareWallets[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
@@ -48,13 +48,13 @@ data controller
 def init():
     self.controller = 0x0
 
-def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
+def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr, shareWallets: arr):
     self.controller.assertIsWhitelisted(msg.sender)
-    # add event list to the market
     self.Markets[market].event = event
     i = 0
     while i < numOutcomes:
         self.Markets[market].shareContracts[i + 1] = shareContracts[i]
+        self.Markets[market].shareWallets[i + 1] = shareWallets[i]
         i += 1
     save(self.Markets[market].extraInfo[0], extraInfo, chars = len(extraInfo))
     self.Markets[market].extraInfoLen = len(extraInfo)
@@ -236,6 +236,9 @@ def getMarketShareContracts(market):
         shareContracts[i] = self.Markets[market].shareContracts[i + 1]
         i += 1
     return(shareContracts: arr)
+
+def getOutcomeShareWallet(market, outcome):
+    return(self.Markets[market].shareWallets[outcome])
 
 def getOutcomeShareContract(market, outcome):
     return(self.Markets[market].shareContracts[outcome])
