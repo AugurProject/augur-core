@@ -96,6 +96,9 @@ def createEvent(sender: address, branch, description: str, expDate, fxpMinValue,
     self.controller.assertIsWhitelisted(msg.sender)
 
     periodLength = BRANCHES.getPeriodLength(branch)
+    if(numOutcomes > 2):
+        fxpMinValue = ONE
+        fxpMaxValue = safeMul(numOutcomes, ONE)
     self.checkEventCreationPreconditions(branch, periodLength, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress)
 
     eventInfo = string(8 * 32 + len(description))
