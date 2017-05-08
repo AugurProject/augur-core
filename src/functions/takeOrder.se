@@ -49,33 +49,33 @@ macro ORDER_FIELDS: 10
 #
 # publicTakeOrder [allows a user to pick up/fill orders off the book]
 #
-# amountTakerWants is amount of shares the taker wants to fill
+# fxpAmountTakerWants is amount of shares the taker wants to fill
 # picks orders off the book
 # @return fxp
 def init():
     self.controller = 0x0
 
-def publicTakeOrder(orderID: address, amountTakerWants: uint256):
+def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
     refund()
     MUTEX.acquire()
-    amountRemaining = self.takeOrder(msg.sender, orderID, amountTakerWants, call = delegate)
+    fxpAmountRemaining = self.takeOrder(msg.sender, orderID, fxpAmountTakerWants)
     MUTEX.release()
-    return(amountRemaining: uint256)
+    return(fxpAmountRemaining: uint256)
 
-def takeOrder(sender: address, orderID: address, amountTakerWants: uint256):
+def takeOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
-    if(amountTakerWants <= 0):
+    if(fxpAmountTakerWants <= 0):
         ~invalid()
     type = ORDERS.getType(orderID)
     # Fill orders
     if(type == BID):
-        amountRemaining = FILLBID.fillBid(sender, orderID, amountTakerWants, call = delegate)
+        fxpAmountRemaining = FILLBID.fillBid(sender, orderID, fxpAmountTakerWants)
     elif(type == ASK):
-        amountRemaining = FILLASK.fillAsk(sender, orderID, amountTakerWants, call = delegate)
+        fxpAmountRemaining = FILLASK.fillAsk(sender, orderID, fxpAmountTakerWants)
     else:
         ~invalid()
-    return(amountRemaining: uint256)
+    return(fxpAmountRemaining: uint256)
 
 def setController(newController: address):
     if(msg.sender != self.controller):
