@@ -130,7 +130,7 @@ def removeLastCurrency(branch):
 
 def updateCurrencyRate(branch, currency, rate, rateContract):
     self.controller.assertIsWhitelisted(msg.sender)
-    if(rate == 0 && !rateContract):
+    if(rate == 0 and !rateContract):
         ~invalid()
     self.Branches[branch].currencies[self.Branches[branch].currencyToIndex[currency]].rate = rate
     self.Branches[branch].currencies[self.Branches[branch].currencyToIndex[currency]].rateContract = rateContract

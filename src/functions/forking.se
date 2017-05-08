@@ -99,7 +99,7 @@ def init():
 # In the last 48 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back and a fork commences
 # bond for a fork is 1% of rep
 # Errors:
-    #  0: not in last 48 hr of period
+    #  0: not in last 48 hr of period or didnt pay for resolution of event
     # -1: ineligible for forking over, already resolved, forked, or hasn't seen 1st backstop yet
     # -2: no fork allowed for 1 period after a forking event
     # -3: invalid branch

@@ -114,7 +114,7 @@ def convertToDormantRep(branch, fxpValue):
     senderBalance = REPORTING.getRepBalance(branch, msg.sender)
     senderDormantBalance = REPORTING.balanceOfReporter(branch, msg.sender)
     reportedOnRoundTwoEvent = REPORTING.getReportedOnNonFinalRoundTwoEvent(branch, msg.sender)
-    if(reportedOnRoundTwoEvent && !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
+    if(reportedOnRoundTwoEvent and !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
         ~invalid()
     checkRepConversionInvariants()
 
@@ -171,7 +171,7 @@ macro checkConversionDuringForkInvariants():
     child = BRANCHES.getMostRecentChild(branch)
     tooLateForChild = block.timestamp > (BRANCHES.getCreationDate(child) + ONE_MONTH)
     # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow converting rep on the parent branch until they claim it
-    if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, msg.sender)) != msg.sender):
+    if(!tooLateForChild and child and REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, msg.sender)) != msg.sender):
         if(!CLAIMINITIALREP.claimInitialRep(branch, child, call = delegate)):
             ~invalid()
 
@@ -183,7 +183,7 @@ macro checkRepConversionInvariants():
         parent = BRANCHES.getParent(branch)
         tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
         reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, msg.sender))
-        if(parent && !tooLate && reporterWasInOldBranch):
+        if(parent and !tooLate and reporterWasInOldBranch):
             if(!CLAIMINITIALREP.claimInitialRep(parent, branch, call = delegate)):
                 ~invalid()
         else:

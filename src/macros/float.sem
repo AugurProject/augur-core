@@ -33,14 +33,14 @@ macro safeFxpDiv($x, $y):
 
 macro safeToAdd($a, $b):
     $c = $a + $b
-    ($c >= $a && $c >= $b)
+    ($c >= $a and $c >= $b)
 
 macro safeToSubtract($a, $b):
-    ($b <= $a && (($a - $b) <= $a))
+    ($b <= $a and (($a - $b) <= $a))
 
 macro safeToMultiply($a, $b):
     $c = $a * $b
-    ($a == 0 || ($c / $a) == $b)
+    ($a == 0 or ($c / $a) == $b)
 
 macro unfix($x):
     $x / 10 ** 18

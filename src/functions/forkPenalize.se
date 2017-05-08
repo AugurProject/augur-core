@@ -61,7 +61,6 @@ def penalizeOnForkedEvent(branch, event):
     MUTEX.acquire()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
-    lastPeriod = lastPeriodVotedOn
     periodLength = BRANCHES.getPeriodLength(branch)
     newRep = 0
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender)

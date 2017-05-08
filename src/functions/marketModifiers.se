@@ -9,7 +9,7 @@ INFO = self.controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setController:[address]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256, suicideFunds:[address]:_]
 
 MARKETS = self.controller.lookup('markets')
-extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256, suicideFunds:[address]:_]
+extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
 
 BACKSTOPS = self.controller.lookup('backstops')
 extern backstops: [adjForkBondPaid:[int256,int256]:int256, doRoundTwoRefund:[int256,int256]:int256, getBondAmount:[int256]:int256, getBondPaid:[int256]:int256, getBondPoster:[int256]:int256, getBondReturned:[int256]:int256, getDisputedOverEthics:[int256]:int256, getFinal:[int256]:int256, getForkBondPaid:[int256]:int256, getForkBondPoster:[int256]:int256, getForkedOverEthicality:[int256]:int256, getMoved:[int256]:int256, getOriginalBranch:[int256]:int256, getOriginalEthicality:[int256]:int256, getOriginalOutcome:[int256]:int256, getOriginalVotePeriod:[int256]:int256, getResolved:[int256,int256]:int256, getRoundTwo:[int256]:int256, increaseBondPaid:[int256,int256]:int256, setBondAmount:[int256,int256]:int256, setBondPoster:[int256,int256]:int256, setBondReturned:[int256]:int256, setController:[address]:int256, setDisputedOverEthics:[int256]:int256, setFinal:[int256]:int256, setForkBondPoster:[int256,int256]:int256, setForkedOverEthicality:[int256]:int256, setMoved:[int256]:int256, setOriginalBranch:[int256,int256]:int256, setOriginalEthicality:[int256,int256]:int256, setOriginalOutcome:[int256,int256]:int256, setOriginalVotePeriod:[int256,int256]:int256, setResolved:[int256,int256,int256]:int256, setRoundTwo:[int256,int256]:int256, setRoundTwoRefund:[int256,int256]:int256, suicideFunds:[address]:_]
@@ -108,66 +108,6 @@ def updateTradingFee(market, fxpTradingFee):
     if(!currency.transferFrom(msg.sender, BRANCHES.getBranchWallet(branch, currency), newCreationFee - oldCreationFee) or !MARKETS.setTradingFee(market, fxpTradingFee)):
         ~invalid()
     log(type = tradingFeeUpdated, msg.sender, branch, market, fxpTradingFee, block.timestamp)
-    MUTEX.release()
-    return(1)
-
-# Anyone can post an "Early Resolution Bond"
-# This bond is equal to 0.5 * marketFee * marketValue
-# This amount is the amount needed to pay the reporters in case this was frivolous.
-# The market goes up for early resolution and reporters place claim to what is truth, however for early resolution, they have an additional option: 'Market is not ready to resolve'
-    # this addl option is just the normal indeterminate (except here it's a bit of a special case, see below)
-# In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
-    # and market remains with old expiration dateevent
-# In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
-# Errors:
-    # 0: invalid branch
-    # -1: not allowed for events during a fork scenario for events that were created before the fork until the fork is over
-    # -2: market already closed or already pushed forward
-    # -3: event has already been pushed forward, is being reported on now, or has an outcome already
-    # -4: event isn't in a regular reporting cycle yet
-def pushMarketForward(branch, market):
-    refund()
-    MUTEX.acquire()
-
-    periodLength = BRANCHES.getPeriodLength(branch)
-    currentPeriod = block.timestamp / periodLength
-    if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):
-        MUTEX.release()
-        return(-2)
-    if(MARKETS.getBranch(market) != branch):
-        MUTEX.release()
-        return(0)
-    event = MARKETS.getMarketEvent(market)
-    if(eventCreatedPriorToFork(event)):
-        return(-1)
-    event = MARKETS.getMarketEvent(market)
-    expiration = EVENTS.getExpiration(event)
-    beingReportedOnNow = (expiration / periodLength == block.timestamp / periodLength)
-    alreadyPushedForward = EVENTS.getRejectedPeriod(event) or expiration != EVENTS.getOriginalExpiration(event)
-    if(alreadyPushedForward or beingReportedOnNow or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event)):
-        MUTEX.release()
-        return(-3)
-    if(EXPEVENTS.getEvent(branch, expiration / periodLength, EXPEVENTS.getEventIndex(branch, expiration / periodLength, event)) != event):
-        return(-4)
-    # push into next vote period
-    period = block.timestamp / periodLength
-    forkPeriod = BRANCHES.getForkPeriod(branch)
-    afterFork = 0
-    if(period == (forkPeriod + 1) or period == (forkPeriod + 2)):
-        afterFork = 1
-    currency = INFO.getCurrency(event)
-    wallet = INFO.getWallet(event)
-    EXPEVENTS.addEvent(branch, period, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
-
-    # set event expiration date to be after the current reporting period ends
-    EVENTS.setExpiration(event, block.timestamp)
-    MARKETS.setTradingPeriod(market, period)
-    MARKETS.setPushedForward(market, 1, msg.sender)
-    EVENTS.setEventPushedUp(event, 1)
-    bond = safeFxpMul(MARKETS.getTradingFee(market), MARKETS.getTotalSharesPurchased(market)) / 2
-    payEarlyResolutionBond = INFO.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), bond)
-    if(!payEarlyResolutionBond or !EVENTS.setEarlyResolutionBond(event, bond)):
-        ~invalid()
     MUTEX.release()
     return(1)
 

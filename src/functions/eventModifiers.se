@@ -9,7 +9,7 @@ INFO = self.controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setController:[address]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256, suicideFunds:[address]:_]
 
 MARKETS = self.controller.lookup('markets')
-extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256, suicideFunds:[address]:_]
+extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
 
 BACKSTOPS = self.controller.lookup('backstops')
 extern backstops: [adjForkBondPaid:[int256,int256]:int256, doRoundTwoRefund:[int256,int256]:int256, getBondAmount:[int256]:int256, getBondPaid:[int256]:int256, getBondPoster:[int256]:int256, getBondReturned:[int256]:int256, getDisputedOverEthics:[int256]:int256, getFinal:[int256]:int256, getForkBondPaid:[int256]:int256, getForkBondPoster:[int256]:int256, getForkedOverEthicality:[int256]:int256, getMoved:[int256]:int256, getOriginalBranch:[int256]:int256, getOriginalEthicality:[int256]:int256, getOriginalOutcome:[int256]:int256, getOriginalVotePeriod:[int256]:int256, getResolved:[int256,int256]:int256, getRoundTwo:[int256]:int256, increaseBondPaid:[int256,int256]:int256, setBondAmount:[int256,int256]:int256, setBondPoster:[int256,int256]:int256, setBondReturned:[int256]:int256, setController:[address]:int256, setDisputedOverEthics:[int256]:int256, setFinal:[int256]:int256, setForkBondPoster:[int256,int256]:int256, setForkedOverEthicality:[int256]:int256, setMoved:[int256]:int256, setOriginalBranch:[int256,int256]:int256, setOriginalEthicality:[int256,int256]:int256, setOriginalOutcome:[int256,int256]:int256, setOriginalVotePeriod:[int256,int256]:int256, setResolved:[int256,int256,int256]:int256, setRoundTwo:[int256,int256]:int256, setRoundTwoRefund:[int256,int256]:int256, suicideFunds:[address]:_]
@@ -99,7 +99,7 @@ def putEventIntoReportingPeriod(event):
     if(eventCreatedPriorToFork(event)):
         return(-1)
 
-    if(!EVENTS.getChallenged(event) && !EVENTS.getFirstPreliminaryOutcome(event) && block.timestamp > (EVENTS.getExpiration(event) + THREE_DAYS)):
+    if(!EVENTS.getChallenged(event) and !EVENTS.getFirstPreliminaryOutcome(event) and block.timestamp > (EVENTS.getExpiration(event) + THREE_DAYS)):
         addEvent()
         EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setChallenged(event)
@@ -128,7 +128,7 @@ def challengeInitialResolution(event):
     if(eventCreatedPriorToFork(event)):
         return(-1)
 
-    if(!EVENTS.getChallenged(event) && block.timestamp < (EVENTS.getExpiration(event) + 2 * THREE_DAYS) && EVENTS.getFirstPreliminaryOutcome(event)):
+    if(!EVENTS.getChallenged(event) and block.timestamp < (EVENTS.getExpiration(event) + 2 * THREE_DAYS) and EVENTS.getFirstPreliminaryOutcome(event)):
         addEvent()
         EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setChallenged(event)
@@ -147,7 +147,7 @@ def challengeInitialResolution(event):
 def resolveEarly(event, outcome):
     if(!isCallerWhitelisted()):
         MUTEX.acquire()
-    if(msg.sender == EVENTS.getResolutionAddress(event) && block.timestamp > EVENTS.getExpiration(event) && block.timestamp < (EVENTS.getExpiration(event) + THREE_DAYS)):
+    if(msg.sender == EVENTS.getResolutionAddress(event) and block.timestamp > EVENTS.getExpiration(event) and block.timestamp < (EVENTS.getExpiration(event) + THREE_DAYS)):
         # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
         if(outcome == 0):
             outcome = 1

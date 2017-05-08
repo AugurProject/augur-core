@@ -93,7 +93,7 @@ def setSaleDistribution(addresses: address[], balances: uint256[]):
     if(msg.sender != self.creator):
         ~invalid()
     while(i < numberOfAddresses):
-        if(!self.reputation[addresses[i]] && !self.seeded):
+        if(!self.reputation[addresses[i]] and !self.seeded):
             self.reputation[addresses[i]] = balances[i]
             self.totalSupply += balances[i]
             log(type = Transfer, 0, addresses[i], balances[i])

@@ -9,7 +9,7 @@ INFO = self.controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setController:[address]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256, suicideFunds:[address]:_]
 
 MARKETS = self.controller.lookup('markets')
-extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256, suicideFunds:[address]:_]
+extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
 
 EVENTS = self.controller.lookup('events')
 extern events: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, addReportersPaidSoFar:[int256]:int256, getBond:[int256]:int256, getChallenged:[int256]:int256, getCreationTime:[int256]:int256, getEarlyResolutionBond:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getEventPushedUp:[int256]:int256, getEventResolution:[int256]:bytes, getExpiration:[int256]:int256, getExtraBond:[int256]:int256, getExtraBondPoster:[int256]:int256, getFirstPreliminaryOutcome:[int256]:int256, getForkEthicality:[int256]:int256, getForkOutcome:[int256]:int256, getForkResolveAddress:[int256]:int256, getForked:[int256]:int256, getForkedDone:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMinValue:[int256]:int256, getMode:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPast24:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getReportersPaidSoFar:[int256]:int256, getReportingThreshold:[int256]:int256, getResolutionAddress:[int256]:int256, getResolutionLength:[int256]:int256, getResolveBondPoster:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, setBond:[int256,int256]:int256, setBranch:[int256,int256]:int256, setChallenged:[int256]:int256, setController:[address]:int256, setCreationTime:[int256]:int256, setEarlyResolutionBond:[int256,int256]:int256, setEthics:[int256,int256]:int256, setEventPushedUp:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setExtraBond:[int256,int256]:int256, setExtraBondPoster:[int256,int256]:int256, setFirstPreliminaryOutcome:[int256,int256]:int256, setForkDone:[int256]:int256, setForkEthicality:[int256,int256]:int256, setForkOutcome:[int256,int256]:int256, setForked:[int256]:int256, setMode:[int256,int256]:int256, setOriginalExpiration:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setRejected:[int256,int256]:int256, setThreshold:[int256,int256]:int256, setUncaughtOutcome:[int256,int256]:int256, suicideFunds:[address]:_]
@@ -47,7 +47,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
     prelimOutcome = EVENTS.getFirstPreliminaryOutcome(event)
     ethics = EVENTS.getEthics(event)
     ethical = ethicCatch(ethics)
-    elif(prelimOutcome && !fxpOutcome):
+    elif(prelimOutcome and !fxpOutcome):
         # if prelimOutcome is indeterminate, ethics doesn't matter b/c it's the same result [money returned at even odds]
         ethical = ONE
         fxpOutcome = prelimOutcome
@@ -68,7 +68,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         if(MARKETS.getPushedForward($market)):
             $amount = EVENTS.getEarlyResolutionBond($event)
             $branchWallet = BRANCHES.getBranchWallet($branch, INFO.getCurrency($market))
-            if($amount && !INFO.getWallet($market).transfer($branchWallet, $amount)):
+            if($amount and !INFO.getWallet($market).transfer($branchWallet, $amount)):
                 ~invalid()
         MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
         MARKETS.setPushedForward($market, 0, msg.sender)
@@ -106,7 +106,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             ~invalid()
         if(MARKETS.getPushedForward($market)):
             $amount = EVENTS.getEarlyResolutionBond($event)
-            if($amount && !INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), $amount)):
+            if($amount and !INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), $amount)):
                 ~invalid()
         if(EVENTS.getEventPushedUp($event)):
             # delete old event from future events exp
@@ -121,13 +121,13 @@ macro handleFirstResolverBond():
     $resolverBondPoster = EVENTS.getResolveBondPoster($event)
     # if different outcome then first resolver bond goes to reporters, any other normal case it is returned
     if(EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
-        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $branch), FIRST_RESOLVE_BOND)
+        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) and REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $branch), FIRST_RESOLVE_BOND)
     else:
-        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $resolverBondPoster), FIRST_RESOLVE_BOND)
+        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) and REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $resolverBondPoster), FIRST_RESOLVE_BOND)
 
 macro payHalfOfValidityBondToChallengerIfNeeded():
     $bond = EVENTS.getBond($event)
-    if(EVENTS.getChallenged($event) && !BACKSTOPS.getRoundTwo($event) && EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
+    if(EVENTS.getChallenged($event) and !BACKSTOPS.getRoundTwo($event) and EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
         # pay half of validity bond to challenger
         if(!INFO.getWallet($event).transfer(EVENTS.getExtraBondPoster($event), $bond / 2)):
             ~invalid()
