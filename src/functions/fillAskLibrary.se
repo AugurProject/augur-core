@@ -23,51 +23,40 @@ extern expiringEvents: [addEvent:[int256,int256,int256,int256,int256,int256,int2
 COMPLETESETS = self.controller.lookup('completeSets')
 extern completeSets: [buyCompleteSets:[address,address,uint256]:int256, publicBuyCompleteSets:[address,uint256]:int256, publicSellCompleteSets:[address,uint256]:int256, sellCompleteSets:[address,address,uint256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-MUTEX = self.controller.lookup('mutex')
-extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
-
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/logReturn.sem')
 inset('../macros/float.sem')
 
 data controller
 
-event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
-event tradeLogReturn(returnValue)
+event logPrice(market: indexed, sender: indexed, owner: indexed, type, price, amount, timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
 
 macro MIN_TRADE_VALUE: 10000000000000000
+
 # Trade types
 macro BID: 1
 macro ASK: 2
+
 # Field counts
 macro ORDER_FIELDS: 10
-# Boolean success/failure
-macro SUCCESS: 1
-
-# removes a order from the book
-macro removeOrder($orderID, $market):
-    ORDERS.removeOrder($orderID)
-    MARKETS.removeOrderFromMarket($market, $orderID)
 
 def init():
     self.controller = 0x0
 
 # Filling an ask [aka buying shares]
 # Scenarios:
-    # Asker either escrowed maxValue - price and expects complete set minus the one they're selling
-    # Or asker had shares and escrowed them and expects to be paid price - minValue for them
-    # Bidder owns all shares except the one they're buying and will pay price - minValue for the shares they're buying
-    # Or bidder will pay price - minValue for their shares
-def fillAsk(orderID, amountTakerWants):
+#  - Asker either escrowed maxValue - price and expects complete set minus the one they're selling
+#  - Or asker had shares and escrowed them and expects to be paid price - minValue for them
+#  - Bidder owns all shares except the one they're buying and will pay price - minValue for the shares they're buying
+#  - Or bidder will pay price - minValue for their shares
+def fillAsk(sender: address, orderID: address, amountTakerWants: uint256):
+    refund()
     self.controller.assertIsWhitelisted(msg.sender)
+
     # Get order
     order = array(ORDER_FIELDS)
     order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
-    if(!order[0]):
-        MUTEX.release()
-        return([0]: arr)
     type = order[1]
     market = order[2]
     creator = INFO.getCreator(market)
@@ -77,110 +66,52 @@ def fillAsk(orderID, amountTakerWants):
     outcome = order[7]
     moneyEscrowed = order[8]
     sharesEscrowed = order[9]
-    checkTradePreconditions()
+
+    # Check trade preconditions
+    if(!order[0]):
+        ~invalid()
+    if(owner == sender):
+        ~invalid()
+    # Make sure the order has been mined, obvious HFT prevention
+    if(block.number <= order[6]):
+        ~invalid()
+
     branch = MARKETS.getBranch(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
     orderInfo = array(4)
     orderInfo[0] = market
     orderInfo[1] = outcome
     orderInfo[2] = type
-    orderInfo[3] = msg.sender
-    orderHash = sha3(orderInfo, items = 4)
-    if(ORDERS.checkHash(orderHash, msg.sender) == -1):
-        MUTEX.release()
-        return([-1]: arr)
+    orderInfo[3] = sender
+    orderHash = ripemd160(orderInfo, items = 4)
+    if(ORDERS.checkHash(orderHash, sender) == -1):
+        ~invalid()
     maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market))
-    minValue = 0
-    # for categorical events the min is one
-    if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent(market)) > 2):
+
+    # FIXME use explicit type field
+    # For categorical events the min is one
+    if(EVENTS.getEventType(MARKETS.getMarketEvent(market)) == "categorical"):
         minValue = ONE
     else:
         minValue = EVENTS.getMinValue(MARKETS.getMarketEvent(market))
+
     sumOfFills = 0
-    # all in shares including the money here
+
+    # All in shares including the money here
     askerSharesFilled = 0
     askerMoneyFilled = 0
     bidderSharesFilled = 0
     bidderMoneyFilled = 0
-    accountForAskWithShares()
-    accountForShortAsk()
-    updateAskOrderWithFillInfo()
-    accountForBidderWithCompleteSetExceptForOutcomeBeingFilled()
-    accountForRegularBuyerBiddingWithCash()
-    # send bidder sumOfFills shares by just creating them and giving them to them
-    MARKETS.modifyParticipantShares(market, msg.sender, outcome, sumOfFills, 1)
-    sellTakerCompleteSetsIfAny()
-    # Transfer (price - minValue) * (bidderSharesFilled + bidderMoneyFilled) to market from bidder since market hasnt been paid yet
-    bidderHasntPaidMarket = (bidderMoneyFilled or bidderSharesFilled) and !INFO.getCurrency(market).transferFrom(msg.sender, market, safeFxpMul(safeSub(price, minValue), safeAdd(bidderSharesFilled, bidderMoneyFilled)))
-    # Transfer (price - minValue) * askerSharesFilled from the market to the asker, dont need to send for askerMoneyFilled because asker only escrowed maxValue - price and thus has "already been paid" for those shares.  Note: bidder has already sent their money to the market so this money comes from the market
-    askerNotPaid = askerSharesFilled and !INFO.getWallet(market).transfer(owner, safeFxpMul(safeSub(price, minValue), askerSharesFilled))
-    if(askerNotPaid or bidderHasntPaidMarket):
-        ~invalid()
-    sellMakersCompleteSets()
-    # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
-    log(type = logPrice, market, msg.sender, owner, BID, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
-    MARKETS.setPrice(market, outcome, price)
-    return([SUCCESS, amountTakerWants]: arr)
 
-macro sellMakersCompleteSets():
-    sharesHeld = -1
-    i = 1
-    while(i <= MARKETS.getMarketNumOutcomes(market)):
-        sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, owner, i), sharesHeld)
-        i += 1
-    if(sharesHeld):
-        i = 1
-        while(i <= MARKETS.getMarketNumOutcomes(market)):
-            MARKETS.modifyShares(market, i, -sharesHeld)
-            # CREATE/DESTROY SHARES
-            MARKETS.modifyParticipantShares(market, owner, i, -sharesHeld, 0)
-            i += 1
-        cost = safeFxpMul(sharesHeld, cumulativeScale)
-        # send funds from the market to the user acc.
-        fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), sharesHeld), cumulativeScale)
-        if(!INFO.getWallet(market).transfer(owner, safeSub(cost, fee))):
-            ~invalid()
-        # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
-        notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
-        if(notVotingOnYet):
-            MARKETS.modifySharesValue(market, safeFxpMul(-sharesHeld, cumulativeScale))
-        currency = INFO.getCurrency(market)
-        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-            ~invalid()
-
-macro sellTakerCompleteSetsIfAny():
-    sharesHeld = -1
-    i = 1
-    while(i <= MARKETS.getMarketNumOutcomes(market)):
-        sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, msg.sender, i), sharesHeld)
-        i += 1
-    # Sell the asker's [msg.sender] complete sets if they have any
-    if(sharesHeld):
-        if(!COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)):
-            ~invalid()
-
-macro updateAskOrderWithFillInfo():
-    remainderToFill = sumOfFills
-    # Calculate value
-    value = safeFxpMul(sumOfFills, price)
-    # must fill at least 0.00000001 in value
-    if(value < MIN_TRADE_VALUE):
-        ~invalid()
-    # Update order amount or remove
-    if(sumOfFills < amount):
-        ORDERS.fillOrder(orderID, sumOfFills, safeFxpMul(askerMoneyFilled, safeSub(maxValue, price)), askerSharesFilled)
-    else:
-        removeOrder(orderID, market)
-
-macro accountForAskWithShares():
+    # Account for ask-with-shares
     if(sharesEscrowed):
         fill = min(sharesEscrowed, amountTakerWants)
         amountTakerWants = safeSub(amountTakerWants, fill)
         sumOfFills = safeAdd(sumOfFills, fill)
         askerSharesFilled = fill
 
-macro accountForShortAsk():
-    if(amountTakerWants && moneyEscrowed):
+    # Account for short-ask
+    if(amountTakerWants and moneyEscrowed):
         fill = min(safeFxpDiv(moneyEscrowed, safeSub(maxValue, price)), amountTakerWants)
         amountTakerWants = safeSub(amountTakerWants, fill)
         sumOfFills = safeAdd(sumOfFills, fill)
@@ -204,31 +135,92 @@ macro accountForShortAsk():
             MARKETS.addFees(market, feesInWei)
             EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
 
-macro accountForBidderWithCompleteSetExceptForOutcomeBeingFilled():
+    # Update ask order with fill info
+    remainderToFill = sumOfFills
+    # Calculate value
+    value = safeFxpMul(sumOfFills, price)
+    # Must fill at least 0.00000001 in value
+    if(value < MIN_TRADE_VALUE):
+        ~invalid()
+    # Update order amount or remove
+    if(sumOfFills < amount):
+        ORDERS.fillOrder(orderID, sumOfFills, safeFxpMul(askerMoneyFilled, safeSub(maxValue, price)), askerSharesFilled)
+    else:
+        ORDERS.removeOrder(orderID)
+        MARKETS.removeOrderFromMarket(market, orderID)
+
+    # Account for bidder with complete set except for outcome being filled
     sharesHeld = -1
     i = 1
     while i < MARKETS.getMarketNumOutcomes(market):
         if(i != outcome):
-            sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, msg.sender, i), sharesHeld)
+            sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), sharesHeld)
         i += 1
     if(sharesHeld):
         fill = min(sharesOwned, remainderToFill)
         bidderSharesFilled = fill
         remainderToFill = safeSub(remainderToFill, fill)
 
-macro accountForRegularBuyerBiddingWithCash():
+    # Account for regular buyer bidding with cash
     if(remainderToFill):
         bidderMoneyFilled = remainderToFill
         remainderToFill = safeSub(remainderToFill, remainderToFill)
 
-macro checkTradePreconditions():
-    if(owner == msg.sender):
-        MUTEX.release()
-        return([-3]: arr)
-    # Make sure the order has been mined, obvious HFT prevention
-    if(block.number <= order[6]):
-        MUTEX.release()
-        return([-2]: arr)
+    # FIXME Send bidder sumOfFills shares by just creating them and giving them to them
+    MARKETS.modifyParticipantShares(market, sender, outcome, sumOfFills, 1)
+
+    # Sell taker complete sets (if any)
+    sharesHeld = -1
+    i = 1
+    while(i <= MARKETS.getMarketNumOutcomes(market)):
+        sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), sharesHeld)
+        i += 1
+    # Sell the asker's [sender's] complete sets if they have any
+    if(sharesHeld):
+        if(!COMPLETESETS.sellCompleteSets(sender, market, sharesHeld)):
+            ~invalid()
+
+    # Transfer (price - minValue) * (bidderSharesFilled + bidderMoneyFilled) to market from bidder since market hasnt been paid yet
+    bidderHasntPaidMarket = (bidderMoneyFilled or bidderSharesFilled) and !INFO.getCurrency(market).transferFrom(sender, market, safeFxpMul(safeSub(price, minValue), safeAdd(bidderSharesFilled, bidderMoneyFilled)))
+
+    # Transfer (price - minValue) * askerSharesFilled from the market to the asker, dont need to send for askerMoneyFilled because asker only escrowed maxValue - price and thus has "already been paid" for those shares.  Note: bidder has already sent their money to the market so this money comes from the market
+    askerNotPaid = askerSharesFilled and !INFO.getWallet(market).transfer(owner, safeFxpMul(safeSub(price, minValue), askerSharesFilled))
+    if(askerNotPaid or bidderHasntPaidMarket):
+        ~invalid()
+
+    # Sell maker's complete sets
+    sharesHeld = -1
+    i = 1
+    while(i <= MARKETS.getMarketNumOutcomes(market)):
+        sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, owner, i), sharesHeld)
+        i += 1
+    if(sharesHeld):
+        i = 1
+        while(i <= MARKETS.getMarketNumOutcomes(market)):
+            # CREATE/DESTROY SHARES
+            MARKETS.modifyShares(market, i, -sharesHeld)
+            MARKETS.modifyParticipantShares(market, owner, i, -sharesHeld, 0)
+            i += 1
+        cost = safeFxpMul(sharesHeld, cumulativeScale)
+
+        # Send funds from the market to the user acc.
+        fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), sharesHeld), cumulativeScale)
+        if(!INFO.getWallet(market).transfer(owner, safeSub(cost, fee))):
+            ~invalid()
+
+        # If still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
+        notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
+        if(notVotingOnYet):
+            MARKETS.modifySharesValue(market, safeFxpMul(-sharesHeld, cumulativeScale))
+        currency = INFO.getCurrency(market)
+        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+            ~invalid()
+
+    # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
+    log(type = logPrice, market, sender, owner, BID, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
+
+    MARKETS.setPrice(market, outcome, price)
+    return(amountTakerWants: uint256)
 
 def setController(newController: address):
     if(msg.sender != self.controller):
