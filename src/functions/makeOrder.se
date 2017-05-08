@@ -27,7 +27,7 @@ inset('../macros/float.sem')
 
 data controller
 
-event logMakeOrder(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, timestamp, tradeGroupID)
+event MakeOrder(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, timestamp, tradeGroupID)
 
 # Order types
 macro BID: 1
@@ -78,7 +78,7 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
     # Update market
     MARKETS.addOrder(market, orderID)
 
-    log(type = logMakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp, tradeGroupID)
+    log(type = MakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp, tradeGroupID)
     return(orderID)
 
 def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):
@@ -104,8 +104,9 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
         fxpFill = min(fxpSharesHeld, fxpAmount)
         fxpAmount -= fxpFill
         fxpSharesEscrowed += fxpFill
+        # MARKETS.getOutcomeShareContract(market, outcome).destroyShares(sender, fxpFill)
         # TODO should this be a transfer to market / escrow account?
-        MARKETS.getOutcomeShareContract(market, outcome).destroyShares(sender, fxpFill)
+        MARKETS.getOutcomeShareContract(market, outcome).transferFrom(sender, MARKETS.getOutcomeShareWallet(market, i), fxpFill)
 
     # Take max minus price they want to sell at for the remainder of the amount
     # that wasn't able to be used up above
@@ -130,7 +131,6 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     fxpMoneyEscrowed = 0
     fxpSharesEscrowed = 0
-    event = MARKETS.getMarketEvent(market)
     fxpCumulativeScale = MARKETS.getCumulativeScale(market)
 
     # If user owns n minus the one outcome we're buying escrow no money but
@@ -141,12 +141,13 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
         if(i != outcome):
             fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), fxpSharesHeld)
         i += 1
+
+    fxpCostPerShare = fxpPrice - EVENTS.getMinValue(MARKETS.getMarketEvent(market))
+    fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
+    if(fxpCostPerShare > fxpCumulativeScale):
+        ~invalid()
+
     if(fxpSharesHeld > 0):
-        fxpMinValue = EVENTS.getMinValue(event)
-        fxpCostPerShare = fxpPrice - fxpMinValue
-        fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
-        if(fxpCostPerShare > fxpCumulativeScale):
-            ~invalid()
         if(fxpCost < MIN_ORDER_VALUE):
             ~invalid()
         fxpFill = min(fxpSharesHeld, fxpAmount)
@@ -155,21 +156,17 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
         i = 1
         while(i <= MARKETS.getMarketNumOutcomes(market)):
             if(i != outcome):
+                # MARKETS.getOutcomeShareContract(market, i).destroyShares(sender, fxpFill)
                 # TODO should this be a transfer to market / escrow account?
-                MARKETS.getOutcomeShareContract(market, i).destroyShares(sender, fxpFill)
+                MARKETS.getOutcomeShareContract(market, i).transferFrom(sender, MARKETS.getOutcomeShareWallet(market, i), fxpFill)
             i += 1
 
     # Take money in escrow for price - min for the remainder of amount that wasn't
     # able to be used up above. Make sure price - min isn't more than range
     if(fxpAmount):
-        fxpMinValue = EVENTS.getMinValue(event)
-        fxpCostPerShare = fxpPrice - fxpMinValue
-        fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
-        fxpMoneyEscrowed += fxpCost
-        if(fxpCostPerShare > fxpCumulativeScale):
-            ~invalid()
         if(fxpCost < MIN_ORDER_VALUE):
             ~invalid()
+        fxpMoneyEscrowed += fxpCost
         if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), fxpCost)):
             ~invalid()
 
