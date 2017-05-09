@@ -3,8 +3,8 @@
 ORDERS = self.controller.lookup('orders')
 extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-TRADE = self.controller.lookup('trade')
-extern trade: [setController:[address]:int256, suicideFunds:[address]:_, trade:[int256,int256]:int256[]]
+TAKEORDER = self.controller.lookup('takeOrder')
+extern takeOrder: [publicTakeOrder:[address,uint256]:uint256, setController:[address]:int256, suicideFunds:[address]:_, takeOrder:[address,address,uint256]:uint256]
 
 extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
@@ -12,19 +12,11 @@ inset('../macros/refund.sem')
 
 data controller
 
-event tradeAvailableOrdersLogArrayReturn(returnArray: arr)
-
-macro logArrayReturn($a):
-    log(type = tradeAvailableOrdersLogArrayReturn, $a)
-    return($a: arr)
-
 # Minimum gas needed to execute the trade function.
 # TODO update with profiled value from the new trade function
 macro MINIMUM_GAS_NEEDED_TO_TRADE: 787421
 
 # tradeAvailableOrders [fills the orderIDs in the orderIDs array with a balance at or above fxpMinimumOrderBalance]
-# Errors:
-#   -6: no available orders found
 # @param amountTakerWants Number of shares to take (buy or sell).
 # @param orderIDs Array of order IDs from which to pick one to fill.
 # @param fxpMinimumOrderBalance Fill the first order that has a balance at or above this value.
@@ -32,22 +24,15 @@ macro MINIMUM_GAS_NEEDED_TO_TRADE: 787421
 def init():
     self.controller = 0x0
 
-def tradeAvailableOrders(orderIDs: arr, amountTakerWants, fxpMinimumOrderBalance):
+def tradeAvailableOrders(orderIDs: arr, amountTakerWants: uint256, fxpMinimumOrderBalance: uint256):
+    # FIXME problem exists here where amounttakerwants can get too low resulting in a throw
     numOrders = len(orderIDs)
-    originalBalance = amountTakerWants
-    amountTakerWants = amountTakerWants
     i = 0
-    # problem exists here where amounttakerwants can get too low resulting in a throw
     while(i < numOrders and msg.gas > MINIMUM_GAS_NEEDED_TO_TRADE and amountTakerWants):
         if(ORDERS.getAmount(orderIDs[i]) > fxpMinimumOrderBalance):
-            tradeReturn = array(2)
-            tradeReturn = TRADE.trade(orderIDs[i], amountTakerWants, call = delegate, outitems = 2)
-            amountTakerWants = tradeReturn[1]
+            amountTakerWants = TAKEORDER.publicTakeOrder(orderIDs[i], amountTakerWants, call = delegate)
         i += 1
-    if(originalBalance == amountTakerWants):
-        logArrayReturn([-6])
-    else:
-        logArrayReturn([1, amountTakerWants])
+    return(amountTakerWants: uint256)
 
 def setController(newController: address):
     if(msg.sender != self.controller):

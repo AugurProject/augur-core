@@ -3,7 +3,7 @@
 extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 MARKETS = self.controller.lookup('markets')
-extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
+extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getOutcomeShareContract:[int256,int256]:int256, getOutcomeShareWallet:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:uint256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[],int256[]]:int256, modifyMarketVolume:[int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
 
 ORDERS = self.controller.lookup('orders')
 extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
@@ -16,6 +16,8 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 
 ### This allows you to cancel orders on the book
 
+extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, transfer:[address,uint256]:int256]
+
 # Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
@@ -24,7 +26,7 @@ inset('../macros/float.sem')
 
 data controller
 
-event logCancelOrder(market: indexed, sender: indexed, fxpPrice, fxpAmount, orderID, outcome, type, cashRefund, sharesRefund, timestamp)
+event CancelOrder(market: indexed, sender: indexed, fxpPrice, fxpAmount, orderID, outcome, type, cashRefund, sharesRefund, timestamp)
 
 # Order types
 macro BID: 1
@@ -79,7 +81,7 @@ def cancelOrder(sender: address, orderID):
     self.refundOrder(sender, type, fxpSharesEscrowed, fxpMoneyEscrowed, market, outcome)
 
     # Log cancellation
-    log(type = logCancelOrder, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp)
+    log(type = CancelOrder, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp)
     return(1)
 
 # Issue refunds
@@ -95,12 +97,12 @@ def refundOrder(sender: address, type: uint256, fxpSharesEscrowed: uint256, fxpM
             i = 1
             while(i <= MARKETS.getMarketNumOutcomes(market)):
                 if(i != outcome):
-                    MARKETS.modifyParticipantShares(market, sender, outcome, fxpSharesEscrowed, 0)
+                    MARKETS.getOutcomeShareWallet(market, i).transfer(sender, fxpSharesEscrowed)
                 i += 1
 
         # Shares refund if has shares escrowed for this outcome
         elif(type == ASK):
-            MARKETS.modifyParticipantShares(market, sender, outcome, fxpSharesEscrowed, 0)
+            MARKETS.getOutcomeShareWallet(market, outcome).transfer(sender, fxpSharesEscrowed)
 
     # Return to user moneyEscrowed that wasn't filled yet
     if(fxpMoneyEscrowed > 0):

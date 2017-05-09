@@ -19,8 +19,8 @@ data symbol
 # amount of decimals per unit of shares
 data decimals
 
-event Transfer(from:indexed, to:indexed, value)
-event Approval(owner:indexed, spender:indexed, value)
+event Transfer(from: address: indexed, to: address: indexed, value: uint256)
+event Approval(owner: address: indexed, spender: address: indexed, value: uint256)
 
 def init():
     self.controller = 0x0
@@ -75,9 +75,10 @@ def approve(spender: address, value: uint256):
 # Internal functions #
 ######################
 
-# Special functions for token (share) creation/destruction
+# Special functions for share (token) creation and destruction
 
-def createTokens(owner: address, fxpValue: uint256):
+def createShares(owner: address, fxpValue: uint256):
+    refund()
     self.controller.assertIsWhitelisted(msg.sender)
     if(fxpValue <= 0):
         ~invalid()
@@ -85,7 +86,8 @@ def createTokens(owner: address, fxpValue: uint256):
     self.totalSupply += fxpValue
     return(1)
 
-def destroyTokens(owner: address, fxpValue: uint256):
+def destroyShares(owner: address, fxpValue: uint256):
+    refund()
     self.controller.assertIsWhitelisted(msg.sender)
     if(fxpValue <= 0):
         ~invalid()
@@ -102,23 +104,29 @@ def destroyTokens(owner: address, fxpValue: uint256):
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(owner: address, spender: address):
+    refund()
     return(self.accounts[owner].spenders[spender].maxValue)
 
 # @return fxp
 def totalSupply():
+    refund()
     return(self.totalSupply)
 
 # @return fxp
 def balanceOf(address: address):
+    refund()
     return(self.accounts[address].balance)
 
 def getName():
+    refund()
     return(self.name)
 
 def getDecimals():
+    refund()
     return(self.decimals)
 
 def getSymbol():
+    refund()
     return(self.symbol)
 
 ########################

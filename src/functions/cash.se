@@ -5,9 +5,6 @@ extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-MUTEX = self.controller.lookup('mutex')
-extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
-
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
 
 inset('../macros/refund.sem')
@@ -26,11 +23,11 @@ data decimals
 data initiated[]
 data controller
 
-event Transfer(from: indexed, to: indexed, value)
-event Approval(owner: indexed, spender: indexed, value)
-event DepositEther(sender: indexed, value, balance, timestamp)
-event WithdrawEther(sender: indexed, value, balance, timestamp)
-event InitiateWithdrawEther(sender: indexed, value, balance, timestamp)
+event Transfer(from: address: indexed, to: address: indexed, value: uint256)
+event Approval(owner: address: indexed, spender: address: indexed, value: uint256)
+event DepositEther(sender: address: indexed, value: uint256, balance: uint256, timestamp: uint256)
+event WithdrawEther(sender: address: indexed, value: uint256, balance: uint256, timestamp: uint256)
+event InitiateWithdrawEther(sender: address: indexed, value: uint256, balance: uint256, timestamp: uint256)
 
 def init():
     self.controller = 0x0

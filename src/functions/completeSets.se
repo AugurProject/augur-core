@@ -9,13 +9,15 @@ EXPEVENTS = self.controller.lookup('expiringEvents')
 extern expiringEvents: [addEvent:[int256,int256,int256,int256,int256,int256,int256]:int256, addReportToReportsSubmitted:[int256,int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodFeeValue:[int256,int256,int256]:int256, countReportAsSubmitted:[int256,int256,int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getActiveReporters:[int256,int256,int256,int256]:int256[], getAfterFork:[int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256,int256]:int256, getEventWeight:[int256,int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getFeeValue:[int256,int256]:int256, getLesserReportNum:[int256,int256,int256]:int256, getNumActiveReporters:[int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsSubmitted:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepWeight:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getRequired:[int256,int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setController:[address]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setEventWeight:[int256,int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepWeight:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, suicideFunds:[address]:_]
 
 MARKETS = self.controller.lookup('markets')
-extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
+extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getOutcomeShareContract:[int256,int256]:int256, getOutcomeShareWallet:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:uint256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[],int256[]]:int256, modifyMarketVolume:[int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
 
 INFO = self.controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setController:[address]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256, suicideFunds:[address]:_]
 
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
+
+extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, changeTokens:[int256,int256]:int256, createShares:[address,uint256]:int256, destroyShares:[address,uint256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, modifySupply:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
@@ -24,7 +26,7 @@ inset('../macros/float.sem')
 
 data controller
 
-event logCompleteSets(sender: indexed, market: indexed, type: indexed, fxpAmount, numOutcomes, fxpFee, timestamp)
+event CompleteSets(sender: indexed, market: indexed, type: indexed, fxpAmount, numOutcomes, fxpFee, timestamp)
 
 ### Allows users to buy/sell sets of every outcome, so 500 complete sets in a 3 outcome market is 500 of outcome 1, 2, and 3 each respectively
 
@@ -70,8 +72,7 @@ def buyCompleteSets(sender: address, market: address, fxpAmount: uint256):
     # issued in the market for each outcome
     n = 1
     while(n <= numOutcomes):
-        MARKETS.modifyShares(market, n, fxpAmount)
-        MARKETS.modifyParticipantShares(market, sender, n, fxpAmount, 0)
+        MARKETS.getOutcomeShareContract(market, n).createShares(sender, fxpAmount)
         n += 1
 
     # if still before voting period has started count the share value
@@ -87,7 +88,7 @@ def buyCompleteSets(sender: address, market: address, fxpAmount: uint256):
         MARKETS.addFees(market, feesInWei)
         EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
 
-    log(type = logCompleteSets, sender, market, 1, fxpAmount, numOutcomes, 0, block.timestamp)
+    log(type = CompleteSets, sender, market, 1, fxpAmount, numOutcomes, 0, block.timestamp)
     return(1)
 
 # Sells fxpAmount of every outcome [if user owns it]
@@ -113,8 +114,7 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
     # market since we're exchanging complete sets
     n = 1
     while(n <= numOutcomes):
-        MARKETS.modifyShares(market, n, -fxpAmount)
-        MARKETS.modifyParticipantShares(market, sender, n, -fxpAmount, 0)
+        MARKETS.getOutcomeShareContract(market, n).destroyShares(sender, fxpAmount)
         n += 1
 
     # Send funds from the market to the user's account
@@ -131,7 +131,7 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
     if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
         ~invalid()
 
-    log(type = logCompleteSets, sender, market, 2, fxpAmount, numOutcomes, fee, block.timestamp)
+    log(type = CompleteSets, sender, market, 2, fxpAmount, numOutcomes, fee, block.timestamp)
     return(1)
 
 def setController(newController: address):

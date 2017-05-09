@@ -7,14 +7,12 @@ extern topics: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, changeTokens:[int256,int256]:int256, createTokens:[address,uint256]:int256, destroyTokens:[address,uint256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, modifySupply:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
+extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, changeTokens:[int256,int256]:int256, createShares:[address,uint256]:int256, destroyShares:[address,uint256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, modifySupply:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
 
 inset('../macros/refund.sem')
 
 # Markets' index is the market, markets stores data about markets [which are able to be traded on] in augur
     # Event is the event in the market
-    # Sharespurchased keeps track of the number of shares purchased for each outcome
-        # sharesPurchased index states starts at 1 - (same for participants[].shares[] array)
     # Participants is an array of participants, their addresses as keys and the shares in each outcome they've purchased of an event as the values
         # e.g. participants[addr].shares[1]
     # currentParticipant is the number of participants [traders] in the market
@@ -38,7 +36,7 @@ inset('../macros/refund.sem')
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded fxpPrice for a given outcome in a market
     # shareContracts stores the erc-20 token contract address for each outcome in the market
-data Markets[](event, sharesPurchased[], participants[](shares[]), resolved, cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, orderIDs[](id, nextID, prevID), lastOrder, totalOrders, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[])
+data Markets[](event, participants[](shares[]), resolved, cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, orderIDs[](id, nextID, prevID), lastOrder, totalOrders, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[], shareWallets[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
@@ -48,13 +46,13 @@ data controller
 def init():
     self.controller = 0x0
 
-def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
+def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr, shareWallets: arr):
     self.controller.assertIsWhitelisted(msg.sender)
-    # add event list to the market
     self.Markets[market].event = event
     i = 0
     while i < numOutcomes:
         self.Markets[market].shareContracts[i + 1] = shareContracts[i]
+        self.Markets[market].shareWallets[i + 1] = shareWallets[i]
         i += 1
     save(self.Markets[market].extraInfo[0], extraInfo, chars = len(extraInfo))
     self.Markets[market].extraInfoLen = len(extraInfo)
@@ -73,24 +71,14 @@ def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, 
     self.addToMarketsHash(branch, market)
     return(1)
 
-def modifyShares(market, outcome, fxpAmount):
-    self.controller.assertIsWhitelisted(msg.sender)
-    self.Markets[market].sharesPurchased[outcome] += fxpAmount
-    self.Markets[market].shareContracts[outcome].modifySupply(fxpAmount)
-    return(1)
-
 def modifySharesValue(market, fxpAmount):
     self.controller.assertIsWhitelisted(msg.sender)
     self.Markets[market].sharesValue += fxpAmount
     return(1)
 
-def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
+def modifyMarketVolume(market, fxpAmount):
     self.controller.assertIsWhitelisted(msg.sender)
-    self.Markets[market].shareContracts[outcome].changeTokens(trader, fxpAmount)
-    if(actualTrade):
-        if(fxpAmount < 0):
-            fxpAmount = fxpAmount * -1
-        self.Markets[market].volume += fxpAmount
+    self.Markets[market].volume += fxpAmount
     TOPICS.updateTopicPopularity(self.Markets[market].branch, self.Markets[market].tag1, fxpAmount)
     return(1)
 
@@ -213,7 +201,8 @@ def getTotalSharesPurchased(market):
     n = self.Markets[market].numOutcomes
     i = 1
     while(i <= n):
-        total += self.Markets[market].sharesPurchased[i]
+        # total += self.Markets[market].sharesPurchased[i]
+        total += self.Markets[market].shareContracts[i].totalSupply()
         i += 1
     return(total)
 
@@ -229,9 +218,16 @@ def getMarketShareContracts(market):
         i += 1
     return(shareContracts: arr)
 
+def getOutcomeShareWallet(market, outcome):
+    return(self.Markets[market].shareWallets[outcome])
+
+def getOutcomeShareContract(market, outcome):
+    return(self.Markets[market].shareContracts[outcome])
+
 # @return fxp
 def getSharesPurchased(market, outcome):
-    return(self.Markets[market].sharesPurchased[outcome])
+    return(self.Markets[market].shareContracts[outcome].totalSupply(): uint256)
+    # return(self.Markets[market].sharesPurchased[outcome])
 
 def getExtraInfoLength(market):
     return(self.Markets[market].extraInfoLen)
