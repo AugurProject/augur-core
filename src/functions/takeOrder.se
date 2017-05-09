@@ -1,0 +1,79 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
+
+MUTEX = self.controller.lookup('mutex')
+extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
+
+ORDERS = self.controller.lookup('orders')
+extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
+
+FILLASKORDER = self.controller.lookup('takeAskOrder')
+extern takeAskOrder: [setController:[address]:int256, suicideFunds:[address]:_, takeAskOrder:[address,address,uint256]:uint256]
+
+TAKEBIDORDER = self.controller.lookup('takeBidOrder')
+extern takeBidOrder: [setController:[address]:int256, suicideFunds:[address]:_, takeBidOrder:[address,address,uint256]:uint256]
+
+extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
+inset('../macros/refund.sem')
+
+data controller
+
+# Trade types
+macro BID: 1
+macro ASK: 2
+
+### Allows users to take orders off the book (i.e. fill orders)
+
+# Trade scenarios:
+# Note: all [] scenarios are typical, if a user somehow gets an extra complete set it'll also be sold when doing a order, typically complete sets only sold when closing out a position or closing out a short
+# - Buying and have all but one and bidding, seller doesn't have outcome and is taking [complete set fee charged on buyer b/c selling complete sets].
+# - Buying and have all but one and bidding, seller has outcome and is taking [complete set fee charged on buyer].
+# - Buying and don't own anything and bidding, seller doesn't have outcome and is taking [no complete set fee charged b/c none sold].
+# - Buying and don't own anything and bidding, seller has outcome and is taking [no complete set fee charged b/c none sold].
+# - Buying and have all but one and taking, seller doesn't have outcome and is asking [complete set fee charged on buyer].
+# - Buying and have all but one and taking, seller has outcome and is asking [complete set fee charged on buyer].
+# - Buying and don't own anything and taking, seller doesn't have outcome and is asking [no complete set fee charged].
+# - Buying and don't own anything and taking, seller has outcome and is asking [no complete set fee charged].
+#
+# publicTakeOrder [allows a user to pick up/fill orders off the book]
+#
+# fxpAmountTakerWants is amount of shares the taker wants to fill
+# picks orders off the book
+# @return fxp
+def init():
+    self.controller = 0x0
+
+def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
+    refund()
+    MUTEX.acquire()
+    fxpAmountRemaining = self.takeOrder(msg.sender, orderID, fxpAmountTakerWants)
+    MUTEX.release()
+    return(fxpAmountRemaining: uint256)
+
+def takeOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
+    refund()
+    self.controller.assertIsWhitelisted(msg.sender)
+    if(fxpAmountTakerWants <= 0):
+        ~invalid()
+    type = ORDERS.getType(orderID)
+    # Fill orders
+    if(type == BID):
+        fxpAmountRemaining = TAKEBIDORDER.takeBidOrder(sender, orderID, fxpAmountTakerWants)
+    elif(type == ASK):
+        fxpAmountRemaining = FILLASKORDER.takeAskOrder(sender, orderID, fxpAmountTakerWants)
+    else:
+        ~invalid()
+    return(fxpAmountRemaining: uint256)
+
+def setController(newController: address):
+    if(msg.sender != self.controller):
+        ~invalid()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to: address):
+    if(msg.sender != self.controller):
+        ~invalid()
+    suicide(to)

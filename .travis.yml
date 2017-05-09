@@ -17,4 +17,4 @@ install:
   - pip install ethereum -r test_requirements.txt
 
 script:
-  - py.test tests/trading_tests.py
+  - travis_wait py.test -s tests/trading_tests.py

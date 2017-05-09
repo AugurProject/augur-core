@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python load_contracts.py update -s ../src
+python ../upload_contracts/upload_contracts.py update -s ../src
