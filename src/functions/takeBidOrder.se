@@ -219,7 +219,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), fxpSharesHeld)
         i += 1
     if(fxpSharesHeld > 0):
-        COMPLETESETS.sellCompleteSets(sender, market, fxpSharesHeld)
+        COMPLETESETS.sellCompleteSets(sender, market, fxpSharesHeld, call=delegate)
 
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
     log(type=FillBid, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)

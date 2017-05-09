@@ -185,7 +185,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         i += 1
     # Sell the taker's complete sets if they have any
     if(fxpSharesHeld > 0):
-        COMPLETESETS.sellCompleteSets(sender, market, fxpSharesHeld)
+        COMPLETESETS.sellCompleteSets(sender, market, fxpSharesHeld, call=delegate)
 
     # Transfer (price - minValue) * (fxpBidderSharesFilled + fxpBidderMoneyFilled) to market from bidder since market hasn't been paid yet
     if(fxpBidderMoneyFilled or fxpBidderSharesFilled):
