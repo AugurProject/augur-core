@@ -728,9 +728,11 @@ def test_markets(contracts, s, t):
     gasSubsidy1 = 10**14*234
     creationFee1 = 10**14*340
     twoPercent = 10**16*2
+    ONE = 10**18
     expirationDate1 = s.block.timestamp + 15
-    shareContract1 = s.abi_contract('shareContract')
-    shareContract2 = s.abi_contract('shareContract')
+    shareContractPath = os.path.join(src, 'functions/shareTokens.se')
+    shareContract1 = s.abi_contract(shareContractPath, sender=t.k0)
+    shareContract2 = s.abi_contract(shareContractPath, sender=t.k0)
     shareAddr1 = long(shareContract1.address.encode('hex'), 16)
     shareAddr2 = long(shareContract2.address.encode('hex'), 16)
     shareContracts = [shareContract1.address, shareContract2.address]
@@ -749,7 +751,7 @@ def test_markets(contracts, s, t):
 
     def test_marketInialization():
         assert(c.getMarketsHash(branch1) == 0)
-        assert(c.initializeMarket(market1, event1, period1, twoPercent, branch1, tag1, tag2, tag3, 10**18, 2, 'this is extra information', gasSubsidy1, creationFee1, expirationDate1, shareContracts) == 1)
+        assert(c.initializeMarket(market1, event1, period1, twoPercent, branch1, tag1, tag2, tag3, ONE, 2, 'this is extra information', gasSubsidy1, creationFee1, expirationDate1, shareContracts, value=gasSubsidy1) == 1)
         assert(c.getMarketsHash(branch1) != 0)
         assert(c.getBranch(market1) == branch1)
         assert(c.getMarketEvent(market1) == event1)
@@ -761,6 +763,9 @@ def test_markets(contracts, s, t):
         assert(c.getVolume(market1) == 0)
         assert(c.getExtraInfo(market1) == 'this is extra information')
         assert(c.getExtraInfoLength(market1) == 25)
+        assert(c.getGasSubsidy(market1) == gasSubsidy1)
+        assert(c.getMarketNumOutcomes(market1) == 2)
+        assert(c.getCumulativeScale(market1) == ONE)
 
     def test_marketOrders():
         assert(c.getOrderIDs(market1) == [])
@@ -813,62 +818,64 @@ def test_markets(contracts, s, t):
         assert(c.getVolume(market1) == 0)
         assert(c.modifyParticipantShares(market1, address1, 2, 200, 1) == 1)
         assert(c.getVolume(market1) == 200)
-        # modifyShares(market, outcome, fxpAmount):
-        # modifySharesValue(market, fxpAmount):
-        # modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
-        # TODO: look into modifyParticipantShares, it might be using deprecated functions in shareToken...
-        # getSharesValue(market):
-        # getMarketShareContracts(market):
-        # getTotalSharesPurchased(market):
-        # getSharesPurchased(market, outcome):
-        # getParticipantSharesPurchased(market, trader, outcome):
+        # shares
+            # modifyShares(market, outcome, fxpAmount):
+            # modifySharesValue(market, fxpAmount):
+            # modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
+            # getSharesValue(market):
+            # getSharesPurchased(market, outcome):
+            # getMarketShareContracts(market):
+            # getParticipantSharesPurchased(market, trader, outcome):
+            # getTotalSharesPurchased(market):
+            # getVolume(market):
+        # TODO: Question, why is changeTokens/modifySupply in shareContracts deprecated and what should i use instead?
 
-    #
-    # addToMarketsHash(branch, newHash):
-    #
-    # refundClosing(market, to):
+    def test_marketSettings():
+        currentMarketHash = c.getMarketsHash(branch1)
+        assert(c.addToMarketsHash(branch1, 123412341234) == 1)
+        assert(c.getMarketsHash(branch1) != currentMarketHash)
 
-    # addFees(market, fxpAmount):
-    # setWinningOutcomes(market, outcomes: arr):
-    # setTradingFee(market, fee):
-    # setPushedForward(market, bool, sender):
-    # setPrice(market, outcome, fxpPrice):
-    # setTradingPeriod(market, period):
+        assert(c.getFees(market1) == creationFee1)
+        assert(c.addFees(market1, 100) == 1)
+        assert(c.getFees(market1) == creationFee1 + 100)
 
-    # getTradingPeriod(market):
-    # getWinningOutcomes(market):
-    # getOneWinningOutcome(market, num):
-    # getPushedForward(market):
-    # getFees(market):
+        assert(c.getTradingPeriod(market1) == period1)
+        assert(c.getOriginalTradingPeriod(market1) == period1)
+        assert(c.setTradingPeriod(market1, period1 + 10) == 1)
+        assert(c.getOriginalTradingPeriod(market1) == period1)
+        assert(c.getTradingPeriod(market1) == period1 + 10)
 
-    # getTradingFee(market):
-    # getMarketsHash(branch):
-    # getLastExpDate(market):
-    # getLastOutcomePrice(market, outcome):
-    # getGasSubsidy(market):
-    # getTags(market):
-    # getTopic(market):
-    # getMarketEvent(market):
+        assert(c.getTradingFee(market1) == twoPercent)
+        assert(c.setTradingFee(market1, twoPercent + 10**13) == twoPercent + 10**13)
+        assert(c.getTradingFee(market1) == twoPercent + 10**13)
 
-    # getExtraInfoLength(market):
-    # getExtraInfo(market):
-    # getVolume(market):
-    # getCumulativeScale(market):
-    # getMarketNumOutcomes(market):
-    # getOriginalTradingPeriod(market):
-    # getBranch(market):
-    # getBondsMan(market):
+        assert(c.getBondsMan(market1) == 0)
+        assert(c.getPushedForward(market1) == 0)
+        assert(c.setPushedForward(market1, 1, address1) == 1)
+        assert(c.getPushedForward(market1) == 1)
+        assert(c.getBondsMan(market1) == address1)
 
-    # addOrder(market, orderID):
-    # removeOrderFromMarket(marketID, orderID):
+        assert(c.getLastOutcomePrice(market1, 1) == 0)
+        assert(c.getLastOutcomePrice(market1, 2) == 0)
+        assert(c.setPrice(market1, 1, 123) == 1)
+        assert(c.setPrice(market1, 2, 456) == 1)
+        assert(c.getLastOutcomePrice(market1, 1) == 123)
+        assert(c.getLastOutcomePrice(market1, 2) == 456)
 
-    # getOrderIDs(marketID):
-    # getLastOrder(market):
-    # getPrevID(market, order):
-    # getTotalOrders(marketID):
+        assert(c.getMarketResolved(market1) == 0)
+        assert(c.setMarketResolved(market1) == 1)
+        assert(c.getMarketResolved(market1) == 1)
+
+        addr1Bal = s.block.get_balance(t.a1)
+        assert(s.block.get_balance(t.a1) == addr1Bal)
+        assert(c.refundClosing(market1, address1) == 1)
+        assert(s.block.get_balance(t.a1) == addr1Bal + gasSubsidy1)
+
+
     test_marketInialization()
     test_marketOrders()
-    test_marketShares()
+    # test_marketShares()
+    test_marketSettings()
     print("data_api/markets.se unit tests complete")
 
 def test_mutex(contracts, s, t):
@@ -1193,13 +1200,12 @@ if __name__ == '__main__':
     test_events(contracts, state, t)
     test_expiringEvents(contracts, state, t)
     test_info(contracts, state, t)
-    test_topics(contracts, state, t)
     test_markets(contracts, state, t)
     test_mutex(contracts, state, t)
     test_orders(contracts, state, t)
     test_register(contracts, state, t)
+    test_topics(contracts, state, t)
     # data_api/fxpFunctions.se
-    # data_api/markets.se
     # data_api/reporting.se
     # data_api/reportingThreshold.se
     print "FINISH TESTING DATA_API"
