@@ -61,7 +61,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Get order
     order = array(ORDER_FIELDS)
-    order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
+    order = ORDERS.getOrder(orderID, outitems=ORDER_FIELDS)
     type = order[1]
     market = order[2]
     fxpAmount = order[3]
@@ -80,19 +80,21 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     if(block.number <= order[6]):
         ~invalid()
 
-    branch = MARKETS.getBranch(market)
-    fxpCumulativeScale = MARKETS.getCumulativeScale(market)
     orderInfo = array(4)
     orderInfo[0] = market
     orderInfo[1] = outcome
     orderInfo[2] = type
     orderInfo[3] = sender
-    orderHash = ripemd160(orderInfo, items = 4)
-    if(ORDERS.checkHash(orderHash, sender) == -1):
-        ~invalid()
+    orderHash = ripemd160(orderInfo, items=4)
+    ORDERS.checkHash(orderHash, sender)
 
+    branch = MARKETS.getBranch(market)
+    fxpCumulativeScale = MARKETS.getCumulativeScale(market)
     event = MARKETS.getMarketEvent(market)
-    fxpMaxValue = EVENTS.getMaxValue(event)
+    if(EVENTS.getEventType(event) == "scalar"):
+        fxpMaxValue = EVENTS.getMaxValue(event)
+    else:
+        fxpMaxValue = TWO
     fxpMinValue = EVENTS.getMinValue(event)
 
     fxpSumOfFills = 0
@@ -220,7 +222,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         COMPLETESETS.sellCompleteSets(sender, market, fxpSharesHeld)
 
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
-    log(type = FillBid, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+    log(type=FillBid, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
 
     MARKETS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)

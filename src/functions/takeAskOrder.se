@@ -60,7 +60,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Get order
     order = array(ORDER_FIELDS)
-    order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
+    order = ORDERS.getOrder(orderID, outitems=ORDER_FIELDS)
     type = order[1]
     market = order[2]
     fxpAmount = order[3]
@@ -79,23 +79,22 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     if(block.number <= order[6]):
         ~invalid()
 
-    branch = MARKETS.getBranch(market)
-    fxpCumulativeScale = MARKETS.getCumulativeScale(market)
     orderInfo = array(4)
     orderInfo[0] = market
     orderInfo[1] = outcome
     orderInfo[2] = type
     orderInfo[3] = sender
-    orderHash = ripemd160(orderInfo, items = 4)
-    if(ORDERS.checkHash(orderHash, sender) == -1):
-        ~invalid()
+    orderHash = ripemd160(orderInfo, items=4)
+    ORDERS.checkHash(orderHash, sender)
 
+    branch = MARKETS.getBranch(market)
     event = MARKETS.getMarketEvent(market)
     if(EVENTS.getEventType(event) == "scalar"):
         fxpMaxValue = EVENTS.getMaxValue(event)
     else:
         fxpMaxValue = TWO
     fxpMinValue = EVENTS.getMinValue(event)
+    fxpCumulativeScale = MARKETS.getCumulativeScale(market)
 
     fxpSumOfFills = 0
 
@@ -225,7 +224,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
             ~invalid()
 
     # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
-    log(type = FillAsk, market, sender, owner, BID, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+    log(type=FillAsk, market, sender, owner, BID, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
 
     MARKETS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)
