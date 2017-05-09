@@ -55,7 +55,7 @@ def init():
 #  - Or asker has shares and expects to be paid price - minValue for them
 #  - Bidder owns all shares except the one theyre buying and has escrowed them and wants to pay price - minValue for the share and then sell the complete set for range thus getting maxValue - price at the end
 #  - Or bidder has escrowed price - minValue for their shares
-def fillBid(sender: address, orderID: address, fxpAmountTakerWants: uint256):
+def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
 

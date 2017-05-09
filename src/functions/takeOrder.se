@@ -8,31 +8,21 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 ORDERS = self.controller.lookup('orders')
 extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-FILLASK = self.controller.lookup('fillAskLibrary')
-extern fillAskLibrary: [fillAsk:[address,address,uint256]:uint256, setController:[address]:int256, suicideFunds:[address]:_]
+FILLASKORDER = self.controller.lookup('takeAskOrder')
+extern takeAskOrder: [setController:[address]:int256, suicideFunds:[address]:_, takeAskOrder:[address,address,uint256]:uint256]
 
-FILLBID = self.controller.lookup('fillBidLibrary')
-extern fillBidLibrary: [fillBid:[address,address,uint256]:uint256, setController:[address]:int256, suicideFunds:[address]:_]
+TAKEBIDORDER = self.controller.lookup('takeBidOrder')
+extern takeBidOrder: [setController:[address]:int256, suicideFunds:[address]:_, takeBidOrder:[address,address,uint256]:uint256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
 
 data controller
-
-event logPrice(market: indexed, sender: indexed, owner: indexed, type, price, amount, timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
-event tradeLogReturn(returnValue)
-event tradeLogArrayReturn(returnArray: arr)
-
-macro MIN_TRADE_VALUE: 10000000000000000
 
 # Trade types
 macro BID: 1
 macro ASK: 2
-
-# Field counts
-macro ORDER_FIELDS: 10
 
 ### Allows users to take orders off the book (i.e. fill orders)
 
@@ -70,9 +60,9 @@ def takeOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     type = ORDERS.getType(orderID)
     # Fill orders
     if(type == BID):
-        fxpAmountRemaining = FILLBID.fillBid(sender, orderID, fxpAmountTakerWants)
+        fxpAmountRemaining = TAKEBIDORDER.takeBidOrder(sender, orderID, fxpAmountTakerWants)
     elif(type == ASK):
-        fxpAmountRemaining = FILLASK.fillAsk(sender, orderID, fxpAmountTakerWants)
+        fxpAmountRemaining = FILLASKORDER.takeAskOrder(sender, orderID, fxpAmountTakerWants)
     else:
         ~invalid()
     return(fxpAmountRemaining: uint256)

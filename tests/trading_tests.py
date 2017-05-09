@@ -11,13 +11,13 @@ Trading tests:
 + functions/wallet.se
 - functions/fillAskLibrary.se
 - functions/fillBidLibrary.se
-- functions/trade.se
-- functions/tradeAvailableOrders.se
+- functions/takeOrder.se
 - functions/marketModifiers.se
 - functions/offChainTrades.se
 - functions/claimMarketProceeds.se
 - functions/oneWinningOutcomePayouts.se
 - functions/twoWinningOutcomePayouts.se
+- extensions/tradeAvailableOrders.se
 
 """
 from __future__ import division
@@ -1025,12 +1025,12 @@ def test_CancelOrder():
 def runtests():
     test_Cash()
     test_ShareTokens()
+    test_Wallet()
     test_CreateEvent()
     test_CreateMarket()
     test_CompleteSets()
     test_MakeOrder()
     test_CancelOrder()
-    test_Wallet()
 
 if __name__ == '__main__':
     runtests()

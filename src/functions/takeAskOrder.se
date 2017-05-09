@@ -54,7 +54,7 @@ def init():
 #  - Asker had shares and escrowed them and expects to be paid price - minValue for them
 #  - Bidder owns all shares except the one they're buying and will pay price - minValue for the shares they're buying
 #  - Bidder will pay price - minValue for their shares
-def fillAsk(sender: address, orderID: address, fxpAmountTakerWants: uint256):
+def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
 
@@ -91,7 +91,10 @@ def fillAsk(sender: address, orderID: address, fxpAmountTakerWants: uint256):
         ~invalid()
 
     event = MARKETS.getMarketEvent(market)
-    fxpMaxValue = EVENTS.getMaxValue(event)
+    if(EVENTS.getEventType(event) == "scalar"):
+        fxpMaxValue = EVENTS.getMaxValue(event)
+    else:
+        fxpMaxValue = TWO
     fxpMinValue = EVENTS.getMinValue(event)
 
     fxpSumOfFills = 0
