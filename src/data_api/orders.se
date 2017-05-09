@@ -26,7 +26,7 @@ def makeOrderHash(market, outcome, direction):
     orderInfo[1] = outcome
     orderInfo[2] = direction
     orderInfo[3] = msg.sender
-    orderHash = ripemd160(orderInfo, items = 4)
+    orderHash = ripemd160(orderInfo, items=4)
     return(orderHash)
 
 def commitOrder(hash):
@@ -37,7 +37,7 @@ def commitOrder(hash):
 
 def checkHash(orderHash, sender):
     if(self.orderCommits[sender].hash != orderHash or block.number <= self.orderCommits[sender].block):
-        return(-1)
+        ~invalid()
     else:
         return(1)
 
