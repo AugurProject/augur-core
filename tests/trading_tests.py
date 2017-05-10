@@ -27,12 +27,15 @@ import json
 import ethereum
 import iocapture
 
+HOMESTEAD_BLOCK_NUMBER = 1150000
+
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
 sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
 
 from upload_contracts import ContractLoader
 
 contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
+contracts._ContractLoader__state.block.number += HOMESTEAD_BLOCK_NUMBER # enable DELEGATECALL opcode
 
 shareTokenContractTranslator = ethereum.abi.ContractTranslator('[{"constant": false, "type": "function", "name": "allowance(address,address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "address", "name": "spender"}]}, {"constant": false, "type": "function", "name": "approve(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "spender"}, {"type": "uint256", "name": "value"}]}, {"constant": false, "type": "function", "name": "balanceOf(address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "address"}]}, {"constant": false, "type": "function", "name": "changeTokens(int256,int256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "int256", "name": "trader"}, {"type": "int256", "name": "amount"}]}, {"constant": false, "type": "function", "name": "createShares(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "uint256", "name": "fxpValue"}]}, {"constant": false, "type": "function", "name": "destroyShares(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "uint256", "name": "fxpValue"}]}, {"constant": false, "type": "function", "name": "getDecimals()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "getName()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "getSymbol()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "modifySupply(int256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "int256", "name": "amount"}]}, {"constant": false, "type": "function", "name": "setController(address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "newController"}]}, {"constant": false, "type": "function", "name": "suicideFunds(address)", "outputs": [], "inputs": [{"type": "address", "name": "to"}]}, {"constant": false, "type": "function", "name": "totalSupply()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "transfer(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "to"}, {"type": "uint256", "name": "value"}]}, {"constant": false, "type": "function", "name": "transferFrom(address,address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "from"}, {"type": "address", "name": "to"}, {"type": "uint256", "name": "value"}]}, {"inputs": [{"indexed": true, "type": "address", "name": "owner"}, {"indexed": true, "type": "address", "name": "spender"}, {"indexed": false, "type": "uint256", "name": "value"}], "type": "event", "name": "Approval(address,address,uint256)"}, {"inputs": [{"indexed": true, "type": "address", "name": "from"}, {"indexed": true, "type": "address", "name": "to"}, {"indexed": false, "type": "uint256", "name": "value"}], "type": "event", "name": "Transfer(address,address,uint256)"}, {"inputs": [{"indexed": false, "type": "int256", "name": "from"}, {"indexed": false, "type": "int256", "name": "to"}, {"indexed": false, "type": "int256", "name": "value"}, {"indexed": false, "type": "int256", "name": "senderBalance"}, {"indexed": false, "type": "int256", "name": "sender"}, {"indexed": false, "type": "int256", "name": "spenderMaxValue"}], "type": "event", "name": "echo(int256,int256,int256,int256,int256,int256)"}]')
 
@@ -1022,14 +1025,52 @@ def test_CancelOrder():
         test_exceptions()
     test_publicCancelOrder()
 
+def test_TakeAskOrder():
+    global contracts
+    t = contracts._ContractLoader__tester
+    def test_takeAskOrder():
+        contracts._ContractLoader__state.mine(1)
+        assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
+        assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
+        contracts._ContractLoader__state.mine(1)
+        orderType = 2                   # ask
+        fxpAmount = 1000000000000000000 # fixed-point 1
+        fxpPrice = 1600000000000000000  # fixed-point 1.6
+        outcomeID = 2
+        tradeGroupID = 42
+        eventID = createBinaryEvent()
+        marketID = createBinaryMarket(eventID)
+        assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
+        assert(contracts.cash.approve(contracts.takeAskOrder.address, fix(10), sender=t.k2) == 1), "Approve takeAskOrder contract to spend cash from account 2"
+        makerInitialCash = contracts.cash.balanceOf(t.a1)
+        takerInitialCash = contracts.cash.balanceOf(t.a2)
+        marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+        assert(orderID != 0), "Order ID should be non-zero"
+        contracts._ContractLoader__state.mine(1)
+        fxpAmountTakerWants = int(fxpAmount / 10)
+        tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=t.k2)
+        assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
+        contracts._ContractLoader__state.mine(1)
+        fxpAmountRemaining = contracts.takeAskOrder.takeAskOrder(t.a2, orderID, fxpAmountTakerWants, sender=t.k0)
+        assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
+    test_takeAskOrder()
+
+def test_TakeBidOrder():
+    global contracts
+    t = contracts._ContractLoader__tester
+    def test_takeBidOrder():
+        pass
+    test_takeBidOrder()
+
 def test_TakeOrder():
     global contracts
     t = contracts._ContractLoader__tester
     def test_publicTakeOrder():
         def test_takeAskOrder():
             contracts._ContractLoader__state.mine(1)
-            assert(contracts.cash.publicDepositEther(value=fix(1000), sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
-            assert(contracts.cash.publicDepositEther(value=fix(1000), sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
+            assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
+            assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
             contracts._ContractLoader__state.mine(1)
             orderType = 2                   # ask
             fxpAmount = 1000000000000000000 # fixed-point 1
@@ -1039,7 +1080,7 @@ def test_TakeOrder():
             eventID = createBinaryEvent()
             marketID = createBinaryMarket(eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
-            assert(contracts.cash.approve(contracts.takeAskOrder.address, fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
+            assert(contracts.cash.approve(contracts.takeOrder.address, fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             takerInitialCash = contracts.cash.balanceOf(t.a2)
             marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -1051,7 +1092,6 @@ def test_TakeOrder():
             assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
             contracts._ContractLoader__state.mine(1)
             fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=t.k2)
-            # fxpAmountRemaining = contracts.takeAskOrder.takeAskOrder(t.a2, orderID, fxpAmountTakerWants, sender=t.k0)
             assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
         def test_takeBidOrder():
             pass
