@@ -39,7 +39,7 @@ def setSlashed(branch, votePeriod, reporter):
 
 def setRefund(refunder, amount):
     self.controller.assertIsWhitelisted(msg.sender)
-    self.refunds[refunder] = amt
+    self.refunds[refunder] = amount
     return(1)
 
 def doRefund(sender, refunder):

@@ -495,7 +495,21 @@ def test_consensusData(contracts, s, t):
         assert(c.setNotEnoughPenalized(branch1, address2, period1) == 1), "setNotEnoughPenalized wasn't executed successfully"
         assert(c.getNotEnoughPenalized(branch1, address2, period1) == 1), "notEnoughReportsPenalized should be set to 1"
 
-    # TODO: setRefund - doRefund
+    def test_refund():
+        # first get the starting balance for account 0 and account 2
+        acc0Bal = s.block.get_balance(t.a0)
+        acc2Bal = s.block.get_balance(t.a2)
+
+        assert(c.setRefund(t.a0, 100, value=100, sender=t.k0) == 1), "setRefund wasn't executed successfully"
+        assert(s.block.get_balance(t.a0) == acc0Bal - 100), "account 0 balance should have reduced by 100 from the original balance"
+        assert(c.doRefund(t.a2, t.a0) == 1), "doRefund wasn't executed successfully"
+        assert(s.block.get_balance(t.a2) == acc2Bal + 100), "account 2 should have had it's balance increase by 100 from the original balance"
+        # confirm that if we try to refund again it should fail due to lack of funds...
+        try:
+            raise Exception(c.doRefund(t.a2, t.a0))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "doRefund should fail if there aren't enough funds to send"
+
     test_baseReporting()
     test_slashed()
     test_feeFirst()
@@ -503,6 +517,7 @@ def test_consensusData(contracts, s, t):
     test_denominator()
     test_collections()
     test_penalization()
+    test_refund()
     print("data_api/consensusData.se unit tests completed")
 
 def test_events(contracts, s, t):
@@ -676,218 +691,6 @@ def test_events(contracts, s, t):
     test_rejection()
     print("data_api/events.se unit tests completed")
 
-def test_info(contracts, s, t):
-    c = contracts.info
-    branch1 = 1010101
-    branch2 = 2020202
-    cashAddr = long(contracts.cash.address.encode("hex"), 16)
-    cashWallet = contracts.branches.getBranchWallet(branch1, cashAddr)
-    address0 = long(t.a0.encode("hex"), 16)
-    address1 = long(t.a1.encode("hex"), 16)
-    ONE = 10**18
-    expectedCreationFee = 10 * ONE
-
-    def test_defaults():
-        assert(c.getCreator(branch1) == address0), "creator of default branch wasn't the expected address"
-        assert(c.getDescription(branch1) == 'Root branch'), "description for default branch should be 'Root branch'"
-        assert(c.getDescriptionLength(branch1) == 11), "descriptionLength should be 11 by default"
-        assert(c.getCreationFee(branch1) == expectedCreationFee), "the creation fee for the default branch wasn't the expected creation fee (10 * ONE)"
-        assert(c.getCurrency(branch1) == 0), "the default currency for the default branch should be set to 0 by default"
-        assert(c.getWallet(branch1) == 0), "the default wallet for the default branch should be set to 0 by default"
-
-    def test_currency():
-        assert(c.getCurrency(branch1) == 0), "the default currency for the default branch should be set to 0 by default"
-        assert(c.getWallet(branch1) == 0), "the default wallet for the default branch should be set to 0 by default"
-        assert(c.setCurrencyAndWallet(branch1, cashAddr, cashWallet) == 1), "setCurrencyAndWallet wasn't executed successfully"
-        assert(c.getCurrency(branch1) == cashAddr), "currency for default branch didn't get set to the cash address as expected"
-        assert(c.getWallet(branch1) == cashWallet), "wallet for the default branch wasn't set to the cash wallet as expected"
-
-    def test_setInfo():
-        assert(c.setInfo(branch1, 'Hello World', address0, expectedCreationFee, cashAddr, cashWallet) == 0), "default branch already exists, so this shouldn't change anything and return 0"
-        assert(c.getDescription(branch1) == 'Root branch'), "Confirm that the description hasn't changed because setInfo should have failed and returned 0"
-        assert(c.getCreator(branch2) == 0), "branch2 shouldn't have been added to info yet and the creator should be set to 0."
-        assert(c.setInfo(branch2, 'Test Branch', address1, expectedCreationFee, cashAddr, cashWallet) == 1), "setInfo wasn't successfully executed when it should have been"
-        assert(c.getCreator(branch2) == address1), "creator of branch2 wasn't the expected address"
-        assert(c.getDescription(branch2) == 'Test Branch'), "description for branch2 should be 'Test Branch'"
-        assert(c.getDescriptionLength(branch2) == 11), "descriptionLength should be 11 by default"
-        assert(c.getCreationFee(branch2) == expectedCreationFee), "the creation fee for branch2 wasn't the expected creation fee (10 * ONE)"
-        assert(c.getCurrency(branch2) == cashAddr), "the currency for the branch2 should be set to the cash currency address"
-        assert(c.getWallet(branch2) == cashWallet), "the wallet for branch2 should be set to the cash wallet address"
-
-    test_defaults()
-    test_currency()
-    test_setInfo()
-    print("data_api/info.se unit tests completed")
-
-def test_markets(contracts, s, t):
-    c = contracts.markets
-    branch1 = 1010101
-    market1 = 1111111111
-    event1 = 12345678901
-    period1 = contracts.branches.getVotePeriod(branch1)
-    gasSubsidy1 = 10**14*234
-    creationFee1 = 10**14*340
-    twoPercent = 10**16*2
-    ONE = 10**18
-    expirationDate1 = s.block.timestamp + 15
-    shareContractPath = os.path.join(src, 'functions/shareTokens.se')
-    shareContract1 = s.abi_contract(shareContractPath, sender=t.k0)
-    shareContract2 = s.abi_contract(shareContractPath, sender=t.k0)
-    shareAddr1 = long(shareContract1.address.encode('hex'), 16)
-    shareAddr2 = long(shareContract2.address.encode('hex'), 16)
-    shareContracts = [shareContract1.address, shareContract2.address]
-    tag1 = 'one'
-    tag2 = 'two'
-    tag3 = 'three'
-    longTag1 = long(tag1.encode('hex'), 16)
-    longTag2 = long(tag2.encode('hex'), 16)
-    longTag3 = long(tag3.encode('hex'), 16)
-    orderID1 = 12340001
-    orderID2 = 12340002
-    orderID3 = 12340003
-    orderID4 = 12340004
-    address0 = long(t.a0.encode("hex"), 16)
-    address1 = long(t.a1.encode("hex"), 16)
-
-    def test_marketInialization():
-        assert(c.getMarketsHash(branch1) == 0)
-        assert(c.initializeMarket(market1, event1, period1, twoPercent, branch1, tag1, tag2, tag3, ONE, 2, 'this is extra information', gasSubsidy1, creationFee1, expirationDate1, shareContracts, value=gasSubsidy1) == 1)
-        assert(c.getMarketsHash(branch1) != 0)
-        assert(c.getBranch(market1) == branch1)
-        assert(c.getMarketEvent(market1) == event1)
-        assert(c.getLastExpDate(market1) == expirationDate1)
-        assert(c.getTags(market1) == [longTag1, longTag2, longTag3])
-        assert(c.getTopic(market1) == longTag1)
-        assert(c.getFees(market1) == creationFee1)
-        assert(c.getTradingFee(market1) == twoPercent)
-        assert(c.getVolume(market1) == 0)
-        assert(c.getExtraInfo(market1) == 'this is extra information')
-        assert(c.getExtraInfoLength(market1) == 25)
-        assert(c.getGasSubsidy(market1) == gasSubsidy1)
-        assert(c.getMarketNumOutcomes(market1) == 2)
-        assert(c.getCumulativeScale(market1) == ONE)
-
-    def test_marketOrders():
-        assert(c.getOrderIDs(market1) == [])
-        assert(c.getTotalOrders(market1) == 0)
-        assert(c.getLastOrder(market1) == 0)
-
-        assert(c.addOrder(market1, orderID1) == 1)
-        assert(c.addOrder(market1, orderID2) == 1)
-        assert(c.addOrder(market1, orderID3) == 1)
-        assert(c.addOrder(market1, orderID4) == 1)
-
-        assert(c.getOrderIDs(market1) == [orderID4, orderID3, orderID2, orderID1])
-        assert(c.getTotalOrders(market1) == 4)
-        assert(c.getLastOrder(market1) == orderID4)
-        assert(c.getPrevID(market1, orderID4) == orderID3)
-        assert(c.getPrevID(market1, orderID3) == orderID2)
-        assert(c.getPrevID(market1, orderID2) == orderID1)
-        assert(c.getPrevID(market1, orderID1) == 0)
-
-        assert(c.removeOrderFromMarket(market1, orderID2) == 1)
-
-        assert(c.getOrderIDs(market1) == [orderID4, orderID3, orderID1])
-        assert(c.getPrevID(market1, orderID3) == orderID1)
-        assert(c.getPrevID(market1, orderID2) == 0)
-        assert(c.getLastOrder(market1) == orderID4)
-
-        assert(c.removeOrderFromMarket(market1, orderID4) == 1)
-
-        assert(c.getOrderIDs(market1) == [orderID3, orderID1])
-        assert(c.getPrevID(market1, orderID4) == 0)
-        assert(c.getLastOrder(market1) == orderID3)
-        assert(c.getTotalOrders(market1) == 2)
-
-    def test_marketShares():
-        assert(c.getSharesValue(market1) == 0)
-        assert(c.getMarketShareContracts(market1) == [shareAddr1, shareAddr2])
-        assert(c.getTotalSharesPurchased(market1) == 0)
-        assert(c.getSharesPurchased(market1, 1) == 0)
-        assert(c.getSharesPurchased(market1, 2) == 0)
-        assert(c.getParticipantSharesPurchased(market1, address1, 1) == 0)
-        assert(c.getParticipantSharesPurchased(market1, address1, 2) == 0)
-
-        assert(c.modifyShares(market1, 1, 100) == 1)
-        assert(c.getTotalSharesPurchased(market1) == 100)
-        assert(c.getSharesPurchased(market1, 1) == 100)
-
-        assert(c.modifySharesValue(market1, ONE) == 1)
-        assert(c.getSharesValue(market1) == ONE)
-
-        assert(c.getVolume(market1) == 0)
-        assert(c.modifyParticipantShares(market1, address1, 2, 200, 1) == 1)
-        assert(c.getVolume(market1) == 200)
-        # shares
-            # modifyShares(market, outcome, fxpAmount):
-            # modifySharesValue(market, fxpAmount):
-            # modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
-            # getSharesValue(market):
-            # getSharesPurchased(market, outcome):
-            # getMarketShareContracts(market):
-            # getParticipantSharesPurchased(market, trader, outcome):
-            # getTotalSharesPurchased(market):
-            # getVolume(market):
-        # TODO: Question, why is changeTokens/modifySupply in shareContracts deprecated and what should i use instead?
-
-    def test_marketSettings():
-        currentMarketHash = c.getMarketsHash(branch1)
-        assert(c.addToMarketsHash(branch1, 123412341234) == 1)
-        assert(c.getMarketsHash(branch1) != currentMarketHash)
-
-        assert(c.getFees(market1) == creationFee1)
-        assert(c.addFees(market1, 100) == 1)
-        assert(c.getFees(market1) == creationFee1 + 100)
-
-        assert(c.getTradingPeriod(market1) == period1)
-        assert(c.getOriginalTradingPeriod(market1) == period1)
-        assert(c.setTradingPeriod(market1, period1 + 10) == 1)
-        assert(c.getOriginalTradingPeriod(market1) == period1)
-        assert(c.getTradingPeriod(market1) == period1 + 10)
-
-        assert(c.getTradingFee(market1) == twoPercent)
-        assert(c.setTradingFee(market1, twoPercent + 10**13) == twoPercent + 10**13)
-        assert(c.getTradingFee(market1) == twoPercent + 10**13)
-
-        assert(c.getBondsMan(market1) == 0)
-        assert(c.getPushedForward(market1) == 0)
-        assert(c.setPushedForward(market1, 1, address1) == 1)
-        assert(c.getPushedForward(market1) == 1)
-        assert(c.getBondsMan(market1) == address1)
-
-        assert(c.getLastOutcomePrice(market1, 1) == 0)
-        assert(c.getLastOutcomePrice(market1, 2) == 0)
-        assert(c.setPrice(market1, 1, 123) == 1)
-        assert(c.setPrice(market1, 2, 456) == 1)
-        assert(c.getLastOutcomePrice(market1, 1) == 123)
-        assert(c.getLastOutcomePrice(market1, 2) == 456)
-
-        assert(c.getMarketResolved(market1) == 0)
-        assert(c.setMarketResolved(market1) == 1)
-        assert(c.getMarketResolved(market1) == 1)
-
-        addr1Bal = s.block.get_balance(t.a1)
-        assert(s.block.get_balance(t.a1) == addr1Bal)
-        assert(c.refundClosing(market1, address1) == 1)
-        assert(s.block.get_balance(t.a1) == addr1Bal + gasSubsidy1)
-
-
-    test_marketInialization()
-    test_marketOrders()
-    # test_marketShares()
-    test_marketSettings()
-    print("data_api/markets.se unit tests complete")
-
-def test_mutex(contracts, s, t):
-    c = contracts.mutex
-    assert(c.acquire() == 1), "acquire should return 1 if the mutex isn't already set."
-    try:
-        raise Exception(c.acquire())
-    except Exception as exc:
-        assert(isinstance(exc, t.TransactionFailed)), "mutex should already be set so attempting to call acquire again should fail"
-    assert(c.release() == 1), "release shoud return 1 and release the mutex"
-    print("data_api/mutex.se unit tests completed")
-
 def test_expiringEvents(contracts, s, t):
     c = contracts.expiringEvents
     branch1 = 1010101
@@ -910,27 +713,27 @@ def test_expiringEvents(contracts, s, t):
     subsidy1 = 15*ONE
 
     def test_addEvent():
-        assert(c.getEvents(branch1, period1) == [])
-        assert(c.getEventsRange(branch1, period1, 0, 5) == [0, 0, 0, 0, 0])
-        assert(c.getNumberEvents(branch1, period1) == 0)
-        assert(c.getEventIndex(branch1, period1, event1) == 0)
-        assert(c.getEvent(branch1, period1, 0) == 0)
-        assert(c.addEvent(branch1, period1, event1, subsidy1, cashAddr, cashWallet, 0) == 1)
-        assert(contracts.events.initializeEvent(event1, branch1, period1, ONE, ONE*2, 2, "https://someresolution.eth", address0, address1, address2) == 1)
-        assert(c.addEvent(branch1, period1, event2, subsidy1, cashAddr, cashWallet, 0) == 1)
-        assert(contracts.events.initializeEvent(event2, branch1, period1, ONE, ONE*4, 4, "https://someresolution.eth", address0, address1, address2) == 1)
-        assert(c.getEvents(branch1, period1) == [event1, event2])
-        assert(c.getEventsRange(branch1, period1, 0, 5) == [event1, event2, 0, 0, 0])
-        assert(c.getNumberEvents(branch1, period1) == 2)
-        assert(c.getEventIndex(branch1, period1, event1) == 0)
-        assert(c.getEventIndex(branch1, period1, event2) == 1)
-        assert(c.getEvent(branch1, period1, 0) == event1)
-        assert(c.getEvent(branch1, period1, 1) == event2)
+        assert(c.getEvents(branch1, period1) == []), "events should be an empty array"
+        assert(c.getEventsRange(branch1, period1, 0, 5) == [0, 0, 0, 0, 0]), "events ranged 0 to 5 should have been an array of 0s"
+        assert(c.getNumberEvents(branch1, period1) == 0), "number of events should be 0 by default"
+        assert(c.getEventIndex(branch1, period1, event1) == 0), "event at event1 position should be 0 since it hasn't been added yet"
+        assert(c.getEvent(branch1, period1, 0) == 0), "event 0 should be 0 as no event has been added"
+        assert(c.addEvent(branch1, period1, event1, subsidy1, cashAddr, cashWallet, 0) == 1), "addEvent didn't execute successfully"
+        assert(contracts.events.initializeEvent(event1, branch1, period1, ONE, ONE*2, 2, "https://someresolution.eth", address0, address1, address2) == 1), "events.initializeEvent didn't execute successfully"
+        assert(c.addEvent(branch1, period1, event2, subsidy1, cashAddr, cashWallet, 0) == 1), "addEvent didn't execute successfully"
+        assert(contracts.events.initializeEvent(event2, branch1, period1, ONE, ONE*4, 4, "https://someresolution.eth", address0, address1, address2) == 1), "events.initializeEvent didn't execute successfully"
+        assert(c.getEvents(branch1, period1) == [event1, event2]), "events should be an array contianing event1 and event2"
+        assert(c.getEventsRange(branch1, period1, 0, 5) == [event1, event2, 0, 0, 0]), "events ranging from 0 to 5 should include event1, event2, and then three 0s"
+        assert(c.getNumberEvents(branch1, period1) == 2), "number of Events should be 2"
+        assert(c.getEventIndex(branch1, period1, event1) == 0), "event1 should be at the 0 index"
+        assert(c.getEventIndex(branch1, period1, event2) == 1), "event2 should be at the 1 index"
+        assert(c.getEvent(branch1, period1, 0) == event1), "index 0 should return event1"
+        assert(c.getEvent(branch1, period1, 1) == event2), "index 1 should return event2"
 
     def test_fees():
-        assert(c.getFeeValue(branch1, period1) == 0)
-        assert(c.adjustPeriodFeeValue(branch1, period1, 100) == 1)
-        assert(c.getFeeValue(branch1, period1) == 100)
+        assert(c.getFeeValue(branch1, period1) == 0), "fee should be 0 by default"
+        assert(c.adjustPeriodFeeValue(branch1, period1, 100) == 1), "adjustPeriodFeeValue wasn't executed successfully"
+        assert(c.getFeeValue(branch1, period1) == 100), "fee should be set to 100"
 
     def test_rep():
         assert(c.getBeforeRep(branch1, period1, address0) == 0)
@@ -1056,6 +859,211 @@ def test_expiringEvents(contracts, s, t):
     test_reporting()
     test_eventModification()
     print("data_api/expiringEvents.se unit tests completed")
+
+def test_info(contracts, s, t):
+    c = contracts.info
+    branch1 = 1010101
+    branch2 = 2020202
+    cashAddr = long(contracts.cash.address.encode("hex"), 16)
+    cashWallet = contracts.branches.getBranchWallet(branch1, cashAddr)
+    address0 = long(t.a0.encode("hex"), 16)
+    address1 = long(t.a1.encode("hex"), 16)
+    ONE = 10**18
+    expectedCreationFee = 10 * ONE
+
+    def test_defaults():
+        assert(c.getCreator(branch1) == address0), "creator of default branch wasn't the expected address"
+        assert(c.getDescription(branch1) == 'Root branch'), "description for default branch should be 'Root branch'"
+        assert(c.getDescriptionLength(branch1) == 11), "descriptionLength should be 11 by default"
+        assert(c.getCreationFee(branch1) == expectedCreationFee), "the creation fee for the default branch wasn't the expected creation fee (10 * ONE)"
+        assert(c.getCurrency(branch1) == 0), "the default currency for the default branch should be set to 0 by default"
+        assert(c.getWallet(branch1) == 0), "the default wallet for the default branch should be set to 0 by default"
+
+    def test_currency():
+        assert(c.getCurrency(branch1) == 0), "the default currency for the default branch should be set to 0 by default"
+        assert(c.getWallet(branch1) == 0), "the default wallet for the default branch should be set to 0 by default"
+        assert(c.setCurrencyAndWallet(branch1, cashAddr, cashWallet) == 1), "setCurrencyAndWallet wasn't executed successfully"
+        assert(c.getCurrency(branch1) == cashAddr), "currency for default branch didn't get set to the cash address as expected"
+        assert(c.getWallet(branch1) == cashWallet), "wallet for the default branch wasn't set to the cash wallet as expected"
+
+    def test_setInfo():
+        assert(c.setInfo(branch1, 'Hello World', address0, expectedCreationFee, cashAddr, cashWallet) == 0), "default branch already exists, so this shouldn't change anything and return 0"
+        assert(c.getDescription(branch1) == 'Root branch'), "Confirm that the description hasn't changed because setInfo should have failed and returned 0"
+        assert(c.getCreator(branch2) == 0), "branch2 shouldn't have been added to info yet and the creator should be set to 0."
+        assert(c.setInfo(branch2, 'Test Branch', address1, expectedCreationFee, cashAddr, cashWallet) == 1), "setInfo wasn't successfully executed when it should have been"
+        assert(c.getCreator(branch2) == address1), "creator of branch2 wasn't the expected address"
+        assert(c.getDescription(branch2) == 'Test Branch'), "description for branch2 should be 'Test Branch'"
+        assert(c.getDescriptionLength(branch2) == 11), "descriptionLength should be 11 by default"
+        assert(c.getCreationFee(branch2) == expectedCreationFee), "the creation fee for branch2 wasn't the expected creation fee (10 * ONE)"
+        assert(c.getCurrency(branch2) == cashAddr), "the currency for the branch2 should be set to the cash currency address"
+        assert(c.getWallet(branch2) == cashWallet), "the wallet for branch2 should be set to the cash wallet address"
+
+    test_defaults()
+    test_currency()
+    test_setInfo()
+    print("data_api/info.se unit tests completed")
+
+def test_markets(contracts, s, t):
+    c = contracts.markets
+    branch1 = 1010101
+    market1 = 1111111111
+    event1 = 12345678901
+    period1 = contracts.branches.getVotePeriod(branch1)
+    gasSubsidy1 = 10**14*234
+    creationFee1 = 10**14*340
+    twoPercent = 10**16*2
+    ONE = 10**18
+    expirationDate1 = s.block.timestamp + 15
+    shareContractPath = os.path.join(src, 'functions/shareTokens.se')
+    walletContractPath = os.path.join(src, 'functions/wallet.se')
+
+    shareContract1 = s.abi_contract(shareContractPath, sender=t.k0)
+    shareContract2 = s.abi_contract(shareContractPath, sender=t.k0)
+    walletContract1 = s.abi_contract(walletContractPath, sender=t.k0)
+    walletContract2 = s.abi_contract(walletContractPath, sender=t.k0)
+    walletContract1.initialize(shareContract1.address)
+    walletContract2.initialize(shareContract2.address)
+    shareAddr1 = long(shareContract1.address.encode('hex'), 16)
+    shareAddr2 = long(shareContract2.address.encode('hex'), 16)
+    walletAddr1 = long(walletContract1.address.encode('hex'), 16)
+    walletAddr2 = long(walletContract2.address.encode('hex'), 16)
+    shareContracts = [shareContract1.address, shareContract2.address]
+    walletContracts = [walletContract1.address, walletContract2.address]
+    tag1 = 'one'
+    tag2 = 'two'
+    tag3 = 'three'
+    longTag1 = long(tag1.encode('hex'), 16)
+    longTag2 = long(tag2.encode('hex'), 16)
+    longTag3 = long(tag3.encode('hex'), 16)
+    orderID1 = 12340001
+    orderID2 = 12340002
+    orderID3 = 12340003
+    orderID4 = 12340004
+    address0 = long(t.a0.encode("hex"), 16)
+    address1 = long(t.a1.encode("hex"), 16)
+
+    def test_marketInialization():
+        assert(c.getMarketsHash(branch1) == 0)
+        assert(c.initializeMarket(market1, event1, period1, twoPercent, branch1, tag1, tag2, tag3, ONE, 2, 'this is extra information', gasSubsidy1, creationFee1, expirationDate1, shareContracts, walletContracts, value=gasSubsidy1) == 1)
+        assert(c.getMarketsHash(branch1) != 0)
+        assert(c.getBranch(market1) == branch1)
+        assert(c.getMarketEvent(market1) == event1)
+        assert(c.getLastExpDate(market1) == expirationDate1)
+        assert(c.getTags(market1) == [longTag1, longTag2, longTag3])
+        assert(c.getTopic(market1) == longTag1)
+        assert(c.getFees(market1) == creationFee1)
+        assert(c.getTradingFee(market1) == twoPercent)
+        assert(c.getVolume(market1) == 0)
+        assert(c.getExtraInfo(market1) == 'this is extra information')
+        assert(c.getExtraInfoLength(market1) == 25)
+        assert(c.getGasSubsidy(market1) == gasSubsidy1)
+        assert(c.getMarketNumOutcomes(market1) == 2)
+        assert(c.getCumulativeScale(market1) == ONE)
+
+    def test_marketOrders():
+        assert(c.getOrderIDs(market1) == [])
+        assert(c.getTotalOrders(market1) == 0)
+        assert(c.getLastOrder(market1) == 0)
+
+        assert(c.addOrder(market1, orderID1) == 1)
+        assert(c.addOrder(market1, orderID2) == 1)
+        assert(c.addOrder(market1, orderID3) == 1)
+        assert(c.addOrder(market1, orderID4) == 1)
+
+        assert(c.getOrderIDs(market1) == [orderID4, orderID3, orderID2, orderID1])
+        assert(c.getTotalOrders(market1) == 4)
+        assert(c.getLastOrder(market1) == orderID4)
+        assert(c.getPrevID(market1, orderID4) == orderID3)
+        assert(c.getPrevID(market1, orderID3) == orderID2)
+        assert(c.getPrevID(market1, orderID2) == orderID1)
+        assert(c.getPrevID(market1, orderID1) == 0)
+
+        assert(c.removeOrderFromMarket(market1, orderID2) == 1)
+
+        assert(c.getOrderIDs(market1) == [orderID4, orderID3, orderID1])
+        assert(c.getPrevID(market1, orderID3) == orderID1)
+        assert(c.getPrevID(market1, orderID2) == 0)
+        assert(c.getLastOrder(market1) == orderID4)
+
+        assert(c.removeOrderFromMarket(market1, orderID4) == 1)
+
+        assert(c.getOrderIDs(market1) == [orderID3, orderID1])
+        assert(c.getPrevID(market1, orderID4) == 0)
+        assert(c.getLastOrder(market1) == orderID3)
+        assert(c.getTotalOrders(market1) == 2)
+
+    def test_marketShares():
+        assert(c.getSharesValue(market1) == 0)
+        assert(c.getMarketShareContracts(market1) == [shareAddr1, shareAddr2])
+        assert(c.getTotalSharesPurchased(market1) == 0)
+        assert(c.getSharesPurchased(market1, 1) == 0)
+        assert(c.getSharesPurchased(market1, 2) == 0)
+        assert(c.getParticipantSharesPurchased(market1, address1, 1) == 0)
+        assert(c.getParticipantSharesPurchased(market1, address1, 2) == 0)
+        assert(c.modifySharesValue(market1, ONE) == 1)
+        assert(c.getSharesValue(market1) == ONE)
+        assert(c.getVolume(market1) == 0)
+        assert(c.getOutcomeShareWallet(market1, 1) == walletAddr1)
+        assert(c.getOutcomeShareWallet(market1, 2) == walletAddr2)
+        assert(c.getOutcomeShareContract(market1, 1) == shareAddr1)
+        assert(c.getOutcomeShareContract(market1, 2) == shareAddr2)
+
+    def test_marketSettings():
+        currentMarketHash = c.getMarketsHash(branch1)
+        assert(c.addToMarketsHash(branch1, 123412341234) == 1)
+        assert(c.getMarketsHash(branch1) != currentMarketHash)
+
+        assert(c.getFees(market1) == creationFee1)
+        assert(c.addFees(market1, 100) == 1)
+        assert(c.getFees(market1) == creationFee1 + 100)
+
+        assert(c.getTradingPeriod(market1) == period1)
+        assert(c.getOriginalTradingPeriod(market1) == period1)
+        assert(c.setTradingPeriod(market1, period1 + 10) == 1)
+        assert(c.getOriginalTradingPeriod(market1) == period1)
+        assert(c.getTradingPeriod(market1) == period1 + 10)
+
+        assert(c.getTradingFee(market1) == twoPercent)
+        assert(c.setTradingFee(market1, twoPercent + 10**13) == twoPercent + 10**13)
+        assert(c.getTradingFee(market1) == twoPercent + 10**13)
+
+        assert(c.getBondsMan(market1) == 0)
+        assert(c.getPushedForward(market1) == 0)
+        assert(c.setPushedForward(market1, 1, address1) == 1)
+        assert(c.getPushedForward(market1) == 1)
+        assert(c.getBondsMan(market1) == address1)
+
+        assert(c.getLastOutcomePrice(market1, 1) == 0)
+        assert(c.getLastOutcomePrice(market1, 2) == 0)
+        assert(c.setPrice(market1, 1, 123) == 1)
+        assert(c.setPrice(market1, 2, 456) == 1)
+        assert(c.getLastOutcomePrice(market1, 1) == 123)
+        assert(c.getLastOutcomePrice(market1, 2) == 456)
+
+        assert(c.getMarketResolved(market1) == 0)
+        assert(c.setMarketResolved(market1) == 1)
+        assert(c.getMarketResolved(market1) == 1)
+
+        addr1Bal = s.block.get_balance(t.a1)
+        assert(s.block.get_balance(t.a1) == addr1Bal)
+        assert(c.refundClosing(market1, address1) == 1)
+        assert(s.block.get_balance(t.a1) == addr1Bal + gasSubsidy1)
+
+    test_marketInialization()
+    test_marketOrders()
+    test_marketShares()
+    test_marketSettings()
+    print("data_api/markets.se unit tests complete")
+
+def test_mutex(contracts, s, t):
+    c = contracts.mutex
+    assert(c.acquire() == 1), "acquire should return 1 if the mutex isn't already set."
+    try:
+        raise Exception(c.acquire())
+    except Exception as exc:
+        assert(isinstance(exc, t.TransactionFailed)), "mutex should already be set so attempting to call acquire again should fail"
+    assert(c.release() == 1), "release shoud return 1 and release the mutex"
+    print("data_api/mutex.se unit tests completed")
 
 def test_orders(contracts, s, t):
     c = contracts.orders
@@ -1204,8 +1212,7 @@ if __name__ == '__main__':
     test_mutex(contracts, state, t)
     test_orders(contracts, state, t)
     test_register(contracts, state, t)
-    test_topics(contracts, state, t)
-    # data_api/fxpFunctions.se
     # data_api/reporting.se
     # data_api/reportingThreshold.se
+    test_topics(contracts, state, t)
     print "FINISH TESTING DATA_API"
