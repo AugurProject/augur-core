@@ -1,2 +1,2 @@
-ethereum
+ethereum>=1.6.1
 serpent>=1.19
