@@ -1086,8 +1086,12 @@ def test_orders(contracts, s, t):
     def test_hashcommit():
         order = c.makeOrderHash(market1, 1, 1)
         assert(order != 0), "makeOrderHash for market1 shouldn't be 0"
+
         assert(c.commitOrder(order) == 1), "commitOrder wasn't executed successfully"
-        assert(c.checkHash(order, address0) == -1), "checkHash for order should be -1"
+        try:
+            raise Exception(c.checkHash(order, address0))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "checkHash for order should throw because that order was placed in the same block we are checking"
         # move the block.number up 1
         s.mine(1)
         assert(c.checkHash(order, address0) == 1), "checkHash for order should now be 1"
@@ -1119,15 +1123,15 @@ def test_orders(contracts, s, t):
         try:
             raise Exception(c.fillOrder(order1, ONE*20, 0, 0))
         except Exception as exc:
-            assert(isinstance(exc, t.TransactionFailed))
+            assert(isinstance(exc, t.TransactionFailed)), "fillOrder should fail if fill is greated then the amount of the order"
         try:
             raise Exception(c.fillOrder(order1, ONE*10, 0, ONE*20))
         except Exception as exc:
-            assert(isinstance(exc, t.TransactionFailed))
+            assert(isinstance(exc, t.TransactionFailed)), "fillOrder should fail if shares is greater than the sharesEscrowed in the order"
         try:
             raise Exception(c.fillOrder(order1, ONE*10, ONE*20, 0))
         except Exception as exc:
-            assert(isinstance(exc, t.TransactionFailed))
+            assert(isinstance(exc, t.TransactionFailed)), "fillOrder should fail if money is greater than the moneyEscrowed in the order"
         # fully fill
         assert(c.fillOrder(order1, ONE*10, 0, ONE*10) == 1), "fillOrder wasn't executed successfully"
         # prove all
