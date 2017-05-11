@@ -176,18 +176,6 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         ORDERS.removeOrder(orderID)
         MARKETS.removeOrderFromMarket(market, orderID)
 
-    # TODO remove this (?)
-    # If still before voting period has started count the share value
-    # notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
-    # if(notVotingOnYet):
-    #     MARKETS.modifySharesValue(market, safeFxpMul(fxpAskerMoneyFilled, fxpCumulativeScale))
-    #     fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAskerMoneyFilled), fxpCumulativeScale)
-    #     feesInWei = safeFxpMul(BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
-    #     if(!feesInWei):
-    #         ~invalid()
-    #     MARKETS.addFees(market, feesInWei)
-    #     EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
-
     # Sell maker's complete sets
     fxpSharesHeld = -1
     i = 1
@@ -200,20 +188,18 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
             MARKETS.getOutcomeShareContract(market, i).destroyShares(owner, fxpSharesHeld)
             i += 1
         fxpCost = safeFxpMul(fxpSharesHeld, fxpCumulativeScale)
+
         # Send complete sets funds from the market to the user's account
         fxpFee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpSharesHeld), fxpCumulativeScale)
         if(!INFO.getWallet(market).transfer(owner, safeSub(fxpCost, fxpFee))):
             ~invalid()
+
+        # Send half of sell-complete-sets fees to the market creator
         if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fxpFee, 2))):
             ~invalid()
-        # TODO remove this (?)
-        # If still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
-        # notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
-        # if(notVotingOnYet):
-        #     MARKETS.modifySharesValue(market, safeFxpMul(-fxpSharesHeld, fxpCumulativeScale))
 
     # Transfer (price - minValue) * fxpBidderSharesFilled to market from bidder since market hasnt been paid yet after complete sets selling. The bidder has already paid for fxpBidderMoneyFilled by escrowing their money
-    if(fxpBidderSharesFilled):
+    if(fxpBidderSharesFilled > 0):
         if(!INFO.getCurrency(market).transferFrom(owner, market, safeFxpMul(safeSub(fxpPrice, minValue), fxpBidderSharesFilled))):
             ~invalid()
 
@@ -222,7 +208,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         ~invalid()
 
     # Transfer range * fxpAskerMoneyFilled to the market from asker for the amount of shares in fxpAskerMoneyFilled, for fxpAskerSharesFilled the asker simply has sent their shares to the bidder and thus doesn't have to put up money
-    if(fxpAskerMoneyFilled):
+    if(fxpAskerMoneyFilled > 0):
         if(!INFO.getCurrency(market).transferFrom(sender, market, safeFxpMul(fxpCumulativeScale, fxpAskerMoneyFilled))):
             ~invalid()
 
