@@ -401,6 +401,7 @@ class ContractLoader(object):
         ethereum.tester.gas_limit = 4200000
         self.__contracts = {}
         self.__temp_dir = TempDirCopy(source_dir)
+        self.__state.block.number += 1150000
         self.__source_dir = source_dir
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)

@@ -60,9 +60,9 @@ def takeOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     type = ORDERS.getType(orderID)
     # Fill orders
     if(type == BID):
-        fxpAmountRemaining = TAKEBIDORDER.takeBidOrder(sender, orderID, fxpAmountTakerWants)
+        fxpAmountRemaining = TAKEBIDORDER.takeBidOrder(sender, orderID, fxpAmountTakerWants, call=delegate)
     elif(type == ASK):
-        fxpAmountRemaining = FILLASKORDER.takeAskOrder(sender, orderID, fxpAmountTakerWants)
+        fxpAmountRemaining = FILLASKORDER.takeAskOrder(sender, orderID, fxpAmountTakerWants, call=delegate)
     else:
         ~invalid()
     return(fxpAmountRemaining: uint256)
