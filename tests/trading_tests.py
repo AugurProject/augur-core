@@ -9,9 +9,9 @@ Trading tests:
 + functions/cancelOrder.se
 + functions/shareTokens.se
 + functions/wallet.se
-- functions/takeAskOrder.se
-- functions/takeBidOrder.se
-- functions/takeOrder.se
++ functions/fillAskLibrary.se
++ functions/fillBidLibrary.se
++ functions/takeOrder.se
 - functions/marketModifiers.se
 - functions/offChainTrades.se
 - functions/claimMarketProceeds.se
@@ -1059,15 +1059,50 @@ def test_TakeAskOrder():
 def test_TakeBidOrder():
     global contracts
     t = contracts._ContractLoader__tester
-    def test_takeBidOrder():
-        pass
-    test_takeBidOrder()
+    def test_takeBidOrderWithoutShares():
+        global shareTokenContractTranslator
+        global outcomeShareContractWrapper
+        contracts._ContractLoader__state.mine(1)
+        assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
+        assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
+        contracts._ContractLoader__state.mine(1)
+        orderType = 1                   # bid
+        fxpAmount = 1000000000000000000 # fixed-point 1
+        fxpPrice = 1600000000000000000  # fixed-point 1.6
+        outcomeID = 2
+        tradeGroupID = 42
+        eventID = createBinaryEvent()
+        marketID = createBinaryMarket(eventID)
+        assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
+        assert(contracts.cash.approve(contracts.takeBidOrder.address, fix(10), sender=t.k2) == 1), "Approve takeBidOrder contract to spend cash from account 2"
+        fxpAllowance = fix(10)
+        outcomeShareContract = contracts.markets.getOutcomeShareContract(marketID, outcomeID)
+        abiEncodedData = shareTokenContractTranslator.encode("approve", [contracts.takeBidOrder.address, fxpAllowance])
+        assert(int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve takeBidOrder contract to spend shares from the user's account (account 2)"
+        assert(outcomeShareContractWrapper.allowance(outcomeShareContract, t.a2, contracts.takeBidOrder.address) == fxpAllowance), "takeBidOrder contract's allowance should be equal to the amount approved"
+        makerInitialCash = contracts.cash.balanceOf(t.a1)
+        takerInitialCash = contracts.cash.balanceOf(t.a2)
+        marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        # place a bid order (escrow cash)
+        orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+        assert(orderID != 0), "Order ID should be non-zero"
+        contracts._ContractLoader__state.mine(1)
+        fxpAmountTakerWants = int(fxpAmount / 10)
+        tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=t.k2)
+        assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
+        contracts._ContractLoader__state.mine(1)
+        assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == 600000000000000000), "Market's cash balance should be (price - 1)*amount"
+        fxpAmountRemaining = contracts.takeBidOrder.takeBidOrder(t.a2, orderID, fxpAmountTakerWants, sender=t.k0)
+        assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
+    test_takeBidOrderWithoutShares()
 
 def test_TakeOrder():
     global contracts
     t = contracts._ContractLoader__tester
     def test_publicTakeOrder():
         def test_takeAskOrder():
+            global shareTokenContractTranslator
+            global outcomeShareContractWrapper
             contracts._ContractLoader__state.mine(1)
             assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
             assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
@@ -1094,12 +1129,42 @@ def test_TakeOrder():
             fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=t.k2)
             assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
         def test_takeBidOrder():
-            pass
-        def test_exceptions():
-            pass
+            global shareTokenContractTranslator
+            global outcomeShareContractWrapper
+            contracts._ContractLoader__state.mine(1)
+            assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
+            assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
+            contracts._ContractLoader__state.mine(1)
+            orderType = 1                   # bid
+            fxpAmount = 1000000000000000000 # fixed-point 1
+            fxpPrice = 1600000000000000000  # fixed-point 1.6
+            outcomeID = 2
+            tradeGroupID = 42
+            eventID = createBinaryEvent()
+            marketID = createBinaryMarket(eventID)
+            assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
+            assert(contracts.cash.approve(contracts.takeOrder.address, fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
+            fxpAllowance = fix(10)
+            outcomeShareContract = contracts.markets.getOutcomeShareContract(marketID, outcomeID)
+            abiEncodedData = shareTokenContractTranslator.encode("approve", [contracts.takeOrder.address, fxpAllowance])
+            assert(int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve takeOrder contract to spend shares from the user's account (account 2)"
+            assert(outcomeShareContractWrapper.allowance(outcomeShareContract, t.a2, contracts.takeOrder.address) == fxpAllowance), "takeOrder contract's allowance should be equal to the amount approved"
+            makerInitialCash = contracts.cash.balanceOf(t.a1)
+            takerInitialCash = contracts.cash.balanceOf(t.a2)
+            marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+            # place a bid order (escrow cash)
+            orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+            assert(orderID != 0), "Order ID should be non-zero"
+            contracts._ContractLoader__state.mine(1)
+            fxpAmountTakerWants = int(fxpAmount / 10)
+            tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=t.k2)
+            assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
+            contracts._ContractLoader__state.mine(1)
+            assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == 600000000000000000), "Market's cash balance should be (price - 1)*amount"
+            fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=t.k2)
+            assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
         test_takeAskOrder()
         test_takeBidOrder()
-        test_exceptions()
     test_publicTakeOrder()
 
 def runtests():
@@ -1111,6 +1176,8 @@ def runtests():
     test_CompleteSets()
     test_MakeOrder()
     test_CancelOrder()
+    test_TakeAskOrder()
+    test_TakeBidOrder()
     test_TakeOrder()
 
 if __name__ == '__main__':
