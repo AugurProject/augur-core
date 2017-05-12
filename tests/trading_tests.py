@@ -26,6 +26,7 @@ import sys
 import json
 import ethereum
 import iocapture
+from decimal import *
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
 sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
@@ -58,10 +59,10 @@ def balanceOf(shareContract: address, address: address):
 eventCreationCounter = 0
 
 def fix(n):
-    return n * 10**18
+    return str((Decimal(str(n)) * Decimal(10)**Decimal(18)).quantize(0))
 
 def unfix(n):
-    return n / 10**18
+    return str(Decimal(str(n)) / Decimal(10)**Decimal(18))
 
 def hex2str(h):
     return hex(h)[2:-1]

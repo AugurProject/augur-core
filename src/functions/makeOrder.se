@@ -63,9 +63,9 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
         ~invalid()
 
     if(type == ASK):
-        escrow = self.placeAsk(sender, fxpAmount, fxpPrice, market, outcome, outitems = 2)
+        escrow = self.placeAsk(sender, fxpAmount, fxpPrice, market, outcome, outitems=2)
     elif(type == BID):
-        escrow = self.placeBid(sender, fxpAmount, fxpPrice, market, outcome, outitems = 2)
+        escrow = self.placeBid(sender, fxpAmount, fxpPrice, market, outcome, outitems=2)
     else:
         ~invalid()
 
@@ -73,7 +73,7 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
     fxpSharesEscrowed = escrow[1]
 
     order = [type, market, fxpAmount, fxpPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
-    orderID = ripemd160(order, items = 9)
+    orderID = ripemd160(order, items=9)
     if(ORDERS.getID(orderID)):
         ~invalid()
     ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
