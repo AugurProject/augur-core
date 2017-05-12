@@ -1115,8 +1115,8 @@ def test_orders(contracts, s, t):
         assert(c.getOrderOwner(order1) == address0), "orderOwner for order1 should be address0"
         assert(c.getOrderOwner(order2) == address1), "orderOwner for order2 should be address1"
 
-        assert(c.getType(order1) == 1), "type for order1 should be set to 1"
-        assert(c.getType(order2) == 2), "type for order2 should be set to 2"
+        assert(c.getEventType(order1) == 1), "type for order1 should be set to 1"
+        assert(c.getEventType(order2) == 2), "type for order2 should be set to 2"
 
     def test_fillOrder():
         # orderID, fill, money, shares
