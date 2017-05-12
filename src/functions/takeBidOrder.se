@@ -37,6 +37,7 @@ data controller
 event FillBid(market: indexed, sender: indexed, owner: indexed, type, fxpPrice, fxpAmount, timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
 
 macro MIN_TRADE_VALUE: 10000000000000000
+macro MAX_INT256_VALUE: 2**255 - 1
 
 # Trade types
 macro BID: 1
@@ -177,7 +178,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         MARKETS.removeOrderFromMarket(market, orderID)
 
     # Sell maker's complete sets
-    fxpSharesHeld = -1
+    fxpSharesHeld = MAX_INT256_VALUE
     i = 1
     while(i <= MARKETS.getMarketNumOutcomes(market)):
         fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, owner, i), fxpSharesHeld)

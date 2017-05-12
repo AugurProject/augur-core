@@ -37,6 +37,7 @@ data controller
 event FillAsk(market: indexed, sender: indexed, owner: indexed, type, fxpPrice, fxpAmount, timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled)
 
 macro MIN_TRADE_VALUE: 10000000000000000
+macro MAX_INT256_VALUE: 2**255 - 1
 
 # Trade types
 macro BID: 1
@@ -105,7 +106,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Account for ask-with-shares
     #  - Asker had shares and escrowed them and expects to be paid price - minValue for them
-    if(fxpSharesEscrowed):
+    if(fxpSharesEscrowed > 0):
         fxpFill = min(fxpSharesEscrowed, fxpAmountTakerWants)
         fxpAmountTakerWants = safeSub(fxpAmountTakerWants, fxpFill)
         fxpSumOfFills = safeAdd(fxpSumOfFills, fxpFill)
@@ -152,7 +153,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     MARKETS.modifyMarketVolume(market, fxpSumOfFills)
 
     # Sell taker complete sets
-    fxpSharesHeld = -1
+    fxpSharesHeld = MAX_INT256_VALUE
     i = 1
     while(i <= MARKETS.getMarketNumOutcomes(market)):
         fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, sender, i), fxpSharesHeld)
@@ -174,7 +175,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
             ~invalid()
 
     # Sell maker's complete sets
-    fxpSharesHeld = -1
+    fxpSharesHeld = MAX_INT256_VALUE
     i = 1
     while(i <= MARKETS.getMarketNumOutcomes(market)):
         fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, owner, i), fxpSharesHeld)
