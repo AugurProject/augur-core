@@ -37,6 +37,7 @@ data controller
 event FillBid(market: indexed, sender: indexed, owner: indexed, type, fxpPrice, fxpAmount, timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
 
 macro MIN_TRADE_VALUE: 10000000000000000
+macro MAX_INT256_VALUE: 2**255 - 1
 
 # Trade types
 macro BID: 1
@@ -177,7 +178,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         MARKETS.removeOrderFromMarket(market, orderID)
 
     # Sell maker's complete sets
-    fxpSharesHeld = -1
+    fxpSharesHeld = MAX_INT256_VALUE
     i = 1
     while(i <= MARKETS.getMarketNumOutcomes(market)):
         fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, owner, i), fxpSharesHeld)
@@ -188,15 +189,18 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
             MARKETS.getOutcomeShareContract(market, i).destroyShares(owner, fxpSharesHeld)
             i += 1
         fxpCost = safeFxpMul(fxpSharesHeld, fxpCumulativeScale)
+
         # Send complete sets funds from the market to the user's account
         fxpFee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpSharesHeld), fxpCumulativeScale)
         if(!INFO.getWallet(market).transfer(owner, safeSub(fxpCost, fxpFee))):
             ~invalid()
+
+        # Send half of sell-complete-sets fees to the market creator
         if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fxpFee, 2))):
             ~invalid()
 
     # Transfer (price - minValue) * fxpBidderSharesFilled to market from bidder since market hasnt been paid yet after complete sets selling. The bidder has already paid for fxpBidderMoneyFilled by escrowing their money
-    if(fxpBidderSharesFilled):
+    if(fxpBidderSharesFilled > 0):
         if(!INFO.getCurrency(market).transferFrom(owner, market, safeFxpMul(safeSub(fxpPrice, minValue), fxpBidderSharesFilled))):
             ~invalid()
 
@@ -205,7 +209,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         ~invalid()
 
     # Transfer range * fxpAskerMoneyFilled to the market from asker for the amount of shares in fxpAskerMoneyFilled, for fxpAskerSharesFilled the asker simply has sent their shares to the bidder and thus doesn't have to put up money
-    if(fxpAskerMoneyFilled):
+    if(fxpAskerMoneyFilled > 0):
         if(!INFO.getCurrency(market).transferFrom(sender, market, safeFxpMul(fxpCumulativeScale, fxpAskerMoneyFilled))):
             ~invalid()
 

@@ -36,6 +36,7 @@ macro BID: 1
 macro ASK: 2
 
 macro MIN_ORDER_VALUE: 10000000000000000
+macro MAX_INT256_VALUE: 2**255 - 1
 
 #
 # Bid / Ask actions: puts orders on the book
@@ -95,7 +96,7 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     # Take shares in escrow if user has shares
     fxpSharesHeld = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
-    if(fxpSharesHeld):
+    if(fxpSharesHeld > 0):
         fxpCostPerShare = fxpPrice - EVENTS.getMinValue(event)
         fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
         if(fxpCostPerShare > fxpCumulativeScale):
@@ -109,7 +110,7 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     # Take max minus price they want to sell at for the remainder of the amount
     # that wasn't able to be used up above
-    if(fxpAmount):
+    if(fxpAmount > 0):
         if(EVENTS.getEventType(event) == "scalar"):
             fxpMaxValue = EVENTS.getMaxValue(event)
         else:
@@ -131,13 +132,9 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
     if(msg.sender != self):
         ~invalid()
 
-    fxpMoneyEscrowed = 0
-    fxpSharesEscrowed = 0
-    fxpCumulativeScale = MARKETS.getCumulativeScale(market)
-
     # If user owns n minus the one outcome we're buying escrow no money but
     # escrow their shares in all the other outcomes.
-    fxpSharesHeld = -1
+    fxpSharesHeld = MAX_INT256_VALUE
     i = 1
     while(i <= MARKETS.getMarketNumOutcomes(market)):
         if(i != outcome):
@@ -146,12 +143,15 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     fxpCostPerShare = fxpPrice - EVENTS.getMinValue(MARKETS.getMarketEvent(market))
     fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
-    if(fxpCostPerShare > fxpCumulativeScale):
+    if(fxpCostPerShare > MARKETS.getCumulativeScale(market)):
+        ~invalid()
+    if(fxpCost < MIN_ORDER_VALUE):
         ~invalid()
 
+    fxpMoneyEscrowed = 0
+    fxpSharesEscrowed = 0
+
     if(fxpSharesHeld > 0):
-        if(fxpCost < MIN_ORDER_VALUE):
-            ~invalid()
         fxpFill = min(fxpSharesHeld, fxpAmount)
         fxpAmount -= fxpFill
         fxpSharesEscrowed += fxpFill
@@ -163,9 +163,7 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     # Take money in escrow for price - min for the remainder of amount that wasn't
     # able to be used up above. Make sure price - min isn't more than range
-    if(fxpAmount):
-        if(fxpCost < MIN_ORDER_VALUE):
-            ~invalid()
+    if(fxpAmount > 0):
         fxpMoneyEscrowed += fxpCost
         if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), fxpCost)):
             ~invalid()
