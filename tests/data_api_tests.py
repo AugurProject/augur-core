@@ -2,12 +2,10 @@
 
 from __future__ import division
 from ethereum import tester as t
-import math
-import random
 import os
 import sys
-import time
-import binascii
+import iocapture
+import json
 from pprint import pprint
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
@@ -18,6 +16,16 @@ from upload_contracts import ContractLoader
 ONE = 10**18
 TWO = 2*ONE
 HALF = ONE/2
+
+def parseCapturedLogs(logs):
+    arrayOfLogs = logs.strip().split("\n")
+    arrayOfParsedLogs = []
+    for log in arrayOfLogs:
+        parsedLog = json.loads(log.replace("'", '"').replace("L", "").replace('u"', '"'))
+        arrayOfParsedLogs.append(parsedLog)
+    if len(arrayOfParsedLogs) == 0:
+        return arrayOfParsedLogs[0]
+    return arrayOfParsedLogs
 
 def test_backstops(contracts, s, t):
     c = contracts.backstops
@@ -32,7 +40,7 @@ def test_backstops(contracts, s, t):
 
     def test_disputedOverEthics():
         assert(c.getDisputedOverEthics(event1) == 0), "disputedOverEthics isn't defaulted to 0"
-        c.setDisputedOverEthics(event1)
+        assert(c.setDisputedOverEthics(event1) == 1), "setDisputedOverEthics wasn't executed successfully"
         assert(c.getDisputedOverEthics(event1) == 1), "setDisputedOverEthics didn't set event properly"
         # try:
         #     assert(c.getDisputedOverEthics(event2) == 0), "disputedOverEthics isn't defaulted to 0"
@@ -263,7 +271,7 @@ def test_branches(contracts, s, t):
         assert(c.getMarketIDsInBranch(branch1, 0, 5) == [0, 0, 0, 0, 0]), "Markets returned when there should be no markets on the branch"
         assert(c.getCreationDate(branch1) == s.block.timestamp), "creationDate not the expected timestamp"
         assert(c.getBaseReporters(branch1) == 6), "baseReporters should be 6"
-        assert(c.getMinTradingFee(branch1) == 200000000000000000), "minTradeFees should be .2%"
+        assert(c.getMinTradingFee(branch1) == 2000000000000000), "minTradeFees should be .2%"
         assert(c.getVotePeriod(branch1) == round((s.block.timestamp / 15) - 1)), "Voteperiod wasn't the expected period"
         assert(c.getPeriodLength(branch1) == 15), "period length should be 15"
         assert(c.getForkPeriod(branch1) == 0), "ForkPeriod should be 0"
@@ -483,7 +491,21 @@ def test_consensusData(contracts, s, t):
         assert(c.setNotEnoughPenalized(branch1, address2, period1) == 1), "setNotEnoughPenalized wasn't executed successfully"
         assert(c.getNotEnoughPenalized(branch1, address2, period1) == 1), "notEnoughReportsPenalized should be set to 1"
 
-    # TODO: setRefund - doRefund
+    def test_refund():
+        # first get the starting balance for account 0 and account 2
+        acc0Bal = s.block.get_balance(t.a0)
+        acc2Bal = s.block.get_balance(t.a2)
+
+        assert(c.setRefund(t.a0, 100, value=100, sender=t.k0) == 1), "setRefund wasn't executed successfully"
+        assert(s.block.get_balance(t.a0) == acc0Bal - 100), "account 0 balance should have reduced by 100 from the original balance"
+        assert(c.doRefund(t.a2, t.a0) == 1), "doRefund wasn't executed successfully"
+        assert(s.block.get_balance(t.a2) == acc2Bal + 100), "account 2 should have had it's balance increase by 100 from the original balance"
+        # confirm that if we try to refund again it should fail due to lack of funds...
+        try:
+            raise Exception(c.doRefund(t.a2, t.a0))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "doRefund should fail if there aren't enough funds to send"
+
     test_baseReporting()
     test_slashed()
     test_feeFirst()
@@ -491,6 +513,7 @@ def test_consensusData(contracts, s, t):
     test_denominator()
     test_collections()
     test_penalization()
+    test_refund()
     print("data_api/consensusData.se unit tests completed")
 
 def test_events(contracts, s, t):
@@ -664,6 +687,184 @@ def test_events(contracts, s, t):
     test_rejection()
     print("data_api/events.se unit tests completed")
 
+def test_expiringEvents(contracts, s, t):
+    c = contracts.expiringEvents
+    branch1 = 1010101
+    branch2 = 2020202
+    period0 = contracts.branches.getVotePeriod(branch1) - 1
+    period1 = period0 + 1
+    period2 = period1 + 1
+    event1 = 123456789
+    event2 = 987654321
+    event3 = 333333333
+    report0 = 1234567890
+    report1 = 9876543210
+    cashAddr = long(contracts.cash.address.encode("hex"), 16)
+    cashWallet = contracts.branches.getBranchWallet(branch1, cashAddr)
+    address0 = long(t.a0.encode("hex"), 16)
+    address1 = long(t.a1.encode("hex"), 16)
+    address2 = long(t.a2.encode("hex"), 16)
+    ONE = 10**18
+    subsidy1 = 15*ONE
+
+    def test_addEvent():
+        assert(c.getEvents(branch1, period1) == []), "events should be an empty array"
+        assert(c.getEventsRange(branch1, period1, 0, 5) == [0, 0, 0, 0, 0]), "events ranged 0 to 5 should have been an array of 0s"
+        assert(c.getNumberEvents(branch1, period1) == 0), "number of events should be 0 by default"
+        assert(c.getEventIndex(branch1, period1, event1) == 0), "event at event1 position should be 0 since it hasn't been added yet"
+        assert(c.getEvent(branch1, period1, 0) == 0), "event 0 should be 0 as no event has been added"
+        assert(c.addEvent(branch1, period1, event1, subsidy1, cashAddr, cashWallet, 0) == 1), "addEvent didn't execute successfully"
+        assert(contracts.events.initializeEvent(event1, branch1, period1, ONE, ONE*2, 2, "https://someresolution.eth", address0, address1, address2) == 1), "events.initializeEvent didn't execute successfully"
+        assert(c.addEvent(branch1, period1, event2, subsidy1, cashAddr, cashWallet, 0) == 1), "addEvent didn't execute successfully"
+        assert(contracts.events.initializeEvent(event2, branch1, period1, ONE, ONE*4, 4, "https://someresolution.eth", address0, address1, address2) == 1), "events.initializeEvent didn't execute successfully"
+        assert(c.getEvents(branch1, period1) == [event1, event2]), "events should be an array contianing event1 and event2"
+        assert(c.getEventsRange(branch1, period1, 0, 5) == [event1, event2, 0, 0, 0]), "events ranging from 0 to 5 should include event1, event2, and then three 0s"
+        assert(c.getNumberEvents(branch1, period1) == 2), "number of Events should be 2"
+        assert(c.getEventIndex(branch1, period1, event1) == 0), "event1 should be at the 0 index"
+        assert(c.getEventIndex(branch1, period1, event2) == 1), "event2 should be at the 1 index"
+        assert(c.getEvent(branch1, period1, 0) == event1), "index 0 should return event1"
+        assert(c.getEvent(branch1, period1, 1) == event2), "index 1 should return event2"
+
+    def test_fees():
+        assert(c.getFeeValue(branch1, period1) == 0), "fee should be 0 by default"
+        assert(c.adjustPeriodFeeValue(branch1, period1, 100) == 1), "adjustPeriodFeeValue wasn't executed successfully"
+        assert(c.getFeeValue(branch1, period1) == 100), "fee should be set to 100"
+
+    def test_rep():
+        assert(c.getBeforeRep(branch1, period1, address0) == 0), "beforeRep for address0 should be 0 by default"
+        assert(c.getBeforeRep(branch1, period1, address1) == 0), "beforeRep for address1 should be 0 by default"
+        assert(c.getPeriodDormantRep(branch1, period1, address0) == 0), "dormantRep for address0 should be 0 by default"
+        assert(c.getPeriodDormantRep(branch1, period1, address1) == 0), "dormantRep for address1 should be 0 by default"
+        assert(c.getNumActiveReporters(branch1, period1) == 0), "there should be 0 active reporters in period1 by default"
+        assert(c.getActiveReporters(branch1, period1) == []), "getActiveReporters should return an empty array"
+        assert(c.getAfterRep(branch1, period1, address0) == 0), "afterRep for address0 should be 0 by default"
+        assert(c.getAfterRep(branch1, period1, address1) == 0), "afterRep for address1 should be 0 by default"
+
+        assert(c.setBeforeRep(branch1, period1, 100, address0) == 100), "setBeforeRep wasn't executed successfully"
+        assert(c.setBeforeRep(branch1, period1, 100, address1) == 100), "setBeforeRep wasn't executed successfully"
+        assert(c.setPeriodDormantRep(branch1, period1, 200, address0) == 200), "setPeriodDormantRep wasn't executed successfully"
+        assert(c.setPeriodDormantRep(branch1, period1, 200, address1) == 200), "setPeriodDormantRep wasn't executed successfully"
+        assert(c.setAfterRep(branch1, period1, 100, address0) == 100), "setAfterRep wasn't executed successfully"
+        assert(c.setAfterRep(branch1, period1, 100, address1) == 100), "setAfterRep wasn't executed successfully"
+
+        assert(c.getBeforeRep(branch1, period1, address0) == 100), "beforeRep for address0 should be set to 100"
+        assert(c.getBeforeRep(branch1, period1, address1) == 100), "beforeRep for address1 should be set to 100"
+        assert(c.getPeriodDormantRep(branch1, period1, address0) == 200), "dormantRep for address0 should be set to 100"
+        assert(c.getPeriodDormantRep(branch1, period1, address1) == 200), "dormantRep for address1 should be set to 100"
+        assert(c.getAfterRep(branch1, period1, address0) == 100), "afterRep should be set to 100 for addresss0"
+        assert(c.getAfterRep(branch1, period1, address1) == 100), "afterRep should be set to 100 for addresss1"
+        assert(c.getNumActiveReporters(branch1, period1) == 2), "numActiveReporters should be set to 2"
+        assert(c.getActiveReporters(branch1, period1) == [address0, address1]), "getActiveReporters should return an array with address0 and address1 in it"
+
+    def test_reporting():
+        assert(c.getPeriodRepWeight(branch1, period1, address0) == 0), "periodWeight for address0 should be set to 0"
+        assert(c.setPeriodRepWeight(branch1, period1, address0, 10) == 1), "setPeriodRepWeight wasn't executed successfully"
+        assert(c.getPeriodRepWeight(branch1, period1, address0) == 10), "periodWeight should return 10 for address0"
+
+        assert(c.getEventWeight(branch1, period1, event1) == 0), "eventWeight for event1 should be 0 by default"
+        assert(c.setEventWeight(branch1, period1, event1, 50) == 1), "setEventWeight wasn't executed successfully"
+        assert(c.getEventWeight(branch1, period1, event1) == 50), "eventWeight should be set to 50 for event1"
+
+        assert(c.getReport(branch1, period1, event1, address0) == 0), "report for event1 address0 should be 0"
+        assert(c.setReport(branch1, period1, event1, report0, address0) == 1), "setReport wasn't executed successfully"
+        assert(c.getReport(branch1, period1, event1, address0) == report0), "report for event1 and address0 should be set to report0"
+
+        assert(c.getEthicReport(branch1, period1, event1, address0) == 0), "ethicReport for event1 address0 should be 0"
+        assert(c.setEthicReport(branch1, period1, event1, ONE, address0) == 1), "setEthicReport wasn't executed successfully"
+        assert(c.getEthicReport(branch1, period1, event1, address0) == ONE), "ethicReport for event1 address0 should be set to 10**18 (ONE)"
+
+        assert(c.getNumReportsSubmitted(branch1, period1, address0) == 0), "numReportsSubmitted for address0 should be 0"
+        assert(c.addReportToReportsSubmitted(branch1, period1, address0) == 1), "addReportToReportsSubmitted wasn't executed successfully"
+        assert(c.getNumReportsSubmitted(branch1, period1, address0) == 1), "numReportsSubmitted for address0 should be 1"
+        assert(c.getEventWeight(branch1, period1, event1) == 50), "event1 weight should be set to 50"
+        assert(c.countReportAsSubmitted(branch1, period1, event1, address0, 50) == 1), "countReportAsSubmitted wasn't executed successfully"
+        assert(c.getNumReportsSubmitted(branch1, period1, address0) == 2), "numReportsSubmitted for address0 should be 2"
+        assert(c.getEventWeight(branch1, period1, event1) == 100), "event1 weight should be set to 100"
+
+        assert(c.getWeightOfReport(period1, event1, report0) == 0), "weightOfReport for report0 on event1 should be 0"
+        assert(c.addToWeightOfReport(period1, event1, report0, 100) == 1), "addToWeightOfReport wasn't executed successfully"
+        assert(c.getWeightOfReport(period1, event1, report0) == 100), "weightOfReport for report0 on event1 should be set to 100"
+
+        assert(c.getLesserReportNum(branch1, period1, event1) == 0), "lesserReportNum should be set to 0 for event1"
+        assert(c.setLesserReportNum(branch1, period1, event1, 5) == 1), "setLesserReportNum wasn't executed successfully"
+        assert(c.getLesserReportNum(branch1, period1, event1) == 5), "lesserReportNum for event1 should be set to 5"
+
+        assert(c.getNumEventsToReportOn(branch1, period1) == 0), "numEventsToReport on for period1 should be set to 0 by default"
+        assert(c.setNumEventsToReportOn(branch1) == 1), "setNumEventsToReportOn wasn't executed successfully"
+        assert(c.getNumEventsToReportOn(branch1, period1) == 12), "numEventsToReport should now be set to 12"
+
+        assert(c.getCurrentMode(period1, event2) == 0), "currentMode for event2 should be set to 0"
+        assert(c.getCurrentModeItems(period1, event2) == 0), "currentModeItems for event2 should be set to 0"
+
+        assert(c.setCurrentMode(period1, event2, 100) == 1), "setCurrentMode wasn't executed successfully"
+        assert(c.setReport(branch1, period1, event2, report1, address0) == 1), "setReport wasn't executed successfully"
+        assert(c.addToWeightOfReport(period1, event2, report1, 100) == 1), "addToWeightOfReport wasn't executed successfully"
+        assert(c.setCurrentModeItems(period1, event2, report1) == 1), "setCurrentModeItems wasn't executed successfully"
+
+        assert(c.getCurrentMode(period1, event2) == 100), "currentMode for event2 should be 100"
+        assert(c.getCurrentModeItems(period1, event2) == 100), "currentModeItems for event2 should be set to 100"
+
+        assert(c.getNumRoundTwo(branch1, period1) == 0), "numRoundTwo should be set to 0 by default"
+        assert(c.addRoundTwo(branch1, period1) == 1), "addRoundTwo wasn't executed successfully"
+        assert(c.getNumRoundTwo(branch1, period1) == 1), "numRoundTwo for period1 should be set to 1"
+
+    def test_eventModification():
+        # COST_FOR_EVENT_REPORT_CALCULATION is set to the current value found in expiringEvents.se
+        COST_FOR_EVENT_REPORT_CALCULATION = 500000
+        event3Subsidy = t.gas_price * COST_FOR_EVENT_REPORT_CALCULATION
+        assert(c.addEvent(branch2, period0, event3, event3Subsidy, cashAddr, cashWallet, 0, value=event3Subsidy) == 1), "addEvent didn't execute successfully"
+        assert(contracts.events.initializeEvent(event3, branch2, period0, ONE, ONE*4, 4, "https://someresolution.eth", address0, address1, address2) == 1), "events.initializeEvent wasn't executed successfully"
+        assert(c.getEvents(branch1, period1) == [event1, event2]), "events in branch1 period1 should be an array with event1 and event2"
+        assert(c.getEvents(branch2, period0) == [event3]), "events for branch2, period0 should be event3 in an array"
+        assert(c.getEvent(branch1, period1, 0) == event1), "event at index 0 in branch1, period1 should be event1"
+        assert(c.getEvent(branch1, period1, 1) == event2), "event at index 1 in branch1, period1 should be event2"
+        assert(c.getEvent(branch2, period0, 0) == event3), "event at index 0 in branch2, period0 should be event3"
+        assert(c.getNumberEvents(branch1, period1) == 2), "numberEvents in branch1, period1 should be 2"
+        assert(c.getNumberEvents(branch2, period0) == 1), "numberEvents in branch2, period0 should be 1"
+
+        assert(c.moveEvent(branch2, event3) == 1), "moveEvent wasn't executed successfully"
+        assert(c.moveEvent(branch1, event2) == 0), "moveEvent executed Successfully when it shouldn't have"
+
+        assert(c.getEvents(branch2, period2) == [event3]), "events in branch2, period2 should be an array with just event3"
+        assert(c.getEvent(branch2, period2, 0) == event3), "event in branch2, period2 at index 0 should be set to event3"
+        assert(c.getEvent(branch2, period0, 0) == event3), "event in branch2, period0 at index 0 should be set to event3"
+
+        assert(c.deleteEvent(branch2, period0, event3) == 1), "deleteEvent wasn't executed successfully"
+        assert(c.getEvent(branch2, period0, 0) == 0), "event at branch2, period0, index 0 should be set to 0"
+
+        assert(c.getNumRemoved(branch1, period1) == 0), "numRemoved should be set to 0 by default"
+        assert(c.removeEvent(branch1, period1) == 1), "removeEvent wasn't executed successfully"
+        assert(c.getNumRemoved(branch1, period1) == 1), "numRemoved should be set to 1"
+
+        assert(c.getRequired(event2, period1, branch1) == 0), "required for event2 in branch1, period1 should be set to 0"
+        assert(c.getNumRequired(branch1, period1) == 0), "numRequired for branch1, period1 should be set to 0"
+
+        assert(c.setEventRequired(branch1, period1, event2) == 1), "setEventRequired wasn't executed successfully"
+        # confirm it returns 0 if we already have this event set to required
+        assert(c.setEventRequired(branch1, period1, event2) == 0), "setEventRequired should have returned 0 since event2 is already set to required"
+
+        assert(c.getRequired(event2, period1, branch1) == 1), "required for event2 in branch1, period1 should be set to 1"
+        assert(c.getNumRequired(branch1, period1) == 1), "numRequired should be set to 1"
+
+        assert(c.getAfterFork(branch1, period1) == 0), "afterFork for branch1, period1 should return 0"
+
+        currAddr0Bal = s.block.get_balance(t.a0)
+        event3sub = c.getSubsidy(branch2, period2, event3)
+        assert(event3sub == event3Subsidy), "the subsidy for event3 after being moved should be = to event3subsidy"
+        assert(c.refundCost(t.a0, branch2, period2, event3) == 1), "refundCost wasn't executed successfully"
+        assert(s.block.get_balance(t.a0) == currAddr0Bal + event3sub), "address0 should have an updated balance of their pervious balance + subsidy1 thanks to refundCost execution"
+        try:
+            raise Exception(c.refundCost(t.a0, branch2, period2, event3))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "refundCost should fail if the contract doesn't have enough funds to refund"
+
+    test_addEvent()
+    test_fees()
+    test_rep()
+    test_reporting()
+    test_eventModification()
+    print("data_api/expiringEvents.se unit tests completed")
+
 def test_info(contracts, s, t):
     c = contracts.info
     branch1 = 1010101
@@ -707,6 +908,160 @@ def test_info(contracts, s, t):
     test_setInfo()
     print("data_api/info.se unit tests completed")
 
+def test_markets(contracts, s, t):
+    c = contracts.markets
+    branch1 = 1010101
+    market1 = 1111111111
+    event1 = 12345678901
+    period1 = contracts.branches.getVotePeriod(branch1)
+    gasSubsidy1 = 10**14*234
+    creationFee1 = 10**14*340
+    twoPercent = 10**16*2
+    ONE = 10**18
+    expirationDate1 = s.block.timestamp + 15
+    shareContractPath = os.path.join(src, 'functions/shareTokens.se')
+    walletContractPath = os.path.join(src, 'functions/wallet.se')
+    shareContract1 = s.abi_contract(shareContractPath, sender=t.k0)
+    shareContract2 = s.abi_contract(shareContractPath, sender=t.k0)
+    walletContract1 = s.abi_contract(walletContractPath, sender=t.k0)
+    walletContract2 = s.abi_contract(walletContractPath, sender=t.k0)
+    walletContract1.initialize(shareContract1.address)
+    walletContract2.initialize(shareContract2.address)
+    shareAddr1 = long(shareContract1.address.encode('hex'), 16)
+    shareAddr2 = long(shareContract2.address.encode('hex'), 16)
+    walletAddr1 = long(walletContract1.address.encode('hex'), 16)
+    walletAddr2 = long(walletContract2.address.encode('hex'), 16)
+    shareContracts = [shareContract1.address, shareContract2.address]
+    walletContracts = [walletContract1.address, walletContract2.address]
+    tag1 = 'one'
+    tag2 = 'two'
+    tag3 = 'three'
+    longTag1 = long(tag1.encode('hex'), 16)
+    longTag2 = long(tag2.encode('hex'), 16)
+    longTag3 = long(tag3.encode('hex'), 16)
+    orderID1 = 12340001
+    orderID2 = 12340002
+    orderID3 = 12340003
+    orderID4 = 12340004
+    address0 = long(t.a0.encode("hex"), 16)
+    address1 = long(t.a1.encode("hex"), 16)
+
+    def test_marketInialization():
+        assert(c.getMarketsHash(branch1) == 0), "getMarketsHash for branch1 should be defaulted to 0"
+        assert(c.initializeMarket(market1, event1, period1, twoPercent, branch1, tag1, tag2, tag3, ONE, 2, 'this is extra information', gasSubsidy1, creationFee1, expirationDate1, shareContracts, walletContracts, value=gasSubsidy1) == 1), "initializeMarket wasn't executed successfully"
+        assert(c.getMarketsHash(branch1) != 0), "marketsHash should no longer be set to 0"
+        assert(c.getBranch(market1) == branch1), "branch for market1 should be set to branch1"
+        assert(c.getMarketEvent(market1) == event1), "marketEvent for market1 shoudl be event1"
+        assert(c.getLastExpDate(market1) == expirationDate1), "lastExpDate for market1 should be set to expirationDate1"
+        assert(c.getTags(market1) == [longTag1, longTag2, longTag3]), "tags for market1 should return an array with 3 tags"
+        assert(c.getTopic(market1) == longTag1), "topic for market1 should be set to topic1"
+        assert(c.getFees(market1) == creationFee1), "fees for market1 should be set to creationFee1"
+        assert(c.getTradingFee(market1) == twoPercent), "tradingFee for market1 should be set to twoPercent"
+        assert(c.getVolume(market1) == 0), "volumne for market1 should be set to 0 by default"
+        assert(c.getExtraInfo(market1) == 'this is extra information'), "extraInfo for market1 should be set to 'this is extra information'"
+        assert(c.getExtraInfoLength(market1) == 25), "extraInfoLength for market1 should be 25"
+        assert(c.getGasSubsidy(market1) == gasSubsidy1), "gasSubsidy for market1 should be set to gasSubsidy1"
+        assert(c.getMarketNumOutcomes(market1) == 2), "marketNumOutcomes for market1 should be 2"
+        assert(c.getCumulativeScale(market1) == ONE), "cumulativeScale for market1 should be set to ONE"
+
+    def test_marketOrders():
+        assert(c.getOrderIDs(market1) == []), "orderIds for market1 should be an empty array"
+        assert(c.getTotalOrders(market1) == 0), "totalOrders for market1 should be 0"
+        assert(c.getLastOrder(market1) == 0), "lastOrder for market1 should be set to 0"
+
+        assert(c.addOrder(market1, orderID1) == 1), "addOrder wasn't executed successfully"
+        assert(c.addOrder(market1, orderID2) == 1), "addOrder wasn't executed successfully"
+        assert(c.addOrder(market1, orderID3) == 1), "addOrder wasn't executed successfully"
+        assert(c.addOrder(market1, orderID4) == 1), "addOrder wasn't executed successfully"
+
+        assert(c.getOrderIDs(market1) == [orderID4, orderID3, orderID2, orderID1]), "orderIds for market1 should return an array of length four containing the orderIds ordered by addition to the array, with most recent addition in the 0 position for the array"
+        assert(c.getTotalOrders(market1) == 4), "totalOrders for market1 should be 4"
+        assert(c.getLastOrder(market1) == orderID4), "getLastOrder for market1 should return orderID4"
+        assert(c.getPrevID(market1, orderID4) == orderID3), "getPrevID for orderID4 should return orderID3"
+        assert(c.getPrevID(market1, orderID3) == orderID2), "getPrevID for orderID3 should return orderID2"
+        assert(c.getPrevID(market1, orderID2) == orderID1), "getPrevID for orderID2 should return orderID1"
+        assert(c.getPrevID(market1, orderID1) == 0), "getPrevId for orderID1 should return 0"
+
+        assert(c.removeOrderFromMarket(market1, orderID2) == 1), "removeOrderFromMarket wasn't executed successfully"
+
+        assert(c.getOrderIDs(market1) == [orderID4, orderID3, orderID1]), "getOrderIDs should now return only 3 topics in the array, ordered 4, 3, 1 after removing order 2"
+        assert(c.getPrevID(market1, orderID3) == orderID1), "getPrevID for orderID3 should return orderID1 instead of orderID2 as orderID2 has been removed"
+        assert(c.getPrevID(market1, orderID2) == 0), "getPrevID for orderID2 should return 0 as orderID2 was removed and not part of the orderbook"
+        assert(c.getLastOrder(market1) == orderID4), "lastOrder for market1 should be orderID4"
+
+        assert(c.removeOrderFromMarket(market1, orderID4) == 1), "removeOrderFromMarket wasn't executed successfully"
+
+        assert(c.getOrderIDs(market1) == [orderID3, orderID1]), "getOrderIDs should now return an array with only 2 topics, 3 and 1 as both 4 and 2 have been removed"
+        assert(c.getPrevID(market1, orderID4) == 0), "getPrevID for orderID4 should be set to 0 as it has been removed and is not part of the orderbook"
+        assert(c.getLastOrder(market1) == orderID3), "lastOrder for market1 should now be set to orderID3 since orderID4 was removed"
+        assert(c.getTotalOrders(market1) == 2), "totalOrders for market1 should be 2"
+
+    def test_marketShares():
+        assert(c.getSharesValue(market1) == 0), "shareValue for market1 should be set to 0 by default"
+        assert(c.getMarketShareContracts(market1) == [shareAddr1, shareAddr2]), "marketShareContracts should be an array of length 2 with shareAddr1 and shareAddr2 contained within"
+        assert(c.getTotalSharesPurchased(market1) == 0), "totalSharesPurchased for market1 should be set to 0"
+        assert(c.getSharesPurchased(market1, 1) == 0), "sharesPurchased for market1, outcome 1 should be set to 0"
+        assert(c.getSharesPurchased(market1, 2) == 0), "sharesPurchased for market1, outcome 2 should be set to 0"
+        assert(c.getParticipantSharesPurchased(market1, address1, 1) == 0), "participantSharesPurchased for address1 on market1 for outcome 1 should be set to 0"
+        assert(c.getParticipantSharesPurchased(market1, address1, 2) == 0), "participantSharesPurchased for address1 on market1 for outcome 2 should be set to 0"
+        assert(c.modifySharesValue(market1, ONE) == 1), "modifySharesValue wasn't executed successfully"
+        assert(c.getSharesValue(market1) == ONE), "getSharesValue for market1 should be set to ONE"
+        assert(c.getVolume(market1) == 0), "volume for market1 should be set to 0"
+        assert(c.modifyMarketVolume(market1, ONE*15) == 1), "modifyMarketVolume wasn't executed successfully"
+        assert(c.getVolume(market1) == ONE*15), "volume for market1 should be set to ONE*15"
+        assert(c.getOutcomeShareWallet(market1, 1) == walletAddr1), "outcomeShareWallet for market1, outcome 1 should return walletAddr1"
+        assert(c.getOutcomeShareWallet(market1, 2) == walletAddr2), "outcomeShareWallet for market1, outcome 2 should return walletAddr2"
+        assert(c.getOutcomeShareContract(market1, 1) == shareAddr1), "outcomeShareContract for market1, outcome 1 should return shareAddr1"
+        assert(c.getOutcomeShareContract(market1, 2) == shareAddr2), "outcomeShareContract for market1, outcome 2 should return shareAddr2"
+
+    def test_marketSettings():
+        currentMarketHash = c.getMarketsHash(branch1)
+        assert(c.addToMarketsHash(branch1, 123412341234) == 1), "addToMarketsHash wasn't executed successfully"
+        assert(c.getMarketsHash(branch1) != currentMarketHash), "marketsHash shouldn't equal the marketHash prior to calling addToMarketsHash"
+
+        assert(c.getFees(market1) == creationFee1), "fees for market1 should be set to creationFee1"
+        assert(c.addFees(market1, 100) == 1), "addFees wasn't executed successfully"
+        assert(c.getFees(market1) == creationFee1 + 100), "fees for market1 should be set to creationFee1 + 100"
+
+        assert(c.getTradingPeriod(market1) == period1), "tradingPeriod for market1 should be set to period1"
+        assert(c.getOriginalTradingPeriod(market1) == period1), "originalTradingPeriod for market1 should be set to period1"
+        assert(c.setTradingPeriod(market1, period1 + 10) == 1), "setTradingPeriod wasn't executed successfully"
+        assert(c.getOriginalTradingPeriod(market1) == period1), "originalTradingPeriod for market1 should be set to period1"
+        assert(c.getTradingPeriod(market1) == period1 + 10), "tradingPeriod for market1 should be set to period1 + 10"
+
+        assert(c.getTradingFee(market1) == twoPercent), "tradingFees should be set to twoPercent"
+        assert(c.setTradingFee(market1, twoPercent + 10**13) == twoPercent + 10**13), "setTradingFee wasn't executed successfully"
+        assert(c.getTradingFee(market1) == twoPercent + 10**13), "tradingFee should be set to twoPercent + 10**13"
+
+        assert(c.getBondsMan(market1) == 0), "bondsMan for market1 should be set to 0 by default"
+        assert(c.getPushedForward(market1) == 0), "pushedForward should be set to 0 for market1"
+        assert(c.setPushedForward(market1, 1, address1) == 1), "setPushedForward wasn't executed successfully"
+        assert(c.getPushedForward(market1) == 1), "pushedForward for market1 should be set to 1"
+        assert(c.getBondsMan(market1) == address1), "bondsMan for market1 should be set to address1"
+
+        assert(c.getLastOutcomePrice(market1, 1) == 0), "lastOutcomePrice for market1, outcome 1 should be 0"
+        assert(c.getLastOutcomePrice(market1, 2) == 0), "lastOutcomePrice for market1, outcome 2 should be 0"
+        assert(c.setPrice(market1, 1, 123) == 1), "setPrice wasn't executed successfully"
+        assert(c.setPrice(market1, 2, 456) == 1), "setPrice wasn't executed successfully"
+        assert(c.getLastOutcomePrice(market1, 1) == 123), "lastOutcomePrice for market1, outcome 1 should be set to 123"
+        assert(c.getLastOutcomePrice(market1, 2) == 456), "lastOutcomePrice for market1, outcome 2 should be set to 456"
+
+        assert(c.getMarketResolved(market1) == 0), "marketResolved for market1 shoudl be set to 0"
+        assert(c.setMarketResolved(market1) == 1), "setMarketResolved wasn't executed successfully"
+        assert(c.getMarketResolved(market1) == 1), "marketResolved for market1 shoudl be set to 1"
+
+        addr1Bal = s.block.get_balance(t.a1)
+        assert(s.block.get_balance(c.address) == gasSubsidy1), "the market contract balance was expected to be set to gasSubsidy1"
+        assert(c.refundClosing(market1, address1) == 1), "refundClosing wasn't executed successfully"
+        assert(s.block.get_balance(t.a1) == addr1Bal + gasSubsidy1), "the balance of address1 should now be it's previous balance + the gasSubsidy1 from market1"
+
+
+    test_marketInialization()
+    test_marketOrders()
+    test_marketShares()
+    test_marketSettings()
+    print("data_api/markets.se unit tests complete")
+
 def test_mutex(contracts, s, t):
     c = contracts.mutex
     assert(c.acquire() == 1), "acquire should return 1 if the mutex isn't already set."
@@ -716,6 +1071,144 @@ def test_mutex(contracts, s, t):
         assert(isinstance(exc, t.TransactionFailed)), "mutex should already be set so attempting to call acquire again should fail"
     assert(c.release() == 1), "release shoud return 1 and release the mutex"
     print("data_api/mutex.se unit tests completed")
+
+def test_orders(contracts, s, t):
+    c = contracts.orders
+    market1 = 1111111111
+    address0 = long(t.a0.encode("hex"), 16)
+    address1 = long(t.a1.encode("hex"), 16)
+    address2 = long(t.a2.encode("hex"), 16)
+    order1 = 123456789
+    order2 = 987654321
+    ONE = 10**18
+    pointFive = 10**17*5
+
+    def test_hashcommit():
+        order = c.makeOrderHash(market1, 1, 1)
+        assert(order != 0), "makeOrderHash for market1 shouldn't be 0"
+
+        assert(c.commitOrder(order) == 1), "commitOrder wasn't executed successfully"
+        try:
+            raise Exception(c.checkHash(order, address0))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "checkHash for order should throw because that order was placed in the same block we are checking"
+        # move the block.number up 1
+        s.mine(1)
+        assert(c.checkHash(order, address0) == 1), "checkHash for order should now be 1"
+
+    def test_saveOrder():
+        assert(c.saveOrder(order1, 1, market1, ONE*10, pointFive, address0, 1, 0, ONE*10) == 1), "saveOrder wasn't executed successfully"
+        assert(c.saveOrder(order2, 2, market1, ONE*10, pointFive, address1, 1, ONE*5, 0) == 1), "saveOrder wasn't executed successfully"
+
+        assert(c.getOrder(order1) == [order1, 1, market1, ONE*10, pointFive, address0, s.block.number, 1, 0, ONE*10]), "getOrder for order1 didn't return the expected array of data"
+        assert(c.getOrder(order2) == [order2, 2, market1, ONE*10, pointFive, address1, s.block.number, 1, ONE*5, 0]), "getOrder for order2 didn't return the expected array of data"
+
+        assert(c.getAmount(order1) == ONE*10), "amount for order1 should be set to ONE*10 (ONE = 10**18)"
+        assert(c.getAmount(order2) == ONE*10), "amount for order2 should be set to ONE*10 (ONE = 10**18)"
+
+        assert(c.getID(order1) == order1), "getID didn't return the expected order"
+        assert(c.getID(order2) == order2), "getID didn't return the expected order"
+
+        assert(c.getPrice(order1) == pointFive), "price for order1 should be set to pointFive (.5*ONE)"
+        assert(c.getPrice(order2) == pointFive), "price for order2 should be set to pointFive (.5*ONE)"
+
+        assert(c.getOrderOwner(order1) == address0), "orderOwner for order1 should be address0"
+        assert(c.getOrderOwner(order2) == address1), "orderOwner for order2 should be address1"
+
+        assert(c.getType(order1) == 1), "type for order1 should be set to 1"
+        assert(c.getType(order2) == 2), "type for order2 should be set to 2"
+
+    def test_fillOrder():
+        # orderID, fill, money, shares
+        try:
+            raise Exception(c.fillOrder(order1, ONE*20, 0, 0))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "fillOrder should fail if fill is greated then the amount of the order"
+        try:
+            raise Exception(c.fillOrder(order1, ONE*10, 0, ONE*20))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "fillOrder should fail if shares is greater than the sharesEscrowed in the order"
+        try:
+            raise Exception(c.fillOrder(order1, ONE*10, ONE*20, 0))
+        except Exception as exc:
+            assert(isinstance(exc, t.TransactionFailed)), "fillOrder should fail if money is greater than the moneyEscrowed in the order"
+        # fully fill
+        assert(c.fillOrder(order1, ONE*10, 0, ONE*10) == 1), "fillOrder wasn't executed successfully"
+        # prove all
+        assert(c.getOrder(order1) == [order1, 1, market1, 0, pointFive, address0, s.block.number, 1, 0, 0]), "getOrder for order1 didn't return the expected data array"
+        # test partial fill
+        assert(c.fillOrder(order2, ONE*6, ONE*3, 0) == 1), "fillOrder wasn't executed successfully"
+        # confirm partial fill
+        assert(c.getOrder(order2) == [order2, 2, market1, ONE*4, pointFive, address1, s.block.number, 1, ONE*2, 0]), "getOrder for order2 didn't return the expected data array"
+        # fill rest of order2
+        assert(c.fillOrder(order2, ONE*4, ONE*2, 0) == 1), "fillOrder wasn't executed successfully"
+        assert(c.getOrder(order2) == [order2, 2, market1, 0, pointFive, address1, s.block.number, 1, 0, 0]), "getOrder for order2 didn't return the expected data array"
+
+    def test_removeOrder():
+        order3 = 321321321
+        assert(c.saveOrder(order3, 1, market1, ONE*10, pointFive, address0, 2, 0, ONE*10) == 1), "saveOrder wasn't executed successfully"
+        assert(c.getOrder(order3) == [order3, 1, market1, ONE*10, pointFive, address0, s.block.number, 2, 0, ONE*10]), "getOrder for order3 didn't return the expected data array"
+        assert(c.removeOrder(order3) == 1), "removeOrder wasn't executed successfully"
+        assert(c.getOrder(order3) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
+
+    test_hashcommit()
+    test_saveOrder()
+    test_fillOrder()
+    test_removeOrder()
+    print("data_api/orders.se unit tests completed")
+
+def test_register(contracts, s, t):
+    c = contracts.register
+    address0 = long(t.a0.encode("hex"), 16)
+    with iocapture.capture() as captured:
+        retVal = c.register()
+        log = parseCapturedLogs(captured.stdout)[-1]
+    assert(retVal == 1), "register should return 1"
+    assert(log["_event_type"] == "registration"), "eventType should be 'registration' for the log created by register"
+    assert(log["timestamp"] == s.block.timestamp), "timestamp should be set to block.timestamp"
+    assert(log["sender"] == address0), "sender should be address0"
+
+    print("data_api/register.se unit tests completed")
+
+def test_topics(contracts, s, t):
+    c = contracts.topics
+    branch1 = 1010101
+    # topic0 is the topic added from the markets tests
+    topic0 = 'one'
+    topic1 = 'augur'
+    topic2 = 'predictions'
+    longTopic0 = long('one'.encode('hex'), 16)
+    longTopic1 = long(topic1.encode('hex'), 16)
+    longTopic2 = long(topic2.encode('hex'), 16)
+    ONE = 10**18
+
+    def test_defaults():
+        assert(c.getNumTopicsInBranch(branch1) == 1), "numTopicsInBranch for branch1 should be 1 at this point"
+        assert(c.getTopicsInBranch(branch1, 0, 5) == [longTopic0]), "topicsInBranch for branch1 ranging from topic 0 to 5 should return an array containing only topic0 from the markets tests"
+        assert(c.getTopicsInfo(branch1, 0, 5) == [longTopic0, ONE*15]), "topicsInfo for branch1 should ranging from topic 0 to 5 should return only topic0 from the markets tests and its popularity"
+        assert(c.getTopicPopularity(branch1, topic1) == 0), "topicPopularity for branch1 and topic1 should be 0 by default as topic1 shouldn't exist yet"
+
+    def test_updateTopicPopularity():
+        assert(c.updateTopicPopularity(branch1, topic1, ONE) == 1), "updateTopicPopularity wasn't executed successfully"
+        assert(c.getTopicPopularity(branch1, topic1) == ONE), "topicPopularity for branch1, topic1 should be set to ONE"
+        assert(c.getNumTopicsInBranch(branch1) == 2), "numTopicsInBranch for branch1 should return 2"
+        assert(c.getTopicsInBranch(branch1, 0, 5) == [longTopic0, longTopic1]), "topicsInBranch1 ranging from index 0 to 5 should return an array with topic0 and topic1 inside of it"
+        assert(c.getTopicsInfo(branch1, 0, 5) == [longTopic0, ONE*15, longTopic1, ONE]), "getTopicsInfo for branch1, index 0 to 5, should return topic0 and its popularity of ONE*15 and topic1 and it's popularity of ONE in a length 4 array"
+        assert(c.getTopicPopularity(branch1, topic2) == 0), "topicPopularity for topic2 should be 0 as topic2 hasn't been added yet"
+        assert(c.updateTopicPopularity(branch1, topic2, ONE*4) == 1), "updateTopicPopularity wasn't executed successfully"
+        assert(c.getTopicPopularity(branch1, topic2) == ONE*4), "topicPopularity for topic2 should now be set to ONE*4"
+        assert(c.getNumTopicsInBranch(branch1) == 3), "numTopicsInBranch should be set to 3"
+        assert(c.getTopicsInBranch(branch1, 0, 5) == [longTopic0, longTopic1, longTopic2]), "getTopicsInBranch for branch1, index 0 to 5 should return an array with topic0, topic1, and topic2 contained within"
+        assert(c.getTopicsInfo(branch1, 0, 5) == [longTopic0, ONE*15, longTopic1, ONE, longTopic2, ONE*4]), "getTopicsInfo for branch1, index 0 to 5 should return a length 6 array with topic0 and it's popularity, topic1 and it's popularity, and topic2 and it's popularity"
+        assert(c.updateTopicPopularity(branch1, topic1, ONE*2) == 1), "updateTopicPopularity wasn't executed successfully"
+        assert(c.updateTopicPopularity(branch1, topic2, -ONE) == 1), "updateTopicPopularity wasn't executed successfully"
+        assert(c.getTopicPopularity(branch1, topic1) == ONE*3), "topicPopularity for branch1, topic1 should be set to ONE*3"
+        assert(c.getTopicPopularity(branch1, topic2) == ONE*3), "topicPopularity for branch1, topic2 should be set to ONE*3"
+        assert(c.getTopicsInfo(branch1, 0, 5) == [longTopic0, ONE*15, longTopic1, ONE*3, longTopic2, ONE*3]), "getTopicsInfo for branch1, index 0 to 5, should return topic0 and it's popularity, topic1 and it's updated popularity, and topic2 and it's updated popularity"
+
+    test_defaults()
+    test_updateTopicPopularity()
+    print("data_api/topics.se unit tests completed")
 
 if __name__ == '__main__':
     src = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'src')
@@ -727,16 +1220,13 @@ if __name__ == '__main__':
     test_branches(contracts, state, t)
     test_consensusData(contracts, state, t)
     test_events(contracts, state, t)
+    test_expiringEvents(contracts, state, t)
     test_info(contracts, state, t)
+    test_markets(contracts, state, t)
     test_mutex(contracts, state, t)
-    # data_api/expiringEvents.se
-    # data_api/fxpFunctions.se
-    # data_api/info.se
-    # data_api/markets.se
-    # data_api/mutex.se
-    # data_api/orders.se
-    # data_api/register.se
+    test_orders(contracts, state, t)
+    test_register(contracts, state, t)
     # data_api/reporting.se
     # data_api/reportingThreshold.se
-    # data_api/topics.se
+    test_topics(contracts, state, t)
     print "FINISH TESTING DATA_API"
