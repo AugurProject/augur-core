@@ -58,6 +58,8 @@ else:
 
 IPC_SOCK = None
 
+HOMESTEAD_BLOCK_NUMBER = 1150000
+
 IMPORT = re.compile('^import (?P<name>\w+) as (?P<alias>\w+)$')
 EXTERN = re.compile('^extern (?P<name>\w+): \[.+\]$')
 CONTROLLER_V1 = re.compile('^(?P<indent>\s*)(?P<alias>\w+) = Controller.lookup\([\'"](?P<name>\w+)[\'"]\)')
@@ -401,7 +403,7 @@ class ContractLoader(object):
         ethereum.tester.gas_limit = 4200000
         self.__contracts = {}
         self.__temp_dir = TempDirCopy(source_dir)
-        self.__state.block.number += 1150000
+        self.__state.block.number += HOMESTEAD_BLOCK_NUMBER # enable DELEGATECALL opcode
         self.__source_dir = source_dir
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
