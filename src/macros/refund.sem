@@ -21,3 +21,4 @@ macro isCallerWhitelisted():
         1
     else:
         0
+

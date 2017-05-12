@@ -51,7 +51,7 @@ def claimProceeds(market):
         success = CLOSETWO.twoOutcomes(market, event, msg.sender)
     else:
         # 5 categorical 1d market is resolved with all outcomes having equal values
-        if(EVENTS.getType(event) == "categorical" and (EVENTS.getOutcome(event) == ONE_HALF)):
+        if(EVENTS.getEventType(event) == "categorical" and (EVENTS.getOutcome(event) == ONE_HALF)):
             success = CLOSEONE.oneOutcome(market, event, msg.sender, 1, EVENTS.getNumOutcomes(event))
         # claims winnings for a regular binary or categorical market
         else:
