@@ -43,7 +43,7 @@ def getMarketInfo(marketID, account):
     marketInfo[2] = numOutcomes
     marketInfo[3] = MARKETS.getTradingPeriod(marketID)
     marketInfo[4] = MARKETS.getTradingFee(marketID)
-    marketInfo[5] = MARKETS
+    marketInfo[5] = 0
     marketInfo[6] = MARKETS.getCumulativeScale(marketID)
     marketInfo[7] = MARKETS.getSharesValue(marketID)
     marketInfo[8] = MARKETS.getTotalOrders(marketID)
