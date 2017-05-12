@@ -3,9 +3,6 @@
 
 extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
-BRANCHES = self.controller.lookup('branches')
-extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setController:[address]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, suicideFunds:[address]:_, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
-
 MARKETS = self.controller.lookup('markets')
 extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getOutcomeShareContract:[int256,int256]:int256, getOutcomeShareWallet:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:uint256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[],int256[]]:int256, modifyMarketVolume:[int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
 
@@ -28,18 +25,7 @@ inset('../macros/float.sem')
 
 data controller
 
-macro MAX_WINNING_OUTCOMES: 8
 macro THREE_DAYS: 259200
-
-# If ethicality value <.5 it's 0, otherwise it's ethical
-macro ethicCatch($x):
-    if($x < ONE_HALF):
-        0
-    else:
-        ONE
-
-macro categorical($event):
-    (EVENTS.getNumOutcomes($event) > 2)
 
 # Claim trading profits/value per share after a market is resolved
 # @returns 1 if successful
@@ -53,10 +39,7 @@ def claimProceeds(market):
     MUTEX.acquire()
     event = MARKETS.getMarketEvent(market)
     success = 0
-    periodLength = BRANCHES.getPeriodLength(MARKETS.getBranch(market))
-    currentPeriodMinus3Days = (block.timestamp - THREE_DAYS) / periodLength
-    expiryPeriod = MARKETS.getLastExpDate(market) / periodLength
-    if(currentPeriodMinus3Days <= expiryPeriod):
+    if(block.timestamp <= EVENTS.getExpiration(event) + THREE_DAYS):
         # can't withdraw funds until 3 days after market resolves
         MUTEX.release()
         return(-1)
@@ -67,9 +50,8 @@ def claimProceeds(market):
     if(scalar):
         success = CLOSETWO.twoOutcomes(market, event, msg.sender)
     else:
-        ethical = ethicCatch(EVENTS.getEthics(event))
-        # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
-        if(categorical(event) and (EVENTS.getOutcome(event) == ONE_HALF or !ethical)):
+        # 5 categorical 1d market is resolved with all outcomes having equal values
+        if(EVENTS.getType(event) == "categorical" and (EVENTS.getOutcome(event) == ONE_HALF)):
             success = CLOSEONE.oneOutcome(market, event, msg.sender, 1, EVENTS.getNumOutcomes(event))
         # claims winnings for a regular binary or categorical market
         else:

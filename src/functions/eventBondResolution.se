@@ -14,8 +14,9 @@ extern events: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, add
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/eventHelpers.sem')
+
 inset('../macros/float.sem')
+inset('../macros/unitConversions.sem')
 
 data controller
 
@@ -35,7 +36,7 @@ def resolveEvent(event):
 
     scaledMax = EVENTS.getMaxValue(event)
     scaledMin = EVENTS.getMinValue(event)
-    if(categorical(event)):
+    if(EVENTS.getEventType(event) == "categorical"):
         scaledMin = ONE
         scaledMax = ONE * EVENTS.getNumOutcomes(event)
         fxpOutcome = round(outcome)
@@ -74,3 +75,9 @@ def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)
+
+macro round($x):
+    if(($x + ONE_HALF) / ONE != ($x / ONE)):
+        ($x + ONE_HALF) / ONE * ONE
+    else:
+        $x / ONE * ONE

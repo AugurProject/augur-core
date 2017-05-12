@@ -88,7 +88,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     orderHash = ripemd160(orderInfo, items=4)
     ORDERS.checkHash(orderHash, sender)
 
-    branch = MARKETS.getBranch(market)
+    branch = EVENTS.getExpiration(MARKETS.getMarketEvent(market))
     fxpCumulativeScale = MARKETS.getCumulativeScale(market)
     event = MARKETS.getMarketEvent(market)
     if(EVENTS.getEventType(event) == "scalar"):
@@ -176,18 +176,6 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         ORDERS.removeOrder(orderID)
         MARKETS.removeOrderFromMarket(market, orderID)
 
-    # TODO remove this (?)
-    # If still before voting period has started count the share value
-    # notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
-    # if(notVotingOnYet):
-    #     MARKETS.modifySharesValue(market, safeFxpMul(fxpAskerMoneyFilled, fxpCumulativeScale))
-    #     fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAskerMoneyFilled), fxpCumulativeScale)
-    #     feesInWei = safeFxpMul(BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
-    #     if(!feesInWei):
-    #         ~invalid()
-    #     MARKETS.addFees(market, feesInWei)
-    #     EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
-
     # Sell maker's complete sets
     fxpSharesHeld = -1
     i = 1
@@ -206,11 +194,6 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
             ~invalid()
         if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fxpFee, 2))):
             ~invalid()
-        # TODO remove this (?)
-        # If still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
-        # notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
-        # if(notVotingOnYet):
-        #     MARKETS.modifySharesValue(market, safeFxpMul(-fxpSharesHeld, fxpCumulativeScale))
 
     # Transfer (price - minValue) * fxpBidderSharesFilled to market from bidder since market hasnt been paid yet after complete sets selling. The bidder has already paid for fxpBidderMoneyFilled by escrowing their money
     if(fxpBidderSharesFilled):

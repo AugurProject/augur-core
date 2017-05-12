@@ -34,9 +34,7 @@ def oneOutcome(market, event, sender, categoricalPointFive, numOutcomes):
         i = 0
         while(i < numOutcomes):
             sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i + 1)
-            # MARKETS.modifyParticipantShares(market, sender, i + 1, -sharesOwned, 0)
             MARKETS.getOutcomeShareContract(market, i + 1).destroyShares(sender, sharesOwned)
-
             value = safeDiv(sharesOwned, numOutcomes)
             fee = safeFxpMul(MARKETS.getTradingFee(market), value)
             if(value != 0 and fee != 0):
@@ -48,7 +46,6 @@ def oneOutcome(market, event, sender, categoricalPointFive, numOutcomes):
     else:
         # distribute profit to the people who won money by holding winning shares
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
-        # MARKETS.modifyParticipantShares(market, sender, outcome, -sharesOwned, 0)
         MARKETS.getOutcomeShareContract(market, outcome).destroyShares(sender, sharesOwned)
         value = sharesOwned
         fee = safeFxpMul(MARKETS.getTradingFee(market), value)

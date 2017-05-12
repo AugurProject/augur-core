@@ -1,46 +1,16 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-macro safeAdd($x, $y):
-    if(!safeToAdd($x, $y)):
-        ~invalid()
-    $x + $y
-
-# used to safely subtract two positive numbers with a positive result desired
-macro safeSub($x, $y):
-    if(!safeToSubtract($x, $y)):
-        ~invalid()
-    $x - $y
-
-macro safeMul($x, $y):
-    if(!safeToMultiply($x, $y)):
-        ~invalid()
-    $x * $y
+inset('safeMath.sem')
 
 macro safeFxpMul($x, $y):
     if(!safeToMultiply($x, $y)):
         ~invalid()
     $x * $y / 10 ** 18
 
-macro safeDiv($x, $y):
-    if($y == 0):
-        ~invalid()
-    $x / $y
-
 macro safeFxpDiv($x, $y):
     if($y == 0 or !safeToMultiply($x, 10 ** 18)):
         ~invalid()
     $x * 10 ** 18 / $y
-
-macro safeToAdd($a, $b):
-    $c = $a + $b
-    ($c >= $a and $c >= $b)
-
-macro safeToSubtract($a, $b):
-    ($b <= $a and (($a - $b) <= $a))
-
-macro safeToMultiply($a, $b):
-    $c = $a * $b
-    ($a == 0 or ($c / $a) == $b)
 
 macro unfix($x):
     $x / 10 ** 18

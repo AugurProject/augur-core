@@ -39,7 +39,7 @@ extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suic
 
 inset('../macros/refund.sem')
 inset('../macros/float.sem')
-inset('../macros/eventHelpers.sem')
+
 
 data controller
 

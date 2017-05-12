@@ -34,7 +34,7 @@ def twoOutcomes(market, event, sender):
     minValue = EVENTS.getMinValue(event)
     maxValue = EVENTS.getMaxValue(event)
     currency = INFO.getCurrency(market)
-    branch = MARKETS.getBranch(market)
+    branch = EVENTS.getExpiration(MARKETS.getMarketEvent(market))
     # price is in fixed point
     # share two goes with the high/long side
     pricePerShare2 = safeFxpDiv(outcome - minValue, maxValue - minValue)
@@ -48,24 +48,22 @@ def twoOutcomes(market, event, sender):
 
     # low side
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, 1)
-    # MARKETS.modifyParticipantShares(market, sender, 1, -sharesOwned, 0)
     MARKETS.getOutcomeShareContract(market, 1).destroyShares(sender, sharesOwned)
     shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
     fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
     if(shareValue != 0 and fee != 0):
-        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+        if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
             ~invalid()
         if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
             ~invalid()
 
     # high side (of the scalar part)
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, 2)
-    # MARKETS.modifyParticipantShares(market, sender, 2, -sharesOwned, 0)
     MARKETS.getOutcomeShareContract(market, 2).destroyShares(sender, sharesOwned)
     shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
     fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
     if(shareValue != 0 and fee != 0):
-        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+        if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
             ~invalid()
         if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
             ~invalid()

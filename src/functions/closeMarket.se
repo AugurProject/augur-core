@@ -29,7 +29,7 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/eventHelpers.sem')
+
 inset('../macros/logReturn.sem')
 inset('../macros/float.sem')
 
@@ -103,11 +103,11 @@ macro checkCloseMarketPreconditions():
 macro resolveEventsInMarket():
     resolution = 0
     # look at event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
-    if(binary(event) and !fxpOutcome):
+    if(EVENTS.getEventType(event) == "binary" and !fxpOutcome):
         resolution = RESOLVEBINARY.resolveBinary(event, market, branch, votingPeriodEvent)
-    elif(scalar(event) and !EVENTS.getMode(event)):
+    elif(EVENTS.getEventType(event) == "scalar" and !EVENTS.getMode(event)):
         resolution = NONBINARYRESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
-    elif(categorical(event) and !EVENTS.getMode(event)):
+    elif(EVENTS.getEventType(event) == "categorical" and !EVENTS.getMode(event)):
         resolution = NONBINARYRESOLVE.resolveCategoricalOrScalar(ONE, ONE * EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
     else:
         ~invalid()

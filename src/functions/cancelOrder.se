@@ -91,7 +91,6 @@ def refundOrder(sender: address, type: uint256, fxpSharesEscrowed: uint256, fxpM
         ~invalid()
 
     if(fxpSharesEscrowed > 0):
-
         # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
         if(type == BID):
             i = 1
@@ -99,7 +98,6 @@ def refundOrder(sender: address, type: uint256, fxpSharesEscrowed: uint256, fxpM
                 if(i != outcome):
                     MARKETS.getOutcomeShareWallet(market, i).transfer(sender, fxpSharesEscrowed)
                 i += 1
-
         # Shares refund if has shares escrowed for this outcome
         elif(type == ASK):
             MARKETS.getOutcomeShareWallet(market, outcome).transfer(sender, fxpSharesEscrowed)
