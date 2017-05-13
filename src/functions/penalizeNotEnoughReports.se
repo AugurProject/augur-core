@@ -152,12 +152,14 @@ macro dealWithWhaleReporters():
     elif(total > WEI_TO_ETH):
         expectedEventsForReporterIncludingRequired = safeAdd(safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), WEI_TO_ETH), safeMul(numRequiredEvents, WEI_TO_ETH))
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

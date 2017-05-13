@@ -55,6 +55,7 @@ def init():
 #  - Asker had shares and escrowed them and expects to be paid price - minValue for them
 #  - Bidder owns all shares except the one they're buying and will pay price - minValue for the shares they're buying
 #  - Bidder will pay price - minValue for their shares
+# @internal
 def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
@@ -200,12 +201,14 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     MARKETS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

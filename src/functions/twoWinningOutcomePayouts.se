@@ -74,12 +74,14 @@ macro normalizePrices():
     pricePerShare1 = safeFxpDiv(pricePerShare1, denominator)
     pricePerShare2 = safeFxpDiv(pricePerShare2, denominator)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

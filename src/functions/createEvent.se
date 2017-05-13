@@ -78,6 +78,7 @@ macro checkForkResolveContractIsValid($contract):
 def init():
     self.controller = 0x0
 
+# @public
 def publicCreateEvent(branch, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
     refund()
     MUTEX.acquire()
@@ -85,6 +86,7 @@ def publicCreateEvent(branch, description: str, expDate, fxpMinValue, fxpMaxValu
     MUTEX.release()
     return(event)
 
+# @internal
 def createEvent(sender: address, branch, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
@@ -140,6 +142,7 @@ def createEvent(sender: address, branch, description: str, expDate, fxpMinValue,
     else:
         ~invalid()
 
+# @private
 def checkEventCreationPreconditions(branch, periodLength, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
     if(msg.sender != self):
         ~invalid()
@@ -171,12 +174,14 @@ def checkEventCreationPreconditions(branch, periodLength, description: str, expD
         ~invalid()
     checkForkResolveContractIsValid(forkResolveAddress)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

@@ -38,16 +38,15 @@ macro ASK: 2
 macro MIN_ORDER_VALUE: 10000000000000000
 macro MAX_INT256_VALUE: 2**255 - 1
 
-#
 # Bid / Ask actions: puts orders on the book
-# costs 532k gas
-
 # price is always in 10**18 fxp, amount is in the market's currency # of decimals, e.g. for 9 10**9 is 1 share [so buy 10**9 complete sets and it'll cost you 1 full unit of that currency or buy 10**9 at a fxpPrice of 10**18 it'll cost you 1 full unit of the currency]
 # price is the exact price you want to buy/sell at [which may not be the cost, for example to short a binary market it'll cost 1-price, to go long it'll cost price]
 # smallest order value is 0.00000001
+
 def init():
     self.controller = 0x0
 
+# @public
 def publicMakeOrder(type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, tradeGroupID):
     refund()
     MUTEX.acquire()
@@ -55,6 +54,7 @@ def publicMakeOrder(type: uint256, fxpAmount: uint256, fxpPrice, market: address
     MUTEX.release()
     return(orderID)
 
+# @internal
 def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, tradeGroupID):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
@@ -84,6 +84,7 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
     log(type = MakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp, tradeGroupID)
     return(orderID)
 
+# @private
 def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):
     refund()
     if(msg.sender != self):
@@ -127,6 +128,7 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
+# @private
 def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):
     refund()
     if(msg.sender != self):
@@ -170,12 +172,14 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

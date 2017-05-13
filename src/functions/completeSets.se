@@ -113,12 +113,14 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
     log(type = CompleteSets, sender, market, 2, fxpAmount, numOutcomes, fee, block.timestamp)
     return(1)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

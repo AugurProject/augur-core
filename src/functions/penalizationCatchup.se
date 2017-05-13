@@ -90,12 +90,14 @@ macro redistributeRepFromNotReporting():
     # sends that rep to the branch rep pool
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repChange)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
