@@ -17,9 +17,9 @@ sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
 
 from upload_contracts import ContractLoader
 
-ONE = 10**18
-TWO = 2*ONE
-HALF = ONE/2
+WEI_TO_ETH = 10**18
+TWO = 2*WEI_TO_ETH
+HALF = WEI_TO_ETH/2
 
 def parseCapturedLogs(captured):
     return json.loads(captured.stdout.replace("'", '"').replace('u"', '"'))
@@ -100,16 +100,16 @@ def test_float():
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
     def test_fxp_multiply():
-        assert(c.fxpMultiply(3*ONE, 5*ONE) == 15*ONE)
-        assert(c.fxpMultiply(500*ONE, ONE*50) == 25000*ONE)
-        assert(c.fxpMultiply(-44*ONE, 2*ONE) == -88*ONE)
-        assert(c.fxpMultiply(0, 47*ONE) == 0)
+        assert(c.fxpMultiply(3*WEI_TO_ETH, 5*WEI_TO_ETH) == 15*WEI_TO_ETH)
+        assert(c.fxpMultiply(500*WEI_TO_ETH, WEI_TO_ETH*50) == 25000*WEI_TO_ETH)
+        assert(c.fxpMultiply(-44*WEI_TO_ETH, 2*WEI_TO_ETH) == -88*WEI_TO_ETH)
+        assert(c.fxpMultiply(0, 47*WEI_TO_ETH) == 0)
         try:
-            raise Exception(c.fxpMultiply(2**255-1*ONE, 3*ONE))
+            raise Exception(c.fxpMultiply(2**255-1*WEI_TO_ETH, 3*WEI_TO_ETH))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
         try:
-            raise Exception(c.fxpMultiply(2**255-1, -10*ONE))
+            raise Exception(c.fxpMultiply(2**255-1, -10*WEI_TO_ETH))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
     def test_divide():
@@ -126,16 +126,16 @@ def test_float():
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
     def test_fxp_divide():
-        assert(c.fxpDivide(3*ONE, 5*ONE) == 3*ONE/5)
-        assert(c.fxpDivide(500*ONE, ONE*50) == 10*ONE)
-        assert(c.fxpDivide(-44*ONE, 2*ONE) == -22*ONE)
-        assert(c.fxpDivide(0, 47*ONE) == 0)
+        assert(c.fxpDivide(3*WEI_TO_ETH, 5*WEI_TO_ETH) == 3*WEI_TO_ETH/5)
+        assert(c.fxpDivide(500*WEI_TO_ETH, WEI_TO_ETH*50) == 10*WEI_TO_ETH)
+        assert(c.fxpDivide(-44*WEI_TO_ETH, 2*WEI_TO_ETH) == -22*WEI_TO_ETH)
+        assert(c.fxpDivide(0, 47*WEI_TO_ETH) == 0)
         try:
-            raise Exception(c.fxpDivide(30*ONE, 0))
+            raise Exception(c.fxpDivide(30*WEI_TO_ETH, 0))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
         try:
-            raise Exception(c.fxpDivide(2**250, -10*ONE))
+            raise Exception(c.fxpDivide(2**250, -10*WEI_TO_ETH))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
 

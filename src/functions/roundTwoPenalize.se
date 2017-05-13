@@ -47,7 +47,7 @@ data controller
 macro POINT_ZERO_ONE: 10000000000000000
 macro POINT_ONE: 100000000000000000
 macro POINT_TWO: 200000000000000000
-macro MIN_BOND: 200 * ONE
+macro MIN_BOND: 200 * WEI_TO_ETH
 
 ### Handles reporter penalization for the first backstop
 
@@ -146,7 +146,7 @@ def penalizeRoundTwoWrong(branch, event):
     return(1)
 
 macro checkPenalizeWrongRoundTwoPreconditions():
-    if(repBalance < ONE):
+    if(repBalance < WEI_TO_ETH):
         MUTEX.release()
         return(0)
     if(EVENTS.getEventBranch(event) != branch):

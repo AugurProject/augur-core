@@ -58,7 +58,7 @@ def calculateReportingThreshold(branch, event, period, sender):
     if(!repConstant):
         calculateAndSetRepConstant()
     # 1 is 10**54 here, lesserreportnum, repconstant, and one are all base 10**18
-    reportingThreshold = EXPEVENTS.getLesserReportNum(branch, period, event) * repConstant * ONE
+    reportingThreshold = EXPEVENTS.getLesserReportNum(branch, period, event) * repConstant * WEI_TO_ETH
     if(reportingThreshold > MAX_THRESHOLD):
         reportingThreshold = MAX_THRESHOLD
     return(reportingThreshold)
@@ -88,9 +88,9 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     allFeesForAllMarkets = EXPEVENTS.getFeeValue(branch, votePeriod)
     feeFraction = safeFxpDiv(totalFeesInWei, allFeesForAllMarkets)
     # number of reporters targeted towards a market is quadratic -267*fee_percent**2 / 2 + 533*fee_percent/2 + 1
-    numReportersOnMarket = BRANCHES.getBaseReporters(branch) * (safeMul(-267, safeFxpMul(feeFraction, feeFraction))/2 + safeMul(533, feeFraction)/2 + ONE)
+    numReportersOnMarket = BRANCHES.getBaseReporters(branch) * (safeMul(-267, safeFxpMul(feeFraction, feeFraction))/2 + safeMul(533, feeFraction)/2 + WEI_TO_ETH)
     canPayForThisManyReporters = totalFeesInWei / (GAS_SUBSIDY * tx.gasprice)
-    lesser = min(canPayForThisManyReporters * ONE, numReportersOnMarket)
+    lesser = min(canPayForThisManyReporters * WEI_TO_ETH, numReportersOnMarket)
     if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
         EXPEVENTS.refundCost(sender, branch, votePeriod, event)
         EXPEVENTS.setLesserReportNum(branch, votePeriod, event, lesser)
@@ -194,7 +194,7 @@ def calculateNumberOfEventsAReporterHasToReportOnAtMinimum(branch, reporter, per
     numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, period)
     # eventsExpected == events available in a period * rep percent**1.2
     # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == rep percent**1.2 due to this property: a**b=exp(b*ln(a))=e**(b*ln(a))
-    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / ONE) * ONE / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
+    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / WEI_TO_ETH) * WEI_TO_ETH / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / WEI_TO_ETH)
     numRequiredEvents = EXPEVENTS.getNumRequired(branch, period)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     period = BRANCHES.getVotePeriod(branch)
@@ -203,14 +203,14 @@ def calculateNumberOfEventsAReporterHasToReportOnAtMinimum(branch, reporter, per
     if(forkScenario):
         expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn
     else:
-        expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * ONE
+        expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * WEI_TO_ETH
     dealWithWhaleReporters()
     return(expectedEventsForReporterIncludingRequired / 2)
 
 macro calculateAndSetRepConstant():
     # eventsExpected == events available in a period * rep percent**1.2
         # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == rep percent**1.2 due to this property: a**b=exp(b*ln(a))=e**(b*ln(a))
-    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getRepBalance(branch, sender)) / ONE) * ONE / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
+    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getRepBalance(branch, sender)) / WEI_TO_ETH) * WEI_TO_ETH / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / WEI_TO_ETH)
     numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, period)
     expectedEventsForReporter = repConstant * numEventsAvailableToReportOn
     eventsInPeriod = EXPEVENTS.getNumberEvents(branch, period) - EXPEVENTS.getNumRemoved(branch, period)
@@ -218,8 +218,8 @@ macro calculateAndSetRepConstant():
     # ensures low number of events with highly concentrated rep edge case still get reported on
     if(repFraction >= POINT_ZERO_ONE):
         minimum = min(MIN_EVENTS_FOR_WHALE_TO_REPORT_ON - numRequiredEvents, eventsInPeriod - numRequiredEvents)
-        if(expectedEventsForReporter / ONE < minimum):
-            expectedEventsForReporter = minimum * ONE
+        if(expectedEventsForReporter / WEI_TO_ETH < minimum):
+            expectedEventsForReporter = minimum * WEI_TO_ETH
             repConstant = expectedEventsForReporter / numEventsAvailableToReportOn
     EXPEVENTS.setPeriodRepWeight(branch, period, sender, repConstant)
 
@@ -228,20 +228,20 @@ macro dealWithWhaleReporters():
     reporterIsAWhale = repConstant >= POINT_ZERO_ONE
     if(reporterIsAWhale and forkScenario):
         minimum = safeAdd(MIN_EVENTS_FOR_WHALE, numEventsAvailableToReportOn)
-        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
-            expectedEventsForReporterIncludingRequired = minimum * ONE
+        if(expectedEventsForReporterIncludingRequired / WEI_TO_ETH < minimum):
+            expectedEventsForReporterIncludingRequired = minimum * WEI_TO_ETH
     elif(reporterIsAWhale):
         minimum = min(safeAdd(MIN_EVENTS_FOR_WHALE, numRequiredEvents), eventsInPeriod)
-        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
-            expectedEventsForReporterIncludingRequired = minimum * ONE
+        if(expectedEventsForReporterIncludingRequired / WEI_TO_ETH < minimum):
+            expectedEventsForReporterIncludingRequired = minimum * WEI_TO_ETH
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
     total = safeMul(repConstant, baseReporters)
     # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
-    if(total > ONE and forkScenario):
-        expectedEventsForReporterIncludingRequired = safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), ONE)
-    elif(total > ONE):
-        expectedEventsForReporterIncludingRequired = safeAdd(safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), ONE), safeMul(numRequiredEvents, ONE))
+    if(total > WEI_TO_ETH and forkScenario):
+        expectedEventsForReporterIncludingRequired = safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), WEI_TO_ETH)
+    elif(total > WEI_TO_ETH):
+        expectedEventsForReporterIncludingRequired = safeAdd(safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), WEI_TO_ETH), safeMul(numRequiredEvents, WEI_TO_ETH))
 
 macro abs($a):
     if($a < 0):

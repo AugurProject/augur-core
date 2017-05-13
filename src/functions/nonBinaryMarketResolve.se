@@ -31,7 +31,7 @@ inset('../macros/float.sem')
 
 data controller
 
-macro FIRST_RESOLVE_BOND: 11 * ONE
+macro FIRST_RESOLVE_BOND: 11 * WEI_TO_ETH
 macro INDETERMINATE: 1500000000000000000
 
 ### Serves to resolve events
@@ -50,7 +50,7 @@ def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch
     ethical = ethicCatch(ethics)
     if(prelimOutcome and !mode):
         mode = prelimOutcome
-        ethical = ONE
+        ethical = WEI_TO_ETH
     EVENTS.setMode(event, mode)
     fxpOutcome = safeFxpMul(mode, fxpScaledMax - fxpScaledMin) + fxpScaledMin
     # outcome is set to the mode of the reported outcomes

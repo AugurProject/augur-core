@@ -46,7 +46,7 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, mos
     branchInfo = string(6 * 32 + len(description))
     branchInfo[0] = msg.sender
     # creation fee
-    branchInfo[1] = 47 * ONE
+    branchInfo[1] = 47 * WEI_TO_ETH
     # length of voting cycle
     branchInfo[2] = periodLength
     branchInfo[3] = block.timestamp
@@ -60,8 +60,8 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, mos
     BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, parentPeriod, parent, ethContract, mostRecentChildBranch)
     # pay creation fee, initialize branch info
     parentEthContract = BRANCHES.getBranchCurrency(parent, 0)
-    feePaid = parentEthContract.transferFrom(msg.sender, BRANCHES.getBranchWallet(parent, parentEthContract), 47 * ONE)
-    if(!feePaid or !INFO.setInfo(branch, description, msg.sender, 47 * ONE, 0, 0) or !REPORTING.setInitialReporters(branch)):
+    feePaid = parentEthContract.transferFrom(msg.sender, BRANCHES.getBranchWallet(parent, parentEthContract), 47 * WEI_TO_ETH)
+    if(!feePaid or !INFO.setInfo(branch, description, msg.sender, 47 * WEI_TO_ETH, 0, 0) or !REPORTING.setInitialReporters(branch)):
         ~invalid()
     if(!isCallerWhitelisted()):
         MUTEX.release()

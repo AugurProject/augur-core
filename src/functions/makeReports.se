@@ -91,9 +91,9 @@ def submitReport(event, fxpReport, fxpEthics):
     reportingThresholdForUser = calculateReportingThreshold()
     # do abs to ensure pos. and between 0 and 1
     hash = sha3([msg.sender, event], items = 2)
-    shaHash = abs(hash) / ONE
+    shaHash = abs(hash) / WEI_TO_ETH
     # max value 10^54
-    shaHash = shaHash / 57896044618658091106304 * ONE
+    shaHash = shaHash / 57896044618658091106304 * WEI_TO_ETH
     # shaHash must be <= to the threshold for that user to be able to fxpReport on the given event
     if(shaHash > reportingThresholdForUser):
         MUTEX.release()
@@ -125,14 +125,14 @@ macro checkSubmitReportPreconditions():
         forkedOverThisEvent = 1
     if(roundTwo or forkedOverThisEvent):
         weight = balance
-    if(balance < ONE):
+    if(balance < WEI_TO_ETH):
         MUTEX.release()
         logReturn(makeReportsLogReturn, 0)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
         MUTEX.release()
         logReturn(makeReportsLogReturn, -1)
     atSecondHalfOfPeriod()
-    if(fxpEthics != ONE and fxpEthics != 0):
+    if(fxpEthics != WEI_TO_ETH and fxpEthics != 0):
         MUTEX.release()
         logReturn(makeReportsLogReturn, -5)
     if(EVENTS.getOutcome(event) != 0):
@@ -159,10 +159,10 @@ macro saveUsersReportAndHandleEthicality():
         # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
         if(forkedOverEthicality):
             oldEthical = ethicCatch(EVENTS.getEthics(event))
-            if(oldEthical == ONE):
+            if(oldEthical == WEI_TO_ETH):
                 validatedFxpEthics = 0
             else:
-                validatedFxpEthics = ONE
+                validatedFxpEthics = WEI_TO_ETH
         EXPEVENTS.setEthicReport(branch, votePeriod, event, validatedFxpEthics, msg.sender)
         eventEthics = safeDiv(safeAdd(safeMul(EVENTS.getForkEthicality(event), EXPEVENTS.getEventWeight(branch, votePeriod, event)), safeMul(validatedFxpEthics, weight)), safeAdd(EXPEVENTS.getEventWeight(branch, votePeriod, event), weight))
         EVENTS.setForkEthicality(event, eventEthics)

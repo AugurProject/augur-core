@@ -51,7 +51,7 @@ data controller
 macro FORK_TEXT: text("fork")
 macro POINT_ZERO_ONE: 10000000000000000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
-macro FIRST_RESOLVE_BOND: 11 * ONE
+macro FIRST_RESOLVE_BOND: 11 * WEI_TO_ETH
 
 def init():
     self.controller = 0x0

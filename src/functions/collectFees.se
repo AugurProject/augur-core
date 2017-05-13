@@ -47,7 +47,7 @@ def collectRep(branch, sender):
     denominator = CONSENSUS.getDenominator(branch, lastPeriod)
     checkCollectRepPreconditions()
     # need 1 rep to claim fees
-    if(newRep < ONE):
+    if(newRep < WEI_TO_ETH):
         prepareInfoForConsensus()
         if(!isCallerWhitelisted()):
             MUTEX.release()
@@ -76,7 +76,7 @@ def collectFees(branch, sender, currency):
     denominator = CONSENSUS.getDenominator(branch, lastPeriod)
     checkCollectFeesPreconditions()
     # need 1 rep to claim fees
-    if(newRep < ONE):
+    if(newRep < WEI_TO_ETH):
         if(!isCallerWhitelisted()):
             MUTEX.release()
         return(2)

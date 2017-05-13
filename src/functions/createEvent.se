@@ -46,7 +46,7 @@ macro COST_PER_REPORTER: 3500000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 macro MAX_FEE: 10 ** 17
 macro THREE_DAYS: 259200
-macro FIRST_RESOLVE_BOND: 11 * ONE
+macro FIRST_RESOLVE_BOND: 11 * WEI_TO_ETH
 macro SECONDS_PER_YEAR: 31557600
 macro 10_PERCENT_RATE: 100000000000000000
 # may want to reconfirm this again
@@ -91,8 +91,8 @@ def createEvent(sender: address, branch, description: str, expDate, fxpMinValue,
 
     periodLength = BRANCHES.getPeriodLength(branch)
     if(numOutcomes > 2):
-        fxpMinValue = ONE
-        fxpMaxValue = safeMul(numOutcomes, ONE)
+        fxpMinValue = WEI_TO_ETH
+        fxpMaxValue = safeMul(numOutcomes, WEI_TO_ETH)
     self.checkEventCreationPreconditions(branch, periodLength, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress)
 
     eventInfo = string(8 * 32 + len(description))
@@ -155,7 +155,7 @@ def checkEventCreationPreconditions(branch, periodLength, description: str, expD
         ~invalid()
     if(fxpMaxValue < fxpMinValue):
         ~invalid()
-    if((fxpMaxValue - fxpMinValue) < ONE):
+    if((fxpMaxValue - fxpMinValue) < WEI_TO_ETH):
         ~invalid()
     if((fxpMaxValue + fxpMinValue) < fxpMaxValue):
         ~invalid()

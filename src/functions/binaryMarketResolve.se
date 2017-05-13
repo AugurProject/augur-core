@@ -31,7 +31,7 @@ inset('../macros/float.sem')
 
 data controller
 
-macro FIRST_RESOLVE_BOND: 11 * ONE
+macro FIRST_RESOLVE_BOND: 11 * WEI_TO_ETH
 macro INDETERMINATE: 1500000000000000000
 
 ### Serves to resolve events
@@ -49,7 +49,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
     ethical = ethicCatch(ethics)
     elif(prelimOutcome and !fxpOutcome):
         # if prelimOutcome is indeterminate, ethics doesn't matter b/c it's the same result [money returned at even odds]
-        ethical = ONE
+        ethical = WEI_TO_ETH
         fxpOutcome = prelimOutcome
     EVENTS.setOutcome(event, fxpOutcome)
     EVENTS.setEthics(event, ethical)

@@ -74,7 +74,7 @@ def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, f
     return(fxpReport)
 
 macro validateReportAndUpdateBinaryEvent():
-    if(fxpReport > 2 * ONE or fxpReport < ONE or !fxpReport):
+    if(fxpReport > 2 * WEI_TO_ETH or fxpReport < WEI_TO_ETH or !fxpReport):
         logReturn(makeReportsLogReturn, -4)
     # outcome is calculated as we go along on a fxpReport by fxpReport basis (i.e. lazily evaluating things)
     elif(forkedOverThisEvent):
@@ -88,8 +88,8 @@ macro validateReportAndUpdateBinaryEvent():
         EVENTS.setUncaughtOutcome(event, outcome)
 
 macro validateReportAndUpdateScalarOrCategoricalEvent():
-    if(fxpReport > ONE):
-        fxpReport = ONE
+    if(fxpReport > WEI_TO_ETH):
+        fxpReport = WEI_TO_ETH
     if(fxpReport <= 0):
         # 1 is the new 0 [1/10**18 is basically 0 but able to be differentiated from no fxpReport of 0]
         fxpReport = 1

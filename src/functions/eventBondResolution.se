@@ -20,7 +20,7 @@ inset('../macros/unitConversions.sem')
 
 data controller
 
-macro FIRST_RESOLVE_BOND: 11 * ONE
+macro FIRST_RESOLVE_BOND: 11 * WEI_TO_ETH
 macro INDETERMINATE: 1500000000000000000
 
 ### Serves to resolve events
@@ -37,8 +37,8 @@ def resolveEvent(event):
     scaledMax = EVENTS.getMaxValue(event)
     scaledMin = EVENTS.getMinValue(event)
     if(EVENTS.getEventType(event) == "categorical"):
-        scaledMin = ONE
-        scaledMax = ONE * EVENTS.getNumOutcomes(event)
+        scaledMin = WEI_TO_ETH
+        scaledMax = WEI_TO_ETH * EVENTS.getNumOutcomes(event)
         fxpOutcome = round(outcome)
     if(outcome < scaledMin):
         outcome = scaledMin
@@ -77,7 +77,7 @@ def suicideFunds(to: address):
     suicide(to)
 
 macro round($x):
-    if(($x + ONE_HALF) / ONE != ($x / ONE)):
-        ($x + ONE_HALF) / ONE * ONE
+    if(($x + ONE_HALF) / WEI_TO_ETH != ($x / WEI_TO_ETH)):
+        ($x + ONE_HALF) / WEI_TO_ETH * WEI_TO_ETH
     else:
-        $x / ONE * ONE
+        $x / WEI_TO_ETH * WEI_TO_ETH

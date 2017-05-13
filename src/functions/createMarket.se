@@ -49,7 +49,7 @@ macro POINT_ZERO_THREE: 553402322211286528
 macro COST_PER_REPORTER: 3500000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 macro THREE_DAYS: 259200
-macro FIRST_RESOLVE_BOND: 11 * ONE
+macro FIRST_RESOLVE_BOND: 11 * WEI_TO_ETH
 macro SECONDS_PER_YEAR: 31557600
 macro TEN_PERCENT_RATE: 100000000000000000
 # may want to reconfirm this again
@@ -104,12 +104,12 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
     # scalars
     fxpMaxValue = EVENTS.getMaxValue(event)
     fxpMinValue = EVENTS.getMinValue(event)
-    scalar = (fxpMaxValue != TWO or fxpMinValue != ONE) and numOutcomes == 2
+    scalar = (fxpMaxValue != TWO or fxpMinValue != WEI_TO_ETH) and numOutcomes == 2
     if(scalar):
         # cumulativeScale is the range of a scalar
         cumulativeScale += fxpMaxValue - fxpMinValue
     if(!cumulativeScale):
-        cumulativeScale = ONE
+        cumulativeScale = WEI_TO_ETH
 
     # formation of market (hash)
     descriptionLength = INFO.getDescriptionLength(event)
@@ -182,7 +182,7 @@ def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet
         # so A - P gives us amount to return to person
     eventCurrency = INFO.getCurrency(event)
     bondPrincipal = EVENTS.getBond(event)
-    time = (expirationDate - block.timestamp) * ONE / SECONDS_PER_YEAR
+    time = (expirationDate - block.timestamp) * WEI_TO_ETH / SECONDS_PER_YEAR
     amountToPay = safeFxpMul(bondPrincipal, FXP.fxExp(safeFxpMul(time, TEN_PERCENT_RATE))) - bondPrincipal
     if(!eventCurrency.transferFrom(sender, INFO.getCreator(event), amountToPay)):
         ~invalid()

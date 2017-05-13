@@ -136,7 +136,7 @@ macro checkPenalizeWrongPreconditions():
     if(EVENTS.getEventBranch(event) != branch):
         MUTEX.release()
         logReturn(consensusLogReturn, -7)
-    if(repBalance < ONE):
+    if(repBalance < WEI_TO_ETH):
         MUTEX.release()
         logReturn(consensusLogReturn, 0)
     p = proportionCorrect(event, 0)
