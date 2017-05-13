@@ -39,9 +39,9 @@ def twoOutcomes(market, event, sender):
     # share two goes with the high/long side
     pricePerShare2 = safeFxpDiv(outcome - minValue, maxValue - minValue)
     # share one goes with the low/short side of the calc
-    pricePerShare1 = safeSub(ONE, pricePerShare2)
+    pricePerShare1 = safeSub(WEI_TO_ETH, pricePerShare2)
     # normalize if not exactly 100%
-    if(safeAdd(pricePerShare1, pricePerShare2) != ONE):
+    if(safeAdd(pricePerShare1, pricePerShare2) != WEI_TO_ETH):
         normalizePrices()
     # for each winning outcome get rid of shares and send money to the trader
     cumulativeScale = MARKETS.getCumulativeScale(market)

@@ -85,7 +85,7 @@ def penalizeOnForkedEvent(branch, event):
     return(1)
 
 macro checkForkPenalizationPreconditions():
-    if(repBalance < ONE):
+    if(repBalance < WEI_TO_ETH):
         MUTEX.release()
         return(0)
     if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
@@ -116,7 +116,7 @@ macro penalizeOrRewardReporter():
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     if(!penalizedOnEvent and reportValue and outcome != 0):
-        repChange = REPCHANGELIBRARY.calculateRepChange(reportValue, ONE, oldRep, p, event, outcome, numReportedOn, call = delegate)
+        repChange = REPCHANGELIBRARY.calculateRepChange(reportValue, WEI_TO_ETH, oldRep, p, event, outcome, numReportedOn, call = delegate)
         handleEthicsAndBondRepRedistribution(numReportedOn)
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
@@ -126,10 +126,10 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
     if(ethics != ethicCatch(EVENTS.getEthics(event)) and repChange >= 0 and BACKSTOPS.getForkedOverEthicality(event)):
         if($numReportedOn < 10):
             # allows max penalty to be 10% per event
-            $penalty = -ONE / 10
+            $penalty = -WEI_TO_ETH / 10
             repChange = safeFxpMul($penalty, repBalance)
         else:
-            $penalty = -ONE / $numReportedOn
+            $penalty = -WEI_TO_ETH / $numReportedOn
             repChange = safeFxpMul($penalty, repBalance)
     # can only lose max of current balance
     if(repBalance + repChange <= 0):

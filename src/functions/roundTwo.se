@@ -43,7 +43,7 @@ data controller
 
 macro POINT_ZERO_ONE: 10000000000000000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
-macro MIN_BOND: 200 * ONE
+macro MIN_BOND: 200 * WEI_TO_ETH
 
 ### Deals with the first backstop wherein everyone reports on a given event
 
@@ -171,8 +171,8 @@ def resolve(branch, event):
         fxpScaledMax = EVENTS.getMaxValue(event)
         fxpScaledMin = EVENTS.getMinValue(event)
         if(categorical(event)):
-            fxpScaledMin = ONE
-            fxpScaledMax = ONE * EVENTS.getNumOutcomes(event)
+            fxpScaledMin = WEI_TO_ETH
+            fxpScaledMax = WEI_TO_ETH * EVENTS.getNumOutcomes(event)
         NONBINARYRESOLVE.resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, EVENTS.getMarket(event, 0), branch, votePeriod)
         return(1)
     # (should never be reached)

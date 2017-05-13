@@ -11,11 +11,11 @@ macro proportionCorrect($event, $forkEvent):
         uncaught = EVENTS.getUncaughtOutcome($event)
     outcome = catch(uncaught)
     # subtract 1 to get it between 0 to 1
-    avgOutcome = uncaught - ONE
+    avgOutcome = uncaught - WEI_TO_ETH
     binary = binary($event)
     if(binary):
         if(outcome == NO):
-            p = ONE - avgOutcome
+            p = WEI_TO_ETH - avgOutcome
         elif(outcome == YES):
             p = avgOutcome
         # in indeterminate case it'll return 0

@@ -77,7 +77,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         expectedEventsForReporterIncludingRequired = safeMul(repConstant, numEventsAvailableToReportOn)
     else:
         # include required events in non fork scenarios
-        expectedEventsForReporterIncludingRequired = safeMul(repConstant, numEventsAvailableToReportOn) + safeMul(numRequiredEvents, ONE)
+        expectedEventsForReporterIncludingRequired = safeMul(repConstant, numEventsAvailableToReportOn) + safeMul(numRequiredEvents, WEI_TO_ETH)
     dealWithWhaleReporters()
     ensureReporterCouldveReportedOnMoreButDidnt()
     checkProveReporterDidntReportEnoughPreconditions()
@@ -100,7 +100,7 @@ macro ensureReporterCouldveReportedOnMoreButDidnt():
     numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
     couldveReported = THRESHOLD.getEventCouldveReportedOn(branch, lastPeriod, reporter, eventExample)
-    reportedOnLessThanShouldve = expectedEventsForReporterIncludingRequired / 2 > safeMul(numReportsSubmitted, ONE) and couldveReported
+    reportedOnLessThanShouldve = expectedEventsForReporterIncludingRequired / 2 > safeMul(numReportsSubmitted, WEI_TO_ETH) and couldveReported
     if(!reportedOnLessThanShouldve):
         MUTEX.release()
         return(-4)
@@ -137,20 +137,20 @@ macro dealWithWhaleReporters():
     reporterIsAWhale = repConstant >= POINT_ZERO_ONE
     if(reporterIsAWhale and forkScenario):
         minimum = safeAdd(MIN_EVENTS_FOR_WHALE, numEventsAvailableToReportOn)
-        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
-            expectedEventsForReporterIncludingRequired = minimum * ONE
+        if(expectedEventsForReporterIncludingRequired / WEI_TO_ETH < minimum):
+            expectedEventsForReporterIncludingRequired = minimum * WEI_TO_ETH
     elif(reporterIsAWhale):
         minimum = min(safeAdd(MIN_EVENTS_FOR_WHALE, numRequiredEvents), eventsInPeriod)
-        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
-            expectedEventsForReporterIncludingRequired = minimum * ONE
+        if(expectedEventsForReporterIncludingRequired / WEI_TO_ETH < minimum):
+            expectedEventsForReporterIncludingRequired = minimum * WEI_TO_ETH
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
     total = safeMul(repConstant, baseReporters)
     # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
-    if(total > ONE and forkScenario):
-        expectedEventsForReporterIncludingRequired = safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), ONE)
-    elif(total > ONE):
-        expectedEventsForReporterIncludingRequired = safeAdd(safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), ONE), safeMul(numRequiredEvents, ONE))
+    if(total > WEI_TO_ETH and forkScenario):
+        expectedEventsForReporterIncludingRequired = safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), WEI_TO_ETH)
+    elif(total > WEI_TO_ETH):
+        expectedEventsForReporterIncludingRequired = safeAdd(safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), WEI_TO_ETH), safeMul(numRequiredEvents, WEI_TO_ETH))
 
 def setController(newController: address):
     if(msg.sender != self.controller):

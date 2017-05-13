@@ -58,7 +58,7 @@ def init():
     self.Branches[1010101].baseReporters = 6
     ethContract = self.controller.lookup("cash")
     self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].contract = ethContract
-    self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].rate = ONE
+    self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].rate = WEI_TO_ETH
     self.Branches[1010101].currencyToIndex[ethContract] = self.Branches[1010101].numCurrencies
     self.Branches[1010101].currencyActive[ethContract] = 1
     self.Branches[1010101].numCurrencies += 1
@@ -267,7 +267,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, pare
         self.Branches[ID].baseReporters = self.Branches[parent].baseReporters
         self.Branches[ID].mostRecentChild = mostRecentChild
         self.Branches[ID].currencies[self.Branches[ID].numCurrencies].contract = ethContract
-        self.Branches[ID].currencies[self.Branches[ID].numCurrencies].rate = ONE
+        self.Branches[ID].currencies[self.Branches[ID].numCurrencies].rate = WEI_TO_ETH
         self.Branches[ID].currencyToIndex[ethContract] = self.Branches[ID].numCurrencies
         self.Branches[ID].currencyActive[ethContract] = 1
         self.Branches[ID].numCurrencies += 1

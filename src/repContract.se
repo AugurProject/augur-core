@@ -27,7 +27,7 @@ event Transfer(from:address:indexed, to:address:indexed, value:uint256)
 event Approval(owner:address:indexed, spender:address:indexed, fxpValue:uint256)
 
 # 18 decimals
-macro ONE:
+macro WEI_TO_ETH:
     10 ** 18
 
 macro refund():
@@ -98,9 +98,9 @@ def setSaleDistribution(addresses: address[], balances: uint256[]):
             self.totalSupply += balances[i]
             log(type = Transfer, 0, addresses[i], balances[i])
         i += 1
-    if(self.totalSupply == 11000000 * ONE):
+    if(self.totalSupply == 11000000 * WEI_TO_ETH):
         self.seeded = 1
-    if(self.totalSupply > 11000000 * ONE):
+    if(self.totalSupply > 11000000 * WEI_TO_ETH):
         ~invalid()
     return(1: uint256)
 

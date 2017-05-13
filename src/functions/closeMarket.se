@@ -108,7 +108,7 @@ macro resolveEventsInMarket():
     elif(EVENTS.getEventType(event) == "scalar" and !EVENTS.getMode(event)):
         resolution = NONBINARYRESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
     elif(EVENTS.getEventType(event) == "categorical" and !EVENTS.getMode(event)):
-        resolution = NONBINARYRESOLVE.resolveCategoricalOrScalar(ONE, ONE * EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
+        resolution = NONBINARYRESOLVE.resolveCategoricalOrScalar(WEI_TO_ETH, WEI_TO_ETH * EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
     else:
         ~invalid()
     if(resolution == -1):

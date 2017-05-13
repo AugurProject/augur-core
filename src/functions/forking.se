@@ -180,7 +180,7 @@ macro returnRoundTwoBond():
     market = EVENTS.getMarket(event, 0)
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1, BRANCHES.getBranchCurrency(branch, 0)) / EXPEVENTS.getNumberEvents(branch, period - 1)
     bond = safeAdd(averageAdjudicationCost, safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2)))
-    minBond = 200 * ONE
+    minBond = 200 * WEI_TO_ETH
     bond = min(bond, minBond)
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
