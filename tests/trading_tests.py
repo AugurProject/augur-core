@@ -59,10 +59,12 @@ def balanceOf(shareContract: address, address: address):
 eventCreationCounter = 0
 
 def fix(n):
-    return str((Decimal(str(n)) * Decimal(10)**Decimal(18)).quantize(0))
+    return n * 10**18
+    # return str((Decimal(str(n)) * Decimal(10)**Decimal(18)).quantize(0))
 
 def unfix(n):
-    return str(Decimal(str(n)) / Decimal(10)**Decimal(18))
+    return n / 10**18
+    # return str(Decimal(str(n)) / Decimal(10)**Decimal(18))
 
 def hex2str(h):
     return hex(h)[2:-1]
