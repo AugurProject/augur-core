@@ -28,6 +28,7 @@ def init():
     self.controller = 0x0
 
 def oneOutcome(market, event, sender, categoricalPointFive, numOutcomes):
+    self.controller.assertIsWhitelisted(msg.sender)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value
     outcome = EVENTS.getOutcome(event)
     if(categoricalPointFive):

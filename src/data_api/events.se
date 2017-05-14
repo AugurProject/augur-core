@@ -246,6 +246,8 @@ def initializeEvent(id, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
         self.Events[id].forkResolveAddress = forkResolveAddress
         if(numOutcomes > 2):
             self.Events[id].type = "categorical"
+            self.Events[id].fxpMinValue = ONE
+            self.Events[id].fxpMaxValue = ONE*numOutcomes
         elif(fxpMinValue == WEI_TO_ETH and fxpMaxValue == TWO):
             self.Events[id].type = "binary"
         else:
