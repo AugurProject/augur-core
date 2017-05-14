@@ -28,7 +28,7 @@ inset('../macros/float.sem')
 
 data controller
 
-event tradingFeeUpdated(sender: indexed, branch: indexed, marketID: indexed, fxpTradingFee, timestamp)
+event DecreaseTradingFee(sender: indexed, branch: indexed, marketID: indexed, fxpTradingFee, timestamp)
 
 macro POINT_ZERO_THREE: 553402322211286528
 macro COST_PER_REPORTER: 3500000
@@ -52,7 +52,7 @@ def init():
 def publicDecreaseTradingFee(market: address, fxpTradingFee: uint256):
     refund()
     MUTEX.acquire()
-    result = self.decreaseTradingFee(sender, market, fxpTradingFee)
+    result = self.decreaseTradingFee(msg.sender, market, fxpTradingFee)
     MUTEX.release()
     return(result)
 
@@ -64,7 +64,7 @@ def publicDecreaseTradingFee(market: address, fxpTradingFee: uint256):
 def decreaseTradingFee(sender: address, market: address, fxpTradingFee: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
-    branch = EVENTS.getExpiration(MARKETS.getMarketEvent(market))
+    branch = EVENTS.getEventBranch(MARKETS.getMarketEvent(market))
     if(sender != INFO.getCreator(market)):
         ~invalid()
     oldFee = MARKETS.getTradingFee(market)
@@ -76,11 +76,12 @@ def decreaseTradingFee(sender: address, market: address, fxpTradingFee: uint256)
         ~invalid()
     if(fxpTradingFee > oldFee):
         ~invalid()
-    if(!currency.transferFrom(sender, BRANCHES.getBranchWallet(branch, currency), newCreationFee - oldCreationFee)):
-        ~invalid()
+    if(newCreationFee > oldCreationFee):
+        if(!currency.transferFrom(sender, BRANCHES.getBranchWallet(branch, currency), newCreationFee - oldCreationFee)):
+            ~invalid()
     if(!MARKETS.setTradingFee(market, fxpTradingFee)):
         ~invalid()
-    log(type=tradingFeeUpdated, sender, branch, market, fxpTradingFee, block.timestamp)
+    log(type=DecreaseTradingFee, sender, branch, market, fxpTradingFee, block.timestamp)
     return(1)
 
 # @controller
