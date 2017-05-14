@@ -18,7 +18,8 @@ MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 
 data controller
 
@@ -29,14 +30,17 @@ def init():
 
 # Increments the period after reporting
 # ui has to call this to stay cheap / not check it elsewhere
-def incrementPeriodAfterReporting(branch):
+def publicIncrementPeriodAfterReporting(branch):
     refund()
-    if(!isCallerWhitelisted()):
-        MUTEX.acquire()
+    MUTEX.acquire()
+    result = self.internalIncrementPeriodAfterReporting(branch)
+    MUTEX.release()
+    return(result)
+
+def internalIncrementPeriodAfterReporting(branch):
+    self.controller.assertIsWhitelisted(msg.sender)
     # do this after reporting is finished
     if(!periodOver(branch)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(0)
     periodVotingOnNow = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
     lastPeriod = periodVotingOnNow - 1
@@ -49,8 +53,6 @@ def incrementPeriodAfterReporting(branch):
     baseReporterQuantity = 2 * (3 * WEI_TO_ETH + ((333 * percentAppealed)^3 / WEI_TO_ETH^2)) / WEI_TO_ETH
     CONSENSUS.setBaseReportersLastPeriod(branch, BRANCHES.getBaseReporters(branch))
     BRANCHES.setBaseReporters(branch, baseReporterQuantity)
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(1)
 
 macro periodOver($branch):

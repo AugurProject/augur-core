@@ -44,10 +44,11 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/periodStage.sem')
 inset('../macros/logReturn.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data controller
 
@@ -115,7 +116,7 @@ macro checkSubmitReportPreconditions():
     if(!eventIndex and (!event or eventID != event)):
         MUTEX.release()
         logReturn(makeReportsLogReturn, -9)
-    if(delta >= 1 and CATCHUP.penalizationCatchup(branch, msg.sender) != 1):
+    if(delta >= 1 and CATCHUP.internalPenalizationCatchup(branch, msg.sender) != 1):
         MUTEX.release()
         logReturn(makeReportsLogReturn, -10)
     # if first fxpReport of period, num events not set
@@ -142,7 +143,7 @@ macro checkSubmitReportPreconditions():
     # if(block.timestamp / periodLength != ((block.timestamp + 2 * TWENTY_FOUR_HR) / periodLength)):
     #    logReturn(makeReportsLogReturn, -7)
     # ensures user has collected fees for last reporting period
-    if(!CONSENSUS.getRepCollected(branch, msg.sender, votePeriod - 1) and COLLECTFEES.collectRep(branch, msg.sender, value = msg.value) < 0):
+    if(!CONSENSUS.getRepCollected(branch, msg.sender, votePeriod - 1) and COLLECTFEES.internalCollectRep(branch, msg.sender, value = msg.value) < 0):
         MUTEX.release()
         logReturn(makeReportsLogReturn, -8)
     # actual submitting of fxpReport and ethicality

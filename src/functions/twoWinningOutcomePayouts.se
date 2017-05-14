@@ -19,7 +19,8 @@ extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint25
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 
 data controller
 
@@ -42,7 +43,10 @@ def twoOutcomes(market, event, sender):
     pricePerShare1 = safeSub(WEI_TO_ETH, pricePerShare2)
     # normalize if not exactly 100%
     if(safeAdd(pricePerShare1, pricePerShare2) != WEI_TO_ETH):
-        normalizePrices()
+        denominator = safeAdd(pricePerShare1, pricePerShare1)
+        pricePerShare1 = safeFxpDiv(pricePerShare1, denominator)
+        pricePerShare2 = safeFxpDiv(pricePerShare2, denominator)
+
     # for each winning outcome get rid of shares and send money to the trader
     cumulativeScale = MARKETS.getCumulativeScale(market)
 
@@ -69,19 +73,12 @@ def twoOutcomes(market, event, sender):
             ~invalid()
     return(1)
 
-macro normalizePrices():
-    denominator = safeAdd(pricePerShare1, pricePerShare1)
-    pricePerShare1 = safeFxpDiv(pricePerShare1, denominator)
-    pricePerShare2 = safeFxpDiv(pricePerShare2, denominator)
-
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

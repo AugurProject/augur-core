@@ -40,7 +40,7 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 
 inset('../macros/refund.sem')
 inset('../macros/periodStage.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 # sender/owner, then spender
 data amountCanSpend[][](branch[])
@@ -86,12 +86,18 @@ def init():
             # say you gained rep in round 1, if it was a valid round 2 you have incentive _to_ convert to dormant
             # say you lost rep in round 1, if it was an invalid round 2 you have incentive to convert to dormant
             # say you gained rep in round 1, if it was an invalid round 2 you have incentive _to_ not convert to dormant or send rep b/c you want to keep it
-def convertToDormantRep(branch, fxpValue):
-    MUTEX.acquire()
-    checkInvariants(msg.sender)
+def publicConvertToDormantRep(branch, fxpValue):
     refund()
+    MUTEX.acquire()
+    result = self.internalConvertToDormantRep(branch, fxpValue)
+    MUTEX.release()
+    return(result)
+
+def internalConvertToDormantRep(branch, fxpValue):
+    self.controller.assertIsWhitelisted(msg.sender)
+    checkInvariants(msg.sender)
     # auto increment vote period if needed
-    INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
+    INCREMENTPERIOD.internalIncrementPeriodAfterReporting(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     lastPeriod = votePeriod - 1
@@ -101,13 +107,9 @@ def convertToDormantRep(branch, fxpValue):
     # Rep cannot be simultaneously spent (transferred) and used to vote
     atFirstHalfOfPeriod()
 
-    if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
+    if(delta > 1 and CATCHUP.internalPenalizationCatchup(branch, $account) != 1):
         return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(0)
 
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
@@ -121,7 +123,6 @@ def convertToDormantRep(branch, fxpValue):
     if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderDormantBalance, fxpValue) or !REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, senderIndex, fxpValue)):
         ~invalid()
     REPORTING.adjustActiveRep(branch, -fxpValue)
-    MUTEX.release()
     return(1)
 
 # Convert dormant rep to active rep
@@ -131,8 +132,15 @@ def convertToDormantRep(branch, fxpValue):
     # -2: not in right part of period
     # -4: couldn't catchup automatically
     # -5: not enough rep
-def convertToActiveRep(branch, fxpValue):
+def publicConvertToActiveRep(branch, fxpValue):
+    refund()
     MUTEX.acquire()
+    result = self.internalConvertToActiveRep(branch, fxpValue)
+    MUTEX.release()
+    return(result)
+
+def internalConvertToActiveRep(branch, fxpValue):
+    self.controller.assertIsWhitelisted(msg.sender)
     checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     senderBalance = REPORTING.balanceOfReporter(branch, msg.sender)
@@ -142,13 +150,11 @@ def convertToActiveRep(branch, fxpValue):
     if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderActiveBalance, fxpValue) or !REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, senderIndex, fxpValue)):
         ~invalid()
     REPORTING.adjustActiveRep(branch, fxpValue)
-    MUTEX.release()
     return(1)
 
 macro checkInvariants($account):
-    refund()
     # auto increment vote period if needed
-    INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
+    INCREMENTPERIOD.internalIncrementPeriodAfterReporting(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     lastPeriod = votePeriod - 1
@@ -158,13 +164,9 @@ macro checkInvariants($account):
     # Rep cannot be simultaneously spent (transferred) and used to vote
     atFirstHalfOfPeriod()
 
-    if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
+    if(delta > 1 and CATCHUP.internalPenalizationCatchup(branch, $account) != 1):
         return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(0)
 
 macro checkConversionDuringForkInvariants():
@@ -188,11 +190,8 @@ macro checkRepConversionInvariants():
                 ~invalid()
         else:
             REPORTING.addReporter(branch, msg.sender)
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-1)
     if(senderBalance < fxpValue or fxpValue <= 0):
-        MUTEX.release()
         return(-5)
     checkConversionDuringForkInvariants()
 

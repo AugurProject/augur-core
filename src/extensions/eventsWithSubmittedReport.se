@@ -27,14 +27,12 @@ def getEventsWithSubmittedReport(branch, period, reporter):
         i += 1
     return(slice(events, items=0, items=n): arr)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

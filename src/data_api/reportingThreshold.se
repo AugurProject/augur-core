@@ -29,8 +29,9 @@ MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 inset('../macros/periodStage.sem')
 
 macro ONE_POINT_TWO: 1200000000000000000

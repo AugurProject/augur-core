@@ -36,8 +36,9 @@ MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data controller
 
@@ -83,7 +84,7 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     if(!send(BACKSTOPS, msg.value)):
         ~invalid()
     # send the bond to the branch
-    if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
+    if(!SENDREP.internalSendRepFrom(branch, msg.sender, event, bond)):
         ~invalid()
     # makes event required reporting in round 2 (the next period) as well
     EXPEVENTS.setEventRequired(branch, votePeriod + 1, event)

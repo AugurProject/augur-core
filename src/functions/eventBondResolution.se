@@ -15,7 +15,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 inset('../macros/refund.sem')
 
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
 data controller
