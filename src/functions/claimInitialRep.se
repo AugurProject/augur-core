@@ -132,12 +132,14 @@ macro removeRepFromThoseWhoReportedWrong():
         # send to new branch's redistribution pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repDecrease)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

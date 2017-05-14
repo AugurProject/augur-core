@@ -12,7 +12,7 @@ Trading tests:
 + functions/fillAskLibrary.se
 + functions/fillBidLibrary.se
 + functions/takeOrder.se
-- functions/marketModifiers.se
++ functions/decreaseTradingFee.se
 - functions/offChainTrades.se
 - functions/claimMarketProceeds.se
 - functions/oneWinningOutcomePayouts.se
@@ -26,6 +26,7 @@ import sys
 import json
 import ethereum
 import iocapture
+from decimal import *
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
 sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
@@ -58,10 +59,11 @@ def balanceOf(shareContract: address, address: address):
 eventCreationCounter = 0
 
 def fix(n):
-    return n * 10**18
+    return int((Decimal(str(n)) * Decimal(10)**Decimal(18)).quantize(0))
 
 def unfix(n):
     return n / 10**18
+    # return str(Decimal(str(n)) / Decimal(10)**Decimal(18))
 
 def hex2str(h):
     return hex(h)[2:-1]
@@ -1268,6 +1270,56 @@ def test_TakeOrder():
         test_takeBidOrder()
     test_publicTakeOrder()
 
+def test_DecreaseTradingFee():
+    global contracts
+    t = contracts._ContractLoader__tester
+    def test_publicDecreaseTradingFee():
+        contracts._ContractLoader__state.mine(1)
+        eventID = createBinaryEvent()
+        marketID = createBinaryMarket(eventID)
+        assert(contracts.cash.approve(contracts.decreaseTradingFee.address, fix(10), sender=t.k1) == 1), "Approve decreaseTradingFee contract to spend cash from account 1"
+        fxpInitialTradingFee = contracts.markets.getTradingFee(marketID)
+        assert(fxpInitialTradingFee == 20000000000000001), "Initial trading fee should be 20000000000000001"
+        fxpNewTradingFee = 20000000000000000
+        result = contracts.decreaseTradingFee.publicDecreaseTradingFee(marketID, fxpNewTradingFee, sender=t.k1)
+        assert(contracts.markets.getTradingFee(marketID) == fxpNewTradingFee), "Updated trading fee should be equal to fxpNewTradingFee"
+    def test_exceptions():
+        contracts._ContractLoader__state.mine(1)
+        eventID = createBinaryEvent()
+        marketID = createBinaryMarket(eventID)
+        assert(contracts.cash.approve(contracts.decreaseTradingFee.address, fix(10), sender=t.k1) == 1), "Approve decreaseTradingFee contract to spend cash from account 1"
+        assert(contracts.cash.approve(contracts.decreaseTradingFee.address, fix(10), sender=t.k2) == 1), "Approve decreaseTradingFee contract to spend cash from account 2"
+        fxpInitialTradingFee = contracts.markets.getTradingFee(marketID)
+        assert(fxpInitialTradingFee == 20000000000000001), "Initial trading fee should be 20000000000000001"
+        fxpNewTradingFee = 20000000000000000
+
+        # Permissions exceptions
+        contracts._ContractLoader__state.mine(1)
+        try:
+            raise Exception(contracts.decreaseTradingFee.decreaseTradingFee(t.a1, marketID, fxpNewTradingFee, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "decreaseTradingFee should fail if called from a non-whitelisted account (account 1)"
+
+        # decreaseTradingFee exceptions
+        contracts._ContractLoader__state.mine(1)
+        try:
+            raise Exception(contracts.decreaseTradingFee.publicDecreaseTradingFee(marketID, fxpNewTradingFee, sender=t.k2))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicDecreaseTradingFee should fail if sender is not the market creator"
+        try:
+            raise Exception(contracts.decreaseTradingFee.publicDecreaseTradingFee(marketID, contracts.branches.getMinTradingFee(1010101) - 1, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicDecreaseTradingFee should fail if new trading fee is below the minimum fee for the branch"
+        try:
+            raise Exception(contracts.decreaseTradingFee.publicDecreaseTradingFee(marketID, 20000000000000002, sender=t.k1))
+        except Exception as exc:
+            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicDecreaseTradingFee should fail if new trading fee is higher than the old trading fee"
+        contracts._ContractLoader__state.mine(1)
+        result = contracts.decreaseTradingFee.publicDecreaseTradingFee(marketID, fxpNewTradingFee, sender=t.k1)
+        assert(contracts.markets.getTradingFee(marketID) == fxpNewTradingFee), "Updated trading fee should be equal to fxpNewTradingFee"
+    test_publicDecreaseTradingFee()
+    test_exceptions()
+
 def runtests():
     test_Cash()
     test_ShareTokens()
@@ -1280,6 +1332,7 @@ def runtests():
     test_TakeAskOrder()
     test_TakeBidOrder()
     test_TakeOrder()
+    test_DecreaseTradingFee()
 
 if __name__ == '__main__':
     runtests()
