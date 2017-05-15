@@ -34,7 +34,7 @@ inset('../macros/float.sem')
 
 data controller
 
-event FillBid(market: indexed, sender: indexed, owner: indexed, type, fxpPrice, fxpAmount, timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+event TakeBidOrder(market: address: indexed, sender: address: indexed, owner: address: indexed, type: uint256, fxpPrice, fxpAmount: uint256, timestamp: uint256, orderID: address, outcome: uint256, fxpAskerSharesFilled: uint256, fxpAskerMoneyFilled: uint256, fxpBidderSharesFilled: uint256, fxpBidderMoneyFilled: uint256, fxpFee: uint256)
 
 macro MIN_TRADE_VALUE: 10000000000000000
 macro MAX_INT256_VALUE: 2**255 - 1
@@ -202,7 +202,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Transfer (price - minValue) * fxpBidderSharesFilled to market from bidder since market hasnt been paid yet after complete sets selling. The bidder has already paid for fxpBidderMoneyFilled by escrowing their money
     if(fxpBidderSharesFilled > 0):
-        if(!INFO.getCurrency(market).transferFrom(owner, market, safeFxpMul(safeSub(fxpPrice, minValue), fxpBidderSharesFilled))):
+        if(!INFO.getCurrency(market).transferFrom(owner, INFO.getWallet(market), safeFxpMul(safeSub(fxpPrice, minValue), fxpBidderSharesFilled))):
             ~invalid()
 
     # Transfer money from person who bid to the person here who is selling/asker [bidder has already sent/escrowed the cash to/with the market when submitting bid so this comes from the market]
@@ -211,7 +211,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Transfer range * fxpAskerMoneyFilled to the market from asker for the amount of shares in fxpAskerMoneyFilled, for fxpAskerSharesFilled the asker simply has sent their shares to the bidder and thus doesn't have to put up money
     if(fxpAskerMoneyFilled > 0):
-        if(!INFO.getCurrency(market).transferFrom(sender, market, safeFxpMul(fxpCumulativeScale, fxpAskerMoneyFilled))):
+        if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), safeFxpMul(fxpCumulativeScale, fxpAskerMoneyFilled))):
             ~invalid()
 
     # Sell taker's complete sets (if they have any)
@@ -224,7 +224,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         COMPLETESETS.sellCompleteSets(sender, market, fxpSharesHeld, call=delegate)
 
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
-    log(type=FillBid, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+    log(type=TakeBidOrder, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled, fxpFee)
 
     MARKETS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)
