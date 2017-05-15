@@ -29,9 +29,7 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-
-inset('../macros/logReturn.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data controller
 
@@ -50,10 +48,17 @@ event closeMarketLogReturn(returnValue)
 def init():
     self.controller = 0x0
 
+def publicCloseMarket(market, sender):
+    refund()
+    MUTEX.acquire()
+    result = self.closeMarket(market, sender)
+    MUTEX.release()
+    return(result)
+
 def closeMarket(market, sender):
     refund()
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
+
+    self.controller.assertIsWhitelisted(msg.sender)
     event = MARKETS.getMarketEvent(market)
     branch = EVENTS.getEventBranch(event)
     expiration = EVENTS.getExpiration(event)
@@ -61,107 +66,27 @@ def closeMarket(market, sender):
     votingPeriodEvent = expiration / periodLength
     period = BRANCHES.getVotePeriod(branch)
     fxpOutcome = EVENTS.getOutcome(event)
-    checkCloseMarketPreconditions()
 
-    resolveEventsInMarket()
     # refunds closing cost
     MARKETS.refundClosing(market, sender)
     # send fees in market to branch
     marketCurrency = INFO.getCurrency(market)
     marketWallet = INFO.getWallet(market)
-    marketWallet.transfer(BRANCHES.getBranchWallet(branch, marketCurrency), marketCurrency.balanceOf(marketWallet) - safeFxpMul(MARKETS.getSharesPurchased(market, 1), MARKETS.getCumulativeScale(market)))
+    marketBalance = marketCurrency.balanceOf(marketWallet)
+    marketShareValue = safeFxpMul(MARKETS.getSharesPurchased(market, 1), MARKETS.getCumulativeScale(market))
+    if(marketBalance > marketShareValue):
+        marketWallet.transfer(BRANCHES.getBranchWallet(branch, marketCurrency), marketBalance - marketShareValue)
 
     MARKETS.setMarketResolved(market)
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
-    logReturn(closeMarketLogReturn, 1)
-
-macro checkCloseMarketPreconditions():
-    # as long as resolved and not challenged we can then resolve, i.e. if not challenged and > 6 days then can take prelim outcome and make it final outcome
-    if(period <= votingPeriodEvent or (!EVENTS.getChallenged(event) and block.timestamp < expiration + SIX_DAYS)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
-        logReturn(closeMarketLogReturn, 0)
-    if(MARKETS.getMarketResolved(market)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
-        logReturn(closeMarketLogReturn, -1)
-    if(!EVENTS.getUncaughtOutcome(event) and !EVENTS.getFirstPreliminaryOutcome(event)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
-        logReturn(closeMarketLogReturn, -2)
-    if(BACKSTOPS.getRoundTwo(event) and !BACKSTOPS.getFinal(event)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
-        logReturn(closeMarketLogReturn, -3)
-    # if an event is one from before a fork and hasn't been moved yet or it's the event the fork occurred over and it's not over yet don't resolve it
-    if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or eventCreatedPriorToFork(eventID)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
-        logReturn(closeMarketLogReturn, -4)
-
-macro resolveEventsInMarket():
-    resolution = 0
-    # look at event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
-    if(EVENTS.getEventType(event) == "binary" and !fxpOutcome):
-        resolution = RESOLVEBINARY.resolveBinary(event, market, branch, votingPeriodEvent)
-    elif(EVENTS.getEventType(event) == "scalar" and !EVENTS.getMode(event)):
-        resolution = NONBINARYRESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
-    elif(EVENTS.getEventType(event) == "categorical" and !EVENTS.getMode(event)):
-        resolution = NONBINARYRESOLVE.resolveCategoricalOrScalar(WEI_TO_ETH, WEI_TO_ETH * EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
-    else:
-        ~invalid()
-    if(resolution == -1):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
-        logReturn(closeMarketLogReturn, -5)
-
-def closeChallengeBond(event):
-    branch = EVENTS.getEventBranch(event)
-    periodLength = BRANCHES.getPeriodLength(branch)
-    votePeriod = EVENTS.getExpiration(event) / periodLength
-    forkPeriod = BRANCHES.getForkPeriod(branch)
-    bondAmount = EVENTS.getExtraBond(event)
-    if(BRANCHES.getVotePeriod(branch) <= votePeriod or !EVENTS.getChallenged(event)):
-        ~invalid()
-    # sets bond as paid back
-    EVENTS.setExtraBond(event, 0)
-    if(BACKSTOPS.getRoundTwo(event)):
-        # return bond
-        if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bondAmount)):
-            ~invalid()
-    if(!EVENTS.getOutcome(event)):
-        ~invalid()
-    if(EVENTS.getFirstPreliminaryOutcome(event) == EVENTS.getOutcome(event)):
-        # lose bond
-        branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(event))
-        if(!INFO.getWallet(event).transfer(branchWallet, bondAmount)):
-            ~invalid()
-    # outcome is different
-    else:
-        # return bond [and in resolve event contract give half of validity bond to extra bond poster as a reward for being correct]
-        if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bondAmount)):
-            ~invalid()
     return(1)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)
-
-# this includes all events created before the fork started
-# means an event was created prior to a fork and hasn't been moved after the fork yet
-macro eventCreatedPriorToFork($event):
-    $branch = EVENTS.getEventBranch($event)
-    if(EVENTS.getCreationTime($event) <= BRANCHES.getForkTime($branch)):
-        1
-    else:
-        0
