@@ -45,6 +45,7 @@ macro ASK: 2
 def init():
     self.controller = 0x0
 
+# @public
 def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
     refund()
     MUTEX.acquire()
@@ -52,6 +53,7 @@ def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
     MUTEX.release()
     return(fxpAmountRemaining: uint256)
 
+# @internal
 def takeOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
@@ -67,12 +69,14 @@ def takeOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
         ~invalid()
     return(fxpAmountRemaining: uint256)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

@@ -75,12 +75,14 @@ macro adjustForNonBinaryResolution():
         difference = report - outcome
         p = safeSub(WEI_TO_ETH, safeDiv(abs(difference), 2))
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

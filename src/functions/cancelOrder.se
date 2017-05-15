@@ -36,6 +36,7 @@ macro ORDER_FIELDS: 10
 def init():
     self.controller = 0x0
 
+# @public
 def publicCancelOrder(orderID):
     refund()
     MUTEX.acquire()
@@ -43,9 +44,9 @@ def publicCancelOrder(orderID):
     MUTEX.release()
     return(1)
 
-#
 # Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
-# @returns 1 if success, throws on failure
+# @internal
+# @return {int256} 1 if success, throws on failure
 def cancelOrder(sender: address, orderID):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
@@ -53,7 +54,7 @@ def cancelOrder(sender: address, orderID):
         ~invalid()
 
     # Look up the order the sender wants to cancel
-    order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
+    order = ORDERS.getOrder(orderID, outitems=ORDER_FIELDS)
     type = order[1]
     market = order[2]
     fxpAmount = order[3]
@@ -83,6 +84,7 @@ def cancelOrder(sender: address, orderID):
     return(1)
 
 # Issue refunds
+# @private
 def refundOrder(sender: address, type: uint256, fxpSharesEscrowed: uint256, fxpMoneyEscrowed: uint256, market: address, outcome: uint256):
     refund()
     if(msg.sender != self):
@@ -107,12 +109,14 @@ def refundOrder(sender: address, type: uint256, fxpSharesEscrowed: uint256, fxpM
 
     return(1)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

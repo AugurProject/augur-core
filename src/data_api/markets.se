@@ -291,12 +291,14 @@ def getPrevID(market, order):
 def getTotalOrders(marketID):
     return(self.Markets[marketID].totalOrders)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

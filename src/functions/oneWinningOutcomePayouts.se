@@ -28,6 +28,7 @@ def init():
     self.controller = 0x0
 
 def oneOutcome(market, event, sender, categoricalPointFive, numOutcomes):
+    self.controller.assertIsWhitelisted(msg.sender)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value
     outcome = EVENTS.getOutcome(event)
     if(categoricalPointFive):
@@ -61,12 +62,14 @@ macro normalizePrices():
     pricePerShare1 = safeFxpDiv(pricePerShare1, denominator)
     pricePerShare2 = safeFxpDiv(pricePerShare2, denominator)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
