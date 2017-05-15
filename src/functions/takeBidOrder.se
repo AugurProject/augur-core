@@ -200,7 +200,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Transfer (price - minValue) * fxpBidderSharesFilled to market from bidder since market hasnt been paid yet after complete sets selling. The bidder has already paid for fxpBidderMoneyFilled by escrowing their money
     if(fxpBidderSharesFilled > 0):
-        if(!INFO.getCurrency(market).transferFrom(owner, market, safeFxpMul(safeSub(fxpPrice, minValue), fxpBidderSharesFilled))):
+        if(!INFO.getCurrency(market).transferFrom(owner, INFO.getWallet(market), safeFxpMul(safeSub(fxpPrice, minValue), fxpBidderSharesFilled))):
             ~invalid()
 
     # Transfer money from person who bid to the person here who is selling/asker [bidder has already sent/escrowed the cash to/with the market when submitting bid so this comes from the market]
@@ -209,7 +209,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Transfer range * fxpAskerMoneyFilled to the market from asker for the amount of shares in fxpAskerMoneyFilled, for fxpAskerSharesFilled the asker simply has sent their shares to the bidder and thus doesn't have to put up money
     if(fxpAskerMoneyFilled > 0):
-        if(!INFO.getCurrency(market).transferFrom(sender, market, safeFxpMul(fxpCumulativeScale, fxpAskerMoneyFilled))):
+        if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), safeFxpMul(fxpCumulativeScale, fxpAskerMoneyFilled))):
             ~invalid()
 
     # Sell taker's complete sets (if they have any)
@@ -221,8 +221,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     if(fxpSharesHeld > 0):
         COMPLETESETS.sellCompleteSets(sender, market, fxpSharesHeld, call=delegate)
 
-    ORDERS.fillBidLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
-
+    ORDERS.takeBidOrderLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled, fxpFee)
     MARKETS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)
 

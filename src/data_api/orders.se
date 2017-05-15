@@ -17,14 +17,14 @@ data controller
 event CancelOrder(market: indexed, sender: indexed, fxpPrice, fxpAmount, orderID, outcome, type, cashRefund, sharesRefund, timestamp)
 event CompleteSets(sender: indexed, market: indexed, type: indexed, fxpAmount, numOutcomes, fxpFee, timestamp)
 event MakeOrder(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, timestamp, tradeGroupID)
-event FillAsk(market: indexed, sender: indexed, owner: indexed, type, fxpPrice, fxpAmount, timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled)
-event FillBid(market: indexed, sender: indexed, owner: indexed, type, fxpPrice, fxpAmount, timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+event TakeAskOrder(market: address: indexed, sender: address: indexed, owner: address: indexed, type: uint256, fxpPrice, fxpAmount: uint256, timestamp: uint256, orderID: address, outcome: uint256, fxpAskerSharesFilled: uint256, fxpAskerMoneyFilled: uint256, fxpBidderMoneyFilled: uint256, fxpFee: uint256)
+event TakeBidOrder(market: address: indexed, sender: address: indexed, owner: address: indexed, type: uint256, fxpPrice, fxpAmount: uint256, timestamp: uint256, orderID: address, outcome: uint256, fxpAskerSharesFilled: uint256, fxpAskerMoneyFilled: uint256, fxpBidderSharesFilled: uint256, fxpBidderMoneyFilled: uint256, fxpFee: uint256)
 
 macro MIN_ORDER_VALUE: 10000000000000000
+
 # Trade types
 macro BID: 1
 macro ASK: 2
-
 
 def init():
     self.controller = 0x0
@@ -105,14 +105,14 @@ def fillOrder(orderID, fill, money, shares):
     self.orders[orderID].fxpSharesEscrowed -= shares
     return(1)
 
-def fillBidLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled):
+def takeBidOrderLog(market: address, sender: address, owner: address, fxpPrice, fxpSumOfFills: uint256, orderID: address, outcome: uint256, fxpAskerSharesFilled: uint256, fxpAskerMoneyFilled: uint256, fxpBidderSharesFilled: uint256, fxpBidderMoneyFilled: uint256, fxpFee: uint256):
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
-    log(type=FillBid, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+    log(type=TakeBidOrder, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled, fxpFee)
     return(1)
 
-def fillAskLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled):
-    # Log transaction [BID b/c it's filling a bid so from trader's perspective they're bidding]
-    log(type=FillAsk, market, sender, owner, BID, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled)
+def takeAskOrderLog(market: address, sender: address, owner: address, fxpPrice, fxpSumOfFills: uint256, orderID: address, outcome: uint256, fxpAskerSharesFilled: uint256, fxpAskerMoneyFilled: uint256, fxpBidderMoneyFilled: uint256, fxpFee: uint256):
+    # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
+    log(type=TakeAskOrder, market, sender, owner, BID, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled, fxpFee)
     return(1)
 
 def completeSetsLog(sender, market, type, fxpAmount, numOutcomes, fee):

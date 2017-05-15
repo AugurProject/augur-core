@@ -49,10 +49,9 @@ def init():
 
 # Filling an ask [aka buying shares]
 # Scenarios:
-#  - Asker escrowed maxValue - price and expects complete set minus the one they're selling
-#  - Asker had shares and escrowed them and expects to be paid price - minValue for them
-#  - Bidder owns all shares except the one they're buying and will pay price - minValue for the shares they're buying
-#  - Bidder will pay price - minValue for their shares
+#  - Asker (maker/owner) escrowed maxValue - price and expects complete set minus the one they're selling
+#  - Asker (maker/owner) had shares and escrowed them and expects to be paid price - minValue for them
+#  - Bidder (taker/sender) pays price - minValue for their shares
 # @internal
 def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     refund()
@@ -162,14 +161,14 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Transfer (price - minValue) * fxpBidderMoneyFilled to market from bidder since market hasn't been paid yet
     if(fxpBidderMoneyFilled > 0):
-        if(!INFO.getCurrency(market).transferFrom(sender, market, safeFxpMul(safeSub(fxpPrice, fxpMinValue), fxpBidderMoneyFilled))):
+        if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), safeFxpMul(safeSub(fxpPrice, fxpMinValue), fxpBidderMoneyFilled))):
             ~invalid()
 
     # Transfer (price - minValue) * fxpAskerSharesFilled from the market to the asker, don't
     # need to send for fxpAskerMoneyFilled because asker only escrowed maxValue - price and thus
     # has "already been paid" for those shares.
     # Note: bidder has already sent their money to the market, so this money comes from the market.
-    if(fxpAskerSharesFilled):
+    if(fxpAskerSharesFilled > 0):
         if(!INFO.getWallet(market).transfer(owner, safeFxpMul(safeSub(fxpPrice, fxpMinValue), fxpAskerSharesFilled))):
             ~invalid()
 
@@ -184,17 +183,16 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         while(i <= MARKETS.getMarketNumOutcomes(market)):
             MARKETS.getOutcomeShareContract(market, i).destroyShares(owner, fxpSharesHeld)
             i += 1
-        fxpCost = safeFxpMul(fxpSharesHeld, fxpCumulativeScale)
+        fxpMoneyFromSellCompleteSets = safeFxpMul(fxpSharesHeld, fxpCumulativeScale)
         # Send funds from the market to the user's account
         fxpFee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpSharesHeld), fxpCumulativeScale)
-        if(!INFO.getWallet(market).transfer(owner, safeSub(fxpCost, fxpFee))):
+        if(!INFO.getWallet(market).transfer(owner, safeSub(fxpMoneyFromSellCompleteSets, fxpFee))):
             ~invalid()
         # Send half of sell-complete-sets fees to the market creator
         if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fxpFee, 2))):
             ~invalid()
 
-    ORDERS.fillAskLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled)
-
+    ORDERS.takeAskOrderLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled, fxpFee)
     MARKETS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)
 
