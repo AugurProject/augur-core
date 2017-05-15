@@ -42,12 +42,14 @@ def reputationFaucet(branch):
     log(type=fundedAccount, branch, msg.sender, fix(10000), fix(47), block.timestamp)
     return(1)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

@@ -182,12 +182,14 @@ def setForkBondPoster(event, poster):
     self.forking[event].bondPoster = poster
     return(1)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

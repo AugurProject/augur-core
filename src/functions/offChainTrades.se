@@ -106,12 +106,14 @@ macro checkSig($signer, $hash, $v, $r, $s):
 macro checkHasAbilityToSpend($owner, $token, $amount):
     token.allowance($owner, $self) >= $amount
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

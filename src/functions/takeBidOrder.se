@@ -54,6 +54,7 @@ def init():
 #  - Or asker has shares and expects to be paid price - minValue for them
 #  - Bidder owns all shares except the one theyre buying and has escrowed them and wants to pay price - minValue for the share and then sell the complete set for range thus getting maxValue - price at the end
 #  - Or bidder has escrowed price - minValue for their shares
+# @internal
 def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
@@ -225,12 +226,14 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     MARKETS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

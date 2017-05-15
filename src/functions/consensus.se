@@ -171,12 +171,14 @@ macro updateAfterRep():
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
     EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
