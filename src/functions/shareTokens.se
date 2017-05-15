@@ -145,19 +145,3 @@ def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)
-
-##############
-# Deprecated #
-##############
-
-def changeTokens(trader, amount):
-    self.controller.assertIsWhitelisted(msg.sender)
-    if(self.accounts[trader].balance + amount < 0):
-        ~invalid()
-    self.accounts[trader].balance += amount
-    return(1)
-
-def modifySupply(amount):
-    self.controller.assertIsWhitelisted(msg.sender)
-    self.totalSupply += amount
-    return(1)
