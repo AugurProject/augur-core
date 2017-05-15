@@ -20,8 +20,6 @@ event MakeOrder(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, out
 event TakeAskOrder(market: address: indexed, sender: address: indexed, owner: address: indexed, type: uint256, fxpPrice, fxpAmount: uint256, timestamp: uint256, orderID: address, outcome: uint256, fxpAskerSharesFilled: uint256, fxpAskerMoneyFilled: uint256, fxpBidderMoneyFilled: uint256, fxpFee: uint256)
 event TakeBidOrder(market: address: indexed, sender: address: indexed, owner: address: indexed, type: uint256, fxpPrice, fxpAmount: uint256, timestamp: uint256, orderID: address, outcome: uint256, fxpAskerSharesFilled: uint256, fxpAskerMoneyFilled: uint256, fxpBidderSharesFilled: uint256, fxpBidderMoneyFilled: uint256, fxpFee: uint256)
 
-macro MIN_ORDER_VALUE: 10000000000000000
-
 # Trade types
 macro BID: 1
 macro ASK: 2
