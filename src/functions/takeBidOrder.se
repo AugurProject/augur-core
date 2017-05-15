@@ -34,8 +34,6 @@ inset('../macros/float.sem')
 
 data controller
 
-event FillBid(market: indexed, sender: indexed, owner: indexed, type, fxpPrice, fxpAmount, timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
-
 macro MIN_TRADE_VALUE: 10000000000000000
 macro MAX_INT256_VALUE: 2**255 - 1
 
@@ -223,8 +221,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     if(fxpSharesHeld > 0):
         COMPLETESETS.sellCompleteSets(sender, market, fxpSharesHeld, call=delegate)
 
-    # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
-    log(type=FillBid, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+    ORDERS.fillBidLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
 
     MARKETS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)

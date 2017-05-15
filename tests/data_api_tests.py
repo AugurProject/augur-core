@@ -1097,8 +1097,8 @@ def test_orders(contracts, s, t):
         assert(c.checkHash(order, address0) == 1), "checkHash for order should now be 1"
 
     def test_saveOrder():
-        assert(c.saveOrder(order1, 1, market1, WEI_TO_ETH*10, pointFive, address0, 1, 0, WEI_TO_ETH*10) == 1), "saveOrder wasn't executed successfully"
-        assert(c.saveOrder(order2, 2, market1, WEI_TO_ETH*10, pointFive, address1, 1, WEI_TO_ETH*5, 0) == 1), "saveOrder wasn't executed successfully"
+        assert(c.saveOrder(order1, 1, market1, WEI_TO_ETH*10, pointFive, address0, 1, 0, WEI_TO_ETH*10, 2) == 1), "saveOrder wasn't executed successfully"
+        assert(c.saveOrder(order2, 2, market1, WEI_TO_ETH*10, pointFive, address1, 1, WEI_TO_ETH*5, 0, 1) == 1), "saveOrder wasn't executed successfully"
 
         assert(c.getOrder(order1) == [order1, 1, market1, WEI_TO_ETH*10, pointFive, address0, s.block.number, 1, 0, WEI_TO_ETH*10]), "getOrder for order1 didn't return the expected array of data"
         assert(c.getOrder(order2) == [order2, 2, market1, WEI_TO_ETH*10, pointFive, address1, s.block.number, 1, WEI_TO_ETH*5, 0]), "getOrder for order2 didn't return the expected array of data"
@@ -1146,7 +1146,7 @@ def test_orders(contracts, s, t):
 
     def test_removeOrder():
         order3 = 321321321
-        assert(c.saveOrder(order3, 1, market1, WEI_TO_ETH*10, pointFive, address0, 2, 0, WEI_TO_ETH*10) == 1), "saveOrder wasn't executed successfully"
+        assert(c.saveOrder(order3, 1, market1, WEI_TO_ETH*10, pointFive, address0, 2, 0, WEI_TO_ETH*10, 3) == 1), "saveOrder wasn't executed successfully"
         assert(c.getOrder(order3) == [order3, 1, market1, WEI_TO_ETH*10, pointFive, address0, s.block.number, 2, 0, WEI_TO_ETH*10]), "getOrder for order3 didn't return the expected data array"
         assert(c.removeOrder(order3) == 1), "removeOrder wasn't executed successfully"
         assert(c.getOrder(order3) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order3 should return an 0'd out array as it has been removed"

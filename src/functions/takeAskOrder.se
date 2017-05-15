@@ -34,8 +34,6 @@ inset('../macros/float.sem')
 
 data controller
 
-event FillAsk(market: indexed, sender: indexed, owner: indexed, type, fxpPrice, fxpAmount, timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled)
-
 macro MIN_TRADE_VALUE: 10000000000000000
 macro MAX_INT256_VALUE: 2**255 - 1
 
@@ -195,8 +193,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fxpFee, 2))):
             ~invalid()
 
-    # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
-    log(type=FillAsk, market, sender, owner, BID, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled)
+    ORDERS.fillAskLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled)
 
     MARKETS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)
