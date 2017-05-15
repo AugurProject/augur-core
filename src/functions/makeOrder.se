@@ -29,8 +29,6 @@ inset('../macros/float.sem')
 
 data controller
 
-event MakeOrder(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, timestamp, tradeGroupID)
-
 # Order types
 macro BID: 1
 macro ASK: 2
@@ -76,12 +74,11 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
     orderID = ripemd160(order, items = 9)
     if(ORDERS.getID(orderID)):
         ~invalid()
-    ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
+    ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, tradeGroupID)
 
     # Update market
     MARKETS.addOrder(market, orderID)
 
-    log(type = MakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp, tradeGroupID)
     return(orderID)
 
 def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):

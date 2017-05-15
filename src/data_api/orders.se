@@ -14,7 +14,17 @@ data orders[](id, type, market, fxpAmount, fxpPrice, owner, block, outcome, fxpS
 
 data controller
 
+event CancelOrder(market: indexed, sender: indexed, fxpPrice, fxpAmount, orderID, outcome, type, cashRefund, sharesRefund, timestamp)
+event CompleteSets(sender: indexed, market: indexed, type: indexed, fxpAmount, numOutcomes, fxpFee, timestamp)
+event MakeOrder(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, timestamp, tradeGroupID)
+event FillAsk(market: indexed, sender: indexed, owner: indexed, type, fxpPrice, fxpAmount, timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled)
+event FillBid(market: indexed, sender: indexed, owner: indexed, type, fxpPrice, fxpAmount, timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+
 macro MIN_ORDER_VALUE: 10000000000000000
+# Trade types
+macro BID: 1
+macro ASK: 2
+
 
 def init():
     self.controller = 0x0
@@ -41,7 +51,7 @@ def checkHash(orderHash, sender):
     else:
         return(1)
 
-def saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed):
+def saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, tradeGroupID):
     self.controller.assertIsWhitelisted(msg.sender)
     self.orders[orderID].id = orderID
     self.orders[orderID].type = type
@@ -53,6 +63,7 @@ def saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMo
     self.orders[orderID].outcome = outcome
     self.orders[orderID].fxpMoneyEscrowed = fxpMoneyEscrowed
     self.orders[orderID].fxpSharesEscrowed = fxpSharesEscrowed
+    log(type = MakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp, tradeGroupID)
     return(1)
 
 def getOrder(id):
@@ -92,6 +103,24 @@ def fillOrder(orderID, fill, money, shares):
     self.orders[orderID].fxpAmount -= fill
     self.orders[orderID].fxpMoneyEscrowed -= money
     self.orders[orderID].fxpSharesEscrowed -= shares
+    return(1)
+
+def fillBidLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled):
+    # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
+    log(type=FillBid, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+    return(1)
+
+def fillAskLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled):
+    # Log transaction [BID b/c it's filling a bid so from trader's perspective they're bidding]
+    log(type=FillAsk, market, sender, owner, BID, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled)
+    return(1)
+
+def completeSetsLog(sender, market, type, fxpAmount, numOutcomes, fee):
+    log(type = CompleteSets, sender, market, type, fxpAmount, numOutcomes, fee, block.timestamp)
+    return(1)
+
+def cancelOrderLog(market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed):
+    log(type = CancelOrder, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp)
     return(1)
 
 # @return fxp

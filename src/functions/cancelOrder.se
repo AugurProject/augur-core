@@ -26,8 +26,6 @@ inset('../macros/float.sem')
 
 data controller
 
-event CancelOrder(market: indexed, sender: indexed, fxpPrice, fxpAmount, orderID, outcome, type, cashRefund, sharesRefund, timestamp)
-
 # Order types
 macro BID: 1
 macro ASK: 2
@@ -81,7 +79,7 @@ def cancelOrder(sender: address, orderID):
     self.refundOrder(sender, type, fxpSharesEscrowed, fxpMoneyEscrowed, market, outcome)
 
     # Log cancellation
-    log(type = CancelOrder, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp)
+    ORDERS.cancelOrderLog(market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed)
     return(1)
 
 # Issue refunds
