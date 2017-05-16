@@ -28,7 +28,8 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 
 inset('../macros/refund.sem')
 inset('../macros/periodStage.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 
 data controller
 

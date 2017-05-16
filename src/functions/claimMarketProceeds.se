@@ -21,7 +21,8 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 
 data controller
 
@@ -41,12 +42,11 @@ def claimProceeds(market):
     success = 0
     if(block.timestamp <= EVENTS.getExpiration(event) + THREE_DAYS):
         # can't withdraw funds until 3 days after market resolves
-        MUTEX.release()
-        return(-1)
+        ~invalid()
     # market not resolved
     if(!MARKETS.getMarketResolved(market)):
         MUTEX.release()
-        return(0)
+        ~invalid()
     if(scalar):
         success = CLOSETWO.twoOutcomes(market, event, msg.sender)
     else:
@@ -59,14 +59,12 @@ def claimProceeds(market):
     MUTEX.release()
     return(success)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

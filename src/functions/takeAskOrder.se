@@ -30,7 +30,8 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, transfer:[address,uint256]:int256]
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 
 data controller
 
@@ -52,7 +53,6 @@ def init():
 #  - Asker (maker/owner) escrowed maxValue - price and expects complete set minus the one they're selling
 #  - Asker (maker/owner) had shares and escrowed them and expects to be paid price - minValue for them
 #  - Bidder (taker/sender) pays price - minValue for their shares
-# @internal
 def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
@@ -196,14 +196,12 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     ORDERS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

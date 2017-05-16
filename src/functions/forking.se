@@ -43,8 +43,9 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 extern forkResolveContract: [resolveFork:[int256]:int256]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data controller
 
@@ -117,7 +118,7 @@ def fork(event, branch, forkedOverEthicality):
     BACKSTOPS.setBondAmount(event, bond)
     # lose fork bond in branch 1
     # results same as roundtwobond, let it resolve as that on original network
-    if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
+    if(!SENDREP.internalSendRepFrom(branch, msg.sender, event, bond)):
         ~invalid()
     # on branch 2 fork bond isn't lost
     # on fork bond isn't lost, gets paid up to 2x from "liars"
@@ -149,7 +150,7 @@ macro checkForkPreconditions():
         return(0)
 
 macro makeFork():
-    newBranch = CREATEBRANCH.createSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), 0)
+    newBranch = CREATEBRANCH.internalCreateSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), 0)
     BRANCHES.setMostRecentChild(branch, newBranch)
     period = BRANCHES.getVotePeriod(newBranch)
     EXPEVENTS.setEventRequired(newBranch, period + 1, event)

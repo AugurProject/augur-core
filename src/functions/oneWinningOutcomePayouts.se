@@ -19,7 +19,7 @@ extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint25
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data controller
 
@@ -57,19 +57,12 @@ def oneOutcome(market, event, sender, categoricalPointFive, numOutcomes):
                 ~invalid()
     return(1)
 
-macro normalizePrices():
-    denominator = safeAdd(pricePerShare1, pricePerShare1)
-    pricePerShare1 = safeFxpDiv(pricePerShare1, denominator)
-    pricePerShare2 = safeFxpDiv(pricePerShare2, denominator)
-
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

@@ -20,6 +20,7 @@ extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256
 # using refund
 inset('../macros/refund.sem')
 # using proportionCorrect
+inset('../macros/unitConversions.sem')
 inset('../macros/proportionCorrect.sem')
 
 macro EVENTS_FIELDS: 7
@@ -142,14 +143,12 @@ def batchGetMarketInfo(marketIDs: arr, account):
         i += 1
     return(marketsInfo: arr)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

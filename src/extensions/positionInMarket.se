@@ -22,14 +22,12 @@ def getPositionInMarket(market, account):
         i += 1
     return(position: arr)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

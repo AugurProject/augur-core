@@ -12,6 +12,7 @@ INFO = self.controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setController:[address]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256, suicideFunds:[address]:_]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 
 ### This contract keeps track of data associated with reporting periods and the events + reports in them

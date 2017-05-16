@@ -8,7 +8,7 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data amountFilled[]
 
@@ -32,31 +32,26 @@ event Trade(maker:address:indexed, taker:address, tokenX:address:indexed, tokenY
 def init():
     self.controller = 0x0
 
-def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, takerAmount, fxpPrice, expiration, gasPriceLimit):
+def publicTrade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, takerAmount, fxpPrice, expiration, gasPriceLimit):
     refund()
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
+    MUTEX.acquire()
+    result = self.internalTrade(maker, v, r, s, tokenX, tokenY, orderSize, takerAmount, fxpPrice, expiration, gasPriceLimit)
+    MUTEX.release()
+    return(result)
+
+def internalTrade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, takerAmount, fxpPrice, expiration, gasPriceLimit):
+    self.controller.assertIsWhitelisted(msg.sender)
 
     orderHash = ripemd160([maker, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 7)
     if(!checkSig(maker, orderHash, v, r, s)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(0)
     if(block.timestamp > expiration):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-1)
     if(!checkHasAbilityToSpend(maker, tokenX, orderSize) or !checkHasAbilityToSpend(msg.sender, tokenY, safeFxpMul(takerAmount, fxpPrice))):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-2)
     if(safeAdd(self.amountFilled[orderHash], takerAmount) > orderSize):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-3)
     if(tx.gasprice > gasPriceLimit):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-4)
 
     self.amountFilled[orderHash] += takerAmount
@@ -66,8 +61,6 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
     if(!tokenX.transferFrom(maker, msg.sender, takerAmount) or !tokenY.transferFrom(msg.sender, maker, safeFxpMul(takerAmount, fxpPrice))):
         ~invalid()
     log(type = Trade, maker, msg.sender, tokenX, tokenY, amount, fxpPrice, orderHash, gasPriceLimit)
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(1)
 
 # fxpPrice is tokens of y per token of x
@@ -80,10 +73,15 @@ def onChainOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expirati
     log(type = Order, tokenX, orderSize, tokenY, fxpPrice, expiration, msg.sender, gasPriceLimit)
     return(orderHash)
 
-def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration, gasPriceLimit, v, r, s):
+def publicCancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration, gasPriceLimit, v, r, s):
     refund()
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
+    MUTEX.acquire()
+    result = self.internalCancelOrder(tokenX, orderSize, tokenY, fxpPrice, expiration, gasPriceLimit, v, r, s)
+    MUTEX.release()
+    return(result)
+
+def internalCancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration, gasPriceLimit, v, r, s):
+    self.controller.assertIsWhitelisted(msg.sender)
 
     orderHash = ripemd160([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration, gasPriceLimit], items = 7)
     if(ecrecover(orderHash, v, r, s) != msg.sender):
@@ -91,8 +89,6 @@ def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiratio
     self.amountFilled[orderHash] = orderSize
     log(type = Cancel, tokenX, orderSize, tokenY, fxpPrice, expiration, gasPriceLimit, msg.sender, v, r, s)
 
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(1)
 
 def getAmountFilled(orderHash):
@@ -106,14 +102,12 @@ macro checkSig($signer, $hash, $v, $r, $s):
 macro checkHasAbilityToSpend($owner, $token, $amount):
     token.allowance($owner, $self) >= $amount
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
