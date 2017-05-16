@@ -124,6 +124,10 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         # Update bid order with fill info
         fxpRemainderToFill = fxpFill
 
+        # Transfer money from person who bid to the person here who is selling/asker [bidder has already sent/escrowed the cash to/with the market when submitting bid so this comes from the market]
+        if(!INFO.getWallet(market).transfer(sender, safeFxpMul(safeSub(fxpPrice, fxpMinValue), fxpFill))):
+            ~invalid()
+
         # If taker has shares, transfer shares from taker (sender) to maker
         fxpBalance = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
         if(fxpBalance > 0):
@@ -150,6 +154,10 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
         # Update bid order with fill info
         fxpRemainderToFill = fxpFill
+
+        # Transfer money from person who bid to the person here who is selling/asker [bidder has already sent/escrowed the cash to/with the market when submitting bid so this comes from the market]
+        if(!INFO.getWallet(market).transfer(sender, safeFxpMul(safeSub(fxpPrice, fxpMinValue), fxpFill))):
+            ~invalid()
 
         # If taker has shares, transfer shares from taker (sender) to maker
         fxpBalance = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
