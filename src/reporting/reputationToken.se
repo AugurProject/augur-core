@@ -1,0 +1,141 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+##### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+#####
+
+macro LEGACY_REP_CONTRACT: self.controller.lookup('legacyRepContract')
+
+inset('../macros/externs.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/assertPrivateCall.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/unitConversions.sem')
+inset('../macros/require.sem')
+inset('../macros/assertPrivateCall.sem')
+
+data initialized
+data branch
+data tokens[2**160]
+data spenders[2**160][2**160]
+data supply
+data name
+data symbol
+data decimals
+data topMigrationDestination
+
+def any():
+    assertNoValue()
+
+def initialize(branch: address):
+    require(not self.initialized)
+    self.initialized = 1
+    self.branch = branch
+    # CONSIDER: these won't be unique (every branch has an instance of this contract)... is that OK?
+    self.name = "Reputation"
+    self.symbol = "REP"
+    self.decimals = 18
+    # CONSIDER: should we copy over contents of 0x0000000000000000000000000000000000000000 from LEGACYREPCONTRACT? if so what do we do with them?
+    # FIXME: DELETE THIS BEFORE LAUNCH!
+    faucetDistribution = 1000000 * WEI_TO_ETH
+    self.tokens[self.controller.lookup('reputationFaucet')] += faucetDistribution
+    self.supply += faucetDistribution
+
+# CONSIDER: this would be better if we used approvals and burned tokens on the parent contract instead of pushing tokens manually onto the child contract, but we need to track topMigrationDestination
+def migrateOut(destinationReputationToken: address, reporter: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    self.assertReputationTokenIsLegit(destinationReputationToken)
+    if (msg.sender != reporter):
+        self.spenders[reporter][msg.sender] = safeSub(self.spenders[reporter][msg.sender], attotokens)
+    self.tokens[reporter] = safeSub(self.tokens[reporter], attotokens)
+    self.supply = safeSub(self.supply, attotokens)
+    destinationReputationToken.migrateIn(reporter, attotokens)
+    if (not self.topMigrationDestination or destinationReputationToken.totalSupply() > self.topMigrationDestination.totalSupply()):
+        self.topMigrationDestination = destinationReputationToken
+
+def migrateIn(reporter: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    require(msg.sender == self.branch.getParentBranch().getReputationToken())
+    self.tokens[reporter] = safeAdd(self.tokens[reporter], attotokens)
+    self.supply = safeAdd(self.supply, attotokens)
+
+def migrateFromLegacyRepContract(branch: address):
+    legacyBalance = LEGACY_REP_CONTRACT.balanceOf(msg.sender)
+    LEGACY_REP_CONTRACT.transferFrom(msg.sender, 0x0000000000000000000000000000000000000000, legacyBalance)
+    self.tokens[msg.sender] = safeAdd(self.tokens[msg.sender], legacyBalance)
+    self.supply = safeAdd(self.supply, legacyBalance)
+
+
+####
+#### Getters
+####
+
+def getBranch():
+    return(self.branch)
+
+def getTopMigrationDestination():
+    return(self.topMigrationDestination)
+
+
+####
+#### Assertions
+####
+
+def assertReputationTokenIsLegit(shadyToken: address):
+    # we need to trustlessly assert that shadyToken is a token associated with a child of our branch
+    shadyBranch = shadyToken.getBranch()
+    require(self.branch.isParentOf(shadyBranch))
+    legitBranch = shadyBranch
+    require(legitBranch.getReputationToken() == shadyToken)
+
+
+####
+#### Privates
+####
+
+def safeDeductAllowance(holder: address, spender: address, attotokens: int256):
+    assertPrivateCall()
+    require(1 <= attotokens and attotokens <= 2**254)
+    if (self.spenders[holder][spender] < attotokens):
+        return(0)
+    self.spenders[holder][spender] -= attotokens
+    return(1)
+
+
+####
+#### ERC20 Implementation
+####
+
+event Transfer(from:address:indexed, to:address:indexed, attotokens:int256)
+event Approval(owner:address:indexed, spender:address:indexed, attotokens:int256)
+
+def totalSupply():
+    return(self.supply)
+
+def balanceOf(address: address):
+    return(self.tokens[address])
+
+def transfer(destinationAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    self.tokens[msg.sender] = safeSub(self.tokens[msg.sender], attotokens)
+    self.tokens[destinationAddress] = safeAdd(self.tokens[destinationAddress], attotokens)
+    log(type = Transfer, msg.sender, destinationAddress, attotokens)
+    return(1)
+
+def transferFrom(sourceAddress: address, destinationAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    require(self.branch.isContainerForReportingWindow(msg.sender) or self.branch.isContainerForRegistrationToken(msg.sender) or self.branch.isContainerForMarket(msg.sender) or self.branch.isContainerForReportingToken(msg.sender) or self.safeDeductAllowance(sourceAddress, msg.sender, attotokens))
+    self.tokens[sourceAddress] = safeSub(self.tokens[sourceAddress], attotokens)
+    self.tokens[destinationAddress] = safeAdd(self.tokens[destinationAddress], attotokens)
+    log(type = Transfer, sourceAddress, destinationAddress, attotokens)
+    return(1)
+
+def approve(spenderAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    self.spenders[msg.sender][spenderAddress] = attotokens
+    log(type = Approval, msg.sender, spenderAddress, attotokens)
+    return(1)
+
+def allowance(ownerAddress: address, spenderAddress: address):
+    return(self.spenders[ownerAddress][spenderAddress])

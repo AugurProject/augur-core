@@ -1,0 +1,13 @@
+extern delegateExtern: [setup:[int256,int256]:_]
+
+# workaround for https://github.com/ethereum/serpent/issues/119
+data lastTopics
+
+def createTopics(controller: address):
+    topics = create('../libraries/delegator.se')
+    topics.setup(controller, 'topics')
+    self.lastTopics = topics
+    return(topics)
+
+def getLastTopics():
+    return(self.lastTopics)

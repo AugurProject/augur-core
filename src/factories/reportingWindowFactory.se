@@ -1,0 +1,15 @@
+extern delegateExtern: [setup:[int256,int256]:_]
+extern reportingWindow: [initialize:[address,int256]:_]
+
+# workaround for https://github.com/ethereum/serpent/issues/119
+data lastReportingWindow
+
+def createReportingWindow(controller: address, branch: address, reportingWindowId: int256):
+    reportingWindow = create('../libraries/delegator.se')
+    reportingWindow.setup(controller, 'reportingWindow')
+    reportingWindow.initialize(branch, reportingWindowId)
+    self.lastReportingWindow = reportingWindow
+    return(reportingWindow)
+
+def getLastReportingWindow():
+    return(self.lastReportingWindow)

@@ -1,0 +1,80 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+macro MUTEX: self.controller.lookup('mutex')
+macro FILL_ASK_ORDER: self.controller.lookup('takeAskOrder')
+macro TAKE_BID_ORDER: self.controller.lookup('takeBidOrder')
+
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/require.sem')
+
+data controller
+data owner
+
+# Order types
+macro BID: 1
+macro ASK: 2
+
+### Allows users to take orders off the book (i.e. fill orders)
+
+# Trade scenarios:
+# Note: all [] scenarios are typical, if a user somehow gets an extra complete set it'll also be sold when doing a order, typically complete sets only sold when closing out a position or closing out a short
+# - Buying and have all but one and bidding, seller doesn't have outcome and is taking [complete set fee charged on buyer b/c selling complete sets].
+# - Buying and have all but one and bidding, seller has outcome and is taking [complete set fee charged on buyer].
+# - Buying and don't own anything and bidding, seller doesn't have outcome and is taking [no complete set fee charged b/c none sold].
+# - Buying and don't own anything and bidding, seller has outcome and is taking [no complete set fee charged b/c none sold].
+# - Buying and have all but one and taking, seller doesn't have outcome and is asking [complete set fee charged on buyer].
+# - Buying and have all but one and taking, seller has outcome and is asking [complete set fee charged on buyer].
+# - Buying and don't own anything and taking, seller doesn't have outcome and is asking [no complete set fee charged].
+# - Buying and don't own anything and taking, seller has outcome and is asking [no complete set fee charged].
+#
+# publicTakeOrder [allows a user to pick up/fill orders off the book]
+#
+# fxpAmountTakerWants is amount of shares the taker wants to fill
+# picks orders off the book
+
+def any():
+    assertNoValue()
+
+def init():
+    self.owner = msg.sender
+
+def initialize(controller: address):
+    require(not self.controller)
+    require(msg.sender == self.owner)
+    self.controller = controller
+
+# "Snipe" an order on the orderbook using its ID.
+# @public
+# @return fxp
+def publicTakeOrder(orderID: address, type: int256, market: address, outcome: int256, fxpAmountTakerWants: int256):
+    assertNoValue()
+    MUTEX.acquire()
+    self.controller.stopInEmergency()
+    fxpAmountRemaining = self.takeOrder(msg.sender, orderID, type, market, outcome, fxpAmountTakerWants)
+    MUTEX.release()
+    return(fxpAmountRemaining)
+
+# @internal
+# @return fxp
+def takeOrder(sender: address, orderID: address, type: int256, market: address, outcome: int256, fxpAmountTakerWants: int256):
+    assertNoValue()
+    self.controller.assertIsWhitelisted(msg.sender)
+    require(fxpAmountTakerWants)
+    # Fill orders
+    if(type == BID):
+        fxpAmountRemaining = TAKE_BID_ORDER.takeBidOrder(sender, orderID, market, outcome, fxpAmountTakerWants, call=delegate)
+    elif(type == ASK):
+        fxpAmountRemaining = FILL_ASK_ORDER.takeAskOrder(sender, orderID, market, outcome, fxpAmountTakerWants, call=delegate)
+    else:
+        ~invalid()
+    return(fxpAmountRemaining)
+
+def setController(newController: address):
+    require(msg.sender == self.controller)
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to: address):
+    require(msg.sender == self.controller)
+    suicide(to)

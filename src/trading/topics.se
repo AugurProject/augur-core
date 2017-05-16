@@ -1,0 +1,74 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+##### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+#####
+
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/require.sem')
+
+# numTopics is the number of distinct topics
+# topics[] is an array with all distinct topics
+# popularity[] is indexed by topic, values are the total "popularity" of all markets using the topic.
+#   (Volume is a crude popularity metric which will be refined by testing.)
+# Note: sorting and/or ranking must be done by the client!
+data topics(numTopics, topics[], popularity[])
+
+def updateTopicPopularity(topic, fxpAmount):
+    assertNoValue()
+    self.controller.assertIsWhitelisted(msg.sender)
+    if(self.topics.popularity[topic] == 0):
+        self.topics.topics[self.topics.numTopics] = topic
+        self.topics.numTopics += 1
+    self.topics.popularity[topic] += fxpAmount
+    return(1)
+
+def getChunkOfTopics(offset, numTopicsToLoad):
+    numTopics = self.topics.numTopics
+    if(offset > numTopics or numTopics == 0):
+        return([]: arr)
+    if(numTopicsToLoad == 0):
+        numTopicsToLoad = numTopics
+    numTopicsToLoad = min(numTopicsToLoad, numTopics - offset)
+    topics = array(numTopicsToLoad)
+    i = 0
+    while(i < numTopicsToLoad):
+        topics[i] = self.topics.topics[i + offset]
+        i += 1
+    return(topics: arr)
+
+def getTopicsInfo(offset, numTopicsToLoad):
+    numTopics = self.topics.numTopics
+    if(offset > numTopics or numTopics == 0):
+        return([]: arr)
+    if(numTopicsToLoad == 0):
+        numTopicsToLoad = numTopics
+    numTopicsToLoad = min(numTopicsToLoad, numTopics - offset)
+    topicsInfo = array(numTopicsToLoad * 2)
+    i = 0
+    j = 0
+    while(i < numTopicsToLoad):
+        topic = self.topics.topics[i + offset]
+        topicsInfo[j] = topic
+        topicsInfo[j + 1] = self.topics.popularity[topic]
+        i += 1
+        j += 2
+    return(topicsInfo: arr)
+
+# @return fxp
+def getTopicPopularity(topic):
+    return(self.topics.popularity[topic])
+
+def getNumTopics():
+    return(self.topics.numTopics)
+
+def setController(newController: address):
+    require(msg.sender == self.controller)
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to: address):
+    require(msg.sender == self.controller)
+    suicide(to)

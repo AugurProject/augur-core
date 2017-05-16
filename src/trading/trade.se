@@ -1,0 +1,120 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+MUTEX = self.controller.lookup('mutex')
+ORDERS = self.controller.lookup('orders')
+TAKEORDER = self.controller.lookup('takeOrder')
+MAKEORDER = self.controller.lookup('makeOrder')
+
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+
+data controller
+
+# Trade types
+macro BID: 1
+macro ASK: 2
+
+# Minimum gas needed to execute the make and/or take functions
+macro MINIMUM_GAS_NEEDED_TO_MAKE_ORDER: 282556
+macro MINIMUM_GAS_NEEDED_TO_TAKE_ORDER: 316476
+
+def init():
+    self.controller = 0x0
+
+# @public
+# @return fxp
+def publicBuy(market: address, outcome: uint256, fxpAmount: uint256, fxpPrice, tradeGroupID):
+    assertNoValue()
+    MUTEX.acquire()
+    self.controller.stopInEmergency()
+    output = self.buy(msg.sender, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
+    MUTEX.release()
+    return(output: uint256)
+
+# @public
+# @return fxp
+def publicSell(market: address, outcome: uint256, fxpAmount: uint256, fxpPrice, tradeGroupID):
+    assertNoValue()
+    MUTEX.acquire()
+    self.controller.stopInEmergency()
+    output = self.sell(msg.sender, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
+    MUTEX.release()
+    return(output: uint256)
+
+# Match an order with the best bid or ask.
+# @public
+# @return fxp
+def publicTakeBestOrder(type: uint256, market: address, outcome: uint256, fxpAmount: uint256, fxpPrice):
+    assertNoValue()
+    MUTEX.acquire()
+    self.controller.stopInEmergency()
+    fxpAmountRemaining = self.takeBestOrder(msg.sender, type, market, outcome, fxpAmount, fxpPrice)
+    MUTEX.release()
+    return(fxpAmountRemaining: uint256)
+
+# Take ask orders from the head of the order list while prices are below the limit price; then make.
+# @internal
+# @return fxp
+def buy(sender: address, market: address, outcome: uint256, fxpAmount: uint256, fxpPrice, tradeGroupID):
+    assertNoValue()
+    self.controller.assertIsWhitelisted(msg.sender)
+    return(self.trade(sender, BID, market, outcome, fxpAmount, fxpPrice, tradeGroupID): uint256)
+
+# Take bid orders from the head of the order list while prices are above the limit price; then make.
+# @internal
+# @return fxp
+def sell(sender: address, market: address, outcome: uint256, fxpAmount: uint256, fxpPrice, tradeGroupID):
+    assertNoValue()
+    self.controller.assertIsWhitelisted(msg.sender)
+    return(self.trade(sender, ASK, market, outcome, fxpAmount, fxpPrice, tradeGroupID): uint256)
+
+# Take orders from the head of the order list while prices are better than the limit price; then make.
+# @internal
+# @return fxp
+def trade(sender: address, type: uint256, market: address, outcome: uint256, fxpAmount: uint256, fxpPrice, tradeGroupID):
+    assertNoValue()
+    self.controller.assertIsWhitelisted(msg.sender)
+    if(type == BID):
+        matchingType = ASK
+    else:
+        matchingType = BID
+    fxpAmount = self.takeBestOrder(sender, matchingType, market, outcome, fxpAmount, fxpPrice)
+    if(fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED_TO_MAKE_ORDER):
+        MAKEORDER.makeOrder(sender, type, fxpAmount, fxpPrice, market, outcome, 0, 0, tradeGroupID)
+        return(0: uint256)
+    return(fxpAmount: uint256)
+
+# @internal
+# @return fxp
+def takeBestOrder(sender: address, type: uint256, market: address, outcome: uint256, fxpAmount: uint256, fxpPrice):
+    assertNoValue()
+    self.controller.assertIsWhitelisted(msg.sender)
+    orderID = ORDERS.getBestOrderID(type, market, outcome)
+    while(orderID != 0 and fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED_TO_TAKE_ORDER):
+        fxpOrderPrice = ORDERS.getPrice(orderID, type, market, outcome)
+        if(type == BID):
+            isAcceptablePrice = fxpOrderPrice >= fxpPrice
+        else:
+            isAcceptablePrice = fxpOrderPrice <= fxpPrice
+        if(isAcceptablePrice):
+            orderOwner = ORDERS.getOrderOwner(orderID, type, market, outcome)
+            nextOrderID = ORDERS.getWorseOrderID(orderID, type, market, outcome)
+            if(orderOwner != sender):
+                fxpAmount = TAKEORDER.takeOrder(sender, orderID, type, market, outcome, fxpAmount)
+            orderID = nextOrderID
+        else:
+            orderID = 0
+    return(fxpAmount: uint256)
+
+# @controller
+def setController(newController: address):
+    if(msg.sender != self.controller):
+        ~invalid()
+    self.controller = newController
+    return(1)
+
+# @controller
+def suicideFunds(to: address):
+    if(msg.sender != self.controller):
+        ~invalid()
+    suicide(to)

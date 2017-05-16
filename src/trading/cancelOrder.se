@@ -1,0 +1,106 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+### This allows you to cancel orders on the book
+
+macro ORDERS: self.controller.lookup('orders')
+macro MUTEX: self.controller.lookup('mutex')
+
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/orderFields.sem')
+inset('../macros/assertPrivateCall.sem')
+inset('../macros/require.sem')
+inset('../macros/orderFields.sem')
+
+data controller
+data owner
+data initialized
+
+# Order types
+macro BID: 1
+macro ASK: 2
+
+# Field counts
+macro ORDER_FIELDS: 9
+
+def init():
+    self.owner = msg.sender
+
+def initialize(controller: address):
+    require(msg.sender == self.owner)
+    require(not self.initialized)
+    self.initialized = 1
+    self.controller = controller
+
+# @public
+def publicCancelOrder(orderID: address, type: int256, market: address, outcome: int256):
+    assertNoValue()
+    MUTEX.acquire()
+    self.cancelOrder(msg.sender, orderID, type, market, outcome)
+    MUTEX.release()
+    return(1)
+
+# Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
+# @internal
+# @returns 1 if success, throws on failure
+def cancelOrder(sender: address, orderID: address, type: int256, market: address, outcome: int256):
+    assertNoValue()
+    self.controller.assertIsWhitelisted(msg.sender)
+    require(sender)
+    require(orderID)
+    require(market)
+
+    # Look up the order the sender wants to cancel
+    order = ORDERS.getOrder(orderID, type, market, outcome, outitems = ORDER_FIELDS)
+    fxpAmount = order[ATTOSHARES]
+    fxpPrice = order[DISPLAY_PRICE]
+    owner = order[OWNER]
+    fxpMoneyEscrowed = order[TOKENS_ESCROWED]
+    fxpSharesEscrowed = order[SHARES_ESCROWED]
+
+    # Check that the order ID is correct, the type is bid (1) or ask (2), and that the sender owns the order
+    require(type == BID or type == ASK)
+    require(sender == owner)
+
+    # Clear the order first
+    ORDERS.removeOrder(orderID, type, market, outcome)
+
+    self.refundOrder(sender, type, fxpSharesEscrowed, fxpMoneyEscrowed, market, outcome)
+
+    # Log cancellation
+    ORDERS.cancelOrderLog(market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed)
+    return(1)
+
+# Issue refunds
+# @private
+def refundOrder(sender: address, type: int256, fxpSharesEscrowed: int256, fxpMoneyEscrowed: int256, market: address, outcome: int256):
+    assertNoValue()
+    assertPrivateCall()
+
+    if(fxpSharesEscrowed > 0):
+        # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
+        if(type == BID):
+            i = 1
+            while(i <= market.getNumberOfOutcomes()):
+                if(i != outcome):
+                    market.getShareToken(i).transfer(sender, fxpSharesEscrowed)
+                i += 1
+        # Shares refund if has shares escrowed for this outcome
+        elif(type == ASK):
+            market.getShareToken(outcome).transfer(sender, fxpSharesEscrowed)
+
+    # Return to user moneyEscrowed that wasn't filled yet
+    if(fxpMoneyEscrowed > 0):
+        require(market.getDenominationToken().transferFrom(market, sender, fxpMoneyEscrowed))
+
+    return(1)
+
+def setController(newController: address):
+    require(msg.sender == self.controller)
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to: address):
+    require(msg.sender == self.controller)
+    suicide(to)

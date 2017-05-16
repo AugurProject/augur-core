@@ -1,46 +1,25 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]:int256, assertOnlySpecifiedCaller:[int256,int256]:_, changeMode:[int256]:int256, emergencyStop:[]:int256, getMode:[]:int256, getOwner:[]:int256, lookup:[int256]:int256, onlyInEmergency:[]:_, release:[]:int256, removeFromWhitelist:[int256,int256]:int256, setValue:[int256,int256]:int256, stopInEmergency:[]:_, suicide:[int256,int256,int256]:int256, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:_, transferOwnership:[int256,int256,int256,int256]:int256, updateController:[int256,int256]:int256]
-
-REPORTING = self.controller.lookup('reporting')
-extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOfReporter:[int256,int256]:int256, claimInitialRepFromRepContract:[]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReportedOnNonFinalRoundTwoEvent:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setController:[address]:int256, setInitialReporters:[int256]:int256, setRep:[int256,int256,int256]:int256, setReportedOnNonFinalRoundTwoEvent:[int256,int256,int256]:int256, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, suicideFunds:[address]:_, totalSupply:[int256]:int256]
-
-CONSENSUSDATA = self.controller.lookup('consensusData')
-extern consensusData: [decreaseDenominator:[int256,int256,int256]:int256, doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepCollected:[int256,int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setController:[address]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:int256, setRefund:[int256,int256]:int256, setRepCollected:[int256,int256,int256]:int256, setSlashed:[int256,int256,int256]:int256, suicideFunds:[address]:_]
-
-BRANCHES = self.controller.lookup('branches')
-extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, addNewETHContract:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getCurrentETHWrapper:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setController:[address]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, suicideFunds:[address]:_, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
-
-# using refund
-inset('../macros/assertZeroValue.sem')
-# using fix
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
 inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 
 data controller
 
-event fundedAccount(branch: indexed, sender: indexed, cashBalance, repBalance, timestamp)
+event fundedAccount(branch: indexed, sender: indexed, repBalance, timestamp)
 
 ### Reputation faucet - get ~free rep!
-### TODO Fix to work with new system
 
 def init():
     self.controller = 0x0
 
 def reputationFaucet(branch):
-    assertZeroValue()
-    if(REPORTING.getRepBalance(branch, msg.sender)):
-        index = REPORTING.repIDToIndex(branch, msg.sender)
-    index = REPORTING.getNumberReporters(branch)
-    REPORTING.addReporter(branch, msg.sender, 0, 0, 0)
-    REPORTING.setRep(branch, index, fix(47))
-    periodLength = BRANCHES.getPeriodLength(branch)
-    if(block.timestamp % periodLength <= periodLength / 2):
-        penalizedUpTo = BRANCHES.getVotePeriod(branch) - 1
-    else:
-        penalizedUpTo = BRANCHES.getVotePeriod(branch)
-    CONSENSUSDATA.setPenalizedUpTo(branch, msg.sender, penalizedUpTo)
-    CONSENSUSDATA.setRepCollected(branch, msg.sender, penalizedUpTo)
-    log(type=fundedAccount, branch, msg.sender, fix(10000), fix(47), block.timestamp)
+    assertNoValue()
+    # FIXME: no longer works with new reporting system
+    # CONSIDER: we should replace this faucet with a cotnract added to the controller named `legacyRepContract`, then that would be the faucet and no need for sketchy code mixed in with our production code
+    # REPUTATION_TOKEN.transfer(branch, msg.sender, 47*WEI_TO_ETH)
+    log(type=fundedAccount, branch, msg.sender, fix(47), block.timestamp)
     return(1)
 
 def setController(newController: address):

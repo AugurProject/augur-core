@@ -1,0 +1,71 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+
+data shareSettlementPerEthFee[]
+data validityBondInAttoeth[]
+
+def any():
+    assertNoValue()
+
+def getValidityBond(reportingWindow):
+    currentValidityBondInAttoeth = self.validityBondInAttoeth[reportingWindow]
+    if (currentValidityBondInAttoeth):
+        return(currentValidityBondInAttoeth)
+    # TODO: get the real data for this
+    indeterminateMarketsInPreviousWindow = 10
+    # TODO: get the real data for this
+    totalMarketsInPreviousWindow = 1000
+    previousValidityBondInAttoeth = self.validityBondInAttoeth[reportingWindow - 1]
+    if (!previousValidityBondInAttoeth):
+        previousValidityBondInAttoeth = 1*10**16
+    targetIndeterminateMarketsPerHundred = 1
+    currentValidityBondInAttoeth = previousValidityBondInAttoeth * targetIndeterminateMarketsPerHundred * totalMarketsInPreviousWindow / indeterminateMarketsInPreviousWindow / 100
+    self.validityBondInAttoeth[reportingWindow] = currentValidityBondInAttoeth
+    return(currentValidityBondInAttoeth)
+
+def getTargetReporterGasCosts():
+    # TODO: get number of registration tokens issued last period
+    # TODO: get target reporter count + wiggle room
+    # TODO: calculate estimated reporters per market
+    estimatedReportsPerMarket = 10
+    # TODO: figure out what the number actually is
+    gasToReport = 100000
+    # we double it to ensure we have more than enough rather than not enough
+    estimatedReportingGas = gasToReport * estimatedReportsPerMarket * 2
+    # TODO: multiply this by average gas costs of reporters historically
+    return(estimatedReportingGas)
+
+def getReportingFeeInAttoethPerEth(reportingWindow):
+    # CONSIDER: store this on the reporting window rather than here
+    currentPerEthFee = self.shareSettlementPerEthFee[reportingWindow]
+    if (currentPerEthFee):
+        return(currentPerEthFee)
+    repMarketCapInAttoeth = self.getRepMarketCapInAttoeth(reportingWindow.getBranch())
+    targetRepMarketCapInAttoeth = self.getTargetRepMarketCapInAttoeth(reportingWindow)
+    previousPerEthFee = self.shareSettlementPerEthFee[reportingWindow - 1]
+    if (!previousPerEthFee):
+        previousPerEthFee = 1*10**16
+    currentPerEthFee = previousPerEthFee * targetRepMarketCapInAttoeth / repMarketCapInAttoeth
+    currentPerEthFee = max(currentPerEthFee, 1*10**14)
+    self.shareSettlementPerEthFee[reportingWindow] = currentPeriodPerEthFee
+    return(currentPerEthFee)
+
+def getRepMarketCapInAttoeth(branch):
+    # TODO: get these from an auto-generated market
+    attorepPerEth = 11*10**18
+    repMarketCapInAttoeth = branch.getReputationToken().totalSupply() * attorepPerEth
+    return(repMarketCapInAttoeth)
+
+def getTargetRepMarketCapInAttoeth(reportingWindow):
+    outstandingSharesInAttoeth = self.getOutstandingSharesInAttoeth(reportingWindow)
+    targetRepMarketCapInAttoeth = outstandingSharesInAttoeth * 5
+    return(targetRepMarketCapInAttoeth)
+
+def getOutstandingSharesInAttoeth(reportingWindow):
+    # TODO: start tracking the real number and store it somewhere
+    # NOTE: make sure we are getting the share value in attoeth, since complete set fees are not normalized across markets
+    # NOTE: eventually we will need to support shares in multiple denominations
+    outstandingSharesInAttoeth = 100*10**18
+    return(outstandingSharesInAttoeth)

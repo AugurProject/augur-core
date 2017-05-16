@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
-git+https://github.com/ethereum/serpent.git@3ec98d01813167cc8725a951bd384c629158af2b#egg=ethereum-serpent
+-e git+https://github.com/ethereum/serpent.git@3ec98d01813167cc8725a951bd384c629158af2b#egg=ethereum-serpent
 bitcoin==1.1.42           # via ethereum
 cffi==1.10.0              # via secp256k1
 ethereum==1.6.1
@@ -16,6 +16,7 @@ pycparser==2.17           # via cffi
 pycryptodome==3.4.6       # via ethereum
 pyethash==0.1.27          # via ethereum
 pysha3==1.0.2             # via ethereum
+pytest-lazy-fixture==0.3.0
 pytest==3.1.2
 pyyaml==3.12              # via ethereum
 repoze.lru==0.6           # via ethereum

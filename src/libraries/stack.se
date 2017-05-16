@@ -1,0 +1,38 @@
+inset('../macros/require.sem')
+
+data collection[]
+data head
+
+data controller
+data owner
+
+def init():
+    self.owner = msg.sender
+    self.head = 0
+
+def any():
+    require(msg.sender == self.owner or msg.sender == self)
+
+def init():
+    self.controller = 0x01
+
+def push(item):
+    index = self.head + 1
+    self.head = index
+    self.collection[index] = item
+
+def pop():
+    index = self.head
+    require(index != 0)
+    self.head = index - 1
+    removedValue = self.collection[index]
+    self.collection[index] = 0
+    return(removedValue)
+
+def peek():
+    index = self.head
+    require(index != 0)
+    return(self.collection[index])
+
+def isEmpty():
+    return(self.head == 0)

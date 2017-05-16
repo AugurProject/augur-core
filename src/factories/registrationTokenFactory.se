@@ -1,0 +1,17 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+extern delegateExtern: [setup:[int256,int256]:_]
+extern registrationToken: [initialize:[address]:_]
+
+# workaround for https://github.com/ethereum/serpent/issues/119
+data lastRegistrationToken
+
+def createRegistrationToken(controller: address, reportingWindow: address):
+    registrationToken = create('../libraries/delegator.se')
+    registrationToken.setup(controller, 'registrationToken')
+    registrationToken.initialize(reportingWindow)
+    self.lastRegistrationToken = registrationToken
+    return(registrationToken)
+
+def getLastRegistrationToken():
+    return(self.lastRegistrationToken)

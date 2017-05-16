@@ -1,0 +1,9 @@
+macro ATTOSHARES: 0
+macro DISPLAY_PRICE: 1
+macro OWNER: 2
+macro OUTCOME: 3
+macro TOKENS_ESCROWED: 4
+macro SHARES_ESCROWED: 5
+macro BETTER_ORDER_ID: 6
+macro WORSE_ORDER_ID: 7
+macro GAS_PRICE: 8

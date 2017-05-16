@@ -1,0 +1,97 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+ORDERS = self.controller.lookup('orders')
+
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/require.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
+
+data controller
+data owner
+
+data marketPricesFrozen[][]
+
+data marketPricesFrozenDenominator[]
+
+macro BID: 1
+macro ASK: 2
+
+def any():
+    assertNoValue()
+
+def init():
+    self.owner = msg.sender
+
+def initialize(controller: address):
+    require(not self.controller)
+    require(msg.sender == self.owner)
+    self.controller = controller
+
+# CONSIDER: do we still need this now that we have fully upgradable contracts (including sharetokens and markets)?
+def claimSharesInUpdate(market: address):
+    self.controller.onlyInEmergency()
+
+    # if this is the first time this is called for this market, make an educated guess as to the trading value
+    numOutcomes = market.getNumberOfOutcomes()
+    if(!self.marketPricesFrozen[market][1]):
+        i = 0
+        while i < numOutcomes:
+            bestBid = ORDERS.getBestOrderID(BID, market, i)
+            if(bestBid == 0):
+                frozenPriceForOutcome = ORDERS.getLastOutcomePrice(market, i)
+            else:
+                frozenPriceForOutcome = ORDERS.getPrice(bestBid, BID, market, i)
+            self.marketPricesFrozen[market][i] = frozenPriceForOutcome
+            self.marketPricesFrozenDenominator[market] += frozenPriceForOutcome
+            i += 1
+
+    marketCurrency = market.getDenominationToken()
+    # Fetch min/max values for the event.
+    minValue = market.getMinDisplayPrice()
+    maxValue = market.getMaxDisplayPrice()
+
+    # FIXME: this code should be normalized and all market types treated the same, there is no need to have multiple code paths by market type
+
+    # categorical
+    if(numOutcomes > 2):
+        denominator = self.marketPricesFrozenDenominator[market]
+        i = 0
+        while i < numOutcomes:
+            # FIXME: always multiple first, then divide
+            shareValue = safeFxpMul(safeFxpDiv(self.marketPricesFrozen[market][i], denominator), ONE)
+            shareToken = market.getShareToken(i)
+            sharesOwned = shareToken.balanceOf(msg.sender)
+            if(sharesOwned > 0):
+                shareToken.destroyShares(msg.sender, sharesOwned)
+                shareValue = safeFxpMul(sharesOwned, shareValue)
+                require(marketCurrency.transferFrom(market, msg.sender, shareValue))
+    # binary or scalar
+    else:
+        range = maxValue - minValue
+        # outcome is 1 if we're 0 indexing now
+        outcome = 1
+        shareValue = self.marketPricesFrozen[market][outcome] - minValue
+        otherSideShareValue = maxValue - self.marketPricesFrozen[market][outcome]
+        denominator = safeAdd(shareValue, otherSideShareValue)
+        # FIXME: always multiple first, then divide
+        shareValue = safeFxpMul(safeFxpDiv(shareValue, denominator), range)
+        shareToken = market.getShareToken(outcome)
+        sharesOwned = shareToken.balanceOf(msg.sender)
+        if(sharesOwned > 0):
+            shareToken.destroyShares(msg.sender, sharesOwned)
+            shareValue = safeFxpMul(sharesOwned, shareValue)
+            require(marketCurrency.transferFrom(market, msg.sender, shareValue))
+
+        # outcome is 0 if we're 0 indexing now
+        outcome = 0
+        # FIXME: always multiple first, then divide
+        shareValue = safeFxpMul(safeFxpDiv(otherSideShareValue, denominator), range)
+        shareToken = market.getShareToken(outcome)
+        sharesOwned = shareToken.balanceOf(msg.sender)
+        if(sharesOwned > 0):
+            shareToken.destroyShares(msg.sender, sharesOwned)
+            shareValue = safeFxpMul(sharesOwned, shareValue)
+            require(marketCurrency.transferFrom(market, msg.sender, shareValue))
+    return(1)

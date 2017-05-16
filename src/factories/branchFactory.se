@@ -1,0 +1,15 @@
+extern delegateExtern: [setup:[int256,int256]:_]
+extern branch: [initialize:[address,int256]:_]
+
+# workaround for https://github.com/ethereum/serpent/issues/119
+data lastBranch
+
+def createBranch(controller: address, parentBranch: address, parentPayoutDistributionHash: int256):
+    branch = create('../libraries/delegator.se')
+    branch.setup(controller, 'branch')
+    branch.initialize(parentBranch, parentPayoutDistributionHash)
+    self.lastBranch = branch
+    return(branch)
+
+def getLastBranch():
+    return(self.lastBranch)

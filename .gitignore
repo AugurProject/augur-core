@@ -75,3 +75,5 @@ notes
 
 local/*.py
 *build-*.json
+
+tests/compilation_cache/
