@@ -49,6 +49,8 @@ def init():
 def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr, shareWallets: arr):
     self.controller.assertIsWhitelisted(msg.sender)
     self.Markets[market].event = event
+    if(numOutcomes > 8):
+        ~invalid()
     i = 0
     while i < numOutcomes:
         self.Markets[market].shareContracts[i + 1] = shareContracts[i]
@@ -291,14 +293,12 @@ def getPrevID(market, order):
 def getTotalOrders(marketID):
     return(self.Markets[marketID].totalOrders)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

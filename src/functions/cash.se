@@ -8,7 +8,8 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 
 data accounts[2**160](balance, spenders[2**160](maxValue))
 
@@ -124,7 +125,7 @@ def withdrawEther(sender: address, to: address, value: uint256):
         log(type = InitiateWithdrawEther, sender, value, self.accounts[sender].balance, block.timestamp)
         return(2)
     else:
-        if((initiatedTimestamp + 3 * TWENTY_FOUR_HR) > block.timestamp):
+        if((initiatedTimestamp + 3 * SECONDS_PER_DAY) > block.timestamp):
             ~invalid()
         self.accounts[sender].balance -= value
         self.totalSupply -= value
@@ -174,14 +175,12 @@ def getInitiated():
 # Controller functions #
 ########################
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

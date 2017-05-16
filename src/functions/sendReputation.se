@@ -40,7 +40,7 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 
 inset('../macros/refund.sem')
 inset('../macros/periodStage.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 # sender/owner, then spender
 data amountCanSpend[][](branch[])
@@ -73,10 +73,16 @@ macro ONE_MONTH: 2419200
 def init():
     self.controller = 0x0
 
-def sendRepFrom(branch, from, receiver, fxpValue):
+def publicSendRepFrom(branch, from, receiver, fxpValue):
+    refund()
+    MUTEX.acquire()
+    result = self.internalSendRepFrom(branch, msg.sender, from, receiver, fxpValue)
+    MUTEX.release()
+    return(result)
+
+def internalSendRepFrom(branch, caller, from, receiver, fxpValue):
+    self.controller.assertIsWhitelisted(msg.sender)
     checkInvariants(from)
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
 
     senderIndex = REPORTING.repIDToIndex(branch, from)
     receiverIndex = REPORTING.repIDToIndex(branch, receiver)
@@ -90,8 +96,6 @@ def sendRepFrom(branch, from, receiver, fxpValue):
     if(!safeToSubtract(senderBalance, fxpValue) or !REPORTING.subtractRep(branch, senderIndex, fxpValue) or !safeToAdd(receiverBalance, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
         ~invalid()
     log(type = Transfer, from, receiver, fxpValue)
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(1)
 
 # Transfer dormant rep
@@ -101,10 +105,15 @@ def sendRepFrom(branch, from, receiver, fxpValue):
     # -3: "Receiving address doesn't exist"
     # -5: not enough rep / fxpValue too small or not authorized
 # fails unless from has authorized sender [either contract which was approved or the from address is the msg.sender]
-def transferFrom(branch, from, receiver, fxpValue):
+def publicTransferFrom(branch, from, receiver, fxpValue):
     refund()
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
+    MUTEX.acquire()
+    result = self.internalTransferFrom(branch, msg.sender, receiver, fxpValue)
+    MUTEX.release()
+    return(result)
+
+def internalTransferFrom(branch, caller, from, receiver, fxpValue):
+    self.controller.assertIsWhitelisted(msg.sender)
 
     votePeriod = BRANCHES.getVotePeriod(branch)
     senderIndex = REPORTING.repIDToIndex(branch, from)
@@ -116,29 +125,35 @@ def transferFrom(branch, from, receiver, fxpValue):
     if(!safeToSubtract(senderBalance, fxpValue) or !REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !safeToAdd(receiverBalance, fxpValue) or !REPORTING.addDormantRep(branch, receiverIndex, fxpValue)):
       ~invalid()
     log(type=Transfer, from, receiver, fxpValue)
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(1)
 
-def claimRep():
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
-    balance = REPCONTRACT.balanceOf(msg.sender)
-    if(!REPCONTRACT.transferFrom(msg.sender, 0, balance) or !REPORTING.addReporter(1010101, msg.sender, 0, balance, 0)):
+def publicClaimRep():
+    refund()
+    MUTEX.acquire()
+    result = self.internalSendRepFrom(msg.sender)
+    MUTEX.release()
+    return(result)
+
+def internalClaimRep(caller):
+    self.controller.assertIsWhitelisted(msg.sender)
+    balance = REPCONTRACT.balanceOf(caller)
+    if(!REPCONTRACT.transferFrom(caller, 0, balance) or !REPORTING.addReporter(1010101, caller, 0, balance, 0)):
         ~invalid()
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(1)
 
 # Allows spender to withdraw from your rep account
-def approve(branch, spender, fxpValue):
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
+def publicApprove(branch, spender, fxpValue):
+    refund()
+    MUTEX.acquire()
+    result = self.internalApprove(branch, msg.sender, spender, fxpValue)
+    MUTEX.release()
+    return(result)
 
-    self.amountCanSpend[msg.sender][spender].branch[branch] = fxpValue
-    log(type = Approval, msg.sender, spender, branch, fxpValue)
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
+def internalApprove(branch, caller, spender, fxpValue):
+    self.controller.assertIsWhitelisted(msg.sender)
+
+    self.amountCanSpend[caller][spender].branch[branch] = fxpValue
+    log(type = Approval, caller, spender, branch, fxpValue)
     return(1)
 
 # Returns amount spender can withdraw from owner
@@ -149,7 +164,7 @@ def allowance(branch, owner, spender):
 macro checkInvariants($account):
     refund()
     # auto increment vote period if needed
-    INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
+    INCREMENTPERIOD.internalIncrementPeriodAfterReporting(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     lastPeriod = votePeriod - 1
@@ -159,13 +174,9 @@ macro checkInvariants($account):
     # Rep cannot be simultaneously spent (transferred) and used to vote
     atFirstHalfOfPeriod()
 
-    if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
+    if(delta > 1 and CATCHUP.internalPenalizationCatchup(branch, $account) != 1):
         return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(0)
 
 macro checkSendRepInvariants():
@@ -184,25 +195,19 @@ macro checkSendRepInvariants():
                 ~invalid()
         else:
             REPORTING.addReporter(branch, from)
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-1)
     # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the receiver claims it
     if(REPORTING.getReporterID(branch, receiverIndex) != receiver or (child and !tooLateForChild and REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, receiver)) != receiver)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-3)
     # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the sender claims it
     if(!tooLateForChild and child and REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
         if(!CLAIMINITIALREP.claimInitialRep(branch, child, call = delegate)):
             ~invalid()
 
-    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
+    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][caller].branch[branch] >= fxpValue or from == caller)):
         return(-5)
-    if(from != msg.sender):
-        self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
+    if(from != caller):
+        self.amountCanSpend[from][caller].branch[branch] -= fxpValue
 
 # @controller
 def setController(newController: address):

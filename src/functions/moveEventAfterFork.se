@@ -44,8 +44,9 @@ RESOLVEFORK = self.controller.lookup('forkResolution')
 extern forkResolution: [exchangeRate:[int256]:int256, resolveFork:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data controller
 
@@ -127,7 +128,7 @@ macro checkMoveEventPreconditions():
         return(0)
     winner = BACKSTOPS.getResolved(branch, forkPeriod)
     if(!winner):
-        winner = RESOLVEFORK.resolveFork(branch)
+        winner = RESOLVEFORK.internalResolveFork(branch)
     nonDefaultForkResolution = EVENTS.getForkResolveAddress(event)
     if(nonDefaultForkResolution):
         resolveCustomForkResolution()
@@ -225,7 +226,7 @@ macro moveEventToWinningBranch():
 
 # use address picked in event creation to resolve it instead of the default fork resolve option
 macro resolveCustomForkResolution():
-    winner = nonDefaultForkResolution.resolveFork(branch)
+    winner = nonDefaultForkResolution.internalResolveFork(branch)
     if(winner):
         return(1)
     else:

@@ -43,8 +43,9 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 extern forkResolveContract: [resolveFork:[int256]:int256]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data controller
 
@@ -97,17 +98,21 @@ def init():
 
 # parent branch is branch here
 # If there's only 1 event and that's the one we forked over [rare edge case] we can call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start of the fork]
-def resolveFork(branch):
-    if(!isCallerWhitelisted()):
-        MUTEX.acquire()
+def publicResolveFork(branch):
+    refund()
+    MUTEX.acquire()
+    result = self.internalResolveFork(branch)
+    MUTEX.release()
+    return(result)
+
+def internalResolveFork(branch):
+    self.controller.assertIsWhitelisted(branch)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     winner = BACKSTOPS.getResolved(branch, forkPeriod)
     if(winner):
         ~invalid()
     if(currentPeriod < (forkPeriod + 2)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(0)
 
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
@@ -120,8 +125,6 @@ def resolveFork(branch):
     else:
         winner = fork
     BACKSTOPS.setResolved(branch, forkPeriod, winner)
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(winner)
 
 # Resolve fork method that gets exchange rate

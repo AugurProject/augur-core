@@ -19,8 +19,8 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 
 data controller
 
@@ -36,10 +36,15 @@ macro MAX_FEE: 10**17
 def init():
     self.controller = 0x0
 
-def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, mostRecentChildBranch):
+def publicCreateSubbranch(description, periodLength, parent, fxpMinTradingFee, mostRecentChildBranch):
     refund()
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
+    MUTEX.acquire()
+    result = self.internalCreateSubbranch(description, periodLength, parent, fxpMinTradingFee, mostRecentChildBranch)
+    MUTEX.release()
+    return(result)
+
+def internalCreateSubbranch(description:str, periodLength, parent, fxpMinTradingFee, mostRecentChildBranch):
+    self.controller.assertIsWhitelisted(msg.sender)
 
     checkBranchCreationPreconditions()
     parentPeriod = BRANCHES.getVotePeriod(parent)
@@ -63,23 +68,15 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, mos
     feePaid = parentEthContract.transferFrom(msg.sender, BRANCHES.getBranchWallet(parent, parentEthContract), 47 * WEI_TO_ETH)
     if(!feePaid or !INFO.setInfo(branch, description, msg.sender, 47 * WEI_TO_ETH, 0, 0) or !REPORTING.setInitialReporters(branch)):
         ~invalid()
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(branch)
 
 macro checkBranchCreationPreconditions():
     # provided branch doesn't already exist, create it
     if(INFO.getCreator(branch)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-2)
     if(periodLength <= TWENTY_FOUR_HR or !BRANCHES.getPeriodLength(parent) or !len(description)):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-1)
     if(fxpMinTradingFee <= 0 or fxpMinTradingFee > MAX_FEE):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-1)
 
 # @controller

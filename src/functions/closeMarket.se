@@ -29,7 +29,7 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data controller
 
@@ -51,13 +51,11 @@ def init():
 def publicCloseMarket(market, sender):
     refund()
     MUTEX.acquire()
-    result = self.closeMarket(market, sender)
+    result = self.internalCloseMarket(market, sender)
     MUTEX.release()
     return(result)
 
-def closeMarket(market, sender):
-    refund()
-
+def internalCloseMarket(market, sender):
     self.controller.assertIsWhitelisted(msg.sender)
     event = MARKETS.getMarketEvent(market)
     branch = EVENTS.getEventBranch(event)

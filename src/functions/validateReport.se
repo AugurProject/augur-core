@@ -42,10 +42,11 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/periodStage.sem')
 inset('../macros/logReturn.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data controller
 
