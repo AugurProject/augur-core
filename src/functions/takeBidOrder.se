@@ -51,18 +51,11 @@ def init():
 # Filling a bid [aka selling shares]
 # Users need to have approved markets to spend their money, simulate fill client side to check in case an order is invalid due to someone not having approved
 # Scenarios:
-<<<<<<< HEAD
 #  - Asker (taker) has maxValue - price and expects complete set minus the one they're selling
 #  - Asker (taker) has shares and expects to be paid price - minValue for them
 #  - Bidder (maker) owns all shares except the one they're buying and has escrowed them and wants to pay price - minValue for the share and then sell the complete set for range thus getting maxValue - price at the end
 #  - Bidder (maker) has escrowed price - minValue for their shares
 # @internal
-=======
-#  - Asker has maxValue - price and expects complete set minus the one theyre selling
-#  - Or asker has shares and expects to be paid price - minValue for them
-#  - Bidder owns all shares except the one theyre buying and has escrowed them and wants to pay price - minValue for the share and then sell the complete set for range thus getting maxValue - price at the end
-#  - Or bidder has escrowed price - minValue for their shares
->>>>>>> develop
 def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
