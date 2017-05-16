@@ -1,0 +1,17 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+extern delegateExtern: [setup:[int256,int256]:_]
+extern market: [initialize:[address,int256,int256,int256,int256,address,address,int256,int256,address,int256]:_]
+
+# workaround for https://github.com/ethereum/serpent/issues/119
+data lastMarket
+
+def createMarket(controller: address, reportingWindow: address, endTime: int256, numOutcomes: int256, payoutDenominator: int256, feePerEthInWei: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
+    market = create('../libraries/delegator.se')
+    market.setup(controller, 'market')
+    market.initialize(reportingWindow, endTime, numOutcomes, payoutDenominator, feePerEthInWei, denominationToken, creator, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = msg.value)
+    self.lastMarket = market
+    return(market)
+
+def getLastMarket():
+    return(self.lastMarket)

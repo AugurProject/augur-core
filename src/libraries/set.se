@@ -1,0 +1,31 @@
+inset('../macros/require.sem')
+
+data collection[]
+data count
+data owner
+
+def init():
+    self.owner = msg.sender
+
+def any():
+    require(self.owner == msg.sender or self == msg.sender)
+
+def addSetItem(item):
+    if (self.contains(item)):
+        return(0)
+    self.collection[item] = 1
+    self.count += 1
+    return(1)
+
+def remove(item):
+    if (not self.contains(item)):
+        return (0)
+    self.collection[item] = 0
+    self.count -= 1
+    return(1)
+
+def contains(item):
+    return(self.collection[item] != 0)
+
+def count():
+    return(self.count)

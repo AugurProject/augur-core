@@ -1,0 +1,5 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+macro require($condition):
+    if (not ($condition)):
+        ~invalid()

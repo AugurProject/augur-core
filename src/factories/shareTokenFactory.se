@@ -1,0 +1,14 @@
+extern delegateExtern: [setup:[int256,int256]:_]
+extern shareTokenExtern: [initialize:[]:_]
+
+# workaround for https://github.com/ethereum/serpent/issues/119
+data lastShareToken
+
+def createShareToken(controller: address):
+    shareToken = create('../libraries/delegator.se')
+    shareToken.setup(controller, 'shareToken')
+    self.lastShareToken = shareToken
+    return(shareToken)
+
+def getLastShareToken():
+    return(self.lastShareToken)

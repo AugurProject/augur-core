@@ -1,0 +1,77 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+### This allows users to claim their money from a market by exchanging their shares which hold value
+
+MUTEX = self.controller.lookup('mutex')
+
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/unitConversions.sem')
+inset('../macros/require.sem')
+
+data owner
+data controller
+
+macro THREE_DAYS: 3 * SECONDS_PER_DAY
+
+def init():
+    self.owner = msg.sender
+
+def initialize(controller: address):
+    require(not self.controller)
+    require(msg.sender == self.owner)
+    self.controller = controller
+
+# Claim trading profits/value per share after a market is resolved.
+# @public
+# @param {address} market Market ID for which to claim proceeds.
+# @return {uint256} 1 if successful
+def publicClaimProceeds(market: address):
+    assertNoValue()
+    MUTEX.acquire()
+    self.controller.stopInEmergency()
+    result = self.claimProceeds(msg.sender, market)
+    MUTEX.release()
+    return(result: uint256)
+
+# Claim trading profits/value per share after a market is resolved.
+# @internal
+# @param {address} sender
+# @param {address} market Market ID for which to claim proceeds.
+# @return {uint256} 1 if successful
+def claimProceeds(sender: address, market: address):
+    assertNoValue()
+    self.controller.assertIsWhitelisted(msg.sender)
+    require(market.isFinalized())
+    require(block.timestamp > market.getFinalizationTime() + THREE_DAYS)
+
+    denominationToken = market.getDenominationToken()
+    numberOfOutcomes = market.getNumberOfOutcomes()
+    payoutNumerators = market.getFinalWinningReportingToken().getPayoutNumerators(outitems = numberOfOutcomes)
+    payoutDenominator = market.getPayoutDenominator()
+    outcome = 0
+
+    while outcome < numberOfOutcomes:
+        payoutNumerator = payoutNumerators[outcome]
+        shareToken = market.getShareToken(outcome)
+        balance = shareToken.balanceOf(sender)
+        proceedAmount = balance * payoutNumerator / payoutDenominator
+        # always zero out the balance, even if the shares are worthless as it yields a gas refund
+        shareToken.transferFrom(sender, 0, balance)
+        if proceedAmount:
+            # NOTE: rounding error here will result in _very_ tiny amounts of denominationToken left in the market
+            require(denominationToken.transferFrom(market, sender, proceedAmount))
+        i += 1
+
+    return 1
+
+# @controller
+def setController(newController: address):
+    require(msg.sender == self.controller)
+    self.controller = newController
+    return(1)
+
+# @controller
+def suicideFunds(to: address):
+    require(msg.sender == self.controller)
+    suicide(to)

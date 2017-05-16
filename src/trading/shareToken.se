@@ -1,0 +1,124 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+##### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+#####
+
+macro CANCEL_ORDER: self.controller.lookup('cancelOrder')
+
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/require.sem')
+
+macro NAME: "Shares"
+macro SYMBOL: "SHARE"
+macro DECIMALS: 18
+
+data market
+data accounts[2**160](balance, spenders[2**160](maxValue))
+data totalSupply
+# token name for display
+data name
+# token symbol for display
+data symbol
+# amount of decimals per unit of shares
+data decimals
+
+event Transfer(from: address: indexed, to: address: indexed, value: int256)
+event Approval(owner: address: indexed, spender: address: indexed, value: int256)
+
+def any():
+    assertNoValue()
+
+####################
+# Public functions #
+####################
+
+def transfer(to: address, value: int256):
+    require(1 <= value and value <= self.accounts[msg.sender].balance)
+    self.accounts[msg.sender].balance = safeSub(self.accounts[msg.sender].balance, value)
+    self.accounts[to].balance = safeAdd(self.accounts[to].balance, value)
+    log(type = Transfer, msg.sender, to, value)
+    return(1)
+
+def transferFrom(from: address, to: address, value: int256):
+    require(1 <= value and value <= self.accounts[from].balance)
+    require(value <= self.accounts[from].spenders[msg.sender].maxValue or msg.sender == CANCEL_ORDER)
+    self.accounts[from].spenders[msg.sender].maxValue = safeSub(self.accounts[from].spenders[msg.sender].maxValue, value)
+    # Update balances
+    self.accounts[from].balance = safeSub(self.accounts[from].balance, value)
+    self.accounts[to].balance = safeAdd(self.accounts[to].balance, value)
+    log(type = Transfer, from, to, value)
+    return(1)
+
+def approve(spender: address, value: int256):
+    require(value >= 1)
+    require(value <= 2**254)
+    self.accounts[msg.sender].spenders[spender].maxValue = value
+    log(type=Approval, msg.sender, spender, value)
+    return(1)
+
+######################
+# Internal functions #
+######################
+
+# Special functions for share (token) creation and destruction
+
+def createShares(owner: address, fxpValue: int256):
+    self.controller.assertIsWhitelisted(msg.sender)
+    require(1 <= fxpValue and fxpValue <= 2**254)
+    self.accounts[owner].balance += fxpValue
+    self.totalSupply += fxpValue
+    return(1)
+
+def destroyShares(owner: address, fxpValue: int256):
+    require(1 <= fxpValue and fxpValue <= 2**254)
+    require(self.accounts[owner].balance >= fxpValue)
+    self.controller.assertIsWhitelisted(msg.sender)
+    self.accounts[owner].balance -= fxpValue
+    self.totalSupply -= fxpValue
+    return(1)
+
+####################
+# Getter functions #
+####################
+
+# Returns amount spender can withdraw from owner
+# @return fxp
+def allowance(owner: address, spender: address):
+    return(self.accounts[owner].spenders[spender].maxValue)
+
+# @return fxp
+def totalSupply():
+    return(self.totalSupply)
+
+# @return fxp
+def balanceOf(address: address):
+    return(self.accounts[address].balance)
+
+def getName():
+    return(NAME)
+
+def getDecimals():
+    return(DECIMALS)
+
+def getSymbol():
+    return(SYMBOL)
+
+def isShareToken():
+    return(1)
+
+########################
+# Controller functions #
+########################
+
+def setController(newController: address):
+    require(msg.sender == self.controller)
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to: address):
+    require(msg.sender == self.controller)
+    suicide(to)

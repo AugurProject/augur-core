@@ -1,0 +1,16 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+inset('../macros/externs.sem')
+inset('../macros/durations.sem')
+
+def createScalarMarket(branch: address, endTime: int256, feePerEthInWei: int256, denominationToken: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
+    payoutDenominator = 2**128
+    reportingWindow = branch.getReportingWindowByMarketEndTime(endTime, automatedReporterAddress != 0)
+    market = reportingWindow.createNewMarket(endTime, numOutcomes, payoutDenominator, feePerEthInWei, denominationToken, msg.sender, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = msg.value)
+    return(market)
+
+def createCategoricalMarket(branch: address, endTime: int256, numOutcomes: int256, feePerEthInWei: int256, denominationToken: address, automatedReporterAddress: address, topic: int256):
+    payoutDenominator = numOutcomes
+    reportingWindow = branch.getReportingWindowByMarketEndTime(endTime, automatedReporterAddress != 0)
+    market = reportingWindow.createNewMarket(endTime, numOutcomes, numOutcomes, feePerEthInWei, denominationToken, msg.sender, 0, 10^18, automatedReporterAddress, topic, value = msg.value)
+    return(market)

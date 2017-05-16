@@ -7,8 +7,10 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install -U pip \
 	&& pip install -r requirements.txt
 COPY src/ /app/src/
-COPY upload_contracts/ /app/upload_contracts/
-RUN python upload_contracts/upload_contracts.py update -s src -c "0x0"
-COPY tests/ /app/tests/
+WORKDIR /app/src
+RUN python generateExterns.py
 
-ENTRYPOINT ["py.test", "-s", "tests/runtests.py"]
+COPY tests/ /app/tests/
+WORKDIR /app/tests
+
+ENTRYPOINT ["pytest"]

@@ -1,0 +1,119 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+macro MUTEX: self.controller.lookup('mutex')
+macro ORDERS: self.controller.lookup('orders')
+macro MARKET_FEE_CALCULATOR: self.controller.lookup('marketFeeCalculator')
+
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/require.sem')
+
+data controller
+data owner
+data initialized
+
+### Allows users to buy/sell sets of every outcome, so 500 complete sets in a 3 outcome market is 500 of outcome 1, 2, and 3 each respectively
+
+def init():
+    self.owner = msg.sender
+
+def initialize(controller: address):
+    require(msg.sender == self.owner)
+    require(not self.initialized)
+    self.initialized = 1
+    self.controller = controller
+
+# Buys fxpAmount shares of every outcome in the specified market
+# @public
+def publicBuyCompleteSets(market: address, fxpAmount: int256):
+    assertNoValue()
+    MUTEX.acquire()
+    self.controller.stopInEmergency()
+    self.buyCompleteSets(msg.sender, market, fxpAmount)
+    MUTEX.release()
+    return(1)
+
+# Sells fxpAmount shares of every outcome in the specified market
+# @public
+def publicSellCompleteSets(market: address, fxpAmount: int256):
+    assertNoValue()
+    MUTEX.acquire()
+    self.controller.stopInEmergency()
+    self.sellCompleteSets(msg.sender, market, fxpAmount)
+    MUTEX.release()
+    return(1)
+
+# @internal
+def buyCompleteSets(sender: address, market: address, fxpAmount: int256):
+    assertNoValue()
+    self.controller.assertIsWhitelisted(msg.sender)
+    require(1 <= fxpAmount and fxpAmount <= 2**254)
+    require(sender)
+    require(market)
+
+    numOutcomes = market.getNumberOfOutcomes()
+    cumulativeScale = market.getCompleteSetCostInAttotokens()
+    cost = safeFxpMul(fxpAmount, cumulativeScale)
+    denominationToken = market.getDenominationToken()
+
+    # Send money from the user's account to the market's address/account
+    require(denominationToken.transferFrom(sender, market, cost))
+
+    # Send shares of the event to the user's address
+    n = 0
+    while(n < numOutcomes):
+        market.getShareToken(n).createShares(sender, fxpAmount)
+        n += 1
+
+    ORDERS.completeSetsLog(sender, market, 1, fxpAmount, numOutcomes, 0, 0)
+    return(1)
+
+# Sells fxpAmount of every outcome [if user owns it]
+# @internal
+def sellCompleteSets(sender: address, market: address, fxpAmount: int256):
+    assertNoValue()
+    self.controller.assertIsWhitelisted(msg.sender)
+    require(sender)
+    require(market)
+    require(1 <= fxpAmount and fxpAmount <= 2**254)
+
+    numOutcomes = market.getNumberOfOutcomes()
+    cumulativeScale = market.getCompleteSetCostInAttotokens()
+    cost = safeFxpMul(fxpAmount, cumulativeScale)
+    denominationToken = market.getDenominationToken()
+    marketCreatorFeeRate = market.getMarketCreatorSettlementFeeInAttoethPerEth()
+    marketCreatorFee = safeFxpMul(safeFxpMul(marketCreatorFeeRate, fxpAmount), cumulativeScale)
+    marketCreator = market.getCreator()
+    # FIXME: this is a security hole, we should do a trustless validation that the share token is a share on this market's branch
+    if not denominationToken.isShareToken():
+        reportingWindow = market.getReportingWindow()
+        reportingFeeRate = MARKET_FEE_CALCULATOR.getReportingFeeInAttoethPerEth(reportingWindow)
+        reportingFee = safeFxpMul(safeFxpMul(reportingFeeRate, fxpAmount), cumulativeScale)
+    else:
+        reportingFee = 0
+    sellerPayout = cost - marketCreatorFee - reportingFee
+
+    # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
+    n = 0
+    while(n < numOutcomes):
+        market.getShareToken(n).destroyShares(sender, fxpAmount)
+        n += 1
+
+    if marketCreatorFee:
+        require(denominationToken.transferFrom(market, marketCreator, marketCreatorFee))
+    if reportingFee:
+        require(denominationToken.transferFrom(market, reportingWindow, reportingFee))
+    require(denominationToken.transferFrom(market, sender, sellerPayout))
+
+    ORDERS.completeSetsLog(sender, market, 2, fxpAmount, numOutcomes, marketCreatorFee, reportingFee)
+    return(1)
+
+def setController(newController: address):
+    require(msg.sender == self.controller)
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to: address):
+    require(msg.sender == self.controller)
+    suicide(to)

@@ -1,17 +1,12 @@
 #Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]:int256, assertOnlySpecifiedCaller:[int256,int256]:_, changeMode:[int256]:int256, emergencyStop:[]:int256, getMode:[]:int256, getOwner:[]:int256, lookup:[int256]:int256, onlyInEmergency:[]:_, release:[]:int256, removeFromWhitelist:[int256,int256]:int256, setValue:[int256,int256]:int256, stopInEmergency:[]:_, suicide:[int256,int256,int256]:int256, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:_, transferOwnership:[int256,int256,int256,int256]:int256, updateController:[int256,int256]:int256]
-
 MARKETS = self.controller.lookup('markets')
-extern markets: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getOutcomeShareContract:[int256,int256]:int256, getOutcomeShareWallet:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:uint256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[],int256[]]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
-
 ORDERS = self.controller.lookup('orders')
-extern orders: [addOrderToMarket:[int256,int256]:int256, cancelOrderLog:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, completeSetsLog:[int256,int256,int256,int256,int256,int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getID:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getOrder:[int256]:int256[], getOrderIDs:[int256]:int256[], getOrderOwner:[int256]:int256, getPrevID:[int256,int256]:int256, getPrice:[int256]:int256, getTotalOrders:[int256]:int256, getType:[int256]:int256, getVolume:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, modifyMarketVolume:[int256,int256]:int256, removeOrder:[int256]:int256, removeOrderFromMarket:[int256,int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, setPrice:[int256,int256,int256]:int256, suicideFunds:[address]:_, takeAskOrderLog:[address,address,address,int256,uint256,address,uint256,uint256,uint256,uint256]:int256, takeBidOrderLog:[address,address,address,int256,uint256,address,uint256,uint256,uint256,uint256,uint256]:int256]
 
-# using refund
-inset('../macros/assertZeroValue.sem')
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
 
-macro ORDER_FIELDS: 10
+macro ORDER_FIELDS: 9
 
 data controller
 
@@ -19,7 +14,7 @@ def init():
     self.controller = 0x0
 
 def getOrderBook(type: uint256, marketID: address, outcomeID: uint256, offset: uint256, numOrdersToLoad: uint256):
-    assertZeroValue()
+    assertNoValue()
     orders = slice(ORDERS.getOrderIDs(type, marketID, outcomeID, 0, numOrdersToLoad, outitems=numOrdersToLoad), items=offset, items=offset+numOrdersToLoad)
     if(len(orders) == 0):
         return([]: arr)
