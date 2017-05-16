@@ -1,0 +1,22 @@
+FROM python:2
+
+WORKDIR /
+RUN git clone https://github.com/ethereum/serpent \
+	&& cd serpent \
+	&& make \
+	&& make install \
+	&& python setup.py install
+
+COPY test_requirements.txt /app/test_requirements.txt
+WORKDIR /app
+RUN pip install -U pip \
+	&& pip install ethereum -r test_requirements.txt
+
+WORKDIR /app
+ENV PYTHONUNBUFFERED=1
+COPY src/ /app/src/
+COPY upload_contracts/ /app/upload_contracts/
+RUN python upload_contracts/upload_contracts.py update -s src -c "0x0"
+COPY tests/ /app/tests/
+
+ENTRYPOINT ["py.test", "-s", "tests/trading_tests.py"]
