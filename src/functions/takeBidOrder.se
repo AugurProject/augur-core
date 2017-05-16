@@ -212,10 +212,6 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         if(!INFO.getCurrency(market).transferFrom(maker, INFO.getWallet(market), safeFxpMul(safeSub(fxpPrice, fxpMinValue), fxpBidderSharesFilled))):
             ~invalid()
 
-    # Transfer money from person who bid to the person here who is selling/asker [bidder has already sent/escrowed the cash to/with the market when submitting bid so this comes from the market]
-    if(!INFO.getWallet(market).transfer(sender, safeFxpMul(safeSub(fxpPrice, fxpMinValue), fxpSumOfFills))):
-        ~invalid()
-
     # Sell taker's complete sets (if they have any)
     fxpSharesHeld = -1
     i = 1
