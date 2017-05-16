@@ -140,7 +140,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         ORDERS.fillOrder(orderID, fxpSumOfFills, safeFxpMul(fxpAskerMoneyFilled, safeSub(fxpMaxValue, fxpPrice)), fxpAskerSharesFilled)
     else:
         ORDERS.removeOrder(orderID)
-        MARKETS.removeOrderFromMarket(market, orderID)
+        ORDERS.removeOrderFromMarket(market, orderID)
 
     # Account for buyer (bidding with cash)
     #  - Bidder will pay price - minValue for their shares
@@ -148,7 +148,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         fxpBidderMoneyFilled = fxpRemainderToFill
 
     # Add fxpSumOfFills to the market's volume
-    MARKETS.modifyMarketVolume(market, fxpSumOfFills)
+    ORDERS.modifyMarketVolume(market, fxpSumOfFills)
 
     # Sell taker complete sets
     fxpSharesHeld = MAX_INT256_VALUE
@@ -193,7 +193,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
             ~invalid()
 
     ORDERS.takeAskOrderLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled, fxpFee)
-    MARKETS.setPrice(market, outcome, fxpPrice)
+    ORDERS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)
 
 # @controller

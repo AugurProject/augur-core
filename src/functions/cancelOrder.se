@@ -75,7 +75,7 @@ def cancelOrder(sender: address, orderID):
 
     # Clear the order first
     ORDERS.removeOrder(orderID)
-    MARKETS.removeOrderFromMarket(market, orderID)
+    ORDERS.removeOrderFromMarket(market, orderID)
 
     self.refundOrder(sender, type, fxpSharesEscrowed, fxpMoneyEscrowed, market, outcome)
 

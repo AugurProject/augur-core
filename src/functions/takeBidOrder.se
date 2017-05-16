@@ -174,7 +174,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         ORDERS.fillOrder(orderID, fxpSumOfFills, safeFxpMul(fxpBidderMoneyFilled, safeSub(fxpPrice, fxpMinValue)), fxpBidderSharesFilled)
     else:
         ORDERS.removeOrder(orderID)
-        MARKETS.removeOrderFromMarket(market, orderID)
+        ORDERS.removeOrderFromMarket(market, orderID)
 
     # Sell maker's complete sets
     fxpSharesHeld = MAX_INT256_VALUE
@@ -222,7 +222,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         COMPLETESETS.sellCompleteSets(sender, market, fxpSharesHeld, call=delegate)
 
     ORDERS.takeBidOrderLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled, fxpFee)
-    MARKETS.setPrice(market, outcome, fxpPrice)
+    ORDERS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)
 
 # @controller

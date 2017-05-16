@@ -78,7 +78,7 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
     ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, tradeGroupID)
 
     # Update market
-    MARKETS.addOrder(market, orderID)
+    ORDERS.addOrder(market, orderID)
 
     return(orderID)
 

@@ -14,6 +14,9 @@ extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToB
 MARKETS = self.controller.lookup('markets')
 extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getOutcomeShareContract:[int256,int256]:int256, getOutcomeShareWallet:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:uint256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[],int256[]]:int256, modifyMarketVolume:[int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
 
+ORDERS = self.controller.lookup('orders')
+extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
+
 # using refund
 inset('../macros/refund.sem')
 
@@ -41,7 +44,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
         m = 0
         while m < totalMarkets:
             marketID = marketIDs[m]
-            volume = MARKETS.getVolume(marketID)
+            volume = ORDERS.getVolume(marketID)
             if volume > volumeMin and (volumeMax == -1 or volume <= volumeMax):
                 thresholdedMarketIDs[numThresholdedMarkets] = marketID
                 numThresholdedMarkets += 1
@@ -73,7 +76,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
         marketsInfo[c + 2] = MARKETS.getTradingPeriod(marketID)
         marketsInfo[c + 3] = MARKETS.getTradingFee(marketID)
         marketsInfo[c + 4] = MARKETS.getCreationTime(marketID)
-        marketsInfo[c + 5] = MARKETS.getVolume(marketID)
+        marketsInfo[c + 5] = ORDERS.getVolume(marketID)
         tags = MARKETS.getTags(marketID, outitems=3)
         marketsInfo[c + 6] = tags[0]
         marketsInfo[c + 7] = tags[1]
