@@ -49,8 +49,8 @@ def init():
 
 # Filling an ask [aka buying shares]
 # Scenarios:
-#  - Asker (maker/owner) escrowed maxValue - price and expects complete set minus the one they're selling
-#  - Asker (maker/owner) had shares and escrowed them and expects to be paid price - minValue for them
+#  - Asker (maker) escrowed maxValue - price and expects complete set minus the one they're selling
+#  - Asker (maker) had shares and escrowed them and expects to be paid price - minValue for them
 #  - Bidder (taker/sender) pays price - minValue for their shares
 # @internal
 def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
@@ -64,7 +64,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     market = order[2]
     fxpAmount = order[3]
     fxpPrice = order[4]
-    owner = order[5]
+    maker = order[5]
     outcome = order[7]
     fxpMoneyEscrowed = order[8]
     fxpSharesEscrowed = order[9]
@@ -72,7 +72,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     # Check trade preconditions
     if(!order[0]):
         ~invalid()
-    if(owner == sender):
+    if(maker == sender):
         ~invalid()
     # Make sure the order has been mined, obvious HFT prevention
     if(block.number <= order[6]):
@@ -123,7 +123,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         i = 1
         while i < MARKETS.getMarketNumOutcomes(market):
             if(i != outcome):
-                MARKETS.getOutcomeShareContract(market, i).createShares(owner, fxpFill)
+                MARKETS.getOutcomeShareContract(market, i).createShares(maker, fxpFill)
             i += 1
         # Issue taker the fill amount for the remaining outcome
         MARKETS.getOutcomeShareContract(market, outcome).createShares(sender, fxpFill)
@@ -169,30 +169,30 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     # has "already been paid" for those shares.
     # Note: bidder has already sent their money to the market, so this money comes from the market.
     if(fxpAskerSharesFilled > 0):
-        if(!INFO.getWallet(market).transfer(owner, safeFxpMul(safeSub(fxpPrice, fxpMinValue), fxpAskerSharesFilled))):
+        if(!INFO.getWallet(market).transfer(maker, safeFxpMul(safeSub(fxpPrice, fxpMinValue), fxpAskerSharesFilled))):
             ~invalid()
 
     # Sell maker's complete sets
     fxpSharesHeld = MAX_INT256_VALUE
     i = 1
     while(i <= MARKETS.getMarketNumOutcomes(market)):
-        fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, owner, i), fxpSharesHeld)
+        fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, maker, i), fxpSharesHeld)
         i += 1
     if(fxpSharesHeld > 0):
         i = 1
         while(i <= MARKETS.getMarketNumOutcomes(market)):
-            MARKETS.getOutcomeShareContract(market, i).destroyShares(owner, fxpSharesHeld)
+            MARKETS.getOutcomeShareContract(market, i).destroyShares(maker, fxpSharesHeld)
             i += 1
         fxpMoneyFromSellCompleteSets = safeFxpMul(fxpSharesHeld, fxpCumulativeScale)
         # Send funds from the market to the user's account
         fxpFee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpSharesHeld), fxpCumulativeScale)
-        if(!INFO.getWallet(market).transfer(owner, safeSub(fxpMoneyFromSellCompleteSets, fxpFee))):
+        if(!INFO.getWallet(market).transfer(maker, safeSub(fxpMoneyFromSellCompleteSets, fxpFee))):
             ~invalid()
         # Send half of sell-complete-sets fees to the market creator
         if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fxpFee, 2))):
             ~invalid()
 
-    ORDERS.takeAskOrderLog(market, sender, owner, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled, fxpFee)
+    ORDERS.takeAskOrderLog(market, sender, maker, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled, fxpFee)
     MARKETS.setPrice(market, outcome, fxpPrice)
     return(fxpAmountTakerWants: uint256)
 
