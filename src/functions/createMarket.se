@@ -38,8 +38,8 @@ extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint25
 extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, transfer:[address,uint256]:int256]
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
-
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 
 data controller
 
@@ -58,7 +58,6 @@ macro COST_FOR_MARKET_RESOLUTION: 1000000
 def init():
     self.controller = 0x0
 
-# @public
 def publicCreateMarket(branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
     MUTEX.acquire()
     market = self.createMarket(msg.sender, branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo, currency, value=msg.value)
@@ -83,7 +82,6 @@ def publicCreateMarket(branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo
 # .05 eth to create
 # need at least 1.2M gas @ gas price to cover resolution & 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation
-# @internal
 def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
     self.controller.assertIsWhitelisted(msg.sender)
 
@@ -145,7 +143,6 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
     log(type = marketCreated, sender, market, tag1, branch, fxpCreationFee, block.timestamp)
     return(market)
 
-# @private
 def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event, expirationDate, currency):
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
     if(msg.sender != self):
@@ -167,7 +164,6 @@ def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event,
     return(1)
 
 # initialize market and send money to pay for resolution
-# @private
 def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo: str, expirationDate, shareContracts: arr, shareWallets: arr):
     if(msg.sender != self):
         ~invalid()
@@ -192,14 +188,12 @@ def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet
         ~invalid()
     return(1)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

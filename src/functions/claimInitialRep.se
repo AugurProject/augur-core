@@ -32,7 +32,8 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 
 data controller
@@ -58,7 +59,7 @@ def claimInitialRep(parent, branch):
     refund()
     MUTEX.acquire()
     # auto increment vote period if needed
-    INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
+    INCREMENTPERIOD.internalIncrementPeriodAfterReporting(parent)
     parentPeriod = BRANCHES.getParentPeriod(branch)
     forkPeriod = BRANCHES.getForkPeriod(parent)
     fork = BRANCHES.getMostRecentChild(parent)
@@ -108,7 +109,7 @@ macro checkRepClaimPreconditions():
     lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(parent, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(parent) - 1
     delta = lastPeriod - lastPeriodPenalized
-    if(delta > 1 and CATCHUP.penalizationCatchup(parent, msg.sender) != 1):
+    if(delta > 1 and CATCHUP.internalPenalizationCatchup(parent, msg.sender) != 1):
         MUTEX.release()
         return(-2)
     if(!CONSENSUS.getRepRedistributionDone(parent, msg.sender)):

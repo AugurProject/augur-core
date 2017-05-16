@@ -29,12 +29,13 @@ REPCHANGELIBRARY = self.controller.lookup('repChangeLib')
 extern repChangeLib: [calculateRepChange:[int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/redistributeRep.sem')
 inset('../macros/proportionCorrect.sem')
 inset('../macros/repChange.sem')
 inset('../macros/periodStage.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data controller
 

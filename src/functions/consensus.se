@@ -30,11 +30,12 @@ REPCHANGELIBRARY = self.controller.lookup('repChangeLib')
 extern repChangeLib: [calculateRepChange:[int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/redistributeRep.sem')
 inset('../macros/proportionCorrect.sem')
 inset('../macros/repChange.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 inset('../macros/logReturn.sem')
 inset('../macros/periodStage.sem')
 
@@ -156,7 +157,7 @@ macro checkPenalizeWrongPreconditions():
         logReturn(consensusLogReturn, -4)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     eventNotResolvedAndNeedsToBe = !EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event) == lastPeriod)
-    if(eventNotResolvedAndNeedsToBe and CLOSEMARKET.closeMarket(EVENTS.getMarket(event, 0), msg.sender) != 1):
+    if(eventNotResolvedAndNeedsToBe and CLOSEMARKET.internalCloseMarket(EVENTS.getMarket(event, 0), msg.sender) != 1):
         MUTEX.release()
         logReturn(consensusLogReturn, -5)
     if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriod - 1)):

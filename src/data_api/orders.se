@@ -1,8 +1,17 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
+TOPICS = self.controller.lookup('topics')
+extern topics: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], setController:[address]:int256, suicideFunds:[address]:_, updateTopicPopularity:[int256,int256,int256]:int256]
+
+MARKETS = self.controller.lookup('markets')
+extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getOutcomeShareContract:[int256,int256]:int256, getOutcomeShareWallet:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:uint256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[],int256[]]:int256, modifyMarketVolume:[int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
+
 extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
-inset('../macros/float.sem')
+MARKETS = self.controller.lookup('markets')
+extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getOutcomeShareContract:[int256,int256]:int256, getOutcomeShareWallet:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:uint256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[],int256[]]:int256, modifyMarketVolume:[int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
+
+inset('../macros/safeMath.sem')
 inset('../macros/refund.sem')
 
 ### Storage of all data associated with orders
@@ -11,6 +20,8 @@ inset('../macros/refund.sem')
 data orderCommits[](hash, block)
 # orderID is index
 data orders[](id, type, market, fxpAmount, fxpPrice, owner, block, outcome, fxpSharesEscrowed, fxpMoneyEscrowed)
+# prices keeps track of the latest traded fxpPrice for a given outcome in a market [market is the key]
+data marketOrderData[](volume, prices[], totalOrders, lastOrder, orderIDs[](id, nextID, prevID))
 
 data controller
 
@@ -19,8 +30,6 @@ event CompleteSets(sender: indexed, market: indexed, type: indexed, fxpAmount, n
 event MakeOrder(market: indexed, sender: indexed, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, timestamp, tradeGroupID)
 event TakeAskOrder(market: address: indexed, sender: address: indexed, owner: address: indexed, type: uint256, fxpPrice, fxpAmount: uint256, timestamp: uint256, orderID: address, outcome: uint256, fxpAskerSharesFilled: uint256, fxpAskerMoneyFilled: uint256, fxpBidderMoneyFilled: uint256, fxpFee: uint256)
 event TakeBidOrder(market: address: indexed, sender: address: indexed, owner: address: indexed, type: uint256, fxpPrice, fxpAmount: uint256, timestamp: uint256, orderID: address, outcome: uint256, fxpAskerSharesFilled: uint256, fxpAskerMoneyFilled: uint256, fxpBidderSharesFilled: uint256, fxpBidderMoneyFilled: uint256, fxpFee: uint256)
-
-macro MIN_ORDER_VALUE: 10000000000000000
 
 # Trade types
 macro BID: 1
@@ -53,6 +62,8 @@ def checkHash(orderHash, sender):
 
 def saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, tradeGroupID):
     self.controller.assertIsWhitelisted(msg.sender)
+    if(outcome > MARKETS.getMarketNumOutcomes(market)):
+        ~invalid()
     self.orders[orderID].id = orderID
     self.orders[orderID].type = type
     self.orders[orderID].market = market
@@ -140,6 +151,80 @@ def getOrderOwner(id):
 def getType(id):
     return(self.orders[id].type)
 
+# @return fxp
+def getVolume(market):
+    return(self.marketOrderData[market].volume)
+
+def modifyMarketVolume(market, fxpAmount):
+    self.controller.assertIsWhitelisted(msg.sender)
+    self.marketOrderData[market].volume += fxpAmount
+    TOPICS.updateTopicPopularity(MARKETS.getBranch(market), MARKETS.getTopic(market), fxpAmount)
+    return(1)
+
+# @return fxp
+def getLastOutcomePrice(market, outcome):
+    return(self.marketOrderData[market].prices[outcome])
+
+def setPrice(market, outcome, fxpPrice):
+    self.controller.assertIsWhitelisted(msg.sender)
+    self.marketOrderData[market].prices[outcome] = fxpPrice
+    return(1)
+
+def getTotalOrders(marketID):
+    return(self.marketOrderData[marketID].totalOrders)
+
+def getLastOrder(market):
+    return(self.marketOrderData[market].lastOrder)
+
+def addOrder(market, orderID):
+    self.controller.assertIsWhitelisted(msg.sender)
+    lastID = self.marketOrderData[market].lastOrder
+    self.marketOrderData[market].orderIDs[lastID].nextID = orderID
+    self.marketOrderData[market].orderIDs[orderID].prevID = self.marketOrderData[market].lastOrder
+    self.marketOrderData[market].orderIDs[orderID].id = orderID
+    self.marketOrderData[market].lastOrder = orderID
+    self.marketOrderData[market].totalOrders += 1
+    return(1)
+
+def removeOrderFromMarket(marketID, orderID):
+    self.controller.assertIsWhitelisted(msg.sender)
+    prevID = self.marketOrderData[marketID].orderIDs[orderID].prevID
+    nextID = self.marketOrderData[marketID].orderIDs[orderID].nextID
+    # if the order had a previous and next order it connects them directly, remove this orderID from the sequence/middle
+    if(prevID and nextID):
+        self.marketOrderData[marketID].orderIDs[prevID].nextID = nextID
+        self.marketOrderData[marketID].orderIDs[nextID].prevID = prevID
+    # if it's the most recent order, update the previous order to be the most recent one
+    elif(prevID):
+        self.marketOrderData[marketID].lastOrder = prevID
+        self.marketOrderData[marketID].orderIDs[prevID].nextID = 0
+
+    # if the order had a order following it, 0 out that slot
+    if(nextID):
+        self.marketOrderData[marketID].orderIDs[orderID].nextID = 0
+    # if the order had a order before it, 0 out that slot
+    if(prevID):
+        self.marketOrderData[marketID].orderIDs[orderID].prevID = 0
+    self.marketOrderData[marketID].orderIDs[orderID].id = 0
+    self.marketOrderData[marketID].totalOrders -= 1
+    return(1)
+
+def getOrderIDs(marketID):
+    ordersCount = self.marketOrderData[marketID].totalOrders
+    orderID = self.marketOrderData[marketID].lastOrder
+    orderIDs = array(ordersCount)
+    i = 0
+    while(i < ordersCount):
+        orderIDs[i] = self.marketOrderData[marketID].orderIDs[orderID].id
+        orderID = self.marketOrderData[marketID].orderIDs[orderID].prevID
+        i += 1
+    if(orderIDs):
+        return(orderIDs: arr)
+    return([FAILURE]: arr)
+
+def getPrevID(market, order):
+    return(self.marketOrderData[market].orderIDs[order].prevID)
+
 # @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
@@ -147,7 +232,6 @@ def setController(newController: address):
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

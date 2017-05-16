@@ -3,6 +3,7 @@
 ### Controller - A contract for updating Augur via a REP weighted vote and storing a whitelist of contract addresses
 
 inset('../macros/refund.sem')
+inset('../macros/logReturn.sem')
 
 # Initializing the controller
     # First call the functions to set the registry values and whitelists and mode
@@ -78,7 +79,7 @@ def addToWhitelist(address):
         self.whitelist[address] = 1
         return(1)
     else:
-        return(0)
+        ~invalid()
 
 # def removeFromWhitelist(address, proposalIndex, suicide):
 #     if(self.owner == msg.sender):

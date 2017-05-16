@@ -25,7 +25,8 @@ extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint25
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 
 data controller
 
@@ -33,18 +34,17 @@ data controller
 macro BID: 1
 macro ASK: 2
 
-macro MIN_ORDER_VALUE: 10000000000000000
+macro MIN_ORDER_VALUE: 10**14
 macro MAX_INT256_VALUE: 2**255 - 1
 
 # Bid / Ask actions: puts orders on the book
-# price is always in 10**18 fxp, amount is in the market's currency # of decimals, e.g. for 9 10**9 is 1 share [so buy 10**9 complete sets and it'll cost you 1 full unit of that currency or buy 10**9 at a fxpPrice of 10**18 it'll cost you 1 full unit of the currency]
+# price is always in 10**18 fxp, so a price of 1 is 1 WEI.
+# amount is the amount of shares to buy, also in base units. For a currency with 18 decimals [like ether] if you buy 10**18 at a price of 10**18 then that's going to buy you ONE share [10**18 units] at a cost of ONE ETH [10**18 wei]. For a currency with say 9 decimals, if you buy 10**9 at a price of 10**18 that'll also buy you ONE full unit of that currency worth of shares. If you buy 10**9 at a price of 10**17 that'll buy you POINT_ONE full units of that currency worth of shares [so it'll cost you 10**8]. If you buy 10**8 amount at a price of 10**18 you're also effectively paying POINT_ONE units of currency, this time it's just to get you 10x less shares [in other words you're paying 10x more per share].
 # price is the exact price you want to buy/sell at [which may not be the cost, for example to short a binary market it'll cost 1-price, to go long it'll cost price]
-# smallest order value is 0.00000001
-
+# smallest order value is 10**14 WEI
 def init():
     self.controller = 0x0
 
-# @public
 def publicMakeOrder(type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, tradeGroupID):
     refund()
     MUTEX.acquire()
@@ -52,7 +52,6 @@ def publicMakeOrder(type: uint256, fxpAmount: uint256, fxpPrice, market: address
     MUTEX.release()
     return(orderID)
 
-# @internal
 def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, tradeGroupID):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
@@ -61,9 +60,9 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
         ~invalid()
 
     if(type == ASK):
-        escrow = self.placeAsk(sender, fxpAmount, fxpPrice, market, outcome, outitems=2)
+        escrow = self.placeAsk(sender, fxpAmount, fxpPrice, market, outcome, outitems = 2)
     elif(type == BID):
-        escrow = self.placeBid(sender, fxpAmount, fxpPrice, market, outcome, outitems=2)
+        escrow = self.placeBid(sender, fxpAmount, fxpPrice, market, outcome, outitems = 2)
     else:
         ~invalid()
 
@@ -71,17 +70,16 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
     fxpSharesEscrowed = escrow[1]
 
     order = [type, market, fxpAmount, fxpPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
-    orderID = ripemd160(order, items=9)
+    orderID = ripemd160(order, items = 9)
     if(ORDERS.getID(orderID)):
         ~invalid()
     ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, tradeGroupID)
 
     # Update market
-    MARKETS.addOrder(market, orderID)
+    ORDERS.addOrder(market, orderID)
 
     return(orderID)
 
-# @private
 def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):
     refund()
     if(msg.sender != self):
@@ -125,7 +123,6 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
-# @private
 def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):
     refund()
     if(msg.sender != self):
@@ -169,14 +166,12 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

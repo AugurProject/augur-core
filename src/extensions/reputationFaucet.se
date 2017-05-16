@@ -14,13 +14,14 @@ extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToB
 # using refund
 inset('../macros/refund.sem')
 # using fix
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 
 data controller
 
 event fundedAccount(branch: indexed, sender: indexed, cashBalance, repBalance, timestamp)
 
 ### Reputation faucet - get ~free rep!
+### TODO Fix to work with new system
 
 def init():
     self.controller = 0x0
@@ -42,14 +43,12 @@ def reputationFaucet(branch):
     log(type=fundedAccount, branch, msg.sender, fix(10000), fix(47), block.timestamp)
     return(1)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

@@ -9,6 +9,7 @@ extern rateContract: [rateFunction:[]:int256]
 extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, transfer:[address,uint256]:int256]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 
 # Branches keeps track of data associated with branches in augur
 # Branches' index is the hash of the branch (aka branch)

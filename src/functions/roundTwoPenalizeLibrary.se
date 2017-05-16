@@ -30,11 +30,12 @@ MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/redistributeRep.sem')
 inset('../macros/proportionCorrect.sem')
 inset('../macros/repChange.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
 inset('../macros/periodStage.sem')
 
 data controller

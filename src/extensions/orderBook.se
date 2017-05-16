@@ -20,13 +20,13 @@ def init():
 
 def getOrderBook(marketID, offset, numOrdersToLoad):
     refund()
-    numOrders = MARKETS.getTotalOrders(marketID)
+    numOrders = ORDERS.getTotalOrders(marketID)
     if offset > numOrders:
         return([]: arr)
     if numOrdersToLoad == 0:
         numOrdersToLoad = numOrders
     totalOrders = min(numOrdersToLoad, numOrders - offset)
-    orders = slice(MARKETS.getOrderIDs(marketID, outitems=numOrders), items=offset, items=offset+numOrdersToLoad)
+    orders = slice(ORDERS.getOrderIDs(marketID, outitems=numOrders), items=offset, items=offset+numOrdersToLoad)
     orderBook = array(ORDER_FIELDS*totalOrders)
     numAvailableOrders = 0
     i = 0
@@ -43,8 +43,8 @@ def getOrderBook(marketID, offset, numOrdersToLoad):
 
 def getAccountOrderBook(marketID, account):
     refund()
-    numOrders = MARKETS.getTotalOrders(marketID)
-    orders = MARKETS.getOrderIDs(marketID, outitems=numOrders)
+    numOrders = ORDERS.getTotalOrders(marketID)
+    orders = ORDERS.getOrderIDs(marketID, outitems=numOrders)
     orderBook = array(ORDER_FIELDS*numOrders)
     numAccountOrders = 0
     i = 0
@@ -61,14 +61,12 @@ def getAccountOrderBook(marketID, account):
         i += 1
     return(slice(orderBook, items=0, items=ORDER_FIELDS*numAccountOrders): arr)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

@@ -28,14 +28,12 @@ def createSingleEventMarket(sender: address, branch, description: str, expDate, 
     marketID = CREATEMARKET.createMarket(msg.sender, branch, fxpTradingFee, eventID, tag1, tag2, tag3, fxpMakerFees, extraInfo, value = msg.value)
     return(marketID)
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

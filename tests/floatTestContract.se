@@ -1,4 +1,4 @@
-inset('../src/macros/float.sem')
+inset('../src/macros/safeMath.sem')
 
 def add(x, y):
     z = safeAdd(x, y)

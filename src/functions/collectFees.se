@@ -23,7 +23,8 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 inset('../macros/refund.sem')
 inset('../macros/periodStage.sem')
-inset('../macros/float.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/unitConversions.sem')
 
 data controller
 
@@ -36,9 +37,15 @@ data controller
 def init():
     self.controller = 0x0
 
-def collectRep(branch, sender):
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
+def publicCollectRep(branch, sender):
+    refund()
+    MUTEX.acquire()
+    result = self.internalCollectRep(branch, sender)
+    MUTEX.release()
+    return(result)
+
+def internalCollectRep(branch, sender):
+    self.controller.assertIsWhitelisted(msg.sender)
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     lastPeriod = votePeriod - 1
@@ -49,13 +56,9 @@ def collectRep(branch, sender):
     # need 1 rep to claim fees
     if(newRep < WEI_TO_ETH):
         prepareInfoForConsensus()
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(2)
     collectRedistributedRep()
     prepareInfoForConsensus()
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(1)
 
 # Allows a user to collect trading fees earned at the end of a period
@@ -65,9 +68,15 @@ def collectRep(branch, sender):
     # -2: needs to be second half of reporting period to claim fees [1st half is when redistribution is done]
     # -3: rep not collected yet
 # 2 means no errors but didnt report last period
-def collectFees(branch, sender, currency):
-    if (!isCallerWhitelisted()):
-        MUTEX.acquire()
+def publicCollectFees(branch, sender, currency):
+    refund()
+    MUTEX.acquire()
+    result = self.internalCollectFees(branch, sender, currency)
+    MUTEX.release()
+    return(result)
+
+def internalCollectFees(branch, sender, currency):
+    self.controller.assertIsWhitelisted(msg.sender)
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     lastPeriod = votePeriod - 1
@@ -77,37 +86,25 @@ def collectFees(branch, sender, currency):
     checkCollectFeesPreconditions()
     # need 1 rep to claim fees
     if(newRep < WEI_TO_ETH):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(2)
     collectTradeFees()
-    if(!isCallerWhitelisted()):
-        MUTEX.release()
     return(1)
 
 macro checkCollectRepPreconditions():
     atSecondHalfOfPeriod()
     if(!CONSENSUS.getRepRedistributionDone(branch, sender)):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-1)
     if(repCollected):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(0)
 
 macro checkCollectFeesPreconditions():
     atSecondHalfOfPeriod()
     if(!CONSENSUS.getRepRedistributionDone(branch, sender)):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(-1)
     feesCollected = CONSENSUS.getFeesCollected(branch, sender, lastPeriod, currency)
     if(feesCollected):
-        if(!isCallerWhitelisted()):
-            MUTEX.release()
         return(0)
     if(!repCollected):
         return(-3)

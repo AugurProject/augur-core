@@ -2,9 +2,6 @@
 
 extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
-TOPICS = self.controller.lookup('topics')
-extern topics: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], setController:[address]:int256, suicideFunds:[address]:_, updateTopicPopularity:[int256,int256,int256]:int256]
-
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, changeTokens:[int256,int256]:int256, createShares:[address,uint256]:int256, destroyShares:[address,uint256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, modifySupply:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
@@ -13,8 +10,6 @@ inset('../macros/refund.sem')
 
 # Markets' index is the market, markets stores data about markets [which are able to be traded on] in augur
     # Event is the event in the market
-    # Participants is an array of participants, their addresses as keys and the shares in each outcome they've purchased of an event as the values
-        # e.g. participants[addr].shares[1]
     # currentParticipant is the number of participants [traders] in the market
     # cumulativeScale == range of the market for scalars
     # numOutcomes is the number of outcomes in a market [up to 8 for now]
@@ -25,8 +20,6 @@ inset('../macros/refund.sem')
     # bondsman is the person/address who/that posted the early resolution bond
     # originalPeriod is the original period the market's event would resolve in
     # orderIDs stores orders for a given market
-    # lastOrder is the last order that was placed in a given market
-    # totalOrders is the total number of orders ever placed in a given market
     # tags are the subject tags / categories / keywords for a given market
     # resolved states that a market is resolved
     # extraInfo is any extra info that didn't fit well in the regular description
@@ -34,9 +27,8 @@ inset('../macros/refund.sem')
     # gasSubsidy is paid by the creator to pay for closing the market [closing is just setting the winning outcomes and allowing people to withdraw funds if they own winning shares]
     # fees is total amount of fees a market has paid to a branch [the reporters] denominated in wei
     # lastExpDate is when the market's last event expires
-    # prices keeps track of the latest traded fxpPrice for a given outcome in a market
     # shareContracts stores the erc-20 token contract address for each outcome in the market
-data Markets[](event, participants[](shares[]), resolved, cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, orderIDs[](id, nextID, prevID), lastOrder, totalOrders, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[], shareWallets[])
+data Markets[](event, resolved, cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, pushingForward, bondsMan, originalPeriod, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, shareContracts[], shareWallets[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
@@ -49,6 +41,8 @@ def init():
 def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr, shareWallets: arr):
     self.controller.assertIsWhitelisted(msg.sender)
     self.Markets[market].event = event
+    if(numOutcomes > 8):
+        ~invalid()
     i = 0
     while i < numOutcomes:
         self.Markets[market].shareContracts[i + 1] = shareContracts[i]
@@ -76,22 +70,6 @@ def modifySharesValue(market, fxpAmount):
     self.Markets[market].sharesValue += fxpAmount
     return(1)
 
-def modifyMarketVolume(market, fxpAmount):
-    self.controller.assertIsWhitelisted(msg.sender)
-    self.Markets[market].volume += fxpAmount
-    TOPICS.updateTopicPopularity(self.Markets[market].branch, self.Markets[market].tag1, fxpAmount)
-    return(1)
-
-def addOrder(market, orderID):
-    self.controller.assertIsWhitelisted(msg.sender)
-    lastID = self.Markets[market].lastOrder
-    self.Markets[market].orderIDs[lastID].nextID = orderID
-    self.Markets[market].orderIDs[orderID].prevID = self.Markets[market].lastOrder
-    self.Markets[market].orderIDs[orderID].id = orderID
-    self.Markets[market].lastOrder = orderID
-    self.Markets[market].totalOrders += 1
-    return(1)
-
 def getMarketResolved(market):
     return(self.Markets[market].resolved)
 
@@ -110,29 +88,6 @@ def setPushedForward(market, bool, sender):
     self.Markets[market].bondsMan = sender
     return(1)
 
-def removeOrderFromMarket(marketID, orderID):
-    self.controller.assertIsWhitelisted(msg.sender)
-    prevID = self.Markets[marketID].orderIDs[orderID].prevID
-    nextID = self.Markets[marketID].orderIDs[orderID].nextID
-    # if the order had a previous and next order it connects them directly, remove this orderID from the sequence/middle
-    if(prevID and nextID):
-        self.Markets[marketID].orderIDs[prevID].nextID = nextID
-        self.Markets[marketID].orderIDs[nextID].prevID = prevID
-    # if it's the most recent order, update the previous order to be the most recent one
-    elif(prevID):
-        self.Markets[marketID].lastOrder = prevID
-        self.Markets[marketID].orderIDs[prevID].nextID = 0
-
-    # if the order had a order following it, 0 out that slot
-    if(nextID):
-        self.Markets[marketID].orderIDs[orderID].nextID = 0
-    # if the order had a order before it, 0 out that slot
-    if(prevID):
-        self.Markets[marketID].orderIDs[orderID].prevID = 0
-    self.Markets[marketID].orderIDs[orderID].id = 0
-    self.Markets[marketID].totalOrders -= 1
-    return(1)
-
 def addToMarketsHash(branch, newHash):
     self.controller.assertIsWhitelisted(msg.sender)
     x = array(2)
@@ -145,11 +100,6 @@ def addFees(market, fxpAmount):
     self.controller.assertIsWhitelisted(msg.sender)
     if(self.Markets[market].fees + fxpAmount > self.Markets[market].fees):
         self.Markets[market].fees += fxpAmount
-    return(1)
-
-def setPrice(market, outcome, fxpPrice):
-    self.controller.assertIsWhitelisted(msg.sender)
-    self.Markets[market].prices[outcome] = fxpPrice
     return(1)
 
 # refund closing cost for a market
@@ -171,10 +121,6 @@ def getMarketsHash(branch):
 def getLastExpDate(market):
     return(self.Markets[market].lastExpDate)
 
-# @return fxp
-def getLastOutcomePrice(market, outcome):
-    return(self.Markets[market].prices[outcome])
-
 def getFees(market):
     return(self.Markets[market].fees)
 
@@ -195,17 +141,6 @@ def getTags(market):
 def getTopic(market):
     return(self.Markets[market].tag1)
 
-# @return fxp
-def getTotalSharesPurchased(market):
-    total = 0
-    n = self.Markets[market].numOutcomes
-    i = 1
-    while(i <= n):
-        # total += self.Markets[market].sharesPurchased[i]
-        total += self.Markets[market].shareContracts[i].totalSupply()
-        i += 1
-    return(total)
-
 def getMarketEvent(market):
     return(self.Markets[market].event)
 
@@ -224,25 +159,12 @@ def getOutcomeShareWallet(market, outcome):
 def getOutcomeShareContract(market, outcome):
     return(self.Markets[market].shareContracts[outcome])
 
-# @return fxp
-def getSharesPurchased(market, outcome):
-    return(self.Markets[market].shareContracts[outcome].totalSupply(): uint256)
-    # return(self.Markets[market].sharesPurchased[outcome])
-
 def getExtraInfoLength(market):
     return(self.Markets[market].extraInfoLen)
 
 def getExtraInfo(market):
     length = self.Markets[market].extraInfoLen
     return(load(self.Markets[market].extraInfo[0], chars = length): str)
-
-# @return fxp
-def getVolume(market):
-    return(self.Markets[market].volume)
-
-# @return fxp
-def getParticipantSharesPurchased(market, trader, outcome):
-    return(self.Markets[market].shareContracts[outcome].balanceOf(trader))
 
 # @return fxp
 def getCumulativeScale(market):
@@ -263,42 +185,36 @@ def getTradingFee(market):
 def getBranch(market):
     return(self.Markets[market].branch)
 
-def getOrderIDs(marketID):
-    ordersCount = self.Markets[marketID].totalOrders
-    orderID = self.Markets[marketID].lastOrder
-    orderIDs = array(ordersCount)
-    i = 0
-    while(i < ordersCount):
-        orderIDs[i] = self.Markets[marketID].orderIDs[orderID].id
-        orderID = self.Markets[marketID].orderIDs[orderID].prevID
-        i += 1
-    if(orderIDs):
-        return(orderIDs: arr)
-    return([FAILURE]: arr)
-
 def getPushedForward(market):
     return(self.Markets[market].pushingForward)
 
 def getBondsMan(market):
     return(self.Markets[market].bondsMan)
 
-def getLastOrder(market):
-    return(self.Markets[market].lastOrder)
+# @return fxp
+def getTotalSharesPurchased(market):
+    total = 0
+    n = self.Markets[market].numOutcomes
+    i = 1
+    while(i <= n):
+        total += self.Markets[market].shareContracts[i].totalSupply()
+        i += 1
+    return(total)
 
-def getPrevID(market, order):
-    return(self.Markets[market].orderIDs[order].prevID)
+# @return fxp
+def getSharesPurchased(market, outcome):
+    return(self.Markets[market].shareContracts[outcome].totalSupply(): uint256)
 
-def getTotalOrders(marketID):
-    return(self.Markets[marketID].totalOrders)
+# @return fxp
+def getParticipantSharesPurchased(market, trader, outcome):
+    return(self.Markets[market].shareContracts[outcome].balanceOf(trader))
 
-# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
-# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
