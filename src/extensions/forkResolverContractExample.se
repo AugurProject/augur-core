@@ -15,7 +15,7 @@ def init():
     self.controller = 0x0
     self.forkResolver = msg.sender
 
-def setForkResolution(branch, winner):
+def resolveFork(branch, winner):
     # do some logic to determine whether branch or child
         # one example is someone like the market/event creator can choose where their market goes
     # if winner == branch, the parent won
@@ -26,7 +26,7 @@ def setForkResolution(branch, winner):
     else:
         return(0)
 
-def resolveFork(branch):
+def getForkResolution(branch):
     if(self.forkResolution[branch]):
         return(self.forkResolution[branch])
     else:
