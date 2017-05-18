@@ -27,15 +27,15 @@ data controller
 def init():
     self.controller = 0x0
 
-def oneOutcome(market, event, sender, categoricalPointFive, numOutcomes):
+def oneOutcome(market, event, sender, indeterminate, numOutcomes):
     self.controller.assertIsWhitelisted(msg.sender)
-    # if it's an indeterminate categorical market resolve with all outcomes having an equal value
+    # if it's an indeterminate market resolve with all outcomes having an equal value
     outcome = EVENTS.getOutcome(event)
-    if(categoricalPointFive):
-        i = 0
-        while(i < numOutcomes):
-            sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i + 1)
-            MARKETS.getOutcomeShareContract(market, i + 1).destroyShares(sender, sharesOwned)
+    if(indeterminate):
+        i = 1
+        while(i <= numOutcomes):
+            sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i)
+            MARKETS.getOutcomeShareContract(market, i).destroyShares(sender, sharesOwned)
             value = safeDiv(sharesOwned, numOutcomes)
             fee = safeFxpMul(MARKETS.getTradingFee(market), value)
             if(value != 0 and fee != 0):
