@@ -63,8 +63,8 @@ def claimProceeds(sender: address, market: address):
     if(scalar):
         TWOWINNINGOUTCOMEPAYOUTS.twoOutcomes(sender, market, event)
 
-    # Indeterminate (0.5 outcome) categorical market is resolved with all outcomes having equal values.
-    elif(EVENTS.getEventType(event) == "categorical" and (EVENTS.getOutcome(event) == ONE_HALF)):
+    # Indeterminate categorical and binary markets are resolved with all outcomes having equal values
+    elif(EVENTS.getOutcome(event) == ONE_HALF):
         ONEWINNINGOUTCOMEPAYOUTS.oneOutcome(sender, market, event, 1, EVENTS.getNumOutcomes(event))
 
     # Claim winnings for a regular binary or categorical market.

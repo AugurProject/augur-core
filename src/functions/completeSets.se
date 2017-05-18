@@ -108,6 +108,7 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
     if(!INFO.getWallet(market).transfer(sender, safeSub(cost, fee))):
         ~invalid()
 
+    # Send half of sell-complete-sets fees to the market creator [other half is sent to branch when closing the market]
     if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
         ~invalid()
 
