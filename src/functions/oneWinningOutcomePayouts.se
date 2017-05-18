@@ -50,20 +50,6 @@ def oneOutcome(sender: address, market: address, event: address, isIndeterminate
                     if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                         ~invalid()
             i += 1
-        # i = 0
-        # while(i < numOutcomes):
-        #     sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i + 1)
-        #     if(sharesOwned > 0):
-        #         MARKETS.getOutcomeShareContract(market, i + 1).destroyShares(sender, sharesOwned)
-        #         shareValue = safeDiv(sharesOwned, numOutcomes)
-        #         fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-        #         if(shareValue != 0 and fee != 0):
-        #             if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2))):
-        #                 ~invalid()
-        #             if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-        #                 ~invalid()
-        #             if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
-        #                 ~invalid()
 
     # Distribute profit to the people who won money by holding winning shares.
     else:
