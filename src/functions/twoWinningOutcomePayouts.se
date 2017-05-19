@@ -60,7 +60,7 @@ def twoOutcomes(sender: address, market: address, event: address):
         shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
         fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
         if(shareValue != 0 and fee != 0):
-            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                 ~invalid()
             if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                 ~invalid()
@@ -72,7 +72,7 @@ def twoOutcomes(sender: address, market: address, event: address):
         shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
         fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
         if(shareValue != 0 and fee != 0):
-            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                 ~invalid()
             if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                 ~invalid()

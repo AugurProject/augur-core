@@ -45,7 +45,7 @@ def oneOutcome(sender: address, market: address, event: address, isIndeterminate
                 shareValue = safeDiv(sharesOwned, numOutcomes)
                 fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
                 if(shareValue != 0 and fee != 0):
-                    if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2))):
+                    if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2))):
                         ~invalid()
                     if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                         ~invalid()
@@ -61,7 +61,7 @@ def oneOutcome(sender: address, market: address, event: address, isIndeterminate
             shareValue = sharesOwned
             fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
             if(shareValue != 0 and fee != 0):
-                if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2))):
+                if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2))):
                     ~invalid()
                 if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                     ~invalid()
