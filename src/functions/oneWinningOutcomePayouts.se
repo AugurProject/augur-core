@@ -32,6 +32,8 @@ def oneOutcome(sender: address, market: address, event: address, isIndeterminate
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
     outcome = EVENTS.getOutcome(event)
+    branch = EVENTS.getEventBranch(event)
+    currency = INFO.getCurrency(market)
 
     # If it's an indeterminate market resolve with all outcomes having an equal value.
     if(isIndeterminate):
