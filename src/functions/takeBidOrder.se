@@ -216,7 +216,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     if(fxpSharesHeld > 0):
         COMPLETESETS.sellCompleteSets(sender, market, fxpSharesHeld, call=delegate)
 
-    ORDERS.takeBidOrderLog(market, sender, MARKETS.getCumulativeScale(market)), maker, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+    ORDERS.takeBidOrderLog(market, sender, MARKETS.getCumulativeScale(market), maker, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
     ORDERS.setPrice(market, outcome, fxpPrice)
     # if((INFO.getCurrency(market).balanceOf(INFO.getWallet(market)) + 100000000) < safeFxpMul(MARKETS.getSharesPurchased(market, outcome), MARKETS.getCumulativeScale(market))):
         # ~invalid()
