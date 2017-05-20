@@ -218,8 +218,8 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     ORDERS.takeBidOrderLog(market, sender, maker, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
     ORDERS.setPrice(market, outcome, fxpPrice)
-    # if((INFO.getCurrency(market).balanceOf(INFO.getWallet(market)) + 100000000) < safeFxpMul(MARKETS.getSharesPurchased(market, outcome), MARKETS.getCumulativeScale(market))):
-        # ~invalid()
+    if((INFO.getCurrency(market).balanceOf(INFO.getWallet(market))) < safeFxpMul(MARKETS.getSharesPurchased(market, outcome), MARKETS.getCumulativeScale(market))):
+        ~invalid()
     return(fxpAmountTakerWants: uint256)
 
 def setController(newController: address):
