@@ -1457,13 +1457,13 @@ def test_TakeBidOrder():
         outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
         outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
 
-        # 1. Maker buys complete sets, then destroys shares of outcome 2.
+        # 1. Maker buys complete sets, then transfers shares of outcome 2.
         contracts._ContractLoader__state.mine(1)
         fxpNumCompleteSets = fix(10)
         buyCompleteSets(marketID, fxpNumCompleteSets)
         contracts._ContractLoader__state.mine(1)
         transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
-        assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
+        assert(int(contracts._ContractLoader__state.send(t.k1, outcomeTwoShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
         assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
         makerInitialCash = contracts.cash.balanceOf(t.a1)
         takerInitialCash = contracts.cash.balanceOf(t.a2)
