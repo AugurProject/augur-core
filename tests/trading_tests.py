@@ -16,7 +16,6 @@ Trading tests:
 - functions/claimMarketProceeds.se
 - functions/oneWinningOutcomePayouts.se
 - functions/twoWinningOutcomePayouts.se
-- extensions/offChainTrades.se
 - extensions/tradeAvailableOrders.se
 
 """
@@ -1586,6 +1585,7 @@ def test_TakeBidOrder():
         contracts._ContractLoader__state.mine(1)
         transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpOutcomeTwoShares])
         assert(int(contracts._ContractLoader__state.send(t.k2, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
+
         assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
         fxpAllowance = fix(10)
         abiEncodedData = shareTokenContractTranslator.encode("approve", [contracts.takeBidOrder.address, fxpAllowance])
@@ -1685,17 +1685,16 @@ def test_TakeBidOrder():
         buyCompleteSets(marketID, fxpOutcomeTwoShares, sender=t.k2)
         contracts._ContractLoader__state.mine(1)
         transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpOutcomeTwoShares])
-        assert(int(contracts._ContractLoader__state.send(t.k2, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
+        assert(int(contracts._ContractLoader__state.send(t.k2, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer taker's shares of outcome 1 to address 0"
 
-        # 2. Create shares of outcome 2 for taker.
+        # 2. Maker buys complete sets, then transfers shares of outcome 2.
         contracts._ContractLoader__state.mine(1)
-        fxpOutcomeTwoShares = fix(10)
-        buyCompleteSets(marketID, fxpOutcomeTwoShares, sender=t.k2)
+        fxpNumCompleteSets = fix(10)
+        buyCompleteSets(marketID, fxpNumCompleteSets)
         contracts._ContractLoader__state.mine(1)
-        transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpOutcomeTwoShares])
-        assert(int(contracts._ContractLoader__state.send(t.k2, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
-        assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 1) == 0), "Taker should have 0 shares of outcome 1"
-        assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 2) == fxpOutcomeTwoShares), "Taker should have fxpOutcomeTwoShares of outcome 2"
+        transferSharesAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
+        assert(int(contracts._ContractLoader__state.send(t.k1, outcomeTwoShareContract, 0, transferSharesAbiEncodedData).encode("hex"), 16) == 1), "Transfer maker's shares of outcome 2 to address 0"
+        assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
         makerInitialCash = contracts.cash.balanceOf(t.a1)
         takerInitialCash = contracts.cash.balanceOf(t.a2)
         marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -1711,7 +1710,7 @@ def test_TakeBidOrder():
         assert(makerInitialOutcomeOneShares == fxpNumCompleteSets), "Maker's initial outcome 1 shares balance should be equal to fxpNumCompleteSets"
         assert(makerInitialOutcomeTwoShares == 0), "Maker's initial outcome 2 shares balance should be 0"
         assert(takerInitialOutcomeOneShares == 0), "Taker's initial outcome 1 shares balance should be 0"
-        assert(takerInitialOutcomeTwoShares == 0), "Taker's initial outcome 2 shares balance should be 0"
+        assert(takerInitialOutcomeTwoShares == fxpOutcomeTwoShares), "Taker's initial outcome 2 shares balance should be equal to fxpOutcomeTwoShares"
         assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
         assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
 
@@ -1743,7 +1742,7 @@ def test_TakeBidOrder():
         assert(makerIntermediateOutcomeOneShares == fxpNumCompleteSets - fxpOrderAmount), "Maker's intermediate outcome 1 shares balance should be fxpNumCompleteSets - fxpOrderAmount"
         assert(makerIntermediateOutcomeTwoShares == 0), "Maker's intermediate outcome 2 shares balance should be 0"
         assert(takerIntermediateOutcomeOneShares == 0), "Taker's intermediate outcome 1 shares balance should be 0"
-        assert(takerIntermediateOutcomeTwoShares == 0), "Taker's intermediate outcome 2 shares balance should be 0"
+        assert(takerIntermediateOutcomeTwoShares == takerInitialOutcomeTwoShares), "Taker's intermediate outcome 2 shares balance should be unchanged"
         assert(marketIntermediateOutcomeOneShares == fxpOrderAmount), "Market's intermediate outcome 1 shares balance should be equal to fxpOrderAmount"
         assert(marketIntermediateOutcomeTwoShares == 0), "Market's intermediate outcome 2 shares balance should be 0"
 
@@ -1773,7 +1772,6 @@ def test_TakeBidOrder():
         fxpExpectedCashTransferToMaker = int(fxpSellCompleteSetsCashTransferFromMarketToMaker - Decimal(fxpExpectedFee))
         # note: creator is also maker in this case
         fxpExpectedFeePaidToCreator = int(Decimal(fxpExpectedFee) / Decimal(2))
-        import ipdb; ipdb.set_trace()
         assert(makerFinalCash == makerInitialCash + fxpExpectedCashTransferToMaker + fxpExpectedFeePaidToCreator - fxpCashTransferFromMakerToMarket), "Maker's final cash balance should be makerInitialCash + fxpExpectedCashTransferToMaker + fxpExpectedFeePaidToCreator - fxpCashTransferFromMakerToMarket"
         assert(takerFinalCash == takerInitialCash + fxpCashTransferFromMarketToTaker), "Taker's final cash balance takerInitialCash + fxpCashTransferFromMarketToTaker"
         assert(marketFinalCash == marketInitialCash - fxpExpectedCashTransferToMaker - fxpExpectedFeePaidToCreator - fxpCashTransferFromMarketToTaker + fxpCashTransferFromMakerToMarket), "Market's final cash balance should be marketInitialCash - fxpExpectedCashTransferToMaker - fxpExpectedFeePaidToCreator - fxpCashTransferFromMarketToTaker + fxpCashTransferFromMakerToMarket"
