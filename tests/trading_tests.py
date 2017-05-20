@@ -110,16 +110,16 @@ def createBinaryMarket(eventID):
     currency = contracts.cash.address
     return contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1, value=fix(10000))
 
-def buyCompleteSets(marketID, fxpAmount):
+def buyCompleteSets(marketID, fxpAmount, sender=None):
     global contracts
     t = contracts._ContractLoader__tester
-    assert(contracts.cash.approve(contracts.completeSets.address, fix(10000), sender=t.k1) == 1), "Approve completeSets contract to spend cash"
+    if sender is None: sender = t.k1
+    assert(contracts.cash.approve(contracts.completeSets.address, fix(10000), sender=sender) == 1), "Approve completeSets contract to spend cash"
     with iocapture.capture() as captured:
-        result = contracts.completeSets.publicBuyCompleteSets(marketID, fxpAmount, sender=t.k1)
+        result = contracts.completeSets.publicBuyCompleteSets(marketID, fxpAmount, sender=sender)
         logged = captured.stdout
     logCompleteSets = parseCapturedLogs(logged)[-1]
     assert(logCompleteSets["_event_type"] == "CompleteSets"), "Should emit a CompleteSets event"
-    assert(logCompleteSets["sender"] == long(t.a1.encode("hex"), 16)), "Logged sender should match input"
     assert(logCompleteSets["type"] == 1), "Logged type should be 1 (buy)"
     assert(logCompleteSets["fxpAmount"] == fxpAmount), "Logged fxpAmount should match input"
     assert(logCompleteSets["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match input"
@@ -1461,8 +1461,8 @@ def test_TakeBidOrder():
         fxpNumCompleteSets = fix(10)
         buyCompleteSets(marketID, fxpNumCompleteSets)
         contracts._ContractLoader__state.mine(1)
-        destroySharesAbiEncodedData = shareTokenContractTranslator.encode("destroyShares", [t.a1, fxpNumCompleteSets])
-        assert(int(contracts._ContractLoader__state.send(t.k0, outcomeTwoShareContract, 0, destroySharesAbiEncodedData).encode("hex"), 16) == 1), "Destroy shares of outcome 2"
+        transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
+        assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
         assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
         makerInitialCash = contracts.cash.balanceOf(t.a1)
         takerInitialCash = contracts.cash.balanceOf(t.a2)
@@ -1577,6 +1577,14 @@ def test_TakeBidOrder():
         outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
         outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
         outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
+
+        # 1. Taker buys a complete set, then transfers outcome 1, leaving taker with shares of outcome 2 only.
+        contracts._ContractLoader__state.mine(1)
+        fxpOutcomeTwoShares = fix(10)
+        buyCompleteSets(marketID, fxpOutcomeTwoShares, sender=t.k2)
+        contracts._ContractLoader__state.mine(1)
+        transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpOutcomeTwoShares])
+        assert(int(contracts._ContractLoader__state.send(t.k2, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
         assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
         fxpAllowance = fix(10)
         abiEncodedData = shareTokenContractTranslator.encode("approve", [contracts.takeBidOrder.address, fxpAllowance])
@@ -1586,8 +1594,8 @@ def test_TakeBidOrder():
         takerInitialCash = contracts.cash.balanceOf(t.a2)
         marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
         assert(makerInitialCash >= fxpEtherDepositValue), "Maker's initial cash balance should be at least fxpEtherDepositValue"
-        assert(takerInitialCash >= fxpEtherDepositValue), "Taker's initial cash balance should be at least fxpEtherDepositValue"
-        assert(marketInitialCash == 0), "Market's initial cash balance should be 0"
+        assert(takerInitialCash >= fxpEtherDepositValue - fxpOutcomeTwoShares), "Taker's initial cash balance should be at least fxpEtherDepositValue - fxpOutcomeTwoShares"
+        assert(marketInitialCash == fxpOutcomeTwoShares), "Market's initial cash balance should be equal to fxpOutcomeTwoShares"
         makerInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
         makerInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
         takerInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 1)
@@ -1597,11 +1605,11 @@ def test_TakeBidOrder():
         assert(makerInitialOutcomeOneShares == 0), "Maker's initial outcome 1 shares balance should be 0"
         assert(makerInitialOutcomeTwoShares == 0), "Maker's initial outcome 2 shares balance should be 0"
         assert(takerInitialOutcomeOneShares == 0), "Taker's initial outcome 1 shares balance should be 0"
-        assert(takerInitialOutcomeTwoShares == 0), "Taker's initial outcome 2 shares balance should be 0"
+        assert(takerInitialOutcomeTwoShares == fxpOutcomeTwoShares), "Taker's initial outcome 2 shares balance should be fxpOutcomeTwoShares"
         assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
         assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
 
-        # 1. Maker places a bid order. Cash sent from maker to market.
+        # 2. Maker places a bid order. Cash sent from maker to market.
         contracts._ContractLoader__state.mine(1)
         orderID = contracts.makeOrder.publicMakeOrder(1, fxpOrderAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
         assert(orderID != 0), "Order ID should be non-zero"
@@ -1612,7 +1620,7 @@ def test_TakeBidOrder():
         fxpCashPaidByMaker = int(Decimal(fxpOrderAmount) * (Decimal(fxpPrice) - Decimal(fxpMinValue)) / Decimal(10)**Decimal(18))
         assert(makerIntermediateCash == makerInitialCash - fxpCashPaidByMaker), "Maker's cash balance should be decreased by fxpCashPaidByMaker"
         assert(takerIntermediateCash == takerInitialCash), "Taker's cash balance should be unchanged"
-        assert(marketIntermediateCash == fxpCashPaidByMaker), "Market's intermediate cash balance should be equal to fxpCashPaidByMaker"
+        assert(marketIntermediateCash == marketInitialCash + fxpCashPaidByMaker), "Market's intermediate cash balance should be equal to fxpCashPaidByMaker"
         makerIntermediateOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
         makerIntermediateOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
         takerIntermediateOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 1)
@@ -1622,16 +1630,9 @@ def test_TakeBidOrder():
         assert(makerIntermediateOutcomeOneShares == 0), "Maker's intermediate outcome 1 shares balance should be 0"
         assert(makerIntermediateOutcomeTwoShares == 0), "Maker's intermediate outcome 2 shares balance should be 0"
         assert(takerIntermediateOutcomeOneShares == 0), "Taker's intermediate outcome 1 shares balance should be 0"
-        assert(takerIntermediateOutcomeTwoShares == 0), "Taker's intermediate outcome 2 shares balance should be 0"
+        assert(takerIntermediateOutcomeTwoShares == fxpOutcomeTwoShares), "Taker's intermediate outcome 2 shares balance should be fxpOutcomeTwoShares"
         assert(marketIntermediateOutcomeOneShares == 0), "Market's intermediate outcome 1 shares balance should be 0"
         assert(marketIntermediateOutcomeTwoShares == 0), "Market's intermediate outcome 2 shares balance should be 0"
-
-        # 2. Create shares of outcome 2 for taker.
-        contracts._ContractLoader__state.mine(1)
-        fxpOutcomeTwoShares = fix(10)
-        createSharesAbiEncodedData = shareTokenContractTranslator.encode("createShares", [t.a2, fxpOutcomeTwoShares])
-        assert(int(contracts._ContractLoader__state.send(t.k0, outcomeTwoShareContract, 0, createSharesAbiEncodedData).encode("hex"), 16) == 1), "Create shares of outcome 2"
-        assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 2) == fxpOutcomeTwoShares), "Taker should have fxpOutcomeTwoShares of outcome 2"
 
         # 3. Taker fills bid order. Taker is short selling: taker buys a complete set then sells a single outcome.
         contracts._ContractLoader__state.mine(1)
@@ -1648,7 +1649,7 @@ def test_TakeBidOrder():
         fxpAmountFilled = min(fxpAmountTakerWants, fxpOrderAmount)
         assert(makerFinalCash == makerIntermediateCash), "Maker's final cash balance should be unchanged from intermediate cash balance"
         assert(takerFinalCash == takerInitialCash + fxpCashPaidByMaker), "Taker's cash balance should be increased by fxpCashPaidByMaker"
-        assert(marketFinalCash == 0), "Market's final cash balance should be 0"
+        assert(marketFinalCash == marketInitialCash), "Market's final cash balance should be equal to its initial cash balance"
         makerFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
         makerFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
         takerFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 1)
@@ -1677,20 +1678,29 @@ def test_TakeBidOrder():
         outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
         outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
 
-        # 1. Maker buys complete sets, then destroys shares of outcome 2.
+        # 1. Taker buys a complete set, then transfers outcome 1, leaving taker with shares of outcome 2 only.
         contracts._ContractLoader__state.mine(1)
-        fxpNumCompleteSets = fix(10)
-        buyCompleteSets(marketID, fxpNumCompleteSets)
+        fxpOutcomeTwoShares = fix(10)
+        buyCompleteSets(marketID, fxpOutcomeTwoShares, sender=t.k2)
         contracts._ContractLoader__state.mine(1)
-        destroySharesAbiEncodedData = shareTokenContractTranslator.encode("destroyShares", [t.a1, fxpNumCompleteSets])
-        assert(int(contracts._ContractLoader__state.send(t.k0, outcomeTwoShareContract, 0, destroySharesAbiEncodedData).encode("hex"), 16) == 1), "Destroy shares of outcome 2"
-        assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
+        transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpOutcomeTwoShares])
+        assert(int(contracts._ContractLoader__state.send(t.k2, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
+
+        # 2. Create shares of outcome 2 for taker.
+        contracts._ContractLoader__state.mine(1)
+        fxpOutcomeTwoShares = fix(10)
+        buyCompleteSets(marketID, fxpOutcomeTwoShares, sender=t.k2)
+        contracts._ContractLoader__state.mine(1)
+        transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpOutcomeTwoShares])
+        assert(int(contracts._ContractLoader__state.send(t.k2, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
+        assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 1) == 0), "Taker should have 0 shares of outcome 1"
+        assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 2) == fxpOutcomeTwoShares), "Taker should have fxpOutcomeTwoShares of outcome 2"
         makerInitialCash = contracts.cash.balanceOf(t.a1)
         takerInitialCash = contracts.cash.balanceOf(t.a2)
         marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
         assert(makerInitialCash >= fxpEtherDepositValue - fxpNumCompleteSets), "Maker's initial cash balance should be at least fxpEtherDepositValue - fxpNumCompleteSets"
-        assert(takerInitialCash >= fxpEtherDepositValue), "Taker's initial cash balance should be at least fxpEtherDepositValue"
-        assert(marketInitialCash == fxpNumCompleteSets), "Market's initial cash balance should be equal to fxpNumCompleteSets"
+        assert(takerInitialCash >= fxpEtherDepositValue - fxpOutcomeTwoShares), "Taker's initial cash balance should be at least fxpEtherDepositValue"
+        assert(marketInitialCash == fxpNumCompleteSets + fxpOutcomeTwoShares), "Market's initial cash balance should be equal to fxpNumCompleteSets + fxpOutcomeTwoShares"
         makerInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
         makerInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
         takerInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 1)
@@ -1704,7 +1714,7 @@ def test_TakeBidOrder():
         assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
         assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
 
-        # 2. Maker places a bid order. Shares of other outcome(s) sent from maker to market.
+        # 3. Maker places a bid order. Shares of other outcome(s) sent from maker to market.
         contracts._ContractLoader__state.mine(1)
         fxpOrderAmount = fix(2)
         fxpPrice = fix("1.6")
@@ -1736,13 +1746,6 @@ def test_TakeBidOrder():
         assert(marketIntermediateOutcomeOneShares == fxpOrderAmount), "Market's intermediate outcome 1 shares balance should be equal to fxpOrderAmount"
         assert(marketIntermediateOutcomeTwoShares == 0), "Market's intermediate outcome 2 shares balance should be 0"
 
-        # 3. Create shares of outcome 2 for taker.
-        contracts._ContractLoader__state.mine(1)
-        fxpOutcomeTwoShares = fix(10)
-        createSharesAbiEncodedData = shareTokenContractTranslator.encode("createShares", [t.a2, fxpOutcomeTwoShares])
-        assert(int(contracts._ContractLoader__state.send(t.k0, outcomeTwoShareContract, 0, createSharesAbiEncodedData).encode("hex"), 16) == 1), "Create shares of outcome 2"
-        assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 2) == fxpOutcomeTwoShares), "Taker should have fxpOutcomeTwoShares of outcome 2"
-
         # 4. Taker fills bid order:
         #    - Maker has a complete set once bid is filled; takeBidOrder auto-sells this complete set.
         contracts._ContractLoader__state.mine(1)
@@ -1769,6 +1772,7 @@ def test_TakeBidOrder():
         fxpExpectedCashTransferToMaker = int(fxpSellCompleteSetsCashTransferFromMarketToMaker - Decimal(fxpExpectedFee))
         # note: creator is also maker in this case
         fxpExpectedFeePaidToCreator = int(Decimal(fxpExpectedFee) / Decimal(2))
+        import ipdb; ipdb.set_trace()
         assert(makerFinalCash == makerInitialCash + fxpExpectedCashTransferToMaker + fxpExpectedFeePaidToCreator - fxpCashTransferFromMakerToMarket), "Maker's final cash balance should be makerInitialCash + fxpExpectedCashTransferToMaker + fxpExpectedFeePaidToCreator - fxpCashTransferFromMakerToMarket"
         assert(takerFinalCash == takerInitialCash + fxpCashTransferFromMarketToTaker), "Taker's final cash balance takerInitialCash + fxpCashTransferFromMarketToTaker"
         assert(marketFinalCash == marketInitialCash - fxpExpectedCashTransferToMaker - fxpExpectedFeePaidToCreator - fxpCashTransferFromMarketToTaker + fxpCashTransferFromMakerToMarket), "Market's final cash balance should be marketInitialCash - fxpExpectedCashTransferToMaker - fxpExpectedFeePaidToCreator - fxpCashTransferFromMarketToTaker + fxpCashTransferFromMakerToMarket"

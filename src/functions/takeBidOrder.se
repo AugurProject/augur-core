@@ -192,11 +192,19 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         fxpSharesHeld = min(MARKETS.getParticipantSharesPurchased(market, maker, i), fxpSharesHeld)
         i += 1
     if(fxpSharesHeld > 0):
-        COMPLETESETS.sellCompleteSets(maker, market, fxpSharesHeld, call=delegate)
+        i = 1
+        while(i <= MARKETS.getMarketNumOutcomes(market)):
+            MARKETS.getOutcomeShareContract(market, i).destroyShares(maker, fxpSharesHeld)
+            i += 1
+        fxpMoneyFromSellCompleteSets = safeFxpMul(fxpSharesHeld, fxpCumulativeScale)
 
-    # Transfer (price - minValue) * fxpBidderSharesFilled to market from bidder since market hasnt been paid yet after complete sets selling. The bidder has already paid for fxpBidderMoneyFilled by escrowing their money
-    if(fxpBidderSharesFilled > 0):
-        if(!INFO.getCurrency(market).transferFrom(maker, INFO.getWallet(market), safeFxpMul(safeSub(fxpPrice, fxpMinValue), fxpBidderSharesFilled))):
+        # Send complete sets funds from the market to the maker's account minus (price - minValue) * fxpBidderSharesFilled since market hasnt been paid yet after complete sets selling.
+        fxpFee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpSharesHeld), fxpCumulativeScale)
+        if(!INFO.getWallet(market).transfer(maker, safeSub(fxpMoneyFromSellCompleteSets, (fxpFee + safeFxpMul(safeSub(fxpPrice, fxpMinValue), fxpBidderSharesFilled))))):
+            ~invalid()
+
+        # Send half of sell-complete-sets fees to the market creator
+        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fxpFee, 2))):
             ~invalid()
 
     # Sell taker's complete sets (if they have any)
@@ -210,6 +218,8 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     ORDERS.takeBidOrderLog(market, sender, maker, fxpPrice, fxpSumOfFills, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
     ORDERS.setPrice(market, outcome, fxpPrice)
+    # if((INFO.getCurrency(market).balanceOf(INFO.getWallet(market)) + 100000000) < safeFxpMul(MARKETS.getSharesPurchased(market, outcome), MARKETS.getCumulativeScale(market))):
+        # ~invalid()
     return(fxpAmountTakerWants: uint256)
 
 def setController(newController: address):

@@ -74,7 +74,6 @@ def buyCompleteSets(sender: address, market: address, fxpAmount: uint256):
     while(n <= numOutcomes):
         MARKETS.getOutcomeShareContract(market, n).createShares(sender, fxpAmount)
         n += 1
-
     ORDERS.completeSetsLog(sender, market, 1, fxpAmount, numOutcomes, 0)
     return(1)
 
