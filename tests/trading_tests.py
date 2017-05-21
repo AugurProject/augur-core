@@ -1971,6 +1971,7 @@ def test_BinaryOrCategoricalPayouts():
                 numOutcomes = 2
                 outcomeID = 2
                 assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
+                assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
                 contracts._ContractLoader__state.mine(1)
                 userInitialCash = contracts.cash.balanceOf(t.a1)
                 marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -1983,7 +1984,7 @@ def test_BinaryOrCategoricalPayouts():
                 assert(userInitialOutcomeTwoShares == 0), "User's initial outcome 2 shares balance should be 0"
                 assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
                 assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
-                assert(contracts.binaryOrCategoricalPayouts.payoutBinaryOrCategoricalMarket(t.a1, marketID, eventID, numOutcomes, sender=t.k0) == 1), "payoutBinaryOrCategoricalMarket should complete successfully"
+                assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
                 userFinalCash = contracts.cash.balanceOf(t.a1)
                 marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
                 assert(userFinalCash == userInitialCash), "User's cash balance should be unchanged"
@@ -2020,6 +2021,7 @@ def test_BinaryOrCategoricalPayouts():
                 transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
                 assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
+                assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
                 contracts._ContractLoader__state.mine(1)
                 userInitialCash = contracts.cash.balanceOf(t.a1)
                 marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -2032,7 +2034,7 @@ def test_BinaryOrCategoricalPayouts():
                 assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
                 assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
                 assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
-                assert(contracts.binaryOrCategoricalPayouts.payoutBinaryOrCategoricalMarket(t.a1, marketID, eventID, numOutcomes, sender=t.k0) == 1), "payoutBinaryOrCategoricalMarket should complete successfully"
+                assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
                 userFinalCash = contracts.cash.balanceOf(t.a1)
                 marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
                 fxpTradingFee = contracts.markets.getTradingFee(marketID)
@@ -2065,6 +2067,7 @@ def test_BinaryOrCategoricalPayouts():
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
                 outcomeID = 2
                 assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
+                assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
                 contracts._ContractLoader__state.mine(1)
                 userInitialCash = contracts.cash.balanceOf(t.a1)
                 marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -2077,7 +2080,7 @@ def test_BinaryOrCategoricalPayouts():
                 assert(userInitialOutcomeTwoShares == 0), "User's initial outcome 2 shares balance should be 0"
                 assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
                 assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
-                assert(contracts.binaryOrCategoricalPayouts.payoutBinaryOrCategoricalMarket(t.a1, marketID, eventID, numOutcomes, sender=t.k0) == 1), "payoutBinaryOrCategoricalMarket should complete successfully"
+                assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
                 userFinalCash = contracts.cash.balanceOf(t.a1)
                 marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
                 assert(userFinalCash == userInitialCash), "User's cash balance should be unchanged"
@@ -2114,6 +2117,7 @@ def test_BinaryOrCategoricalPayouts():
                 transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
                 assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
+                assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
                 contracts._ContractLoader__state.mine(1)
                 userInitialCash = contracts.cash.balanceOf(t.a1)
                 marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -2126,7 +2130,7 @@ def test_BinaryOrCategoricalPayouts():
                 assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
                 assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
                 assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
-                assert(contracts.binaryOrCategoricalPayouts.payoutBinaryOrCategoricalMarket(t.a1, marketID, eventID, numOutcomes, sender=t.k0) == 1), "payoutBinaryOrCategoricalMarket should complete successfully"
+                assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
                 userFinalCash = contracts.cash.balanceOf(t.a1)
                 marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
                 fxpTradingFee = contracts.markets.getTradingFee(marketID)
@@ -2170,7 +2174,8 @@ def test_BinaryOrCategoricalPayouts():
             contracts._ContractLoader__state.mine(1)
             transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
             assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
-            assert(contracts.events.setOutcome(eventID, fix("1.5"), sender=t.k0) == 1), "Should manually set event outcome"
+            assert(contracts.events.setOutcome(eventID, fix("0.5"), sender=t.k0) == 1), "Should manually set event outcome"
+            assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
             contracts._ContractLoader__state.mine(1)
             userInitialCash = contracts.cash.balanceOf(t.a1)
             marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -2183,7 +2188,7 @@ def test_BinaryOrCategoricalPayouts():
             assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
             assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
             assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
-            assert(contracts.binaryOrCategoricalPayouts.payoutIndeterminateBinaryOrCategoricalMarket(t.a1, marketID, eventID, numOutcomes, sender=t.k0) == 1), "payoutIndeterminateBinaryOrCategoricalMarket should complete successfully"
+            assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
             userFinalCash = contracts.cash.balanceOf(t.a1)
             marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
             fxpTradingFee = contracts.markets.getTradingFee(marketID)
@@ -2225,7 +2230,8 @@ def test_BinaryOrCategoricalPayouts():
             contracts._ContractLoader__state.mine(1)
             transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
             assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
-            assert(contracts.events.setOutcome(eventID, fix("1.5"), sender=t.k0) == 1), "Should manually set event outcome"
+            assert(contracts.events.setOutcome(eventID, fix("0.5"), sender=t.k0) == 1), "Should manually set event outcome"
+            assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
             contracts._ContractLoader__state.mine(1)
             userInitialCash = contracts.cash.balanceOf(t.a1)
             marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -2242,7 +2248,7 @@ def test_BinaryOrCategoricalPayouts():
             assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
             assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
             assert(marketInitialOutcomeThreeShares == 0), "Market's initial outcome 3 shares balance should be 0"
-            assert(contracts.binaryOrCategoricalPayouts.payoutIndeterminateBinaryOrCategoricalMarket(t.a1, marketID, eventID, numOutcomes, sender=t.k0) == 1), "payoutIndeterminateBinaryOrCategoricalMarket should complete successfully"
+            assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
             userFinalCash = contracts.cash.balanceOf(t.a1)
             marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
             fxpTradingFee = contracts.markets.getTradingFee(marketID)
