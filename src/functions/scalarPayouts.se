@@ -37,7 +37,7 @@ def payoutScalarMarket(sender: address, market: address, event: address):
     minValue = EVENTS.getMinValue(event)
     maxValue = EVENTS.getMaxValue(event)
     currency = INFO.getCurrency(market)
-    branch = EVENTS.getExpiration(MARKETS.getMarketEvent(market))
+    branch = EVENTS.getEventBranch(MARKETS.getMarketEvent(market))
 
     # Price is in fixed point
     # Share two goes with the high/long side
