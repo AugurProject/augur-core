@@ -68,7 +68,7 @@ def init():
         wallet = create('../functions/wallet.se')
         wallet.initialize(ethContract)
         self.Branches[1010101].contract[ethContract] = wallet
-        self.Branches[branch].currentETHWrapper = ethContract
+        self.Branches[1010101].currentETHWrapper = ethContract
 
 def updateNumCurrencies(branch, num):
     self.controller.assertIsWhitelisted(msg.sender)

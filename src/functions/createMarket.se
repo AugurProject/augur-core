@@ -112,8 +112,8 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
         cumulativeScale = WEI_TO_ETH
 
     # 0 fees for markets denominated in other outcomes
-    if(currency != BRANCHES.getCurrentETHWrapper(branch)):
-        fxpTradingFee = 0
+    if(currency != BRANCHES.getCurrentETHWrapper(branch) && fxpTradingFee >0):
+        ~invalid()
 
     # formation of market (hash)
     descriptionLength = INFO.getDescriptionLength(event)
