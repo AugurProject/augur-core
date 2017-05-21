@@ -20,7 +20,6 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 inset('../macros/refund.sem')
 inset('../macros/safeMath.sem')
-inset('../macros/unitConversions.sem')
 
 data controller
 
@@ -28,55 +27,50 @@ data controller
 def init():
     self.controller = 0x0
 
-def twoOutcomes(sender: address, market: address, event: address):
+# If it's an indeterminate market resolve with all outcomes having an equal value.
+# @internal
+def payoutIndeterminateBinaryOrCategoricalMarket(sender: address, market: address, event: address, numOutcomes: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
-
-    # Fetch outcome and min/max values for the event.
-    outcome = EVENTS.getOutcome(event)
-    minValue = EVENTS.getMinValue(event)
-    maxValue = EVENTS.getMaxValue(event)
+    branch = EVENTS.getEventBranch(event)
     currency = INFO.getCurrency(market)
-    branch = EVENTS.getExpiration(MARKETS.getMarketEvent(market))
+    i = 1
+    while(i <= numOutcomes):
+        sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i)
+        if(sharesOwned > 0):
+            MARKETS.getOutcomeShareContract(market, i).destroyShares(sender, sharesOwned)
+            shareValue = safeDiv(sharesOwned, numOutcomes)
+            fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
+            if(shareValue != 0 and fee != 0):
+                if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2))):
+                    ~invalid()
+                if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+                    ~invalid()
+                if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
+                    ~invalid()
+        i += 1
+    return(1: uint256)
 
-    # Price is in fixed point
-    # Share two goes with the high/long side
-    pricePerShare2 = safeFxpDiv(outcome - minValue, maxValue - minValue)
-    # Share one goes with the low/short side of the calc
-    pricePerShare1 = safeSub(WEI_TO_ETH, pricePerShare2)
-    # Normalize if not exactly 100%
-    if(safeAdd(pricePerShare1, pricePerShare2) != WEI_TO_ETH):
-        denominator = safeAdd(pricePerShare1, pricePerShare1)
-        pricePerShare1 = safeFxpDiv(pricePerShare1, denominator)
-        pricePerShare2 = safeFxpDiv(pricePerShare2, denominator)
-
-    # For each winning outcome get rid of shares and send money to the trader
-    cumulativeScale = MARKETS.getCumulativeScale(market)
-
-    # Low side
-    sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, 1)
+# Distribute profit to the people who won money by holding winning shares.
+# @internal
+def payoutBinaryOrCategoricalMarket(sender: address, market: address, event: address, isIndeterminate: uint256, numOutcomes: uint256):
+    refund()
+    self.controller.assertIsWhitelisted(msg.sender)
+    branch = EVENTS.getEventBranch(event)
+    currency = INFO.getCurrency(market)
+    outcome = EVENTS.getOutcome(event) / 10**18
+    sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
     if(sharesOwned > 0):
-        MARKETS.getOutcomeShareContract(market, 1).destroyShares(sender, sharesOwned)
-        shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
+        MARKETS.getOutcomeShareContract(market, outcome).destroyShares(sender, sharesOwned)
+        shareValue = sharesOwned
         fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
         if(shareValue != 0 and fee != 0):
-            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2))):
+                ~invalid()
+            if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                 ~invalid()
             if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                 ~invalid()
-
-    # High side (of the scalar part)
-    sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, 2)
-    if(sharesOwned > 0):
-        MARKETS.getOutcomeShareContract(market, 2).destroyShares(sender, sharesOwned)
-        shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
-        fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-        if(shareValue != 0 and fee != 0):
-            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-                ~invalid()
-            if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
-                ~invalid()
-
     return(1: uint256)
 
 # @controller
