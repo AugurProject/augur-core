@@ -75,7 +75,7 @@ def decreaseTradingFee(sender: address, market: address, fxpTradingFee: uint256)
     newCreationFee = safeFxpMul(safeFxpDiv(POINT_ZERO_SIX * baseReporters, fxpTradingFee), BRANCHES.getCurrencyRate(branch, currency))
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch)):
         ~invalid()
-    if(fxpTradingFee > oldFee):
+    if(fxpTradingFee >= oldFee):
         ~invalid()
     if(newCreationFee > oldCreationFee):
         if(!currency.transferFrom(sender, BRANCHES.getBranchWallet(branch, currency), newCreationFee - oldCreationFee)):

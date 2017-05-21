@@ -72,7 +72,7 @@ def internalCloseMarket(market, sender):
     marketWallet = INFO.getWallet(market)
     marketBalance = marketCurrency.balanceOf(marketWallet)
     marketShareValue = safeFxpMul(MARKETS.getSharesPurchased(market, 1), MARKETS.getCumulativeScale(market))
-    if(marketBalance > marketShareValue):
+    if(marketBalance > marketShareValue and MARKETS.getTradingFee(market) != 0):
         marketWallet.transfer(BRANCHES.getBranchWallet(branch, marketCurrency), marketBalance - marketShareValue)
 
     MARKETS.setMarketResolved(market)

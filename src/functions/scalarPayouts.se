@@ -59,10 +59,11 @@ def payoutScalarMarket(sender: address, market: address, event: address):
         MARKETS.getOutcomeShareContract(market, 1).destroyShares(sender, sharesOwned)
         shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
         fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-        if(shareValue != 0 and fee != 0):
-            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-                ~invalid()
+        if(shareValue != 0):
             if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
+                ~invalid()
+        if(fee != 0):
+            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                 ~invalid()
 
     # High side (of the scalar part)
@@ -71,12 +72,12 @@ def payoutScalarMarket(sender: address, market: address, event: address):
         MARKETS.getOutcomeShareContract(market, 2).destroyShares(sender, sharesOwned)
         shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
         fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-        if(shareValue != 0 and fee != 0):
-            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-                ~invalid()
+        if(shareValue != 0):
             if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                 ~invalid()
-
+        if(fee != 0):
+            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+                ~invalid()
     return(1: uint256)
 
 # @controller
