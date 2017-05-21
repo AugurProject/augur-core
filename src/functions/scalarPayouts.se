@@ -28,57 +28,65 @@ data controller
 def init():
     self.controller = 0x0
 
-def twoOutcomes(market, event, sender):
+def payoutScalarMarket(sender: address, market: address, event: address):
+    refund()
     self.controller.assertIsWhitelisted(msg.sender)
-    # fetch outcome and min/max values for the scalar
+
+    # Fetch outcome and min/max values for the event.
     outcome = EVENTS.getOutcome(event)
     minValue = EVENTS.getMinValue(event)
     maxValue = EVENTS.getMaxValue(event)
     currency = INFO.getCurrency(market)
     branch = EVENTS.getExpiration(MARKETS.getMarketEvent(market))
-    # price is in fixed point
-    # share two goes with the high/long side
+
+    # Price is in fixed point
+    # Share two goes with the high/long side
     pricePerShare2 = safeFxpDiv(outcome - minValue, maxValue - minValue)
-    # share one goes with the low/short side of the calc
+    # Share one goes with the low/short side of the calc
     pricePerShare1 = safeSub(WEI_TO_ETH, pricePerShare2)
-    # normalize if not exactly 100%
+    # Normalize if not exactly 100%
     if(safeAdd(pricePerShare1, pricePerShare2) != WEI_TO_ETH):
         denominator = safeAdd(pricePerShare1, pricePerShare1)
         pricePerShare1 = safeFxpDiv(pricePerShare1, denominator)
         pricePerShare2 = safeFxpDiv(pricePerShare2, denominator)
 
-    # for each winning outcome get rid of shares and send money to the trader
+    # For each winning outcome get rid of shares and send money to the trader
     cumulativeScale = MARKETS.getCumulativeScale(market)
 
-    # low side
+    # Low side
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, 1)
-    MARKETS.getOutcomeShareContract(market, 1).destroyShares(sender, sharesOwned)
-    shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
-    fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-    if(shareValue != 0 and fee != 0):
-        if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-            ~invalid()
-        if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
-            ~invalid()
+    if(sharesOwned > 0):
+        MARKETS.getOutcomeShareContract(market, 1).destroyShares(sender, sharesOwned)
+        shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
+        fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
+        if(shareValue != 0 and fee != 0):
+            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+                ~invalid()
+            if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
+                ~invalid()
 
-    # high side (of the scalar part)
+    # High side (of the scalar part)
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, 2)
-    MARKETS.getOutcomeShareContract(market, 2).destroyShares(sender, sharesOwned)
-    shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
-    fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-    if(shareValue != 0 and fee != 0):
-        if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-            ~invalid()
-        if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
-            ~invalid()
-    return(1)
+    if(sharesOwned > 0):
+        MARKETS.getOutcomeShareContract(market, 2).destroyShares(sender, sharesOwned)
+        shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
+        fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
+        if(shareValue != 0 and fee != 0):
+            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+                ~invalid()
+            if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
+                ~invalid()
 
+    return(1: uint256)
+
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()

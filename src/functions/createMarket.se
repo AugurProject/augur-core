@@ -105,11 +105,10 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
     # scalars
     fxpMaxValue = EVENTS.getMaxValue(event)
     fxpMinValue = EVENTS.getMinValue(event)
-    scalar = (fxpMaxValue != TWO or fxpMinValue != WEI_TO_ETH) and numOutcomes == 2
-    if(scalar):
+    if(EVENTS.getEventType(event) == "scalar"):
         # cumulativeScale is the range of a scalar
         cumulativeScale += fxpMaxValue - fxpMinValue
-    if(!cumulativeScale):
+    else:
         cumulativeScale = WEI_TO_ETH
 
     # 0 fees for markets denominated in other outcomes
