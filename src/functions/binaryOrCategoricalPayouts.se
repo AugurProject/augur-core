@@ -53,7 +53,7 @@ def payoutIndeterminateBinaryOrCategoricalMarket(sender: address, market: addres
 
 # Distribute profit to the people who won money by holding winning shares.
 # @internal
-def payoutBinaryOrCategoricalMarket(sender: address, market: address, event: address, isIndeterminate: uint256, numOutcomes: uint256):
+def payoutBinaryOrCategoricalMarket(sender: address, market: address, event: address, numOutcomes: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
     branch = EVENTS.getEventBranch(event)
