@@ -1848,7 +1848,7 @@ def test_TakeBidOrder():
         test_takeBidOrder_makerEscrowedCash_takerWithShares()
         test_takeBidOrder_makerEscrowedShares_takerWithShares()
     test_usingMarketType("binary")
-    tesT_usingMarketType("scalar")
+    test_usingMarketType("scalar")
 
 def test_TakeOrder():
     global contracts
