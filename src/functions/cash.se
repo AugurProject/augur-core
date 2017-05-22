@@ -31,7 +31,7 @@ event WithdrawEther(sender: address: indexed, value: uint256, balance: uint256, 
 event InitiateWithdrawEther(sender: address: indexed, value: uint256, balance: uint256, timestamp: uint256)
 
 def init():
-    self.controller = 0x0
+    self.controller = 0x01
     self.name = "Cash"
     self.symbol = "CASH"
     self.decimals = 18

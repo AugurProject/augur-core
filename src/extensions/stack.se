@@ -1,6 +1,11 @@
 data stacks[](items[], head)
 
 # should only be used with call = delegate
+data controller
+
+def init():
+    self.controller = 0x01
+
 def push(key, item):
     index = self.stacks[key].head + 1
     self.stacks[key].head = index

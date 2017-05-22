@@ -12,7 +12,7 @@ data currency
 data controller
 
 def init():
-    self.controller = 0x0
+    self.controller = 0x01
 
 def initialize(currency):
     if(!self.currency):
