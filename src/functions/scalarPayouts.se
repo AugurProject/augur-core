@@ -41,42 +41,37 @@ def payoutScalarMarket(sender: address, market: address, event: address):
 
     # Price is in fixed point
     # Share two goes with the high/long side
-    pricePerShare2 = safeFxpDiv(outcome - minValue, maxValue - minValue)
+    share2Value = outcome - minValue
     # Share one goes with the low/short side of the calc
-    pricePerShare1 = safeSub(WEI_TO_ETH, pricePerShare2)
-    # Normalize if not exactly 100%
-    if(safeAdd(pricePerShare1, pricePerShare2) != WEI_TO_ETH):
-        denominator = safeAdd(pricePerShare1, pricePerShare1)
-        pricePerShare1 = safeFxpDiv(pricePerShare1, denominator)
-        pricePerShare2 = safeFxpDiv(pricePerShare2, denominator)
+    share1Value = maxValue - outcome
 
     # For each winning outcome get rid of shares and send money to the trader
-    cumulativeScale = MARKETS.getCumulativeScale(market)
 
     # Low side
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, 1)
     if(sharesOwned > 0):
         MARKETS.getOutcomeShareContract(market, 1).destroyShares(sender, sharesOwned)
-        shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
+        shareValue = safeFxpMul(sharesOwned, share1Value)
         fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-        if(shareValue != 0 and fee != 0):
-            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-                ~invalid()
+        if(shareValue != 0):
             if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
+                ~invalid()
+        if(fee != 0):
+            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                 ~invalid()
 
     # High side (of the scalar part)
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, 2)
     if(sharesOwned > 0):
         MARKETS.getOutcomeShareContract(market, 2).destroyShares(sender, sharesOwned)
-        shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
+        shareValue = safeFxpMul(sharesOwned, share2Value)
         fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-        if(shareValue != 0 and fee != 0):
-            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-                ~invalid()
+        if(shareValue != 0):
             if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                 ~invalid()
-
+        if(fee != 0):
+            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+                ~invalid()
     return(1: uint256)
 
 # @controller

@@ -1,4 +1,4 @@
-data banana
+data banana[][][]
 
 data controller
 
@@ -9,5 +9,6 @@ def init():
 
 def ok():
     x = create('functions/cash.se')
+    self.banana[1][1][1] = 2
     y = x.allowance(msg.sender, self, gas = 30000)
     return(y)

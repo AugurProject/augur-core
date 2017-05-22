@@ -167,7 +167,7 @@ def checkEventCreationPreconditions(branch, periodLength, description: str, expD
     whenEventExpires = expDate / periodLength
     if(whenEventExpires == fortyEightHourPeriodWhereNoEventsCanExpireOnNewFork):
         ~invalid()
-    if(!BRANCHES.getCurrencyActive(branch, currency)):
+    if(currency != BRANCHES.getCurrentETHWrapper(branch)):
         ~invalid()
     checkForkResolveContractIsValid(forkResolveAddress)
 

@@ -160,13 +160,9 @@ def test_logReturn():
         with iocapture.capture() as captured:
             retval = c.testLogArrayReturn([5, 10, 15])
             logged = parseCapturedLogs(captured)
-            assert(logged["_event_type"] == u'tradeLogArrayeturn')
+            assert(logged["_event_type"] == u'tradeLogArrayReturn')
             assert(logged["returnArray"] == [5, 10, 15])
     test_logReturn()
-
-def test_eventBondResolution(controller, state, t):
-    s = test.state()
-    c = s.abi_contract('floatTestContract.se')
 
 # def test_controller(contracts, state, t):
     ### Useful for controller testing
@@ -184,15 +180,13 @@ def test_eventBondResolution(controller, state, t):
         # binascii.hexlify()
 
 if __name__ == '__main__':
-    src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
-    contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
-    state = contracts._ContractLoader__state
-    t = contracts._ContractLoader__tester
-    test_refund(contracts, state, t)
+    # src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
+    # contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
+    # state = contracts._ContractLoader__state
+    # t = contracts._ContractLoader__tester
+    # test_refund(contracts, state, t)
     test_float()
     test_logReturn()
-    test_eventBondResolution(contracts, state, t)
-    # test_closeMarket(contracts, state, t)
     # test_controller(contracts, state, t)
     print "DONE TESTING RESOLUTION TESTS"
 

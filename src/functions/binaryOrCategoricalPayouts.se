@@ -41,12 +41,13 @@ def payoutIndeterminateBinaryOrCategoricalMarket(sender: address, market: addres
             MARKETS.getOutcomeShareContract(market, i).destroyShares(sender, sharesOwned)
             shareValue = safeDiv(sharesOwned, numOutcomes)
             fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-            if(shareValue != 0 and fee != 0):
+            if(shareValue != 0):
+                if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
+                    ~invalid()
+            if(fee != 0):
                 if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2))):
                     ~invalid()
                 if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-                    ~invalid()
-                if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                     ~invalid()
         i += 1
     return(1: uint256)
@@ -64,12 +65,13 @@ def payoutBinaryOrCategoricalMarket(sender: address, market: address, event: add
         MARKETS.getOutcomeShareContract(market, outcome).destroyShares(sender, sharesOwned)
         shareValue = sharesOwned
         fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
-        if(shareValue != 0 and fee != 0):
+        if(shareValue != 0):
+            if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
+                ~invalid()
+        if(fee != 0):
             if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2))):
                 ~invalid()
             if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
-                ~invalid()
-            if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                 ~invalid()
     return(1: uint256)
 

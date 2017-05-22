@@ -145,7 +145,7 @@ def createMarket(eventID):
     tag3 = 789
     extraInfo = "rabble rabble rabble"
     currency = contracts.cash.address
-    return contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1, value=fix(10000))
+    return contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, 0, 0, sender=t.k1, value=fix(10000))
 
 def buyCompleteSets(marketID, fxpAmount, sender=None):
     global contracts
@@ -550,13 +550,17 @@ def test_CreateMarket():
         tag2 = 456
         tag3 = 789
         extraInfo = "rabble rabble rabble"
-        marketID = contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, sender=t.k1, value=fix(10000))
+        marketID = contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, 0, 0, sender=t.k1, value=fix(10000))
         assert(marketID != 0)
         assert(contracts.markets.getTradingFee(marketID) == fxpTradingFee), "Trading fee matches input"
         assert(contracts.markets.getMarketEvent(marketID) == eventID), "Market event matches input"
         assert(contracts.markets.getTags(marketID) == [tag1, tag2, tag3]), "Tags array matches input"
         assert(contracts.markets.getTopic(marketID)), "Topic matches input tag1"
         assert(contracts.markets.getExtraInfo(marketID) == extraInfo), "Extra info matches input"
+        assert(contracts.cash.publicDepositEther(value=fix(10000), sender=t.k1) == 1), "Convert ether to cash"
+        assert(contracts.cash.approve(contracts.createEvent.address, fix(10000), sender=t.k1) == 1), "Approve createEvent contract to spend cash (for validity bond)"
+        assert(contracts.cash.approve(contracts.createMarket.address, fix(10000), sender=t.k1) == 1), "Approve createMarket contract to spend cash"
+        marketID2 = contracts.createMarket.publicCreateMarket(branch, 0, eventID, tag1, tag2, tag3, extraInfo, contracts.markets.getOutcomeShareContract(marketID, 1), marketID, 1, sender=t.k1, value=fix(10000))
     test_publicCreateMarket()
 
 def test_CompleteSets():

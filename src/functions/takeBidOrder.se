@@ -204,7 +204,7 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
             ~invalid()
 
         # Send half of sell-complete-sets fees to the market creator
-        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fxpFee, 2))):
+        if(fxpFee and !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fxpFee, 2))):
             ~invalid()
 
     # Sell taker's complete sets (if they have any)

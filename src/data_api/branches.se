@@ -38,7 +38,7 @@ inset('../macros/unitConversions.sem')
 # mostRecentChild is the most recent child of a branch
 # currencyActive is whether new markets can be made in that currency
 # forkTime is the block timestamp when a fork of this branch was last created
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild, currencyActive[], forkTime)
+data Branches[](currentVotePeriod, periodLength, currentETHWrapper, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild, currencyActive[], forkTime)
 
 # keeps track of a list of all branches
 data branchList[]
@@ -57,7 +57,7 @@ def init():
     self.Branches[1010101].creationDate = block.timestamp
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
-    ethContract = self.controller.lookup("cash")
+    ethContract = self.controller.lookup('cash')
     self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].contract = ethContract
     self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].rate = WEI_TO_ETH
     self.Branches[1010101].currencyToIndex[ethContract] = self.Branches[1010101].numCurrencies
@@ -68,6 +68,7 @@ def init():
         wallet = create('../functions/wallet.se')
         wallet.initialize(ethContract)
         self.Branches[1010101].contract[ethContract] = wallet
+        self.Branches[1010101].currentETHWrapper = ethContract
 
 def updateNumCurrencies(branch, num):
     self.controller.assertIsWhitelisted(msg.sender)
@@ -147,6 +148,18 @@ def getCurrencyRate(branch, currency):
         return(self.Branches[branch].currencies[currencyIndex].rate)
     else:
         return(self.Branches[branch].currencies[currencyIndex].rateContract.rateFunction())
+
+# - need ability to add / update eth contract + eth wallets for branches
+    # - add contract[] is a mapping from currency -> wallet contract addr for that currency
+def addNewETHContract(branch, currency):
+    self.controller.assertIsWhitelisted(msg.sender)
+    self.Branches[branch].contract[currency] = create('../functions/wallet.se')
+    self.Branches[branch].contract[currency].initialize(currency)
+    self.Branches[branch].currentETHWrapper = currency
+    return(1)
+
+def getCurrentETHWrapper(branch):
+    return(self.Branches[branch].currentETHWrapper)
 
 def getBranchCurrency(branch, index):
     return(self.Branches[branch].currencies[index].contract)
