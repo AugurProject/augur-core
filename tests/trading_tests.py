@@ -9,14 +9,13 @@ Trading tests:
 + functions/cancelOrder.se
 + functions/shareTokens.se
 + functions/wallet.se
-+ functions/fillAskLibrary.se
-+ functions/fillBidLibrary.se
++ functions/takeAskOrder.se
++ functions/takeBidOrder.se
 + functions/takeOrder.se
 + functions/decreaseTradingFee.se
 + functions/binaryOrCategoricalPayouts.se
-- functions/scalarPayouts.se
-- functions/claimMarketProceeds.se
-- extensions/tradeAvailableOrders.se
++ functions/scalarPayouts.se
++ functions/claimMarketProceeds.se
 
 """
 from __future__ import division
@@ -2319,7 +2318,7 @@ def test_ClaimProceeds():
                 assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
                 assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
-            def test_userWithWinningShares():
+            def test_userWithHighSideShares():
                 global shareTokenContractTranslator
                 global outcomeShareContractWrapper
                 contracts._ContractLoader__state.mine(1)
@@ -2341,7 +2340,6 @@ def test_ClaimProceeds():
                 contracts._ContractLoader__state.mine(1)
                 transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
-                # outcomeID = "0.5"
                 outcomeID = "12.5"
                 assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
                 assert(contracts.events.getOutcome(eventID) == fix(outcomeID)), "Event outcome should be equal to value set"
@@ -2359,16 +2357,79 @@ def test_ClaimProceeds():
                 assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
                 assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
                 assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
-                # assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
-                import ipdb; ipdb.set_trace()
-                assert(contracts.scalarPayouts.payoutScalarMarket(t.a1, marketID, eventID, sender=t.k0) == 1), "payoutScalarMarket should complete successfully"
+                assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
+                # assert(contracts.scalarPayouts.payoutScalarMarket(t.a1, marketID, eventID, sender=t.k0) == 1), "payoutScalarMarket should complete successfully"
                 userFinalCash = contracts.cash.balanceOf(t.a1)
                 marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                fxpShare1Value = fxpMaxValue - fix(outcomeID)
+                fxpShare2Value = fix(outcomeID) - fxpMinValue
                 fxpTradingFee = contracts.markets.getTradingFee(marketID)
-                fxpFee = int(Decimal(userInitialOutcomeTwoShares) * Decimal(fxpTradingFee) / Decimal(10)**Decimal(18))
+                fxpShareValue = int(Decimal(fxpShare2Value) * Decimal(userInitialOutcomeTwoShares) / Decimal(10)**Decimal(18))
+                fxpFee = int(Decimal(fxpShareValue) * Decimal(fxpTradingFee) / Decimal(10)**Decimal(18))
+                fxpFeeSentToBranch = int(Decimal(fxpFee) - Decimal(fxpFee) / Decimal(2))
                 fxpFeeSentToMarketCreator = int(Decimal(fxpFee) / Decimal(2))
-                assert(userFinalCash == userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator), "User's final cash balance should be userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator"
-                assert(marketFinalCash == 0), "Market's final cash balance should be equal to 0"
+                assert(userFinalCash == userInitialCash + fxpShareValue - fxpFee + fxpFeeSentToMarketCreator), "User's final cash balance should be userInitialCash + fxpShareValue - fxpFee + fxpFeeSentToMarketCreator"
+                assert(marketFinalCash == marketInitialCash - fxpShareValue), "Market's final cash balance should be equal to 0"
+                userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                marketFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                assert(userFinalOutcomeOneShares == 0), "User's final outcome 1 shares balance should be equal to 0"
+                assert(userFinalOutcomeTwoShares == 0), "User's final outcome 2 shares balance should be 0"
+                assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
+                assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
+                contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
+            def test_userWithLowSideShares():
+                global shareTokenContractTranslator
+                global outcomeShareContractWrapper
+                contracts._ContractLoader__state.mine(1)
+                fxpEtherDepositValue = fix(100)
+                assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
+                contracts._ContractLoader__state.mine(1)
+                fxpMinValue = fix(5)
+                fxpMaxValue = fix(15)
+                eventID = createScalarEvent(fxpMinValue, fxpMaxValue)
+                marketID = createMarket(eventID)
+                outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
+                outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
+                outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
+                outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
+                contracts._ContractLoader__state.mine(1)
+                contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
+                fxpNumCompleteSets = fix(3)
+                buyCompleteSets(marketID, fxpNumCompleteSets)
+                contracts._ContractLoader__state.mine(1)
+                transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
+                assert(int(contracts._ContractLoader__state.send(t.k1, outcomeTwoShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 2 to address 0"
+                outcomeID = "12.5"
+                assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
+                assert(contracts.events.getOutcome(eventID) == fix(outcomeID)), "Event outcome should be equal to value set"
+                assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
+                contracts._ContractLoader__state.mine(1)
+                fxpCompleteSetsCost = int(Decimal(fxpNumCompleteSets) * Decimal(contracts.markets.getCumulativeScale(marketID)) / Decimal(10)**Decimal(18))
+                userInitialCash = contracts.cash.balanceOf(t.a1)
+                marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                assert(marketInitialCash == fxpCompleteSetsCost), "Market's initial cash balance should be equal to fxpNumCompleteSets"
+                userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                marketInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                assert(userInitialOutcomeOneShares == fxpNumCompleteSets), "User's initial outcome 1 shares balance should be fxpNumCompleteSets"
+                assert(userInitialOutcomeTwoShares == 0), "User's initial outcome 2 shares balance should be 0"
+                assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
+                assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
+                assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
+                # assert(contracts.scalarPayouts.payoutScalarMarket(t.a1, marketID, eventID, sender=t.k0) == 1), "payoutScalarMarket should complete successfully"
+                userFinalCash = contracts.cash.balanceOf(t.a1)
+                marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                fxpShare1Value = fxpMaxValue - fix(outcomeID)
+                fxpTradingFee = contracts.markets.getTradingFee(marketID)
+                fxpShareValue = int(Decimal(fxpShare1Value) * Decimal(userInitialOutcomeOneShares) / Decimal(10)**Decimal(18))
+                fxpFee = int(Decimal(fxpShareValue) * Decimal(fxpTradingFee) / Decimal(10)**Decimal(18))
+                fxpFeeSentToBranch = int(Decimal(fxpFee) - Decimal(fxpFee) / Decimal(2))
+                fxpFeeSentToMarketCreator = int(Decimal(fxpFee) / Decimal(2))
+                assert(userFinalCash == userInitialCash + fxpShareValue - fxpFee + fxpFeeSentToMarketCreator), "User's final cash balance should be userInitialCash + fxpShareValue - fxpFee + fxpFeeSentToMarketCreator"
+                assert(marketFinalCash == marketInitialCash - fxpShareValue), "Market's final cash balance should be equal to 0"
                 userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
                 userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
                 marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
@@ -2379,7 +2440,8 @@ def test_ClaimProceeds():
                 assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
             test_userWithoutShares()
-            test_userWithWinningShares()
+            test_userWithHighSideShares()
+            test_userWithLowSideShares()
         test_payoutScalarMarket()
     test_BinaryOrCategoricalPayouts()
     test_ScalarPayouts()
