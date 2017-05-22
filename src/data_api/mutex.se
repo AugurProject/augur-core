@@ -7,7 +7,7 @@ data mutex
 data controller
 
 def init():
-    self.controller = 0x0
+    self.controller = 0x01
 
 def acquire():
     if(self.mutex == 1):

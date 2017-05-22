@@ -9,7 +9,7 @@ event registration(sender: indexed, timestamp)
 data controller
 
 def init():
-    self.controller = 0x0
+    self.controller = 0x01
 
 def register():
     refund()

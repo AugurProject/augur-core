@@ -23,7 +23,7 @@ event Transfer(from: address: indexed, to: address: indexed, value: uint256)
 event Approval(owner: address: indexed, spender: address: indexed, value: uint256)
 
 def init():
-    self.controller = 0x0
+    self.controller = 0x01
     self.name = "Shares"
     self.symbol = "SHARE"
     self.decimals = 18

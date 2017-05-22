@@ -47,7 +47,7 @@ data branchListCount
 data controller
 
 def init():
-    self.controller = 0x0
+    self.controller = 0x01
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
     self.Branches[1010101].periodLength = 15
     # .2%
