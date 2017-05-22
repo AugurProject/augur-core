@@ -1953,12 +1953,210 @@ def test_DecreaseTradingFee():
     test_publicDecreaseTradingFee()
     test_exceptions()
 
-def test_BinaryOrCategoricalPayouts():
-    global contracts
-    t = contracts._ContractLoader__tester
-    def test_payoutBinaryOrCategoricalMarket():
-        def test_binary():
-            def test_userWithoutShares():
+def test_ClaimProceeds():
+    def test_BinaryOrCategoricalPayouts():
+        global contracts
+        t = contracts._ContractLoader__tester
+        def test_payoutBinaryOrCategoricalMarket():
+            def test_binary():
+                def test_userWithoutShares():
+                    contracts._ContractLoader__state.mine(1)
+                    eventID = createBinaryEvent()
+                    marketID = createMarket(eventID)
+                    outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
+                    outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
+                    outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
+                    outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
+                    contracts._ContractLoader__state.mine(1)
+                    contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
+                    outcomeID = 2
+                    assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
+                    assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
+                    contracts._ContractLoader__state.mine(1)
+                    userInitialCash = contracts.cash.balanceOf(t.a1)
+                    marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                    assert(marketInitialCash == 0), "Market's initial cash balance should be equal to 0"
+                    userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                    userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                    marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                    marketInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                    assert(userInitialOutcomeOneShares == 0), "User's initial outcome 1 shares balance should be equal to 0"
+                    assert(userInitialOutcomeTwoShares == 0), "User's initial outcome 2 shares balance should be 0"
+                    assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
+                    assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
+                    assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
+                    userFinalCash = contracts.cash.balanceOf(t.a1)
+                    marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                    assert(userFinalCash == userInitialCash), "User's cash balance should be unchanged"
+                    assert(marketFinalCash == 0), "Market's final cash balance should be equal to 0"
+                    userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                    userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                    marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                    marketFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                    assert(userFinalOutcomeOneShares == 0), "User's final outcome 1 shares balance should be equal to 0"
+                    assert(userFinalOutcomeTwoShares == 0), "User's final outcome 2 shares balance should be 0"
+                    assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
+                    assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
+                    contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
+                def test_userWithWinningShares():
+                    global shareTokenContractTranslator
+                    global outcomeShareContractWrapper
+                    contracts._ContractLoader__state.mine(1)
+                    fxpEtherDepositValue = fix(100)
+                    assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
+                    contracts._ContractLoader__state.mine(1)
+                    eventID = createBinaryEvent()
+                    marketID = createMarket(eventID)
+                    outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
+                    outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
+                    outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
+                    outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
+                    contracts._ContractLoader__state.mine(1)
+                    contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
+                    fxpNumCompleteSets = fix(3)
+                    buyCompleteSets(marketID, fxpNumCompleteSets)
+                    contracts._ContractLoader__state.mine(1)
+                    transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
+                    assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
+                    outcomeID = 2
+                    assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
+                    assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
+                    contracts._ContractLoader__state.mine(1)
+                    userInitialCash = contracts.cash.balanceOf(t.a1)
+                    marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                    assert(marketInitialCash == fxpNumCompleteSets), "Market's initial cash balance should be equal to fxpNumCompleteSets"
+                    userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                    userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                    marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                    marketInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                    assert(userInitialOutcomeOneShares == 0), "User's initial outcome 1 shares balance should be 0"
+                    assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
+                    assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
+                    assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
+                    assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
+                    userFinalCash = contracts.cash.balanceOf(t.a1)
+                    marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                    fxpTradingFee = contracts.markets.getTradingFee(marketID)
+                    fxpFee = int(Decimal(userInitialOutcomeTwoShares) * Decimal(fxpTradingFee) / Decimal(10)**Decimal(18))
+                    fxpFeeSentToMarketCreator = int(Decimal(fxpFee) / Decimal(2))
+                    assert(userFinalCash == userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator), "User's final cash balance should be userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator"
+                    assert(marketFinalCash == 0), "Market's final cash balance should be equal to 0"
+                    userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                    userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                    marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                    marketFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                    assert(userFinalOutcomeOneShares == 0), "User's final outcome 1 shares balance should be equal to 0"
+                    assert(userFinalOutcomeTwoShares == 0), "User's final outcome 2 shares balance should be 0"
+                    assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
+                    assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
+                    contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
+                test_userWithoutShares()
+                test_userWithWinningShares()
+            def test_categorical():
+                def test_userWithoutShares():
+                    contracts._ContractLoader__state.mine(1)
+                    numOutcomes = 3
+                    eventID = createCategoricalEvent(numOutcomes)
+                    marketID = createMarket(eventID)
+                    outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
+                    outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
+                    outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
+                    outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
+                    contracts._ContractLoader__state.mine(1)
+                    contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
+                    outcomeID = 2
+                    assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
+                    assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
+                    contracts._ContractLoader__state.mine(1)
+                    userInitialCash = contracts.cash.balanceOf(t.a1)
+                    marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                    assert(marketInitialCash == 0), "Market's initial cash balance should be equal to 0"
+                    userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                    userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                    marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                    marketInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                    assert(userInitialOutcomeOneShares == 0), "User's initial outcome 1 shares balance should be equal to 0"
+                    assert(userInitialOutcomeTwoShares == 0), "User's initial outcome 2 shares balance should be 0"
+                    assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
+                    assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
+                    assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
+                    userFinalCash = contracts.cash.balanceOf(t.a1)
+                    marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                    assert(userFinalCash == userInitialCash), "User's cash balance should be unchanged"
+                    assert(marketFinalCash == 0), "Market's final cash balance should be equal to 0"
+                    userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                    userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                    marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                    marketFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                    assert(userFinalOutcomeOneShares == 0), "User's final outcome 1 shares balance should be equal to 0"
+                    assert(userFinalOutcomeTwoShares == 0), "User's final outcome 2 shares balance should be 0"
+                    assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
+                    assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
+                    contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
+                def test_userWithWinningShares():
+                    global shareTokenContractTranslator
+                    global outcomeShareContractWrapper
+                    contracts._ContractLoader__state.mine(1)
+                    fxpEtherDepositValue = fix(100)
+                    assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
+                    contracts._ContractLoader__state.mine(1)
+                    numOutcomes = 3
+                    eventID = createCategoricalEvent(numOutcomes)
+                    marketID = createMarket(eventID)
+                    outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
+                    outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
+                    outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
+                    outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
+                    contracts._ContractLoader__state.mine(1)
+                    contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
+                    fxpNumCompleteSets = fix(3)
+                    buyCompleteSets(marketID, fxpNumCompleteSets)
+                    contracts._ContractLoader__state.mine(1)
+                    transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
+                    assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
+                    outcomeID = 2
+                    assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
+                    assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
+                    contracts._ContractLoader__state.mine(1)
+                    userInitialCash = contracts.cash.balanceOf(t.a1)
+                    marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                    assert(marketInitialCash == fxpNumCompleteSets), "Market's initial cash balance should be equal to fxpNumCompleteSets"
+                    userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                    userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                    marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                    marketInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                    assert(userInitialOutcomeOneShares == 0), "User's initial outcome 1 shares balance should be 0"
+                    assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
+                    assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
+                    assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
+                    assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
+                    userFinalCash = contracts.cash.balanceOf(t.a1)
+                    marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                    fxpTradingFee = contracts.markets.getTradingFee(marketID)
+                    fxpFee = int(Decimal(userInitialOutcomeTwoShares) * Decimal(fxpTradingFee) / Decimal(10)**Decimal(18))
+                    fxpFeeSentToMarketCreator = int(Decimal(fxpFee) / Decimal(2))
+                    assert(userFinalCash == userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator), "User's final cash balance should be userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator"
+                    assert(marketFinalCash == 0), "Market's final cash balance should be equal to 0"
+                    userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                    userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                    marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                    marketFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                    assert(userFinalOutcomeOneShares == 0), "User's final outcome 1 shares balance should be equal to 0"
+                    assert(userFinalOutcomeTwoShares == 0), "User's final outcome 2 shares balance should be 0"
+                    assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
+                    assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
+                    contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
+                test_userWithoutShares()
+                test_userWithWinningShares()
+            test_binary()
+            test_categorical()
+        def test_payoutIndeterminateBinaryOrCategoricalMarket():
+            def test_binary():
+                global shareTokenContractTranslator
+                global outcomeShareContractWrapper
+                contracts._ContractLoader__state.mine(1)
+                fxpEtherDepositValue = fix(100)
+                assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
                 contracts._ContractLoader__state.mine(1)
                 eventID = createBinaryEvent()
                 marketID = createMarket(eventID)
@@ -1968,8 +2166,127 @@ def test_BinaryOrCategoricalPayouts():
                 outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
                 contracts._ContractLoader__state.mine(1)
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
-                numOutcomes = 2
-                outcomeID = 2
+                fxpNumCompleteSets = fix(3)
+                buyCompleteSets(marketID, fxpNumCompleteSets)
+                contracts._ContractLoader__state.mine(1)
+                transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
+                assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
+                assert(contracts.events.setOutcome(eventID, fix("0.5"), sender=t.k0) == 1), "Should manually set event outcome"
+                assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
+                contracts._ContractLoader__state.mine(1)
+                userInitialCash = contracts.cash.balanceOf(t.a1)
+                marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                assert(marketInitialCash == fxpNumCompleteSets), "Market's initial cash balance should be equal to fxpNumCompleteSets"
+                userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                marketInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                assert(userInitialOutcomeOneShares == 0), "User's initial outcome 1 shares balance should be 0"
+                assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
+                assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
+                assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
+                assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
+                userFinalCash = contracts.cash.balanceOf(t.a1)
+                marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                fxpTradingFee = contracts.markets.getTradingFee(marketID)
+                fxpShareValue = int(Decimal(userInitialOutcomeTwoShares) / Decimal(2))
+                fxpFee = int(Decimal(fxpShareValue) * Decimal(fxpTradingFee) / Decimal(10)**Decimal(18))
+                fxpFeeSentToMarketCreator = int(Decimal(fxpFee) / Decimal(2))
+                assert(userFinalCash == userInitialCash + fxpShareValue - fxpFee + fxpFeeSentToMarketCreator), "User's final cash balance should be userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator"
+                assert(marketFinalCash == int(Decimal(marketInitialCash) / Decimal(2))), "Market's final cash balance should be equal to 0"
+                userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                marketFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                assert(userFinalOutcomeOneShares == 0), "User's final outcome 1 shares balance should be equal to 0"
+                assert(userFinalOutcomeTwoShares == 0), "User's final outcome 2 shares balance should be 0"
+                assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
+                assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
+                contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
+            def test_categorical():
+                global shareTokenContractTranslator
+                global outcomeShareContractWrapper
+                contracts._ContractLoader__state.mine(1)
+                fxpEtherDepositValue = fix(100)
+                assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
+                contracts._ContractLoader__state.mine(1)
+                numOutcomes = 3
+                eventID = createCategoricalEvent(numOutcomes)
+                marketID = createMarket(eventID)
+                outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
+                outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
+                outcomeThreeShareContract = contracts.markets.getOutcomeShareContract(marketID, 3)
+                outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
+                outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
+                outcomeThreeShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 3)
+                contracts._ContractLoader__state.mine(1)
+                contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
+                fxpNumCompleteSets = fix(3)
+                buyCompleteSets(marketID, fxpNumCompleteSets)
+                contracts._ContractLoader__state.mine(1)
+                transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
+                assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
+                assert(contracts.events.setOutcome(eventID, fix("0.5"), sender=t.k0) == 1), "Should manually set event outcome"
+                assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
+                contracts._ContractLoader__state.mine(1)
+                userInitialCash = contracts.cash.balanceOf(t.a1)
+                marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                assert(marketInitialCash == fxpNumCompleteSets), "Market's initial cash balance should be equal to fxpNumCompleteSets"
+                userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                userInitialOutcomeThreeShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 3)
+                marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                marketInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                marketInitialOutcomeThreeShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 3)
+                assert(userInitialOutcomeOneShares == 0), "User's initial outcome 1 shares balance should be 0"
+                assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
+                assert(userInitialOutcomeThreeShares == fxpNumCompleteSets), "User's initial outcome 3 shares balance should be 0"
+                assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
+                assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
+                assert(marketInitialOutcomeThreeShares == 0), "Market's initial outcome 3 shares balance should be 0"
+                assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
+                userFinalCash = contracts.cash.balanceOf(t.a1)
+                marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+                fxpTradingFee = contracts.markets.getTradingFee(marketID)
+                fxpShareValue = int(Decimal(userInitialOutcomeTwoShares) / Decimal(numOutcomes) * Decimal(2))
+                fxpFee = int(Decimal(fxpShareValue) * Decimal(fxpTradingFee) / Decimal(10)**Decimal(18))
+                fxpFeeSentToMarketCreator = int(Decimal(fxpFee) / Decimal(2))
+                assert(userFinalCash == userInitialCash + fxpShareValue - fxpFee + fxpFeeSentToMarketCreator - 1), "User's final cash balance should be userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator - 1 (rounding)"
+                assert(marketFinalCash == int(Decimal(marketInitialCash) / Decimal(3))), "Market's final cash balance should be equal to marketInitialCash / 3"
+                userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
+                userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
+                userFinalOutcomeThreeShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 3)
+                marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
+                marketFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
+                marketFinalOutcomeThreeShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeThreeShareWallet, 2)
+                assert(userFinalOutcomeOneShares == 0), "User's final outcome 1 shares balance should be equal to 0"
+                assert(userFinalOutcomeTwoShares == 0), "User's final outcome 2 shares balance should be 0"
+                assert(userFinalOutcomeThreeShares == 0), "User's final outcome 3 shares balance should be 0"
+                assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
+                assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
+                assert(marketFinalOutcomeThreeShares == 0), "Market's final outcome 3 shares balance should be 0"
+                contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
+            test_binary()
+            test_categorical()
+        test_payoutBinaryOrCategoricalMarket()
+        test_payoutIndeterminateBinaryOrCategoricalMarket()
+    def test_ScalarPayouts():
+        global contracts
+        t = contracts._ContractLoader__tester
+        def test_payoutScalarMarket():
+            def test_userWithoutShares():
+                contracts._ContractLoader__state.mine(1)
+                fxpMinValue = fix(5)
+                fxpMaxValue = fix(15)
+                eventID = createScalarEvent(fxpMinValue, fxpMaxValue)
+                marketID = createMarket(eventID)
+                outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
+                outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
+                outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
+                outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
+                contracts._ContractLoader__state.mine(1)
+                contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
+                outcomeID = "12.5"
                 assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
                 assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
                 contracts._ContractLoader__state.mine(1)
@@ -2005,7 +2322,9 @@ def test_BinaryOrCategoricalPayouts():
                 fxpEtherDepositValue = fix(100)
                 assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
                 contracts._ContractLoader__state.mine(1)
-                eventID = createBinaryEvent()
+                fxpMinValue = fix(5)
+                fxpMaxValue = fix(15)
+                eventID = createScalarEvent(fxpMinValue, fxpMaxValue)
                 marketID = createMarket(eventID)
                 outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
                 outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
@@ -2013,19 +2332,21 @@ def test_BinaryOrCategoricalPayouts():
                 outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
                 contracts._ContractLoader__state.mine(1)
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
-                numOutcomes = 2
-                outcomeID = 2
                 fxpNumCompleteSets = fix(3)
                 buyCompleteSets(marketID, fxpNumCompleteSets)
                 contracts._ContractLoader__state.mine(1)
                 transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
+                # outcomeID = "0.5"
+                outcomeID = "12.5"
                 assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
+                assert(contracts.events.getOutcome(eventID) == fix(outcomeID)), "Event outcome should be equal to value set"
                 assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
                 contracts._ContractLoader__state.mine(1)
+                fxpCompleteSetsCost = int(Decimal(fxpNumCompleteSets) * Decimal(contracts.markets.getCumulativeScale(marketID)) / Decimal(10)**Decimal(18))
                 userInitialCash = contracts.cash.balanceOf(t.a1)
                 marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-                assert(marketInitialCash == fxpNumCompleteSets), "Market's initial cash balance should be equal to fxpNumCompleteSets"
+                assert(marketInitialCash == fxpCompleteSetsCost), "Market's initial cash balance should be equal to fxpNumCompleteSets"
                 userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
                 userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
                 marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
@@ -2034,7 +2355,9 @@ def test_BinaryOrCategoricalPayouts():
                 assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
                 assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
                 assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
-                assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
+                # assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
+                import ipdb; ipdb.set_trace()
+                assert(contracts.scalarPayouts.payoutScalarMarket(t.a1, marketID, eventID, sender=t.k0) == 1), "payoutScalarMarket should complete successfully"
                 userFinalCash = contracts.cash.balanceOf(t.a1)
                 marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
                 fxpTradingFee = contracts.markets.getTradingFee(marketID)
@@ -2053,227 +2376,9 @@ def test_BinaryOrCategoricalPayouts():
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
             test_userWithoutShares()
             test_userWithWinningShares()
-        def test_categorical():
-            def test_userWithoutShares():
-                contracts._ContractLoader__state.mine(1)
-                numOutcomes = 3
-                eventID = createCategoricalEvent(numOutcomes)
-                marketID = createMarket(eventID)
-                outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
-                outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
-                outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
-                outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
-                contracts._ContractLoader__state.mine(1)
-                contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
-                outcomeID = 2
-                assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
-                assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
-                contracts._ContractLoader__state.mine(1)
-                userInitialCash = contracts.cash.balanceOf(t.a1)
-                marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-                assert(marketInitialCash == 0), "Market's initial cash balance should be equal to 0"
-                userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
-                userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
-                marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
-                marketInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
-                assert(userInitialOutcomeOneShares == 0), "User's initial outcome 1 shares balance should be equal to 0"
-                assert(userInitialOutcomeTwoShares == 0), "User's initial outcome 2 shares balance should be 0"
-                assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
-                assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
-                assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
-                userFinalCash = contracts.cash.balanceOf(t.a1)
-                marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-                assert(userFinalCash == userInitialCash), "User's cash balance should be unchanged"
-                assert(marketFinalCash == 0), "Market's final cash balance should be equal to 0"
-                userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
-                userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
-                marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
-                marketFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
-                assert(userFinalOutcomeOneShares == 0), "User's final outcome 1 shares balance should be equal to 0"
-                assert(userFinalOutcomeTwoShares == 0), "User's final outcome 2 shares balance should be 0"
-                assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
-                assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
-                contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
-            def test_userWithWinningShares():
-                global shareTokenContractTranslator
-                global outcomeShareContractWrapper
-                contracts._ContractLoader__state.mine(1)
-                fxpEtherDepositValue = fix(100)
-                assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
-                contracts._ContractLoader__state.mine(1)
-                numOutcomes = 3
-                eventID = createCategoricalEvent(numOutcomes)
-                marketID = createMarket(eventID)
-                outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
-                outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
-                outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
-                outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
-                contracts._ContractLoader__state.mine(1)
-                contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
-                outcomeID = 2
-                fxpNumCompleteSets = fix(3)
-                buyCompleteSets(marketID, fxpNumCompleteSets)
-                contracts._ContractLoader__state.mine(1)
-                transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
-                assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
-                assert(contracts.events.setOutcome(eventID, fix(outcomeID), sender=t.k0) == 1), "Should manually set event outcome"
-                assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
-                contracts._ContractLoader__state.mine(1)
-                userInitialCash = contracts.cash.balanceOf(t.a1)
-                marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-                assert(marketInitialCash == fxpNumCompleteSets), "Market's initial cash balance should be equal to fxpNumCompleteSets"
-                userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
-                userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
-                marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
-                marketInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
-                assert(userInitialOutcomeOneShares == 0), "User's initial outcome 1 shares balance should be 0"
-                assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
-                assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
-                assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
-                assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
-                userFinalCash = contracts.cash.balanceOf(t.a1)
-                marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-                fxpTradingFee = contracts.markets.getTradingFee(marketID)
-                fxpFee = int(Decimal(userInitialOutcomeTwoShares) * Decimal(fxpTradingFee) / Decimal(10)**Decimal(18))
-                fxpFeeSentToMarketCreator = int(Decimal(fxpFee) / Decimal(2))
-                assert(userFinalCash == userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator), "User's final cash balance should be userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator"
-                assert(marketFinalCash == 0), "Market's final cash balance should be equal to 0"
-                userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
-                userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
-                marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
-                marketFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
-                assert(userFinalOutcomeOneShares == 0), "User's final outcome 1 shares balance should be equal to 0"
-                assert(userFinalOutcomeTwoShares == 0), "User's final outcome 2 shares balance should be 0"
-                assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
-                assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
-                contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
-            test_userWithoutShares()
-            test_userWithWinningShares()
-        test_binary()
-        test_categorical()
-    def test_payoutIndeterminateBinaryOrCategoricalMarket():
-        def test_binary():
-            global shareTokenContractTranslator
-            global outcomeShareContractWrapper
-            contracts._ContractLoader__state.mine(1)
-            fxpEtherDepositValue = fix(100)
-            assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
-            contracts._ContractLoader__state.mine(1)
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
-            outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
-            outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
-            outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
-            outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
-            contracts._ContractLoader__state.mine(1)
-            contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
-            numOutcomes = 2
-            outcomeID = 2
-            fxpNumCompleteSets = fix(3)
-            buyCompleteSets(marketID, fxpNumCompleteSets)
-            contracts._ContractLoader__state.mine(1)
-            transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
-            assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
-            assert(contracts.events.setOutcome(eventID, fix("0.5"), sender=t.k0) == 1), "Should manually set event outcome"
-            assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
-            contracts._ContractLoader__state.mine(1)
-            userInitialCash = contracts.cash.balanceOf(t.a1)
-            marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-            assert(marketInitialCash == fxpNumCompleteSets), "Market's initial cash balance should be equal to fxpNumCompleteSets"
-            userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
-            userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
-            marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
-            marketInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
-            assert(userInitialOutcomeOneShares == 0), "User's initial outcome 1 shares balance should be 0"
-            assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
-            assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
-            assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
-            assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
-            userFinalCash = contracts.cash.balanceOf(t.a1)
-            marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-            fxpTradingFee = contracts.markets.getTradingFee(marketID)
-            fxpShareValue = int(Decimal(userInitialOutcomeTwoShares) / Decimal(2))
-            fxpFee = int(Decimal(fxpShareValue) * Decimal(fxpTradingFee) / Decimal(10)**Decimal(18))
-            fxpFeeSentToMarketCreator = int(Decimal(fxpFee) / Decimal(2))
-            assert(userFinalCash == userInitialCash + fxpShareValue - fxpFee + fxpFeeSentToMarketCreator), "User's final cash balance should be userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator"
-            assert(marketFinalCash == int(Decimal(marketInitialCash) / Decimal(2))), "Market's final cash balance should be equal to 0"
-            userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
-            userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
-            marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
-            marketFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
-            assert(userFinalOutcomeOneShares == 0), "User's final outcome 1 shares balance should be equal to 0"
-            assert(userFinalOutcomeTwoShares == 0), "User's final outcome 2 shares balance should be 0"
-            assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
-            assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
-            contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
-        def test_categorical():
-            global shareTokenContractTranslator
-            global outcomeShareContractWrapper
-            contracts._ContractLoader__state.mine(1)
-            fxpEtherDepositValue = fix(100)
-            assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
-            contracts._ContractLoader__state.mine(1)
-            numOutcomes = 3
-            eventID = createCategoricalEvent(numOutcomes)
-            marketID = createMarket(eventID)
-            outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
-            outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
-            outcomeThreeShareContract = contracts.markets.getOutcomeShareContract(marketID, 3)
-            outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
-            outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
-            outcomeThreeShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 3)
-            contracts._ContractLoader__state.mine(1)
-            contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
-            outcomeID = 2
-            fxpNumCompleteSets = fix(3)
-            buyCompleteSets(marketID, fxpNumCompleteSets)
-            contracts._ContractLoader__state.mine(1)
-            transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
-            assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
-            assert(contracts.events.setOutcome(eventID, fix("0.5"), sender=t.k0) == 1), "Should manually set event outcome"
-            assert(contracts.markets.setMarketResolved(marketID, sender=t.k0) == 1), "Should manually set market resolved"
-            contracts._ContractLoader__state.mine(1)
-            userInitialCash = contracts.cash.balanceOf(t.a1)
-            marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-            assert(marketInitialCash == fxpNumCompleteSets), "Market's initial cash balance should be equal to fxpNumCompleteSets"
-            userInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
-            userInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
-            userInitialOutcomeThreeShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 3)
-            marketInitialOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
-            marketInitialOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
-            marketInitialOutcomeThreeShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 3)
-            assert(userInitialOutcomeOneShares == 0), "User's initial outcome 1 shares balance should be 0"
-            assert(userInitialOutcomeTwoShares == fxpNumCompleteSets), "User's initial outcome 2 shares balance should be fxpNumCompleteSets"
-            assert(userInitialOutcomeThreeShares == fxpNumCompleteSets), "User's initial outcome 3 shares balance should be 0"
-            assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
-            assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
-            assert(marketInitialOutcomeThreeShares == 0), "Market's initial outcome 3 shares balance should be 0"
-            assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
-            userFinalCash = contracts.cash.balanceOf(t.a1)
-            marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-            fxpTradingFee = contracts.markets.getTradingFee(marketID)
-            fxpShareValue = int(Decimal(userInitialOutcomeTwoShares) / Decimal(numOutcomes) * Decimal(2))
-            fxpFee = int(Decimal(fxpShareValue) * Decimal(fxpTradingFee) / Decimal(10)**Decimal(18))
-            fxpFeeSentToMarketCreator = int(Decimal(fxpFee) / Decimal(2))
-            assert(userFinalCash == userInitialCash + fxpShareValue - fxpFee + fxpFeeSentToMarketCreator - 1), "User's final cash balance should be userInitialCash + userInitialOutcomeTwoShares - fxpFee + fxpFeeSentToMarketCreator - 1 (rounding)"
-            assert(marketFinalCash == int(Decimal(marketInitialCash) / Decimal(3))), "Market's final cash balance should be equal to marketInitialCash / 3"
-            userFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1)
-            userFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
-            userFinalOutcomeThreeShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 3)
-            marketFinalOutcomeOneShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeOneShareWallet, 1)
-            marketFinalOutcomeTwoShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeTwoShareWallet, 2)
-            marketFinalOutcomeThreeShares = contracts.markets.getParticipantSharesPurchased(marketID, outcomeThreeShareWallet, 2)
-            assert(userFinalOutcomeOneShares == 0), "User's final outcome 1 shares balance should be equal to 0"
-            assert(userFinalOutcomeTwoShares == 0), "User's final outcome 2 shares balance should be 0"
-            assert(userFinalOutcomeThreeShares == 0), "User's final outcome 3 shares balance should be 0"
-            assert(marketFinalOutcomeOneShares == 0), "Market's final outcome 1 shares balance should be 0"
-            assert(marketFinalOutcomeTwoShares == 0), "Market's final outcome 2 shares balance should be 0"
-            assert(marketFinalOutcomeThreeShares == 0), "Market's final outcome 3 shares balance should be 0"
-            contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
-        test_binary()
-        test_categorical()
-    test_payoutBinaryOrCategoricalMarket()
-    test_payoutIndeterminateBinaryOrCategoricalMarket()
+        test_payoutScalarMarket()
+    test_BinaryOrCategoricalPayouts()
+    test_ScalarPayouts()
 
 def runtests():
     test_Cash()
@@ -2288,7 +2393,7 @@ def runtests():
     test_TakeBidOrder()
     test_TakeOrder()
     test_DecreaseTradingFee()
-    test_BinaryOrCategoricalPayouts()
+    test_ClaimProceeds()
 
 if __name__ == '__main__':
     runtests()
