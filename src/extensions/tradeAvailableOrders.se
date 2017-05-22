@@ -13,8 +13,7 @@ inset('../macros/refund.sem')
 data controller
 
 # Minimum gas needed to execute the trade function.
-# TODO update with profiled value from the new trade function
-macro MINIMUM_GAS_NEEDED_TO_TRADE: 787421
+macro MINIMUM_GAS_NEEDED_TO_TRADE: 300000
 
 # tradeAvailableOrders [fills the orderIDs in the orderIDs array with a balance at or above fxpMinimumOrderBalance]
 # @param amountTakerWants Number of shares to take (buy or sell).
