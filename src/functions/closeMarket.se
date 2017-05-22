@@ -57,13 +57,7 @@ def publicCloseMarket(market, sender):
 
 def internalCloseMarket(market, sender):
     self.controller.assertIsWhitelisted(msg.sender)
-    event = MARKETS.getMarketEvent(market)
-    branch = EVENTS.getEventBranch(event)
-    expiration = EVENTS.getExpiration(event)
-    periodLength = BRANCHES.getPeriodLength(branch)
-    votingPeriodEvent = expiration / periodLength
-    period = BRANCHES.getVotePeriod(branch)
-    fxpOutcome = EVENTS.getOutcome(event)
+    branch = EVENTS.getEventBranch(MARKETS.getMarketEvent(market))
 
     # refunds closing cost
     MARKETS.refundClosing(market, sender)

@@ -58,9 +58,9 @@ macro COST_FOR_MARKET_RESOLUTION: 1000000
 def init():
     self.controller = 0x0
 
-def publicCreateMarket(branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
+def publicCreateMarket(branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency, marketDenominatedIn, outcomeDenominatedIn):
     MUTEX.acquire()
-    market = self.createMarket(msg.sender, branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo, currency, value=msg.value)
+    market = self.createMarket(msg.sender, branch, fxpTradingFee, event, tag1, tag2, tag3, extraInfo, currency, marketDenominatedIn, outcomeDenominatedIn, value=msg.value)
     MUTEX.release()
     return(market)
 
@@ -88,12 +88,13 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
 
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
-    creationFee = safeFxpDiv(POINT_ZERO_THREE * baseReporters, fxpTradingFee)
-    # gives ether/cash amount in fixed point
-    minFee = safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice)
-    creationFee = max(minFee, creationFee)
-    if(!creationFee):
-        ~invalid()
+    if(fxpTradingFee):
+        creationFee = safeFxpDiv(POINT_ZERO_THREE * baseReporters, fxpTradingFee)
+        # gives ether/cash amount in fixed point
+        minFee = safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice)
+        creationFee = max(minFee, creationFee)
+        if(!creationFee):
+            ~invalid()
     period = block.timestamp / TWENTY_FOUR_HR
     numOutcomes = EVENTS.getNumOutcomes(event)
     cumulativeScale = 0
@@ -112,7 +113,7 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
         cumulativeScale = WEI_TO_ETH
 
     # 0 fees for markets denominated in other outcomes
-    if(currency != BRANCHES.getCurrentETHWrapper(branch) && fxpTradingFee >0):
+    if(currency != BRANCHES.getCurrentETHWrapper(branch) && fxpTradingFee > 0):
         ~invalid()
 
     # formation of market (hash)
@@ -153,7 +154,7 @@ def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event,
         ~invalid()
     if(!periodLength):
         ~invalid()
-    if(fxpTradingFee < BRANCHES.getMinTradingFee(branch)):
+    if(fxpTradingFee and fxpTradingFee < BRANCHES.getMinTradingFee(branch)):
         ~invalid()
     if(EVENTS.getEventBranch(event) != branch):
         ~invalid()
@@ -166,7 +167,7 @@ def checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event,
     return(1)
 
 # initialize market and send money to pay for resolution
-def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo: str, expirationDate, shareContracts: arr, shareWallets: arr, marketDenominatedIn, shareContract, outcomeDenominatedIn):
+def makeMarket(sender: address, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo: str, expirationDate, shareContracts: arr, shareWallets: arr, marketDenominatedIn, outcomeDenominatedIn):
     if(msg.sender != self):
         ~invalid()
     currentETHWrapper = BRANCHES.getCurrentETHWrapper(branch)
