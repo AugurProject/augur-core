@@ -3,6 +3,7 @@
 extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
 
 inset('../macros/refund.sem')
+inset('../macros/unitConversions.sem')
 
 # Every entity in our contract has similar metadata.
 # Instead of putting it in each entity, we put all the metadata here.
