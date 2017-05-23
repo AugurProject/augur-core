@@ -28,6 +28,7 @@ data controller
 def init():
     self.controller = 0x01
 
+# @internal
 def payoutScalarMarket(sender: address, market: address, event: address):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
@@ -37,7 +38,7 @@ def payoutScalarMarket(sender: address, market: address, event: address):
     minValue = EVENTS.getMinValue(event)
     maxValue = EVENTS.getMaxValue(event)
     currency = INFO.getCurrency(market)
-    branch = EVENTS.getExpiration(MARKETS.getMarketEvent(market))
+    branch = EVENTS.getEventBranch(MARKETS.getMarketEvent(market))
 
     # Price is in fixed point
     # Share two goes with the high/long side
@@ -57,7 +58,9 @@ def payoutScalarMarket(sender: address, market: address, event: address):
             if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                 ~invalid()
         if(fee != 0):
-            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2))):
+                ~invalid()
+            if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                 ~invalid()
 
     # High side (of the scalar part)
@@ -70,7 +73,9 @@ def payoutScalarMarket(sender: address, market: address, event: address):
             if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                 ~invalid()
         if(fee != 0):
-            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+            if(!INFO.getWallet(market).transfer(BRANCHES.getBranchWallet(branch, currency), fee - safeDiv(fee, 2))):
+                ~invalid()
+            if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                 ~invalid()
     return(1: uint256)
 
