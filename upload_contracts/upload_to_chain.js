@@ -3,6 +3,7 @@
 "use strict";
 
 var fs = require("fs");
+var join = require("path").join;
 var cp = require("child_process");
 var async = require("async");
 var abi = require("augur-abi");
@@ -93,9 +94,8 @@ rpc.connect({
               if (err) return console.error(err);
               var allContractAddresses = JSON.parse(data);
               allContractAddresses[rpc.getNetworkID()] = contractAddresses;
-              fs.writeFile("contracts.json", JSON.stringify(allContractAddresses, null, 2), "utf8", (err) => {
+              fs.writeFile(join(process.env.AUGUR_CONTRACTS, "contracts.json"), JSON.stringify(allContractAddresses, null, 2), "utf8", (err) => {
                 if (err) console.error(err);
-                console.log("Wrote addresses to contracts.json");
                 process.exit(0);
               });
             });
