@@ -4,22 +4,17 @@ from __future__ import division
 import os
 import sys
 import json
-import ethereum
 import iocapture
+import ethereum.tester
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
-sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
-
-from upload_contracts import ContractLoader
-
-contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
+src = os.path.join(ROOT, "src")
 
 WEI_TO_ETH = 10**18
 TWO = 2*WEI_TO_ETH
 HALF = WEI_TO_ETH/2
 
-def test_backstops():
-    global contracts
+def test_backstops(contracts):
     t = contracts._ContractLoader__tester
     s = contracts._ContractLoader__state
     c = contracts.backstops
@@ -245,8 +240,7 @@ def test_backstops():
     # test_misc()
     print("data_api/backstops.se unit tests completed")
 
-def test_branches():
-    global contracts
+def test_branches(contracts):
     t = contracts._ContractLoader__tester
     s = contracts._ContractLoader__state
     c = contracts.branches
@@ -416,8 +410,7 @@ def test_branches():
     test_edits()
     print("data_api/branches.se unit tests completed")
 
-def test_consensusData():
-    global contracts
+def test_consensusData(contracts):
     t = contracts._ContractLoader__tester
     s = contracts._ContractLoader__state
     c = contracts.consensusData
@@ -516,8 +509,7 @@ def test_consensusData():
     test_refund()
     print("data_api/consensusData.se unit tests completed")
 
-def test_events():
-    global contracts
+def test_events(contracts):
     t = contracts._ContractLoader__tester
     s = contracts._ContractLoader__state
     c = contracts.events
@@ -690,8 +682,7 @@ def test_events():
     test_rejection()
     print("data_api/events.se unit tests completed")
 
-def test_expiringEvents():
-    global contracts
+def test_expiringEvents(contracts):
     t = contracts._ContractLoader__tester
     s = contracts._ContractLoader__state
     c = contracts.expiringEvents
@@ -871,8 +862,7 @@ def test_expiringEvents():
     test_eventModification()
     print("data_api/expiringEvents.se unit tests completed")
 
-def test_info():
-    global contracts
+def test_info(contracts):
     t = contracts._ContractLoader__tester
     s = contracts._ContractLoader__state
     c = contracts.info
@@ -918,8 +908,7 @@ def test_info():
     test_setInfo()
     print("data_api/info.se unit tests completed")
 
-def test_markets():
-    global contracts
+def test_markets(contracts):
     t = contracts._ContractLoader__tester
     s = contracts._ContractLoader__state
     c = contracts.markets
@@ -959,7 +948,7 @@ def test_markets():
     address0 = long(t.a0.encode("hex"), 16)
     address1 = long(t.a1.encode("hex"), 16)
 
-    def test_marketInialization():
+    def test_initializeMarket():
         assert(c.getMarketsHash(branch1) == 0), "getMarketsHash for branch1 should be defaulted to 0"
         assert(c.initializeMarket(market1, event1, period1, twoPercent, branch1, tag1, tag2, tag3, WEI_TO_ETH, 2, 'this is extra information', gasSubsidy1, creationFee1, expirationDate1, shareContracts, walletContracts, value=gasSubsidy1) == 1), "initializeMarket wasn't executed successfully"
         assert(c.getMarketsHash(branch1) != 0), "marketsHash should no longer be set to 0"
@@ -1069,14 +1058,13 @@ def test_markets():
         assert(s.block.get_balance(t.a1) == addr1Bal + gasSubsidy1), "the balance of address1 should now be it's previous balance + the gasSubsidy1 from market1"
 
 
-    test_marketInialization()
+    test_initializeMarket()
     # test_marketOrders()
     test_marketShares()
     test_marketSettings()
     print("data_api/markets.se unit tests complete")
 
-def test_mutex():
-    global contracts
+def test_mutex(contracts):
     t = contracts._ContractLoader__tester
     s = contracts._ContractLoader__state
     c = contracts.mutex
@@ -1088,8 +1076,7 @@ def test_mutex():
     assert(c.release() == 1), "release shoud return 1 and release the mutex"
     print("data_api/mutex.se unit tests completed")
 
-def test_orders():
-    global contracts
+def test_orders(contracts):
     t = contracts._ContractLoader__tester
     s = contracts._ContractLoader__state
     c = contracts.orders
@@ -1176,8 +1163,7 @@ def test_orders():
     test_removeOrder()
     print("data_api/orders.se unit tests completed")
 
-def test_topics():
-    global contracts
+def test_topics(contracts):
     t = contracts._ContractLoader__tester
     s = contracts._ContractLoader__state
     c = contracts.topics
@@ -1220,17 +1206,16 @@ def test_topics():
     print("data_api/topics.se unit tests completed")
 
 if __name__ == '__main__':
-    print "BEGIN TESTING DATA_API"
-    test_backstops()
-    test_branches()
-    test_consensusData()
-    test_events()
-    test_expiringEvents()
-    test_info()
-    test_markets()
-    test_mutex()
-    test_orders()
-    test_topics()
-    # data_api/reporting.se
-    # data_api/reportingThreshold.se
-    print "FINISH TESTING DATA_API"
+    sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
+    from upload_contracts import ContractLoader
+    contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
+    test_backstops(contracts)
+    test_branches(contracts)
+    test_consensusData(contracts)
+    test_events(contracts)
+    test_expiringEvents(contracts)
+    test_info(contracts)
+    test_markets(contracts)
+    test_mutex(contracts)
+    test_orders(contracts)
+    test_topics(contracts)
