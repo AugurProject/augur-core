@@ -21,6 +21,7 @@ HALF = WEI_TO_ETH/2
 def test_backstops():
     global contracts
     t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.backstops
     event1 = 1234
     event2 = 5678
@@ -247,6 +248,7 @@ def test_backstops():
 def test_branches():
     global contracts
     t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.branches
     branch1 = 1010101
     branch2 = 2020202
@@ -417,6 +419,7 @@ def test_branches():
 def test_consensusData():
     global contracts
     t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.consensusData
     branch1 = 1010101
     period1 = contracts.branches.getVotePeriod(branch1)
@@ -516,6 +519,7 @@ def test_consensusData():
 def test_events():
     global contracts
     t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.events
     event1 = 1234
     branch1 = 1010101
@@ -689,6 +693,7 @@ def test_events():
 def test_expiringEvents():
     global contracts
     t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.expiringEvents
     branch1 = 1010101
     branch2 = 2020202
@@ -869,6 +874,7 @@ def test_expiringEvents():
 def test_info():
     global contracts
     t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.info
     branch1 = 1010101
     branch2 = 2020202
@@ -915,6 +921,7 @@ def test_info():
 def test_markets():
     global contracts
     t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.markets
     branch1 = 1010101
     market1 = 1111111111
@@ -1071,6 +1078,7 @@ def test_markets():
 def test_mutex():
     global contracts
     t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.mutex
     assert(c.acquire() == 1), "acquire should return 1 if the mutex isn't already set."
     try:
@@ -1083,6 +1091,7 @@ def test_mutex():
 def test_orders():
     global contracts
     t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.orders
     market1 = 1111111111
     address0 = long(t.a0.encode("hex"), 16)
@@ -1170,6 +1179,7 @@ def test_orders():
 def test_topics():
     global contracts
     t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.topics
     branch1 = 1010101
     # topic0 is the topic added from the markets tests
