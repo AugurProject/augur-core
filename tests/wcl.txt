@@ -8,6 +8,7 @@ Filling a bid [so selling]:
         - The maker is placing a bid for n shares at x each and has shares escrowed in every outcome except the one bidding on. Taker fills the bid at x for n shares and has n shares. These n shares are sent to the maker. The maker's now formed complete sets are then sold and (x - min)*n ETH are sent to the taker. The maker ends up with (max - x)*n ETH proceeds after closing their short.
     maker escrowed cash, taker has shares in this outcome /// maker is going long, taker is closing a long position:
         - The maker is placing a bid for n shares at x each, costing them (x - min)*n ETH in escrow with the market. Taker fills the bid at x for n shares and already has n shares. These n shares are sent to the maker. The maker's (x - min)*n ETH are then sent to the taker.
+
 Filling an ask [so buying]:
     maker escrowed shares in this outcome, taker does not have shares in all outcomes except this one /// maker is closing a long position, taker is going long:
         - The maker had n shares escrowed by placing an ask for n shares @ x each. Taker fills an ask at x for n shares, they should spend (price - min)*n ETH on this trade and end up with n more shares of the outcome. The maker should receive (price - min)*n ETH and not have access to those n shares anymore [like they shouldn't be able to cancel their order and get the 10 shares back, they've gone from their account -> market -> taker]. The market should no longer have those n shares in escrow.

@@ -22,20 +22,16 @@ from __future__ import division
 import os
 import sys
 import json
-import ethereum
 import iocapture
+import ethereum.tester
 from decimal import *
 
-ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
-sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
-
-from upload_contracts import ContractLoader
-
-contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
+eventCreationCounter = 0
 
 shareTokenContractTranslator = ethereum.abi.ContractTranslator('[{"constant": false, "type": "function", "name": "allowance(address,address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "address", "name": "spender"}]}, {"constant": false, "type": "function", "name": "approve(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "spender"}, {"type": "uint256", "name": "value"}]}, {"constant": false, "type": "function", "name": "balanceOf(address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "address"}]}, {"constant": false, "type": "function", "name": "changeTokens(int256,int256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "int256", "name": "trader"}, {"type": "int256", "name": "amount"}]}, {"constant": false, "type": "function", "name": "createShares(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "uint256", "name": "fxpValue"}]}, {"constant": false, "type": "function", "name": "destroyShares(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "uint256", "name": "fxpValue"}]}, {"constant": false, "type": "function", "name": "getDecimals()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "getName()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "getSymbol()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "modifySupply(int256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "int256", "name": "amount"}]}, {"constant": false, "type": "function", "name": "setController(address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "newController"}]}, {"constant": false, "type": "function", "name": "suicideFunds(address)", "outputs": [], "inputs": [{"type": "address", "name": "to"}]}, {"constant": false, "type": "function", "name": "totalSupply()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "transfer(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "to"}, {"type": "uint256", "name": "value"}]}, {"constant": false, "type": "function", "name": "transferFrom(address,address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "from"}, {"type": "address", "name": "to"}, {"type": "uint256", "name": "value"}]}, {"inputs": [{"indexed": true, "type": "address", "name": "owner"}, {"indexed": true, "type": "address", "name": "spender"}, {"indexed": false, "type": "uint256", "name": "value"}], "type": "event", "name": "Approval(address,address,uint256)"}, {"inputs": [{"indexed": true, "type": "address", "name": "from"}, {"indexed": true, "type": "address", "name": "to"}, {"indexed": false, "type": "uint256", "name": "value"}], "type": "event", "name": "Transfer(address,address,uint256)"}, {"inputs": [{"indexed": false, "type": "int256", "name": "from"}, {"indexed": false, "type": "int256", "name": "to"}, {"indexed": false, "type": "int256", "name": "value"}, {"indexed": false, "type": "int256", "name": "senderBalance"}, {"indexed": false, "type": "int256", "name": "sender"}, {"indexed": false, "type": "int256", "name": "spenderMaxValue"}], "type": "event", "name": "echo(int256,int256,int256,int256,int256,int256)"}]')
 
-outcomeShareContractWrapper = contracts._ContractLoader__state.abi_contract("""
+def makeOutcomeShareContractWrapper(contracts):
+    return contracts._ContractLoader__state.abi_contract("""
 extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, changeTokens:[int256,int256]:int256, createShares:[address,uint256]:int256, destroyShares:[address,uint256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, modifySupply:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
 
 def approve(shareContract: address, spender: address, value: uint256):
@@ -53,8 +49,6 @@ def totalSupply(shareContract: address):
 def balanceOf(shareContract: address, address: address):
     return(shareContract.balanceOf(address))
 """)
-
-eventCreationCounter = 0
 
 def fix(n):
     return int((Decimal(str(n)) * Decimal(10)**Decimal(18)).quantize(0))
@@ -76,9 +70,8 @@ def parseCapturedLogs(logs):
         return arrayOfParsedLogs[0]
     return arrayOfParsedLogs
 
-def createBinaryEvent():
+def createBinaryEvent(contracts):
     global eventCreationCounter
-    global contracts
     t = contracts._ContractLoader__tester
     contracts.cash.publicDepositEther(value=fix(100), sender=t.k1)
     contracts.cash.approve(contracts.createEvent.address, fix(100), sender=t.k1)
@@ -96,9 +89,8 @@ def createBinaryEvent():
     forkResolveAddress = contracts.forkResolution.address
     return contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
 
-def createCategoricalEvent(numOutcomes=8):
+def createCategoricalEvent(contracts, numOutcomes=8):
     global eventCreationCounter
-    global contracts
     t = contracts._ContractLoader__tester
     contracts.cash.publicDepositEther(value=fix(100), sender=t.k1)
     contracts.cash.approve(contracts.createEvent.address, fix(100), sender=t.k1)
@@ -115,9 +107,8 @@ def createCategoricalEvent(numOutcomes=8):
     forkResolveAddress = contracts.forkResolution.address
     return contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
 
-def createScalarEvent(fxpMinValue=fix(1), fxpMaxValue=fix(10)):
+def createScalarEvent(contracts, fxpMinValue=fix(1), fxpMaxValue=fix(10)):
     global eventCreationCounter
-    global contracts
     t = contracts._ContractLoader__tester
     contracts.cash.publicDepositEther(value=fix(100), sender=t.k1)
     contracts.cash.approve(contracts.createEvent.address, fix(100), sender=t.k1)
@@ -133,17 +124,16 @@ def createScalarEvent(fxpMinValue=fix(1), fxpMaxValue=fix(10)):
     forkResolveAddress = contracts.forkResolution.address
     return contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
 
-def createEventType(eventType):
+def createEventType(contracts, eventType):
     if eventType == "binary":
-        eventID = createBinaryEvent()
+        eventID = createBinaryEvent(contracts)
     elif eventType == "scalar":
-        eventID = createScalarEvent()
+        eventID = createScalarEvent(contracts)
     else:
-        eventID = createCategoricalEvent()
+        eventID = createCategoricalEvent(contracts)
     return eventID
 
-def createMarket(eventID):
-    global contracts
+def createMarket(contracts, eventID):
     t = contracts._ContractLoader__tester
     contracts.cash.approve(contracts.createMarket.address, fix(10000), sender=t.k1)
     branch = 1010101
@@ -155,8 +145,7 @@ def createMarket(eventID):
     currency = contracts.cash.address
     return contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, 0, 0, sender=t.k1, value=fix(10000))
 
-def buyCompleteSets(marketID, fxpAmount, sender=None):
-    global contracts
+def buyCompleteSets(contracts, marketID, fxpAmount, sender=None):
     t = contracts._ContractLoader__tester
     if sender is None: sender = t.k1
     assert(contracts.cash.approve(contracts.completeSets.address, fix(10000), sender=sender) == 1), "Approve completeSets contract to spend cash"
@@ -171,8 +160,7 @@ def buyCompleteSets(marketID, fxpAmount, sender=None):
     assert(logCompleteSets["numOutcomes"] == contracts.markets.getMarketNumOutcomes(marketID)), "Logged numOutcomes should market's number of outcomes"
     assert(logCompleteSets["market"] == marketID), "Logged market should match input"
 
-def test_Cash():
-    global contracts
+def test_Cash(contracts):
     t = contracts._ContractLoader__tester
     address1 = long(t.a1.encode("hex"), 16)
     address2 = long(t.a2.encode("hex"), 16)
@@ -304,8 +292,7 @@ def test_Cash():
     test_suicideFunds()
     test_exceptions()
 
-def test_ShareTokens():
-    global contracts
+def test_ShareTokens(contracts):
     t = contracts._ContractLoader__tester
     address1 = long(t.a1.encode("hex"), 16)
     address2 = long(t.a2.encode("hex"), 16)
@@ -429,8 +416,7 @@ def test_ShareTokens():
     test_suicideFunds()
     test_exceptions()
 
-def test_Wallet():
-    global contracts
+def test_Wallet(contracts):
     t = contracts._ContractLoader__tester
     def test_initialize():
         contracts._ContractLoader__state.mine(1)
@@ -485,8 +471,7 @@ def test_Wallet():
     test_suicideFunds()
 
 # TODO update create event tests pending final review of contract
-def test_CreateEvent():
-    global contracts
+def test_CreateEvent(contracts):
     t = contracts._ContractLoader__tester
     def test_checkEventCreationPreconditions():
         contracts._ContractLoader__state.mine(1)
@@ -533,8 +518,7 @@ def test_CreateEvent():
     test_publicCreateEvent()
 
 # TODO update create market tests pending final review of contract
-def test_CreateMarket():
-    global contracts
+def test_CreateMarket(contracts):
     t = contracts._ContractLoader__tester
     def test_publicCreateMarket():
         contracts._ContractLoader__state.mine(1)
@@ -571,14 +555,13 @@ def test_CreateMarket():
         marketID2 = contracts.createMarket.publicCreateMarket(branch, 0, eventID, tag1, tag2, tag3, extraInfo, contracts.markets.getOutcomeShareContract(marketID, 1), marketID, 1, sender=t.k1, value=fix(10000))
     test_publicCreateMarket()
 
-def test_CompleteSets():
-    global contracts
+def test_CompleteSets(contracts):
     t = contracts._ContractLoader__tester
     address1 = long(t.a1.encode("hex"), 16)
     def test_publicBuyCompleteSets():
         contracts._ContractLoader__state.mine(1)
-        eventID = createBinaryEvent()
-        marketID = createMarket(eventID)
+        eventID = createBinaryEvent(contracts)
+        marketID = createMarket(contracts, eventID)
         fxpAmount = fix(10)
         senderInitialCash = contracts.cash.balanceOf(t.a1)
         marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -603,8 +586,8 @@ def test_CompleteSets():
         assert(contracts.markets.getTotalSharesPurchased(marketID) - marketInitialTotalShares == 2*fxpAmount), "Increase in total shares purchased for this market should be 18"
         def test_exceptions():
             contracts._ContractLoader__state.mine(1)
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
+            eventID = createBinaryEvent(contracts)
+            marketID = createMarket(contracts, eventID)
             fxpAmount = fix(10)
             assert(contracts.cash.approve(contracts.completeSets.address, fxpAmount, sender=t.k1) == 1), "Approve completeSets contract to spend cash"
 
@@ -637,9 +620,9 @@ def test_CompleteSets():
         test_exceptions()
     def test_publicSellCompleteSets():
         contracts._ContractLoader__state.mine(1)
-        eventID = createBinaryEvent()
-        marketID = createMarket(eventID)
-        buyCompleteSets(marketID, fix(10))
+        eventID = createBinaryEvent(contracts)
+        marketID = createMarket(contracts, eventID)
+        buyCompleteSets(contracts, marketID, fix(10))
         fxpAmount = fix(9)
         senderInitialCash = contracts.cash.balanceOf(t.a1)
         marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -661,10 +644,10 @@ def test_CompleteSets():
         assert(marketInitialTotalShares - contracts.markets.getTotalSharesPurchased(marketID) == 2*fxpAmount), "Decrease in total shares purchased for this market should be 18"
         def test_exceptions():
             contracts._ContractLoader__state.mine(1)
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
+            eventID = createBinaryEvent(contracts)
+            marketID = createMarket(contracts, eventID)
             fxpAmount = fix(10)
-            buyCompleteSets(marketID, fxpAmount)
+            buyCompleteSets(contracts, marketID, fxpAmount)
 
             # Permissions exceptions
             contracts._ContractLoader__state.mine(1)
@@ -695,8 +678,7 @@ def test_CompleteSets():
     test_publicBuyCompleteSets()
     test_publicSellCompleteSets()
 
-def test_MakeOrder():
-    global contracts
+def test_MakeOrder(contracts):
     t = contracts._ContractLoader__tester
     address1 = long(t.a1.encode("hex"), 16)
     def test_usingMarketType(marketType):
@@ -708,8 +690,8 @@ def test_MakeOrder():
                 fxpPrice = fix("1.6")
                 outcomeID = 2
                 tradeGroupID = 42
-                eventID = createEventType(marketType)
-                marketID = createMarket(eventID)
+                eventID = createEventType(contracts, marketType)
+                marketID = createMarket(contracts, eventID)
                 assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
                 makerInitialCash = contracts.cash.balanceOf(t.a1)
                 marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -747,7 +729,7 @@ def test_MakeOrder():
                 # 3. Account 2: take account 1's ask order for outcome 2
                 # 4. Account 1: make bid order for outcome 2
                 global shareTokenContractTranslator
-                global outcomeShareContractWrapper
+                outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
                 contracts._ContractLoader__state.mine(1)
                 assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
                 assert(contracts.cash.publicDepositEther(value=fix(100), sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
@@ -756,15 +738,15 @@ def test_MakeOrder():
                 fxpPrice = fix("1.6")
                 outcomeID = 2
                 tradeGroupID = 42
-                eventID = createEventType(marketType)
-                marketID = createMarket(eventID)
+                eventID = createEventType(contracts, marketType)
+                marketID = createMarket(contracts, eventID)
                 outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
                 outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
                 outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
                 outcomeTwoShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 2)
                 # 1. Account 1: buy complete sets
                 contracts._ContractLoader__state.mine(1)
-                buyCompleteSets(marketID, fxpAmount)
+                buyCompleteSets(contracts, marketID, fxpAmount)
                 assert(outcomeShareContractWrapper.balanceOf(outcomeOneShareContract, t.a1) == fxpAmount), "Account 1 should have fxpAmount shares of outcome 1"
                 assert(outcomeShareContractWrapper.balanceOf(outcomeTwoShareContract, t.a1) == fxpAmount), "Account 1 should have fxpAmount shares of outcome 2"
                 assert(outcomeShareContractWrapper.balanceOf(outcomeOneShareContract, t.a2) == 0), "Account 2 should have 0 shares of outcome 2"
@@ -844,8 +826,8 @@ def test_MakeOrder():
                 fxpPrice = fix("1.6")
                 outcomeID = 2
                 tradeGroupID = 42
-                eventID = createEventType(marketType)
-                marketID = createMarket(eventID)
+                eventID = createEventType(contracts, marketType)
+                marketID = createMarket(contracts, eventID)
                 assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
                 makerInitialCash = contracts.cash.balanceOf(t.a1)
                 marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -879,16 +861,16 @@ def test_MakeOrder():
                 assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
             def test_ask_withShares():
                 global shareTokenContractTranslator
-                global outcomeShareContractWrapper
+                outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
                 contracts._ContractLoader__state.mine(1)
                 orderType = 2                   # ask
                 fxpAmount = fix(1)
                 fxpPrice = fix("1.6")
                 outcomeID = 2
                 tradeGroupID = 42
-                eventID = createEventType(marketType)
-                marketID = createMarket(eventID)
-                buyCompleteSets(marketID, fix(10))
+                eventID = createEventType(contracts, marketType)
+                marketID = createMarket(contracts, eventID)
+                buyCompleteSets(contracts, marketID, fix(10))
                 fxpAmount = fix(9)
                 fxpAllowance = fix(12)
                 makerInitialCash = contracts.cash.balanceOf(t.a1)
@@ -931,16 +913,16 @@ def test_MakeOrder():
                 assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
             def test_ask_withPartialShares():
                 global shareTokenContractTranslator
-                global outcomeShareContractWrapper
+                outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
                 contracts._ContractLoader__state.mine(1)
                 orderType = 2                   # ask
                 fxpAmount = fix(1)
                 fxpPrice = fix("1.6")
                 outcomeID = 2
                 tradeGroupID = 42
-                eventID = createEventType(marketType)
-                marketID = createMarket(eventID)
-                buyCompleteSets(marketID, fix(10))
+                eventID = createEventType(contracts, marketType)
+                marketID = createMarket(contracts, eventID)
+                buyCompleteSets(contracts, marketID, fix(10))
                 fxpAmount = fix(12)
                 fxpAllowance = fix(120)
                 makerInitialCash = contracts.cash.balanceOf(t.a1)
@@ -982,15 +964,15 @@ def test_MakeOrder():
                 assert(logMakeOrder["sender"] == address1), "Logged sender should match input"
             def test_exceptions():
                 global shareTokenContractTranslator
-                global outcomeShareContractWrapper
+                outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
                 contracts._ContractLoader__state.mine(1)
                 orderType = 1 # bid
                 fxpAmount = fix(1)
                 fxpPrice = fix("1.6")
                 outcomeID = 1
                 tradeGroupID = 42
-                eventID = createBinaryEvent()
-                marketID = createMarket(eventID)
+                eventID = createBinaryEvent(contracts)
+                marketID = createMarket(contracts, eventID)
                 makerInitialCash = contracts.cash.balanceOf(t.a1)
                 marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
 
@@ -1041,7 +1023,7 @@ def test_MakeOrder():
                     raise Exception(contracts.makeOrder.publicMakeOrder(2, 1, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1))
                 except Exception as exc:
                     assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicMakeOrder ask (without shares) should fail if order cost is below than the minimum order value"
-                buyCompleteSets(marketID, fix(2))
+                buyCompleteSets(contracts, marketID, fix(2))
                 contracts._ContractLoader__state.mine(1)
                 try:
                     raise Exception(contracts.makeOrder.publicMakeOrder(2, fxpAmount, fix(3), marketID, outcomeID, tradeGroupID, sender=t.k1))
@@ -1077,8 +1059,7 @@ def test_MakeOrder():
     test_usingMarketType("binary")
     test_usingMarketType("scalar")
 
-def test_CancelOrder():
-    global contracts
+def test_CancelOrder(contracts):
     t = contracts._ContractLoader__tester
     address1 = long(t.a1.encode("hex"), 16)
     def test_publicCancelOrder():
@@ -1089,8 +1070,8 @@ def test_CancelOrder():
             fxpPrice = fix("1.6")
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
+            eventID = createBinaryEvent(contracts)
+            marketID = createMarket(contracts, eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
@@ -1112,8 +1093,8 @@ def test_CancelOrder():
             fxpPrice = fix("1.6")
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
+            eventID = createBinaryEvent(contracts)
+            marketID = createMarket(contracts, eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)
@@ -1135,8 +1116,8 @@ def test_CancelOrder():
             fxpPrice = fix("1.6")
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
+            eventID = createBinaryEvent(contracts)
+            marketID = createMarket(contracts, eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10000), sender=t.k1) == 1), "Approve makeOrder contract to spend cash"
             makerInitialCash = contracts.cash.balanceOf(t.a1)
             marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
@@ -1178,8 +1159,7 @@ def test_CancelOrder():
         test_exceptions()
     test_publicCancelOrder()
 
-def test_TakeAskOrder():
-    global contracts
+def test_TakeAskOrder(contracts):
     t = contracts._ContractLoader__tester
     def test_usingMarketType(marketType):
         def test_takeAskOrder_makerEscrowedCash():
@@ -1189,8 +1169,8 @@ def test_TakeAskOrder():
             assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
             contracts._ContractLoader__state.mine(1)
             outcomeID = 2
-            eventID = createEventType(marketType)
-            marketID = createMarket(eventID)
+            eventID = createEventType(contracts, marketType)
+            marketID = createMarket(contracts, eventID)
             outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
             outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
             outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -1275,14 +1255,14 @@ def test_TakeAskOrder():
 
         def test_takeAskOrder_makerEscrowedShares():
             global shareTokenContractTranslator
-            global outcomeShareContractWrapper
+            outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
             contracts._ContractLoader__state.mine(1)
             fxpEtherDepositValue = fix(100)
             assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
             assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
             contracts._ContractLoader__state.mine(1)
-            eventID = createEventType(marketType)
-            marketID = createMarket(eventID)
+            eventID = createEventType(contracts, marketType)
+            marketID = createMarket(contracts, eventID)
             outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
             outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
             outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -1290,7 +1270,7 @@ def test_TakeAskOrder():
 
             # 1. Maker buys complete sets
             fxpNumCompleteSets = fix(10)
-            buyCompleteSets(marketID, fxpNumCompleteSets)
+            buyCompleteSets(contracts, marketID, fxpNumCompleteSets)
             fxpAllowance = fix(12)
             outcomeID = 2
             makerInitialCash = contracts.cash.balanceOf(t.a1)
@@ -1395,13 +1375,12 @@ def test_TakeAskOrder():
     test_usingMarketType("binary")
     test_usingMarketType("scalar")
 
-def test_TakeBidOrder():
-    global contracts
+def test_TakeBidOrder(contracts):
     t = contracts._ContractLoader__tester
     def test_usingMarketType(marketType):
         def test_takeBidOrder_makerEscrowedCash_takerWithoutShares():
             global shareTokenContractTranslator
-            global outcomeShareContractWrapper
+            outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
             contracts._ContractLoader__state.mine(1)
             fxpEtherDepositValue = fix(100)
             assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
@@ -1411,8 +1390,8 @@ def test_TakeBidOrder():
             fxpPrice = fix("1.6")
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
+            eventID = createBinaryEvent(contracts)
+            marketID = createMarket(contracts, eventID)
             outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
             outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
             outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -1498,14 +1477,14 @@ def test_TakeBidOrder():
 
         def test_takeBidOrder_makerEscrowedShares_takerWithoutShares():
             global shareTokenContractTranslator
-            global outcomeShareContractWrapper
+            outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
             contracts._ContractLoader__state.mine(1)
             fxpEtherDepositValue = fix(100)
             assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
             assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
             contracts._ContractLoader__state.mine(1)
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
+            eventID = createBinaryEvent(contracts)
+            marketID = createMarket(contracts, eventID)
             outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
             outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
             outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -1514,7 +1493,7 @@ def test_TakeBidOrder():
             # 1. Maker buys complete sets, then transfers shares of outcome 2.
             contracts._ContractLoader__state.mine(1)
             fxpNumCompleteSets = fix(10)
-            buyCompleteSets(marketID, fxpNumCompleteSets)
+            buyCompleteSets(contracts, marketID, fxpNumCompleteSets)
             contracts._ContractLoader__state.mine(1)
             transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
             assert(int(contracts._ContractLoader__state.send(t.k1, outcomeTwoShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
@@ -1616,7 +1595,7 @@ def test_TakeBidOrder():
 
         def test_takeBidOrder_makerEscrowedCash_takerWithShares():
             global shareTokenContractTranslator
-            global outcomeShareContractWrapper
+            outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
             contracts._ContractLoader__state.mine(1)
             fxpEtherDepositValue = fix(100)
             assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
@@ -1626,8 +1605,8 @@ def test_TakeBidOrder():
             fxpPrice = fix("1.6")
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
+            eventID = createBinaryEvent(contracts)
+            marketID = createMarket(contracts, eventID)
             outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
             outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
             outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -1636,7 +1615,7 @@ def test_TakeBidOrder():
             # 1. Taker buys a complete set, then transfers outcome 1, leaving taker with shares of outcome 2 only.
             contracts._ContractLoader__state.mine(1)
             fxpOutcomeTwoShares = fix(10)
-            buyCompleteSets(marketID, fxpOutcomeTwoShares, sender=t.k2)
+            buyCompleteSets(contracts, marketID, fxpOutcomeTwoShares, sender=t.k2)
             contracts._ContractLoader__state.mine(1)
             transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpOutcomeTwoShares])
             assert(int(contracts._ContractLoader__state.send(t.k2, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
@@ -1721,14 +1700,14 @@ def test_TakeBidOrder():
 
         def test_takeBidOrder_makerEscrowedShares_takerWithShares():
             global shareTokenContractTranslator
-            global outcomeShareContractWrapper
+            outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
             contracts._ContractLoader__state.mine(1)
             fxpEtherDepositValue = fix(100)
             assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
             assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
             contracts._ContractLoader__state.mine(1)
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
+            eventID = createBinaryEvent(contracts)
+            marketID = createMarket(contracts, eventID)
             outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
             outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
             outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -1737,7 +1716,7 @@ def test_TakeBidOrder():
             # 1. Taker buys a complete set, then transfers outcome 1, leaving taker with shares of outcome 2 only.
             contracts._ContractLoader__state.mine(1)
             fxpOutcomeTwoShares = fix(10)
-            buyCompleteSets(marketID, fxpOutcomeTwoShares, sender=t.k2)
+            buyCompleteSets(contracts, marketID, fxpOutcomeTwoShares, sender=t.k2)
             contracts._ContractLoader__state.mine(1)
             transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpOutcomeTwoShares])
             assert(int(contracts._ContractLoader__state.send(t.k2, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer taker's shares of outcome 1 to address 0"
@@ -1745,7 +1724,7 @@ def test_TakeBidOrder():
             # 2. Maker buys complete sets, then transfers shares of outcome 2.
             contracts._ContractLoader__state.mine(1)
             fxpNumCompleteSets = fix(10)
-            buyCompleteSets(marketID, fxpNumCompleteSets)
+            buyCompleteSets(contracts, marketID, fxpNumCompleteSets)
             contracts._ContractLoader__state.mine(1)
             transferSharesAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
             assert(int(contracts._ContractLoader__state.send(t.k1, outcomeTwoShareContract, 0, transferSharesAbiEncodedData).encode("hex"), 16) == 1), "Transfer maker's shares of outcome 2 to address 0"
@@ -1850,13 +1829,12 @@ def test_TakeBidOrder():
     test_usingMarketType("binary")
     test_usingMarketType("scalar")
 
-def test_TakeOrder():
-    global contracts
+def test_TakeOrder(contracts):
     t = contracts._ContractLoader__tester
     def test_publicTakeOrder():
         def test_takeAskOrder():
             global shareTokenContractTranslator
-            global outcomeShareContractWrapper
+            outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
             contracts._ContractLoader__state.mine(1)
             fxpEtherDepositValue = fix(100)
             assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
@@ -1867,8 +1845,8 @@ def test_TakeOrder():
             fxpPrice = fix("1.6")
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
+            eventID = createBinaryEvent(contracts)
+            marketID = createMarket(contracts, eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
             assert(contracts.cash.approve(contracts.takeOrder.address, fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
             makerInitialCash = contracts.cash.balanceOf(t.a1)
@@ -1885,7 +1863,7 @@ def test_TakeOrder():
             assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
         def test_takeBidOrder():
             global shareTokenContractTranslator
-            global outcomeShareContractWrapper
+            outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
             contracts._ContractLoader__state.mine(1)
             fxpEtherDepositValue = fix(100)
             assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
@@ -1896,8 +1874,8 @@ def test_TakeOrder():
             fxpPrice = fix("1.6")
             outcomeID = 2
             tradeGroupID = 42
-            eventID = createBinaryEvent()
-            marketID = createMarket(eventID)
+            eventID = createBinaryEvent(contracts)
+            marketID = createMarket(contracts, eventID)
             assert(contracts.cash.approve(contracts.makeOrder.address, fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
             assert(contracts.cash.approve(contracts.takeOrder.address, fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
             fxpAllowance = fix(10)
@@ -1923,13 +1901,12 @@ def test_TakeOrder():
         test_takeBidOrder()
     test_publicTakeOrder()
 
-def test_DecreaseTradingFee():
-    global contracts
+def test_DecreaseTradingFee(contracts):
     t = contracts._ContractLoader__tester
     def test_publicDecreaseTradingFee():
         contracts._ContractLoader__state.mine(1)
-        eventID = createBinaryEvent()
-        marketID = createMarket(eventID)
+        eventID = createBinaryEvent(contracts)
+        marketID = createMarket(contracts, eventID)
         assert(contracts.cash.approve(contracts.decreaseTradingFee.address, fix(10), sender=t.k1) == 1), "Approve decreaseTradingFee contract to spend cash from account 1"
         fxpInitialTradingFee = contracts.markets.getTradingFee(marketID)
         assert(fxpInitialTradingFee == fix("0.020000000000000001")), "Initial trading fee should be 20000000000000001"
@@ -1938,8 +1915,8 @@ def test_DecreaseTradingFee():
         assert(contracts.markets.getTradingFee(marketID) == fxpNewTradingFee), "Updated trading fee should be equal to fxpNewTradingFee"
     def test_exceptions():
         contracts._ContractLoader__state.mine(1)
-        eventID = createBinaryEvent()
-        marketID = createMarket(eventID)
+        eventID = createBinaryEvent(contracts)
+        marketID = createMarket(contracts, eventID)
         assert(contracts.cash.approve(contracts.decreaseTradingFee.address, fix(10), sender=t.k1) == 1), "Approve decreaseTradingFee contract to spend cash from account 1"
         assert(contracts.cash.approve(contracts.decreaseTradingFee.address, fix(10), sender=t.k2) == 1), "Approve decreaseTradingFee contract to spend cash from account 2"
         fxpInitialTradingFee = contracts.markets.getTradingFee(marketID)
@@ -1973,16 +1950,15 @@ def test_DecreaseTradingFee():
     test_publicDecreaseTradingFee()
     test_exceptions()
 
-def test_ClaimProceeds():
+def test_ClaimProceeds(contracts):
+    t = contracts._ContractLoader__tester
     def test_BinaryOrCategoricalPayouts():
-        global contracts
-        t = contracts._ContractLoader__tester
         def test_payoutBinaryOrCategoricalMarket():
             def test_binary():
                 def test_userWithoutShares():
                     contracts._ContractLoader__state.mine(1)
-                    eventID = createBinaryEvent()
-                    marketID = createMarket(eventID)
+                    eventID = createBinaryEvent(contracts)
+                    marketID = createMarket(contracts, eventID)
                     outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
                     outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
                     outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -2020,13 +1996,13 @@ def test_ClaimProceeds():
                     contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
                 def test_userWithWinningShares():
                     global shareTokenContractTranslator
-                    global outcomeShareContractWrapper
+                    outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
                     contracts._ContractLoader__state.mine(1)
                     fxpEtherDepositValue = fix(100)
                     assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
                     contracts._ContractLoader__state.mine(1)
-                    eventID = createBinaryEvent()
-                    marketID = createMarket(eventID)
+                    eventID = createBinaryEvent(contracts)
+                    marketID = createMarket(contracts, eventID)
                     outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
                     outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
                     outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -2034,7 +2010,7 @@ def test_ClaimProceeds():
                     contracts._ContractLoader__state.mine(1)
                     contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
                     fxpNumCompleteSets = fix(3)
-                    buyCompleteSets(marketID, fxpNumCompleteSets)
+                    buyCompleteSets(contracts, marketID, fxpNumCompleteSets)
                     contracts._ContractLoader__state.mine(1)
                     transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
                     assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
@@ -2076,8 +2052,8 @@ def test_ClaimProceeds():
                 def test_userWithoutShares():
                     contracts._ContractLoader__state.mine(1)
                     numOutcomes = 3
-                    eventID = createCategoricalEvent(numOutcomes)
-                    marketID = createMarket(eventID)
+                    eventID = createCategoricalEvent(contracts, numOutcomes)
+                    marketID = createMarket(contracts, eventID)
                     outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
                     outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
                     outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -2115,14 +2091,14 @@ def test_ClaimProceeds():
                     contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
                 def test_userWithWinningShares():
                     global shareTokenContractTranslator
-                    global outcomeShareContractWrapper
+                    outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
                     contracts._ContractLoader__state.mine(1)
                     fxpEtherDepositValue = fix(100)
                     assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
                     contracts._ContractLoader__state.mine(1)
                     numOutcomes = 3
-                    eventID = createCategoricalEvent(numOutcomes)
-                    marketID = createMarket(eventID)
+                    eventID = createCategoricalEvent(contracts, numOutcomes)
+                    marketID = createMarket(contracts, eventID)
                     outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
                     outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
                     outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -2130,7 +2106,7 @@ def test_ClaimProceeds():
                     contracts._ContractLoader__state.mine(1)
                     contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
                     fxpNumCompleteSets = fix(3)
-                    buyCompleteSets(marketID, fxpNumCompleteSets)
+                    buyCompleteSets(contracts, marketID, fxpNumCompleteSets)
                     contracts._ContractLoader__state.mine(1)
                     transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
                     assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
@@ -2173,13 +2149,13 @@ def test_ClaimProceeds():
         def test_payoutIndeterminateBinaryOrCategoricalMarket():
             def test_binary():
                 global shareTokenContractTranslator
-                global outcomeShareContractWrapper
+                outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
                 contracts._ContractLoader__state.mine(1)
                 fxpEtherDepositValue = fix(100)
                 assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
                 contracts._ContractLoader__state.mine(1)
-                eventID = createBinaryEvent()
-                marketID = createMarket(eventID)
+                eventID = createBinaryEvent(contracts)
+                marketID = createMarket(contracts, eventID)
                 outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
                 outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
                 outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -2187,7 +2163,7 @@ def test_ClaimProceeds():
                 contracts._ContractLoader__state.mine(1)
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
                 fxpNumCompleteSets = fix(3)
-                buyCompleteSets(marketID, fxpNumCompleteSets)
+                buyCompleteSets(contracts, marketID, fxpNumCompleteSets)
                 contracts._ContractLoader__state.mine(1)
                 transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
@@ -2225,14 +2201,14 @@ def test_ClaimProceeds():
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
             def test_categorical():
                 global shareTokenContractTranslator
-                global outcomeShareContractWrapper
+                outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
                 contracts._ContractLoader__state.mine(1)
                 fxpEtherDepositValue = fix(100)
                 assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
                 contracts._ContractLoader__state.mine(1)
                 numOutcomes = 3
-                eventID = createCategoricalEvent(numOutcomes)
-                marketID = createMarket(eventID)
+                eventID = createCategoricalEvent(contracts, numOutcomes)
+                marketID = createMarket(contracts, eventID)
                 outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
                 outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
                 outcomeThreeShareContract = contracts.markets.getOutcomeShareContract(marketID, 3)
@@ -2242,7 +2218,7 @@ def test_ClaimProceeds():
                 contracts._ContractLoader__state.mine(1)
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
                 fxpNumCompleteSets = fix(3)
-                buyCompleteSets(marketID, fxpNumCompleteSets)
+                buyCompleteSets(contracts, marketID, fxpNumCompleteSets)
                 contracts._ContractLoader__state.mine(1)
                 transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
@@ -2291,15 +2267,13 @@ def test_ClaimProceeds():
         test_payoutBinaryOrCategoricalMarket()
         test_payoutIndeterminateBinaryOrCategoricalMarket()
     def test_ScalarPayouts():
-        global contracts
-        t = contracts._ContractLoader__tester
         def test_payoutScalarMarket():
             def test_userWithoutShares():
                 contracts._ContractLoader__state.mine(1)
                 fxpMinValue = fix(5)
                 fxpMaxValue = fix(15)
-                eventID = createScalarEvent(fxpMinValue, fxpMaxValue)
-                marketID = createMarket(eventID)
+                eventID = createScalarEvent(contracts, fxpMinValue, fxpMaxValue)
+                marketID = createMarket(contracts, eventID)
                 outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
                 outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
                 outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -2337,15 +2311,15 @@ def test_ClaimProceeds():
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
             def test_userWithHighSideShares():
                 global shareTokenContractTranslator
-                global outcomeShareContractWrapper
+                outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
                 contracts._ContractLoader__state.mine(1)
                 fxpEtherDepositValue = fix(100)
                 assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
                 contracts._ContractLoader__state.mine(1)
                 fxpMinValue = fix(5)
                 fxpMaxValue = fix(15)
-                eventID = createScalarEvent(fxpMinValue, fxpMaxValue)
-                marketID = createMarket(eventID)
+                eventID = createScalarEvent(contracts, fxpMinValue, fxpMaxValue)
+                marketID = createMarket(contracts, eventID)
                 outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
                 outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
                 outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -2353,7 +2327,7 @@ def test_ClaimProceeds():
                 contracts._ContractLoader__state.mine(1)
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
                 fxpNumCompleteSets = fix(3)
-                buyCompleteSets(marketID, fxpNumCompleteSets)
+                buyCompleteSets(contracts, marketID, fxpNumCompleteSets)
                 contracts._ContractLoader__state.mine(1)
                 transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 1 to address 0"
@@ -2375,7 +2349,6 @@ def test_ClaimProceeds():
                 assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
                 assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
                 assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
-                # assert(contracts.scalarPayouts.payoutScalarMarket(t.a1, marketID, eventID, sender=t.k0) == 1), "payoutScalarMarket should complete successfully"
                 userFinalCash = contracts.cash.balanceOf(t.a1)
                 marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
                 fxpShare1Value = fxpMaxValue - fix(outcomeID)
@@ -2398,15 +2371,15 @@ def test_ClaimProceeds():
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) - 259201
             def test_userWithLowSideShares():
                 global shareTokenContractTranslator
-                global outcomeShareContractWrapper
+                outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
                 contracts._ContractLoader__state.mine(1)
                 fxpEtherDepositValue = fix(100)
                 assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to user account should succeed"
                 contracts._ContractLoader__state.mine(1)
                 fxpMinValue = fix(5)
                 fxpMaxValue = fix(15)
-                eventID = createScalarEvent(fxpMinValue, fxpMaxValue)
-                marketID = createMarket(eventID)
+                eventID = createScalarEvent(contracts, fxpMinValue, fxpMaxValue)
+                marketID = createMarket(contracts, eventID)
                 outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
                 outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
                 outcomeOneShareWallet = contracts.markets.getOutcomeShareWallet(marketID, 1)
@@ -2414,7 +2387,7 @@ def test_ClaimProceeds():
                 contracts._ContractLoader__state.mine(1)
                 contracts._ContractLoader__state.block.timestamp = contracts.events.getExpiration(eventID) + 259201
                 fxpNumCompleteSets = fix(3)
-                buyCompleteSets(marketID, fxpNumCompleteSets)
+                buyCompleteSets(contracts, marketID, fxpNumCompleteSets)
                 contracts._ContractLoader__state.mine(1)
                 transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [t.a0, fxpNumCompleteSets])
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeTwoShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome 2 to address 0"
@@ -2436,7 +2409,6 @@ def test_ClaimProceeds():
                 assert(marketInitialOutcomeOneShares == 0), "Market's initial outcome 1 shares balance should be 0"
                 assert(marketInitialOutcomeTwoShares == 0), "Market's initial outcome 2 shares balance should be 0"
                 assert(contracts.claimProceeds.publicClaimProceeds(marketID, sender=t.k1) == 1), "publicClaimProceeds should complete successfully"
-                # assert(contracts.scalarPayouts.payoutScalarMarket(t.a1, marketID, eventID, sender=t.k0) == 1), "payoutScalarMarket should complete successfully"
                 userFinalCash = contracts.cash.balanceOf(t.a1)
                 marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
                 fxpShare1Value = fxpMaxValue - fix(outcomeID)
@@ -2463,20 +2435,21 @@ def test_ClaimProceeds():
     test_BinaryOrCategoricalPayouts()
     test_ScalarPayouts()
 
-def runtests():
-    test_Cash()
-    test_ShareTokens()
-    test_Wallet()
-    test_CreateEvent()
-    test_CreateMarket()
-    test_CompleteSets()
-    test_MakeOrder()
-    test_CancelOrder()
-    test_TakeAskOrder()
-    test_TakeBidOrder()
-    test_TakeOrder()
-    test_DecreaseTradingFee()
-    test_ClaimProceeds()
-
 if __name__ == '__main__':
-    runtests()
+    ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
+    sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
+    from upload_contracts import ContractLoader
+    contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
+    test_Cash(contracts)
+    test_ShareTokens(contracts)
+    test_Wallet(contracts)
+    test_CreateEvent(contracts)
+    test_CreateMarket(contracts)
+    test_CompleteSets(contracts)
+    test_MakeOrder(contracts)
+    test_CancelOrder(contracts)
+    test_TakeAskOrder(contracts)
+    test_TakeBidOrder(contracts)
+    test_TakeOrder(contracts)
+    test_DecreaseTradingFee(contracts)
+    test_ClaimProceeds(contracts)

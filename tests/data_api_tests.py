@@ -1,33 +1,22 @@
 #!/usr/bin/env python
 
 from __future__ import division
-from ethereum import tester as t
 import os
 import sys
-import iocapture
 import json
-from pprint import pprint
+import iocapture
+import ethereum.tester
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
-sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
-
-from upload_contracts import ContractLoader
+src = os.path.join(ROOT, "src")
 
 WEI_TO_ETH = 10**18
 TWO = 2*WEI_TO_ETH
 HALF = WEI_TO_ETH/2
 
-def parseCapturedLogs(logs):
-    arrayOfLogs = logs.strip().split("\n")
-    arrayOfParsedLogs = []
-    for log in arrayOfLogs:
-        parsedLog = json.loads(log.replace("'", '"').replace("L", "").replace('u"', '"'))
-        arrayOfParsedLogs.append(parsedLog)
-    if len(arrayOfParsedLogs) == 0:
-        return arrayOfParsedLogs[0]
-    return arrayOfParsedLogs
-
-def test_backstops(contracts, s, t):
+def test_backstops(contracts):
+    t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.backstops
     event1 = 1234
     event2 = 5678
@@ -251,7 +240,9 @@ def test_backstops(contracts, s, t):
     # test_misc()
     print("data_api/backstops.se unit tests completed")
 
-def test_branches(contracts, s, t):
+def test_branches(contracts):
+    t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.branches
     branch1 = 1010101
     branch2 = 2020202
@@ -419,7 +410,9 @@ def test_branches(contracts, s, t):
     test_edits()
     print("data_api/branches.se unit tests completed")
 
-def test_consensusData(contracts, s, t):
+def test_consensusData(contracts):
+    t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.consensusData
     branch1 = 1010101
     period1 = contracts.branches.getVotePeriod(branch1)
@@ -516,7 +509,9 @@ def test_consensusData(contracts, s, t):
     test_refund()
     print("data_api/consensusData.se unit tests completed")
 
-def test_events(contracts, s, t):
+def test_events(contracts):
+    t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.events
     event1 = 1234
     branch1 = 1010101
@@ -687,7 +682,9 @@ def test_events(contracts, s, t):
     test_rejection()
     print("data_api/events.se unit tests completed")
 
-def test_expiringEvents(contracts, s, t):
+def test_expiringEvents(contracts):
+    t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.expiringEvents
     branch1 = 1010101
     branch2 = 2020202
@@ -865,7 +862,9 @@ def test_expiringEvents(contracts, s, t):
     test_eventModification()
     print("data_api/expiringEvents.se unit tests completed")
 
-def test_info(contracts, s, t):
+def test_info(contracts):
+    t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.info
     branch1 = 1010101
     branch2 = 2020202
@@ -909,7 +908,9 @@ def test_info(contracts, s, t):
     test_setInfo()
     print("data_api/info.se unit tests completed")
 
-def test_markets(contracts, s, t):
+def test_markets(contracts):
+    t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.markets
     branch1 = 1010101
     market1 = 1111111111
@@ -947,7 +948,7 @@ def test_markets(contracts, s, t):
     address0 = long(t.a0.encode("hex"), 16)
     address1 = long(t.a1.encode("hex"), 16)
 
-    def test_marketInialization():
+    def test_initializeMarket():
         assert(c.getMarketsHash(branch1) == 0), "getMarketsHash for branch1 should be defaulted to 0"
         assert(c.initializeMarket(market1, event1, period1, twoPercent, branch1, tag1, tag2, tag3, WEI_TO_ETH, 2, 'this is extra information', gasSubsidy1, creationFee1, expirationDate1, shareContracts, walletContracts, value=gasSubsidy1) == 1), "initializeMarket wasn't executed successfully"
         assert(c.getMarketsHash(branch1) != 0), "marketsHash should no longer be set to 0"
@@ -1057,13 +1058,15 @@ def test_markets(contracts, s, t):
         assert(s.block.get_balance(t.a1) == addr1Bal + gasSubsidy1), "the balance of address1 should now be it's previous balance + the gasSubsidy1 from market1"
 
 
-    test_marketInialization()
+    test_initializeMarket()
     # test_marketOrders()
     test_marketShares()
     test_marketSettings()
     print("data_api/markets.se unit tests complete")
 
-def test_mutex(contracts, s, t):
+def test_mutex(contracts):
+    t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.mutex
     assert(c.acquire() == 1), "acquire should return 1 if the mutex isn't already set."
     try:
@@ -1073,7 +1076,9 @@ def test_mutex(contracts, s, t):
     assert(c.release() == 1), "release shoud return 1 and release the mutex"
     print("data_api/mutex.se unit tests completed")
 
-def test_orders(contracts, s, t):
+def test_orders(contracts):
+    t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.orders
     market1 = 1111111111
     address0 = long(t.a0.encode("hex"), 16)
@@ -1158,20 +1163,9 @@ def test_orders(contracts, s, t):
     test_removeOrder()
     print("data_api/orders.se unit tests completed")
 
-# def test_register(contracts, s, t):
-#     c = contracts.register
-#     address0 = long(t.a0.encode("hex"), 16)
-#     with iocapture.capture() as captured:
-#         retVal = c.register()
-#         log = parseCapturedLogs(captured.stdout)[-1]
-#     assert(retVal == 1), "register should return 1"
-#     assert(log["_event_type"] == "registration"), "eventType should be 'registration' for the log created by register"
-#     assert(log["timestamp"] == s.block.timestamp), "timestamp should be set to block.timestamp"
-#     assert(log["sender"] == address0), "sender should be address0"
-#
-#     print("data_api/register.se unit tests completed")
-
-def test_topics(contracts, s, t):
+def test_topics(contracts):
+    t = contracts._ContractLoader__tester
+    s = contracts._ContractLoader__state
     c = contracts.topics
     branch1 = 1010101
     # topic0 is the topic added from the markets tests
@@ -1212,22 +1206,16 @@ def test_topics(contracts, s, t):
     print("data_api/topics.se unit tests completed")
 
 if __name__ == '__main__':
-    src = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'src')
-    contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
-    state = contracts._ContractLoader__state
-    t = contracts._ContractLoader__tester
-    print "BEGIN TESTING DATA_API"
-    test_backstops(contracts, state, t)
-    test_branches(contracts, state, t)
-    test_consensusData(contracts, state, t)
-    test_events(contracts, state, t)
-    test_expiringEvents(contracts, state, t)
-    test_info(contracts, state, t)
-    test_markets(contracts, state, t)
-    test_mutex(contracts, state, t)
-    test_orders(contracts, state, t)
-    # test_register(contracts, state, t)
-    # data_api/reporting.se
-    # data_api/reportingThreshold.se
-    test_topics(contracts, state, t)
-    print "FINISH TESTING DATA_API"
+    sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
+    from upload_contracts import ContractLoader
+    contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
+    test_backstops(contracts)
+    test_branches(contracts)
+    test_consensusData(contracts)
+    test_events(contracts)
+    test_expiringEvents(contracts)
+    test_info(contracts)
+    test_markets(contracts)
+    test_mutex(contracts)
+    test_orders(contracts)
+    test_topics(contracts)
