@@ -93,13 +93,13 @@ macro fxLog2($x):
 macro fxLog($x):
     fxLog2($x) * 0xDE0B6B3A7640000 / 0x14057B7EF767814F
 
-extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
+extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]:int256, assertOnlySpecifiedCaller:[int256,int256]:_, changeMode:[int256]:int256, emergencyStop:[]:int256, getMode:[]:int256, getOwner:[]:int256, lookup:[int256]:int256, onlyInEmergency:[]:_, release:[]:int256, removeFromWhitelist:[int256,int256]:int256, setValue:[int256,int256]:int256, stopInEmergency:[]:_, suicide:[int256,int256,int256]:int256, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:_, transferOwnership:[int256,int256,int256,int256]:int256, updateController:[int256,int256]:int256]
 
 # Calculates the exponential function given a fixed point [base 10^18] number, so e^x
 data controller
 
 def init():
-    self.controller = 0x01
+    self.controller = 0x0
 
 def fxExp(x):
     refund()

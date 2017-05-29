@@ -6,7 +6,7 @@ extern orders: [addOrder:[int256,int256]:int256, cancelOrderLog:[int256,int256,i
 TAKEORDER = self.controller.lookup('takeOrder')
 extern takeOrder: [publicTakeOrder:[address,uint256]:uint256, setController:[address]:int256, suicideFunds:[address]:_, takeOrder:[address,address,uint256]:uint256]
 
-extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
+extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]:int256, assertOnlySpecifiedCaller:[int256,int256]:_, changeMode:[int256]:int256, emergencyStop:[]:int256, getMode:[]:int256, getOwner:[]:int256, lookup:[int256]:int256, onlyInEmergency:[]:_, release:[]:int256, removeFromWhitelist:[int256,int256]:int256, setValue:[int256,int256]:int256, stopInEmergency:[]:_, suicide:[int256,int256,int256]:int256, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:_, transferOwnership:[int256,int256,int256,int256]:int256, updateController:[int256,int256]:int256]
 
 inset('../macros/refund.sem')
 
@@ -21,7 +21,7 @@ macro MINIMUM_GAS_NEEDED_TO_TRADE: 300000
 # @param fxpMinimumOrderBalance Fill the first order that has a balance at or above this value.
 # @return array [error code] or [response code, unfilled value, unfilled amount]
 def init():
-    self.controller = 0x01
+    self.controller = 0x0
 
 def tradeAvailableOrders(orderIDs: arr, amountTakerWants: uint256, fxpMinimumOrderBalance: uint256):
     # FIXME problem exists here where amounttakerwants can get too low resulting in a throw
