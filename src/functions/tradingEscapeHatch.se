@@ -1,0 +1,77 @@
+data controller
+
+def init():
+    self.controller = 0x0
+
+def testit():
+    return(1)
+
+# def claimSharesInUpdate():
+#     onlyInEmergency()
+#     if(marketJustBeingFrozen):
+#         for all outcomes in market:
+#             setBestFrozenBidAndAsks
+#     # send fees in market to branch
+#     marketCurrency = INFO.getCurrency(market)
+#     marketWallet = INFO.getWallet(market)
+#     marketBalance = marketCurrency.balanceOf(marketWallet)
+#     marketShareValue = safeFxpMul(MARKETS.getSharesPurchased(market, 1), MARKETS.getCumulativeScale(market))
+#     if(marketBalance > marketShareValue and MARKETS.getTradingFee(market) != 0):
+#         marketWallet.transfer(BRANCHES.getBranchWallet(branch, marketCurrency), marketBalance - marketShareValue)
+
+
+#     # Fetch outcome and min/max values for the event.
+#     outcome = EVENTS.getOutcome(event)
+#     minValue = EVENTS.getMinValue(event)
+#     maxValue = EVENTS.getMaxValue(event)
+#     currency = INFO.getCurrency(market)
+#     branch = EVENTS.getExpiration(MARKETS.getMarketEvent(market))
+
+#     if(binary or scalar):
+#         bestBid = MARKETS.getBestBid(market, outcome)
+#         bestAsk = MARKETS.getBestAsk(market, outcome)
+
+#         # outcome is 1 if we're 0 indexing now
+#         if(outcome == 2):
+#             shareValue = (bestBid + bestAsk)/2 - minValue
+#             # outcome is 0 if we're 0 indexing now
+#             otherSideShareValue = maxValue - (MARKETS.getBestAsk(market, 1) + MARKETS.getBestBid(market, 1))/2
+#             denominator = safeAdd(shareValue, otherSideShareValue)
+#             shareValue = safeFxpMul(safeFxpDiv(shareValue, denominator), range)
+#             sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
+#             if(sharesOwned > 0):
+#                 MARKETS.getOutcomeShareContract(market, outcome).destroyShares(sender, sharesOwned)
+#                 shareValue = safeFxpMul(sharesOwned, shareValue)
+#                 if(!INFO.getWallet(market).transfer(sender, shareValue)):
+#                     ~invalid()
+#         else:
+#             shareValue = maxValue - (bestBid + bestAsk)/2
+#             # outcome is 1 if we're 0 indexing now
+#             otherSideShareValue = (MARKETS.getBestAsk(market, 2) + MARKETS.getBestBid(market, 2))/2 - minValue
+#             denominator = safeAdd(shareValue, otherSideShareValue)
+#             shareValue = safeFxpMul(safeFxpDiv(shareValue, denominator), range)
+#             sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
+#             if(sharesOwned > 0):
+#                 MARKETS.getOutcomeShareContract(market, outcome).destroyShares(sender, sharesOwned)
+#                 shareValue = safeFxpMul(sharesOwned, shareValue)
+#                 if(!INFO.getWallet(market).transfer(sender, shareValue)):
+#                     ~invalid()
+#     # categorical
+#     else:
+#         bestPrices = array(numOutcomes)
+#         denominator = 0
+#         i = 1
+#         while i <= numOutcomes:
+#             bestPrices[i-1] = (MARKETS.getBestBid(market, i) + MARKETS.getBestAsk(market, i))/2
+#             denominator += bestPrices[i-1]
+#             i += 1
+
+#         shareValue = bestPrices[outcome]
+#         shareValue = safeFxpMul(safeFxpDiv(shareValue, denominator), ONE)
+#         sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
+#         if(sharesOwned > 0):
+#             MARKETS.getOutcomeShareContract(market, outcome).destroyShares(sender, sharesOwned)
+#             shareValue = safeFxpMul(sharesOwned, shareValue)
+#             if(!INFO.getWallet(market).transfer(sender, shareValue)):
+#                 ~invalid()
+#     return(1)
