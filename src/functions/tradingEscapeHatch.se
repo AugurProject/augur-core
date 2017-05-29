@@ -28,6 +28,9 @@ data marketPricesFrozen[]
 def init():
     self.controller = 0x0
 
+def test():
+    return(1)
+
 # def claimSharesInUpdate(market):
 #     self.controller.onlyInEmergency()
 #     if(!self.marketsPrizesFrozen[market]):

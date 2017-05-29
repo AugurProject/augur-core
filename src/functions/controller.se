@@ -131,3 +131,4 @@ def getOwner():
 
 def getMode():
     return(self.mode)
+x
