@@ -15,14 +15,15 @@ inset('../macros/refund.sem')
     # Then new controller needs to populate its registry and whitelist
     # Then once it is updated suicide the old controller
 
-# 	Dev mode: a developer address which can do an update
-#   Decentralized mode: contracts must be updated by a reupload, people can transfer their rep / claim it on new contracts, traders + market creators cancel orders and go to the new contract
-    #   For bugs found involving money or rep, contracts are locked / an escape hatch is enabled which allows withdraws of shares [and cancelling orders] for a value half way between the bid-ask spread at the time of the lock and another escape hatch is enabled which allows withdrawal of any locked up rep. All rep in the erc20 contracts are fungible as usual [needed so it can migrate to new contracts]. All cash is withdrawable but transfers are disabled.
-    #   When a bug is not found and it's just some, for whatever reason, backwards incompatible upgrade [ideally we'd be able to just add contracts, but if that doesn't work for some reason], people should be allowed to migrate over to the new system. i.e. Don't emergency stop + withdraw at fixed price, instead allow them to trade around and sell complete sets and/or wait for any straggling rep to resolve their markets
+# Dev mode: a developer address which can do an update
+# Decentralized mode: contracts must be updated by a reupload, people can transfer their rep / claim it on new contracts, traders + market creators cancel orders and go to the new contract
+    # For bugs found involving money or rep, contracts are locked / an escape hatch is enabled which allows withdraws of shares [and cancelling orders] for a value half way between the bid-ask spread at the time of the lock and another escape hatch is enabled which allows withdrawal of any locked up rep. All rep in the erc20 contracts are fungible as usual [needed so it can migrate to new contracts]. All cash is withdrawable but transfers are disabled.
+    # When a bug is not found and it's just some, for whatever reason, backwards incompatible upgrade [ideally we'd be able to just add contracts, but if that doesn't work for some reason], people should be allowed to migrate over to the new system. i.e. Don't emergency stop + withdraw at fixed price, instead allow them to trade around and sell complete sets and/or wait for any straggling rep to resolve their markets
 
-# initial dev key
+# initial dev key to control updates
 data owner
 
+# starts in dev mode [where escape hatches and contract reuploads are allowed], will eventually switch to decentralized [where escape hatches are allowed, and contract updates are done through migration of users/tokens]
 data mode
 
 # Registry keys have a 32 char limit and the contract address is the value, index is the contract name
@@ -31,10 +32,8 @@ data registry[](value)
 # takes contract address as index, value is whether it's in the whitelist or not
 data whitelist[]
 
+# whether the system is currently emergency stopped or not
 data stopped
-
-macro ONE_FOURTH: 250000000000000000
-macro POINT_SIX: 600000000000000000
 
 def init():
     self.owner = msg.sender
@@ -42,9 +41,7 @@ def init():
     self.whitelist[self] = 1
     self.whitelist[msg.sender] = 1
 
-def transferOwnership(key, newOwner, ownerBranch, proposalIndex):
-    self.owner = newOwner
-    return(1)
+### Whitelisting, registry for contract lookups, and contract updating machinery ###
 
 def setValue(key, newValue):
     if(self.owner == msg.sender):
@@ -65,31 +62,15 @@ def removeFromWhitelist(address, suicide):
     else:
         return(0)
 
-def changeMode(newMode):
-    self.mode = newMode
-    return(1)
-
-def assertIsWhitelisted(address):
-    if(self.whitelist[address] or (self.mode == "dev" and msg.sender == self.owner)):
-        return(1)
-    else:
-        ~invalid()
-
-def assertOnlySpecifiedCaller(callerAddress, allowedCallerContractName):
-    if((self.mode == "dev" and msg.sender != self.owner) or self.registry[allowedCallerContractName].value != callerAddress):
-        ~invalid()
-
-def lookup(key):
-    return(self.registry[key].value)
-
-def getOwner():
-    return(self.owner)
-
-def getMode():
-    return(self.mode)
-
 def suicide(address, to, proposalIndex):
     address.suicideFunds(to)
+    return(1)
+
+
+### Controller Administration ###
+
+def transferOwnership(key, newOwner, ownerBranch, proposalIndex):
+    self.owner = newOwner
     return(1)
 
 def updateController(address, newController):
@@ -100,14 +81,10 @@ def switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed():
     if(msg.sender != self.owner):
         ~invalid()
     self.mode = "Decentralized"
+    return(1)
 
-def stopInEmergency():
-    if(self.stopped):
-        ~invalid()
 
-def onlyInEmergency():
-    if(!self.stopped):
-        ~invalid()
+### Emergency Stop Functions ###
 
 # called by the owner in emergency, triggers a stop state/lock
 def emergencyStop():
@@ -124,3 +101,33 @@ def release():
         ~invalid()
     self.stopped = 0
     return(1)
+
+
+### Getters ###
+
+def lookup(key):
+    return(self.registry[key].value)
+
+def assertIsWhitelisted(address):
+    if(self.whitelist[address] or (self.mode == "dev" and msg.sender == self.owner)):
+        return(1)
+    else:
+        ~invalid()
+
+def assertOnlySpecifiedCaller(callerAddress, allowedCallerContractName):
+    if((self.mode == "dev" and msg.sender != self.owner) or self.registry[allowedCallerContractName].value != callerAddress):
+        ~invalid()
+
+def stopInEmergency():
+    if(self.stopped):
+        ~invalid()
+
+def onlyInEmergency():
+    if(!self.stopped):
+        ~invalid()
+
+def getOwner():
+    return(self.owner)
+
+def getMode():
+    return(self.mode)
