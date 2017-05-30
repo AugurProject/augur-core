@@ -44,25 +44,26 @@ def init():
 ### Whitelisting, registry for contract lookups, and contract updating machinery ###
 
 def setValue(key, newValue):
-    if(self.owner == msg.sender):
-        self.registry[key].value = newValue
+    if(msg.sender != self.owner):
+        ~invalid()
+    self.registry[key].value = newValue
     return(1)
 
 def addToWhitelist(address):
-    if(self.owner == msg.sender):
-        self.whitelist[address] = 1
-        return(1)
-    else:
+    if(msg.sender != self.owner):
         ~invalid()
+    self.whitelist[address] = 1
+    return(1)
 
 def removeFromWhitelist(address, suicide):
-    if(self.owner == msg.sender):
-        self.whitelist[address] = 0
-        return(1)
-    else:
-        return(0)
+    if(msg.sender != self.owner):
+        ~invalid()
+    self.whitelist[address] = 0
+    return(1)
 
 def suicide(address, to, proposalIndex):
+    if(msg.sender != self.owner):
+        ~invalid()
     address.suicideFunds(to)
     return(1)
 
@@ -70,10 +71,14 @@ def suicide(address, to, proposalIndex):
 ### Controller Administration ###
 
 def transferOwnership(key, newOwner, ownerBranch, proposalIndex):
+    if(msg.sender != self.owner):
+        ~invalid()
     self.owner = newOwner
     return(1)
 
 def updateController(address, newController):
+    if(msg.sender != self.owner):
+        ~invalid()
     address.setController(newController)
     return(1)
 
@@ -131,4 +136,3 @@ def getOwner():
 
 def getMode():
     return(self.mode)
-x
