@@ -236,3 +236,11 @@ def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)
+
+# placeholder
+def getBestAskOrderID(market, outcome):
+    return(1)
+
+# placeholder
+def getBestBidOrderID(market, outcome):
+    return(1)
