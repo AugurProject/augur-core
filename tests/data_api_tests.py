@@ -1578,20 +1578,16 @@ def test_orders(contracts):
         # fully fill
         assert(contracts.orders.fillOrder(order1, WEI_TO_ETH*10, 0, WEI_TO_ETH*10) == 1), "fillOrder wasn't executed successfully"
         # prove all
-        try:
-            order1BlockNumber = contracts.orders.getOrder(order1)[6]
-            assert(contracts.orders.getOrder(order1) == [order1, 1, market1, 0, pointFive, address0, order1BlockNumber, 1, 0, 0, 0, 0]), "getOrder for order1 didn't return the expected data array"
-            # test partial fill
-            assert(contracts.orders.fillOrder(order2, WEI_TO_ETH*6, WEI_TO_ETH*3, 0) == 1), "fillOrder wasn't executed successfully"
-            # confirm partial fill
-            order2BlockNumber = contracts.orders.getOrder(order2)[6]
-            assert(contracts.orders.getOrder(order2) == [order2, 2, market1, WEI_TO_ETH*4, pointFive, address1, order2BlockNumber, 1, WEI_TO_ETH*2, 0, 0, 0]), "getOrder for order2 didn't return the expected data array"
-            # fill rest of order2
-            assert(contracts.orders.fillOrder(order2, WEI_TO_ETH*4, WEI_TO_ETH*2, 0) == 1), "fillOrder wasn't executed successfully"
-            assert(contracts.orders.getOrder(order2) == [order2, 2, market1, 0, pointFive, address1, order2BlockNumber, 1, 0, 0, 0, 0]), "getOrder for order2 didn't return the expected data array"
-        except Exception as exc:
-            import ipdb; ipdb.set_trace()
-            print "slewlz"
+        order1BlockNumber = contracts.orders.getOrder(order1)[6]
+        assert(contracts.orders.getOrder(order1) == [order1, 1, market1, 0, pointFive, address0, order1BlockNumber, 1, 0, 0, 0, 0]), "getOrder for order1 didn't return the expected data array"
+        # test partial fill
+        assert(contracts.orders.fillOrder(order2, WEI_TO_ETH*6, WEI_TO_ETH*3, 0) == 1), "fillOrder wasn't executed successfully"
+        # confirm partial fill
+        order2BlockNumber = contracts.orders.getOrder(order2)[6]
+        assert(contracts.orders.getOrder(order2) == [order2, 2, market1, WEI_TO_ETH*4, pointFive, address1, order2BlockNumber, 1, WEI_TO_ETH*2, 0, 0, 0]), "getOrder for order2 didn't return the expected data array"
+        # fill rest of order2
+        assert(contracts.orders.fillOrder(order2, WEI_TO_ETH*4, WEI_TO_ETH*2, 0) == 1), "fillOrder wasn't executed successfully"
+        assert(contracts.orders.getOrder(order2) == [order2, 2, market1, 0, pointFive, address1, order2BlockNumber, 1, 0, 0, 0, 0]), "getOrder for order2 didn't return the expected data array"
 
     def test_removeOrder():
         order3 = 321321321

@@ -569,7 +569,7 @@ def test_MakeOrder(contracts):
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
                 order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 10), "Order array length should be 10"
+                assert(len(order) == 12), "Order array length should be 12"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
@@ -662,7 +662,7 @@ def test_MakeOrder(contracts):
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(bidOrderID != 0), "Order ID should be non-zero"
                 order = contracts.orders.getOrder(bidOrderID)
-                assert(len(order) == 10), "Order array length should be 10"
+                assert(len(order) == 12), "Order array length should be 12"
                 assert(order[0] == bidOrderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
@@ -705,7 +705,7 @@ def test_MakeOrder(contracts):
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
                 order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 10), "Order array length should be 10"
+                assert(len(order) == 12), "Order array length should be 12"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
@@ -755,7 +755,7 @@ def test_MakeOrder(contracts):
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
                 order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 10), "Order array length should be 10"
+                assert(len(order) == 12), "Order array length should be 12"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
@@ -808,7 +808,7 @@ def test_MakeOrder(contracts):
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
                 order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 10), "Order array length should be 10"
+                assert(len(order) == 12), "Order array length should be 12"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
@@ -847,7 +847,7 @@ def test_MakeOrder(contracts):
                 # Permissions exceptions
                 contracts._ContractLoader__state.mine(1)
                 try:
-                    raise Exception(contracts.makeOrder.makeOrder(t.a1, orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1))
+                    raise Exception(contracts.makeOrder.makeOrder(t.a1, orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1))
                 except Exception as exc:
                     assert(isinstance(exc, ethereum.tester.TransactionFailed)), "makeOrder should fail if called from a non-whitelisted account (account 1)"
                 try:
@@ -862,43 +862,43 @@ def test_MakeOrder(contracts):
                 # makeOrder exceptions (pre-placeBid/placeAsk)
                 contracts._ContractLoader__state.mine(1)
                 try:
-                    raise Exception(contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID - 1, outcomeID, tradeGroupID, sender=t.k1))
+                    raise Exception(contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID - 1, outcomeID, 0, 0, tradeGroupID, sender=t.k1))
                 except Exception as exc:
                     assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicMakeOrder should fail if market ID is not valid"
                 try:
-                    raise Exception(contracts.makeOrder.publicMakeOrder(3, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1))
+                    raise Exception(contracts.makeOrder.publicMakeOrder(3, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1))
                 except Exception as exc:
                     assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicMakeOrder should fail if order type is not 1 (bid) or 2 (ask)"
 
                 # placeBid exceptions
                 contracts._ContractLoader__state.mine(1)
                 try:
-                    raise Exception(contracts.makeOrder.publicMakeOrder(1, fxpAmount, utils.fix(3), marketID, outcomeID, tradeGroupID, sender=t.k1))
+                    raise Exception(contracts.makeOrder.publicMakeOrder(1, fxpAmount, utils.fix(3), marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1))
                 except Exception as exc:
                     assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicMakeOrder bid should fail if order cost per share is greater than the market's range"
                 try:
-                    raise Exception(contracts.makeOrder.publicMakeOrder(1, 1, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1))
+                    raise Exception(contracts.makeOrder.publicMakeOrder(1, 1, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1))
                 except Exception as exc:
                     assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicMakeOrder bid should fail if order cost is below than the minimum order value"
 
                 # placeAsk exceptions
                 contracts._ContractLoader__state.mine(1)
                 try:
-                    raise Exception(contracts.makeOrder.publicMakeOrder(2, fxpAmount, 1, marketID, outcomeID, tradeGroupID, sender=t.k1))
+                    raise Exception(contracts.makeOrder.publicMakeOrder(2, fxpAmount, 1, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1))
                 except Exception as exc:
                     assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicMakeOrder ask (without shares) should fail if order cost per share (maxValue - price) is greater than the market's range"
                 try:
-                    raise Exception(contracts.makeOrder.publicMakeOrder(2, 1, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1))
+                    raise Exception(contracts.makeOrder.publicMakeOrder(2, 1, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1))
                 except Exception as exc:
                     assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicMakeOrder ask (without shares) should fail if order cost is below than the minimum order value"
                 utils.buyCompleteSets(contracts, marketID, utils.fix(2))
                 contracts._ContractLoader__state.mine(1)
                 try:
-                    raise Exception(contracts.makeOrder.publicMakeOrder(2, fxpAmount, utils.fix(3), marketID, outcomeID, tradeGroupID, sender=t.k1))
+                    raise Exception(contracts.makeOrder.publicMakeOrder(2, fxpAmount, utils.fix(3), marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1))
                 except Exception as exc:
                     assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicMakeOrder ask (with shares held) should fail if cost per share (price - minValue) is greater than the market's range"
                 try:
-                    raise Exception(contracts.makeOrder.publicMakeOrder(2, 1, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1))
+                    raise Exception(contracts.makeOrder.publicMakeOrder(2, 1, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1))
                 except Exception as exc:
                     assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicMakeOrder ask (with shares held) should fail if order cost is below than the minimum order value"
 
@@ -910,11 +910,11 @@ def test_MakeOrder(contracts):
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeTwoShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve makeOrder contract to spend shares from the user's account (account 1)"
                 assert(outcomeShareContractWrapper.allowance(outcomeTwoShareContract, t.a1, contracts.makeOrder.address) == fxpAllowance), "makeOrder contract's allowance should be equal to the amount approved"
                 contracts._ContractLoader__state.mine(1)
-                assert(contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1) != 0), "Order ID should be non-zero"
+                assert(contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1) != 0), "Order ID should be non-zero"
 
                 # makeOrder exceptions (post-placeBid/Ask)
                 try:
-                    raise Exception(contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1))
+                    raise Exception(contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1))
                 except Exception as exc:
                     assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicMakeOrder should fail if duplicate orders are placed in the same block (should combine into a single order instead)"
             test_bid()
@@ -947,9 +947,9 @@ def test_CancelOrder(contracts):
             marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
             orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
             assert(orderID != 0), "Order ID should be non-zero"
-            assert(contracts.orders.getOrder(orderID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
+            assert(contracts.orders.getOrder(orderID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
             assert(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k1) == 1), "publicCancelOrder should succeed"
-            assert(contracts.orders.getOrder(orderID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+            assert(contracts.orders.getOrder(orderID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
             assert(makerInitialCash == contracts.cash.balanceOf(t.a1)), "Maker's cash should be the same as before the order was placed"
             assert(marketInitialCash == contracts.cash.balanceOf(contracts.info.getWallet(marketID))), "Market's cash balance should be the same as before the order was placed"
             assert(makerInitialShares == contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)), "Maker's shares should be unchanged"
@@ -970,9 +970,9 @@ def test_CancelOrder(contracts):
             marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
             orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
             assert(orderID != 0), "Order ID should be non-zero"
-            assert(contracts.orders.getOrder(orderID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
+            assert(contracts.orders.getOrder(orderID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
             assert(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k1) == 1), "publicCancelOrder should succeed"
-            assert(contracts.orders.getOrder(orderID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+            assert(contracts.orders.getOrder(orderID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
             assert(makerInitialCash == contracts.cash.balanceOf(t.a1)), "Maker's cash should be the same as before the order was placed"
             assert(marketInitialCash == contracts.cash.balanceOf(contracts.info.getWallet(marketID))), "Market's cash balance should be the same as before the order was placed"
             assert(makerInitialShares == contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)), "Maker's shares should be unchanged"
