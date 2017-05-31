@@ -403,7 +403,10 @@ class ContractLoader(object):
         ethereum.tester.gas_limit = 4200000
         self.__contracts = {}
         self.__temp_dir = TempDirCopy(source_dir)
-        self.__state.block.number += HOMESTEAD_BLOCK_NUMBER # enable DELEGATECALL opcode
+        try:
+            self.__state.block_number += HOMESTEAD_BLOCK_NUMBER # enable DELEGATECALL opcode
+        except:
+            self.__state.state.block_number += HOMESTEAD_BLOCK_NUMBER # enable DELEGATECALL opcode
         self.__source_dir = source_dir
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)

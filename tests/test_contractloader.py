@@ -9,3 +9,7 @@ sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
 from upload_contracts import ContractLoader
 
 contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
+
+
+from upload_contracts import ContractLoader
+contracts = ContractLoader("src", "controller.se", ["mutex.se", "cash.se", "repContract.se"])
