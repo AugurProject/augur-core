@@ -406,7 +406,7 @@ class ContractLoader(object):
         try:
             self.__state.block.number += HOMESTEAD_BLOCK_NUMBER # enable DELEGATECALL opcode
         except:
-            self.__state.state.block.number += HOMESTEAD_BLOCK_NUMBER # enable DELEGATECALL opcode
+            self.__state.state.block_number += HOMESTEAD_BLOCK_NUMBER # enable DELEGATECALL opcode
         self.__source_dir = source_dir
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
