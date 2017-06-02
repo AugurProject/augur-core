@@ -68,7 +68,7 @@ CONTROLLER_INIT = re.compile('^(?P<indent>\s*)self.controller = 0x[0-9A-F]{1,40}
 INDENT = re.compile('^$|^[#\s].*$')
 
 STANDARD_EXTERNS = {
-    'controller': 'extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]',
+    'controller': 'extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]:int256, assertOnlySpecifiedCaller:[int256,int256]:_, changeMode:[int256]:int256, emergencyStop:[]:int256, getMode:[]:int256, getOwner:[]:int256, lookup:[int256]:int256, onlyInEmergency:[]:_, release:[]:int256, removeFromWhitelist:[int256,int256]:int256, setValue:[int256,int256]:int256, stopInEmergency:[]:_, suicide:[int256,int256,int256]:int256, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:_, transferOwnership:[int256,int256,int256,int256]:int256, updateController:[int256,int256]:int256]',
     # ERC20 and aliases used in Augur code
     'ERC20': 'extern ERC20: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]',
     'subcurrency': 'extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]',
@@ -403,7 +403,10 @@ class ContractLoader(object):
         ethereum.tester.gas_limit = 4200000
         self.__contracts = {}
         self.__temp_dir = TempDirCopy(source_dir)
-        self.__state.block.number += HOMESTEAD_BLOCK_NUMBER # enable DELEGATECALL opcode
+        try:
+            self.__state.block.number += HOMESTEAD_BLOCK_NUMBER # enable DELEGATECALL opcode
+        except:
+            self.__state.state.block_number += HOMESTEAD_BLOCK_NUMBER # enable DELEGATECALL opcode
         self.__source_dir = source_dir
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)

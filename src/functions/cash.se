@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controller: [lookup:[int256]:int256, assertIsWhitelisted:[int256]:int256]
+extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]:int256, assertOnlySpecifiedCaller:[int256,int256]:_, changeMode:[int256]:int256, emergencyStop:[]:int256, getMode:[]:int256, getOwner:[]:int256, lookup:[int256]:int256, onlyInEmergency:[]:_, release:[]:int256, removeFromWhitelist:[int256,int256]:int256, setValue:[int256,int256]:int256, stopInEmergency:[]:_, suicide:[int256,int256,int256]:int256, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:_, transferOwnership:[int256,int256,int256,int256]:int256, updateController:[int256,int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
@@ -31,7 +31,7 @@ event WithdrawEther(sender: address: indexed, value: uint256, balance: uint256, 
 event InitiateWithdrawEther(sender: address: indexed, value: uint256, balance: uint256, timestamp: uint256)
 
 def init():
-    self.controller = 0x01
+    self.controller = 0x0
     self.name = "Cash"
     self.symbol = "CASH"
     self.decimals = 18
@@ -42,6 +42,7 @@ def init():
 
 def transfer(to: address, value: uint256):
     refund()
+    self.controller.stopInEmergency()
     senderBalance = self.accounts[msg.sender].balance
     if(senderBalance < value):
         ~invalid()
@@ -57,6 +58,7 @@ def transfer(to: address, value: uint256):
 
 def transferFrom(from: address, to: address, value: uint256):
     refund()
+    self.controller.stopInEmergency()
     senderBalance = self.accounts[from].balance
     if(senderBalance < value):
         ~invalid()
@@ -75,12 +77,14 @@ def transferFrom(from: address, to: address, value: uint256):
 
 def approve(spender: address, value: uint256):
     refund()
+    self.controller.stopInEmergency()
     self.accounts[msg.sender].spenders[spender].maxValue = value
     log(type=Approval, msg.sender, spender, value)
     return(1)
 
 def publicDepositEther():
     MUTEX.acquire()
+    self.controller.stopInEmergency()
     self.depositEther(msg.sender, value = msg.value)
     MUTEX.release()
     return(1)

@@ -4,7 +4,7 @@ data stacks[](items[], head)
 data controller
 
 def init():
-    self.controller = 0x01
+    self.controller = 0x0
 
 def push(key, item):
     index = self.stacks[key].head + 1
