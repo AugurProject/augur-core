@@ -41,10 +41,12 @@ macro ASK: 2
 #
 # fxpAmountTakerWants is amount of shares the taker wants to fill
 # picks orders off the book
-# @return fxp
+
 def init():
     self.controller = 0x0
 
+# @public
+# @return fxp
 def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
     refund()
     MUTEX.acquire()
@@ -53,6 +55,8 @@ def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
     MUTEX.release()
     return(fxpAmountRemaining: uint256)
 
+# @internal
+# @return fxp
 def takeOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)

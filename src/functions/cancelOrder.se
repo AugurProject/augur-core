@@ -36,6 +36,7 @@ macro ORDER_FIELDS: 10
 def init():
     self.controller = 0x0
 
+# @public
 def publicCancelOrder(orderID):
     refund()
     MUTEX.acquire()
@@ -44,6 +45,7 @@ def publicCancelOrder(orderID):
     return(1)
 
 # Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
+# @internal
 # @returns 1 if success, throws on failure
 def cancelOrder(sender: address, orderID):
     refund()
@@ -82,6 +84,7 @@ def cancelOrder(sender: address, orderID):
     return(1)
 
 # Issue refunds
+# @private
 def refundOrder(sender: address, type: uint256, fxpSharesEscrowed: uint256, fxpMoneyEscrowed: uint256, market: address, outcome: uint256):
     refund()
     if(msg.sender != self):

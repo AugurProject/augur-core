@@ -51,7 +51,6 @@ def publicMakeOrder(type: uint256, fxpAmount: uint256, fxpPrice, market: address
     MUTEX.acquire()
     self.controller.stopInEmergency()
     orderID = self.makeOrder(msg.sender, type, fxpAmount, fxpPrice, market, outcome, betterOrderID, worseOrderID, tradeGroupID)
-    orderID = self.makeOrder(msg.sender, type, fxpAmount, fxpPrice, market, outcome, tradeGroupID)
     MUTEX.release()
     return(orderID)
 
