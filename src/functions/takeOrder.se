@@ -45,6 +45,18 @@ macro ASK: 2
 def init():
     self.controller = 0x0
 
+# Match an order with the best bid or ask.
+# @public
+# @return fxp
+def publicTakeBestOrder(type: uint256, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
+    refund()
+    MUTEX.acquire()
+    self.controller.stopInEmergency()
+    self.takeBestOrder(msg.sender, type, market, outcome, fxpAmountTakerWants)
+    MUTEX.release()
+    return(fxpAmountRemaining: uint256)
+
+# "Snipe" an order on the orderbook using its ID.
 # @public
 # @return fxp
 def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
@@ -54,6 +66,17 @@ def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
     fxpAmountRemaining = self.takeOrder(msg.sender, orderID, fxpAmountTakerWants)
     MUTEX.release()
     return(fxpAmountRemaining: uint256)
+
+# @internal
+# @return fxp
+def takeBestOrder(sender: address, type: uint256, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
+    refund()
+    self.controller.assertIsWhitelisted(msg.sender)
+    if(type == BID):
+        orderID = ORDERS.getBestAskOrderID(market, outcome)
+    elif(type == ASK):
+        orderID = ORDERS.getBestBidOrderID(market, outcome)
+    return(self.takeOrder(sender, orderID, fxpAmountTakerWants): uint256)
 
 # @internal
 # @return fxp
