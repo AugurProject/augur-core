@@ -16,8 +16,9 @@ Depends on Serpent and Pyethereum
 To test:
 
 ```
-pip install -r requirements.txt
-pip install -r test_requirements.txt
+sudo pip install -r requirements.txt
+sudo pip install -r test_requirements.txt
+git clone https://github.com/ethereum/serpent/ && cd serpent && make && sudo make install && sudo python setup.py install && cd ..
 python tests/runtests.py
 ```
 
