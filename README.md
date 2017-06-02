@@ -13,6 +13,12 @@ Also note, Mist uses a different contract abi style than usual, to convert use t
 
 Depends on Serpent and Pyethereum
 
+To test:
+
+``` pip install -r requirements.txt
+pip install -r test_requirements.txt
+python tests/runtests.py```
+
 # Docker
 
 ### Build:
