@@ -21,39 +21,36 @@ WEI_TO_ETH = 10**18
 TWO = 2*WEI_TO_ETH
 HALF = WEI_TO_ETH/2
 
-# def parseCapturedLogs(captured):
-    # return json.loads(captured.stdout.replace("'", '"').replace('u"', '"'))
-
 def nearly_equal(a, b, sig_fig=8):
     return(a == b or int(a * 10**sig_fig) == int(b * 10**sig_fig))
 
 def isclose(a, b, rel_tol=1e-10, abs_tol=0.0):
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
-def test_refund(contracts, state, t):
+def test_refund():
+    state = test.state()
+    c = state.abi_contract("tests/serpent_test_helpers/testRefund.se")
+
     def test_refund_funds():
-        balanceBefore = state.block.get_balance(t.a2)
-        contracts.orders.commitOrder(5, value=500*10**18, sender=t.k2)
-        balanceAfter = state.block.get_balance(t.a2)
+        balanceBefore = 0
+        balanceAfter = 0
+        try:
+            balanceBefore = state.block.get_balance(test.a2)
+        except:
+            balanceBefore = state.state.get_balance(test.a2)
+        c.testRefund(value=500*10**18, sender=test.k2)
+        try:
+            balanceAfter = state.block.get_balance(test.a2)
+        except:
+            balanceAfter = state.state.get_balance(test.a2)
+        print balanceAfter
+        print balanceBefore
         assert(isclose(balanceBefore, balanceAfter) == True)
-    def test_caller_whitelisted():
-        try:
-            raise Exception(contracts.backstops.setDisputedOverEthics(5, sender=t.k1))
-        except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that checks whitelist should fail from a non-whitelisted address"
-    def test_invalid():
-        contracts.mutex.acquire()
-        try:
-            raise Exception(contracts.mutex.acquire())
-        except Exception as exc:
-            assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails"
     test_refund_funds()
-    test_caller_whitelisted()
-    test_invalid()
 
 def test_float():
     s = test.state()
-    c = s.abi_contract('floatTestContract.se')
+    c = s.abi_contract("tests/serpent_test_helpers/floatTest.se")
     def test_add():
         assert(c.add(5, 10)==15)
         assert(c.add(500, 100)==600)
@@ -146,24 +143,6 @@ def test_float():
     test_divide()
     test_fxp_divide()
 
-def test_logReturn():
-    s = test.state()
-    c = s.abi_contract('logReturnTest.se')
-    def test_logReturn():
-        assert(c.testLogReturnContractCall(444) == 444)
-        assert(c.testLogReturnContractCall(-444) == -444)
-        with iocapture.capture() as captured:
-            retval = c.testLogReturn(5)
-            logged = parseCapturedLogs(captured)
-            print(cap)
-            # assert(logged["_event_type"] == u'tradeLogReturn')
-            # assert(logged["returnValue"] == 5)
-        with iocapture.capture() as captured:
-            retval = c.testLogArrayReturn([5, 10, 15])
-            logged = parseCapturedLogs(captured)
-            # assert(logged["_event_type"] == u'tradeLogArrayReturn')
-            # assert(logged["returnArray"] == [5, 10, 15])
-    test_logReturn()
 
 # def test_controller(contracts, state, t):
     ### Useful for controller testing
@@ -181,13 +160,8 @@ def test_logReturn():
         # binascii.hexlify()
 
 if __name__ == '__main__':
-    # src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
-    # contracts = ContractLoader(src, 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
-    # state = contracts._ContractLoader__state
-    # t = contracts._ContractLoader__tester
-    # test_refund(contracts, state, t)
+    test_refund()
     test_float()
-    test_logReturn()
-    # test_controller(contracts, state, t)
+    # test_controller()
     print "DONE TESTING RESOLUTION TESTS"
 
