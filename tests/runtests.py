@@ -5,6 +5,7 @@ import os
 import sys
 import trading_tests
 import data_api_tests
+import helper_tests
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
 sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
@@ -42,6 +43,11 @@ def test_trading():
     trading_tests.test_DecreaseTradingFee(contracts)
     trading_tests.test_ClaimProceeds(contracts)
 
+def test_helpers():
+    helper_tests.test_refund()
+    helper_tests.test_float()
+
 if __name__ == "__main__":
     test_data_api()
     test_trading()
+    test_helpers()

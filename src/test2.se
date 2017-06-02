@@ -1,0 +1,13 @@
+data yay
+
+def getYay():
+    return(self.yay)
+
+def setYay(yay):
+    self.yay = yay
+
+def initialize():
+    self.yay = 47
+
+def ok():
+    return(1)
