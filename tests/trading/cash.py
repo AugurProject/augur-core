@@ -19,14 +19,17 @@ def test_Cash(contracts):
         assert(utils.hex2str(contracts.cash.getSymbol()) == '4341534800000000000000000000000000000000000000000000000000000000'), "currency symbol"
     def test_publicDepositEther():
         contracts._ContractLoader__state.mine(1)
-        assert(contracts.cash.publicDepositEther(value=100, sender=t.k1) == 1), "deposit ether"
-        assert(contracts.cash.balanceOf(t.a1) == 100), "balance equal to deposit"
-        assert(contracts.cash.totalSupply() == 100), "totalSupply equal to deposit"
+        depositEtherAmount = 100
+        assert(contracts.cash.publicDepositEther(value=depositEtherAmount, sender=t.k1) == 1), "deposit ether"
+        assert(contracts.cash.balanceOf(t.a1) >= depositEtherAmount), "balance at least equal to deposit"
+        assert(contracts.cash.totalSupply() >= depositEtherAmount), "totalSupply at least equal to deposit"
     def test_publicWithdrawEther():
         contracts._ContractLoader__state.mine(1)
+        initialCashBalance = contracts.cash.balanceOf(t.a1)
+        initialTotalSupply = contracts.cash.totalSupply()
         assert(contracts.cash.getInitiated(sender=t.k1) == 0), "withdraw not initiated"
         try:
-            raise Exception(contracts.cash.publicWithdrawEther(t.a2, 110, sender=t.k1))
+            raise Exception(contracts.cash.publicWithdrawEther(t.a1, initialCashBalance + 1, sender=t.k1))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "withdraw should throw due to insufficient funds"
         assert(contracts.cash.publicWithdrawEther(t.a2, 30, sender=t.k1)), "initiate withdrawal"
@@ -42,10 +45,10 @@ def test_Cash(contracts):
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "withdraw should throw (3 days still haven't passed)"
         contracts._ContractLoader__state.block.timestamp += 1
         assert(contracts.cash.publicWithdrawEther(t.a2, 30, sender=t.k1)), "withdraw should succeed"
-        assert(contracts.cash.balanceOf(t.a1) == 70), "decrease sender's balance by 30"
+        assert(contracts.cash.balanceOf(t.a1) == initialCashBalance - 30), "decrease sender's balance by 30"
         assert(contracts.cash.balanceOf(t.a2) == 0), "receiver's cash balance still equals 0"
         assert(contracts._ContractLoader__state.block.get_balance(t.a2) - initialEtherBalance2 == 30), "receiver's ether balance increased by 30"
-        assert(contracts.cash.totalSupply() == 70), "total supply decreased by 30"
+        assert(contracts.cash.totalSupply() == initialTotalSupply - 30), "total supply decreased by 30"
         try:
             raise Exception(contracts.cash.publicWithdrawEther(t.a2, -10, sender=t.k1))
         except Exception as exc:
@@ -53,6 +56,9 @@ def test_Cash(contracts):
         assert(contracts.cash.getInitiated(sender=t.k1) == 0), "withdraw no longer initiated"
     def test_transfer():
         contracts._ContractLoader__state.mine(1)
+        initialCashBalance1 = contracts.cash.balanceOf(t.a1)
+        initialCashBalance2 = contracts.cash.balanceOf(t.a2)
+        initialTotalSupply = contracts.cash.totalSupply()
         with iocapture.capture() as captured:
             retval = contracts.cash.transfer(t.a2, 5, sender=t.k1)
             logged = utils.parseCapturedLogs(captured.stdout)[-1]
@@ -61,11 +67,11 @@ def test_Cash(contracts):
         assert(long(logged["to"], 16) == address2)
         assert(long(logged["from"], 16) == address1)
         assert(logged["value"] == 5)
-        assert(contracts.cash.balanceOf(t.a1) == 65), "balance of a1 decreased by 5"
-        assert(contracts.cash.balanceOf(t.a2) == 5), "balance of a2 increased by 5"
-        assert(contracts.cash.totalSupply() == 70), "totalSupply unchanged"
+        assert(contracts.cash.balanceOf(t.a1) == initialCashBalance1 - 5), "balance of a1 decreased by 5"
+        assert(contracts.cash.balanceOf(t.a2) == initialCashBalance2 + 5), "balance of a2 increased by 5"
+        assert(contracts.cash.totalSupply() == initialTotalSupply), "totalSupply unchanged"
         try:
-            raise Exception(contracts.cash.transfer(t.a2, 70, sender=t.k1))
+            raise Exception(contracts.cash.transfer(t.a2, contracts.cash.balanceOf(t.a1) + 1, sender=t.k1))
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "transfer should throw if insufficient funds"
         try:
@@ -80,9 +86,9 @@ def test_Cash(contracts):
         assert(long(logged["to"], 16) == address2)
         assert(long(logged["from"], 16) == address1)
         assert(logged["value"] == 0)
-        assert(contracts.cash.balanceOf(t.a1) == 65), "balance of a1 unchanged"
-        assert(contracts.cash.balanceOf(t.a2) == 5), "balance of a2 unchanged"
-        assert(contracts.cash.totalSupply() == 70), "totalSupply unchanged"
+        assert(contracts.cash.balanceOf(t.a1) == initialCashBalance1 - 5), "balance of a1 unchanged"
+        assert(contracts.cash.balanceOf(t.a2) == initialCashBalance2 + 5), "balance of a2 unchanged"
+        assert(contracts.cash.totalSupply() == initialTotalSupply), "totalSupply unchanged"
     def test_transferFrom():
         try:
             raise Exception(contracts.cash.transferFrom(t.a1, t.a2, 7, sender=t.k2))

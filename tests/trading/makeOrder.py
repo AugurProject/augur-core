@@ -28,7 +28,7 @@ def test_MakeOrder(contracts):
                 makerInitialCash = contracts.cash.balanceOf(t.a1)
                 marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
                 with iocapture.capture() as captured:
-                    orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+                    orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1)
                     logged = captured.stdout
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
@@ -90,7 +90,7 @@ def test_MakeOrder(contracts):
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeTwoShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve makeOrder contract to spend outcome 2 shares from account 1"
                 assert(outcomeShareContractWrapper.allowance(outcomeTwoShareContract, t.a1, contracts.makeOrder.address) == fxpAllowance), "makeOrder contract's allowance should be equal to the amount approved"
                 contracts._ContractLoader__state.mine(1)
-                askOrderID = contracts.makeOrder.publicMakeOrder(2, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+                askOrderID = contracts.makeOrder.publicMakeOrder(2, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1)
                 assert(askOrderID != 0), "Order ID should be non-zero"
                 # 3. Account 2: take account 1's ask order for outcome 2
                 contracts._ContractLoader__state.mine(1)
@@ -121,7 +121,7 @@ def test_MakeOrder(contracts):
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeOneShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve makeOrder contract to spend outcome 1 shares from account 1"
                 assert(outcomeShareContractWrapper.allowance(outcomeOneShareContract, t.a1, contracts.makeOrder.address) == fxpAllowance), "makeOrder contract's allowance should be equal to the amount approved"
                 with iocapture.capture() as captured:
-                    bidOrderID = contracts.makeOrder.publicMakeOrder(1, fxpBidAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+                    bidOrderID = contracts.makeOrder.publicMakeOrder(1, fxpBidAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1)
                     logged = captured.stdout
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(bidOrderID != 0), "Order ID should be non-zero"
@@ -164,7 +164,7 @@ def test_MakeOrder(contracts):
                 makerInitialCash = contracts.cash.balanceOf(t.a1)
                 marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
                 with iocapture.capture() as captured:
-                    orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+                    orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1)
                     logged = captured.stdout
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
@@ -214,7 +214,7 @@ def test_MakeOrder(contracts):
                 assert(int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve makeOrder contract to spend shares from the user's account (account 1)"
                 assert(outcomeShareContractWrapper.allowance(outcomeShareContract, t.a1, contracts.makeOrder.address) == fxpAllowance), "makeOrder contract's allowance should be equal to the amount approved"
                 with iocapture.capture() as captured:
-                    orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+                    orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1)
                     logged = captured.stdout
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
@@ -267,7 +267,7 @@ def test_MakeOrder(contracts):
                 assert(outcomeShareContractWrapper.allowance(outcomeShareContract, t.a1, contracts.makeOrder.address) == fxpAllowance), "makeOrder contract's allowance should be equal to the amount approved"
                 assert(contracts.cash.approve(contracts.makeOrder.address, fxpAllowance, sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
                 with iocapture.capture() as captured:
-                    orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+                    orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1)
                     logged = captured.stdout
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
