@@ -8,14 +8,8 @@ import os
 import sys
 import time
 import binascii
-import iocapture
-from pprint import pprint
-import json
 
-ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
-sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
-
-from upload_contracts import ContractLoader
+SERPENT_TEST_HELPERS = os.path.join(os.path.dirname(os.path.realpath(__file__)), "serpent_test_helpers")
 
 WEI_TO_ETH = 10**18
 TWO = 2*WEI_TO_ETH
@@ -29,7 +23,7 @@ def isclose(a, b, rel_tol=1e-10, abs_tol=0.0):
 
 def test_refund():
     state = test.state()
-    c = state.abi_contract("tests/serpent_test_helpers/testRefund.se")
+    c = state.abi_contract(os.path.join(SERPENT_TEST_HELPERS, "testRefund.se"))
 
     def test_refund_funds():
         balanceBefore = 0
@@ -50,7 +44,7 @@ def test_refund():
 
 def test_float():
     s = test.state()
-    c = s.abi_contract("tests/serpent_test_helpers/floatTest.se")
+    c = s.abi_contract(os.path.join(SERPENT_TEST_HELPERS, "floatTest.se"))
     def test_add():
         assert(c.add(5, 10)==15)
         assert(c.add(500, 100)==600)
@@ -164,4 +158,3 @@ if __name__ == '__main__':
     test_float()
     # test_controller()
     print "DONE TESTING RESOLUTION TESTS"
-

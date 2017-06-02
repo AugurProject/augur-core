@@ -8,9 +8,6 @@ extern markets: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256
 
 extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]:int256, assertOnlySpecifiedCaller:[int256,int256]:_, changeMode:[int256]:int256, emergencyStop:[]:int256, getMode:[]:int256, getOwner:[]:int256, lookup:[int256]:int256, onlyInEmergency:[]:_, release:[]:int256, removeFromWhitelist:[int256,int256]:int256, setValue:[int256,int256]:int256, stopInEmergency:[]:_, suicide:[int256,int256,int256]:int256, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:_, transferOwnership:[int256,int256,int256,int256]:int256, updateController:[int256,int256]:int256]
 
-MARKETS = self.controller.lookup('markets')
-extern markets: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getOutcomeShareContract:[int256,int256]:int256, getOutcomeShareWallet:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:uint256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[],int256[]]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
-
 inset('../macros/safeMath.sem')
 inset('../macros/refund.sem')
 
@@ -19,9 +16,12 @@ inset('../macros/refund.sem')
 # traderID is index
 data orderCommits[](hash, block)
 # orderID is index
-data orders[](id, type, market, fxpAmount, fxpPrice, owner, block, outcome, fxpSharesEscrowed, fxpMoneyEscrowed)
+data orders[](id, type, market, fxpAmount, fxpPrice, owner, block, outcome, fxpSharesEscrowed, fxpMoneyEscrowed, betterOrderID, worseOrderID)
 # prices keeps track of the latest traded fxpPrice for a given outcome in a market [market is the key]
 data marketOrderData[](volume, prices[], totalOrders, lastOrder, orderIDs[](id, nextID, prevID))
+# indices are marketID and outcomeID
+data bestOrder[][](bid, ask)
+data worstOrder[][](bid, ask)
 
 data controller
 
@@ -38,7 +38,48 @@ macro ASK: 2
 def init():
     self.controller = 0x0
 
-def makeOrderHash(market, outcome, direction):
+# @public
+# @return fxp
+def getAmount(id: address):
+    return(self.orders[id].fxpAmount: uint256)
+
+# @public
+def getID(orderID: address):
+    return(self.orders[orderID].id: address)
+
+# @public
+# @return fxp
+def getPrice(id: address):
+    return(self.orders[id].fxpPrice)
+
+# @public
+def getOrderOwner(id: address):
+    return(self.orders[id].owner: address)
+
+# @public
+def getType(id: address):
+    return(self.orders[id].type: uint256)
+
+# @public
+# @return fxp
+def getVolume(market: address):
+    return(self.marketOrderData[market].volume: uint256)
+
+# @public
+# @return fxp
+def getLastOutcomePrice(market: address, outcome: uint256):
+    return(self.marketOrderData[market].prices[outcome])
+
+# @public
+def getTotalOrders(marketID: address):
+    return(self.marketOrderData[marketID].totalOrders: uint256)
+
+# @public
+def getLastOrder(market: address):
+    return(self.marketOrderData[market].lastOrder: address)
+
+# @public
+def makeOrderHash(market: address, outcome: uint256, direction: uint256):
     refund()
     orderInfo = array(4)
     orderInfo[0] = market
@@ -48,19 +89,170 @@ def makeOrderHash(market, outcome, direction):
     orderHash = ripemd160(orderInfo, items=4)
     return(orderHash)
 
+# @public
 def commitOrder(hash):
     refund()
     self.orderCommits[msg.sender].hash = hash
     self.orderCommits[msg.sender].block = block.number
-    return(1)
+    return(1: uint256)
 
-def checkHash(orderHash, sender):
+# @public
+def checkHash(orderHash, sender: address):
     if(self.orderCommits[sender].hash != orderHash or block.number <= self.orderCommits[sender].block):
         ~invalid()
-    else:
-        return(1)
+    return(1: uint256)
 
-def saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, tradeGroupID):
+# @public
+def getOrderIDs(marketID: address):
+    ordersCount = self.marketOrderData[marketID].totalOrders
+    orderID = self.marketOrderData[marketID].lastOrder
+    orderIDs = array(ordersCount)
+    i = 0
+    while(i < ordersCount):
+        orderIDs[i] = self.marketOrderData[marketID].orderIDs[orderID].id
+        orderID = self.marketOrderData[marketID].orderIDs[orderID].prevID
+        i += 1
+    if(orderIDs):
+        return(orderIDs: arr)
+    return([FAILURE]: arr)
+
+# @public
+def getPrevID(market: address, order: address):
+    return(self.marketOrderData[market].orderIDs[order].prevID: address)
+
+# @public
+def getOrder(id: address):
+    order = array(12)
+    order[0] = self.orders[id].id
+    order[1] = self.orders[id].type
+    order[2] = self.orders[id].market
+    order[3] = self.orders[id].fxpAmount
+    order[4] = self.orders[id].fxpPrice
+    order[5] = self.orders[id].owner
+    order[6] = self.orders[id].block
+    order[7] = self.orders[id].outcome
+    order[8] = self.orders[id].fxpMoneyEscrowed
+    order[9] = self.orders[id].fxpSharesEscrowed
+    order[10] = self.orders[id].betterOrderID
+    order[11] = self.orders[id].worseOrderID
+    if(order):
+        return(order: arr)
+    return([0]: arr)
+
+# @public
+def getBestBidOrderID(market: address, outcome: uint256):
+    return(self.bestOrder[market][outcome].bid: address)
+
+# @public
+def getBestAskOrderID(market: address, outcome: uint256):
+    return(self.bestOrder[market][outcome].ask: address)
+
+# @public
+def getWorstBidOrderID(market: address, outcome: uint256):
+    return(self.worstOrder[market][outcome].bid: address)
+
+# @public
+def getWorstAskOrderID(market: address, outcome: uint256):
+    return(self.worstOrder[market][outcome].ask: address)
+
+# @private
+def updateBestBidOrder(orderID: address, market: address, fxpPrice, outcome: uint256, betterOrderID: uint256):
+    if(msg.sender != self):
+        ~invalid()
+    bestBidOrderID = self.bestOrder[market][outcome].bid
+    # If best bid is not set, this order is the new best bid
+    if(bestBidOrderID == 0):
+        self.bestOrder[market][outcome].bid = orderID
+    else:
+        # If price higher than best bid price, this order is the new best bid
+        if(fxpPrice > self.orders[bestBidOrderID].fxpPrice):
+            if(betterOrderID != 0):
+                ~invalid()
+            self.bestOrder[market][outcome].bid = orderID
+        # If price is lower than the best bid price:
+        #  - betterOrderID must be specified
+        #  - price must be less than or equal to betterOrderID's price
+        else:
+            if(betterOrderID == 0):
+                ~invalid()
+            if(fxpPrice > self.orders[betterOrderID].fxpPrice):
+                ~invalid()
+    return(1: uint256)
+
+# @private
+def updateWorstBidOrder(orderID: address, market: address, fxpPrice, outcome: uint256, worseOrderID: uint256):
+    if(msg.sender != self):
+        ~invalid()
+    worstBidOrderID = self.worstOrder[market][outcome].bid
+    # If worst bid is not set, this order is the new worst bid
+    if(worstBidOrderID == 0):
+        self.worstOrder[market][outcome].bid = orderID
+    else:
+        # If price lower than worst bid price, this order is the new worst bid
+        if(fxpPrice < self.orders[worstBidOrderID].fxpPrice):
+            if(worseOrderID != 0):
+                ~invalid()
+            self.worstOrder[market][outcome].bid = orderID
+        # If price is higher than the worst bid price:
+        #  - worseOrderID must be specified
+        #  - price must be greater than or equal to worseOrderID's price
+        else:
+            if(worseOrderID == 0):
+                ~invalid()
+            if(fxpPrice < self.orders[worseOrderID].fxpPrice):
+                ~invalid()
+    return(1: uint256)
+
+# @private
+def updateBestAskOrder(orderID: address, market: address, fxpPrice, outcome: uint256, betterOrderID: uint256):
+    if(msg.sender != self):
+        ~invalid()
+    bestAskOrderID = self.bestOrder[market][outcome].ask
+    # If best ask is not set, this order is the new best ask
+    if(bestAskOrderID == 0):
+        self.bestOrder[market][outcome].ask = orderID
+    else:
+        # If price lower than best ask price, this order is the new best ask
+        if(fxpPrice < self.orders[bestAskOrderID].fxpPrice):
+            if(betterOrderID != 0):
+                ~invalid()
+            self.bestOrder[market][outcome].ask = orderID
+        # If price is higher than the best ask price:
+        #  - betterOrderID must be specified
+        #  - price must be greater than than or equal to betterOrderID's price
+        else:
+            if(betterOrderID == 0):
+                ~invalid()
+            if(fxpPrice < self.orders[betterOrderID].fxpPrice):
+                ~invalid()
+    return(1: uint256)
+
+# @private
+def updateWorstAskOrder(orderID: address, market: address, fxpPrice, outcome: uint256, worseOrderID: uint256):
+    if(msg.sender != self):
+        ~invalid()
+    worstAskOrderID = self.worstOrder[market][outcome].ask
+    # If worst ask is not set, this order is the new worst ask
+    if(worstAskOrderID == 0):
+        self.worstOrder[market][outcome].ask = orderID
+    else:
+        # If price higher than worst ask price, this order is the new worst ask
+        if(fxpPrice > self.orders[worstAskOrderID].fxpPrice):
+            if(worseOrderID != 0):
+                ~invalid()
+            self.worstOrder[market][outcome].ask = orderID
+        # If price is lower than the worst ask price:
+        #  - worseOrderID must be specified
+        #  - price must be less than or equal to worseOrderID's price
+        else:
+            if(worseOrderID == 0):
+                ~invalid()
+            if(fxpPrice > self.orders[worseOrderID].fxpPrice):
+                ~invalid()
+    return(1: uint256)
+
+# @internal
+def saveOrder(orderID: address, type: uint256, market: address, fxpAmount: uint256, fxpPrice, sender: address, outcome: uint256, fxpMoneyEscrowed: uint256, fxpSharesEscrowed: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID):
     self.controller.assertIsWhitelisted(msg.sender)
     if(outcome > MARKETS.getMarketNumOutcomes(market)):
         ~invalid()
@@ -74,27 +266,41 @@ def saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMo
     self.orders[orderID].outcome = outcome
     self.orders[orderID].fxpMoneyEscrowed = fxpMoneyEscrowed
     self.orders[orderID].fxpSharesEscrowed = fxpSharesEscrowed
-    log(type = MakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp, tradeGroupID)
-    return(1)
+    if(type == BID):
+        self.updateBestBidOrder(orderID, market, fxpPrice, outcome, betterOrderID)
+        self.updateWorstBidOrder(orderID, market, fxpPrice, outcome, worseOrderID)
+    elif(type == ASK):
+        self.updateBestAskOrder(orderID, market, fxpPrice, outcome, betterOrderID)
+        self.updateWorstAskOrder(orderID, market, fxpPrice, outcome, worseOrderID)
+    if(betterOrderID != 0):
+        self.orders[betterOrderID].worseOrderID = orderID
+        self.orders[orderID].betterOrderID = betterOrderID
+    if(worseOrderID != 0):
+        self.orders[worseOrderID].betterOrderID = orderID
+        self.orders[orderID].worseOrderID = worseOrderID
+    log(type=MakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp, tradeGroupID)
+    return(1: uint256)
 
-def getOrder(id):
-    order = array(10)
-    order[0] = self.orders[id].id
-    order[1] = self.orders[id].type
-    order[2] = self.orders[id].market
-    order[3] = self.orders[id].fxpAmount
-    order[4] = self.orders[id].fxpPrice
-    order[5] = self.orders[id].owner
-    order[6] = self.orders[id].block
-    order[7] = self.orders[id].outcome
-    order[8] = self.orders[id].fxpMoneyEscrowed
-    order[9] = self.orders[id].fxpSharesEscrowed
-    if(order):
-        return(order: arr)
-    return([0]: arr)
-
-def removeOrder(id):
+# @internal
+def removeOrder(id: address):
     self.controller.assertIsWhitelisted(msg.sender)
+    type = self.orders[id].type
+    betterOrderID = self.orders[id].betterOrderID
+    worseOrderID = self.orders[id].worseOrderID
+    if(type == BID):
+        if(self.bestOrder[market][outcome].bid == id):
+            self.bestOrder[market][outcome].bid = worseOrderID
+        if(self.worstOrder[market][outcome].bid == id):
+            self.worstOrder[market][outcome].bid = betterOrderID
+    elif(type == ASK):
+        if(self.bestOrder[market][outcome].ask == id):
+            self.bestOrder[market][outcome].ask = worseOrderID
+        if(self.worstOrder[market][outcome].ask == id):
+            self.worstOrder[market][outcome].ask = betterOrderID
+    if(betterOrderID != 0):
+        self.orders[betterOrderID].worseOrderID = worseOrderID
+    if(worseOrderID != 0):
+        self.orders[worseOrderID].betterOrderID = betterOrderID
     self.orders[id].id = 0
     self.orders[id].type = 0
     self.orders[id].market = 0
@@ -105,78 +311,65 @@ def removeOrder(id):
     self.orders[id].outcome = 0
     self.orders[id].fxpMoneyEscrowed = 0
     self.orders[id].fxpSharesEscrowed = 0
-    return(1)
+    self.orders[id].betterOrderID = 0
+    self.orders[id].worseOrderID = 0
+    return(1: uint256)
 
-def fillOrder(orderID, fill, money, shares):
+# @internal
+def fillOrder(orderID: address, fill, money, shares):
     self.controller.assertIsWhitelisted(msg.sender)
-    if(fill > self.orders[orderID].fxpAmount or money > self.orders[orderID].fxpMoneyEscrowed or shares > self.orders[orderID].fxpSharesEscrowed):
+    if(fill > self.orders[orderID].fxpAmount):
+        ~invalid()
+    if(money > self.orders[orderID].fxpMoneyEscrowed):
+        ~invalid()
+    if(shares > self.orders[orderID].fxpSharesEscrowed):
         ~invalid()
     self.orders[orderID].fxpAmount -= fill
     self.orders[orderID].fxpMoneyEscrowed -= money
     self.orders[orderID].fxpSharesEscrowed -= shares
-    return(1)
+    return(1: uint256)
 
+# Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
+# @ internal
 def takeBidOrderLog(market: address, sender: address, owner: address, fxpPrice, fxpSumOfFills: uint256, orderID: address, outcome: uint256, fxpAskerSharesFilled: uint256, fxpAskerMoneyFilled: uint256, fxpBidderSharesFilled: uint256, fxpBidderMoneyFilled: uint256):
-    # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
+    self.controller.assertIsWhitelisted(msg.sender)
     log(type=TakeBidOrder, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
-    return(1)
+    return(1: uint256)
 
+# Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
+# @ internal
 def takeAskOrderLog(market: address, sender: address, owner: address, fxpPrice, fxpSumOfFills: uint256, orderID: address, outcome: uint256, fxpAskerSharesFilled: uint256, fxpAskerMoneyFilled: uint256, fxpBidderMoneyFilled: uint256):
-    # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
+    self.controller.assertIsWhitelisted(msg.sender)
     log(type=TakeAskOrder, market, sender, owner, BID, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled)
-    return(1)
+    return(1: uint256)
 
+# @ internal
 def completeSetsLog(sender, market, type, fxpAmount, numOutcomes, fee):
-    log(type = CompleteSets, sender, market, type, fxpAmount, numOutcomes, fee, block.timestamp)
-    return(1)
+    self.controller.assertIsWhitelisted(msg.sender)
+    log(type=CompleteSets, sender, market, type, fxpAmount, numOutcomes, fee, block.timestamp)
+    return(1: uint256)
 
+# @ internal
 def cancelOrderLog(market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed):
-    log(type = CancelOrder, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp)
-    return(1)
+    self.controller.assertIsWhitelisted(msg.sender)
+    log(type=CancelOrder, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp)
+    return(1: uint256)
 
-# @return fxp
-def getAmount(id):
-    return(self.orders[id].fxpAmount)
-
-def getID(orderID):
-    return(self.orders[orderID].id)
-
-# @return fxp
-def getPrice(id):
-    return(self.orders[id].fxpPrice)
-
-def getOrderOwner(id):
-    return(self.orders[id].owner)
-
-def getType(id):
-    return(self.orders[id].type)
-
-# @return fxp
-def getVolume(market):
-    return(self.marketOrderData[market].volume)
-
-def modifyMarketVolume(market, fxpAmount):
+# @internal
+def modifyMarketVolume(market: address, fxpAmount):
     self.controller.assertIsWhitelisted(msg.sender)
     self.marketOrderData[market].volume += fxpAmount
     TOPICS.updateTopicPopularity(MARKETS.getBranch(market), MARKETS.getTopic(market), fxpAmount)
-    return(1)
+    return(1: uint256)
 
-# @return fxp
-def getLastOutcomePrice(market, outcome):
-    return(self.marketOrderData[market].prices[outcome])
-
-def setPrice(market, outcome, fxpPrice):
+# @internal
+def setPrice(market: address, outcome: uint256, fxpPrice):
     self.controller.assertIsWhitelisted(msg.sender)
     self.marketOrderData[market].prices[outcome] = fxpPrice
-    return(1)
+    return(1: uint256)
 
-def getTotalOrders(marketID):
-    return(self.marketOrderData[marketID].totalOrders)
-
-def getLastOrder(market):
-    return(self.marketOrderData[market].lastOrder)
-
-def addOrder(market, orderID):
+# @internal
+def addOrderToMarket(market: address, orderID: address):
     self.controller.assertIsWhitelisted(msg.sender)
     lastID = self.marketOrderData[market].lastOrder
     self.marketOrderData[market].orderIDs[lastID].nextID = orderID
@@ -184,9 +377,10 @@ def addOrder(market, orderID):
     self.marketOrderData[market].orderIDs[orderID].id = orderID
     self.marketOrderData[market].lastOrder = orderID
     self.marketOrderData[market].totalOrders += 1
-    return(1)
+    return(1: uint256)
 
-def removeOrderFromMarket(marketID, orderID):
+# @internal
+def removeOrderFromMarket(marketID: address, orderID: address):
     self.controller.assertIsWhitelisted(msg.sender)
     prevID = self.marketOrderData[marketID].orderIDs[orderID].prevID
     nextID = self.marketOrderData[marketID].orderIDs[orderID].nextID
@@ -207,23 +401,7 @@ def removeOrderFromMarket(marketID, orderID):
         self.marketOrderData[marketID].orderIDs[orderID].prevID = 0
     self.marketOrderData[marketID].orderIDs[orderID].id = 0
     self.marketOrderData[marketID].totalOrders -= 1
-    return(1)
-
-def getOrderIDs(marketID):
-    ordersCount = self.marketOrderData[marketID].totalOrders
-    orderID = self.marketOrderData[marketID].lastOrder
-    orderIDs = array(ordersCount)
-    i = 0
-    while(i < ordersCount):
-        orderIDs[i] = self.marketOrderData[marketID].orderIDs[orderID].id
-        orderID = self.marketOrderData[marketID].orderIDs[orderID].prevID
-        i += 1
-    if(orderIDs):
-        return(orderIDs: arr)
-    return([FAILURE]: arr)
-
-def getPrevID(market, order):
-    return(self.marketOrderData[market].orderIDs[order].prevID)
+    return(1: uint256)
 
 # @controller
 def setController(newController: address):
@@ -232,15 +410,8 @@ def setController(newController: address):
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
     suicide(to)
-
-# placeholder
-def getBestAskOrderID(market, outcome):
-    return(1)
-
-# placeholder
-def getBestBidOrderID(market, outcome):
-    return(1)

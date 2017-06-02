@@ -9,7 +9,7 @@ EVENTS = self.controller.lookup('events')
 extern events: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, addReportersPaidSoFar:[int256]:int256, getBond:[int256]:int256, getChallenged:[int256]:int256, getCreationTime:[int256]:int256, getEarlyResolutionBond:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getEventPushedUp:[int256]:int256, getEventResolution:[int256]:bytes, getEventType:[int256]:int256, getExpiration:[int256]:int256, getExtraBond:[int256]:int256, getExtraBondPoster:[int256]:int256, getFirstPreliminaryOutcome:[int256]:int256, getForkEthicality:[int256]:int256, getForkOutcome:[int256]:int256, getForkResolveAddress:[int256]:int256, getForked:[int256]:int256, getForkedDone:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMinValue:[int256]:int256, getMode:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPast24:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getReportersPaidSoFar:[int256]:int256, getReportingThreshold:[int256]:int256, getResolutionAddress:[int256]:int256, getResolutionLength:[int256]:int256, getResolveBondPoster:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, setBond:[int256,int256]:int256, setBranch:[int256,int256]:int256, setChallenged:[int256]:int256, setController:[address]:int256, setCreationTime:[int256]:int256, setEarlyResolutionBond:[int256,int256]:int256, setEthics:[int256,int256]:int256, setEventPushedUp:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setExtraBond:[int256,int256]:int256, setExtraBondPoster:[int256,int256]:int256, setFirstPreliminaryOutcome:[int256,int256]:int256, setForkDone:[int256]:int256, setForkEthicality:[int256,int256]:int256, setForkOutcome:[int256,int256]:int256, setForked:[int256]:int256, setMode:[int256,int256]:int256, setOriginalExpiration:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setRejected:[int256,int256]:int256, setThreshold:[int256,int256]:int256, setUncaughtOutcome:[int256,int256]:int256, suicideFunds:[address]:_]
 
 ORDERS = self.controller.lookup('orders')
-extern orders: [addOrder:[int256,int256]:int256, cancelOrderLog:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, completeSetsLog:[int256,int256,int256,int256,int256,int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAskOrderID:[int256,int256]:int256, getBestBidOrderID:[int256,int256]:int256, getID:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getOrder:[int256]:int256[], getOrderIDs:[int256]:int256[], getOrderOwner:[int256]:int256, getPrevID:[int256,int256]:int256, getPrice:[int256]:int256, getTotalOrders:[int256]:int256, getType:[int256]:int256, getVolume:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, modifyMarketVolume:[int256,int256]:int256, removeOrder:[int256]:int256, removeOrderFromMarket:[int256,int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, setPrice:[int256,int256,int256]:int256, suicideFunds:[address]:_, takeAskOrderLog:[address,address,address,int256,uint256,address,uint256,uint256,uint256,uint256]:int256, takeBidOrderLog:[address,address,address,int256,uint256,address,uint256,uint256,uint256,uint256,uint256]:int256]
+extern orders: [addOrderToMarket:[int256,int256]:int256, cancelOrderLog:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, completeSetsLog:[int256,int256,int256,int256,int256,int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getID:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getOrder:[int256]:int256[], getOrderIDs:[int256]:int256[], getOrderOwner:[int256]:int256, getPrevID:[int256,int256]:int256, getPrice:[int256]:int256, getTotalOrders:[int256]:int256, getType:[int256]:int256, getVolume:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, modifyMarketVolume:[int256,int256]:int256, removeOrder:[int256]:int256, removeOrderFromMarket:[int256,int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, setPrice:[int256,int256,int256]:int256, suicideFunds:[address]:_, takeAskOrderLog:[address,address,address,int256,uint256,address,uint256,uint256,uint256,uint256]:int256, takeBidOrderLog:[address,address,address,int256,uint256,address,uint256,uint256,uint256,uint256,uint256]:int256]
 
 INFO = self.controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:address, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setController:[address]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256, suicideFunds:[address]:_]
@@ -45,15 +45,17 @@ macro MAX_INT256_VALUE: 2**255 - 1
 def init():
     self.controller = 0x0
 
-def publicMakeOrder(type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, tradeGroupID):
+# @public
+def publicMakeOrder(type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID):
     refund()
     MUTEX.acquire()
     self.controller.stopInEmergency()
-    orderID = self.makeOrder(msg.sender, type, fxpAmount, fxpPrice, market, outcome, tradeGroupID)
+    orderID = self.makeOrder(msg.sender, type, fxpAmount, fxpPrice, market, outcome, betterOrderID, worseOrderID, tradeGroupID)
     MUTEX.release()
     return(orderID)
 
-def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, tradeGroupID):
+# @internal
+def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID):
     refund()
     self.controller.assertIsWhitelisted(msg.sender)
 
@@ -61,9 +63,9 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
         ~invalid()
 
     if(type == ASK):
-        escrow = self.placeAsk(sender, fxpAmount, fxpPrice, market, outcome, outitems = 2)
+        escrow = self.placeAsk(sender, fxpAmount, fxpPrice, market, outcome, outitems=2)
     elif(type == BID):
-        escrow = self.placeBid(sender, fxpAmount, fxpPrice, market, outcome, outitems = 2)
+        escrow = self.placeBid(sender, fxpAmount, fxpPrice, market, outcome, outitems=2)
     else:
         ~invalid()
 
@@ -71,16 +73,17 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
     fxpSharesEscrowed = escrow[1]
 
     order = [type, market, fxpAmount, fxpPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
-    orderID = ripemd160(order, items = 9)
+    orderID = ripemd160(order, items=9)
     if(ORDERS.getID(orderID)):
         ~invalid()
-    ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, tradeGroupID)
+    ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID)
 
     # Update market
-    ORDERS.addOrder(market, orderID)
+    ORDERS.addOrderToMarket(market, orderID)
 
     return(orderID)
 
+# @private
 def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):
     refund()
     if(msg.sender != self):
@@ -96,7 +99,7 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
     if(fxpSharesHeld > 0):
         fxpCostPerShare = fxpPrice - EVENTS.getMinValue(event)
         fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
-        if(fxpCostPerShare > fxpCumulativeScale):
+        if(fxpCostPerShare >= fxpCumulativeScale):
             ~invalid()
         if(fxpCost < MIN_ORDER_VALUE):
             ~invalid()
@@ -114,7 +117,7 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
             fxpMaxValue = TWO
         fxpCostPerShareShorting = fxpMaxValue - fxpPrice
         fxpOrderCost = safeFxpMul(fxpAmount, fxpCostPerShareShorting)
-        if(fxpCostPerShareShorting > fxpCumulativeScale):
+        if(fxpCostPerShareShorting >= fxpCumulativeScale):
             ~invalid()
         if(fxpOrderCost < MIN_ORDER_VALUE):
             ~invalid()
@@ -124,6 +127,7 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
+# @private
 def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):
     refund()
     if(msg.sender != self):
@@ -140,7 +144,7 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     fxpCostPerShare = fxpPrice - EVENTS.getMinValue(MARKETS.getMarketEvent(market))
     fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
-    if(fxpCostPerShare > MARKETS.getCumulativeScale(market)):
+    if(fxpCostPerShare >= MARKETS.getCumulativeScale(market)):
         ~invalid()
     if(fxpCost < MIN_ORDER_VALUE):
         ~invalid()
@@ -167,12 +171,14 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
     return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
+# @controller
 def setController(newController: address):
     if(msg.sender != self.controller):
         ~invalid()
     self.controller = newController
     return(1)
 
+# @controller
 def suicideFunds(to: address):
     if(msg.sender != self.controller):
         ~invalid()
