@@ -3,8 +3,8 @@
 from __future__ import division
 import os
 import sys
-import trading_tests
-import data_api_tests
+from data_api import backstops, branches, consensusData, events, expiringEvents, info, markets, mutex, orders, topics
+from trading import cash, shareTokens, wallet, createEvent, createMarket, completeSets, makeOrder, cancelOrder, takeAskOrder, takeBidOrder, takeOrder, decreaseTradingFee, claimProceeds
 import helper_tests
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
@@ -16,32 +16,32 @@ contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.s
 
 def test_data_api():
     global contracts
-    data_api_tests.test_backstops(contracts)
-    data_api_tests.test_branches(contracts)
-    data_api_tests.test_consensusData(contracts)
-    data_api_tests.test_events(contracts)
-    data_api_tests.test_expiringEvents(contracts)
-    data_api_tests.test_info(contracts)
-    data_api_tests.test_markets(contracts)
-    data_api_tests.test_mutex(contracts)
-    data_api_tests.test_orders(contracts)
-    data_api_tests.test_topics(contracts)
+    backstops.test_backstops(contracts)
+    branches.test_branches(contracts)
+    consensusData.test_consensusData(contracts)
+    events.test_events(contracts)
+    expiringEvents.test_expiringEvents(contracts)
+    info.test_info(contracts)
+    markets.test_markets(contracts)
+    mutex.test_mutex(contracts)
+    orders.test_orders(contracts)
+    topics.test_topics(contracts)
 
 def test_trading():
     global contracts
-    trading_tests.test_Cash(contracts)
-    trading_tests.test_ShareTokens(contracts)
-    trading_tests.test_Wallet(contracts)
-    trading_tests.test_CreateEvent(contracts)
-    trading_tests.test_CreateMarket(contracts)
-    trading_tests.test_CompleteSets(contracts)
-    trading_tests.test_MakeOrder(contracts)
-    trading_tests.test_CancelOrder(contracts)
-    trading_tests.test_TakeAskOrder(contracts)
-    trading_tests.test_TakeBidOrder(contracts)
-    trading_tests.test_TakeOrder(contracts)
-    trading_tests.test_DecreaseTradingFee(contracts)
-    trading_tests.test_ClaimProceeds(contracts)
+    cash.test_Cash(contracts)
+    shareTokens.test_ShareTokens(contracts)
+    wallet.test_Wallet(contracts)
+    createEvent.test_CreateEvent(contracts)
+    createMarket.test_CreateMarket(contracts)
+    completeSets.test_CompleteSets(contracts)
+    makeOrder.test_MakeOrder(contracts)
+    cancelOrder.test_CancelOrder(contracts)
+    takeAskOrder.test_TakeAskOrder(contracts)
+    takeBidOrder.test_TakeBidOrder(contracts)
+    takeOrder.test_TakeOrder(contracts)
+    decreaseTradingFee.test_DecreaseTradingFee(contracts)
+    claimProceeds.test_ClaimProceeds(contracts)
 
 def test_helpers():
     helper_tests.test_refund()
