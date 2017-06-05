@@ -1,4 +1,5 @@
 Note, these test cases are designed such that you can write while loops and randomly vary the # of shares and the price once you've written the first one of each [as long as the price you specify is within the range] and the math'll add up.
+
 Filling a bid [so selling]:
 
     maker escrowed shares in all outcomes except this one, taker does not have shares in this outcome /// maker is closing a short position, taker is going short:
