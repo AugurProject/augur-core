@@ -7,7 +7,6 @@ import sys
 import json
 import iocapture
 import ethereum.tester
-import utils
 from decimal import *
 
 eventCreationCounter = 0
@@ -274,40 +273,36 @@ def test_binary(contracts, i):
         # confirm cash
         fxpCumulativeScale = contracts.markets.getCumulativeScale(marketID)
         fxpTradingFee = contracts.markets.getTradingFee(marketID)
-        fxpMoneyFromSellCompleteSets = fix(unfix(makerInitialShares)*unfix(fxpCumulativeScale))
+        fxpMoneyFromSellCompleteSets = int((Decimal(makerInitialShares)*Decimal(fxpCumulativeScale)) / Decimal(10)**Decimal(18))
         print ""
-        print "marketTradingFee", fxpTradingFee, unfix(fxpTradingFee)
+        print "fxpTradingFee", fxpTradingFee, unfix(fxpTradingFee)
+        print "fxpMoneyFromSellCompleteSets", fxpMoneyFromSellCompleteSets, unfix(fxpMoneyFromSellCompleteSets)
+        print "fxpCumulativeScale", fxpCumulativeScale
         print "expectedMakerGain", expectedMakerGain, unfix(expectedMakerGain)
         print "expectedTakerGain", expectedTakerGain, unfix(expectedTakerGain)
-        print "expectedFinalMaker", (makerInitialCash + expectedMakerGain), unfix(makerInitialCash + expectedMakerGain)
+        print "expectedFinalMaker", (makerInitialCash + expectedMakerGain - marketFinalCash), unfix(makerInitialCash + expectedMakerGain - marketFinalCash)
         print "expectedFinalTaker", (takerInitialCash + expectedTakerGain), unfix(takerInitialCash + expectedTakerGain)
-        print "actualMaker/TakerFinal", makerFinalCash, takerFinalCash
-        print "actualUnfixedMaker/TakerFinal", unfix(makerFinalCash), unfix(takerFinalCash)
-        print ""
-        print "expectedMarketFinal", fix(randomAmount*0.01), randomAmount*0.01
-        print marketFinalCash, fix(randomAmount*0.01)
-        print unfix(marketFinalCash), randomAmount*0.01
         print ""
         print "makerInitialShares", makerInitialShares, unfix(makerInitialShares)
-        fxpFee = fix(((unfix(fxpTradingFee)*unfix(makerInitialShares))*unfix(fxpCumulativeScale)))
+        fxpFee = int(Decimal((fxpTradingFee*makerInitialShares)*fxpCumulativeScale / 10**18))
+        # fxpFee split in half should be the value of market.
         print "fxpFee", fxpFee, unfix(fxpFee)
-        print "fxpTesting..", (fxpFee/2), unfix(fxpFee/2)
-        print "fxpMoneyFromSellCompleteSets", fxpMoneyFromSellCompleteSets, unfix(fxpMoneyFromSellCompleteSets)
-        pretest = unfix(fxpFee) + unfix(fxpExpectedTakerGain)
-        print "pretest", pretest, fix(pretest)
-        test = fix((unfix(fxpMoneyFromSellCompleteSets) - pretest))
-        # test = fix(unfix(fxpMoneyFromSellCompleteSets) - (unfix(fxpFee) + unfix(fxpExpectedTakerGain)))
-        print "finally:", test, unfix(test)
-        print "another:", ((makerInitialCash - test) + expectedMakerGain), unfix(((makerInitialCash - test) + expectedMakerGain))
+        print "more fee stuff", int(Decimal(fxpFee / 2)), unfix(int(Decimal(fxpFee / 2))), unfix(Decimal(fxpFee / 2))
+        # expectedMarketFinal is off... it only works if we compared unfixed but thats not accurate, the issue appears to be binary float math vs regular math.
         expectedMarketFinal = fix(randomAmount*0.01)
-        assert(expectedMarketFinal == marketFinalCash), "expected market's final cash to be = to the amount of shares purchased * .01"
-        assert(makerInitialCash + expectedMakerGain == makerFinalCash), "maker's cash balance should be the initial balance + expected Gain"
-        assert(takerInitialCash + expectedTakerGain == takerFinalCash), "taker's cash balance should be the initial balance + expected Gain"
+        print 'combined', makerInitialCash + expectedMakerGain - expectedMarketFinal
+        print 'makerInitialCash', makerInitialCash, unfix(makerInitialCash)
+        print 'expectedMakerGain', expectedMakerGain, unfix(expectedMakerGain)
+        print '-expectedMarketFinal', expectedMarketFinal, unfix(expectedMarketFinal)
+        print '=makerFinalCash', makerFinalCash, unfix(makerFinalCash)
         # # confirm shares
         assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 1) == 0), "maker should have 0 shares in the outcomeID 1"
         assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 1) == 0), "taker should have 0 shares in the outcomeID 1"
         assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2) == 0), "maker should have 0 shares in the outcomeID 2"
         assert(contracts.markets.getParticipantSharesPurchased(marketID, t.a2, 2) == 0), "taker should have 0 shares in the outcomeID 2"
+        assert(makerInitialCash + expectedMakerGain - expectedMarketFinal == makerFinalCash), "maker's cash balance should be the initial balance + expected Gain"
+        assert(takerInitialCash + expectedTakerGain == takerFinalCash), "taker's cash balance should be the initial balance + expected Gain"
+        assert(expectedMarketFinal == marketFinalCash), "expected market's final cash to be = to the amount of shares purchased * .01"
     test_bid_case_1()
     test_bid_case_4()
 
