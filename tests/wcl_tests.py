@@ -155,6 +155,7 @@ def test_binary(contracts, i):
     marketID = createMarket(contracts, eventID)
     randomAmount = random.randint(1, 11)
     randomPrice = random.random()
+    print "Start Fuzzy WCL tests - Binary Market - BidOrders. loop count:", i + 1
     # run all possible approvals now so that we don't need to do it in each test case
     approvals(contracts, marketID, eventID, randomAmount, randomPrice)
     def test_makerEscrowedCash_takerWithoutShares():
@@ -371,6 +372,7 @@ def test_binary(contracts, i):
     test_makerEscrowedShares_takerWithShares()
     test_makerEscrowedCash_takerWithShares()
     test_makerEscrowedShares_takerWithoutShares()
+    print "Finished Fuzzy WCL tests - Binary Market - BidOrders. loop count:", i + 1
 
 def approvals(contracts, marketID, eventID, amount, price):
     fxpAllowance = fix(100*amount)
@@ -395,11 +397,15 @@ def approvals(contracts, marketID, eventID, amount, price):
         abiEncodedData = shareTokenContractTranslator.encode("approve", [contracts.takeBidOrder.address, fxpAllowance])
         assert(int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve takeBidOrder contract to spend shares from the user's account (account 1)"
         assert(int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve takeBidOrder contract to spend shares from the user's account (account 2)"
+        abiEncodedData = shareTokenContractTranslator.encode("approve", [contracts.takeAskOrder.address, fxpAllowance])
+        assert(int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve takeAskOrder contract to spend shares from the user's account (account 1)"
+        assert(int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve takeAskOrder contract to spend shares from the user's account (account 2)"
         abiEncodedData = shareTokenContractTranslator.encode("approve", [contracts.makeOrder.address, fxpAllowance])
         assert(int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve makeOrder contract to spend shares from the user's account (account 1)"
         assert(int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16) == 1), "Approve makeOrder contract to spend shares from the user's account (account 2)"
         assert(outcomeShareContractWrapper.allowance(outcomeShareContract, t.a2, contracts.takeOrder.address) == fxpAllowance), "takeOrder contract's allowance should be equal to the amount approved"
         assert(outcomeShareContractWrapper.allowance(outcomeShareContract, t.a1, contracts.takeBidOrder.address) == fxpAllowance), "takeBidOrder contract's allowance should be equal to the amount approved"
+        assert(outcomeShareContractWrapper.allowance(outcomeShareContract, t.a1, contracts.takeAskOrder.address) == fxpAllowance), "takeAskOrder contract's allowance should be equal to the amount approved"
         assert(outcomeShareContractWrapper.allowance(outcomeShareContract, t.a2, contracts.makeOrder.address) == fxpAllowance), "makeOrder contract's allowance should be equal to the amount approved"
 
 # TODO: remove "print_for_dev" before finishing
@@ -431,6 +437,9 @@ def print_for_dev(contracts, marketID, fxpAmount, fxpPrice, outcomeID, expectedC
 
 def test_wcl(contracts, amountOfTests=1):
     t = contracts._ContractLoader__tester
+    print "Initiating Fuzzy WCL Tests"
+    print "Amount of times looping through tests:", amountOfTests
+    print ""
     contracts.cash.publicDepositEther(value=fix(10000), sender=t.k1)
     contracts.cash.publicDepositEther(value=fix(10000), sender=t.k2)
     def test_fuzzy_wcl():
@@ -438,6 +447,9 @@ def test_wcl(contracts, amountOfTests=1):
             contracts._ContractLoader__state.mine(1)
             test_binary(contracts, i)
     test_fuzzy_wcl()
+    print ""
+    print "Fuzzy WCL Tests Complete"
+    print "Amount of times looped through tests:", amountOfTests
 
 
 if __name__ == '__main__':
