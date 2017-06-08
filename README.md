@@ -33,6 +33,7 @@ git clone https://github.com/ethereum/pyethereum.git
 cd pyethereum
 git checkout develop
 sudo pip install -r requirements.txt
+sudo make && sudo make install
 sudo python setup.py install
 ```
 
