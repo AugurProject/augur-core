@@ -61,7 +61,7 @@ def removeFromWhitelist(address, suicide):
     self.whitelist[address] = 0
     return(1)
 
-def suicide(address, to, proposalIndex):
+def suicide(address, to):
     if(msg.sender != self.owner):
         ~invalid()
     address.suicideFunds(to)
@@ -70,7 +70,7 @@ def suicide(address, to, proposalIndex):
 
 ### Controller Administration ###
 
-def transferOwnership(key, newOwner, ownerBranch, proposalIndex):
+def transferOwnership(key, newOwner, ownerBranch):
     if(msg.sender != self.owner):
         ~invalid()
     self.owner = newOwner
