@@ -11,7 +11,7 @@ Depends on Serpent and Pyethereum
 
 You should already have a system-wide installation of python, and it should be set to python-2.7.
 
-Install the serpent smart contract programming language.\n
+Install the serpent smart contract programming language.<br>
 This can be installed system-wide if available on your OS or distribution.<br>
 However, it is recommended to install the dev version of serpent directly from github as your user in your home directory as follows:
 
@@ -24,7 +24,7 @@ sudo pip install -r requirements-dev.txt
 sudo python setup.py install
 ```
 
-Next set up pyethereum, which includes the tools used to test Ethereum smart contracts from python scripts.
+Next set up pyethereum, which includes the tools used to test Ethereum smart contracts from python scripts.<br>
 (again, can be done as your preferred user from your home directory)
 
 Pyethereum Installation:
@@ -36,7 +36,7 @@ sudo pip install -r requirements.txt
 sudo python setup.py install
 ```
 
-To install the augur-core Ethereum contracts:
+To install the augur-core Ethereum contracts:<br>
 (again, can be done as your preferred user from your home directory or wherever you'd like them installed)
 ```
 git clone https://github.com/AugurProject/augur-core.git
@@ -78,7 +78,7 @@ py.test -s tests/trading_tests.py
 
 # Additional Notes:
 
-There are no floats or strings in the serpent language.  
+There are no floats or strings in the serpent language.
 In cases where strings are used, they are actually stored numerically as integers.
 
 All augur-core contracts use fixedpoint (no floats).  So sub-ether values in serpent would be represented as integers whose value
