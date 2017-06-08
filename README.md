@@ -79,7 +79,7 @@ py.test -s tests/trading_tests.py
 
 # Additional Notes:
 
-There are no floats or strings in the serpent language.
+There are no floats in the serpent language.
 In cases where strings are used, they are actually stored numerically as integers.
 
 All augur-core contracts use fixedpoint (no floats).  So sub-ether values in serpent would be represented as integers whose value
