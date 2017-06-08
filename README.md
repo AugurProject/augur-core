@@ -9,7 +9,7 @@ Depends on Serpent and Pyethereum
 
 # Installation
 
-You should already have a system-wide installation of python, and it should be set to python-2.7.
+You should already have a system-wide installation of python, and it should be set to python-2.7.x.
 
 Install the serpent smart contract programming language.<br>
 This can be installed system-wide if available on your OS or distribution.<br>
