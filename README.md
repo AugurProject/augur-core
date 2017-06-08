@@ -21,6 +21,7 @@ git clone https://github.com/ethereum/serpent.git
 cd serpent
 git checkout develop
 sudo pip install -r requirements-dev.txt
+sudo make && sudo make install
 sudo python setup.py install
 ```
 
@@ -33,7 +34,6 @@ git clone https://github.com/ethereum/pyethereum.git
 cd pyethereum
 git checkout develop
 sudo pip install -r requirements.txt
-sudo make && sudo make install
 sudo python setup.py install
 ```
 
