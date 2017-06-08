@@ -9,9 +9,10 @@ Depends on Serpent and Pyethereum
 
 # Installation
 
-You should already have a system-wide installation of python, and it must be set to python-2.7.
-First install the serpent smart contract programming language.
-This can be installed system-wide if available on your OS or distribution.
+You should already have a system-wide installation of python, and it should be set to python-2.7.
+
+Install the serpent smart contract programming language.\n
+This can be installed system-wide if available on your OS or distribution.<br>
 However, it is recommended to install the dev version of serpent directly from github as your user in your home directory as follows:
 
 Serpent Installation:
@@ -77,11 +78,11 @@ py.test -s tests/trading_tests.py
 
 # Additional Notes:
 
-There is no floats or strings in the serpent language.
+There are no floats or strings in the serpent language.  
 In cases where strings are used, they are actually stored numerically as integers.
 
-All augur-core contracts use fixedpoint (no floats).  So sub-ether values in serpent would be represented as integers representing their
-value in wei (attoEthers or 10**-18 Ethers).
+All augur-core contracts use fixedpoint (no floats).  So sub-ether values in serpent would be represented as integers whose value
+is in wei (attoEthers or 10**-18 Ethers).
 
 To give an example, 200\*base / 5 would be 40 in that base.  To multiply two fixed point numbers like 5 times 10 an example in 
 base 10\*\*18 would be 5\*10\*\*18 \* 10\*10\*\*18 / 10\*\*18
