@@ -189,7 +189,7 @@ def updateWorstBidOrder(orderID: address, market: address, fxpPrice, outcome: ui
         self.worstOrder[market][outcome].bid = orderID
     else:
         # If price lower than worst bid price, this order is the new worst bid
-        if(fxpPrice < self.orders[worstBidOrderID].fxpPrice):
+        if(self.orders[worstBidOrderID].fxpPrice == 0 or fxpPrice < self.orders[worstBidOrderID].fxpPrice):
             if(worseOrderID != 0):
                 ~invalid()
             self.worstOrder[market][outcome].bid = orderID
@@ -213,7 +213,7 @@ def updateBestAskOrder(orderID: address, market: address, fxpPrice, outcome: uin
         self.bestOrder[market][outcome].ask = orderID
     else:
         # If price lower than best ask price, this order is the new best ask
-        if(fxpPrice < self.orders[bestAskOrderID].fxpPrice):
+        if(self.orders[bestAskOrderID].fxpPrice == 0 or fxpPrice < self.orders[bestAskOrderID].fxpPrice):
             if(betterOrderID != 0):
                 ~invalid()
             self.bestOrder[market][outcome].ask = orderID

@@ -162,29 +162,6 @@ def test_makerEscrowedCash_takerWithoutShares(contracts, eventID, marketID, rand
     takerInitialCash = contracts.cash.balanceOf(t.a2)
     makerInitialCash = contracts.cash.balanceOf(t.a1)
     marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-    # bestBidOrder = contracts.orders.getBestBidOrderID(marketID, outcomeID)
-    # worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, outcomeID)
-    # orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, bestBidOrder, worstBidOrder, tradeGroupID, sender=t.k1)
-    print ""
-    print 'about to make order first test'
-    print ""
-    bestBidOrder1 = contracts.orders.getBestBidOrderID(marketID, 1)
-    worstBidOrder1 = contracts.orders.getWorstBidOrderID(marketID, 1)
-    bestBidOrder = contracts.orders.getBestBidOrderID(marketID, 2)
-    worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, 2)
-    print "bestBidOrder out1:", bestBidOrder1
-    print "worstBidOrder out1:", worstBidOrder1
-    print "bestBidOrder out2:", bestBidOrder
-    print "worstBidOrder out2:", worstBidOrder
-    print ''
-    print 'bestOrderInfo out1:', contracts.orders.getOrder(bestBidOrder1)
-    print 'worstOrderInfo out1:', contracts.orders.getOrder(worstBidOrder1)
-    print 'bestOrderInfo out2:', contracts.orders.getOrder(bestBidOrder)
-    print 'worstOrderInfo out2:', contracts.orders.getOrder(worstBidOrder)
-    print ''
-    print 'orderIDs:', contracts.orders.getOrderIDs(marketID)
-    print 'totalOrders:', contracts.orders.getTotalOrders(marketID)
-    print ''
     orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1)
     order = contracts.orders.getOrder(orderID)
     assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == order[8]), "Increase in market's cash balance should equal money escrowed"
@@ -193,27 +170,6 @@ def test_makerEscrowedCash_takerWithoutShares(contracts, eventID, marketID, rand
     assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
     contracts._ContractLoader__state.mine(1)
     assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == fxpExpectedCash), "Market's cash balance should be (price - 1)*amount"
-    print ""
-    print 'about to take order first test'
-    print ""
-    bestBidOrder1 = contracts.orders.getBestBidOrderID(marketID, 1)
-    worstBidOrder1 = contracts.orders.getWorstBidOrderID(marketID, 1)
-    bestBidOrder = contracts.orders.getBestBidOrderID(marketID, 2)
-    worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, 2)
-    print "bestBidOrder out1:", bestBidOrder1
-    print "worstBidOrder out1:", worstBidOrder1
-    print "bestBidOrder out2:", bestBidOrder
-    print "worstBidOrder out2:", worstBidOrder
-    print ''
-    print 'bestOrderInfo out1:', contracts.orders.getOrder(bestBidOrder1)
-    print 'worstOrderInfo out1:', contracts.orders.getOrder(worstBidOrder1)
-    print 'bestOrderInfo out2:', contracts.orders.getOrder(bestBidOrder)
-    print 'worstOrderInfo out2:', contracts.orders.getOrder(worstBidOrder)
-    print ''
-    print 'OrderID:', orderID, hex(orderID)
-    print 'orderIDs:', contracts.orders.getOrderIDs(marketID)
-    print 'totalOrders:', contracts.orders.getTotalOrders(marketID)
-    print ''
     fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=t.k2)
     assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
     makerFinalCash = contracts.cash.balanceOf(t.a1)
@@ -249,29 +205,6 @@ def test_makerEscrowedShares_takerWithShares(contracts, eventID, marketID, rando
     makerInitialCash = contracts.cash.balanceOf(t.a1)
     marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
     makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
-    # bestBidOrder = contracts.orders.getBestBidOrderID(marketID, outcomeID)
-    # worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, outcomeID)
-    # orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, bestBidOrder, worstBidOrder, tradeGroupID, sender=t.k1)
-    print ""
-    print 'about to make order 2nd test'
-    print ""
-    bestBidOrder1 = contracts.orders.getBestBidOrderID(marketID, 1)
-    worstBidOrder1 = contracts.orders.getWorstBidOrderID(marketID, 1)
-    bestBidOrder = contracts.orders.getBestBidOrderID(marketID, 2)
-    worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, 2)
-    print "bestBidOrder out1:", bestBidOrder1
-    print "worstBidOrder out1:", worstBidOrder1
-    print "bestBidOrder out2:", bestBidOrder
-    print "worstBidOrder out2:", worstBidOrder
-    print ''
-    print 'bestOrderInfo out1:', contracts.orders.getOrder(bestBidOrder1)
-    print 'worstOrderInfo out1:', contracts.orders.getOrder(worstBidOrder1)
-    print 'bestOrderInfo out2:', contracts.orders.getOrder(bestBidOrder)
-    print 'worstOrderInfo out2:', contracts.orders.getOrder(worstBidOrder)
-    print ''
-    print 'orderIDs:', contracts.orders.getOrderIDs(marketID)
-    print 'totalOrders:', contracts.orders.getTotalOrders(marketID)
-    print ''
     orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1)
     order = contracts.orders.getOrder(orderID)
     assert(makerInitialShares == order[9]), "Shares Escrowed should be = to the shares the maker started with"
@@ -280,27 +213,6 @@ def test_makerEscrowedShares_takerWithShares(contracts, eventID, marketID, rando
     tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=t.k2)
     assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
     contracts._ContractLoader__state.mine(1)
-    print ""
-    print 'about to take order 2nd test'
-    print ""
-    bestBidOrder1 = contracts.orders.getBestBidOrderID(marketID, 1)
-    worstBidOrder1 = contracts.orders.getWorstBidOrderID(marketID, 1)
-    bestBidOrder = contracts.orders.getBestBidOrderID(marketID, 2)
-    worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, 2)
-    print "bestBidOrder out1:", bestBidOrder1
-    print "worstBidOrder out1:", worstBidOrder1
-    print "bestBidOrder out2:", bestBidOrder
-    print "worstBidOrder out2:", worstBidOrder
-    print ''
-    print 'bestOrderInfo out1:', contracts.orders.getOrder(bestBidOrder1)
-    print 'worstOrderInfo out1:', contracts.orders.getOrder(worstBidOrder1)
-    print 'bestOrderInfo out2:', contracts.orders.getOrder(bestBidOrder)
-    print 'worstOrderInfo out2:', contracts.orders.getOrder(worstBidOrder)
-    print ''
-    print 'OrderID:', orderID, hex(orderID)
-    print 'orderIDs:', contracts.orders.getOrderIDs(marketID)
-    print 'totalOrders:', contracts.orders.getTotalOrders(marketID)
-    print ''
     fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=t.k2)
     assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
     makerFinalCash = contracts.cash.balanceOf(t.a1)
@@ -351,29 +263,6 @@ def test_makerEscrowedCash_takerWithShares(contracts, eventID, marketID, randomA
     takerInitialCash = contracts.cash.balanceOf(t.a2)
     makerInitialCash = contracts.cash.balanceOf(t.a1)
     marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-    # bestBidOrder = contracts.orders.getBestBidOrderID(marketID, outcomeID)
-    # worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, outcomeID)
-    # orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, worstBidOrder, tradeGroupID, sender=t.k1)
-    print ""
-    print 'about to make order 3rd test'
-    print ""
-    bestBidOrder1 = contracts.orders.getBestBidOrderID(marketID, 1)
-    worstBidOrder1 = contracts.orders.getWorstBidOrderID(marketID, 1)
-    bestBidOrder = contracts.orders.getBestBidOrderID(marketID, 2)
-    worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, 2)
-    print "bestBidOrder out1:", bestBidOrder1
-    print "worstBidOrder out1:", worstBidOrder1
-    print "bestBidOrder out2:", bestBidOrder
-    print "worstBidOrder out2:", worstBidOrder
-    print ''
-    print 'bestOrderInfo out1:', contracts.orders.getOrder(bestBidOrder1)
-    print 'worstOrderInfo out1:', contracts.orders.getOrder(worstBidOrder1)
-    print 'bestOrderInfo out2:', contracts.orders.getOrder(bestBidOrder)
-    print 'worstOrderInfo out2:', contracts.orders.getOrder(worstBidOrder)
-    print ''
-    print 'orderIDs:', contracts.orders.getOrderIDs(marketID)
-    print 'totalOrders:', contracts.orders.getTotalOrders(marketID)
-    print ''
     orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1)
     order = contracts.orders.getOrder(orderID)
     assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == order[8]), "Increase in market's cash balance should equal money escrowed"
@@ -381,27 +270,6 @@ def test_makerEscrowedCash_takerWithShares(contracts, eventID, marketID, randomA
     assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
     contracts._ContractLoader__state.mine(1)
     # take order
-    print ""
-    print 'about to take order 3rd test'
-    print ""
-    bestBidOrder1 = contracts.orders.getBestBidOrderID(marketID, 1)
-    worstBidOrder1 = contracts.orders.getWorstBidOrderID(marketID, 1)
-    bestBidOrder = contracts.orders.getBestBidOrderID(marketID, 2)
-    worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, 2)
-    print "bestBidOrder out1:", bestBidOrder1
-    print "worstBidOrder out1:", worstBidOrder1
-    print "bestBidOrder out2:", bestBidOrder
-    print "worstBidOrder out2:", worstBidOrder
-    print ''
-    print 'bestOrderInfo out1:', contracts.orders.getOrder(bestBidOrder1)
-    print 'worstOrderInfo out1:', contracts.orders.getOrder(worstBidOrder1)
-    print 'bestOrderInfo out2:', contracts.orders.getOrder(bestBidOrder)
-    print 'worstOrderInfo out2:', contracts.orders.getOrder(worstBidOrder)
-    print ''
-    print 'OrderID:', orderID, hex(orderID)
-    print 'orderIDs:', contracts.orders.getOrderIDs(marketID)
-    print 'totalOrders:', contracts.orders.getTotalOrders(marketID)
-    print ''
     fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=t.k2)
     assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
     makerFinalCash = contracts.cash.balanceOf(t.a1)
@@ -446,29 +314,6 @@ def test_makerEscrowedShares_takerWithoutShares(contracts, eventID, marketID, ra
     makerInitialCash = contracts.cash.balanceOf(t.a1)
     marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
     makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, t.a1, 2)
-    # bestBidOrder = contracts.orders.getBestBidOrderID(marketID, outcomeID)
-    # worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, outcomeID)
-    # orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, worstBidOrder, tradeGroupID, sender=t.k1)
-    print ""
-    print 'about to make order 4th test'
-    print ""
-    bestBidOrder1 = contracts.orders.getBestBidOrderID(marketID, 1)
-    worstBidOrder1 = contracts.orders.getWorstBidOrderID(marketID, 1)
-    bestBidOrder = contracts.orders.getBestBidOrderID(marketID, 2)
-    worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, 2)
-    print "bestBidOrder out1:", bestBidOrder1
-    print "worstBidOrder out1:", worstBidOrder1
-    print "bestBidOrder out2:", bestBidOrder
-    print "worstBidOrder out2:", worstBidOrder
-    print ''
-    print 'bestOrderInfo out1:', contracts.orders.getOrder(bestBidOrder1)
-    print 'worstOrderInfo out1:', contracts.orders.getOrder(worstBidOrder1)
-    print 'bestOrderInfo out2:', contracts.orders.getOrder(bestBidOrder)
-    print 'worstOrderInfo out2:', contracts.orders.getOrder(worstBidOrder)
-    print ''
-    print 'orderIDs:', contracts.orders.getOrderIDs(marketID)
-    print 'totalOrders:', contracts.orders.getTotalOrders(marketID)
-    print ''
     orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=t.k1)
     order = contracts.orders.getOrder(orderID)
     assert(makerInitialShares == order[9]), "Shares Escrowed should be = to the shares the maker started with"
@@ -480,27 +325,6 @@ def test_makerEscrowedShares_takerWithoutShares(contracts, eventID, marketID, ra
     tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=t.k2)
     assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
     contracts._ContractLoader__state.mine(1)
-    print ""
-    print 'about to take order 4th test'
-    print ""
-    bestBidOrder1 = contracts.orders.getBestBidOrderID(marketID, 1)
-    worstBidOrder1 = contracts.orders.getWorstBidOrderID(marketID, 1)
-    bestBidOrder = contracts.orders.getBestBidOrderID(marketID, 2)
-    worstBidOrder = contracts.orders.getWorstBidOrderID(marketID, 2)
-    print "bestBidOrder out1:", bestBidOrder1
-    print "worstBidOrder out1:", worstBidOrder1
-    print "bestBidOrder out2:", bestBidOrder
-    print "worstBidOrder out2:", worstBidOrder
-    print ''
-    print 'bestOrderInfo out1:', contracts.orders.getOrder(bestBidOrder1)
-    print 'worstOrderInfo out1:', contracts.orders.getOrder(worstBidOrder1)
-    print 'bestOrderInfo out2:', contracts.orders.getOrder(bestBidOrder)
-    print 'worstOrderInfo out2:', contracts.orders.getOrder(worstBidOrder)
-    print ''
-    print 'OrderID:', orderID, hex(orderID)
-    print 'orderIDs:', contracts.orders.getOrderIDs(marketID)
-    print 'totalOrders:', contracts.orders.getTotalOrders(marketID)
-    print ''
     fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=t.k2)
     assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
     # finish take order
