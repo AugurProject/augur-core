@@ -105,9 +105,9 @@ https://medium.com/@AugurProject/augur-master-plan-42dda65a3e3d
 
 # New reporting system info
 
-[Flow diagram] (https://pasteboard.co/1FcgIDWR2.png)
+[Flow diagram](https://pasteboard.co/1FcgIDWR2.png)
 
-[More in depth diagram] (https://www.websequencediagrams.com/files/render?link=kUm7MBHLoO87M3m2dXzE)
+[More in depth diagram](https://www.websequencediagrams.com/files/render?link=kUm7MBHLoO87M3m2dXzE)
 
 # Trading wcl info
 
