@@ -90,3 +90,25 @@ base 10\*\*18 would be 5\*10\*\*18 \* 10\*10\*\*18 / 10\*\*18
 [we divide by the base to keep it in base 10\*\*18].  For a division example, 18/10 would be 18\*10\*\*18 \* 10\*\*18 / (10\*10\*\*18).
 
 Also note, Mist uses a different contract abi style than usual, to convert use the following regex \((.\*?)\) and replace with nothing [except don't do it for events].
+
+# Resources to learn about serpent
+
+https://github.com/ethereum/wiki/wiki/Serpent
+
+https://www.cs.umd.edu/~elaine/smartcontract/guide.pdf
+
+# More on Augur / high level
+
+https://medium.com/@AugurProject/a-roadmap-for-augur-and-whats-next-930fe6c7f75a
+
+https://medium.com/@AugurProject/augur-master-plan-42dda65a3e3d
+
+# New reporting system info
+
+[Flow diagram](https://pasteboard.co/1FcgIDWR2.png)
+
+[More in depth diagram](https://www.websequencediagrams.com/files/render?link=kUm7MBHLoO87M3m2dXzE)
+
+# Trading wcl info
+
+More on worst case loss / value at risk: https://github.com/AugurProject/augur-core/blob/develop/tests/wcl.txt
