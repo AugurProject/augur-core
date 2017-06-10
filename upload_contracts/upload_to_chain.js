@@ -41,7 +41,6 @@ rpc.connect({
         // 3. bash ./deterministic_build.sh "0xactualControllerAddress"
         cp.exec("bash deterministic_build.sh " + contractAddresses.controller, (err, stdout, stderr) => {
           if (err) return console.error("deterministic build error:", err);
-          console.log('stdout:', stdout.toString());
 
           // 4. upload deps ['mutex.se', 'cash.se', 'repContract.se'] are the ones so far, then the remaining contracts
           async.eachSeries(contractNames, (contractName, nextContract) => {
@@ -102,6 +101,6 @@ rpc.connect({
           });
         });
       });
-    }, process.exit);
+    }, e => console.error(e));
   });
 });
