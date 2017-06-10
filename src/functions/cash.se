@@ -101,7 +101,6 @@ def publicWithdrawEther(to: address, value: uint256):
 ######################
 
 def depositEther(sender: address):
-    refund()
     self.controller.assertIsWhitelisted(msg.sender)
     amount = msg.value
     if(!safeToAdd(amount, self.accounts[sender].balance)):

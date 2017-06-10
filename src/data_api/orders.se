@@ -155,105 +155,79 @@ def getWorstBidOrderID(market: address, outcome: uint256):
 def getWorstAskOrderID(market: address, outcome: uint256):
     return(self.worstOrder[market][outcome].ask: address)
 
-# @private
-def updateBestBidOrder(orderID: address, market: address, fxpPrice, outcome: uint256, betterOrderID: uint256):
-    if(msg.sender != self):
-        ~invalid()
-    bestBidOrderID = self.bestOrder[market][outcome].bid
-    # If best bid is not set, this order is the new best bid
-    if(bestBidOrderID == 0):
-        self.bestOrder[market][outcome].bid = orderID
-    else:
-        # If price higher than best bid price, this order is the new best bid
-        if(fxpPrice > self.orders[bestBidOrderID].fxpPrice):
-            if(betterOrderID != 0):
-                ~invalid()
-            self.bestOrder[market][outcome].bid = orderID
-        # If price is lower than the best bid price:
-        #  - betterOrderID must be specified
-        #  - price must be less than or equal to betterOrderID's price
-        else:
-            if(betterOrderID == 0):
-                ~invalid()
-            if(fxpPrice > self.orders[betterOrderID].fxpPrice):
-                ~invalid()
-    return(1: uint256)
+# @public
+def isBetterPrice(type: uint256, fxpPrice, orderID: address):
+    if(type == BID):
+        return((fxpPrice > self.orders[orderID].fxpPrice): uint256)
+    return((fxpPrice < self.orders[orderID].fxpPrice): uint256)
 
-# @private
-def updateWorstBidOrder(orderID: address, market: address, fxpPrice, outcome: uint256, worseOrderID: uint256):
-    if(msg.sender != self):
-        ~invalid()
-    worstBidOrderID = self.worstOrder[market][outcome].bid
-    # If worst bid is not set, this order is the new worst bid
-    if(worstBidOrderID == 0):
-        self.worstOrder[market][outcome].bid = orderID
-    else:
-        # If price lower than worst bid price, this order is the new worst bid
-        if(fxpPrice < self.orders[worstBidOrderID].fxpPrice):
-            if(worseOrderID != 0):
-                ~invalid()
-            self.worstOrder[market][outcome].bid = orderID
-        # If price is higher than the worst bid price:
-        #  - worseOrderID must be specified
-        #  - price must be greater than or equal to worseOrderID's price
-        else:
-            if(worseOrderID == 0):
-                ~invalid()
-            if(fxpPrice < self.orders[worseOrderID].fxpPrice):
-                ~invalid()
-    return(1: uint256)
+# @public
+def isWorsePrice(type: uint256, fxpPrice, orderID: address):
+    if(type == BID):
+        return((fxpPrice < self.orders[orderID].fxpPrice): uint256)
+    return((fxpPrice > self.orders[orderID].fxpPrice): uint256)
 
-# @private
-def updateBestAskOrder(orderID: address, market: address, fxpPrice, outcome: uint256, betterOrderID: uint256):
-    if(msg.sender != self):
-        ~invalid()
-    bestAskOrderID = self.bestOrder[market][outcome].ask
-    # If best ask is not set, this order is the new best ask
-    if(bestAskOrderID == 0):
-        self.bestOrder[market][outcome].ask = orderID
+# @public
+def ascendOrderList(type: uint256, fxpPrice, lowestOrderID: address):
+    worseOrderID = lowestOrderID
+    if(type == BID):
+        isWorstPrice = fxpPrice <= self.orders[worseOrderID].fxpPrice
     else:
-        # If price lower than best ask price, this order is the new best ask
-        if(fxpPrice < self.orders[bestAskOrderID].fxpPrice):
-            if(betterOrderID != 0):
-                ~invalid()
-            self.bestOrder[market][outcome].ask = orderID
-        # If price is higher than the best ask price:
-        #  - betterOrderID must be specified
-        #  - price must be greater than than or equal to betterOrderID's price
-        else:
-            if(betterOrderID == 0):
-                ~invalid()
-            if(fxpPrice < self.orders[betterOrderID].fxpPrice):
-                ~invalid()
-    return(1: uint256)
+        isWorstPrice = fxpPrice >= self.orders[worseOrderID].fxpPrice
+    if(isWorstPrice):
+        return([worseOrderID, self.orders[worseOrderID].worseOrderID]: arr)
+    isBetterPrice = self.isBetterPrice(type, fxpPrice, worseOrderID)
+    while(isBetterPrice and self.orders[worseOrderID].betterOrderID != 0 and fxpPrice != self.orders[self.orders[worseOrderID].betterOrderID].fxpPrice):
+        isBetterPrice = self.isBetterPrice(type, fxpPrice, self.orders[worseOrderID].betterOrderID)
+        if(isBetterPrice):
+            worseOrderID = self.orders[worseOrderID].betterOrderID
+    betterOrderID = self.orders[worseOrderID].betterOrderID
+    return([betterOrderID, worseOrderID]: arr)
 
-# @private
-def updateWorstAskOrder(orderID: address, market: address, fxpPrice, outcome: uint256, worseOrderID: uint256):
-    if(msg.sender != self):
-        ~invalid()
-    worstAskOrderID = self.worstOrder[market][outcome].ask
-    # If worst ask is not set, this order is the new worst ask
-    if(worstAskOrderID == 0):
-        self.worstOrder[market][outcome].ask = orderID
+# @public
+def descendOrderList(type: uint256, fxpPrice, highestOrderID: address):
+    betterOrderID = highestOrderID
+    if(type == BID):
+        isBestPrice = fxpPrice > self.orders[betterOrderID].fxpPrice
     else:
-        # If price higher than worst ask price, this order is the new worst ask
-        if(fxpPrice > self.orders[worstAskOrderID].fxpPrice):
-            if(worseOrderID != 0):
-                ~invalid()
-            self.worstOrder[market][outcome].ask = orderID
-        # If price is lower than the worst ask price:
-        #  - worseOrderID must be specified
-        #  - price must be less than or equal to worseOrderID's price
-        else:
-            if(worseOrderID == 0):
-                ~invalid()
-            if(fxpPrice > self.orders[worseOrderID].fxpPrice):
-                ~invalid()
-    return(1: uint256)
+        isBestPrice = fxpPrice < self.orders[betterOrderID].fxpPrice
+    if(isBestPrice):
+        return([0, betterOrderID]: arr)
+    if(fxpPrice == self.orders[betterOrderID].fxpPrice):
+        return([betterOrderID, self.orders[betterOrderID].worseOrderID]: arr)
+    isWorsePrice = self.isWorsePrice(type, fxpPrice, betterOrderID)
+    while(isWorsePrice and self.orders[betterOrderID].worseOrderID != 0):
+        isWorsePrice = self.isWorsePrice(type, fxpPrice, self.orders[betterOrderID].worseOrderID)
+        if(isWorsePrice or fxpPrice == self.orders[self.orders[betterOrderID].worseOrderID].fxpPrice):
+            betterOrderID = self.orders[betterOrderID].worseOrderID
+    worseOrderID = self.orders[betterOrderID].worseOrderID
+    return([betterOrderID, worseOrderID]: arr)
+
+# @public
+def findBoundingOrders(type: uint256, fxpPrice, bestOrderID: address, worstOrderID: address, betterOrderID: address, worseOrderID: address):
+    if(bestOrderID == worstOrderID):
+        return([bestOrderID, bestOrderID]: arr)
+    if(betterOrderID != 0 and self.orders[betterOrderID].id == 0):
+        betterOrderID = 0
+    if(worseOrderID != 0 and self.orders[worseOrderID].id == 0):
+        worseOrderID = 0
+    if(betterOrderID == 0 and worseOrderID == 0):
+        return(self.descendOrderList(type, fxpPrice, bestOrderID, outitems=2): arr)
+    elif(betterOrderID == 0):
+        return(self.ascendOrderList(type, fxpPrice, worseOrderID, outitems=2): arr)
+    elif(worseOrderID == 0):
+        return(self.descendOrderList(type, fxpPrice, betterOrderID, outitems=2): arr)
+    if(self.orders[betterOrderID].worseOrderID != worseOrderID):
+        return(self.descendOrderList(type, fxpPrice, betterOrderID, outitems=2): arr)
+    elif(self.orders[worseOrderID].betterOrderID != betterOrderID):
+        return(self.ascendOrderList(type, fxpPrice, worseOrderID, outitems=2): arr)
+    return([betterOrderID, worseOrderID]: arr)
 
 # @internal
 def saveOrder(orderID: address, type: uint256, market: address, fxpAmount: uint256, fxpPrice, sender: address, outcome: uint256, fxpMoneyEscrowed: uint256, fxpSharesEscrowed: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID):
     self.controller.assertIsWhitelisted(msg.sender)
+    if(type != BID and type != ASK):
+        ~invalid()
     if(outcome > MARKETS.getMarketNumOutcomes(market)):
         ~invalid()
     self.orders[orderID].id = orderID
@@ -267,11 +241,24 @@ def saveOrder(orderID: address, type: uint256, market: address, fxpAmount: uint2
     self.orders[orderID].fxpMoneyEscrowed = fxpMoneyEscrowed
     self.orders[orderID].fxpSharesEscrowed = fxpSharesEscrowed
     if(type == BID):
-        self.updateBestBidOrder(orderID, market, fxpPrice, outcome, betterOrderID)
-        self.updateWorstBidOrder(orderID, market, fxpPrice, outcome, worseOrderID)
-    elif(type == ASK):
-        self.updateBestAskOrder(orderID, market, fxpPrice, outcome, betterOrderID)
-        self.updateWorstAskOrder(orderID, market, fxpPrice, outcome, worseOrderID)
+        bestOrderID = self.bestOrder[market][outcome].bid
+        worstOrderID = self.worstOrder[market][outcome].bid
+    else:
+        bestOrderID = self.bestOrder[market][outcome].ask
+        worstOrderID = self.worstOrder[market][outcome].ask
+    boundingOrders = self.findBoundingOrders(type, fxpPrice, bestOrderID, worstOrderID, betterOrderID, worseOrderID, outitems=2)
+    betterOrderID = boundingOrders[0]
+    worseOrderID = boundingOrders[1]
+    if(type == BID):
+        bestOrderID = self.updateBestBidOrder(orderID, market, fxpPrice, outcome, betterOrderID)
+        worstOrderID = self.updateWorstBidOrder(orderID, market, fxpPrice, outcome, worseOrderID)
+    else:
+        bestOrderID = self.updateBestAskOrder(orderID, market, fxpPrice, outcome, betterOrderID)
+        worstOrderID = self.updateWorstAskOrder(orderID, market, fxpPrice, outcome, worseOrderID)
+    if(bestOrderID == orderID):
+        betterOrderID = 0
+    if(worstOrderID == orderID):
+        worseOrderID = 0
     if(betterOrderID != 0):
         self.orders[betterOrderID].worseOrderID = orderID
         self.orders[orderID].betterOrderID = betterOrderID
@@ -402,6 +389,46 @@ def removeOrderFromMarket(marketID: address, orderID: address):
     self.marketOrderData[marketID].orderIDs[orderID].id = 0
     self.marketOrderData[marketID].totalOrders -= 1
     return(1: uint256)
+
+# If best bid is not set or price higher than best bid price, this order is the new best bid.
+# @private
+def updateBestBidOrder(orderID: address, market: address, fxpPrice, outcome: uint256, betterOrderID: uint256):
+    if(msg.sender != self):
+        ~invalid()
+    bestBidOrderID = self.bestOrder[market][outcome].bid
+    if(bestBidOrderID == 0 or fxpPrice > self.orders[bestBidOrderID].fxpPrice):
+        self.bestOrder[market][outcome].bid = orderID
+    return(self.bestOrder[market][outcome].bid: address)
+
+# If worst bid is not set or price lower than worst bid price, this order is the new worst bid.
+# @private
+def updateWorstBidOrder(orderID: address, market: address, fxpPrice, outcome: uint256, worseOrderID: uint256):
+    if(msg.sender != self):
+        ~invalid()
+    worstBidOrderID = self.worstOrder[market][outcome].bid
+    if(worstBidOrderID == 0 or fxpPrice < self.orders[worstBidOrderID].fxpPrice):
+        self.worstOrder[market][outcome].bid = orderID
+    return(self.worstOrder[market][outcome].bid: address)
+
+# If best ask is not set or price lower than best ask price, this order is the new best ask.
+# @private
+def updateBestAskOrder(orderID: address, market: address, fxpPrice, outcome: uint256, betterOrderID: uint256):
+    if(msg.sender != self):
+        ~invalid()
+    bestAskOrderID = self.bestOrder[market][outcome].ask
+    if(bestAskOrderID == 0 or fxpPrice < self.orders[bestAskOrderID].fxpPrice):
+        self.bestOrder[market][outcome].ask = orderID
+    return(self.bestOrder[market][outcome].ask: address)
+
+# If worst ask is not set or price higher than worst ask price, this order is the new worst ask.
+# @private
+def updateWorstAskOrder(orderID: address, market: address, fxpPrice, outcome: uint256, worseOrderID: uint256):
+    if(msg.sender != self):
+        ~invalid()
+    worstAskOrderID = self.worstOrder[market][outcome].ask
+    if(worstAskOrderID == 0 or fxpPrice > self.orders[worstAskOrderID].fxpPrice):
+        self.worstOrder[market][outcome].ask = orderID
+    return(self.worstOrder[market][outcome].ask: address)
 
 # @controller
 def setController(newController: address):
