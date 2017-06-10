@@ -112,5 +112,3 @@ https://medium.com/@AugurProject/augur-master-plan-42dda65a3e3d
 # Trading wcl info
 
 More on worst case loss / value at risk: https://github.com/AugurProject/augur-core/blob/develop/tests/wcl.txt
-
-
