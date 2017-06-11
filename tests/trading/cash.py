@@ -20,12 +20,14 @@ def test_Cash(contracts):
     def test_publicDepositEther():
         contracts._ContractLoader__state.mine(1)
         initialEtherBalance = contracts._ContractLoader__state.block.get_balance(t.a1)
+        initialCashContractEtherBalance = contracts._ContractLoader__state.block.get_balance(contracts.cash.address)
         initialCashSupply = contracts.cash.totalSupply()
         initialCashBalance = contracts.cash.balanceOf(t.a1)
         depositEtherAmount = utils.fix(100)
         assert(contracts.cash.publicDepositEther(value=depositEtherAmount, sender=t.k1) == 1), "deposit ether"
         assert(contracts.cash.balanceOf(t.a1) == initialCashBalance + depositEtherAmount), "account 1 cash balance should be equal to initial cash balance plus amount of ether deposited"
         assert(contracts.cash.totalSupply() == initialCashSupply + depositEtherAmount), "total cash supply should be equal to initial cash supply plus amount of ether deposited"
+        assert(contracts._ContractLoader__state.block.get_balance(contracts.cash.address) == initialCashContractEtherBalance + depositEtherAmount), "cash contract ether balance should be equal to initial contract ether balance plus amount of ether deposited"
         assert(contracts._ContractLoader__state.block.get_balance(t.a1) <= initialEtherBalance - depositEtherAmount), "account 1 ether balance should be at most the initial ether balance minus the amount of ether deposited"
     def test_publicWithdrawEther():
         contracts._ContractLoader__state.mine(1)
