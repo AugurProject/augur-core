@@ -13,10 +13,8 @@ inset('../macros/assertZeroValue.sem')
 
 ### Storage of all data associated with orders
 
-# traderID is index
-data orderCommits[](hash, block)
 # orderID is index
-data orders[](id, type, market, fxpAmount, fxpPrice, owner, block, outcome, fxpSharesEscrowed, fxpMoneyEscrowed, betterOrderID, worseOrderID)
+data orders[](id, type, market, fxpAmount, fxpPrice, owner, block, outcome, fxpSharesEscrowed, fxpMoneyEscrowed, betterOrderID, worseOrderID, gasPrice)
 # prices keeps track of the latest traded fxpPrice for a given outcome in a market [market is the key]
 data marketOrderData[](volume, prices[], totalOrders, lastOrder, orderIDs[](id, nextID, prevID))
 # indices are marketID and outcomeID
@@ -90,19 +88,6 @@ def makeOrderHash(market: address, outcome: uint256, direction: uint256):
     return(orderHash)
 
 # @public
-def commitOrder(hash):
-    assertZeroValue()
-    self.orderCommits[msg.sender].hash = hash
-    self.orderCommits[msg.sender].block = block.number
-    return(1: uint256)
-
-# @public
-def checkHash(orderHash, sender: address):
-    if(self.orderCommits[sender].hash != orderHash or block.number <= self.orderCommits[sender].block):
-        ~invalid()
-    return(1: uint256)
-
-# @public
 def getOrderIDs(marketID: address):
     ordersCount = self.marketOrderData[marketID].totalOrders
     orderID = self.marketOrderData[marketID].lastOrder
@@ -135,6 +120,7 @@ def getOrder(id: address):
     order[9] = self.orders[id].fxpSharesEscrowed
     order[10] = self.orders[id].betterOrderID
     order[11] = self.orders[id].worseOrderID
+    order[12] = self.orders[id].gasPrice
     if(order):
         return(order: arr)
     return([0]: arr)
@@ -249,6 +235,10 @@ def findBoundingOrders(type: uint256, fxpPrice, bestOrderID: address, worstOrder
         return(self.ascendOrderList(type, fxpPrice, worseOrderID, outitems=2): arr)
     return([betterOrderID, worseOrderID]: arr)
 
+# @public
+def getGasPrice(orderID: address):
+    return(self.orders[orderID].gasPrice)
+
 # @internal
 def insertOrderIntoList(orderID: address, type: uint256, market: address, outcome: uint256, fxpPrice, betterOrderID: address, worseOrderID: address):
     self.controller.assertIsWhitelisted(msg.sender)
@@ -283,7 +273,7 @@ def insertOrderIntoList(orderID: address, type: uint256, market: address, outcom
     return(1: uint256)
 
 # @internal
-def saveOrder(orderID: address, type: uint256, market: address, fxpAmount: uint256, fxpPrice, sender: address, outcome: uint256, fxpMoneyEscrowed: uint256, fxpSharesEscrowed: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID):
+def saveOrder(orderID: address, type: uint256, market: address, fxpAmount: uint256, fxpPrice, sender: address, outcome: uint256, fxpMoneyEscrowed: uint256, fxpSharesEscrowed: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID, gasPrice):
     self.controller.assertIsWhitelisted(msg.sender)
     if(type != BID and type != ASK):
         ~invalid()
@@ -297,6 +287,7 @@ def saveOrder(orderID: address, type: uint256, market: address, fxpAmount: uint2
     self.orders[orderID].outcome = outcome
     self.orders[orderID].fxpMoneyEscrowed = fxpMoneyEscrowed
     self.orders[orderID].fxpSharesEscrowed = fxpSharesEscrowed
+    self.orders[orderID].gasPrice = gasPrice
     log(type=MakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp, tradeGroupID)
     return(1: uint256)
 
@@ -348,6 +339,8 @@ def fillOrder(orderID: address, fill, money, shares):
     if(money > self.orders[orderID].fxpMoneyEscrowed):
         ~invalid()
     if(shares > self.orders[orderID].fxpSharesEscrowed):
+        ~invalid()
+    if(tx.gasprice > self.orders[orderID].gasPrice):
         ~invalid()
     self.orders[orderID].fxpAmount -= fill
     self.orders[orderID].fxpMoneyEscrowed -= money

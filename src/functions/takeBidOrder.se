@@ -43,7 +43,7 @@ macro BID: 1
 macro ASK: 2
 
 # Field counts
-macro ORDER_FIELDS: 10
+macro ORDER_FIELDS: 11
 
 def init():
     self.controller = 0x0
@@ -81,14 +81,6 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     # Make sure the order has been mined, obvious HFT prevention
     if(block.number <= order[6]):
         ~invalid()
-
-    orderInfo = array(4)
-    orderInfo[0] = market
-    orderInfo[1] = outcome
-    orderInfo[2] = type
-    orderInfo[3] = sender
-    orderHash = ripemd160(orderInfo, items=4)
-    ORDERS.checkHash(orderHash, sender)
 
     branch = EVENTS.getExpiration(MARKETS.getMarketEvent(market))
     fxpCumulativeScale = MARKETS.getCumulativeScale(market)
