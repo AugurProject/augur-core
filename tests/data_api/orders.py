@@ -33,18 +33,6 @@ def test_orders(contracts):
     WEI_TO_ETH = 10**18
     pointFive = 10**17*5
 
-    def test_hashcommit():
-        order = contracts.orders.makeOrderHash(market1, 1, 1)
-        assert(order != 0), "makeOrderHash for market1 shouldn't be 0"
-
-        try:
-            raise Exception(contracts.orders.checkHash(order, address0))
-        except Exception as exc:
-            assert(isinstance(exc, t.TransactionFailed)), "checkHash for order should throw because that order was placed in the same block we are checking"
-        # move the block.number up 1
-        contracts._ContractLoader__state.mine(1)
-        assert(contracts.orders.checkHash(order, address0) == 1), "checkHash for order should now be 1"
-
     def test_randomOrderSorting():
         def test_randomSorting(orderType, numOrders):
             marketID = utils.createMarket(contracts, utils.createBinaryEvent(contracts))
@@ -1178,7 +1166,6 @@ def test_orders(contracts):
         assert(contracts.orders.removeOrder(order3) == 1), "removeOrder wasn't executed successfully"
         assert(contracts.orders.getOrder(order3) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
 
-    test_hashcommit()
     test_randomOrderSorting()
     test_walkOrderList()
     test_orderSorting()
