@@ -8,9 +8,13 @@ import iocapture
 import ethereum.tester
 import utils
 import pprint
+import random
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 src = os.path.join(ROOT, "src")
+
+BID = 1
+ASK = 2
 
 WEI_TO_ETH = 10**18
 TWO = 2*WEI_TO_ETH
@@ -42,6 +46,43 @@ def test_orders(contracts):
         contracts._ContractLoader__state.mine(1)
         assert(contracts.orders.checkHash(order, address0) == 1), "checkHash for order should now be 1"
 
+    def test_randomOrderSorting():
+        def test_randomSorting(orderType, numOrders):
+            marketID = utils.createMarket(contracts, utils.createBinaryEvent(contracts))
+            contracts._ContractLoader__state.mine(1)
+            outcomeID = 1
+            orderIDs = range(1, numOrders + 1)
+            for orderID in orderIDs:
+                fxpPrice = utils.fix(random.random())
+                betterOrderID = 0
+                worseOrderID = 0
+                assert(contracts.orders.insertOrderIntoList(orderID, orderType, marketID, outcomeID, fxpPrice, betterOrderID, worseOrderID) == 1), "Insert order into list"
+                contracts._ContractLoader__state.mine(1)
+            for orderID in orderIDs:
+                order = contracts.orders.getOrder(orderID)
+                orderPrice = order[4]
+                betterOrderID = order[10]
+                worseOrderID = order[11]
+                betterOrderPrice = contracts.orders.getPrice(betterOrderID)
+                worseOrderPrice = contracts.orders.getPrice(worseOrderID)
+                if orderType == BID:
+                    if betterOrderPrice: assert(orderPrice <= betterOrderPrice), "Order price <= better order price"
+                    if worseOrderPrice: assert(orderPrice >= worseOrderPrice), "Order price >= worse order price"
+                else:
+                    if betterOrderPrice: assert(orderPrice >= betterOrderPrice), "Order price >= better order price"
+                    if worseOrderPrice: assert(orderPrice <= worseOrderPrice), "Order price <= worse order price"
+                if betterOrderID: assert(contracts.orders.getOrder(betterOrderID)[11] == orderID), "Better order's worseOrderID should equal orderID"
+                if worseOrderID: assert(contracts.orders.getOrder(worseOrderID)[10] == orderID), "Worse order's betterOrderID should equal orderID"
+            for orderID in orderIDs:
+                assert(contracts.orders.removeOrderFromList(orderID) == 1), "Remove order from list"
+                contracts._ContractLoader__state.mine(1)
+        test_randomSorting(BID, 10)
+        test_randomSorting(ASK, 10)
+        test_randomSorting(BID, 50)
+        test_randomSorting(ASK, 50)
+        test_randomSorting(BID, 100)
+        test_randomSorting(ASK, 100)
+
     def test_walkOrderList():
         def test_walkOrderList_bids():
             marketID = utils.createMarket(contracts, utils.createBinaryEvent(contracts))
@@ -60,8 +101,24 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
+            bestOrderID = int(contracts.orders.getBestBidOrderID(marketID, outcomeID), 16)
+            worstOrderID = int(contracts.orders.getWorstBidOrderID(marketID, outcomeID), 16)
+            assert(bestOrderID == 5)
+            assert(worstOrderID == 5)
+            # walk down order list starting from bestOrderID
+            assert(contracts.orders.descendOrderList(1, utils.fix("0.6"), bestOrderID) == [5, 0])
+            assert(contracts.orders.descendOrderList(1, utils.fix("0.59"), bestOrderID) == [5, 0])
+            assert(contracts.orders.descendOrderList(1, utils.fix("0.61"), bestOrderID) == [0, 5])
+            assert(contracts.orders.descendOrderList(1, utils.fix("0.58"), bestOrderID) == [5, 0])
+            assert(contracts.orders.descendOrderList(1, utils.fix("0.595"), bestOrderID) == [5, 0])
+            # walk up order list starting from worstOrderID
+            assert(contracts.orders.ascendOrderList(1, utils.fix("0.6"), worstOrderID) == [5, 0])
+            assert(contracts.orders.ascendOrderList(1, utils.fix("0.59"), worstOrderID) == [5, 0])
+            assert(contracts.orders.ascendOrderList(1, utils.fix("0.61"), worstOrderID) == [0, 5])
+            assert(contracts.orders.ascendOrderList(1, utils.fix("0.58"), worstOrderID) == [5, 0])
+            assert(contracts.orders.ascendOrderList(1, utils.fix("0.595"), bestOrderID) == [5, 0])
             order = {
                 "orderID": 6,
                 "type": 1,
@@ -75,7 +132,7 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
             bestOrderID = int(contracts.orders.getBestBidOrderID(marketID, outcomeID), 16)
             worstOrderID = int(contracts.orders.getWorstBidOrderID(marketID, outcomeID), 16)
@@ -106,7 +163,7 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
             bestOrderID = int(contracts.orders.getBestBidOrderID(marketID, outcomeID), 16)
             worstOrderID = int(contracts.orders.getWorstBidOrderID(marketID, outcomeID), 16)
@@ -142,7 +199,7 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
             bestOrderID = int(contracts.orders.getBestAskOrderID(marketID, outcomeID), 16)
             worstOrderID = int(contracts.orders.getWorstAskOrderID(marketID, outcomeID), 16)
@@ -171,7 +228,7 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
             bestOrderID = int(contracts.orders.getBestAskOrderID(marketID, outcomeID), 16)
             worstOrderID = int(contracts.orders.getWorstAskOrderID(marketID, outcomeID), 16)
@@ -202,7 +259,7 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
             bestOrderID = int(contracts.orders.getBestAskOrderID(marketID, outcomeID), 16)
             worstOrderID = int(contracts.orders.getWorstAskOrderID(marketID, outcomeID), 16)
@@ -1123,6 +1180,7 @@ def test_orders(contracts):
         assert(contracts.orders.getOrder(order3) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
 
     test_hashcommit()
+    test_randomOrderSorting()
     test_walkOrderList()
     test_orderSorting()
     test_saveOrder()
