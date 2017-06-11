@@ -22,7 +22,7 @@ def test_Cash(contracts):
         initialEtherBalance = contracts._ContractLoader__state.block.get_balance(t.a1)
         initialCashSupply = contracts.cash.totalSupply()
         initialCashBalance = contracts.cash.balanceOf(t.a1)
-        depositEtherAmount = 100
+        depositEtherAmount = utils.fix(100)
         assert(contracts.cash.publicDepositEther(value=depositEtherAmount, sender=t.k1) == 1), "deposit ether"
         assert(contracts.cash.balanceOf(t.a1) == initialCashBalance + depositEtherAmount), "account 1 cash balance should be equal to initial cash balance plus amount of ether deposited"
         assert(contracts.cash.totalSupply() == initialCashSupply + depositEtherAmount), "total cash supply should be equal to initial cash supply plus amount of ether deposited"
