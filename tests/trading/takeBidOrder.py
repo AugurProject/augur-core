@@ -84,7 +84,6 @@ def test_TakeBidOrder(contracts):
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = utils.fix(3)
             tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, 1, sender=t.k2)
-            assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
             assert(contracts.cash.approve(contracts.takeBidOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeBidOrder contract to spend cash from account 2"
             contracts._ContractLoader__state.mine(1)
             fxpAmountRemaining = contracts.takeBidOrder.takeBidOrder(t.a2, orderID, fxpAmountTakerWants, sender=t.k0)
@@ -190,7 +189,6 @@ def test_TakeBidOrder(contracts):
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = utils.fix(3)
             tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, 1, sender=t.k2)
-            assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
             contracts._ContractLoader__state.mine(1)
             assert(int(contracts._ContractLoader__state.send(t.k2, outcomeTwoShareContract, 0, shareTokenContractTranslator.encode("approve", [contracts.takeBidOrder.address, fxpAllowance])).encode("hex"), 16) == 1), "Approve takeBidOrder contract to spend shares from the user's account (account 2)"
             assert(outcomeShareContractWrapper.allowance(outcomeTwoShareContract, t.a2, contracts.takeBidOrder.address) == fxpAllowance), "takeBidOrder contract's allowance should be equal to the amount approved"
@@ -308,7 +306,6 @@ def test_TakeBidOrder(contracts):
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = utils.fix(3)
             tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, 1, sender=t.k2)
-            assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
             assert(contracts.cash.approve(contracts.takeBidOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeBidOrder contract to spend cash from account 2"
             contracts._ContractLoader__state.mine(1)
             fxpAmountRemaining = contracts.takeBidOrder.takeBidOrder(t.a2, orderID, fxpAmountTakerWants, sender=t.k0)
@@ -420,7 +417,6 @@ def test_TakeBidOrder(contracts):
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = utils.fix(3)
             tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, 1, sender=t.k2)
-            assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
             contracts._ContractLoader__state.mine(1)
             assert(int(contracts._ContractLoader__state.send(t.k2, outcomeTwoShareContract, 0, shareTokenContractTranslator.encode("approve", [contracts.takeBidOrder.address, fxpAllowance])).encode("hex"), 16) == 1), "Approve takeBidOrder contract to spend shares from the user's account (account 2)"
             assert(outcomeShareContractWrapper.allowance(outcomeTwoShareContract, t.a2, contracts.takeBidOrder.address) == fxpAllowance), "takeBidOrder contract's allowance should be equal to the amount approved"
