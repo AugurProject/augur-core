@@ -1,1 +1,0 @@
-[{"constant": false, "type": "function", "name": "claimSharesInUpdate(int256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "int256", "name": "market"}]}]
