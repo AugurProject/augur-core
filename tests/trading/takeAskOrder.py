@@ -78,7 +78,7 @@ def test_TakeAskOrder(contracts):
             # 2. Taker fills ask order. Complete sets are created and split between taker (receives outcome 2) and maker (receives other outcomes).
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = utils.fix(7)
-            tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, 2, sender=t.k2)
+
             contracts._ContractLoader__state.mine(1)
             fxpAmountRemaining = contracts.takeAskOrder.takeAskOrder(t.a2, orderID, fxpAmountTakerWants, sender=t.k0)
             assert(fxpAmountRemaining == fxpAmountTakerWants - fxpOrderAmount), "Amount remaining of taker's request should be fxpAmountTakerWants - fxpOrderAmount"
@@ -180,7 +180,6 @@ def test_TakeAskOrder(contracts):
 
             # 3. Taker fills ask order. Taker receives maker's escrowed shares. Maker receives cash.
             contracts._ContractLoader__state.mine(1)
-            tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, 2, sender=t.k2)
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = utils.fix(7)
             assert(contracts.cash.approve(contracts.takeAskOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeAskOrder contract to spend cash from account 2"
