@@ -1,0 +1,30 @@
+# controller_test.se
+#
+# Intended to implement functions what will help test the functionality
+# of controller.se
+# 
+# Tests are in controller_tests.py file which tests the controller by calling
+# various controller.se and controller_test.se functions --- current testing
+# contract examples also available in the tests folder.
+# 
+# self.controller = 0x0 [this is the controller contract's address, you
+# have a few ways in getting it here, one is to get the address of the
+# controller contract once you've uploaded it in the pyethereum tester,
+# another is to just upload the contract here using create]
+
+data controller
+
+def init():
+	self.controller = msg.sender
+
+def setController(newController: address):
+	if(msg.sender != self.controller):
+		~invalid()
+	self.controller = newController
+	return(1)
+
+def suicideFunds(to: address):
+	if(msg.sender != self.controller):
+		~invalid()
+	suicide(to)
+
