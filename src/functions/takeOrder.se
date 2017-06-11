@@ -16,7 +16,7 @@ extern takeBidOrder: [setController:[address]:int256, suicideFunds:[address]:_, 
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 
 data controller
 
@@ -49,7 +49,7 @@ def init():
 # @public
 # @return fxp
 def publicTakeBestOrder(type: uint256, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
     self.takeBestOrder(msg.sender, type, market, outcome, fxpAmountTakerWants)
@@ -60,7 +60,7 @@ def publicTakeBestOrder(type: uint256, market: address, outcome: uint256, fxpAmo
 # @public
 # @return fxp
 def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
     fxpAmountRemaining = self.takeOrder(msg.sender, orderID, fxpAmountTakerWants)
@@ -70,7 +70,7 @@ def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
 # @internal
 # @return fxp
 def takeBestOrder(sender: address, type: uint256, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     if(type == BID):
         orderID = ORDERS.getBestAskOrderID(market, outcome)
@@ -81,7 +81,7 @@ def takeBestOrder(sender: address, type: uint256, market: address, outcome: uint
 # @internal
 # @return fxp
 def takeOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     if(fxpAmountTakerWants <= 0):
         ~invalid()

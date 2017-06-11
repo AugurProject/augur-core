@@ -4,7 +4,7 @@ extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]
 
 ### Token wrapper for shares
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 
 data accounts[2**160](balance, spenders[2**160](maxValue))
@@ -33,7 +33,7 @@ def init():
 ####################
 
 def transfer(to: address, value: uint256):
-    refund()
+    assertZeroValue()
     senderBalance = self.accounts[msg.sender].balance
     if(senderBalance < value):
         ~invalid()
@@ -48,7 +48,7 @@ def transfer(to: address, value: uint256):
     return(1)
 
 def transferFrom(from: address, to: address, value: uint256):
-    refund()
+    assertZeroValue()
     senderBalance = self.accounts[from].balance
     if(senderBalance < value):
         ~invalid()
@@ -66,7 +66,7 @@ def transferFrom(from: address, to: address, value: uint256):
     return(1)
 
 def approve(spender: address, value: uint256):
-    refund()
+    assertZeroValue()
     self.accounts[msg.sender].spenders[spender].maxValue = value
     log(type=Approval, msg.sender, spender, value)
     return(1)
@@ -78,7 +78,7 @@ def approve(spender: address, value: uint256):
 # Special functions for share (token) creation and destruction
 
 def createShares(owner: address, fxpValue: uint256):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     if(fxpValue <= 0):
         ~invalid()
@@ -87,7 +87,7 @@ def createShares(owner: address, fxpValue: uint256):
     return(1)
 
 def destroyShares(owner: address, fxpValue: uint256):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     if(fxpValue <= 0):
         ~invalid()
@@ -104,29 +104,29 @@ def destroyShares(owner: address, fxpValue: uint256):
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(owner: address, spender: address):
-    refund()
+    assertZeroValue()
     return(self.accounts[owner].spenders[spender].maxValue)
 
 # @return fxp
 def totalSupply():
-    refund()
+    assertZeroValue()
     return(self.totalSupply)
 
 # @return fxp
 def balanceOf(address: address):
-    refund()
+    assertZeroValue()
     return(self.accounts[address].balance)
 
 def getName():
-    refund()
+    assertZeroValue()
     return(self.name)
 
 def getDecimals():
-    refund()
+    assertZeroValue()
     return(self.decimals)
 
 def getSymbol():
-    refund()
+    assertZeroValue()
     return(self.symbol)
 
 ########################

@@ -44,7 +44,7 @@ def test_trading():
     claimProceeds.test_ClaimProceeds(contracts)
 
 def test_helpers():
-    helper_tests.test_refund()
+    helper_tests.test_assertZeroValue()
     helper_tests.test_float()
 
 if __name__ == "__main__":

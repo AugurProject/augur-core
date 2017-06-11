@@ -38,7 +38,7 @@ extern claimInitialRep: [claimInitialRep:[int256,int256]:int256, setController:[
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/periodStage.sem')
 inset('../macros/safeMath.sem')
 
@@ -74,7 +74,7 @@ def init():
     self.controller = 0x0
 
 def publicSendRepFrom(branch, from, receiver, fxpValue):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     result = self.internalSendRepFrom(branch, msg.sender, from, receiver, fxpValue)
     MUTEX.release()
@@ -106,7 +106,7 @@ def internalSendRepFrom(branch, caller, from, receiver, fxpValue):
     # -5: not enough rep / fxpValue too small or not authorized
 # fails unless from has authorized sender [either contract which was approved or the from address is the msg.sender]
 def publicTransferFrom(branch, from, receiver, fxpValue):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     result = self.internalTransferFrom(branch, msg.sender, receiver, fxpValue)
     MUTEX.release()
@@ -128,7 +128,7 @@ def internalTransferFrom(branch, caller, from, receiver, fxpValue):
     return(1)
 
 def publicClaimRep():
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     result = self.internalSendRepFrom(msg.sender)
     MUTEX.release()
@@ -143,7 +143,7 @@ def internalClaimRep(caller):
 
 # Allows spender to withdraw from your rep account
 def publicApprove(branch, spender, fxpValue):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     result = self.internalApprove(branch, msg.sender, spender, fxpValue)
     MUTEX.release()
@@ -162,7 +162,7 @@ def allowance(branch, owner, spender):
     return(self.amountCanSpend[owner][spender].branch[branch])
 
 macro checkInvariants($account):
-    refund()
+    assertZeroValue()
     # auto increment vote period if needed
     INCREMENTPERIOD.internalIncrementPeriodAfterReporting(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -180,7 +180,7 @@ macro checkInvariants($account):
         return(0)
 
 macro checkSendRepInvariants():
-    refund()
+    assertZeroValue()
     tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
     child = BRANCHES.getMostRecentChild(branch)
     tooLateForChild = block.timestamp > (BRANCHES.getCreationDate(child) + ONE_MONTH)

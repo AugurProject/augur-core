@@ -43,7 +43,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 RESOLVEFORK = self.controller.lookup('forkResolution')
 extern forkResolution: [exchangeRate:[int256]:int256, internalResolveFork:[int256]:int256, publicResolveFork:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/safeMath.sem')
@@ -98,7 +98,7 @@ def init():
     self.controller = 0x0
 
 def moveEvent(event):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
 
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))

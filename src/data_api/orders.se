@@ -9,7 +9,7 @@ extern markets: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256
 extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]:int256, assertOnlySpecifiedCaller:[int256,int256]:_, changeMode:[int256]:int256, emergencyStop:[]:int256, getMode:[]:int256, getOwner:[]:int256, lookup:[int256]:int256, onlyInEmergency:[]:_, release:[]:int256, removeFromWhitelist:[int256,int256]:int256, setValue:[int256,int256]:int256, stopInEmergency:[]:_, suicide:[int256,int256,int256]:int256, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:_, transferOwnership:[int256,int256,int256,int256]:int256, updateController:[int256,int256]:int256]
 
 inset('../macros/safeMath.sem')
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 
 ### Storage of all data associated with orders
 
@@ -80,7 +80,7 @@ def getLastOrder(market: address):
 
 # @public
 def makeOrderHash(market: address, outcome: uint256, direction: uint256):
-    refund()
+    assertZeroValue()
     orderInfo = array(4)
     orderInfo[0] = market
     orderInfo[1] = outcome
@@ -91,7 +91,7 @@ def makeOrderHash(market: address, outcome: uint256, direction: uint256):
 
 # @public
 def commitOrder(hash):
-    refund()
+    assertZeroValue()
     self.orderCommits[msg.sender].hash = hash
     self.orderCommits[msg.sender].block = block.number
     return(1: uint256)

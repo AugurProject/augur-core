@@ -43,7 +43,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]:int256, assertOnlySpecifiedCaller:[int256,int256]:_, changeMode:[int256]:int256, emergencyStop:[]:int256, getMode:[]:int256, getOwner:[]:int256, lookup:[int256]:int256, onlyInEmergency:[]:_, release:[]:int256, removeFromWhitelist:[int256,int256]:int256, setValue:[int256,int256]:int256, stopInEmergency:[]:_, suicide:[int256,int256,int256]:int256, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:_, transferOwnership:[int256,int256,int256,int256]:int256, updateController:[int256,int256]:int256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/periodStage.sem')
@@ -77,7 +77,7 @@ def init():
     # -10: not caught up on penalizations [>1 period behind] and auto catchup failed
     # -11: not able to fxpReport on this event
 def submitReport(event, fxpReport, fxpEthics):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
 
     branch = EVENTS.getBranch(event)

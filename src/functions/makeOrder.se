@@ -24,7 +24,7 @@ extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint25
 # Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
@@ -47,7 +47,7 @@ def init():
 
 # @public
 def publicMakeOrder(type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
     orderID = self.makeOrder(msg.sender, type, fxpAmount, fxpPrice, market, outcome, betterOrderID, worseOrderID, tradeGroupID)
@@ -56,7 +56,7 @@ def publicMakeOrder(type: uint256, fxpAmount: uint256, fxpPrice, market: address
 
 # @internal
 def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
     if(!EVENTS.getExpiration(MARKETS.getMarketEvent(market))):
@@ -85,7 +85,7 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
 
 # @private
 def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):
-    refund()
+    assertZeroValue()
     if(msg.sender != self):
         ~invalid()
 
@@ -129,7 +129,7 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
 # @private
 def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, outcome: uint256):
-    refund()
+    assertZeroValue()
     if(msg.sender != self):
         ~invalid()
 

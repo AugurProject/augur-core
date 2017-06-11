@@ -42,7 +42,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 extern forkResolveContract: [resolveFork:[int256]:int256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/safeMath.sem')
@@ -99,7 +99,7 @@ def init():
 # parent branch is branch here
 # If there's only 1 event and that's the one we forked over [rare edge case] we can call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start of the fork]
 def publicResolveFork(branch):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     result = self.internalResolveFork(branch)
     MUTEX.release()

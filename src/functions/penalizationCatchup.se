@@ -19,7 +19,7 @@ extern consensusData: [decreaseDenominator:[int256,int256,int256]:int256, doRefu
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/periodStage.sem')
 inset('../macros/safeMath.sem')
 
@@ -37,7 +37,7 @@ def init():
     self.controller = 0x0
 
 def publicPenalizationCatchup(branch, sender):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     result = self.internalPenalizationCatchup(branch, sender)
     MUTEX.release()

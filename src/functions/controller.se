@@ -4,7 +4,7 @@
 
 extern suicide: [suicideFunds:[address]:_, setController:[address]:int256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 
 # Initializing the controller
     # First call the functions to set the registry values and whitelists

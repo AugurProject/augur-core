@@ -6,7 +6,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint256]:int256, balanceOf:[address]:int256, createShares:[address,uint256]:int256, destroyShares:[address,uint256]:int256, getDecimals:[]:int256, getName:[]:int256, getSymbol:[]:int256, setController:[address]:int256, suicideFunds:[address]:_, totalSupply:[]:int256, transfer:[address,uint256]:int256, transferFrom:[address,address,uint256]:int256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 
 # Markets' index is the market, markets stores data about markets [which are able to be traded on] in augur
     # Event is the event in the market

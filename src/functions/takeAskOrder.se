@@ -29,7 +29,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, transfer:[address,uint256]:int256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
@@ -56,7 +56,7 @@ def init():
 # @internal
 # @return fxp
 def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
     # Get order

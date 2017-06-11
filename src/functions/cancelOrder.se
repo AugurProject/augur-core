@@ -21,7 +21,7 @@ extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suic
 # Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 
 data controller
@@ -38,7 +38,7 @@ def init():
 
 # @public
 def publicCancelOrder(orderID):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     self.cancelOrder(msg.sender, orderID)
     MUTEX.release()
@@ -48,7 +48,7 @@ def publicCancelOrder(orderID):
 # @internal
 # @returns 1 if success, throws on failure
 def cancelOrder(sender: address, orderID):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     if(orderID == 0):
         ~invalid()
@@ -86,7 +86,7 @@ def cancelOrder(sender: address, orderID):
 # Issue refunds
 # @private
 def refundOrder(sender: address, type: uint256, fxpSharesEscrowed: uint256, fxpMoneyEscrowed: uint256, market: address, outcome: uint256):
-    refund()
+    assertZeroValue()
     if(msg.sender != self):
         ~invalid()
 

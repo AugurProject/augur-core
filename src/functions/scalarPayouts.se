@@ -18,7 +18,7 @@ extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint25
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
@@ -30,7 +30,7 @@ def init():
 
 # @internal
 def payoutScalarMarket(sender: address, market: address, event: address):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
     # Fetch outcome and min/max values for the event.
