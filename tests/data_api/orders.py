@@ -37,7 +37,6 @@ def test_orders(contracts):
         order = contracts.orders.makeOrderHash(market1, 1, 1)
         assert(order != 0), "makeOrderHash for market1 shouldn't be 0"
 
-        assert(contracts.orders.commitOrder(order) == 1), "commitOrder wasn't executed successfully"
         try:
             raise Exception(contracts.orders.checkHash(order, address0))
         except Exception as exc:

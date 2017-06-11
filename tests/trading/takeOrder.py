@@ -38,7 +38,6 @@ def test_TakeOrder(contracts):
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = int(fxpAmount / 10)
             tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=t.k2)
-            assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
             contracts._ContractLoader__state.mine(1)
             t.gas_price = 5
             try:
@@ -79,7 +78,6 @@ def test_TakeOrder(contracts):
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = int(fxpAmount / 10)
             tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=t.k2)
-            assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
             contracts._ContractLoader__state.mine(1)
             assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == utils.fix("0.6")), "Market's cash balance should be (price - 1)*amount"
             fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=t.k2)
@@ -112,7 +110,6 @@ def test_TakeOrder(contracts):
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = int(fxpAmount / 10)
             tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=t.k2)
-            assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
             contracts._ContractLoader__state.mine(1)
             fxpAmountRemaining = contracts.takeOrder.publicTakeBestOrder(1, marketID, outcomeID, fxpAmountTakerWants, sender=t.k2)
             assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
@@ -147,7 +144,6 @@ def test_TakeOrder(contracts):
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = int(fxpAmount / 10)
             tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=t.k2)
-            assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
             contracts._ContractLoader__state.mine(1)
             assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == utils.fix("0.6")), "Market's cash balance should be (price - 1)*amount"
             fxpAmountRemaining = contracts.takeOrder.publicTakeBestOrder(2, marketID, outcomeID, fxpAmountTakerWants, sender=t.k2)
