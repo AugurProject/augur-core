@@ -92,7 +92,7 @@ def createEventType(contracts, eventType):
 
 def createMarket(contracts, eventID):
     t = contracts._ContractLoader__tester
-    contracts.cash.approve(contracts.createMarket.address, fix(10000), sender=t.k1)
+    contracts.cash.approve(contracts.createMarket.address, fix(10), sender=t.k1)
     branch = 1010101
     fxpTradingFee = 20000000000000001
     tag1 = 123
@@ -100,7 +100,7 @@ def createMarket(contracts, eventID):
     tag3 = 789
     extraInfo = "rabble rabble rabble"
     currency = contracts.cash.address
-    return contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, 0, 0, sender=t.k1, value=fix(10000))
+    return contracts.createMarket.publicCreateMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, extraInfo, currency, 0, 0, sender=t.k1, value=fix(10))
 
 def buyCompleteSets(contracts, marketID, fxpAmount, sender=None):
     t = contracts._ContractLoader__tester
