@@ -97,7 +97,6 @@ def test_MakeOrder(contracts):
                 assert(contracts.cash.approve(contracts.takeOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
                 contracts._ContractLoader__state.mine(1)
                 fxpAmountTakerWants = fxpAmount
-                orderHash = contracts.orders.makeOrderHash(marketID, outcomeID, 2, sender=t.k2)
                 contracts._ContractLoader__state.mine(1)
                 assert(outcomeShareContractWrapper.balanceOf(outcomeTwoShareContract, t.a1) == 0), "Account 1 should have 0 shares of outcome 2"
                 assert(outcomeShareContractWrapper.balanceOf(outcomeTwoShareContract, t.a2) == 0), "Account 2 should have 0 shares of outcome 2"
