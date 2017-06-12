@@ -7,8 +7,9 @@ import json
 import iocapture
 import ethereum.tester
 import utils
-import pprint
-import random
+import numpy as np
+
+np.set_printoptions(linewidth=225)
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 src = os.path.join(ROOT, "src")
@@ -47,17 +48,55 @@ def test_orders(contracts):
         assert(contracts.orders.checkHash(order, address0) == 1), "checkHash for order should now be 1"
 
     def test_randomOrderSorting():
-        def test_randomSorting(orderType, numOrders):
+        def test_randomSorting(orderType, numOrders, withBoundingOrders=False, deadOrderProbability=0.0):
+            print("Order sorting tests (orderType=" + str(orderType) + ", numOrders=" + str(numOrders) + ", withBoundingOrders=" + str(withBoundingOrders) + ", deadOrderProbability=" + str(deadOrderProbability) + ")")
             marketID = utils.createMarket(contracts, utils.createBinaryEvent(contracts))
             contracts._ContractLoader__state.mine(1)
             outcomeID = 1
-            orderIDs = range(1, numOrders + 1)
-            for orderID in orderIDs:
-                fxpPrice = utils.fix(random.random())
-                betterOrderID = 0
-                worseOrderID = 0
-                assert(contracts.orders.insertOrderIntoList(orderID, orderType, marketID, outcomeID, fxpPrice, betterOrderID, worseOrderID) == 1), "Insert order into list"
+            orderIDs = np.arange(1, numOrders + 1)
+            # Generate random prices on [0, 1) and rank them (smallest price @ rank 0)
+            fxpPrices = np.vectorize(utils.fix)(np.random.rand(numOrders))
+            priceRanks = np.argsort(np.argsort(fxpPrices))
+            if orderType == BID:
+                bestOrderID = orderIDs[np.argmax(priceRanks)]
+                worstOrderID = orderIDs[np.argmin(priceRanks)]
+            else:
+                bestOrderID = orderIDs[np.argmin(priceRanks)]
+                worstOrderID = orderIDs[np.argmax(priceRanks)]
+            betterOrderIDs = np.zeros(numOrders, dtype=np.int)
+            worseOrderIDs = np.zeros(numOrders, dtype=np.int)
+            deadOrders = np.random.rand(numOrders, 2) < deadOrderProbability
+            for i, priceRank in enumerate(priceRanks):
+                if withBoundingOrders:
+                    if orderType == BID:
+                        betterOrders = np.flatnonzero(priceRank < priceRanks)
+                        worseOrders = np.flatnonzero(priceRank > priceRanks)
+                    else:
+                        betterOrders = np.flatnonzero(priceRank > priceRanks)
+                        worseOrders = np.flatnonzero(priceRank < priceRanks)
+                    if len(betterOrders): betterOrderIDs[i] = orderIDs[np.random.choice(betterOrders)]
+                    if len(worseOrders): worseOrderIDs[i] = orderIDs[np.random.choice(worseOrders)]
+            print(np.c_[orderIDs, fxpPrices, priceRanks, betterOrderIDs, worseOrderIDs, deadOrders])
+            for i, orderID in enumerate(orderIDs):
+                betterOrderID = betterOrderIDs[i]
+                worseOrderID = worseOrderIDs[i]
+                if withBoundingOrders:
+                    if orderType == BID:
+                        assert((orderID == bestOrderID and betterOrderID == 0) or fxpPrices[i] < fxpPrices[betterOrderID - 1]), "Input price is < better order price, or this is the best order so better order ID is zero"
+                        assert((orderID == worstOrderID and worseOrderID == 0) or fxpPrices[i] > fxpPrices[worseOrderID - 1]), "Input price is > worse order price, or this is the worst order so worse order ID is zero"
+                    else:
+                        assert((orderID == bestOrderID and betterOrderID == 0) or fxpPrices[i] > fxpPrices[betterOrderID - 1]), "Input price is > better order price, or this is the best order so better order ID is zero"
+                        assert((orderID == worstOrderID and worseOrderID == 0) or fxpPrices[i] < fxpPrices[worseOrderID - 1]), "Input price is < worse order price, or this is the worst order so worse order ID is zero"
+                    if deadOrders[i, 0]: betterOrderID = numOrders + 1
+                    if deadOrders[i, 1]: worseOrderID = numOrders + 1
+                assert(contracts.orders.insertOrderIntoList(orderID, orderType, marketID, outcomeID, fxpPrices[i], betterOrderID, worseOrderID) == 1), "Insert order into list"
                 contracts._ContractLoader__state.mine(1)
+            if orderType == BID:
+                assert(bestOrderID == int(contracts.orders.getBestBidOrderID(marketID, outcomeID), 16)), "Verify best bid order ID"
+                assert(worstOrderID == int(contracts.orders.getWorstBidOrderID(marketID, outcomeID), 16)), "Verify worst bid order ID"
+            else:
+                assert(bestOrderID == int(contracts.orders.getBestAskOrderID(marketID, outcomeID), 16)), "Verify best ask order ID"
+                assert(worstOrderID == int(contracts.orders.getWorstAskOrderID(marketID, outcomeID), 16)), "Verify worst ask order ID"
             for orderID in orderIDs:
                 order = contracts.orders.getOrder(orderID)
                 orderPrice = order[4]
@@ -71,17 +110,32 @@ def test_orders(contracts):
                 else:
                     if betterOrderPrice: assert(orderPrice >= betterOrderPrice), "Order price >= better order price"
                     if worseOrderPrice: assert(orderPrice <= worseOrderPrice), "Order price <= worse order price"
-                if betterOrderID: assert(contracts.orders.getOrder(betterOrderID)[11] == orderID), "Better order's worseOrderID should equal orderID"
-                if worseOrderID: assert(contracts.orders.getOrder(worseOrderID)[10] == orderID), "Worse order's betterOrderID should equal orderID"
+                if betterOrderID:
+                    assert(contracts.orders.getOrder(betterOrderID)[11] == orderID), "Better order's worseOrderID should equal orderID"
+                else:
+                    assert(orderID == bestOrderID), "Should be the best order ID"
+                if worseOrderID:
+                    assert(contracts.orders.getOrder(worseOrderID)[10] == orderID), "Worse order's betterOrderID should equal orderID"
+                else:
+                    assert(orderID == worstOrderID), "Should be the worst order ID"
             for orderID in orderIDs:
                 assert(contracts.orders.removeOrderFromList(orderID) == 1), "Remove order from list"
                 contracts._ContractLoader__state.mine(1)
-        test_randomSorting(BID, 10)
-        test_randomSorting(ASK, 10)
-        test_randomSorting(BID, 50)
-        test_randomSorting(ASK, 50)
-        test_randomSorting(BID, 100)
-        test_randomSorting(ASK, 100)
+
+        def run_randomSorting_tests(withBoundingOrders, deadOrderProbability=0.0):
+            test_randomSorting(BID, 10, withBoundingOrders=withBoundingOrders, deadOrderProbability=deadOrderProbability)
+            test_randomSorting(ASK, 10, withBoundingOrders=withBoundingOrders, deadOrderProbability=deadOrderProbability)
+            test_randomSorting(BID, 50, withBoundingOrders=withBoundingOrders, deadOrderProbability=deadOrderProbability)
+            test_randomSorting(ASK, 50, withBoundingOrders=withBoundingOrders, deadOrderProbability=deadOrderProbability)
+            test_randomSorting(BID, 100, withBoundingOrders=withBoundingOrders, deadOrderProbability=deadOrderProbability)
+            test_randomSorting(ASK, 100, withBoundingOrders=withBoundingOrders, deadOrderProbability=deadOrderProbability)
+
+        run_randomSorting_tests(False)
+        run_randomSorting_tests(True, deadOrderProbability=0.0)
+        run_randomSorting_tests(True, deadOrderProbability=0.25)
+        run_randomSorting_tests(True, deadOrderProbability=0.5)
+        run_randomSorting_tests(True, deadOrderProbability=0.75)
+        run_randomSorting_tests(True, deadOrderProbability=1.0)
 
     def test_walkOrderList():
         def test_walkOrderList_bids():
