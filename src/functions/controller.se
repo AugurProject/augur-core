@@ -120,7 +120,9 @@ def assertIsWhitelisted(address):
         ~invalid()
 
 def assertOnlySpecifiedCaller(callerAddress, allowedCallerContractName):
-    if((self.mode == "dev" and msg.sender != self.owner) or self.registry[allowedCallerContractName].value != callerAddress):
+    if(self.mode == "dev" and (msg.sender != self.owner and self.registry[allowedCallerContractName].value != callerAddress)):
+        ~invalid()
+    elif(self.registry[allowedCallerContractName].value != callerAddress):
         ~invalid()
 
 def stopInEmergency():

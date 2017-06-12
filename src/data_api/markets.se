@@ -43,6 +43,8 @@ def initializeMarket(market, event, tradingPeriod, fxpTradingFee, branch, tag1, 
     self.Markets[market].event = event
     if(numOutcomes > 8):
         ~invalid()
+    if(fxpTradingFee > 10**18):
+        ~invalid()
     i = 0
     while i < numOutcomes:
         self.Markets[market].shareContracts[i + 1] = shareContracts[i]

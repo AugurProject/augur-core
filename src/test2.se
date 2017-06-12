@@ -11,3 +11,6 @@ def initialize():
 
 def ok():
     return(1)
+
+def hmm():
+    return("fsf": str)
