@@ -88,7 +88,7 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
             bestOrderID = int(contracts.orders.getBestBidOrderID(marketID, outcomeID), 16)
             worstOrderID = int(contracts.orders.getWorstBidOrderID(marketID, outcomeID), 16)
@@ -119,7 +119,7 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
             bestOrderID = int(contracts.orders.getBestBidOrderID(marketID, outcomeID), 16)
             worstOrderID = int(contracts.orders.getWorstBidOrderID(marketID, outcomeID), 16)
@@ -150,7 +150,7 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
             bestOrderID = int(contracts.orders.getBestBidOrderID(marketID, outcomeID), 16)
             worstOrderID = int(contracts.orders.getWorstBidOrderID(marketID, outcomeID), 16)
@@ -186,7 +186,7 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
             bestOrderID = int(contracts.orders.getBestAskOrderID(marketID, outcomeID), 16)
             worstOrderID = int(contracts.orders.getWorstAskOrderID(marketID, outcomeID), 16)
@@ -215,7 +215,7 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
             bestOrderID = int(contracts.orders.getBestAskOrderID(marketID, outcomeID), 16)
             worstOrderID = int(contracts.orders.getWorstAskOrderID(marketID, outcomeID), 16)
@@ -246,7 +246,7 @@ def test_orders(contracts):
                 "worseOrderID": 0,
                 "tradeGroupID": 0
             }
-            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"]) == 1), "Save order"
+            assert(contracts.orders.saveOrder(order["orderID"], order["type"], marketID, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
             contracts._ContractLoader__state.mine(1)
             bestOrderID = int(contracts.orders.getBestAskOrderID(marketID, outcomeID), 16)
             worstOrderID = int(contracts.orders.getWorstAskOrderID(marketID, outcomeID), 16)
@@ -285,7 +285,7 @@ def test_orders(contracts):
                                                     order["fxpSharesEscrowed"],
                                                     order["betterOrderID"],
                                                     order["worseOrderID"],
-                                                    order["tradeGroupID"])
+                                                    order["tradeGroupID"], 1)
                 assert(output == 1), "saveOrder wasn't executed successfully"
                 contracts._ContractLoader__state.mine(1)
             for order in testCase["orders"]:
@@ -1109,8 +1109,8 @@ def test_orders(contracts):
         })
 
     def test_saveOrder():
-        assert(contracts.orders.saveOrder(order1, 1, market1, WEI_TO_ETH*10, pointFive, address0, 1, 0, WEI_TO_ETH*10, 0, 0, 2) == 1), "saveOrder wasn't executed successfully"
-        assert(contracts.orders.saveOrder(order2, 2, market1, WEI_TO_ETH*10, pointFive, address1, 1, WEI_TO_ETH*5, 0, 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
+        assert(contracts.orders.saveOrder(order1, 1, market1, WEI_TO_ETH*10, pointFive, address0, 1, 0, WEI_TO_ETH*10, 0, 0, 2, 1) == 1), "saveOrder wasn't executed successfully"
+        assert(contracts.orders.saveOrder(order2, 2, market1, WEI_TO_ETH*10, pointFive, address1, 1, WEI_TO_ETH*5, 0, 0, 0, 1, 1) == 1), "saveOrder wasn't executed successfully"
 
         assert(contracts.orders.getOrder(order1) == [order1, 1, market1, WEI_TO_ETH*10, pointFive, address0, contracts._ContractLoader__state.block.number, 1, 0, WEI_TO_ETH*10, 0, 0]), "getOrder for order1 didn't return the expected array of data"
         assert(contracts.orders.getOrder(order2) == [order2, 2, market1, WEI_TO_ETH*10, pointFive, address1, contracts._ContractLoader__state.block.number, 1, WEI_TO_ETH*5, 0, 0, 0]), "getOrder for order2 didn't return the expected array of data"
@@ -1160,7 +1160,7 @@ def test_orders(contracts):
 
     def test_removeOrder():
         order3 = 321321321
-        assert(contracts.orders.saveOrder(order3, 1, market1, WEI_TO_ETH*10, pointFive, address0, 2, 0, WEI_TO_ETH*10, 0, 0, 0) == 1), "saveOrder wasn't executed successfully"
+        assert(contracts.orders.saveOrder(order3, 1, market1, WEI_TO_ETH*10, pointFive, address0, 2, 0, WEI_TO_ETH*10, 0, 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
         order3BlockNumber = contracts.orders.getOrder(order3)[6]
         assert(contracts.orders.getOrder(order3) == [order3, 1, market1, WEI_TO_ETH*10, pointFive, address0, order3BlockNumber, 2, 0, WEI_TO_ETH*10, 0, 0]), "getOrder for order3 didn't return the expected data array"
         assert(contracts.orders.removeOrder(order3) == 1), "removeOrder wasn't executed successfully"
