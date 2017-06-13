@@ -74,12 +74,9 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
 
     order = [type, market, fxpAmount, fxpPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, tx.gasprice]
     orderID = ripemd160(order, items=10)
-    if(ORDERS.getID(orderID)):
+    if(ORDERS.getAmount(orderID)):
         ~invalid()
     ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID, tx.gasprice)
-
-    # Update market
-    ORDERS.addOrderToMarket(market, orderID)
 
     return(orderID)
 

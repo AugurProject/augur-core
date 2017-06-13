@@ -59,11 +59,11 @@ def publicTakeBestOrder(type: uint256, market: address, outcome: uint256, fxpAmo
 # "Snipe" an order on the orderbook using its ID.
 # @public
 # @return fxp
-def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
+def publicTakeOrder(orderID: address, type: uint256, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
     assertZeroValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
-    fxpAmountRemaining = self.takeOrder(msg.sender, orderID, fxpAmountTakerWants)
+    fxpAmountRemaining = self.takeOrder(msg.sender, orderID, type, market, outcome, fxpAmountTakerWants)
     MUTEX.release()
     return(fxpAmountRemaining: uint256)
 
@@ -72,25 +72,21 @@ def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
 def takeBestOrder(sender: address, type: uint256, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
     assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
-    if(type == BID):
-        orderID = ORDERS.getBestAskOrderID(market, outcome)
-    elif(type == ASK):
-        orderID = ORDERS.getBestBidOrderID(market, outcome)
-    return(self.takeOrder(sender, orderID, fxpAmountTakerWants): uint256)
+    orderID = ORDERS.getBestOrderID(type, market, outcome)
+    return(self.takeOrder(sender, orderID, type, market, outcome, fxpAmountTakerWants): uint256)
 
 # @internal
 # @return fxp
-def takeOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
+def takeOrder(sender: address, orderID: address, type: uint256, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
     assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     if(fxpAmountTakerWants <= 0):
         ~invalid()
-    type = ORDERS.getType(orderID)
     # Fill orders
     if(type == BID):
-        fxpAmountRemaining = TAKEBIDORDER.takeBidOrder(sender, orderID, fxpAmountTakerWants, call=delegate)
+        fxpAmountRemaining = TAKEBIDORDER.takeBidOrder(sender, orderID, market, outcome, fxpAmountTakerWants, call=delegate)
     elif(type == ASK):
-        fxpAmountRemaining = FILLASKORDER.takeAskOrder(sender, orderID, fxpAmountTakerWants, call=delegate)
+        fxpAmountRemaining = FILLASKORDER.takeAskOrder(sender, orderID, market, outcome, fxpAmountTakerWants, call=delegate)
     else:
         ~invalid()
     return(fxpAmountRemaining: uint256)

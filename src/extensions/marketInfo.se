@@ -50,7 +50,7 @@ def getMarketInfo(marketID, account):
     marketInfo[5] = 0
     marketInfo[6] = MARKETS.getCumulativeScale(marketID)
     marketInfo[7] = MARKETS.getSharesValue(marketID)
-    marketInfo[8] = ORDERS.getTotalOrders(marketID)
+    marketInfo[8] = 0
     marketInfo[9] = ORDERS.getVolume(marketID)
     marketInfo[10] = INFO.getCreationFee(marketID)
     marketInfo[11] = INFO.getCreator(marketID)

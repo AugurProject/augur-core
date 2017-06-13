@@ -33,7 +33,7 @@ def test_MakeOrder(contracts):
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
                 order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 12), "Order array length should be 12"
+                assert(len(order) == 13), "Order array length should be 13"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
@@ -124,7 +124,7 @@ def test_MakeOrder(contracts):
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(bidOrderID != 0), "Order ID should be non-zero"
                 order = contracts.orders.getOrder(bidOrderID)
-                assert(len(order) == 12), "Order array length should be 12"
+                assert(len(order) == 13), "Order array length should be 13"
                 assert(order[0] == bidOrderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
@@ -167,7 +167,7 @@ def test_MakeOrder(contracts):
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
                 order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 12), "Order array length should be 12"
+                assert(len(order) == 13), "Order array length should be 13"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
@@ -217,7 +217,7 @@ def test_MakeOrder(contracts):
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
                 order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 12), "Order array length should be 12"
+                assert(len(order) == 13), "Order array length should be 13"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
@@ -245,7 +245,7 @@ def test_MakeOrder(contracts):
                 global shareTokenContractTranslator
                 outcomeShareContractWrapper = utils.makeOutcomeShareContractWrapper(contracts)
                 contracts._ContractLoader__state.mine(1)
-                orderType = 2                   # ask
+                orderType = 2 # ask
                 fxpAmount = utils.fix(1)
                 fxpPrice = utils.fix("1.6")
                 outcomeID = 2
@@ -270,7 +270,7 @@ def test_MakeOrder(contracts):
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
                 order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 12), "Order array length should be 12"
+                assert(len(order) == 13), "Order array length should be 13"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"

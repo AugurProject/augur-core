@@ -55,19 +55,16 @@ def init():
 #  - Bidder (taker/sender) pays price - minValue for their shares
 # @internal
 # @return fxp
-def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
+def takeAskOrder(sender: address, orderID: address, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
     assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
     # Get order
     order = array(ORDER_FIELDS)
-    order = ORDERS.getOrder(orderID, outitems=ORDER_FIELDS)
-    type = order[1]
-    market = order[2]
+    order = ORDERS.getOrder(orderID, market, outcome, ASK, outitems=ORDER_FIELDS)
     fxpAmount = order[3]
     fxpPrice = order[4]
     maker = order[5]
-    outcome = order[7]
     fxpMoneyEscrowed = order[8]
     fxpSharesEscrowed = order[9]
 
@@ -131,10 +128,9 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Update order amount or remove
     if(fxpSumOfFills < fxpAmount):
-        ORDERS.fillOrder(orderID, fxpSumOfFills, safeFxpMul(fxpAskerMoneyFilled, safeSub(fxpMaxValue, fxpPrice)), fxpAskerSharesFilled)
+        ORDERS.fillOrder(orderID, ASK, market, outcome, fxpSumOfFills, safeFxpMul(fxpAskerMoneyFilled, safeSub(fxpMaxValue, fxpPrice)), fxpAskerSharesFilled)
     else:
-        ORDERS.removeOrder(orderID)
-        ORDERS.removeOrderFromMarket(market, orderID)
+        ORDERS.removeOrder(orderID, ASK, market, outcome)
 
     # Account for buyer (bidding with cash)
     #  - Bidder will pay price - minValue for their shares

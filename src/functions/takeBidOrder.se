@@ -57,13 +57,13 @@ def init():
 #  - Bidder (maker) has escrowed price - minValue for their shares
 # @internal
 # @return fxp
-def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
+def takeBidOrder(sender: address, orderID: address, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
     assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
     # Get order
     order = array(ORDER_FIELDS)
-    order = ORDERS.getOrder(orderID, outitems=ORDER_FIELDS)
+    order = ORDERS.getOrder(orderID, BID, market, outcome, outitems=ORDER_FIELDS)
     type = order[1]
     market = order[2]
     fxpAmount = order[3]
@@ -173,10 +173,9 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Update order amount or remove
     if(fxpSumOfFills < fxpAmount):
-        ORDERS.fillOrder(orderID, fxpSumOfFills, safeFxpMul(fxpBidderMoneyFilled, safeSub(fxpPrice, fxpMinValue)), fxpBidderSharesFilled)
+        ORDERS.fillOrder(orderID, BID, market, outcome, fxpSumOfFills, safeFxpMul(fxpBidderMoneyFilled, safeSub(fxpPrice, fxpMinValue)), fxpBidderSharesFilled)
     else:
-        ORDERS.removeOrder(orderID)
-        ORDERS.removeOrderFromMarket(market, orderID)
+        ORDERS.removeOrder(orderID, BID, market, outcome)
 
     # Sell maker's complete sets
     fxpSharesHeld = MAX_INT256_VALUE
