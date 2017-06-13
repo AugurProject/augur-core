@@ -1197,7 +1197,6 @@ def test_orders(contracts):
         # fully fill
         assert(contracts.orders.fillOrder(order1, 1, market1, 1, WEI_TO_ETH*10, 0, WEI_TO_ETH*10) == 1), "fillOrder wasn't executed successfully"
         # prove all
-        import ipdb; ipdb.set_trace()
         assert(contracts.orders.getOrder(order1, 1, market1, 1) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order1 didn't return the expected data array"
         # test partial fill
         assert(contracts.orders.fillOrder(order2, 2, market1, 1, WEI_TO_ETH*6, WEI_TO_ETH*3, 0) == 1), "fillOrder wasn't executed successfully"
@@ -1212,7 +1211,6 @@ def test_orders(contracts):
 
     def test_removeOrder():
         order3 = 321321321
-        import ipdb; ipdb.set_trace()
         assert(contracts.orders.saveOrder(order1, 1, market1, WEI_TO_ETH*10, pointFive, address0, 1, 0, WEI_TO_ETH*10, 0, 0, 2, 1) == 1), "saveOrder wasn't executed successfully"
         assert(contracts.orders.saveOrder(order2, 2, market1, WEI_TO_ETH*10, pointFive, address1, 1, WEI_TO_ETH*5, 0, 0, 0, 1, 1) == 1), "saveOrder wasn't executed successfully"
         assert(contracts.orders.saveOrder(order3, 1, market1, WEI_TO_ETH*10, pointFive, address0, 2, 0, WEI_TO_ETH*10, 0, 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
