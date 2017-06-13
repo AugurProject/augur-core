@@ -804,6 +804,51 @@ def test_bidOrders_categorical(contracts, eventID, marketID, randomAmount, rando
     test_makerEscrowedCash_takerWithShares(contracts, eventID, marketID, randomAmount, randomPrice)
     test_makerEscrowedShares_takerWithoutShares(contracts, eventID, marketID, randomAmount, randomPrice)
 
+def test_askOrders_categorical(contracts, eventID, marketID, randomAmount, randomPrice):
+    def test_makerEscrowedCash_takerWithoutShares(contracts, eventID, marketID, randomAmount, randomPrice):
+        # maker has cash, taker has cash
+        t = contracts._ContractLoader__tester
+        contracts._ContractLoader__state.mine(1)
+        MAKER = t.a1
+        TAKER = t.a2
+        MAKER_KEY = t.k1
+        TAKER_KEY = t.k2
+        orderType = 2 # ask
+        fxpAmount = fix(randomAmount)
+        fxpPrice = fix(randomPrice + unfix(contracts.events.getMinValue(eventID)))
+        fxpExpectedMakerCostPerShareShorting = fix(2 - unfix(fxpPrice))
+        fxpExpectedMakerOrderCost = fix(unfix(fxpAmount)*unfix(fxpExpectedMakerCostPerShareShorting))
+        fxpExpectedTakerCost = calculateLowSide(contracts, eventID, fxpAmount, fxpPrice)
+        outcomeID = 2
+        tradeGroupID = 10
+        # Start makeOrder
+        makerInitialCash = contracts.cash.balanceOf(MAKER)
+        takerInitialCash = contracts.cash.balanceOf(TAKER)
+        marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=MAKER_KEY)
+        order = contracts.orders.getOrder(orderID)
+        assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == order[8]), "Increase in market's cash balance should equal money escrowed"
+        fxpAmountTakerWants = fxpAmount
+        tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=TAKER_KEY)
+        assert(contracts.orders.commitOrder(tradeHash, sender=TAKER_KEY) == 1), "Commit to market/outcome/direction"
+        contracts._ContractLoader__state.mine(1)
+        assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == marketInitialCash + fxpExpectedMakerOrderCost), "Market's cash balance should be market Initial balance + (max - price)*amount"
+        fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=TAKER_KEY)
+        assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
+        makerFinalCash = contracts.cash.balanceOf(MAKER)
+        takerFinalCash = contracts.cash.balanceOf(TAKER)
+        marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        # TODO: remove "print_for_dev" before finishing.
+        # print_for_dev(contracts, marketID, fxpAmount, fxpPrice, outcomeID, fxpExpectedMakerOrderCost, makerInitialCash, takerInitialCash, marketInitialCash, makerFinalCash, takerFinalCash, marketFinalCash, fxpAmountTakerWants)
+        # confirm cash
+        assert(marketFinalCash == marketInitialCash + fxpAmount), "Market's cash balance should be the marketInitialCash + fxpAmount of the maker's Order"
+        assert(makerFinalCash == makerInitialCash - fxpExpectedMakerOrderCost), "maker's cash balance should be maker's initial balance - (max - price)*amount"
+        assert(takerFinalCash == takerInitialCash - fxpExpectedTakerCost), "taker's cash balance should be taker's initial balance - (max - price)*amountTakerWanted"
+        # confirm shares
+        check_shares(contracts, marketID, MAKER, [fxpAmountTakerWants, 0, fxpAmountTakerWants])
+        check_shares(contracts, marketID, TAKER, [0, fxpAmountTakerWants, 0])
+    test_makerEscrowedCash_takerWithoutShares(contracts, eventID, marketID, randomAmount, randomPrice)
+
 def test_binary(contracts, i):
     # Test case:
     # binary event market
@@ -836,9 +881,9 @@ def test_categorical(contracts, i):
     test_bidOrders_categorical(contracts, eventID, marketID, randomAmount, randomPrice)
     print "Finished Fuzzy WCL tests - Categorical Market - bidOrders. loop count:", i + 1
     print ""
-    # print "Start Fuzzy WCL tests - Categorical Market - askOrders. loop count:", i + 1
-    # test_askOrders_categorical(contracts, eventID, marketID, randomAmount, randomPrice)
-    # print "Finished Fuzzy WCL tests - Categorical Market - askOrders. loop count:", i + 1
+    print "Start Fuzzy WCL tests - Categorical Market - askOrders. loop count:", i + 1
+    test_askOrders_categorical(contracts, eventID, marketID, randomAmount, randomPrice)
+    print "Finished Fuzzy WCL tests - Categorical Market - askOrders. loop count:", i + 1
 
 def approvals(contracts, eventID, marketID, amount, price):
     t = contracts._ContractLoader__tester
@@ -941,8 +986,8 @@ def test_wcl(contracts, amountOfTests=1):
     contracts.cash.publicDepositEther(value=fix(10000), sender=t.k2)
     def test_fuzzy_wcl():
         for i in range(0, amountOfTests):
-            contracts._ContractLoader__state.mine(1)
-            test_binary(contracts, i)
+            # contracts._ContractLoader__state.mine(1)
+            # test_binary(contracts, i)
             contracts._ContractLoader__state.mine(1)
             test_categorical(contracts, i)
     test_fuzzy_wcl()
