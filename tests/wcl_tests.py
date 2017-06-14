@@ -94,7 +94,9 @@ def createScalarEvent(contracts, fxpMinValue=fix(1), fxpMaxValue=fix(10)):
     contracts.cash.publicDepositEther(value=fix(100), sender=t.k1)
     contracts.cash.approve(contracts.createEvent.address, fix(100), sender=t.k1)
     branch = 1010101
+    print "ABOUT TO FUND"
     contracts.reputationFaucet.reputationFaucet(branch, sender=t.k1)
+    print "AFTER FUND"
     description = "test scalar event"
     expDate = 3000000002 + eventCreationCounter
     eventCreationCounter += 1
@@ -103,6 +105,7 @@ def createScalarEvent(contracts, fxpMinValue=fix(1), fxpMaxValue=fix(10)):
     resolutionAddress = t.a2
     currency = contracts.cash.address
     forkResolveAddress = contracts.forkResolution.address
+    print "ABOUT TO CREATE SCALAR MARKET"
     return contracts.createEvent.publicCreateEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress, sender=t.k1)
 
 def createEventType(contracts, eventType):
@@ -1006,6 +1009,56 @@ def test_askOrders_categorical(contracts, eventID, marketID, randomAmount, rando
     test_makerEscrowedCash_takerWithShares(contracts, eventID, marketID, randomAmount, randomPrice)
     test_makerEscrowedShares_takerWithoutShares(contracts, eventID, marketID, randomAmount, randomPrice)
 
+def test_bidOrders_scalar(contracts, eventID, marketID, randomAmount, randomPrice):
+    def test_makerEscrowedCash_takerWithoutShares(contracts, eventID, marketID, randomAmount, randomPrice):
+        # maker escrows cash, taker does not have shares of anything
+        t = contracts._ContractLoader__tester
+        contracts._ContractLoader__state.mine(1)
+        MAKER = t.a1
+        TAKER = t.a2
+        MAKER_KEY = t.k1
+        TAKER_KEY = t.k2
+        fxpMinValue = contracts.events.getMinValue(eventID)
+        fxpMaxValue = contracts.events.getMaxValue(eventID)
+        orderType = 1 # bid
+        fxpAmount = fix(randomAmount)
+        fxpPrice = fix(randomPrice + unfix(fxpMinValue))
+        fxpExpectedMakerCost = calculateLowSide(contracts, eventID, fxpAmount, fxpPrice)
+        fxpExpectedTakerCost = calculateHighSide(contracts, eventID, fxpAmount, fxpPrice)
+        outcomeID = 2
+        tradeGroupID = 10
+        # Start makeOrder
+        makerInitialCash = contracts.cash.balanceOf(MAKER)
+        takerInitialCash = contracts.cash.balanceOf(TAKER)
+        marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=MAKER_KEY)
+        order = contracts.orders.getOrder(orderID)
+        assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == order[8]), "Increase in market's cash balance should equal money escrowed"
+        fxpAmountTakerWants = fxpAmount
+        tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=TAKER_KEY)
+        assert(contracts.orders.commitOrder(tradeHash, sender=TAKER_KEY) == 1), "Commit to market/outcome/direction"
+        contracts._ContractLoader__state.mine(1)
+        assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == fxpExpectedMakerCost), "Market's cash balance should be (price - 1)*amount"
+        fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=TAKER_KEY)
+        assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
+        makerFinalCash = contracts.cash.balanceOf(MAKER)
+        takerFinalCash = contracts.cash.balanceOf(TAKER)
+        marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        # TODO: remove "print_for_dev" before finishing.
+        print_for_dev(contracts, marketID, fxpAmount, fxpPrice, outcomeID, fxpExpectedMakerCost, makerInitialCash, takerInitialCash, marketInitialCash, makerFinalCash, takerFinalCash, marketFinalCash, fxpAmountTakerWants, fxpExpectedTakerCost)
+        # confirm cash
+        print ""
+        print "expected market", (fxpMaxValue - fxpMinValue)*fxpAmount, unfix((fxpMaxValue - fxpMinValue)*fxpAmount)
+        print "alternative", (fxpMaxValue - fxpMinValue), unfix(fxpMaxValue - fxpMinValue)
+        print "another", (fxpMaxValue - fxpMinValue)*unfix(fxpAmount), unfix((fxpMaxValue - fxpMinValue)*unfix(fxpAmount))
+        assert(marketFinalCash == (fxpMaxValue - fxpMinValue)*unfix(fxpAmount)), "Market's cash balance should be the (max - min)*amount"
+        assert(makerFinalCash == makerInitialCash - fxpExpectedMakerCost), "maker's cash balance should be maker's initial balance - (price-min)*amount"
+        assert(takerFinalCash == takerInitialCash - fxpExpectedTakerCost), "taker's cash balance should be taker's initial balance - (max-price)*amount"
+        # confirm shares
+        check_shares(contracts, marketID, MAKER, [0, fxpAmountTakerWants])
+        check_shares(contracts, marketID, TAKER, [fxpAmountTakerWants, 0])
+    test_makerEscrowedCash_takerWithoutShares(contracts, eventID, marketID, randomAmount, randomPrice)
+
 def test_binary(contracts, i):
     # Test case:
     # binary event market
@@ -1026,7 +1079,7 @@ def test_binary(contracts, i):
 
 def test_categorical(contracts, i):
     # Test case:
-    # binary event market
+    # categorical event market
     t = contracts._ContractLoader__tester
     eventID = createEventType(contracts, 'categorical')
     marketID = createMarket(contracts, eventID)
@@ -1042,10 +1095,31 @@ def test_categorical(contracts, i):
     test_askOrders_categorical(contracts, eventID, marketID, randomAmount, randomPrice)
     print "Finished Fuzzy WCL tests - Categorical Market - askOrders. loop count:", i + 1
 
+def test_scalar(contracts, i):
+    # Test case:
+    # scalar event market
+    t = contracts._ContractLoader__tester
+    # TODO: it seems like createScalar doesn't handle - numbers, like a scale between -20 and 200 will always throw because 200 + - 20 = 180 < 200 which throws in the validator for a new event. I thought the scalar scaling was getting moved to contracts but maybe that hasn't happened yet.
+    eventID = createScalarEvent(contracts, fix(10), fix(60))
+    marketID = createMarket(contracts, eventID)
+    randomAmount = random.randint(1, 11)
+    randomPrice = random.randrange(10, 61, 1)
+    # run all possible approvals now so that we don't need to do it in each test case
+    approvals(contracts, eventID, marketID, randomAmount, randomPrice)
+    print "Start Fuzzy WCL tests - Scalar Market - bidOrders. loop count:", i + 1
+    test_bidOrders_scalar(contracts, eventID, marketID, randomAmount, randomPrice)
+    print "Finished Fuzzy WCL tests - Scalar Market - bidOrders. loop count:", i + 1
+    print ""
+    # print "Start Fuzzy WCL tests - Scalar Market - askOrders. loop count:", i + 1
+    # test_askOrders_scalar(contracts, eventID, marketID, randomAmount, randomPrice)
+    # print "Finished Fuzzy WCL tests - Scalar Market - askOrders. loop count:", i + 1
+
 def approvals(contracts, eventID, marketID, amount, price):
     t = contracts._ContractLoader__tester
     fxpAllowance = fix(100*amount)
     fxpEtherDepositValue = fix(101*price)
+    if price > 1:
+        fxpEtherDepositValue = fix(10*amount*price)
     # deposit ETH to cash contract
     assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
     assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
@@ -1157,10 +1231,12 @@ def test_wcl(contracts, amountOfTests=1):
     contracts.cash.publicDepositEther(value=fix(10000), sender=t.k2)
     def test_fuzzy_wcl():
         for i in range(0, amountOfTests):
+            # contracts._ContractLoader__state.mine(1)
+            # test_binary(contracts, i)
+            # contracts._ContractLoader__state.mine(1)
+            # test_categorical(contracts, i)
             contracts._ContractLoader__state.mine(1)
-            test_binary(contracts, i)
-            contracts._ContractLoader__state.mine(1)
-            test_categorical(contracts, i)
+            test_scalar(contracts, i)
     test_fuzzy_wcl()
     print ""
     print "Fuzzy WCL Tests Complete"
