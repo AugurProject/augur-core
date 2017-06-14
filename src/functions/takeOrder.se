@@ -52,7 +52,7 @@ def publicTakeBestOrder(type: uint256, market: address, outcome: uint256, fxpAmo
     assertZeroValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
-    self.takeBestOrder(msg.sender, type, market, outcome, fxpAmountTakerWants)
+    fxpAmountRemaining = self.takeBestOrder(msg.sender, type, market, outcome, fxpAmountTakerWants)
     MUTEX.release()
     return(fxpAmountRemaining: uint256)
 
@@ -73,7 +73,10 @@ def takeBestOrder(sender: address, type: uint256, market: address, outcome: uint
     assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     orderID = ORDERS.getBestOrderID(type, market, outcome)
-    return(self.takeOrder(sender, orderID, type, market, outcome, fxpAmountTakerWants): uint256)
+    if(orderID != 0):
+        return(self.takeOrder(sender, orderID, type, market, outcome, fxpAmountTakerWants): uint256)
+    else:
+        return(fxpAmountTakerWants: uint256)
 
 # @internal
 # @return fxp
