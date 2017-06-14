@@ -101,7 +101,7 @@ def test_MakeOrder(contracts):
                 assert(outcomeShareContractWrapper.balanceOf(outcomeTwoShareContract, t.a2) == 0), "Account 2 should have 0 shares of outcome 2"
                 assert(contracts.cash.approve(contracts.takeOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
                 contracts._ContractLoader__state.mine(1)
-                fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(askOrderID, fxpAmountTakerWants, sender=t.k2)
+                fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(askOrderID, 2, marketID, outcomeID, fxpAmountTakerWants, sender=t.k2)
                 assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
                 assert(outcomeShareContractWrapper.balanceOf(outcomeTwoShareContract, t.a1) == 0), "Account 1 should have 0 shares of outcome 2"
                 assert(outcomeShareContractWrapper.balanceOf(outcomeTwoShareContract, t.a2) == fxpAmount), "Account 2 should have fxpAmount shares of outcome 2"
