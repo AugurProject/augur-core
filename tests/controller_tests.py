@@ -31,6 +31,8 @@ def set_controller():
 	except Exception as exc:
 		#print "exception caught: %s" % exc
 		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "setController should fail when attempted by non-controller address"
+	# todo use updatecontroller w/ sender as owner and address, newController
+	# make sure it set on contract d
 
 
 def test_whitelisting():
@@ -49,6 +51,11 @@ def test_whitelisting():
 	print "getMode output: %s" % out
 	assert(out == 30936411264679932392881305702504462444513638254699919670237862177711222423552), "getMode should be Decentralized"    # numeric string for 'Decentralized'
 
+	try:
+		raise Exception(c.addToWhitelist(2342, sender=t.k2))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "adding to whitelist with an invalid sender should fail"
+
 	# Test addToWhiteList
 	out = c.addToWhitelist(t.a1)
 	print "addToWhitelist output: %s" % out
@@ -59,12 +66,12 @@ def test_whitelisting():
 
 	# Check an address that shouldn't be Whitelisted:
 	try:
-		raise Exception(c.assertIsWhitelisted(t.a2, sender=t.k1))   # In dev mode will return 1 no matter what unless called by non-controller
+		raise Exception(c.assertIsWhitelisted(t.a2, sender=t.k0))
 	except Exception as exc:
 		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "assertIsWhitelisted should fail when address is not Whitelisted"
 
 	# Test removeFromWhitelist
-	out = c.removeFromWhitelist(t.a1, 0)
+	out = c.removeFromWhitelist(t.a1)
 	assert (out == 1), "removeFromWhitelist failed."
 
 
@@ -84,9 +91,10 @@ def test_suicideFunds():
 	#out = d.suicideFunds(d.address, sender=d.key)   # ???
 	#print "controller suicideFunds output: %s" % out
 	#assert(out == None), "suicideFunds should succeed when called by controller address"
+	# todo test suicide address, to and make sure any funds in controller_test go to to, and also make sure only owner can call this
 
 
-def test_Ownership():
+def test_ownership():
 	print("Testing ownership functions")
 	address0 = long(t.a0.encode("hex"), 16)
 	address1 = long(t.a1.encode("hex"), 16)
@@ -121,38 +129,41 @@ def test_Ownership():
 	out = c.updateController(c.address, t.a0)
 	print "updateController output: %s" % out
 	assert(out == 1), "updateController did not succeed"
+	# todo check it on controller test
 
 
-def test_lookup():
+def test_registry():
 	print("Testing lookup functions")
-	# Let's set t.k2 into the registry
-	out = c.setValue(t.k2, 23)
+	out = c.setValue(t.a2, 23)
 	print "setValue output: %s" % out
-	assert(out == 1), "setValue failed to set t.k2 into registry"
+	assert(out == 1), "setValue failed to set t.a2 into registry"
 	# Test with t.k0
 	print "passed key: %s" % binascii.hexlify(t.k0)
-	#out = c.lookup(binascii.hexlify(t.k0))
 	out = c.lookup(t.k0)
 	print "lookup output: %s" % out
-	assert(out == 0), "test_lookup failed"
-	# Test with t.k1
-	print "passed key: %s" % binascii.hexlify(t.k1)
-	out = c.lookup(t.k1)
+	assert(out == 0), "test_lookup didn't fail"
+	# Test with t.a1
+	print "passed key: %s" % binascii.hexlify(t.a1)
+	out = c.lookup(t.a1)
 	print "lookup output: %s" % out
-	assert(out == 0), "test_lookup failed"
-	# Test with t.k2
+	assert(out == 0), "test_lookup didn't fail but should've"
+	# Test with t.a2
 	print "passed key: %s" % binascii.hexlify(t.k2)
-	out = c.lookup(t.k2)
+	out = c.lookup(t.a2)
 	print "lookup output: %s" % out
 	assert(out == 23), "test_lookup should have returned 23"
 
 
 # Call tests
 if __name__ == "__main__":
-	set_controller()
+	update_controller()
 	test_whitelisting()
-	test_Ownership()
-	test_lookup()
+	test_ownership()
+	test_registry()
 	test_suicideFunds()
 
+# todo test emergencyStop, release, assertOnlySpecifiedCaller, stopInEmergency, onlyInEmergency
 
+# todo test setValue, addToWhitelist, and removeFromWhitelist for sender being another augur contract
+
+# should be able to remove or no?

@@ -44,19 +44,19 @@ def init():
 ### Whitelisting, registry for contract lookups, and contract updating machinery ###
 
 def setValue(key, newValue):
-    if(msg.sender != self.owner):
+    if(msg.sender != self.owner and !self.whitelist[msg.sender]):
         ~invalid()
     self.registry[key].value = newValue
     return(1)
 
 def addToWhitelist(address):
-    if(msg.sender != self.owner):
+    if(msg.sender != self.owner and !self.whitelist[msg.sender]):
         ~invalid()
     self.whitelist[address] = 1
     return(1)
 
-def removeFromWhitelist(address, suicide):
-    if(msg.sender != self.owner):
+def removeFromWhitelist(address):
+    if(msg.sender != self.owner and !self.whitelist[msg.sender]):
         ~invalid()
     self.whitelist[address] = 0
     return(1)
