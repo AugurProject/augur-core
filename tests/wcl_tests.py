@@ -7,6 +7,7 @@ import sys
 import json
 import iocapture
 import ethereum.tester
+import utils
 from decimal import *
 
 eventCreationCounter = 0
@@ -81,7 +82,7 @@ def createCategoricalEvent(contracts, numOutcomes=3):
     expDate = 3000000002 + eventCreationCounter
     eventCreationCounter += 1
     fxpMinValue = fix(1)
-    fxpMaxValue = fix(3)
+    fxpMaxValue = fix(numOutcomes)
     resolution = "http://lmgtfy.com"
     resolutionAddress = t.a2
     currency = contracts.cash.address
@@ -1019,7 +1020,7 @@ def test_bidOrders_scalar(contracts, eventID, marketID, randomAmount, randomPric
         fxpMaxValue = contracts.events.getMaxValue(eventID)
         orderType = 1 # bid
         fxpAmount = fix(randomAmount)
-        fxpPrice = fix(randomPrice + unfix(fxpMinValue))
+        fxpPrice = fix(randomPrice)
         fxpExpectedMakerCost = calculateLowSide(contracts, eventID, fxpAmount, fxpPrice)
         fxpExpectedTakerCost = calculateHighSide(contracts, eventID, fxpAmount, fxpPrice)
         outcomeID = 2
@@ -1060,7 +1061,7 @@ def test_bidOrders_scalar(contracts, eventID, marketID, randomAmount, randomPric
         TAKER_KEY = t.k2
         orderType = 1 # bid
         fxpAmount = fix(randomAmount)
-        fxpPrice = fix(randomPrice + unfix(contracts.events.getMinValue(eventID)))
+        fxpPrice = fix(randomPrice)
         fxpExpectedTakerGain = calculateLowSide(contracts, eventID, fxpAmount, fxpPrice)
         expectedTakerGain = int(fxpExpectedTakerGain)
         fxpExpectedMakerGain = calculateHighSide(contracts, eventID, fxpAmount, fxpPrice)
@@ -1115,7 +1116,7 @@ def test_bidOrders_scalar(contracts, eventID, marketID, randomAmount, randomPric
         TAKER_KEY = t.k2
         orderType = 1 # bid
         fxpAmount = fix(randomAmount)
-        fxpPrice = fix(randomPrice + unfix(contracts.events.getMinValue(eventID)))
+        fxpPrice = fix(randomPrice)
         fxpExpectedTakerGain = calculateLowSide(contracts, eventID, fxpAmount, fxpPrice)
         outcomeID = 2
         tradeGroupID = 10
@@ -1161,7 +1162,7 @@ def test_bidOrders_scalar(contracts, eventID, marketID, randomAmount, randomPric
         TAKER_KEY = t.k2
         orderType = 1 # bid
         fxpAmount = fix(randomAmount)
-        fxpPrice = fix(randomPrice + unfix(contracts.events.getMinValue(eventID)))
+        fxpPrice = fix(randomPrice)
         outcomeID = 1
         tradeGroupID = 10
         fxpAmountTakerWants = fxpAmount
@@ -1221,6 +1222,215 @@ def test_bidOrders_scalar(contracts, eventID, marketID, randomAmount, randomPric
     test_makerEscrowedCash_takerWithShares(contracts, eventID, marketID, randomAmount, randomPrice)
     test_makerEscrowedShares_takerWithoutShares(contracts, eventID, marketID, randomAmount, randomPrice)
 
+def test_askOrders_scalar(contracts, eventID, marketID, randomAmount, randomPrice):
+    def test_makerEscrowedCash_takerWithoutShares(contracts, eventID, marketID, randomAmount, randomPrice):
+        # maker has cash, taker has cash
+        t = contracts._ContractLoader__tester
+        contracts._ContractLoader__state.mine(1)
+        MAKER = t.a1
+        TAKER = t.a2
+        MAKER_KEY = t.k1
+        TAKER_KEY = t.k2
+        orderType = 2 # ask
+        fxpAmount = fix(randomAmount)
+        fxpPrice = fix(randomPrice)
+        fxpExpectedMakerCost = calculateHighSide(contracts, eventID, fxpAmount, fxpPrice)
+        fxpExpectedTakerCost = calculateLowSide(contracts, eventID, fxpAmount, fxpPrice)
+        outcomeID = 2
+        tradeGroupID = 10
+        # Start makeOrder
+        makerInitialCash = contracts.cash.balanceOf(MAKER)
+        takerInitialCash = contracts.cash.balanceOf(TAKER)
+        marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=MAKER_KEY)
+        order = contracts.orders.getOrder(orderID)
+        assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == order[8]), "Increase in market's cash balance should equal money escrowed"
+        fxpAmountTakerWants = fxpAmount
+        tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=TAKER_KEY)
+        assert(contracts.orders.commitOrder(tradeHash, sender=TAKER_KEY) == 1), "Commit to market/outcome/direction"
+        contracts._ContractLoader__state.mine(1)
+        assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == marketInitialCash + fxpExpectedMakerCost), "Market's cash balance should be market Initial balance + (max - price)*amount"
+        fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=TAKER_KEY)
+        assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
+        makerFinalCash = contracts.cash.balanceOf(MAKER)
+        takerFinalCash = contracts.cash.balanceOf(TAKER)
+        marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        # TODO: remove "print_for_dev" before finishing.
+        # print_for_dev(contracts, marketID, fxpAmount, fxpPrice, outcomeID, fxpExpectedMakerCost, makerInitialCash, takerInitialCash, marketInitialCash, makerFinalCash, takerFinalCash, marketFinalCash, fxpAmountTakerWants, fxpExpectedTakerCost)
+        # confirm cash
+        assert(marketFinalCash == marketInitialCash + fxpExpectedMakerCost + fxpExpectedTakerCost), "Market's cash balance should be the marketInitialCash + fxpExpectedMakerCost + fxpExpectedTakerCost"
+        assert(makerFinalCash == makerInitialCash - fxpExpectedMakerCost), "maker's cash balance should be maker's initial balance - (max - price)*amount"
+        assert(takerFinalCash == takerInitialCash - fxpExpectedTakerCost), "taker's cash balance should be taker's initial balance - (max - price)*amountTakerWanted"
+        # confirm shares
+        check_shares(contracts, marketID, MAKER, [fxpAmountTakerWants, 0])
+        check_shares(contracts, marketID, TAKER, [0, fxpAmountTakerWants])
+    def test_makerEscrowedShares_takerWithShares(contracts, eventID, marketID, randomAmount, randomPrice):
+        # maker has shares in outcome, taker has shares of other outcomes
+        t = contracts._ContractLoader__tester
+        contracts._ContractLoader__state.mine(1)
+        MAKER = t.a1
+        TAKER = t.a2
+        MAKER_KEY = t.k1
+        TAKER_KEY = t.k2
+        orderType = 2 # ask
+        fxpAmount = fix(randomAmount)
+        fxpPrice = fix(randomPrice)
+        fxpExpectedTakerGain = calculateHighSide(contracts, eventID, fxpAmount, fxpPrice)
+        expectedTakerGain = int(fxpExpectedTakerGain)
+        fxpExpectedMakerGain = calculateLowSide(contracts, eventID, fxpAmount, fxpPrice)
+        expectedMakerGain = int(fxpExpectedMakerGain)
+        outcomeID = 1
+        tradeGroupID = 10
+        # place bid order
+        makerInitialCash = contracts.cash.balanceOf(MAKER)
+        takerInitialCash = contracts.cash.balanceOf(TAKER)
+        marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, MAKER, outcomeID)
+        takerInitalShares = contracts.markets.getParticipantSharesPurchased(marketID, TAKER, outcomeID)
+        orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=MAKER_KEY)
+        order = contracts.orders.getOrder(orderID)
+        assert(makerInitialShares == order[9]), "Shares Escrowed should be = to the shares the maker started with"
+        assert(makerInitialShares - order[9] == contracts.markets.getParticipantSharesPurchased(marketID, MAKER, 2)), "maker shouldn't have shares in outcomeID anymore"
+        fxpAmountTakerWants = fxpAmount
+        tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=TAKER_KEY)
+        assert(contracts.orders.commitOrder(tradeHash, sender=TAKER_KEY) == 1), "Commit to market/outcome/direction"
+        contracts._ContractLoader__state.mine(1)
+        fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=TAKER_KEY)
+        assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
+        makerFinalCash = contracts.cash.balanceOf(MAKER)
+        takerFinalCash = contracts.cash.balanceOf(TAKER)
+        marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        # TODO: remove "print_for_dev" before finishing.
+        # print_for_dev(contracts, marketID, fxpAmount, fxpPrice, outcomeID, expectedMakerGain, makerInitialCash, takerInitialCash, marketInitialCash, makerFinalCash, takerFinalCash, marketFinalCash, fxpAmountTakerWants, expectedTakerGain)
+        fxpCumulativeScale = contracts.markets.getCumulativeScale(marketID)
+        fxpTradingFee = contracts.markets.getTradingFee(marketID)
+        fxpExpectedFee = int(Decimal(fxpTradingFee) * makerInitialShares / Decimal(10)**Decimal(18) * fxpCumulativeScale / Decimal(10)**Decimal(18))
+        # note: creator is also maker in this case
+        fxpExpectedFeePaidToCreator = int(Decimal(fxpExpectedFee) / Decimal(2))
+        # confirm shares
+        check_shares(contracts, marketID, MAKER, [0, 0])
+        check_shares(contracts, marketID, TAKER, [0, 0])
+        # confirm cash
+        assert(makerFinalCash == makerInitialCash + fxpExpectedMakerGain + fxpExpectedFeePaidToCreator), "Maker's final cash balance should be makerInitialCash + fxpExpectedMakerGain + fxpExpectedFeePaidToCreator"
+        assert(takerFinalCash == takerInitialCash + fxpExpectedTakerGain - fxpExpectedFee), "Taker's final cash balance takerInitialCash + fxpExpectedTakerGain"
+        assert(marketFinalCash == (marketInitialCash - (fxpExpectedMakerGain + fxpExpectedTakerGain) + fxpExpectedFee - fxpExpectedFeePaidToCreator)), "Market's final cash balance should be marketInitialCash - ((fxpExpectedMakerGain + fxpExpectedTakerGain) + fxpExpectedFee - fxpExpectedFeePaidToCreator)"
+    def test_makerEscrowedCash_takerWithShares(contracts, eventID, marketID, randomAmount, randomPrice):
+        # maker escrows cash, taker has complete set (shares of outcome)
+        t = contracts._ContractLoader__tester
+        outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
+        contracts._ContractLoader__state.mine(1)
+        MAKER = t.a1
+        TAKER = t.a2
+        MAKER_KEY = t.k1
+        TAKER_KEY = t.k2
+        orderType = 2 # ask
+        fxpAmount = fix(randomAmount)
+        fxpPrice = fix(randomPrice)
+        fxpExpectedTakerGain = calculateHighSide(contracts, eventID, fxpAmount, fxpPrice)
+        outcomeID = 2
+        tradeGroupID = 10
+        fxpAmountTakerWants = fxpAmount
+        # taker first buys a complete set
+        # buy the amount the taker plans to take from the order
+        contracts._ContractLoader__state.mine(1)
+        buyCompleteSets(contracts, marketID, fxpAmountTakerWants, sender=TAKER_KEY)
+        contracts._ContractLoader__state.mine(1)
+        # makeOrder
+        makerInitialCash = contracts.cash.balanceOf(MAKER)
+        takerInitialCash = contracts.cash.balanceOf(TAKER)
+        marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        takerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, TAKER, outcomeID)
+        orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=MAKER_KEY)
+        order = contracts.orders.getOrder(orderID)
+        assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) - marketInitialCash == order[8]), "Increase in market's cash balance should equal money escrowed"
+        tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=TAKER_KEY)
+        assert(contracts.orders.commitOrder(tradeHash, sender=TAKER_KEY) == 1), "Commit to market/outcome/direction"
+        contracts._ContractLoader__state.mine(1)
+        # take order
+        fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=TAKER_KEY)
+        assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
+        makerFinalCash = contracts.cash.balanceOf(MAKER)
+        takerFinalCash = contracts.cash.balanceOf(TAKER)
+        marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        # TODO: remove "print_for_dev" before finishing.
+        # print_for_dev(contracts, marketID, fxpAmount, fxpPrice, outcomeID, fxpExpectedTakerGain, makerInitialCash, takerInitialCash, marketInitialCash, makerFinalCash, takerFinalCash, marketFinalCash, fxpAmountTakerWants)
+        # check shares
+        check_shares(contracts, marketID, MAKER, [fxpAmountTakerWants, 0])
+        check_shares(contracts, marketID, TAKER, [0, fxpAmountTakerWants])
+        fxpCumulativeScale = contracts.markets.getCumulativeScale(marketID)
+        fxpTradingFee = contracts.markets.getTradingFee(marketID)
+        fxpExpectedFee = int(Decimal(fxpTradingFee) * takerInitialShares / Decimal(10)**Decimal(18) * fxpCumulativeScale / Decimal(10)**Decimal(18))
+        # note: creator is also maker in this case
+        fxpExpectedFeePaidToCreator = int(Decimal(fxpExpectedFee) / Decimal(2))
+        # check cash
+        assert(makerFinalCash == makerInitialCash - fxpExpectedTakerGain + fxpExpectedFeePaidToCreator), "maker final cash should be equal to makerInitialCash - expectedTakerGain + expectedFeePaidToCreator because maker is also market maker."
+        assert(takerFinalCash == takerInitialCash + fxpExpectedTakerGain - fxpExpectedFee), "taker final cash should be equal to takerInitialCash + expectedTakerGain - expectedFee"
+        assert(marketFinalCash == marketInitialCash + fxpExpectedFee - fxpExpectedFeePaidToCreator), "market final cash should be equal to marketInitialCash + expectedFee - expectedFeePaidToCreator"
+    def test_makerEscrowedShares_takerWithoutShares(contracts, eventID, marketID, randomAmount, randomPrice):
+        # maker has shares in other outcome, taker has no shares
+        t = contracts._ContractLoader__tester
+        outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
+        contracts._ContractLoader__state.mine(1)
+        MAKER = t.a1
+        TAKER = t.a2
+        MAKER_KEY = t.k1
+        TAKER_KEY = t.k2
+        orderType = 2 # Ask
+        fxpAmount = fix(randomAmount)
+        fxpPrice = fix(randomPrice)
+        outcomeID = 1
+        tradeGroupID = 10
+        fxpAmountTakerWants = fxpAmount
+        fxpExpectedMakerGain = calculateLowSide(contracts, eventID, fxpAmount, fxpPrice)
+        # transfer shares from taker to account 0 if taker has any shares
+        # this is done because there should be shares from previous tests
+        send_shares(contracts, marketID, TAKER, TAKER_KEY)
+        # make order
+        contracts._ContractLoader__state.mine(1)
+        makerInitialCash = contracts.cash.balanceOf(MAKER)
+        takerInitialCash = contracts.cash.balanceOf(TAKER)
+        marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        makerInitialShares = contracts.markets.getParticipantSharesPurchased(marketID, MAKER, outcomeID)
+        orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, 0, 0, tradeGroupID, sender=MAKER_KEY)
+        order = contracts.orders.getOrder(orderID)
+        assert(makerInitialShares == order[9]), "Shares Escrowed should be = to the shares the maker started with"
+        assert(makerInitialShares - order[9] == contracts.markets.getParticipantSharesPurchased(marketID, MAKER, 2)), "maker shouldn't have shares in outcomeID anymore"
+        # finish make order
+        contracts._ContractLoader__state.mine(1)
+        # take order
+        fxpAmountTakerWants = fxpAmount
+        tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, orderType, sender=TAKER_KEY)
+        assert(contracts.orders.commitOrder(tradeHash, sender=TAKER_KEY) == 1), "Commit to market/outcome/direction"
+        contracts._ContractLoader__state.mine(1)
+        fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=TAKER_KEY)
+        assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
+        # finish take order
+        # begin assertions
+        makerFinalCash = contracts.cash.balanceOf(MAKER)
+        takerFinalCash = contracts.cash.balanceOf(TAKER)
+        marketFinalCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
+        # TODO: remove "print_for_dev" before finishing.
+        # print_for_dev(contracts, marketID, fxpAmount, fxpPrice, outcomeID, fxpExpectedMakerGain, makerInitialCash, takerInitialCash, marketInitialCash, makerFinalCash, takerFinalCash, marketFinalCash, fxpAmountTakerWants, 0)
+        # confirm shares
+        check_shares(contracts, marketID, MAKER, [0, 0])
+        check_shares(contracts, marketID, TAKER, [fxpAmountTakerWants, 0])
+        # confirm cash
+        fxpCumulativeScale = contracts.markets.getCumulativeScale(marketID)
+        fxpTradingFee = contracts.markets.getTradingFee(marketID)
+        fxpExpectedFee = int(Decimal(fxpTradingFee) * makerInitialShares / Decimal(10)**Decimal(18) * fxpCumulativeScale / Decimal(10)**Decimal(18))
+        # note: creator is also maker in this case
+        fxpExpectedFeePaidToCreator = int(Decimal(fxpExpectedFee) / Decimal(2))
+        assert(makerFinalCash == makerInitialCash + fxpExpectedMakerGain), "Maker's final cash balance should be makerInitialCash + fxpExpectedMakerGain"
+        assert(takerFinalCash == takerInitialCash - fxpExpectedMakerGain), "Taker's final cash balance takerInitialCash - fxpExpectedMakerGain"
+        assert(marketFinalCash == marketInitialCash), "Market's final cash balance should be marketInitialCash + fxpExpectedFee - fxpExpectedFeePaidToCreator"
+        # finally, transfer all shares to account 0 to close out or bid tests
+        send_shares(contracts, marketID, MAKER, MAKER_KEY)
+        send_shares(contracts, marketID, TAKER, TAKER_KEY)
+    test_makerEscrowedCash_takerWithoutShares(contracts, eventID, marketID, randomAmount, randomPrice)
+    test_makerEscrowedShares_takerWithShares(contracts, eventID, marketID, randomAmount, randomPrice)
+    test_makerEscrowedCash_takerWithShares(contracts, eventID, marketID, randomAmount, randomPrice)
+    test_makerEscrowedShares_takerWithoutShares(contracts, eventID, marketID, randomAmount, randomPrice)
+
 def test_binary(contracts, i):
     # Test case:
     # binary event market
@@ -1264,7 +1474,7 @@ def test_scalar(contracts, i):
     # TODO: it seems like createScalar doesn't handle - numbers, like a scale between -20 and 200 will always throw because 200 + - 20 = 180 < 200 which throws in the validator for a new event. I thought the scalar scaling was getting moved to contracts but maybe that hasn't happened yet.
     eventID = createScalarEvent(contracts, fix(10), fix(60))
     marketID = createMarket(contracts, eventID)
-    randomAmount = random.randint(1, 11)
+    randomAmount = random.randint(1, 10)
     randomPrice = random.randrange(10, 61, 1)
     # run all possible approvals now so that we don't need to do it in each test case
     approvals(contracts, eventID, marketID, randomAmount, randomPrice)
@@ -1272,24 +1482,77 @@ def test_scalar(contracts, i):
     test_bidOrders_scalar(contracts, eventID, marketID, randomAmount, randomPrice)
     print "Finished Fuzzy WCL tests - Scalar Market - bidOrders. loop count:", i + 1
     print ""
-    # print "Start Fuzzy WCL tests - Scalar Market - askOrders. loop count:", i + 1
-    # test_askOrders_scalar(contracts, eventID, marketID, randomAmount, randomPrice)
-    # print "Finished Fuzzy WCL tests - Scalar Market - askOrders. loop count:", i + 1
+    print "Start Fuzzy WCL tests - Scalar Market - askOrders. loop count:", i + 1
+    test_askOrders_scalar(contracts, eventID, marketID, randomAmount, randomPrice)
+    print "Finished Fuzzy WCL tests - Scalar Market - askOrders. loop count:", i + 1
+
+def test_cash(contracts, eventID, marketID, MAKER, TAKER):
+    t = contracts._ContractLoader__tester
+    print "Maker:"
+    print "makeOrder", contracts.cash.allowance(MAKER, contracts.makeOrder.address), unfix(contracts.cash.allowance(MAKER, contracts.makeOrder.address))
+    print "takeOrder", contracts.cash.allowance(MAKER, contracts.takeOrder.address), unfix(contracts.cash.allowance(MAKER, contracts.takeOrder.address))
+    print "takeBidOrder", contracts.cash.allowance(MAKER, contracts.takeBidOrder.address), unfix(contracts.cash.allowance(MAKER, contracts.takeBidOrder.address))
+    print "takeAskOrder", contracts.cash.allowance(MAKER, contracts.takeAskOrder.address), unfix(contracts.cash.allowance(MAKER, contracts.takeAskOrder.address))
+    numOutcomes = contracts.markets.getMarketNumOutcomes(marketID)
+    outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
+    contracts._ContractLoader__state.mine(1)
+    for i in range(0, numOutcomes):
+        outcomeID = i + 1
+        print "outcome", outcomeID
+        outcomeShareContract = contracts.markets.getOutcomeShareContract(marketID, outcomeID)
+        abiEncodedData = shareTokenContractTranslator.encode("allowance", [MAKER, contracts.makeOrder.address])
+        print "makeOrder", int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16), unfix(int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16))
+        abiEncodedData = shareTokenContractTranslator.encode("allowance", [MAKER, contracts.takeOrder.address])
+        print "takeOrder", int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16), unfix(int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16))
+        abiEncodedData = shareTokenContractTranslator.encode("allowance", [MAKER, contracts.takeBidOrder.address])
+        print "takeBidOrder", int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16), unfix(int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16))
+        abiEncodedData = shareTokenContractTranslator.encode("allowance", [MAKER, contracts.takeAskOrder.address])
+        print "takeAskOrder", int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16), unfix(int(contracts._ContractLoader__state.send(t.k1, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16))
+    print ""
+    print "Taker:"
+    print "makeOrder", contracts.cash.allowance(TAKER, contracts.makeOrder.address), unfix(contracts.cash.allowance(TAKER, contracts.makeOrder.address))
+    print "takeOrder", contracts.cash.allowance(TAKER, contracts.takeOrder.address), unfix(contracts.cash.allowance(TAKER, contracts.takeOrder.address))
+    print "takeBidOrder", contracts.cash.allowance(TAKER, contracts.takeBidOrder.address), unfix(contracts.cash.allowance(TAKER, contracts.takeBidOrder.address))
+    print "takeAskOrder", contracts.cash.allowance(TAKER, contracts.takeAskOrder.address), unfix(contracts.cash.allowance(TAKER, contracts.takeAskOrder.address))
+    numOutcomes = contracts.markets.getMarketNumOutcomes(marketID)
+    outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
+    contracts._ContractLoader__state.mine(1)
+    for i in range(0, numOutcomes):
+        outcomeID = i + 1
+        print "outcome", outcomeID
+        outcomeShareContract = contracts.markets.getOutcomeShareContract(marketID, outcomeID)
+        abiEncodedData = shareTokenContractTranslator.encode("allowance", [TAKER, contracts.makeOrder.address])
+        print "makeOrder", int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16), unfix(int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16))
+        abiEncodedData = shareTokenContractTranslator.encode("allowance", [TAKER, contracts.takeOrder.address])
+        print "takeOrder", int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16), unfix(int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16))
+        abiEncodedData = shareTokenContractTranslator.encode("allowance", [TAKER, contracts.takeBidOrder.address])
+        print "takeBidOrder", int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16), unfix(int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16))
+        abiEncodedData = shareTokenContractTranslator.encode("allowance", [TAKER, contracts.takeAskOrder.address])
+        print "takeAskOrder", int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16), unfix(int(contracts._ContractLoader__state.send(t.k2, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16))
 
 def approvals(contracts, eventID, marketID, amount, price):
     t = contracts._ContractLoader__tester
     fxpAllowance = fix(100*amount)
     fxpEtherDepositValue = fix(101*price)
+    # if scalar, we need to allocate more ether than usual
     if price > 1:
-        fxpEtherDepositValue = fix(10*amount*price)
+        fxpEtherDepositValue = fix(50*amount*price)
+        fxpAllowance = fix(50*amount*price)
+    # print "APPROVING FUNDS..."
+    # print "Allowance", fxpAllowance, unfix(fxpAllowance)
+    # print "DepositValue", fxpEtherDepositValue, unfix(fxpEtherDepositValue)
     # deposit ETH to cash contract
     assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
     assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
     # begin approval process for all possible contracts
     assert(contracts.cash.approve(contracts.makeOrder.address, fxpAllowance, sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
+    assert(contracts.cash.approve(contracts.makeOrder.address, fxpAllowance, sender=t.k2) == 1), "Approve makeOrder contract to spend cash from account 2"
     assert(contracts.cash.approve(contracts.takeOrder.address, fxpAllowance, sender=t.k1) == 1), "Approve takeOrder contract to spend cash from account 1"
     assert(contracts.cash.approve(contracts.takeOrder.address, fxpAllowance, sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
-    assert(contracts.cash.approve(contracts.makeOrder.address, fxpAllowance, sender=t.k2) == 1), "Approve makeOrder contract to spend cash from account 2"
+    assert(contracts.cash.approve(contracts.takeBidOrder.address, fxpAllowance, sender=t.k1) == 1), "Approve takeBidOrder contract to spend cash from account 1"
+    assert(contracts.cash.approve(contracts.takeBidOrder.address, fxpAllowance, sender=t.k2) == 1), "Approve takeBidOrder contract to spend cash from account 2"
+    assert(contracts.cash.approve(contracts.takeAskOrder.address, fxpAllowance, sender=t.k1) == 1), "Approve takeAskOrder contract to spend cash from account 1"
+    assert(contracts.cash.approve(contracts.takeAskOrder.address, fxpAllowance, sender=t.k2) == 1), "Approve takeAskOrder contract to spend cash from account 2"
     numOutcomes = contracts.markets.getMarketNumOutcomes(marketID)
     outcomeShareContractWrapper = makeOutcomeShareContractWrapper(contracts)
     contracts._ContractLoader__state.mine(1)
@@ -1389,8 +1652,6 @@ def test_wcl(contracts, amountOfTests=1):
     print "Initiating Fuzzy WCL Tests"
     print "Amount of times looping through tests:", amountOfTests
     print ""
-    contracts.cash.publicDepositEther(value=fix(10000), sender=t.k1)
-    contracts.cash.publicDepositEther(value=fix(10000), sender=t.k2)
     def test_fuzzy_wcl():
         for i in range(0, amountOfTests):
             contracts._ContractLoader__state.mine(1)
