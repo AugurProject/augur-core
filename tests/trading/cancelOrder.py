@@ -28,9 +28,9 @@ def test_CancelOrder(contracts):
             marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
             orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
             assert(orderID != 0), "Order ID should be non-zero"
-            assert(contracts.orders.getOrder(orderID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
-            assert(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k1) == 1), "publicCancelOrder should succeed"
-            assert(contracts.orders.getOrder(orderID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
+            assert(contracts.cancelOrder.publicCancelOrder(orderID, orderType, marketID, outcomeID, sender=t.k1) == 1), "publicCancelOrder should succeed"
+            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
             assert(makerInitialCash == contracts.cash.balanceOf(t.a1)), "Maker's cash should be the same as before the order was placed"
             assert(marketInitialCash == contracts.cash.balanceOf(contracts.info.getWallet(marketID))), "Market's cash balance should be the same as before the order was placed"
             assert(makerInitialShares == contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)), "Maker's shares should be unchanged"
@@ -51,9 +51,9 @@ def test_CancelOrder(contracts):
             marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
             orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
             assert(orderID != 0), "Order ID should be non-zero"
-            assert(contracts.orders.getOrder(orderID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
-            assert(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k1) == 1), "publicCancelOrder should succeed"
-            assert(contracts.orders.getOrder(orderID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
+            assert(contracts.cancelOrder.publicCancelOrder(orderID, orderType, marketID, outcomeID, sender=t.k1) == 1), "publicCancelOrder should succeed"
+            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
             assert(makerInitialCash == contracts.cash.balanceOf(t.a1)), "Maker's cash should be the same as before the order was placed"
             assert(marketInitialCash == contracts.cash.balanceOf(contracts.info.getWallet(marketID))), "Market's cash balance should be the same as before the order was placed"
             assert(makerInitialShares == contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)), "Maker's shares should be unchanged"
@@ -76,7 +76,7 @@ def test_CancelOrder(contracts):
             # Permissions exceptions
             contracts._ContractLoader__state.mine(1)
             try:
-                raise Exception(contracts.cancelOrder.cancelOrder(t.a1, orderID, sender=t.k1))
+                raise Exception(contracts.cancelOrder.cancelOrder(t.a1, orderID, orderType, marketID, outcomeID, sender=t.k1))
             except Exception as exc:
                 assert(isinstance(exc, ethereum.tester.TransactionFailed)), "cancelOrder should fail if called from a non-whitelisted account (account 1)"
             try:
@@ -87,20 +87,20 @@ def test_CancelOrder(contracts):
             # cancelOrder exceptions
             contracts._ContractLoader__state.mine(1)
             try:
-                raise Exception(contracts.cancelOrder.publicCancelOrder(0, sender=t.k1))
+                raise Exception(contracts.cancelOrder.publicCancelOrder(0, orderType, marketID, outcomeID, sender=t.k1))
             except Exception as exc:
                 assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicCancelOrder should fail if order ID is zero"
             try:
-                raise Exception(contracts.cancelOrder.publicCancelOrder(orderID + 1, sender=t.k1))
+                raise Exception(contracts.cancelOrder.publicCancelOrder(orderID + 1, orderType, marketID, outcomeID, sender=t.k1))
             except Exception as exc:
                 assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicCancelOrder should fail if order does not exist"
             try:
-                raise Exception(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k2))
+                raise Exception(contracts.cancelOrder.publicCancelOrder(orderID, orderType, marketID, outcomeID, sender=t.k2))
             except Exception as exc:
                 assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicCancelOrder should fail if sender does not own the order"
-            assert(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k1) == 1), "publicCancelOrder should succeed"
+            assert(contracts.cancelOrder.publicCancelOrder(orderID, orderType, marketID, outcomeID, sender=t.k1) == 1), "publicCancelOrder should succeed"
             try:
-                raise Exception(contracts.cancelOrder.publicCancelOrder(orderID, sender=t.k1))
+                raise Exception(contracts.cancelOrder.publicCancelOrder(orderID, orderType, marketID, outcomeID, sender=t.k1))
             except Exception as exc:
                 assert(isinstance(exc, ethereum.tester.TransactionFailed)), "publicCancelOrder should fail if the order has already been cancelled"
         test_cancelBid()

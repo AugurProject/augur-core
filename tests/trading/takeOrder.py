@@ -40,11 +40,11 @@ def test_TakeOrder(contracts):
             contracts._ContractLoader__state.mine(1)
             t.gas_price = 5
             try:
-                raise Exception(contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=t.k2))
+                raise Exception(contracts.takeOrder.publicTakeOrder(orderID, marketID, outcomeID, fxpAmountTakerWants, sender=t.k2))
             except Exception as exc:
                 assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails, tx.gasprice check in orders isn't working"
             t.gas_price = 1
-            fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=t.k2)
+            fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, marketID, outcomeID, fxpAmountTakerWants, sender=t.k2)
             assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
         def test_takeBidOrder():
             global shareTokenContractTranslator
@@ -78,7 +78,7 @@ def test_TakeOrder(contracts):
             fxpAmountTakerWants = int(fxpAmount / 10)
             contracts._ContractLoader__state.mine(1)
             assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == utils.fix("0.6")), "Market's cash balance should be (price - 1)*amount"
-            fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, fxpAmountTakerWants, sender=t.k2)
+            fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, marketID, outcomeID, fxpAmountTakerWants, sender=t.k2)
             assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
         test_takeAskOrder()
         test_takeBidOrder()

@@ -80,7 +80,7 @@ def test_TakeAskOrder(contracts):
             fxpAmountTakerWants = utils.fix(7)
 
             contracts._ContractLoader__state.mine(1)
-            fxpAmountRemaining = contracts.takeAskOrder.takeAskOrder(t.a2, orderID, fxpAmountTakerWants, sender=t.k0)
+            fxpAmountRemaining = contracts.takeAskOrder.takeAskOrder(t.a2, orderID, marketID, outcomeID, fxpAmountTakerWants, sender=t.k0)
             assert(fxpAmountRemaining == fxpAmountTakerWants - fxpOrderAmount), "Amount remaining of taker's request should be fxpAmountTakerWants - fxpOrderAmount"
             makerFinalCash = contracts.cash.balanceOf(t.a1)
             takerFinalCash = contracts.cash.balanceOf(t.a2)
@@ -184,7 +184,7 @@ def test_TakeAskOrder(contracts):
             fxpAmountTakerWants = utils.fix(7)
             assert(contracts.cash.approve(contracts.takeAskOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeAskOrder contract to spend cash from account 2"
             contracts._ContractLoader__state.mine(1)
-            fxpAmountRemaining = contracts.takeAskOrder.takeAskOrder(t.a2, orderID, fxpAmountTakerWants, sender=t.k0)
+            fxpAmountRemaining = contracts.takeAskOrder.takeAskOrder(t.a2, orderID, marketID, outcomeID, fxpAmountTakerWants, sender=t.k0)
             assert(fxpAmountRemaining == 0), "Number of shares remaining in taker's request should be 0"
             makerFinalCash = contracts.cash.balanceOf(t.a1)
             takerFinalCash = contracts.cash.balanceOf(t.a2)
