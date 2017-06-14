@@ -64,7 +64,6 @@ def takeBidOrder(sender: address, orderID: address, market: address, outcome: ui
     # Get order
     order = array(ORDER_FIELDS)
     order = ORDERS.getOrder(orderID, BID, market, outcome, outitems=ORDER_FIELDS)
-    type = order[1]
     market = order[2]
     fxpAmount = order[3]
     fxpPrice = order[4]

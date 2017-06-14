@@ -61,7 +61,7 @@ def takeAskOrder(sender: address, orderID: address, market: address, outcome: ui
 
     # Get order
     order = array(ORDER_FIELDS)
-    order = ORDERS.getOrder(orderID, market, outcome, ASK, outitems=ORDER_FIELDS)
+    order = ORDERS.getOrder(orderID, ASK, market, outcome, outitems=ORDER_FIELDS)
     fxpAmount = order[3]
     fxpPrice = order[4]
     maker = order[5]

@@ -28,9 +28,9 @@ def test_CancelOrder(contracts):
             marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
             orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
             assert(orderID != 0), "Order ID should be non-zero"
-            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
+            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
             assert(contracts.cancelOrder.publicCancelOrder(orderID, orderType, marketID, outcomeID, sender=t.k1) == 1), "publicCancelOrder should succeed"
-            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
             assert(makerInitialCash == contracts.cash.balanceOf(t.a1)), "Maker's cash should be the same as before the order was placed"
             assert(marketInitialCash == contracts.cash.balanceOf(contracts.info.getWallet(marketID))), "Market's cash balance should be the same as before the order was placed"
             assert(makerInitialShares == contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)), "Maker's shares should be unchanged"
@@ -51,9 +51,9 @@ def test_CancelOrder(contracts):
             marketInitialTotalShares = contracts.markets.getTotalSharesPurchased(marketID)
             orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
             assert(orderID != 0), "Order ID should be non-zero"
-            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
+            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) != [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Order should have non-zero elements"
             assert(contracts.cancelOrder.publicCancelOrder(orderID, orderType, marketID, outcomeID, sender=t.k1) == 1), "publicCancelOrder should succeed"
-            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+            assert(contracts.orders.getOrder(orderID, orderType, marketID, outcomeID) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
             assert(makerInitialCash == contracts.cash.balanceOf(t.a1)), "Maker's cash should be the same as before the order was placed"
             assert(marketInitialCash == contracts.cash.balanceOf(contracts.info.getWallet(marketID))), "Market's cash balance should be the same as before the order was placed"
             assert(makerInitialShares == contracts.markets.getParticipantSharesPurchased(marketID, t.a1, outcomeID)), "Maker's shares should be unchanged"
