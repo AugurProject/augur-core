@@ -4,7 +4,7 @@ from __future__ import division
 import os
 import sys
 from data_api import backstops, branches, consensusData, events, expiringEvents, info, markets, mutex, orders, topics
-from trading import cash, shareTokens, wallet, createEvent, createMarket, completeSets, makeOrder, cancelOrder, takeAskOrder, takeBidOrder, takeOrder, decreaseTradingFee, claimProceeds
+from trading import cash, shareTokens, wallet, createEvent, createMarket, completeSets, makeOrder, cancelOrder, takeAskOrder, takeBidOrder, takeOrder, decreaseTradingFee, claimProceeds, trade
 import helper_tests
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
@@ -42,6 +42,7 @@ def test_trading():
     takeOrder.test_TakeOrder(contracts)
     decreaseTradingFee.test_DecreaseTradingFee(contracts)
     claimProceeds.test_ClaimProceeds(contracts)
+    trade.test_Trade(contracts)
 
 def test_helpers():
     helper_tests.test_assertZeroValue()
