@@ -121,22 +121,14 @@ def isWorsePrice(type: uint256, market: address, outcome: uint256, fxpPrice, ord
 
 # @public
 def assertIsNotBetterPrice(type: uint256, market: address, outcome: uint256, fxpPrice, betterOrderID: address):
-    if(type == BID):
-        if(fxpPrice > self.orders[market][outcome][type][betterOrderID].fxpPrice):
-            ~invalid()
-    else:
-        if(fxpPrice < self.orders[market][outcome][type][betterOrderID].fxpPrice):
-            ~invalid()
+    if(self.isBetterPrice(type, market, outcome, fxpPrice, betterOrderID)):
+        ~invalid()
     return(1: uint256)
 
 # @public
 def assertIsNotWorsePrice(type: uint256, market: address, outcome: uint256, fxpPrice, worseOrderID: address):
-    if(type == BID):
-        if(fxpPrice < self.orders[market][outcome][type][worseOrderID].fxpPrice):
-            ~invalid()
-    else:
-        if(fxpPrice > self.orders[market][outcome][type][worseOrderID].fxpPrice):
-            ~invalid()
+    if(self.isWorsePrice(type, market, outcome, fxpPrice, worseOrderID)):
+        ~invalid()
     return(1: uint256)
 
 # @public
