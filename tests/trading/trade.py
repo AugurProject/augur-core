@@ -222,10 +222,43 @@ def test_Trade(contracts):
             assert(fxpAmountRemaining == 0), "fxpAmountRemaining should be zero"
             assert(contracts.orders.getAmount(orderID1, orderType, marketID, outcomeID) == 0), "Order 1 amount should be zero"
             assert(contracts.orders.getAmount(orderID2, orderType, marketID, outcomeID) == utils.fix("0.3")), "Order 2 amount should be 0.3"
+        def test_publicBuy_takeTwoOrdersSamePrice():
+            outcomeShareContractWrapper = utils.makeOutcomeShareContractWrapper(contracts)
+            contracts._ContractLoader__state.mine(1)
+            fxpEtherDepositValue = utils.fix(20)
+            assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
+            assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
+            assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k3) == 1), "publicDepositEther to account 3 should succeed"
+            contracts._ContractLoader__state.mine(1)
+            orderType = 2 # ask
+            fxpAmount1 = utils.fix(1)
+            fxpAmount2 = utils.fix("0.4")
+            fxpPrice1 = utils.fix("1.6")
+            fxpPrice2 = utils.fix("1.6")
+            outcomeID = 2
+            tradeGroupID = 42
+            eventID = utils.createBinaryEvent(contracts)
+            marketID = utils.createMarket(contracts, eventID)
+            assert(contracts.cash.approve(contracts.makeOrder.address, utils.fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
+            assert(contracts.cash.approve(contracts.makeOrder.address, utils.fix(10), sender=t.k3) == 1), "Approve makeOrder contract to spend cash from account 3"
+            assert(contracts.cash.approve(contracts.takeOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
+            orderID1 = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount1, fxpPrice1, marketID, outcomeID, tradeGroupID, sender=t.k1)
+            contracts._ContractLoader__state.mine(1)
+            orderID2 = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount2, fxpPrice2, marketID, outcomeID, tradeGroupID, sender=t.k3)
+            contracts._ContractLoader__state.mine(1)
+            assert(orderID1 != 0), "Order ID should be non-zero"
+            assert(orderID2 != 0), "Order ID should be non-zero"
+            fxpAmountToBuy = utils.fix("1.1")
+            # should take all of the first order and 0.1 of the second order (0.3 remaining in 2nd order)
+            fxpAmountRemaining = contracts.trade.publicBuy(marketID, outcomeID, fxpAmountToBuy, fxpPrice2, tradeGroupID, sender=t.k2)
+            assert(fxpAmountRemaining == 0), "fxpAmountRemaining should be zero"
+            assert(contracts.orders.getAmount(orderID1, orderType, marketID, outcomeID) == 0), "Order 1 amount should be zero"
+            assert(contracts.orders.getAmount(orderID2, orderType, marketID, outcomeID) == utils.fix("0.3")), "Order 2 amount should be 0.3"
         test_publicBuy_takeOrder()
         test_publicBuy_makeOrder()
         test_publicBuy_takeThenMakeOrder()
         test_publicBuy_takeTwoOrders()
+        test_publicBuy_takeTwoOrdersSamePrice()
 
     def test_publicSell():
         def test_publicSell_takeOrder():
@@ -391,10 +424,51 @@ def test_Trade(contracts):
             assert(fxpAmountRemaining == 0), "fxpAmountRemaining should be zero"
             assert(contracts.orders.getAmount(orderID1, orderType, marketID, outcomeID) == 0), "Order 1 amount should be zero"
             assert(contracts.orders.getAmount(orderID2, orderType, marketID, outcomeID) == utils.fix("0.3")), "Order 2 amount should be 0.3"
+        def test_publicSell_takeTwoOrdersSamePrice():
+            global shareTokenContractTranslator
+            outcomeShareContractWrapper = utils.makeOutcomeShareContractWrapper(contracts)
+            contracts._ContractLoader__state.mine(1)
+            fxpEtherDepositValue = utils.fix(20)
+            assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
+            assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k2) == 1), "publicDepositEther to account 2 should succeed"
+            assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k3) == 1), "publicDepositEther to account 3 should succeed"
+            contracts._ContractLoader__state.mine(1)
+            orderType = 1 # bid
+            fxpAmount1 = utils.fix(1)
+            fxpAmount2 = utils.fix("0.4")
+            fxpPrice1 = utils.fix("1.6")
+            fxpPrice2 = utils.fix("1.6")
+            outcomeID = 2
+            tradeGroupID = 42
+            eventID = utils.createBinaryEvent(contracts)
+            marketID = utils.createMarket(contracts, eventID)
+            outcomeOneShareContract = contracts.markets.getOutcomeShareContract(marketID, 1)
+            outcomeTwoShareContract = contracts.markets.getOutcomeShareContract(marketID, 2)
+            assert(contracts.cash.approve(contracts.makeOrder.address, utils.fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
+            assert(contracts.cash.approve(contracts.makeOrder.address, utils.fix(10), sender=t.k3) == 1), "Approve makeOrder contract to spend cash from account 3"
+            assert(contracts.cash.approve(contracts.takeOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
+            fxpAllowance = utils.fix(20)
+            assert(int(contracts._ContractLoader__state.send(t.k2, outcomeOneShareContract, 0, shareTokenContractTranslator.encode("approve", [contracts.takeOrder.address, fxpAllowance])).encode("hex"), 16) == 1), "Approve takeOrder contract to spend shares from the user's account (account 2)"
+            assert(int(contracts._ContractLoader__state.send(t.k2, outcomeTwoShareContract, 0, shareTokenContractTranslator.encode("approve", [contracts.takeOrder.address, fxpAllowance])).encode("hex"), 16) == 1), "Approve takeOrder contract to spend shares from the user's account (account 2)"
+            assert(outcomeShareContractWrapper.allowance(outcomeOneShareContract, t.a2, contracts.takeOrder.address) == fxpAllowance), "takeOrder contract's allowance should be equal to the amount approved"
+            assert(outcomeShareContractWrapper.allowance(outcomeTwoShareContract, t.a2, contracts.takeOrder.address) == fxpAllowance), "takeOrder contract's allowance should be equal to the amount approved"
+            orderID1 = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount1, fxpPrice1, marketID, outcomeID, tradeGroupID, sender=t.k1)
+            contracts._ContractLoader__state.mine(1)
+            orderID2 = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount2, fxpPrice2, marketID, outcomeID, tradeGroupID, sender=t.k3)
+            contracts._ContractLoader__state.mine(1)
+            assert(orderID1 != 0), "Order ID should be non-zero"
+            assert(orderID2 != 0), "Order ID should be non-zero"
+            fxpAmountToSell = utils.fix("1.1")
+            # should take all of the first order and 0.1 of the second order (0.3 remaining in 2nd order)
+            fxpAmountRemaining = contracts.trade.publicSell(marketID, outcomeID, fxpAmountToSell, fxpPrice2, tradeGroupID, sender=t.k2)
+            assert(fxpAmountRemaining == 0), "fxpAmountRemaining should be zero"
+            assert(contracts.orders.getAmount(orderID1, orderType, marketID, outcomeID) == 0), "Order 1 amount should be zero"
+            assert(contracts.orders.getAmount(orderID2, orderType, marketID, outcomeID) == utils.fix("0.3")), "Order 2 amount should be 0.3"
         test_publicSell_takeOrder()
         test_publicSell_makeOrder()
         test_publicSell_takeThenMakeOrder()
         test_publicSell_takeTwoOrders()
+        test_publicSell_takeTwoOrdersSamePrice()
 
     test_publicTakeBestOrder()
     test_publicBuy()
