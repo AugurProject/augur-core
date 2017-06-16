@@ -178,7 +178,12 @@ def descendOrderList(type: uint256, market: address, outcome: uint256, fxpPrice,
 # @public
 def findBoundingOrders(type: uint256, market: address, outcome: uint256, fxpPrice, bestOrderID: address, worstOrderID: address, betterOrderID: address, worseOrderID: address):
     if(bestOrderID == worstOrderID):
-        return([bestOrderID, bestOrderID]: arr)
+        if(bestOrderID == 0):
+            return([0, 0]: arr)
+        elif(self.isBetterPrice(type, market, outcome, fxpPrice, bestOrderID)):
+            return([0, bestOrderID]: arr)
+        else:
+            return([bestOrderID, 0]: arr)
     if(betterOrderID != 0):
         if(self.orders[market][outcome][type][betterOrderID].fxpAmount == 0):
             betterOrderID = 0
