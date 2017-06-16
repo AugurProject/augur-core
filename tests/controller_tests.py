@@ -161,6 +161,8 @@ if __name__ == "__main__":
 	test_ownership()
 	test_registry()
 	test_suicideFunds()
+	
+whitelists, registry, contract admin, controller admin, emergency stops
 
 # todo test emergencyStop, release, assertOnlySpecifiedCaller, stopInEmergency, onlyInEmergency
 
