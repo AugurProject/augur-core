@@ -28,7 +28,7 @@ data owner
 data mode
 
 # Registry keys have a 32 char limit and the contract address is the value, index is the contract name
-data registry[](value)
+data registry[]
 
 # takes contract address as index, value is whether it's in the whitelist or not
 data whitelist[]
@@ -39,7 +39,6 @@ data stopped
 def init():
     self.owner = msg.sender
     self.mode = "dev"
-    self.whitelist[self] = 1
 
 ### Whitelisting [whitelisted augur contracts and dev mode can use it] ###
 
@@ -64,19 +63,19 @@ def assertIsWhitelisted(address):
 
 def setValue(key, newValue):
     assertAnotherWhitelistedContractCallingOrDevModeAndDevCalling()
-    self.registry[key].value = newValue
+    self.registry[key] = newValue
     return(1)
 
 def assertOnlySpecifiedCaller(callerAddress, allowedCallerContractName):
     if(self.mode == "dev"):
-        if(msg.sender != self.owner and self.registry[allowedCallerContractName].value != callerAddress):
+        if(msg.sender != self.owner and self.registry[allowedCallerContractName] != callerAddress):
             ~invalid()
-    elif(self.registry[allowedCallerContractName].value != callerAddress):
+    elif(self.registry[allowedCallerContractName] != callerAddress):
         ~invalid()
     return(1)
 
 def lookup(key):
-    return(self.registry[key].value)
+    return(self.registry[key])
 
 
 ### Contract Administration [dev mode can use it] ###
@@ -94,7 +93,7 @@ def updateController(address, newController):
 
 ### Controller Administration [dev can transfer ownership anytime, mode can only switched from dev mode -> decentralized] ###
 
-def transferOwnership(newOwner, ownerBranch):
+def transferOwnership(newOwner):
     assertDevCalling()
     self.owner = newOwner
     return(1)
