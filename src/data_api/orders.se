@@ -60,6 +60,14 @@ def getVolume(market: address):
 def getLastOutcomePrice(market: address, outcome: uint256):
     return(self.marketOrderData[market].prices[outcome])
 
+# @public
+def getBetterOrderID(orderID: address, type: uint256, market: address, outcome: uint256):
+    return(self.orders[market][outcome][type][orderID].betterOrderID: address)
+
+# @public
+def getWorseOrderID(orderID: address, type: uint256, market: address, outcome: uint256):
+    return(self.orders[market][outcome][type][orderID].worseOrderID: address)
+
 # Get orders for a particular market, type, and outcome (chunked)
 # @public
 def getOrderIDs(type: uint256, market: address, outcome: uint256, startingOrderID: address, numOrdersToLoad: uint256):
