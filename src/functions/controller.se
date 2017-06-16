@@ -40,26 +40,6 @@ def init():
     self.owner = msg.sender
     self.mode = "dev"
     self.whitelist[self] = 1
-    self.whitelist[msg.sender] = 1
-
-
-### Registry for lookups [whitelisted augur contracts and dev mode can use it] ###
-
-def setValue(key, newValue):
-    assertAnotherWhitelistedContractCallingOrDevModeAndDevCalling()
-    self.registry[key].value = newValue
-    return(1)
-
-def assertOnlySpecifiedCaller(callerAddress, allowedCallerContractName):
-    if(self.mode == "dev" and (msg.sender != self.owner and self.registry[allowedCallerContractName].value != callerAddress)):
-        ~invalid()
-    elif(self.registry[allowedCallerContractName].value != callerAddress):
-        ~invalid()
-    return(1)
-
-def lookup(key):
-    return(self.registry[key].value)
-
 
 ### Whitelisting [whitelisted augur contracts and dev mode can use it] ###
 
@@ -78,6 +58,25 @@ def assertIsWhitelisted(address):
         return(1)
     else:
         ~invalid()
+
+
+### Registry for lookups [whitelisted augur contracts and dev mode can use it] ###
+
+def setValue(key, newValue):
+    assertAnotherWhitelistedContractCallingOrDevModeAndDevCalling()
+    self.registry[key].value = newValue
+    return(1)
+
+def assertOnlySpecifiedCaller(callerAddress, allowedCallerContractName):
+    if(self.mode == "dev"):
+        if(msg.sender != self.owner and self.registry[allowedCallerContractName].value != callerAddress):
+            ~invalid()
+    elif(self.registry[allowedCallerContractName].value != callerAddress):
+        ~invalid()
+    return(1)
+
+def lookup(key):
+    return(self.registry[key].value)
 
 
 ### Contract Administration [dev mode can use it] ###
@@ -140,8 +139,9 @@ def onlyInEmergency():
 ### Helper Macros ###
 
 macro assertAnotherWhitelistedContractCallingOrDevModeAndDevCalling():
-    if(self.mode == "dev" and (msg.sender != self.owner and !self.whitelist[msg.sender])):
-        ~invalid()
+    if(self.mode == "dev"):
+        if(msg.sender != self.owner and !self.whitelist[msg.sender]):
+            ~invalid()
     elif(!self.whitelist[msg.sender]):
         ~invalid()
 
