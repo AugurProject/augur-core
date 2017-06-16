@@ -24,7 +24,7 @@ macro ASK: 2
 
 # Minimum gas needed to execute the make and/or take functions
 macro MINIMUM_GAS_NEEDED_TO_MAKE_ORDER: 282556
-macro MINUMUM_GAS_NEEDED_TO_TAKE_ORDER: 316476
+macro MINIMUM_GAS_NEEDED_TO_TAKE_ORDER: 316476
 
 def init():
     self.controller = 0x0
@@ -99,16 +99,17 @@ def takeBestOrder(sender: address, type: uint256, market: address, outcome: uint
     self.controller.assertIsWhitelisted(msg.sender)
     orderID = ORDERS.getBestOrderID(type, market, outcome)
     while(orderID != 0 and fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED_TO_TAKE_ORDER):
-        orderID = ORDERS.getBestOrderID(type, market, outcome)
         fxpOrderPrice = ORDERS.getPrice(orderID, type, market, outcome)
         if(type == BID):
-            isBetterPrice = fxpOrderPrice <= fxpPrice
+            isAcceptablePrice = fxpOrderPrice >= fxpPrice
         else:
-            isBetterPrice = fxpOrderPrice >= fxpPrice
-        if(isBetterPrice):
+            isAcceptablePrice = fxpOrderPrice <= fxpPrice
+        if(isAcceptablePrice):
             orderOwner = ORDERS.getOrderOwner(orderID, type, market, outcome)
+            nextOrderID = ORDERS.getWorseOrderID(orderID, type, market, outcome)
             if(orderOwner != sender):
                 fxpAmount = TAKEORDER.takeOrder(sender, orderID, type, market, outcome, fxpAmount)
+            orderID = nextOrderID
         else:
             orderID = 0
     return(fxpAmount: uint256)
