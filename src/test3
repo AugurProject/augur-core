@@ -1,0 +1,3 @@
+def returnFive():
+    ~invalid()
+    return(5)

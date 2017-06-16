@@ -14,79 +14,115 @@ import time
 import random
 from binascii import hexlify
 from ethereum import tester as t
-s = t.state()
-c = s.abi_contract('../src/functions/controller.se')
-d = s.abi_contract('controller_test.se')
+state = t.state()
+c = state.abi_contract('../src/functions/controller.se')
+d = state.abi_contract('controller_test.se')
 
 def set_controller():
-	print("Setting Controller")
-	# set the controller = 0x0 now that we have it
-	print "Setting controller to: %s" % binascii.hexlify(d.address)
-	out = d.setController(binascii.hexlify(d.address))
-	print "setController output: %s" % out
-	assert(out == 1), "setController succeeded"
-	# Test a setController failure  (do we even want to leave this in?)
+	global d
+	d.getController(value=500)
+	# Test a suicide failure
 	try:
-		raise Exception(d.setController(binascii.hexlify(c.address)))
+		raise Exception(d.suicideFunds(t.a2, sender=t.k1))
 	except Exception as exc:
-		#print "exception caught: %s" % exc
 		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "setController should fail when attempted by non-controller address"
+	d.suicideFunds(t.a0, sender=t.k0)
+	d = state.abi_contract('controller_test.se')
+	out = d.setController(c.address)
+	assert(out == 1), "setController succeeded"
+	# Test a setController failure
+	try:
+		raise Exception(d.setController(binascii.hexlify(d.address)))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "setController should fail when attempted by non-controller address"
+	print "Controller Set"
 
-
-def test_whitelisting():
+def test_whitelists():
 	print("Testing Whitelists")
-	address1 = long(t.a1.encode("hex"), 16)
 
-	# Check the current mode
-	out = c.getMode()
-	print "getMode output: %s" % out
-	assert(out == 45410550817938176941147246367785497464285552864458998948296910157280029179904), "getMode should be dev"    # numeric string for 'dev'
-	# setMode to something other than dev to test
-	out = c.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed()
-	print "switchMode output: %s" % out
-	# Mode should now be 'Decentralized':
-	out = c.getMode()
-	print "getMode output: %s" % out
-	assert(out == 30936411264679932392881305702504462444513638254699919670237862177711222423552), "getMode should be Decentralized"    # numeric string for 'Decentralized'
+	try:
+		raise Exception(c.addToWhitelist(2342, sender=t.k2))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "adding to whitelist with an invalid sender should fail"
 
 	# Test addToWhiteList
 	out = c.addToWhitelist(t.a1)
-	print "addToWhitelist output: %s" % out
 
 	# Check that address is now Whitelisted:
-	out = c.assertIsWhitelisted(t.a1)
+	out = c.assertIsWhitelisted(t.a1, sender=t.k2)
 	assert (out == 1), "assertIsWhitelisted failed."
+
+	assert(c.assertIsWhitelisted(443434, sender=t.k0)), "Dev owner should be whitelisted in dev mode"
 
 	# Check an address that shouldn't be Whitelisted:
 	try:
-		raise Exception(c.assertIsWhitelisted(t.a2, sender=t.k1))   # In dev mode will return 1 no matter what unless called by non-controller
+		raise Exception(c.assertIsWhitelisted(t.a2, sender=t.k1))
 	except Exception as exc:
 		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "assertIsWhitelisted should fail when address is not Whitelisted"
 
 	# Test removeFromWhitelist
-	out = c.removeFromWhitelist(t.a1, 0)
+	out = c.removeFromWhitelist(t.a1)
 	assert (out == 1), "removeFromWhitelist failed."
 
-
-def test_suicideFunds():
-	print("Testing suicideFunds")
-	# Test with non-controller addresses
 	try:
-		raise Exception(d.suicideFunds(t.a1, sender=t.k1))
+		raise Exception(c.removeFromWhitelist(2342, sender=t.k2))
 	except Exception as exc:
-		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "suicideFunds should fail when attempted by non-controller address"
-	# Test with another non-controller address
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "removing from whitelist with an invalid sender should fail"
+
+def test_registry():
+	print("Testing registry")
+
 	try:
-		raise Exception(d.suicideFunds(t.a2, sender=t.k2))
+		raise Exception(c.setValue("sdfs", 2342, sender=t.k2))
 	except Exception as exc:
-		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "suicideFunds should fail when attempted by non-controller address"
-	# Test with controller address  (take this out if not possible)
-	#out = d.suicideFunds(d.address, sender=d.key)   # ???
-	#print "controller suicideFunds output: %s" % out
-	#assert(out == None), "suicideFunds should succeed when called by controller address"
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "removing from whitelist with an invalid sender should fail"
 
+	out = c.setValue(t.a2, 23)
+	print "setValue output: %s" % out
+	assert(out == 1), "setValue failed to set t.a2 into registry"
+	# Test with t.k0
+	print "passed key: %s" % binascii.hexlify(t.k0)
+	out = c.lookup(t.k0)
+	print "lookup output: %s" % out
+	assert(out == 0), "test_lookup didn't fail"
+	# Test with t.a1
+	print "passed key: %s" % binascii.hexlify(t.a1)
+	out = c.lookup(t.a1)
+	print "lookup output: %s" % out
+	assert(out == 0), "test_lookup didn't fail but should've"
+	# Test with t.a2
+	print "passed key: %s" % binascii.hexlify(t.k2)
+	out = c.lookup(t.a2)
+	print "lookup output: %s" % out
+	assert(out == 23), "test_lookup should have returned 23"
 
-def test_Ownership():
+	c.assertOnlySpecifiedCaller(t.k0, "banana")
+	c.assertOnlySpecifiedCaller(23, t.a2, sender = t.k1)
+	try:
+		raise Exception(c.assertOnlySpecifiedCaller(t.k0, "banana", sender = t.k1))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "should fail with invalid caller and sender not dev in dev mode"
+
+def test_contractAdmin():
+	print("Testing suicide")
+	global d
+	try:
+		raise Exception(c.suicide(d.address, t.a1, sender=t.k1))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "suicide should fail when attempted by non-dev address"
+	assert(c.suicide(d.address, t.a0, sender = t.k0) == 1), "Suicide failed"
+
+	print("Testing controller update")
+	a = state.abi_contract("../src/functions/controller.se")
+	d = state.abi_contract('controller_test.se')
+	d.setController(c.address)
+	try:
+		raise Exception(c.updateController(d.address, a.address, sender=t.k1))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "controller update should fail when attempted by non-dev address"
+	assert(c.updateController(d.address, a.address, sender = t.k0) == 1), "Controller update failed"
+
+def test_controllerAdmin():
 	print("Testing ownership functions")
 	address0 = long(t.a0.encode("hex"), 16)
 	address1 = long(t.a1.encode("hex"), 16)
@@ -95,20 +131,23 @@ def test_Ownership():
 	print "getOwner output: %s" % out
 	assert(out == address0), "Owner should start out as address0"
 
+	try:
+		raise Exception(c.transferOwnership(t.a1, sender = t.k1))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "ownership transfer should fail when attempted by non-dev address"
+
 	# Test transferOwnership
-	#transferOwnership(key, newOwner, ownerBranch, proposalIndex)
-	out = c.transferOwnership(t.k1, t.a1, 0)
+	out = c.transferOwnership(t.a1)
 	print "transferOwnership output: %s" % out
 	assert(out == 1), "transferOwnsership did not succeed"
 
 	out = c.getOwner()
 	print "getOwner output: %s" % out
-	# if newowner == t.a1 ...
 	assert(out == address1), "Owner should now be address1"
 
 	# transferOwnership back to original msg.sender
 	# sender must be t.k1 now or this call won't work
-	out = c.transferOwnership(t.k0, t.a0, 0, sender=t.k1)
+	out = c.transferOwnership(t.a0, sender=t.k1)
 	print "transferOwnership output: %s" % out
 
 	out = c.getOwner()
@@ -116,43 +155,35 @@ def test_Ownership():
 	# if newowner == t.a0 ...
 	assert(out == address0), "Owner should now be the original address0"
 
-	# Try updateController:
-	# Need to run transferOwnership first I think.  self.owner must be msg.sender
-	out = c.updateController(c.address, t.a0)
-	print "updateController output: %s" % out
-	assert(out == 1), "updateController did not succeed"
+	# Check the current mode
+	out = c.getMode()
+	print "getMode output: %s" % out
+	assert(out == 45410550817938176941147246367785497464285552864458998948296910157280029179904), "getMode should be dev"    # numeric string for 'dev'
 
+	try:
+		raise Exception(c.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender=t.k3))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "mode switch should fail when attempted by non-dev address"
 
-def test_lookup():
-	print("Testing lookup functions")
-	# Let's set t.k2 into the registry
-	out = c.setValue(t.k2, 23)
-	print "setValue output: %s" % out
-	assert(out == 1), "setValue failed to set t.k2 into registry"
-	# Test with t.k0
-	print "passed key: %s" % binascii.hexlify(t.k0)
-	#out = c.lookup(binascii.hexlify(t.k0))
-	out = c.lookup(t.k0)
-	print "lookup output: %s" % out
-	assert(out == 0), "test_lookup failed"
-	# Test with t.k1
-	print "passed key: %s" % binascii.hexlify(t.k1)
-	out = c.lookup(t.k1)
-	print "lookup output: %s" % out
-	assert(out == 0), "test_lookup failed"
-	# Test with t.k2
-	print "passed key: %s" % binascii.hexlify(t.k2)
-	out = c.lookup(t.k2)
-	print "lookup output: %s" % out
-	assert(out == 23), "test_lookup should have returned 23"
-
+	# setMode to something other than dev to test
+	out = c.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed()
+	print "switchMode output: %s" % out
+	# Mode should now be 'Decentralized':
+	out = c.getMode()
+	print "getMode output: %s" % out
+	assert(out == 30936411264679932392881305702504462444513638254699919670237862177711222423552), "getMode should be Decentralized"    # numeric string for 'Decentralized'
 
 # Call tests
 if __name__ == "__main__":
 	set_controller()
-	test_whitelisting()
-	test_Ownership()
-	test_lookup()
-	test_suicideFunds()
+	test_whitelists()
+	test_registry()
+	test_contractAdmin()
+	test_controllerAdmin()
+	# redo after decentralized mode enabled
+	# test_whitelistsDecentralized()
+	# test_registryDecentralized()
+	# test_contractAdminDecentralized()
+	# test_controllerAdmin()
 
-
+	# test_emergencyStops()
