@@ -52,7 +52,7 @@ def test_whitelists():
 	out = c.assertIsWhitelisted(t.a1, sender=t.k2)
 	assert (out == 1), "assertIsWhitelisted failed."
 
-	assert(c.assertIsWhitelisted(443434, sender=t.k0)), "Dev owner should be whitelisted in dev mode"
+	assert(c.assertIsWhitelisted(t.a0, sender=t.k0)), "Dev owner should be whitelisted in dev mode"
 
 	# Check an address that shouldn't be Whitelisted:
 	try:
@@ -96,7 +96,7 @@ def test_registry():
 	print "lookup output: %s" % out
 	assert(out == 23), "test_lookup should have returned 23"
 
-	c.assertOnlySpecifiedCaller(t.k0, "banana")
+	c.assertOnlySpecifiedCaller(t.a0, "banana")
 	c.assertOnlySpecifiedCaller(23, t.a2, sender = t.k1)
 	try:
 		raise Exception(c.assertOnlySpecifiedCaller(t.k0, "banana", sender = t.k1))

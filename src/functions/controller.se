@@ -52,7 +52,7 @@ def removeFromWhitelist(address):
     return(1)
 
 def assertIsWhitelisted(address):
-    if(self.whitelist[address] or (self.mode == "dev" and msg.sender == self.owner)):
+    if(self.whitelist[address]):
         return(1)
     else:
         ~invalid()
@@ -67,7 +67,7 @@ def setValue(key, newValue):
 
 def assertOnlySpecifiedCaller(callerAddress, allowedCallerContractName):
     if(self.mode == "dev"):
-        if(msg.sender != self.owner and self.registry[allowedCallerContractName] != callerAddress):
+        if(!self.whitelist[callerAddress] and self.registry[allowedCallerContractName] != callerAddress):
             ~invalid()
     elif(self.registry[allowedCallerContractName] != callerAddress):
         ~invalid()
@@ -99,6 +99,7 @@ def transferOwnership(newOwner):
 
 def switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed():
     assertDevModeAndDevCalling()
+    self.whitelist[msg.sender] = 0
     self.mode = "Decentralized"
     return(1)
 
@@ -137,10 +138,7 @@ def onlyInEmergency():
 ### Helper Macros ###
 
 macro assertAnotherWhitelistedContractCallingOrDevModeAndDevCalling():
-    if(self.mode == "dev"):
-        if(msg.sender != self.owner and !self.whitelist[msg.sender]):
-            ~invalid()
-    elif(!self.whitelist[msg.sender]):
+    if(!self.whitelist[msg.sender]):
         ~invalid()
 
 macro assertDevModeAndDevCalling():

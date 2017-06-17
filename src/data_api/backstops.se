@@ -29,7 +29,7 @@ data resolved[][]
 data controller
 
 def init():
-    self.controller = 0x0
+    self.controller = 0xc305c901078781c232a2a521c2af7980f8385ee9
 
 def getDisputedOverEthics(event):
     return(self.roundTwo[event].disputedOverEthics)
