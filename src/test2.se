@@ -5,9 +5,18 @@ def getYay():
 
 def setYay(yay):
     self.yay = yay
+    with $x = yay:
+        return($x)
 
 def initialize():
     self.yay = 47
 
-def ok():
-    return(1)
+# def ok(x: uint256):
+    # return()
+
+def foo(bigNumber: uint256):
+    return(bigNumber > -2**255)
+
+
+def hmm():
+    return("fsf": str)

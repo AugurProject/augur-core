@@ -15,7 +15,8 @@ inset('../macros/assertZeroValue.sem')
     # Then new controller needs to populate its registry and whitelist
     # Then once it is updated suicide the old controller
 
-# Dev mode: a developer address which can do an update
+# Dev mode: a developer address which can do updates / call functions
+
 # Decentralized mode: contracts must be updated by a reupload, people can transfer their rep / claim it on new contracts, traders + market creators cancel orders and go to the new contract
     # For bugs found involving money or rep, contracts are locked / an escape hatch is enabled which allows withdraws of shares [and cancelling orders] for a value half way between the bid-ask spread at the time of the lock and another escape hatch is enabled which allows withdrawal of any locked up rep. All rep in the erc20 contracts are fungible as usual [needed so it can migrate to new contracts]. All cash is withdrawable but transfers are disabled.
     # When a bug is not found and it's just some, for whatever reason, backwards incompatible upgrade [ideally we'd be able to just add contracts, but if that doesn't work for some reason], people should be allowed to migrate over to the new system. i.e. Don't emergency stop + withdraw at fixed price, instead allow them to trade around and sell complete sets and/or wait for any straggling rep to resolve their markets
@@ -27,7 +28,7 @@ data owner
 data mode
 
 # Registry keys have a 32 char limit and the contract address is the value, index is the contract name
-data registry[](value)
+data registry[]
 
 # takes contract address as index, value is whether it's in the whitelist or not
 data whitelist[]
@@ -38,80 +39,18 @@ data stopped
 def init():
     self.owner = msg.sender
     self.mode = "dev"
-    self.whitelist[self] = 1
-    self.whitelist[msg.sender] = 1
 
-### Whitelisting, registry for contract lookups, and contract updating machinery ###
-
-def setValue(key, newValue):
-    if(msg.sender != self.owner):
-        ~invalid()
-    self.registry[key].value = newValue
-    return(1)
+### Whitelisting [whitelisted augur contracts and dev mode can use it] ###
 
 def addToWhitelist(address):
-    if(msg.sender != self.owner):
-        ~invalid()
+    assertAnotherWhitelistedContractCallingOrDevModeAndDevCalling()
     self.whitelist[address] = 1
     return(1)
 
-def removeFromWhitelist(address, suicide):
-    if(msg.sender != self.owner):
-        ~invalid()
+def removeFromWhitelist(address):
+    assertAnotherWhitelistedContractCallingOrDevModeAndDevCalling()
     self.whitelist[address] = 0
     return(1)
-
-def suicide(address, to):
-    if(msg.sender != self.owner):
-        ~invalid()
-    address.suicideFunds(to)
-    return(1)
-
-
-### Controller Administration ###
-
-def transferOwnership(key, newOwner, ownerBranch):
-    if(msg.sender != self.owner):
-        ~invalid()
-    self.owner = newOwner
-    return(1)
-
-def updateController(address, newController):
-    if(msg.sender != self.owner):
-        ~invalid()
-    address.setController(newController)
-    return(1)
-
-def switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed():
-    if(msg.sender != self.owner):
-        ~invalid()
-    self.mode = "Decentralized"
-    return(1)
-
-
-### Emergency Stop Functions ###
-
-# called by the owner in emergency, triggers a stop state/lock
-def emergencyStop():
-    if(msg.sender != self.owner):
-        ~invalid()
-    self.stopped = 1
-    return(1)
-
-# called by the owner at end of emergency, returns to a normal state/unlock
-def release():
-    if(msg.sender != self.owner):
-        ~invalid()
-    if(self.stopped != 1):
-        ~invalid()
-    self.stopped = 0
-    return(1)
-
-
-### Getters ###
-
-def lookup(key):
-    return(self.registry[key].value)
 
 def assertIsWhitelisted(address):
     if(self.whitelist[address] or (self.mode == "dev" and msg.sender == self.owner)):
@@ -119,9 +58,73 @@ def assertIsWhitelisted(address):
     else:
         ~invalid()
 
+
+### Registry for lookups [whitelisted augur contracts and dev mode can use it] ###
+
+def setValue(key, newValue):
+    assertAnotherWhitelistedContractCallingOrDevModeAndDevCalling()
+    self.registry[key] = newValue
+    return(1)
+
 def assertOnlySpecifiedCaller(callerAddress, allowedCallerContractName):
-    if((self.mode == "dev" and msg.sender != self.owner) or self.registry[allowedCallerContractName].value != callerAddress):
+    if(self.mode == "dev"):
+        if(msg.sender != self.owner and self.registry[allowedCallerContractName] != callerAddress):
+            ~invalid()
+    elif(self.registry[allowedCallerContractName] != callerAddress):
         ~invalid()
+    return(1)
+
+def lookup(key):
+    return(self.registry[key])
+
+
+### Contract Administration [dev mode can use it] ###
+
+def suicide(address, to):
+    assertDevModeAndDevCalling()
+    address.suicideFunds(to)
+    return(1)
+
+def updateController(address, newController):
+    assertDevModeAndDevCalling()
+    address.setController(newController)
+    return(1)
+
+
+### Controller Administration [dev can transfer ownership anytime, mode can only switched from dev mode -> decentralized] ###
+
+def transferOwnership(newOwner):
+    assertDevCalling()
+    self.owner = newOwner
+    return(1)
+
+def switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed():
+    assertDevModeAndDevCalling()
+    self.mode = "Decentralized"
+    return(1)
+
+def getOwner():
+    return(self.owner)
+
+def getMode():
+    return(self.mode)
+
+
+### Emergency Stop Functions [dev can use it anytime] ###
+
+# called by the owner in emergency, triggers a stop state/lock
+def emergencyStop():
+    assertDevCalling()
+    self.stopped = 1
+    return(1)
+
+# called by the owner at end of emergency, returns to a normal state/unlock
+def release():
+    assertDevCalling()
+    if(self.stopped != 1):
+        ~invalid()
+    self.stopped = 0
+    return(1)
 
 def stopInEmergency():
     if(self.stopped):
@@ -131,8 +134,20 @@ def onlyInEmergency():
     if(!self.stopped):
         ~invalid()
 
-def getOwner():
-    return(self.owner)
 
-def getMode():
-    return(self.mode)
+### Helper Macros ###
+
+macro assertAnotherWhitelistedContractCallingOrDevModeAndDevCalling():
+    if(self.mode == "dev"):
+        if(msg.sender != self.owner and !self.whitelist[msg.sender]):
+            ~invalid()
+    elif(!self.whitelist[msg.sender]):
+        ~invalid()
+
+macro assertDevModeAndDevCalling():
+    if(self.mode != "dev" or msg.sender != self.owner):
+        ~invalid()
+
+macro assertDevCalling():
+    if(msg.sender != self.owner):
+        ~invalid()
