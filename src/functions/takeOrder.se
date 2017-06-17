@@ -5,9 +5,6 @@ extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-ORDERS = self.controller.lookup('orders')
-extern orders: [addOrderToMarket:[int256,int256]:int256, cancelOrderLog:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, completeSetsLog:[int256,int256,int256,int256,int256,int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getID:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getOrder:[int256]:int256[], getOrderIDs:[int256]:int256[], getOrderOwner:[int256]:int256, getPrevID:[int256,int256]:int256, getPrice:[int256]:int256, getTotalOrders:[int256]:int256, getType:[int256]:int256, getVolume:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, modifyMarketVolume:[int256,int256]:int256, removeOrder:[int256]:int256, removeOrderFromMarket:[int256,int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, setPrice:[int256,int256,int256]:int256, suicideFunds:[address]:_, takeAskOrderLog:[address,address,address,int256,uint256,address,uint256,uint256,uint256,uint256]:int256, takeBidOrderLog:[address,address,address,int256,uint256,address,uint256,uint256,uint256,uint256,uint256]:int256]
-
 FILLASKORDER = self.controller.lookup('takeAskOrder')
 extern takeAskOrder: [setController:[address]:int256, suicideFunds:[address]:_, takeAskOrder:[address,address,uint256]:uint256]
 
@@ -16,7 +13,7 @@ extern takeBidOrder: [setController:[address]:int256, suicideFunds:[address]:_, 
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 
 data controller
 
@@ -45,52 +42,29 @@ macro ASK: 2
 def init():
     self.controller = 0x0
 
-# Match an order with the best bid or ask.
-# @public
-# @return fxp
-def publicTakeBestOrder(type: uint256, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
-    refund()
-    MUTEX.acquire()
-    self.controller.stopInEmergency()
-    self.takeBestOrder(msg.sender, type, market, outcome, fxpAmountTakerWants)
-    MUTEX.release()
-    return(fxpAmountRemaining: uint256)
-
 # "Snipe" an order on the orderbook using its ID.
 # @public
 # @return fxp
-def publicTakeOrder(orderID: address, fxpAmountTakerWants: uint256):
-    refund()
+def publicTakeOrder(orderID: address, type: uint256, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
+    assertZeroValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
-    fxpAmountRemaining = self.takeOrder(msg.sender, orderID, fxpAmountTakerWants)
+    fxpAmountRemaining = self.takeOrder(msg.sender, orderID, type, market, outcome, fxpAmountTakerWants)
     MUTEX.release()
     return(fxpAmountRemaining: uint256)
 
 # @internal
 # @return fxp
-def takeBestOrder(sender: address, type: uint256, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
-    refund()
-    self.controller.assertIsWhitelisted(msg.sender)
-    if(type == BID):
-        orderID = ORDERS.getBestAskOrderID(market, outcome)
-    elif(type == ASK):
-        orderID = ORDERS.getBestBidOrderID(market, outcome)
-    return(self.takeOrder(sender, orderID, fxpAmountTakerWants): uint256)
-
-# @internal
-# @return fxp
-def takeOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
-    refund()
+def takeOrder(sender: address, orderID: address, type: uint256, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     if(fxpAmountTakerWants <= 0):
         ~invalid()
-    type = ORDERS.getType(orderID)
     # Fill orders
     if(type == BID):
-        fxpAmountRemaining = TAKEBIDORDER.takeBidOrder(sender, orderID, fxpAmountTakerWants, call=delegate)
+        fxpAmountRemaining = TAKEBIDORDER.takeBidOrder(sender, orderID, market, outcome, fxpAmountTakerWants, call=delegate)
     elif(type == ASK):
-        fxpAmountRemaining = FILLASKORDER.takeAskOrder(sender, orderID, fxpAmountTakerWants, call=delegate)
+        fxpAmountRemaining = FILLASKORDER.takeAskOrder(sender, orderID, market, outcome, fxpAmountTakerWants, call=delegate)
     else:
         ~invalid()
     return(fxpAmountRemaining: uint256)

@@ -21,26 +21,27 @@ def nearly_equal(a, b, sig_fig=8):
 def isclose(a, b, rel_tol=1e-10, abs_tol=0.0):
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
-def test_refund():
+def test_assertZeroValue():
     state = test.state()
-    c = state.abi_contract(os.path.join(SERPENT_TEST_HELPERS, "testRefund.se"))
-
-    def test_refund_funds():
-        balanceBefore = 0
-        balanceAfter = 0
-        try:
-            balanceBefore = state.block.get_balance(test.a2)
-        except:
-            balanceBefore = state.state.get_balance(test.a2)
-        c.testRefund(value=500*10**18, sender=test.k2)
-        try:
-            balanceAfter = state.block.get_balance(test.a2)
-        except:
-            balanceAfter = state.state.get_balance(test.a2)
-        print balanceAfter
-        print balanceBefore
-        assert(isclose(balanceBefore, balanceAfter) == True)
-    test_refund_funds()
+    c = state.abi_contract(os.path.join(SERPENT_TEST_HELPERS, "testAssertZeroValue.se"))
+    balanceBefore = 0
+    balanceAfter = 0
+    try:
+        balanceBefore = state.block.get_balance(test.a2)
+    except:
+        balanceBefore = state.state.get_balance(test.a2)
+    c.testAssertZeroValue(sender=test.k2)
+    try:
+        raise Exception(c.testAssertZeroValue(value=500*10**18, sender=test.k2))
+    except Exception as exc:
+        assert(isinstance(exc, ethereum.tester.TransactionFailed)), "throw if testAssertZeroValue has value > 0"
+    try:
+        balanceAfter = state.block.get_balance(test.a2)
+    except:
+        balanceAfter = state.state.get_balance(test.a2)
+    print balanceAfter
+    print balanceBefore
+    assert(isclose(balanceBefore, balanceAfter) == True)
 
 def test_float():
     s = test.state()
@@ -154,7 +155,6 @@ def test_float():
         # binascii.hexlify()
 
 if __name__ == '__main__':
-    test_refund()
+    test_assertZeroValue()
     test_float()
     # test_controller()
-    print "DONE TESTING RESOLUTION TESTS"

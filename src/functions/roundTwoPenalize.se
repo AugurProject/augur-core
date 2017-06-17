@@ -35,7 +35,7 @@ extern roundTwoPenalizeLibrary: [handleEthicsAndBondRepRedistribution:[int256,in
 REPCHANGELIBRARY = self.controller.lookup('repChangeLib')
 extern repChangeLib: [calculateRepChange:[int256,int256,int256,int256,int256,int256,int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/redistributeRep.sem')
@@ -71,7 +71,7 @@ def init():
     self.controller = 0x0
 
 def penalizeRoundTwoWrong(branch, event):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
     lastPenalizationPeriod = lastPeriodVotedOn - 1

@@ -24,7 +24,7 @@ extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint25
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 
 data controller
@@ -37,7 +37,7 @@ def init():
 # Buys fxpAmount shares of every outcome in the specified market
 # @public
 def publicBuyCompleteSets(market: address, fxpAmount: uint256):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
     self.buyCompleteSets(msg.sender, market, fxpAmount)
@@ -47,7 +47,7 @@ def publicBuyCompleteSets(market: address, fxpAmount: uint256):
 # Sells fxpAmount shares of every outcome in the specified market
 # @public
 def publicSellCompleteSets(market: address, fxpAmount: uint256):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
     self.sellCompleteSets(msg.sender, market, fxpAmount)
@@ -56,7 +56,7 @@ def publicSellCompleteSets(market: address, fxpAmount: uint256):
 
 # @internal
 def buyCompleteSets(sender: address, market: address, fxpAmount: uint256):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
@@ -85,7 +85,7 @@ def buyCompleteSets(sender: address, market: address, fxpAmount: uint256):
 # Sells fxpAmount of every outcome [if user owns it]
 # @internal
 def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
     numOutcomes = MARKETS.getMarketNumOutcomes(market)

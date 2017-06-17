@@ -29,7 +29,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, transfer:[address,uint256]:int256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
@@ -55,19 +55,16 @@ def init():
 #  - Bidder (taker/sender) pays price - minValue for their shares
 # @internal
 # @return fxp
-def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
-    refund()
+def takeAskOrder(sender: address, orderID: address, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
     # Get order
     order = array(ORDER_FIELDS)
-    order = ORDERS.getOrder(orderID, outitems=ORDER_FIELDS)
-    type = order[1]
-    market = order[2]
+    order = ORDERS.getOrder(orderID, ASK, market, outcome, outitems=ORDER_FIELDS)
     fxpAmount = order[3]
     fxpPrice = order[4]
     maker = order[5]
-    outcome = order[7]
     fxpMoneyEscrowed = order[8]
     fxpSharesEscrowed = order[9]
 
@@ -79,14 +76,6 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     # Make sure the order has been mined, obvious HFT prevention
     if(block.number <= order[6]):
         ~invalid()
-
-    orderInfo = array(4)
-    orderInfo[0] = market
-    orderInfo[1] = outcome
-    orderInfo[2] = type
-    orderInfo[3] = sender
-    orderHash = ripemd160(orderInfo, items=4)
-    ORDERS.checkHash(orderHash, sender)
 
     branch = EVENTS.getExpiration(MARKETS.getMarketEvent(market))
     event = MARKETS.getMarketEvent(market)
@@ -123,7 +112,7 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
         fxpAskerMoneyFilled = fxpFill
         # Issue asker complete sets (minus outcome) for fill amount; don't charge because the asker has already paid
         i = 1
-        while i < MARKETS.getMarketNumOutcomes(market):
+        while i <= MARKETS.getMarketNumOutcomes(market):
             if(i != outcome):
                 MARKETS.getOutcomeShareContract(market, i).createShares(maker, fxpFill)
             i += 1
@@ -139,10 +128,9 @@ def takeAskOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Update order amount or remove
     if(fxpSumOfFills < fxpAmount):
-        ORDERS.fillOrder(orderID, fxpSumOfFills, safeFxpMul(fxpAskerMoneyFilled, safeSub(fxpMaxValue, fxpPrice)), fxpAskerSharesFilled)
+        ORDERS.fillOrder(orderID, ASK, market, outcome, fxpSumOfFills, safeFxpMul(fxpAskerMoneyFilled, safeSub(fxpMaxValue, fxpPrice)), fxpAskerSharesFilled)
     else:
-        ORDERS.removeOrder(orderID)
-        ORDERS.removeOrderFromMarket(market, orderID)
+        ORDERS.removeOrder(orderID, ASK, market, outcome)
 
     # Account for buyer (bidding with cash)
     #  - Bidder will pay price - minValue for their shares

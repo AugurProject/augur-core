@@ -29,7 +29,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, transfer:[address,uint256]:int256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
@@ -43,7 +43,7 @@ macro BID: 1
 macro ASK: 2
 
 # Field counts
-macro ORDER_FIELDS: 10
+macro ORDER_FIELDS: 11
 
 def init():
     self.controller = 0x0
@@ -57,14 +57,13 @@ def init():
 #  - Bidder (maker) has escrowed price - minValue for their shares
 # @internal
 # @return fxp
-def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256):
-    refund()
+def takeBidOrder(sender: address, orderID: address, market: address, outcome: uint256, fxpAmountTakerWants: uint256):
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
     # Get order
     order = array(ORDER_FIELDS)
-    order = ORDERS.getOrder(orderID, outitems=ORDER_FIELDS)
-    type = order[1]
+    order = ORDERS.getOrder(orderID, BID, market, outcome, outitems=ORDER_FIELDS)
     market = order[2]
     fxpAmount = order[3]
     fxpPrice = order[4]
@@ -81,14 +80,6 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
     # Make sure the order has been mined, obvious HFT prevention
     if(block.number <= order[6]):
         ~invalid()
-
-    orderInfo = array(4)
-    orderInfo[0] = market
-    orderInfo[1] = outcome
-    orderInfo[2] = type
-    orderInfo[3] = sender
-    orderHash = ripemd160(orderInfo, items=4)
-    ORDERS.checkHash(orderHash, sender)
 
     branch = EVENTS.getExpiration(MARKETS.getMarketEvent(market))
     fxpCumulativeScale = MARKETS.getCumulativeScale(market)
@@ -181,10 +172,9 @@ def takeBidOrder(sender: address, orderID: address, fxpAmountTakerWants: uint256
 
     # Update order amount or remove
     if(fxpSumOfFills < fxpAmount):
-        ORDERS.fillOrder(orderID, fxpSumOfFills, safeFxpMul(fxpBidderMoneyFilled, safeSub(fxpPrice, fxpMinValue)), fxpBidderSharesFilled)
+        ORDERS.fillOrder(orderID, BID, market, outcome, fxpSumOfFills, safeFxpMul(fxpBidderMoneyFilled, safeSub(fxpPrice, fxpMinValue)), fxpBidderSharesFilled)
     else:
-        ORDERS.removeOrder(orderID)
-        ORDERS.removeOrderFromMarket(market, orderID)
+        ORDERS.removeOrder(orderID, BID, market, outcome)
 
     # Sell maker's complete sets
     fxpSharesHeld = MAX_INT256_VALUE

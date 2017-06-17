@@ -52,7 +52,11 @@ def test_TakeAskOrder(contracts):
             fxpOrderAmount = utils.fix(1)
             fxpPrice = utils.fix("1.6")
             tradeGroupID = 42
-            orderID = contracts.makeOrder.publicMakeOrder(2, fxpOrderAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+            with iocapture.capture() as captured:
+                  orderID = contracts.makeOrder.publicMakeOrder(2, fxpOrderAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+                  logged = captured.stdout
+            logMakeOrder = utils.parseCapturedLogs(logged)[-1]
+            assert(logMakeOrder["_event_type"] == "MakeOrder"), "Should emit a MakeOrder event"
             assert(orderID != 0), "Order ID should be non-zero"
             makerIntermediateCash = contracts.cash.balanceOf(t.a1)
             takerIntermediateCash = contracts.cash.balanceOf(t.a2)
@@ -78,10 +82,22 @@ def test_TakeAskOrder(contracts):
             # 2. Taker fills ask order. Complete sets are created and split between taker (receives outcome 2) and maker (receives other outcomes).
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = utils.fix(7)
-            tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, 2, sender=t.k2)
-            assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
-            contracts._ContractLoader__state.mine(1)
-            fxpAmountRemaining = contracts.takeAskOrder.takeAskOrder(t.a2, orderID, fxpAmountTakerWants, sender=t.k0)
+            with iocapture.capture() as captured:
+                  fxpAmountRemaining = contracts.takeAskOrder.takeAskOrder(t.a2, orderID, marketID, outcomeID, fxpAmountTakerWants, sender=t.k0)
+                  logged = captured.stdout
+            logTakeOrder = utils.parseCapturedLogs(logged)[-1]
+            assert(logTakeOrder["_event_type"] == "TakeAskOrder"), "Should emit a TakeAskOrder event"
+            assert(logTakeOrder["fxpPrice"] == fxpPrice), "Logged fxpPrice should be " + str(fxpPrice)
+            assert(logTakeOrder["fxpAmount"] == fxpOrderAmount), "Logged fxpAmount should be " + str(fxpOrderAmount)
+            assert(logTakeOrder["fxpAskerSharesFilled"] == 0), "Logged fxpAskerSharesFilled should be 0"
+            assert(logTakeOrder["fxpAskerMoneyFilled"] == fxpOrderAmount), "Logged fxpAskerMoneyFilled should be " + str(fxpOrderAmount)
+            assert(logTakeOrder["fxpBidderMoneyFilled"] == fxpOrderAmount), "Logged fxpBidderMoneyFilled should be " + str(fxpOrderAmount)
+            assert(int(logTakeOrder["orderID"], 16) == orderID), "Logged orderID should be " + str(orderID)
+            assert(logTakeOrder["outcome"] == outcomeID), "Logged outcome should be " + str(outcomeID)
+            assert(int(logTakeOrder["market"], 16) == marketID), "Logged market should be " + str(marketID)
+            assert(int(logTakeOrder["owner"], 16) == long(t.a1.encode("hex"), 16)), "Logged owner should be account 1"
+            assert(int(logTakeOrder["sender"], 16) == long(t.a2.encode("hex"), 16)), "Logged sender should be account 2"
+            assert(logTakeOrder["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match the current block timestamp"
             assert(fxpAmountRemaining == fxpAmountTakerWants - fxpOrderAmount), "Amount remaining of taker's request should be fxpAmountTakerWants - fxpOrderAmount"
             makerFinalCash = contracts.cash.balanceOf(t.a1)
             takerFinalCash = contracts.cash.balanceOf(t.a2)
@@ -181,13 +197,26 @@ def test_TakeAskOrder(contracts):
 
             # 3. Taker fills ask order. Taker receives maker's escrowed shares. Maker receives cash.
             contracts._ContractLoader__state.mine(1)
-            tradeHash = contracts.orders.makeOrderHash(marketID, outcomeID, 2, sender=t.k2)
-            assert(contracts.orders.commitOrder(tradeHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
             contracts._ContractLoader__state.mine(1)
             fxpAmountTakerWants = utils.fix(7)
             assert(contracts.cash.approve(contracts.takeAskOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeAskOrder contract to spend cash from account 2"
             contracts._ContractLoader__state.mine(1)
-            fxpAmountRemaining = contracts.takeAskOrder.takeAskOrder(t.a2, orderID, fxpAmountTakerWants, sender=t.k0)
+            with iocapture.capture() as captured:
+                  fxpAmountRemaining = contracts.takeAskOrder.takeAskOrder(t.a2, orderID, marketID, outcomeID, fxpAmountTakerWants, sender=t.k0)
+                  logged = captured.stdout
+            logTakeOrder = utils.parseCapturedLogs(logged)[-1]
+            assert(logTakeOrder["_event_type"] == "TakeAskOrder"), "Should emit a TakeAskOrder event"
+            assert(logTakeOrder["fxpPrice"] == fxpPrice), "Logged fxpPrice should be " + str(fxpPrice)
+            assert(logTakeOrder["fxpAmount"] == fxpAmountTakerWants), "Logged fxpAmount should be " + str(fxpAmountTakerWants)
+            assert(logTakeOrder["fxpAskerSharesFilled"] == fxpAmountTakerWants), "Logged fxpAskerSharesFilled should be " + str(fxpAmountTakerWants)
+            assert(logTakeOrder["fxpAskerMoneyFilled"] == 0), "Logged fxpAskerMoneyFilled should be 0"
+            assert(logTakeOrder["fxpBidderMoneyFilled"] == fxpAmountTakerWants), "Logged fxpBidderMoneyFilled should be " + str(fxpAmountTakerWants)
+            assert(int(logTakeOrder["orderID"], 16) == orderID), "Logged orderID should be " + str(orderID)
+            assert(logTakeOrder["outcome"] == outcomeID), "Logged outcome should be " + str(outcomeID)
+            assert(int(logTakeOrder["market"], 16) == marketID), "Logged market should be " + str(marketID)
+            assert(int(logTakeOrder["owner"], 16) == long(t.a1.encode("hex"), 16)), "Logged owner should be account 1"
+            assert(int(logTakeOrder["sender"], 16) == long(t.a2.encode("hex"), 16)), "Logged sender should be account 2"
+            assert(logTakeOrder["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match the current block timestamp"
             assert(fxpAmountRemaining == 0), "Number of shares remaining in taker's request should be 0"
             makerFinalCash = contracts.cash.balanceOf(t.a1)
             takerFinalCash = contracts.cash.balanceOf(t.a2)

@@ -35,7 +35,7 @@ extern nonBinaryMarketResolve: [resolveCategoricalOrScalar:[int256,int256,int256
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/safeMath.sem')
@@ -120,7 +120,7 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
 
 # Resolves a round 2 event scenario
 def roundTwoResolve(branch, event, eventIndex, sender):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     if(!branch):
         ~invalid()
@@ -162,7 +162,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
 # Errors:
     # 0: event isn't binary, categorical, or scalar [hell has frozen over or quantum events have been invented]
 def resolve(branch, event):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     if(binary(event)):
         BINARYRESOLVE.resolveBinary(event, EVENTS.getMarket(event, 0), branch, votePeriod)

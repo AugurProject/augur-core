@@ -35,7 +35,7 @@ extern forkResolveContract: [resolveFork:[int256]:int256]
 
 extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, transfer:[address,uint256]:int256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
@@ -79,7 +79,7 @@ def init():
     self.controller = 0x0
 
 def publicCreateEvent(branch, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
     event = self.createEvent(msg.sender, branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, currency, forkResolveAddress)
@@ -87,7 +87,7 @@ def publicCreateEvent(branch, description: str, expDate, fxpMinValue, fxpMaxValu
     return(event)
 
 def createEvent(sender: address, branch, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
     periodLength = BRANCHES.getPeriodLength(branch)

@@ -31,7 +31,7 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
@@ -56,7 +56,7 @@ def init():
     # -2: penalization catchup failed
     # -3: only behind one period and not caught up / penalized yet
 def claimInitialRep(parent, branch):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
     # auto increment vote period if needed

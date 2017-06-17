@@ -1,5 +1,0 @@
-inset('../../src/macros/refund.sem')
-
-def testRefund():
-    refund()
-    return(5)

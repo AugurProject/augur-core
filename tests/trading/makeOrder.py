@@ -32,15 +32,14 @@ def test_MakeOrder(contracts):
                     logged = captured.stdout
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
-                order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 12), "Order array length should be 12"
+                order = contracts.orders.getOrder(orderID, orderType, marketID, outcomeID)
+                assert(len(order) == 13), "Order array length should be 13"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
                 assert(order[3] == fxpAmount), "order[3] should be the amount of the order"
                 assert(order[4] == fxpPrice), "order[4] should be the order's price"
                 assert(order[5] == address1), "order[5] should be the sender's address"
-                assert(order[6] == contracts._ContractLoader__state.block.number), "order[6] should be the current block number"
                 assert(order[7] == outcomeID), "order[6] should be the outcome ID"
                 assert(order[8] == int(utils.unfix(fxpAmount*(fxpPrice - contracts.events.getMinValue(eventID))))), "order[8] should be the amount of money escrowed"
                 assert(order[9] == 0), "order[9] should be the number of shares escrowed"
@@ -97,14 +96,12 @@ def test_MakeOrder(contracts):
                 assert(contracts.cash.approve(contracts.takeOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
                 contracts._ContractLoader__state.mine(1)
                 fxpAmountTakerWants = fxpAmount
-                orderHash = contracts.orders.makeOrderHash(marketID, outcomeID, 2, sender=t.k2)
-                assert(contracts.orders.commitOrder(orderHash, sender=t.k2) == 1), "Commit to market/outcome/direction"
                 contracts._ContractLoader__state.mine(1)
                 assert(outcomeShareContractWrapper.balanceOf(outcomeTwoShareContract, t.a1) == 0), "Account 1 should have 0 shares of outcome 2"
                 assert(outcomeShareContractWrapper.balanceOf(outcomeTwoShareContract, t.a2) == 0), "Account 2 should have 0 shares of outcome 2"
                 assert(contracts.cash.approve(contracts.takeOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
                 contracts._ContractLoader__state.mine(1)
-                fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(askOrderID, fxpAmountTakerWants, sender=t.k2)
+                fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(askOrderID, 2, marketID, outcomeID, fxpAmountTakerWants, sender=t.k2)
                 assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
                 assert(outcomeShareContractWrapper.balanceOf(outcomeTwoShareContract, t.a1) == 0), "Account 1 should have 0 shares of outcome 2"
                 assert(outcomeShareContractWrapper.balanceOf(outcomeTwoShareContract, t.a2) == fxpAmount), "Account 2 should have fxpAmount shares of outcome 2"
@@ -125,15 +122,14 @@ def test_MakeOrder(contracts):
                     logged = captured.stdout
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(bidOrderID != 0), "Order ID should be non-zero"
-                order = contracts.orders.getOrder(bidOrderID)
-                assert(len(order) == 12), "Order array length should be 12"
+                order = contracts.orders.getOrder(bidOrderID, orderType, marketID, outcomeID)
+                assert(len(order) == 13), "Order array length should be 13"
                 assert(order[0] == bidOrderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
                 assert(order[3] == fxpBidAmount), "order[3] should be the amount of the order"
                 assert(order[4] == fxpPrice), "order[4] should be the order's price"
                 assert(order[5] == address1), "order[5] should be the sender's address"
-                assert(order[6] == contracts._ContractLoader__state.block.number), "order[6] should be the current block number"
                 assert(order[7] == outcomeID), "order[6] should be the outcome ID"
                 assert(order[8] == 0), "order[8] should be the amount of money escrowed"
                 assert(order[9] == fxpBidAmount), "order[9] should be the number of shares escrowed"
@@ -168,15 +164,14 @@ def test_MakeOrder(contracts):
                     logged = captured.stdout
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
-                order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 12), "Order array length should be 12"
+                order = contracts.orders.getOrder(orderID, orderType, marketID, outcomeID)
+                assert(len(order) == 13), "Order array length should be 13"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
                 assert(order[3] == fxpAmount), "order[3] should be the amount of the order"
                 assert(order[4] == fxpPrice), "order[4] should be the order's price"
                 assert(order[5] == address1), "order[5] should be the sender's address"
-                assert(order[6] == contracts._ContractLoader__state.block.number), "order[6] should be the current block number"
                 assert(order[7] == outcomeID), "order[6] should be the outcome ID"
                 assert(order[8] == int(utils.unfix(fxpAmount*(contracts.events.getMaxValue(eventID) - fxpPrice)))), "order[8] should be the amount of money escrowed"
                 assert(order[9] == 0), "order[9] should be the number of shares escrowed"
@@ -218,15 +213,14 @@ def test_MakeOrder(contracts):
                     logged = captured.stdout
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
-                order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 12), "Order array length should be 12"
+                order = contracts.orders.getOrder(orderID, orderType, marketID, outcomeID)
+                assert(len(order) == 13), "Order array length should be 13"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
                 assert(order[3] == fxpAmount), "order[3] should be the amount of the order"
                 assert(order[4] == fxpPrice), "order[4] should be the order's price"
                 assert(order[5] == address1), "order[5] should be the sender's address"
-                assert(order[6] == contracts._ContractLoader__state.block.number), "order[6] should be the current block number"
                 assert(order[7] == outcomeID), "order[6] should be the outcome ID"
                 assert(order[8] == 0), "order[8] should be the amount of money escrowed"
                 assert(order[9] == fxpAmount), "order[9] should be the number of shares escrowed"
@@ -247,7 +241,7 @@ def test_MakeOrder(contracts):
                 global shareTokenContractTranslator
                 outcomeShareContractWrapper = utils.makeOutcomeShareContractWrapper(contracts)
                 contracts._ContractLoader__state.mine(1)
-                orderType = 2                   # ask
+                orderType = 2 # ask
                 fxpAmount = utils.fix(1)
                 fxpPrice = utils.fix("1.6")
                 outcomeID = 2
@@ -271,15 +265,14 @@ def test_MakeOrder(contracts):
                     logged = captured.stdout
                 logMakeOrder = utils.parseCapturedLogs(logged)[-1]
                 assert(orderID != 0), "Order ID should be non-zero"
-                order = contracts.orders.getOrder(orderID)
-                assert(len(order) == 12), "Order array length should be 12"
+                order = contracts.orders.getOrder(orderID, orderType, marketID, outcomeID)
+                assert(len(order) == 13), "Order array length should be 13"
                 assert(order[0] == orderID), "order[0] should be the order ID"
                 assert(order[1] == orderType), "order[1] should be the order type"
                 assert(order[2] == marketID), "order[2] should be the market ID"
                 assert(order[3] == fxpAmount), "order[3] should be the amount of the order"
                 assert(order[4] == fxpPrice), "order[4] should be the order's price"
                 assert(order[5] == address1), "order[5] should be the sender's address"
-                assert(order[6] == contracts._ContractLoader__state.block.number), "order[6] should be the current block number"
                 assert(order[7] == outcomeID), "order[6] should be the outcome ID"
                 assert(order[8] == int(utils.unfix(utils.fix(2)*(contracts.events.getMaxValue(eventID) - fxpPrice)))), "order[8] should be the amount of money escrowed"
                 assert(order[9] == utils.fix(10)), "order[9] should be the number of shares escrowed"

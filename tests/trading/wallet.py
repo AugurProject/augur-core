@@ -19,12 +19,15 @@ def test_Wallet(contracts):
         contracts._ContractLoader__state.mine(1)
         fxpValue = utils.fix(100)
         assert(contracts.wallet.initialize(contracts.cash.address, sender=t.k1) == 1), "Should initialize wallet with cash currency"
+        contracts._ContractLoader__state.mine(1)
         initialBalanceWallet = contracts.cash.balanceOf(contracts.wallet.address)
         initialBalance2 = contracts.cash.balanceOf(t.a2)
         assert(contracts.cash.publicDepositEther(value=fxpValue, sender=t.k2) == 1), "Should deposit ether to account 2"
+        contracts._ContractLoader__state.mine(1)
         assert(contracts.cash.balanceOf(contracts.wallet.address) == initialBalanceWallet), "Wallet balance unchanged"
         assert(contracts.cash.balanceOf(t.a2) - initialBalance2 == fxpValue), "Account 2 balance increase equal to deposit"
         assert(contracts.cash.transfer(contracts.wallet.address, fxpValue, sender=t.k2) == 1), "Should transfer ether to wallet address"
+        contracts._ContractLoader__state.mine(1)
         assert(contracts.cash.balanceOf(contracts.wallet.address) - initialBalanceWallet == fxpValue), "Wallet balance increase equal to deposit"
         assert(contracts.cash.balanceOf(t.a2) == initialBalance2), "Account 2 balance unchanged"
         fxpTransferValue = contracts.cash.balanceOf(contracts.wallet.address)
@@ -45,6 +48,7 @@ def test_Wallet(contracts):
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "transfer should fail if receiver address is zero"
         assert(contracts.wallet.transfer(t.a1, fxpTransferValue, sender=t.k0) == 1), "transfer should succeed"
+        contracts._ContractLoader__state.mine(1)
         try:
             raise Exception(contracts.wallet.transfer(t.a2, fxpTransferValue, sender=t.k0))
         except Exception as exc:

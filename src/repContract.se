@@ -30,7 +30,7 @@ event Approval(owner:address:indexed, spender:address:indexed, fxpValue:uint256)
 macro WEI_TO_ETH:
     10 ** 18
 
-macro refund():
+macro assertZeroValue():
     if(msg.value > 0):
         if(!send(msg.sender, msg.value)):
             ~invalid()
@@ -46,7 +46,7 @@ def init():
     self.creation = block.timestamp
 
 def any():
-    refund()
+    assertZeroValue()
 
 # Transfer rep
 # @return 1 if reputation sent

@@ -17,7 +17,7 @@ extern consensusData: [decreaseDenominator:[int256,int256,int256]:int256, doRefu
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
@@ -31,7 +31,7 @@ def init():
 # Increments the period after reporting
 # ui has to call this to stay cheap / not check it elsewhere
 def publicIncrementPeriodAfterReporting(branch):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     result = self.internalIncrementPeriodAfterReporting(branch)
     MUTEX.release()

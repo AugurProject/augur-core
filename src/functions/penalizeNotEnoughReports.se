@@ -26,7 +26,7 @@ extern fxpFunctions: [fxExp:[int256]:int256, fxLog:[int256]:int256, setControlle
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/periodStage.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
@@ -59,7 +59,7 @@ def init():
     self.controller = 0x0
 
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
 
     expectedEventsForReporterIncludingRequired = 0

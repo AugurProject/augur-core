@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 
 macro fxExp2Small($x):
     with $result = 0xDE0B6B3A7640000:
@@ -102,12 +102,12 @@ def init():
     self.controller = 0x0
 
 def fxExp(x):
-    refund()
+    assertZeroValue()
     return(fxExp(x))
 
 # Calculates the natural log function given a fixed point [base 10^18] number, so ln(x)
 def fxLog(x):
-    refund()
+    assertZeroValue()
     return(fxLog(x))
 
 # @controller

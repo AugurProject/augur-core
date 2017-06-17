@@ -1,3 +1,4 @@
+compiled/
 upload_contracts/node_modules
 *.dill
 .~c9_invoke_*
