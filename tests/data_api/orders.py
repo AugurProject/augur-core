@@ -76,7 +76,9 @@ def test_orders(contracts):
                         assert((orderID == worstOrderID and worseOrderID == 0) or fxpPrices[i] < fxpPrices[worseOrderID - 1]), "Input price is < worse order price, or this is the worst order so worse order ID is zero"
                     if deadOrders[i, 0]: betterOrderID = numOrders + 1
                     if deadOrders[i, 1]: worseOrderID = numOrders + 1
-                assert(contracts.orders.saveOrder(orderID, orderType, marketID, 1, fxpPrices[i], t.a1, outcomeID, 0, 0, betterOrderID, worseOrderID, 0, 20000000) == 1), "Insert order into list"
+                with iocapture.capture() as captured:
+                    output = contracts.orders.saveOrder(orderID, orderType, marketID, 1, fxpPrices[i], t.a1, outcomeID, 0, 0, betterOrderID, worseOrderID, 0, 20000000)
+                assert(output == 1), "Insert order into list"
                 contracts._ContractLoader__state.mine(1)
             assert(bestOrderID == int(contracts.orders.getBestOrderID(orderType, marketID, outcomeID), 16)), "Verify best order ID"
             assert(worstOrderID == int(contracts.orders.getWorstOrderID(orderType, marketID, outcomeID), 16)), "Verify worst order ID"
@@ -324,18 +326,19 @@ def test_orders(contracts):
             contracts._ContractLoader__state.mine(1)
             orders = []
             for order in testCase["orders"]:
-                output = contracts.orders.saveOrder(order["orderID"],
-                                                    order["type"],
-                                                    marketID,
-                                                    order["fxpAmount"],
-                                                    order["fxpPrice"],
-                                                    order["sender"],
-                                                    order["outcome"],
-                                                    order["fxpMoneyEscrowed"],
-                                                    order["fxpSharesEscrowed"],
-                                                    order["betterOrderID"],
-                                                    order["worseOrderID"],
-                                                    order["tradeGroupID"], 1)
+                with iocapture.capture() as captured:
+                    output = contracts.orders.saveOrder(order["orderID"],
+                                                        order["type"],
+                                                        marketID,
+                                                        order["fxpAmount"],
+                                                        order["fxpPrice"],
+                                                        order["sender"],
+                                                        order["outcome"],
+                                                        order["fxpMoneyEscrowed"],
+                                                        order["fxpSharesEscrowed"],
+                                                        order["betterOrderID"],
+                                                        order["worseOrderID"],
+                                                        order["tradeGroupID"], 1)
                 assert(output == 1), "saveOrder wasn't executed successfully"
                 contracts._ContractLoader__state.mine(1)
             for order in testCase["orders"]:

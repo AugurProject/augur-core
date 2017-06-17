@@ -32,9 +32,11 @@ def test_TakeOrder(contracts):
         makerInitialCash = contracts.cash.balanceOf(t.a1)
         takerInitialCash = contracts.cash.balanceOf(t.a2)
         marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
-        # initialGasUsed = contracts._ContractLoader__state.block.gas_used
-        orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
-        # print "Make order gas used:", contracts._ContractLoader__state.block.gas_used - initialGasUsed
+        with iocapture.capture() as captured:
+            orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+            logged = captured.stdout
+        logMakeOrder = utils.parseCapturedLogs(logged)[-1]
+        assert(logMakeOrder["_event_type"] == "MakeOrder"), "Should emit a MakeOrder event"
         assert(orderID != 0), "Order ID should be non-zero"
         contracts._ContractLoader__state.mine(1)
         fxpAmountTakerWants = int(fxpAmount / 10)
@@ -44,9 +46,22 @@ def test_TakeOrder(contracts):
         except Exception as exc:
             assert(isinstance(exc, ethereum.tester.TransactionFailed)), "a call that throws should actually throw the transaction so it fails, tx.gasprice check in orders isn't working"
         t.gas_price = 1
-        # initialGasUsed = contracts._ContractLoader__state.block.gas_used
-        fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, orderType, marketID, outcomeID, fxpAmountTakerWants, sender=t.k2)
-        # print "Take order gas used:", contracts._ContractLoader__state.block.gas_used - initialGasUsed
+        with iocapture.capture() as captured:
+            fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, orderType, marketID, outcomeID, fxpAmountTakerWants, sender=t.k2)
+            logged = captured.stdout
+        logTakeOrder = utils.parseCapturedLogs(logged)[-1]
+        assert(logTakeOrder["_event_type"] == "TakeAskOrder"), "Should emit a TakeAskOrder event"
+        assert(logTakeOrder["fxpPrice"] == fxpPrice), "Logged fxpPrice should be " + str(fxpPrice)
+        assert(logTakeOrder["fxpAmount"] == fxpAmountTakerWants), "Logged fxpAmount should be " + str(fxpAmountTakerWants)
+        assert(logTakeOrder["fxpAskerSharesFilled"] == 0), "Logged fxpAskerSharesFilled should be 0"
+        assert(logTakeOrder["fxpAskerMoneyFilled"] == fxpAmountTakerWants), "Logged fxpAskerMoneyFilled should be " + str(fxpAmountTakerWants)
+        assert(logTakeOrder["fxpBidderMoneyFilled"] == fxpAmountTakerWants), "Logged fxpBidderMoneyFilled should be " + str(fxpAmountTakerWants)
+        assert(int(logTakeOrder["orderID"], 16) == orderID), "Logged orderID should be " + str(orderID)
+        assert(logTakeOrder["outcome"] == outcomeID), "Logged outcome should be " + str(outcomeID)
+        assert(int(logTakeOrder["market"], 16) == marketID), "Logged market should be " + str(marketID)
+        assert(int(logTakeOrder["owner"], 16) == long(t.a1.encode("hex"), 16)), "Logged owner should be account 1"
+        assert(int(logTakeOrder["sender"], 16) == long(t.a2.encode("hex"), 16)), "Logged sender should be account 2"
+        assert(logTakeOrder["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match the current block timestamp"
         assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
     def test_publicTakeBidOrder():
         global shareTokenContractTranslator
@@ -74,12 +89,32 @@ def test_TakeOrder(contracts):
         takerInitialCash = contracts.cash.balanceOf(t.a2)
         marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))
         # place a bid order (escrow cash)
-        orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+        with iocapture.capture() as captured:
+            orderID = contracts.makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, marketID, outcomeID, tradeGroupID, sender=t.k1)
+            logged = captured.stdout
+        logMakeOrder = utils.parseCapturedLogs(logged)[-1]
+        assert(logMakeOrder["_event_type"] == "MakeOrder"), "Should emit a MakeOrder event"
         assert(orderID != 0), "Order ID should be non-zero"
         contracts._ContractLoader__state.mine(1)
         fxpAmountTakerWants = int(fxpAmount / 10)
         assert(contracts.cash.balanceOf(contracts.info.getWallet(marketID)) == utils.fix("0.6")), "Market's cash balance should be (price - 1)*amount"
-        fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, orderType, marketID, outcomeID, fxpAmountTakerWants, sender=t.k2)
+        with iocapture.capture() as captured:
+            fxpAmountRemaining = contracts.takeOrder.publicTakeOrder(orderID, orderType, marketID, outcomeID, fxpAmountTakerWants, sender=t.k2)
+            logged = captured.stdout
+        logTakeOrder = utils.parseCapturedLogs(logged)[-1]
+        assert(logTakeOrder["_event_type"] == "TakeBidOrder"), "Should emit a TakeBidOrder event"
+        assert(logTakeOrder["fxpPrice"] == fxpPrice), "Logged fxpPrice should be " + str(fxpPrice)
+        assert(logTakeOrder["fxpAmount"] == fxpAmountTakerWants), "Logged fxpAmount should be " + str(fxpAmountTakerWants)
+        assert(logTakeOrder["fxpAskerSharesFilled"] == 0), "Logged fxpAskerSharesFilled should be 0"
+        assert(logTakeOrder["fxpAskerMoneyFilled"] == fxpAmountTakerWants), "Logged fxpAskerMoneyFilled should be " + str(fxpAmountTakerWants)
+        assert(logTakeOrder["fxpBidderSharesFilled"] == 0), "Logged fxpBidderSharesFilled should be 0"
+        assert(logTakeOrder["fxpBidderMoneyFilled"] == fxpAmountTakerWants), "Logged fxpBidderMoneyFilled should be " + str(fxpAmountTakerWants)
+        assert(int(logTakeOrder["orderID"], 16) == orderID), "Logged orderID should be " + str(orderID)
+        assert(logTakeOrder["outcome"] == outcomeID), "Logged outcome should be " + str(outcomeID)
+        assert(int(logTakeOrder["market"], 16) == marketID), "Logged market should be " + str(marketID)
+        assert(int(logTakeOrder["owner"], 16) == long(t.a1.encode("hex"), 16)), "Logged owner should be account 1"
+        assert(int(logTakeOrder["sender"], 16) == long(t.a2.encode("hex"), 16)), "Logged sender should be account 2"
+        assert(logTakeOrder["timestamp"] == contracts._ContractLoader__state.block.timestamp), "Logged timestamp should match the current block timestamp"
         assert(fxpAmountRemaining == 0), "Amount remaining should be 0"
     test_publicTakeAskOrder()
     test_publicTakeBidOrder()
