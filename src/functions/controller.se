@@ -13,7 +13,8 @@ extern suicide: [suicideFunds:[address]:_, setController:[address]:int256]
     # Then new controller needs to populate its registry and whitelist
     # Then once it is updated suicide the old controller
 
-# Dev mode: a developer address which can do an update
+# Dev mode: a developer address which can do updates / call functions
+
 # Decentralized mode: contracts must be updated by a reupload, people can transfer their rep / claim it on new contracts, traders + market creators cancel orders and go to the new contract
     # For bugs found involving money or rep, contracts are locked / an escape hatch is enabled which allows withdraws of shares [and cancelling orders] for a value half way between the bid-ask spread at the time of the lock and another escape hatch is enabled which allows withdrawal of any locked up rep. All rep in the erc20 contracts are fungible as usual [needed so it can migrate to new contracts]. All cash is withdrawable but transfers are disabled.
     # When a bug is not found and it's just some, for whatever reason, backwards incompatible upgrade [ideally we'd be able to just add contracts, but if that doesn't work for some reason], people should be allowed to migrate over to the new system. i.e. Don't emergency stop + withdraw at fixed price, instead allow them to trade around and sell complete sets and/or wait for any straggling rep to resolve their markets
@@ -36,8 +37,6 @@ data stopped
 def init():
     self.owner = msg.sender
     self.mode = "dev"
-    self.whitelist[self] = 1
-    self.whitelist[msg.sender] = 1
 
 ### Whitelisting, registry for contract lookups, and contract updating machinery ###
 
