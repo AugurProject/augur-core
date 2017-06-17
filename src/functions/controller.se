@@ -37,7 +37,6 @@ data stopped
 def init():
     self.owner = msg.sender
     self.mode = "dev"
-    self.whitelist[self] = 1
     self.whitelist[msg.sender] = 1
 
 ### Whitelisting [whitelisted augur contracts and dev mode can use it] ###
