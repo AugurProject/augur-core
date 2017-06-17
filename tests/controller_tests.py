@@ -173,6 +173,77 @@ def test_controllerAdmin():
 	print "getMode output: %s" % out
 	assert(out == 30936411264679932392881305702504462444513638254699919670237862177711222423552), "getMode should be Decentralized"    # numeric string for 'Decentralized'
 
+# make sure dev can't call anymore
+def test_whitelistsDecentralized():
+	print("Testing Whitelists in decentralized mode")
+	global d
+	try:
+		raise Exception(c.addToWhitelist(2342, sender=t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "adding to whitelist with an invalid sender should fail"
+
+	try:
+		raise Exception(c.removeFromWhitelist(2342, sender=t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "removing from whitelist with an invalid sender should fail"
+
+# make sure dev can't call anymore
+def test_registryDecentralized():
+	print("Testing registry in decentralized mode")
+
+	try:
+		raise Exception(c.setValue("sdfs", 2342, sender=t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "removing from whitelist with an invalid sender should fail"
+
+	c.assertOnlySpecifiedCaller(23, t.a2, sender = t.k1)
+	try:
+		raise Exception(c.assertOnlySpecifiedCaller(t.k0, "banana", sender = t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "should fail with invalid caller and sender not dev in dev mode"
+
+# make sure dev can't call anymore
+def test_contractAdminDecentralized():
+	print("Testing suicide decentralized")
+	global d
+	try:
+		raise Exception(c.suicide(d.address, t.a1, sender=t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "suicide should fail when not attempted in dev mode"
+
+	print("Testing controller update decentralized mode")
+	a = state.abi_contract("../src/functions/controller.se")
+	d = state.abi_contract('controller_test.se')
+	d.setController(c.address)
+	try:
+		raise Exception(c.updateController(d.address, a.address, sender=t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "controller update should fail when not attempted in dev mode"
+
+# make sure dev can't call switch mode anymore, make sure dev can call transferOwnership
+def test_controllerAdminDecentralized():
+	print("Testing ownership functions in decentralized mode")
+
+	try:
+		raise Exception(c.transferOwnership(t.a1, sender = t.k1))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "ownership transfer should fail when attempted by non-dev address"
+
+	# Test transferOwnership
+	out = c.transferOwnership(t.a1)
+	print "transferOwnership output: %s" % out
+	assert(out == 1), "transferOwnsership did not succeed"
+
+	# transferOwnership back to original msg.sender
+	# sender must be t.k1 now or this call won't work
+	out = c.transferOwnership(t.a0, sender=t.k1)
+	print "transferOwnership output: %s" % out
+
+	try:
+		raise Exception(c.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed())
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "mode switch should fail when attempted in decentralized mode"
+
 # Call tests
 if __name__ == "__main__":
 	set_controller()
@@ -181,9 +252,8 @@ if __name__ == "__main__":
 	test_contractAdmin()
 	test_controllerAdmin()
 	# redo after decentralized mode enabled
-	# test_whitelistsDecentralized()
-	# test_registryDecentralized()
-	# test_contractAdminDecentralized()
-	# test_controllerAdmin()
-
+	test_whitelistsDecentralized()
+	test_registryDecentralized()
+	test_contractAdminDecentralized()
+	test_controllerAdminDecentralized()
 	# test_emergencyStops()

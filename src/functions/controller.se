@@ -145,7 +145,7 @@ macro assertAnotherWhitelistedContractCallingOrDevModeAndDevCalling():
         ~invalid()
 
 macro assertDevModeAndDevCalling():
-    if(self.mode == "dev" and msg.sender != self.owner):
+    if(self.mode != "dev" or msg.sender != self.owner):
         ~invalid()
 
 macro assertDevCalling():
