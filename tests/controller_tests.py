@@ -155,11 +155,6 @@ def test_controllerAdmin():
 	# if newowner == t.a0 ...
 	assert(out == address0), "Owner should now be the original address0"
 
-	# Check the current mode
-	out = c.getMode()
-	print "getMode output: %s" % out
-	assert(out == 45410550817938176941147246367785497464285552864458998948296910157280029179904), "getMode should be dev"    # numeric string for 'dev'
-
 	try:
 		raise Exception(c.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender=t.k3))
 	except Exception as exc:
@@ -168,10 +163,6 @@ def test_controllerAdmin():
 	# setMode to something other than dev to test
 	out = c.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed()
 	print "switchMode output: %s" % out
-	# Mode should now be 'Decentralized':
-	out = c.getMode()
-	print "getMode output: %s" % out
-	assert(out == 30936411264679932392881305702504462444513638254699919670237862177711222423552), "getMode should be Decentralized"    # numeric string for 'Decentralized'
 
 # make sure dev can't call anymore
 def test_whitelistsDecentralized():
