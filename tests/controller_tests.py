@@ -121,6 +121,8 @@ def test_contractAdmin():
 	except Exception as exc:
 		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "controller update should fail when attempted by non-dev address"
 	assert(c.updateController(d.address, a.address, sender = t.k0) == 1), "Controller update failed"
+	# put back to original
+	assert(a.updateController(d.address, c.address, sender = t.k0) == 1), "Controller update failed"
 
 def test_controllerAdmin():
 	print("Testing ownership functions")
@@ -235,6 +237,38 @@ def test_controllerAdminDecentralized():
 	except Exception as exc:
 		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "mode switch should fail when attempted in decentralized mode"
 
+def test_emergencyStops():
+	print("Testing emergency stops")
+
+	try:
+		raise Exception(c.emergencyStop(sender = t.k1))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "emergency stop should fail when attempted by non-owner address"
+
+	assert(c.emergencyStop()==1), "Emergency stop enabling failed"
+
+	try:
+		raise Exception(d.canBeCalledAnytimeExceptEmergency())
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "only emergency / escape hatches should fail when not an emergency"
+
+	assert(d.canOnlyBeCalledInEmergency()==1), "Functions that can't be called in emergencies should be able to be called when not in an emergency"
+
+	try:
+		raise Exception(c.release(sender = t.k1))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "emergency stop release should fail when attempted by non-owner address"
+
+	assert(c.release()==1), "Emergency stop release failed"
+
+	try:
+		raise Exception(d.canOnlyBeCalledInEmergency())
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "only emergency / escape hatches should fail when not an emergency"
+
+	assert(d.canBeCalledAnytimeExceptEmergency()==1), "Functions that can't be called in emergencies should be able to be called when not in an emergency"
+
+
 # Call tests
 if __name__ == "__main__":
 	set_controller()
@@ -247,4 +281,4 @@ if __name__ == "__main__":
 	test_registryDecentralized()
 	test_contractAdminDecentralized()
 	test_controllerAdminDecentralized()
-	# test_emergencyStops()
+	test_emergencyStops()

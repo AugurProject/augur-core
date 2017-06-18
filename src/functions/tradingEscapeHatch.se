@@ -65,7 +65,6 @@ def claimSharesInUpdate(market):
     # categorical
     if(numOutcomes > 2):
         denominator = self.marketPricesFrozenDenominator[market]
-
         shareValue = safeFxpMul(safeFxpDiv(self.marketPricesFrozen[market][outcome], denominator), ONE)
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
         if(sharesOwned > 0):
