@@ -25,7 +25,7 @@ extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,i
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/safeMath.sem')

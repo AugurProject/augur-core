@@ -18,7 +18,7 @@ extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint25
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 
 data controller
@@ -30,7 +30,7 @@ def init():
 # If it's an indeterminate market resolve with all outcomes having an equal value.
 # @internal
 def payoutIndeterminateBinaryOrCategoricalMarket(sender: address, market: address, event: address, numOutcomes: uint256):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     branch = EVENTS.getEventBranch(event)
     currency = INFO.getCurrency(market)
@@ -55,7 +55,7 @@ def payoutIndeterminateBinaryOrCategoricalMarket(sender: address, market: addres
 # Distribute profit to the people who won money by holding winning shares.
 # @internal
 def payoutBinaryOrCategoricalMarket(sender: address, market: address, event: address, numOutcomes: uint256):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     branch = EVENTS.getEventBranch(event)
     currency = INFO.getCurrency(market)

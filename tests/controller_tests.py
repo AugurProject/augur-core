@@ -52,7 +52,7 @@ def test_whitelists():
 	out = c.assertIsWhitelisted(t.a1, sender=t.k2)
 	assert (out == 1), "assertIsWhitelisted failed."
 
-	assert(c.assertIsWhitelisted(443434, sender=t.k0)), "Dev owner should be whitelisted in dev mode"
+	assert(c.assertIsWhitelisted(t.a0, sender=t.k0)), "Dev owner should be whitelisted in dev mode"
 
 	# Check an address that shouldn't be Whitelisted:
 	try:
@@ -96,7 +96,7 @@ def test_registry():
 	print "lookup output: %s" % out
 	assert(out == 23), "test_lookup should have returned 23"
 
-	c.assertOnlySpecifiedCaller(t.k0, "banana")
+	c.assertOnlySpecifiedCaller(t.a0, "banana")
 	c.assertOnlySpecifiedCaller(23, t.a2, sender = t.k1)
 	try:
 		raise Exception(c.assertOnlySpecifiedCaller(t.k0, "banana", sender = t.k1))
@@ -121,6 +121,8 @@ def test_contractAdmin():
 	except Exception as exc:
 		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "controller update should fail when attempted by non-dev address"
 	assert(c.updateController(d.address, a.address, sender = t.k0) == 1), "Controller update failed"
+	# put back to original
+	assert(a.updateController(d.address, c.address, sender = t.k0) == 1), "Controller update failed"
 
 def test_controllerAdmin():
 	print("Testing ownership functions")
@@ -155,11 +157,6 @@ def test_controllerAdmin():
 	# if newowner == t.a0 ...
 	assert(out == address0), "Owner should now be the original address0"
 
-	# Check the current mode
-	out = c.getMode()
-	print "getMode output: %s" % out
-	assert(out == 45410550817938176941147246367785497464285552864458998948296910157280029179904), "getMode should be dev"    # numeric string for 'dev'
-
 	try:
 		raise Exception(c.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender=t.k3))
 	except Exception as exc:
@@ -168,10 +165,109 @@ def test_controllerAdmin():
 	# setMode to something other than dev to test
 	out = c.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed()
 	print "switchMode output: %s" % out
-	# Mode should now be 'Decentralized':
-	out = c.getMode()
-	print "getMode output: %s" % out
-	assert(out == 30936411264679932392881305702504462444513638254699919670237862177711222423552), "getMode should be Decentralized"    # numeric string for 'Decentralized'
+
+# make sure dev can't call anymore
+def test_whitelistsDecentralized():
+	print("Testing Whitelists in decentralized mode")
+	global d
+	try:
+		raise Exception(c.addToWhitelist(2342, sender=t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "adding to whitelist with an invalid sender should fail"
+
+	try:
+		raise Exception(c.removeFromWhitelist(2342, sender=t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "removing from whitelist with an invalid sender should fail"
+
+# make sure dev can't call anymore
+def test_registryDecentralized():
+	print("Testing registry in decentralized mode")
+
+	try:
+		raise Exception(c.setValue("sdfs", 2342, sender=t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "removing from whitelist with an invalid sender should fail"
+
+	c.assertOnlySpecifiedCaller(23, t.a2, sender = t.k1)
+	try:
+		raise Exception(c.assertOnlySpecifiedCaller(t.k0, "banana", sender = t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "should fail with invalid caller and sender not dev in dev mode"
+
+# make sure dev can't call anymore
+def test_contractAdminDecentralized():
+	print("Testing suicide decentralized")
+	global d
+	try:
+		raise Exception(c.suicide(d.address, t.a1, sender=t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "suicide should fail when not attempted in dev mode"
+
+	print("Testing controller update decentralized mode")
+	a = state.abi_contract("../src/functions/controller.se")
+	d = state.abi_contract('controller_test.se')
+	d.setController(c.address)
+	try:
+		raise Exception(c.updateController(d.address, a.address, sender=t.k0))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "controller update should fail when not attempted in dev mode"
+
+# make sure dev can't call switch mode anymore, make sure dev can call transferOwnership
+def test_controllerAdminDecentralized():
+	print("Testing ownership functions in decentralized mode")
+
+	try:
+		raise Exception(c.transferOwnership(t.a1, sender = t.k1))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "ownership transfer should fail when attempted by non-dev address"
+
+	# Test transferOwnership
+	out = c.transferOwnership(t.a1)
+	print "transferOwnership output: %s" % out
+	assert(out == 1), "transferOwnsership did not succeed"
+
+	# transferOwnership back to original msg.sender
+	# sender must be t.k1 now or this call won't work
+	out = c.transferOwnership(t.a0, sender=t.k1)
+	print "transferOwnership output: %s" % out
+
+	try:
+		raise Exception(c.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed())
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "mode switch should fail when attempted in decentralized mode"
+
+def test_emergencyStops():
+	print("Testing emergency stops")
+
+	try:
+		raise Exception(c.emergencyStop(sender = t.k1))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "emergency stop should fail when attempted by non-owner address"
+
+	assert(c.emergencyStop()==1), "Emergency stop enabling failed"
+
+	try:
+		raise Exception(d.canBeCalledAnytimeExceptEmergency())
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "only emergency / escape hatches should fail when not an emergency"
+
+	assert(d.canOnlyBeCalledInEmergency()==1), "Functions that can't be called in emergencies should be able to be called when not in an emergency"
+
+	try:
+		raise Exception(c.release(sender = t.k1))
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "emergency stop release should fail when attempted by non-owner address"
+
+	assert(c.release()==1), "Emergency stop release failed"
+
+	try:
+		raise Exception(d.canOnlyBeCalledInEmergency())
+	except Exception as exc:
+		assert(isinstance(exc, ethereum.tester.TransactionFailed)), "only emergency / escape hatches should fail when not an emergency"
+
+	assert(d.canBeCalledAnytimeExceptEmergency()==1), "Functions that can't be called in emergencies should be able to be called when not in an emergency"
+
 
 # Call tests
 if __name__ == "__main__":
@@ -181,9 +277,8 @@ if __name__ == "__main__":
 	test_contractAdmin()
 	test_controllerAdmin()
 	# redo after decentralized mode enabled
-	# test_whitelistsDecentralized()
-	# test_registryDecentralized()
-	# test_contractAdminDecentralized()
-	# test_controllerAdmin()
-
-	# test_emergencyStops()
+	test_whitelistsDecentralized()
+	test_registryDecentralized()
+	test_contractAdminDecentralized()
+	test_controllerAdminDecentralized()
+	test_emergencyStops()

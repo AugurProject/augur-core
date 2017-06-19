@@ -89,7 +89,7 @@ def test_consensusData(contracts):
         assert(c.setNotEnoughPenalized(branch1, address2, period1) == 1), "setNotEnoughPenalized wasn't executed successfully"
         assert(c.getNotEnoughPenalized(branch1, address2, period1) == 1), "notEnoughReportsPenalized should be set to 1"
 
-    def test_refund():
+    def test_assertZeroValue():
         # first get the starting balance for account 0 and account 2
         acc0Bal = s.block.get_balance(t.a0)
         acc2Bal = s.block.get_balance(t.a2)
@@ -111,7 +111,7 @@ def test_consensusData(contracts):
     test_denominator()
     test_collections()
     test_penalization()
-    test_refund()
+    test_assertZeroValue()
 
 if __name__ == '__main__':
     sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))

@@ -42,7 +42,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 extern forkResolveContract: [resolveFork:[int256]:int256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/safeMath.sem')

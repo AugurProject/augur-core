@@ -7,7 +7,7 @@ extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int
 
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
@@ -30,6 +30,10 @@ event DepositEther(sender: address: indexed, value: uint256, balance: uint256, t
 event WithdrawEther(sender: address: indexed, value: uint256, balance: uint256, timestamp: uint256)
 event InitiateWithdrawEther(sender: address: indexed, value: uint256, balance: uint256, timestamp: uint256)
 
+# def any():
+#    if(self.balance != self.totalSupply):
+#       ~invalid()
+
 def init():
     self.controller = 0x0
     self.name = "Cash"
@@ -41,8 +45,7 @@ def init():
 ####################
 
 def transfer(to: address, value: uint256):
-    refund()
-    self.controller.stopInEmergency()
+    assertZeroValue()
     senderBalance = self.accounts[msg.sender].balance
     if(senderBalance < value):
         ~invalid()
@@ -57,7 +60,7 @@ def transfer(to: address, value: uint256):
     return(1)
 
 def transferFrom(from: address, to: address, value: uint256):
-    refund()
+    assertZeroValue()
     self.controller.stopInEmergency()
     senderBalance = self.accounts[from].balance
     if(senderBalance < value):
@@ -76,7 +79,7 @@ def transferFrom(from: address, to: address, value: uint256):
     return(1)
 
 def approve(spender: address, value: uint256):
-    refund()
+    assertZeroValue()
     self.controller.stopInEmergency()
     self.accounts[msg.sender].spenders[spender].maxValue = value
     log(type=Approval, msg.sender, spender, value)
@@ -85,13 +88,15 @@ def approve(spender: address, value: uint256):
 def publicDepositEther():
     MUTEX.acquire()
     self.controller.stopInEmergency()
-    self.depositEther(msg.sender, value = msg.value)
+    if(!self.depositEther(msg.sender, value = msg.value)):
+        ~invalid()
     MUTEX.release()
     return(1)
 
 def publicWithdrawEther(to: address, value: uint256):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
+    self.controller.stopInEmergency()
     self.withdrawEther(msg.sender, to, value)
     MUTEX.release()
     return(1)
@@ -101,7 +106,6 @@ def publicWithdrawEther(to: address, value: uint256):
 ######################
 
 def depositEther(sender: address):
-    refund()
     self.controller.assertIsWhitelisted(msg.sender)
     amount = msg.value
     if(!safeToAdd(amount, self.accounts[sender].balance)):
@@ -114,9 +118,8 @@ def depositEther(sender: address):
     return(1)
 
 def withdrawEther(sender: address, to: address, value: uint256):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
-    # TODO: add support for emergency stop
     initiatedTimestamp = self.initiated[sender]
     if(self.accounts[sender].balance < value):
         ~invalid()
@@ -146,33 +149,33 @@ def withdrawEther(sender: address, to: address, value: uint256):
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(owner: address, spender: address):
-    refund()
+    assertZeroValue()
     return(self.accounts[owner].spenders[spender].maxValue)
 
 # @return fxp
 def totalSupply():
-    refund()
+    assertZeroValue()
     return(self.totalSupply)
 
 # @return fxpValue
 def balanceOf(address: address):
-    refund()
+    assertZeroValue()
     return(self.accounts[address].balance)
 
 def getName():
-    refund()
+    assertZeroValue()
     return(self.name)
 
 def getDecimals():
-    refund()
+    assertZeroValue()
     return(self.decimals)
 
 def getSymbol():
-    refund()
+    assertZeroValue()
     return(self.symbol)
 
 def getInitiated():
-    refund()
+    assertZeroValue()
     return(self.initiated[msg.sender])
 
 ########################

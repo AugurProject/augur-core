@@ -37,7 +37,7 @@ extern shareTokens: [allowance:[address,address]:int256, approve:[address,uint25
 
 extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_, transfer:[address,uint256]:int256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
@@ -102,7 +102,8 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
     # market's trading period is the same as the last expiring event in the market
     expirationDate = EVENTS.getExpiration(event)
     futurePeriod = expirationDate / periodLength
-    self.checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event, expirationDate, currency, value = msg.value)
+    if(!self.checkMarketCreationPreconditions(branch, periodLength, fxpTradingFee, event, expirationDate, currency, value = msg.value)):
+        ~invalid()
 
     # scalars
     fxpMaxValue = EVENTS.getMaxValue(event)
@@ -144,7 +145,8 @@ def createMarket(sender: address, branch, fxpTradingFee, event, tag1, tag2, tag3
         shareWallets[i].initialize(shareContracts[i])
         i += 1
 
-    self.makeMarket(sender, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, expirationDate, shareContracts, shareWallets, marketDenominatedIn, outcomeDenominatedIn, value = msg.value)
+    if(!self.makeMarket(sender, branch, fxpCreationFee, market, currency, wallet, event, futurePeriod, fxpTradingFee, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, expirationDate, shareContracts, shareWallets, marketDenominatedIn, outcomeDenominatedIn, value = msg.value)):
+        ~invalid()
 
     log(type = marketCreated, sender, market, tag1, branch, fxpCreationFee, block.timestamp)
     return(market)

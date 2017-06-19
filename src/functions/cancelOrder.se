@@ -21,7 +21,7 @@ extern wallet: [initialize:[int256]:int256, setController:[address]:int256, suic
 # Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/safeMath.sem')
 
 data controller
@@ -37,30 +37,27 @@ def init():
     self.controller = 0x0
 
 # @public
-def publicCancelOrder(orderID):
-    refund()
+def publicCancelOrder(orderID: address, type: uint256, market: address, outcome: uint256):
+    assertZeroValue()
     MUTEX.acquire()
-    self.cancelOrder(msg.sender, orderID)
+    self.cancelOrder(msg.sender, orderID, type, market, outcome)
     MUTEX.release()
     return(1)
 
 # Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
 # @internal
 # @returns 1 if success, throws on failure
-def cancelOrder(sender: address, orderID):
-    refund()
+def cancelOrder(sender: address, orderID: address, type: uint256, market: address, outcome: uint256):
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     if(orderID == 0):
         ~invalid()
 
     # Look up the order the sender wants to cancel
-    order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
-    type = order[1]
-    market = order[2]
+    order = ORDERS.getOrder(orderID, type, market, outcome, outitems=ORDER_FIELDS)
     fxpAmount = order[3]
     fxpPrice = order[4]
     owner = order[5]
-    outcome = order[7]
     fxpMoneyEscrowed = order[8]
     fxpSharesEscrowed = order[9]
 
@@ -74,8 +71,7 @@ def cancelOrder(sender: address, orderID):
         ~invalid()
 
     # Clear the order first
-    ORDERS.removeOrder(orderID)
-    ORDERS.removeOrderFromMarket(market, orderID)
+    ORDERS.removeOrder(orderID, type, market, outcome)
 
     self.refundOrder(sender, type, fxpSharesEscrowed, fxpMoneyEscrowed, market, outcome)
 
@@ -86,7 +82,7 @@ def cancelOrder(sender: address, orderID):
 # Issue refunds
 # @private
 def refundOrder(sender: address, type: uint256, fxpSharesEscrowed: uint256, fxpMoneyEscrowed: uint256, market: address, outcome: uint256):
-    refund()
+    assertZeroValue()
     if(msg.sender != self):
         ~invalid()
 

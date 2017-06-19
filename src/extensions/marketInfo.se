@@ -18,7 +18,7 @@ MARKETS = self.controller.lookup('markets')
 extern markets: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getMarketEvent:[int256]:int256, getMarketNumOutcomes:[int256]:int256, getMarketResolved:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getOutcomeShareContract:[int256,int256]:int256, getOutcomeShareWallet:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:uint256, getSharesValue:[int256]:int256, getTags:[int256]:int256[], getTopic:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, initializeMarket:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[],int256[]]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, setController:[address]:int256, setMarketResolved:[int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, suicideFunds:[address]:_]
 
 # using refund
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 # using proportionCorrect
 inset('../macros/unitConversions.sem')
 inset('../macros/proportionCorrect.sem')
@@ -34,7 +34,7 @@ def init():
     self.controller = 0x0
 
 def getMarketInfo(marketID, account):
-    refund()
+    assertZeroValue()
     index = BASE_FIELDS
     eventID = MARKETS.getMarketEvent(marketID)
     descriptionLength = INFO.getDescriptionLength(eventID)
@@ -50,7 +50,7 @@ def getMarketInfo(marketID, account):
     marketInfo[5] = 0
     marketInfo[6] = MARKETS.getCumulativeScale(marketID)
     marketInfo[7] = MARKETS.getSharesValue(marketID)
-    marketInfo[8] = ORDERS.getTotalOrders(marketID)
+    marketInfo[8] = 0
     marketInfo[9] = ORDERS.getVolume(marketID)
     marketInfo[10] = INFO.getCreationFee(marketID)
     marketInfo[11] = INFO.getCreator(marketID)
@@ -114,7 +114,7 @@ def getMarketInfo(marketID, account):
     return(marketInfo: arr)
 
 def batchGetMarketInfo(marketIDs: arr, account):
-    refund()
+    assertZeroValue()
     numMarkets = len(marketIDs)
     totalLength = 0
     marketInfoLength = array(numMarkets)

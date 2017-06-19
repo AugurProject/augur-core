@@ -38,7 +38,7 @@ extern claimInitialRep: [claimInitialRep:[int256,int256]:int256, setController:[
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [acquire:[]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/periodStage.sem')
 inset('../macros/safeMath.sem')
 
@@ -87,7 +87,7 @@ def init():
             # say you lost rep in round 1, if it was an invalid round 2 you have incentive to convert to dormant
             # say you gained rep in round 1, if it was an invalid round 2 you have incentive _to_ not convert to dormant or send rep b/c you want to keep it
 def publicConvertToDormantRep(branch, fxpValue):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
     result = self.internalConvertToDormantRep(branch, fxpValue)
@@ -134,7 +134,7 @@ def internalConvertToDormantRep(branch, fxpValue):
     # -4: couldn't catchup automatically
     # -5: not enough rep
 def publicConvertToActiveRep(branch, fxpValue):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     result = self.internalConvertToActiveRep(branch, fxpValue)
     MUTEX.release()

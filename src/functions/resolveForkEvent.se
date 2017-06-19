@@ -48,7 +48,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 extern forkResolveContract: [resolveFork:[int256]:int256]
 
-inset('../macros/refund.sem')
+inset('../macros/assertZeroValue.sem')
 inset('../macros/unitConversions.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/safeMath.sem')
@@ -70,7 +70,7 @@ def init():
     self.controller = 0x0
 
 def resolveForkedEvent(branch, event):
-    refund()
+    assertZeroValue()
     MUTEX.acquire()
     # checks for orig. branch
     if(EVENTS.getEventBranch(event) != branch or BRANCHES.getEventForkedOver(branch) != event or !branch or !event):
@@ -96,7 +96,7 @@ def resolveForkedEvent(branch, event):
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
     # helper function for resolveForkedEvent
 def resolveForkEvent(branch, event):
-    refund()
+    assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
     bond = EVENTS.getBond(event)
     periodLength = BRANCHES.getPeriodLength(branch)
