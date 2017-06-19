@@ -43,7 +43,7 @@ def test_trading():
     decreaseTradingFee.test_DecreaseTradingFee(contracts)
     claimProceeds.test_ClaimProceeds(contracts)
     trade.test_Trade(contracts)
-    tradingEscapeHatch.test_EscapeHatch(contracts)
+    # tradingEscapeHatch.test_EscapeHatch(contracts)
 
 def test_helpers():
     helper_tests.test_assertZeroValue()
