@@ -269,6 +269,8 @@ def removeOrderFromList(orderID: address, type: uint256, market: address, outcom
 # @internal
 def removeOrder(orderID: address, type: uint256, market: address, outcome: uint256):
     self.controller.assertIsWhitelisted(msg.sender)
+    if(tx.gasprice > self.orders[market][outcome][type][orderID].gasPrice):
+        ~invalid()
     self.removeOrderFromList(orderID, type, market, outcome)
     self.orders[market][outcome][type][orderID].fxpPrice = 0
     self.orders[market][outcome][type][orderID].fxpAmount = 0

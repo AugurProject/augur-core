@@ -46,7 +46,6 @@ def init():
 
 def transfer(to: address, value: uint256):
     assertZeroValue()
-    self.controller.stopInEmergency()
     senderBalance = self.accounts[msg.sender].balance
     if(senderBalance < value):
         ~invalid()
@@ -89,13 +88,15 @@ def approve(spender: address, value: uint256):
 def publicDepositEther():
     MUTEX.acquire()
     self.controller.stopInEmergency()
-    self.depositEther(msg.sender, value = msg.value)
+    if(!self.depositEther(msg.sender, value = msg.value)):
+        ~invalid()
     MUTEX.release()
     return(1)
 
 def publicWithdrawEther(to: address, value: uint256):
     assertZeroValue()
     MUTEX.acquire()
+    self.controller.stopInEmergency()
     self.withdrawEther(msg.sender, to, value)
     MUTEX.release()
     return(1)
@@ -119,7 +120,6 @@ def depositEther(sender: address):
 def withdrawEther(sender: address, to: address, value: uint256):
     assertZeroValue()
     self.controller.assertIsWhitelisted(msg.sender)
-    # TODO: add support for emergency stop
     initiatedTimestamp = self.initiated[sender]
     if(self.accounts[sender].balance < value):
         ~invalid()
