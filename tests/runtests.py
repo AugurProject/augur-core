@@ -50,6 +50,6 @@ def test_helpers():
     helper_tests.test_float()
 
 if __name__ == "__main__":
-    # test_data_api()
+    test_data_api()
     test_trading()
     test_helpers()
