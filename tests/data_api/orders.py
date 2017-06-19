@@ -354,6 +354,7 @@ def test_orders(contracts):
                 assert(order[11] == testCase["expected"]["orders"][i]["worseOrderID"]), "Worse order ID incorrect"
             for order in testCase["orders"]:
                 print contracts.orders.getGasPrice(order["orderID"], order["type"], marketID, order["outcome"])
+                print t.gas_price
                 removed = contracts.orders.removeOrder(order["orderID"])
                 assert(removed == 1), "Removed not equal to 1"
 
