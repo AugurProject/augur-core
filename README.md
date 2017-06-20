@@ -44,7 +44,6 @@ git clone https://github.com/AugurProject/augur-core.git
 cd augur-core
 git checkout develop
 sudo pip install -r requirements.txt
-sudo python setup.py install
 ```
 
 Now we can try running some tests to make sure our installation worked.
