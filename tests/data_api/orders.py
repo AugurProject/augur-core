@@ -1227,9 +1227,9 @@ def test_orders(contracts):
     test_randomOrderSorting()
     test_walkOrderList()
     test_orderSorting()
-    # test_saveOrder()
-    # test_fillOrder()
-    # test_removeOrder()
+    test_saveOrder()
+    test_fillOrder()
+    test_removeOrder()
 
 if __name__ == '__main__':
     sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
