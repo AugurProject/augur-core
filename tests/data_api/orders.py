@@ -1222,7 +1222,6 @@ def test_orders(contracts):
         assert(contracts.orders.getOrder(order3, 1, market1, 2) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
         assert(contracts.orders.removeOrder(order1, 1, market1, 1) == 1), "Remove order 1"
         assert(contracts.orders.removeOrder(order2, 2, market1, 1) == 1), "Remove order 2"
-        assert(contracts.orders.removeOrder(order3, 1, market1, 2) == 1), "Remove order 3"
 
     test_randomOrderSorting()
     test_walkOrderList()
