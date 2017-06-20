@@ -25,7 +25,7 @@ def test_orders(contracts):
     t = contracts._ContractLoader__tester
     s = contracts._ContractLoader__state
     c = contracts.orders
-    market1 = utils.createMarket(contracts, utils.createBinaryEvent(contracts))
+    market1 = 1111111111
     address0 = long(t.a0.encode("hex"), 16)
     address1 = long(t.a1.encode("hex"), 16)
     address2 = long(t.a2.encode("hex"), 16)
