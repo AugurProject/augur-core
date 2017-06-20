@@ -104,7 +104,7 @@ def takeAskOrder(sender: address, orderID: address, market: address, outcome: ui
         fxpAskerSharesFilled = fxpFill
 
     # Account for short-ask
-    #  - Asker escrowed maxValue - price and expects complete set minus the one they're selling
+    #  - Asker escrowed maxValue - price and expects x minus the one they're selling
     if(fxpAmountTakerWants > 0 and fxpMoneyEscrowed > 0):
         fxpFill = min(safeFxpDiv(fxpMoneyEscrowed, safeSub(fxpMaxValue, fxpPrice)), fxpAmountTakerWants)
         fxpAmountTakerWants = safeSub(fxpAmountTakerWants, fxpFill)
