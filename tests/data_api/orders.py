@@ -353,7 +353,7 @@ def test_orders(contracts):
                 assert(order[10] == testCase["expected"]["orders"][i]["betterOrderID"]), "Better order ID incorrect"
                 assert(order[11] == testCase["expected"]["orders"][i]["worseOrderID"]), "Worse order ID incorrect"
             for order in testCase["orders"]:
-                removed = contracts.orders.removeOrder(order["orderID"])
+                removed = contracts.orders.removeOrder(order["orderID"], order["type"], marketID, order["outcome"])
                 assert(removed == 1), "Removed not equal to 1"
 
         # Bids
@@ -1222,7 +1222,6 @@ def test_orders(contracts):
         assert(contracts.orders.getOrder(order3, 1, market1, 2) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
         assert(contracts.orders.removeOrder(order1, 1, market1, 1) == 1), "Remove order 1"
         assert(contracts.orders.removeOrder(order2, 2, market1, 1) == 1), "Remove order 2"
-        assert(contracts.orders.removeOrder(order3, 1, market1, 2) == 1), "Remove order 3"
 
     test_randomOrderSorting()
     test_walkOrderList()
