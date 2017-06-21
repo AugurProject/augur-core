@@ -16,11 +16,7 @@ First set up pyethereum, which includes the tools used to test Ethereum smart co
 
 Pyethereum Installation:
 ```
-git clone https://github.com/ethereum/pyethereum.git
-cd pyethereum
-git checkout master
-sudo pip install -r requirements.txt
-sudo python setup.py install
+sudo pip install ethereum
 ```
 
 
