@@ -10,17 +10,6 @@ from decimal import *
 
 shareTokenContractTranslator = ethereum.abi.ContractTranslator('[{"constant": false, "type": "function", "name": "allowance(address,address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "address", "name": "spender"}]}, {"constant": false, "type": "function", "name": "approve(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "spender"}, {"type": "uint256", "name": "value"}]}, {"constant": false, "type": "function", "name": "balanceOf(address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "address"}]}, {"constant": false, "type": "function", "name": "changeTokens(int256,int256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "int256", "name": "trader"}, {"type": "int256", "name": "amount"}]}, {"constant": false, "type": "function", "name": "createShares(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "uint256", "name": "fxpValue"}]}, {"constant": false, "type": "function", "name": "destroyShares(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "owner"}, {"type": "uint256", "name": "fxpValue"}]}, {"constant": false, "type": "function", "name": "getDecimals()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "getName()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "getSymbol()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "modifySupply(int256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "int256", "name": "amount"}]}, {"constant": false, "type": "function", "name": "setController(address)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "newController"}]}, {"constant": false, "type": "function", "name": "suicideFunds(address)", "outputs": [], "inputs": [{"type": "address", "name": "to"}]}, {"constant": false, "type": "function", "name": "totalSupply()", "outputs": [{"type": "int256", "name": "out"}], "inputs": []}, {"constant": false, "type": "function", "name": "transfer(address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "to"}, {"type": "uint256", "name": "value"}]}, {"constant": false, "type": "function", "name": "transferFrom(address,address,uint256)", "outputs": [{"type": "int256", "name": "out"}], "inputs": [{"type": "address", "name": "from"}, {"type": "address", "name": "to"}, {"type": "uint256", "name": "value"}]}, {"inputs": [{"indexed": true, "type": "address", "name": "owner"}, {"indexed": true, "type": "address", "name": "spender"}, {"indexed": false, "type": "uint256", "name": "value"}], "type": "event", "name": "Approval(address,address,uint256)"}, {"inputs": [{"indexed": true, "type": "address", "name": "from"}, {"indexed": true, "type": "address", "name": "to"}, {"indexed": false, "type": "uint256", "name": "value"}], "type": "event", "name": "Transfer(address,address,uint256)"}, {"inputs": [{"indexed": false, "type": "int256", "name": "from"}, {"indexed": false, "type": "int256", "name": "to"}, {"indexed": false, "type": "int256", "name": "value"}, {"indexed": false, "type": "int256", "name": "senderBalance"}, {"indexed": false, "type": "int256", "name": "sender"}, {"indexed": false, "type": "int256", "name": "spenderMaxValue"}], "type": "event", "name": "echo(int256,int256,int256,int256,int256,int256)"}]')
 
-def calculateLowSide(contracts, eventID, fxpAmount, fxpPrice):
-    return int(Decimal(fxpAmount) * (Decimal(fxpPrice) - Decimal(contracts.events.getMinValue(eventID))) / Decimal(10)**Decimal(18))
-
-def calculateHighSide(contracts, eventID, fxpAmount, fxpPrice):
-    maxValue = contracts.events.getMaxValue(eventID)
-    numOutcomes = contracts.events.getNumOutcomes(eventID)
-    if numOutcomes > 2:
-        # this is categorical, we should have fix(2) as the max value
-        maxValue = utils.fix(2)
-    return int(Decimal(fxpAmount) * (Decimal(maxValue) - Decimal(fxpPrice)) / Decimal(10)**Decimal(18))
-
 # bid assertions
 def assertions_bid_makerEscrowedCash_takerWithoutShares(contracts, eventID, marketID, fxpAmount, fxpPrice, MAKER, TAKER, marketInitialCash, makerInitialCash, takerInitialCash, outcomeID):
     fxpMinValue = contracts.events.getMinValue(eventID)
@@ -571,13 +560,17 @@ def test_askOrders(contracts, eventID, marketID, fxpAmount, fxpPrice, MAKER, TAK
     test_makerEscrowedCash_takerWithShares(contracts, eventID, marketID, fxpAmount, fxpPrice, MAKER, TAKER, MAKER_KEY, TAKER_KEY)
     test_makerEscrowedShares_takerWithoutShares(contracts, eventID, marketID, fxpAmount, fxpPrice, MAKER, TAKER, MAKER_KEY, TAKER_KEY)
 
-# test_binary(contracts, 1, MAKER, TAKER, MAKER_KEY, TAKER_KEY, 5, 0.979)
 def test_binary(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY, amount=random.randint(1, 11), price=random.random()):
     # Test case:
     # binary event market
     t = contracts._ContractLoader__tester
     eventID = utils.createBinaryEvent(contracts)
     marketID = utils.createMarket(contracts, eventID)
+    randomCheck = check_randoms(contracts, eventID, marketID, amount, price)
+    while(randomCheck == 0):
+        price = random.random()
+        amount = random.randint(1, 11)
+        randomCheck = check_randoms(contracts, eventID, marketID, amount, price)
     fxpAmount = utils.fix(amount)
     fxpPrice = utils.fix(price + utils.unfix(contracts.events.getMinValue(eventID)))
     # run all possible approvals now so that we don't need to do it in each test case
@@ -595,13 +588,17 @@ def test_binary(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY, amount=random.
     print "Finished Fuzzy WCL tests - Binary Market - askOrders. loop count:", i + 1
     print ""
 
-# test_categorical(contracts, 1, MAKER, TAKER, MAKER_KEY, TAKER_KEY, 5, 0.979, 3)
 def test_categorical(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY, amount=random.randint(1, 11), price=random.random(), numOutcomes=3):
     # Test case:
     # categorical event market
     t = contracts._ContractLoader__tester
     eventID = utils.createCategoricalEvent(contracts, numOutcomes)
     marketID = utils.createMarket(contracts, eventID)
+    randomCheck = check_randoms(contracts, eventID, marketID, amount, price)
+    while(randomCheck == 0):
+        price = random.random()
+        amount = random.randint(1, 11)
+        randomCheck = check_randoms(contracts, eventID, marketID, amount, price)
     fxpAmount = utils.fix(amount)
     fxpPrice = utils.fix(price + utils.unfix(contracts.events.getMinValue(eventID)))
     # run all possible approvals now so that we don't need to do it in each test case
@@ -619,29 +616,25 @@ def test_categorical(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY, amount=ra
     print "Finished Fuzzy WCL tests - Categorical Market - askOrders. loop count:", i + 1
     print ""
 
-# test_scalar(contracts, 1, MAKER, TAKER, MAKER_KEY, TAKER_KEY, 8, 58)
 def test_scalar(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY, amount=random.randint(1, 11), price=0, scalarMin=10, scalarMax=60):
     # Test case:
     # scalar event market
     t = contracts._ContractLoader__tester
-    if price == 0:
-        price = random.randint(scalarMin, (scalarMax + 1))
     eventID = utils.createScalarEvent(contracts, utils.fix(scalarMin), utils.fix(scalarMax))
     marketID = utils.createMarket(contracts, eventID)
+    if price == 0:
+        price = random.randint(scalarMin, (scalarMax + 1))
+    randomCheck = check_randoms(contracts, eventID, marketID, amount, price)
+    while(randomCheck == 0):
+        price = random.randint(scalarMin, (scalarMax + 1))
+        amount = random.randint(1, 11)
+        randomCheck = check_randoms(contracts, eventID, marketID, amount, price)
     fxpAmount = utils.fix(amount)
     fxpPrice = utils.fix(price)
     # run all possible approvals now so that we don't need to do it in each test case
     approvals(contracts, eventID, marketID, amount, price, MAKER, TAKER, MAKER_KEY, TAKER_KEY)
     print "Start Fuzzy WCL tests - Scalar Market - bidOrders. loop count:", i + 1
     print ""
-    print "amount", amount
-    print "price", price
-    fxpAllowance = utils.fix(100*(price*amount))
-    fxpEtherDepositValue = utils.fix(10*(price*amount))
-    print "fxpAllowance", fxpAllowance, utils.unfix(fxpAllowance)
-    print "fxpEtherDepositValue", fxpEtherDepositValue, utils.unfix(fxpEtherDepositValue)
-    print ""
-    print_allowance(contracts, eventID, marketID, MAKER, TAKER, MAKER_KEY, TAKER_KEY, 'scalar')
     test_bidOrders(contracts, eventID, marketID, fxpAmount, fxpPrice, MAKER, TAKER, MAKER_KEY, TAKER_KEY)
     print ""
     print "Finished Fuzzy WCL tests - Scalar Market - bidOrders. loop count:", i + 1
@@ -653,6 +646,19 @@ def test_scalar(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY, amount=random.
     print "Finished Fuzzy WCL tests - Scalar Market - askOrders. loop count:", i + 1
     print ""
 
+# utility functions
+def calculateLowSide(contracts, eventID, fxpAmount, fxpPrice):
+    return int(Decimal(fxpAmount) * (Decimal(fxpPrice) - Decimal(contracts.events.getMinValue(eventID))) / Decimal(10)**Decimal(18))
+
+def calculateHighSide(contracts, eventID, fxpAmount, fxpPrice):
+    maxValue = contracts.events.getMaxValue(eventID)
+    numOutcomes = contracts.events.getNumOutcomes(eventID)
+    if numOutcomes > 2:
+        # this is categorical, we should have fix(2) as the max value
+        maxValue = utils.fix(2)
+    return int(Decimal(fxpAmount) * (Decimal(maxValue) - Decimal(fxpPrice)) / Decimal(10)**Decimal(18))
+
+# approves all contracts involved to spend money
 def approvals(contracts, eventID, marketID, amount, price, MAKER, TAKER, MAKER_KEY, TAKER_KEY):
     t = contracts._ContractLoader__tester
     fxpAllowance = utils.fix(100*(price*amount))
@@ -694,59 +700,7 @@ def approvals(contracts, eventID, marketID, amount, price, MAKER, TAKER, MAKER_K
         assert(outcomeShareContractWrapper.allowance(outcomeShareContract, MAKER, contracts.takeAskOrder.address) == fxpAllowance), "takeAskOrder contract's allowance should be equal to the amount approved"
         assert(outcomeShareContractWrapper.allowance(outcomeShareContract, TAKER, contracts.makeOrder.address) == fxpAllowance), "makeOrder contract's allowance should be equal to the amount approved"
 
-def print_allowance(contracts, eventID, marketID, MAKER, TAKER, MAKER_KEY, TAKER_KEY, marketType):
-    t = contracts._ContractLoader__tester
-    numOutcomes = contracts.markets.getMarketNumOutcomes(marketID)
-    outcomeShareContractWrapper = utils.makeOutcomeShareContractWrapper(contracts)
-    print ""
-    print "MarketType", marketType
-    print ""
-    print "Maker:"
-    print "cashBalance", contracts.cash.balanceOf(MAKER), utils.unfix(contracts.cash.balanceOf(MAKER))
-    print "makeOrder", contracts.cash.allowance(MAKER, contracts.makeOrder.address), utils.unfix(contracts.cash.allowance(MAKER, contracts.makeOrder.address))
-    print "takeOrder", contracts.cash.allowance(MAKER, contracts.takeOrder.address), utils.unfix(contracts.cash.allowance(MAKER, contracts.takeOrder.address))
-    print "takeBidOrder", contracts.cash.allowance(MAKER, contracts.takeBidOrder.address), utils.unfix(contracts.cash.allowance(MAKER, contracts.takeBidOrder.address))
-    print "takeAskOrder", contracts.cash.allowance(MAKER, contracts.takeAskOrder.address), utils.unfix(contracts.cash.allowance(MAKER, contracts.takeAskOrder.address))
-    print "Outcomes Approval:"
-    for i in range(0, numOutcomes):
-        outcomeID = i + 1
-        outcomeShareContract = contracts.markets.getOutcomeShareContract(marketID, outcomeID)
-        abiEncodedData = shareTokenContractTranslator.encode("allowance", [MAKER, contracts.makeOrder.address])
-        makeOrder = int(contracts._ContractLoader__state.send(MAKER_KEY, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16)
-        abiEncodedData = shareTokenContractTranslator.encode("allowance", [MAKER, contracts.takeOrder.address])
-        takeOrder = int(contracts._ContractLoader__state.send(MAKER_KEY, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16)
-        abiEncodedData = shareTokenContractTranslator.encode("allowance", [MAKER, contracts.takeBidOrder.address])
-        takeBidOrder = int(contracts._ContractLoader__state.send(MAKER_KEY, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16)
-        abiEncodedData = shareTokenContractTranslator.encode("allowance", [MAKER, contracts.takeAskOrder.address])
-        takeAskOrder = int(contracts._ContractLoader__state.send(MAKER_KEY, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16)
-        print "makeOrder outcome", outcomeID, makeOrder, utils.unfix(makeOrder)
-        print "takeOrder outcome", outcomeID, takeOrder, utils.unfix(takeOrder)
-        print "takeBidOrder outcome", outcomeID, takeBidOrder, utils.unfix(takeBidOrder)
-        print "takeAskOrder outcome", outcomeID, takeAskOrder, utils.unfix(takeAskOrder)
-    print ""
-    print "Taker:"
-    print "cashBalance", contracts.cash.balanceOf(TAKER), utils.unfix(contracts.cash.balanceOf(TAKER))
-    print "makeOrder", contracts.cash.allowance(TAKER, contracts.makeOrder.address), utils.unfix(contracts.cash.allowance(TAKER, contracts.makeOrder.address))
-    print "takeOrder", contracts.cash.allowance(TAKER, contracts.takeOrder.address), utils.unfix(contracts.cash.allowance(TAKER, contracts.takeOrder.address))
-    print "takeBidOrder", contracts.cash.allowance(TAKER, contracts.takeBidOrder.address), utils.unfix(contracts.cash.allowance(TAKER, contracts.takeBidOrder.address))
-    print "takeAskOrder", contracts.cash.allowance(TAKER, contracts.takeAskOrder.address), utils.unfix(contracts.cash.allowance(TAKER, contracts.takeAskOrder.address))
-    print "Outcomes Approval:"
-    for i in range(0, numOutcomes):
-        outcomeID = i + 1
-        outcomeShareContract = contracts.markets.getOutcomeShareContract(marketID, outcomeID)
-        abiEncodedData = shareTokenContractTranslator.encode("allowance", [TAKER, contracts.makeOrder.address])
-        makeOrder = int(contracts._ContractLoader__state.send(TAKER_KEY, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16)
-        abiEncodedData = shareTokenContractTranslator.encode("allowance", [TAKER, contracts.takeOrder.address])
-        takeOrder = int(contracts._ContractLoader__state.send(TAKER_KEY, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16)
-        abiEncodedData = shareTokenContractTranslator.encode("allowance", [TAKER, contracts.takeBidOrder.address])
-        takeBidOrder = int(contracts._ContractLoader__state.send(TAKER_KEY, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16)
-        abiEncodedData = shareTokenContractTranslator.encode("allowance", [TAKER, contracts.takeAskOrder.address])
-        takeAskOrder = int(contracts._ContractLoader__state.send(TAKER_KEY, outcomeShareContract, 0, abiEncodedData).encode("hex"), 16)
-        print "makeOrder outcome", outcomeID, makeOrder, utils.unfix(makeOrder)
-        print "takeOrder outcome", outcomeID, takeOrder, utils.unfix(takeOrder)
-        print "takeBidOrder outcome", outcomeID, takeBidOrder, utils.unfix(takeBidOrder)
-        print "takeAskOrder outcome", outcomeID, takeAskOrder, utils.unfix(takeAskOrder)
-
+# sends shares to account 0 if no toAddress is provided, otherwise can send shares to an address, used to move shares occasionally before tests
 def send_shares(contracts, marketID, address, key, outcome=0, toAddress=0):
     # address is the account we plan to take shares away from (e.g. t.a2)
     t = contracts._ContractLoader__tester
@@ -767,20 +721,6 @@ def send_shares(contracts, marketID, address, key, outcome=0, toAddress=0):
             transferAbiEncodedData = shareTokenContractTranslator.encode("transfer", [toAddress, shares])
             assert(int(contracts._ContractLoader__state.send(key, outcomeShareContract, 0, transferAbiEncodedData).encode("hex"), 16) == 1), "Transfer shares of outcome to address 0"
 
-def print_shares(contracts, marketID, MAKER, TAKER):
-    t = contracts._ContractLoader__tester
-    print "Shares:"
-    numOutcomes = contracts.markets.getMarketNumOutcomes(marketID)
-    print "MAKER"
-    for i in range(0, numOutcomes):
-        outcome = i + 1
-        print "outcome", outcome, contracts.markets.getParticipantSharesPurchased(marketID, MAKER, outcome), utils.unfix(contracts.markets.getParticipantSharesPurchased(marketID, MAKER, outcome))
-    print ""
-    print "TAKER"
-    for i in range(0, numOutcomes):
-        outcome = i + 1
-        print "outcome", outcome, contracts.markets.getParticipantSharesPurchased(marketID, TAKER, outcome), utils.unfix(contracts.markets.getParticipantSharesPurchased(marketID, TAKER, outcome))
-
 # assertions around shares
 def check_shares(contracts, marketID, owner, expectedArray):
     t = contracts._ContractLoader__tester
@@ -788,6 +728,30 @@ def check_shares(contracts, marketID, owner, expectedArray):
     for i in range(0, numOutcomes):
         outcome = i + 1
         assert(contracts.markets.getParticipantSharesPurchased(marketID, owner, outcome) == expectedArray[i]), "Shares haven't been assigned as expected"
+
+# check randomly generated numbers to make sure they aren't out of range
+def check_randoms(contracts, eventID, marketID, amount, price):
+    t = contracts._ContractLoader__tester
+    fxpCumulativeScale = contracts.markets.getCumulativeScale(marketID) # 1
+    fxpTradingFee = contracts.markets.getTradingFee(marketID) # 0.020...01
+    if price > 1:
+        # scalar
+        fxpPricePerShare = utils.fix(price - utils.unfix(contracts.events.getMinValue(eventID)))
+        # if we don't have a positive amount of pricePerShare this will fail, lets re-randomize
+        if fxpPricePerShare <= 0:
+            return 0
+    else:
+        # binary / categorical
+        fxpPricePerShare = utils.fix(price)
+        # if we don't have at least the tradingFee this will fail, lets re-randomize
+        if fxpPricePerShare <= fxpTradingFee:
+            return 0
+    if (int((Decimal(fxpTradingFee) * Decimal(fxpCumulativeScale) / 10**18) + fxpPricePerShare) > fxpCumulativeScale):
+        # if fees + cost of the shares are > range then the trade is a guaranteed losing proposition and we should use different random numbers
+        return 0
+    else:
+        # these random numbers should work
+        return 1
 
 def test_wcl(contracts, amountOfTests=1):
     t = contracts._ContractLoader__tester
@@ -802,11 +766,11 @@ def test_wcl(contracts, amountOfTests=1):
     def test_fuzzy_wcl():
         for i in range(0, amountOfTests):
             contracts._ContractLoader__state.mine(1)
-            test_binary(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY, 5, .99)
-            # contracts._ContractLoader__state.mine(1)
-            # test_categorical(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY)
-            # contracts._ContractLoader__state.mine(1)
-            # test_scalar(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY)
+            test_binary(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY)
+            contracts._ContractLoader__state.mine(1)
+            test_categorical(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY)
+            contracts._ContractLoader__state.mine(1)
+            test_scalar(contracts, i, MAKER, TAKER, MAKER_KEY, TAKER_KEY)
     test_fuzzy_wcl()
     print ""
     print "Fuzzy WCL Tests Complete"
@@ -817,4 +781,4 @@ if __name__ == '__main__':
     sys.path.insert(0, os.path.join(ROOT, "upload_contracts"))
     from upload_contracts import ContractLoader
     contracts = ContractLoader(os.path.join(ROOT, "src"), "controller.se", ["mutex.se", "cash.se", "repContract.se"])
-    test_wcl(contracts, 25)
+    test_wcl(contracts, 20)

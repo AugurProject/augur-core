@@ -149,7 +149,7 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
 
         if(fxpSharesHeld > 0):
             # only get rid of shares if the user can do so without losing money, if fees + cost of the shares are > range then the trade is a guaranteed losing proposition
-            if((MARKETS.getTradingFee(market)*MARKETS.getCumulativeScale(market) + fxpCostPerShare) < MARKETS.getCumulativeScale(market)):
+            if((safeFxpMul(MARKETS.getTradingFee(market), MARKETS.getCumulativeScale(market)) + fxpCostPerShare) < MARKETS.getCumulativeScale(market)):
                 fxpFill = min(fxpSharesHeld, fxpAmount)
                 fxpAmount -= fxpFill
                 fxpSharesEscrowed += fxpFill
