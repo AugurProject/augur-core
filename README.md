@@ -11,6 +11,15 @@ Depends on Serpent and Pyethereum
 
 You should already have a system-wide installation of python, and it should be set to python-2.7.x.
 
+First set up pyethereum, which includes the tools used to test Ethereum smart contracts from python scripts.<br>
+(can be done as your preferred user from your home directory)
+
+Pyethereum Installation:
+```
+sudo pip install ethereum
+```
+
+
 Install the serpent smart contract programming language.<br>
 This can be installed system-wide if available on your OS or distribution.<br>
 However, it is recommended to install the dev version of serpent directly from github as your user in your home directory as follows:
@@ -20,22 +29,11 @@ Serpent Installation:
 git clone https://github.com/ethereum/serpent.git
 cd serpent
 git checkout develop
-sudo pip install -r requirements-dev.txt
+sudo pip install pytest
 sudo make && sudo make install
 sudo python setup.py install
 ```
 
-Next set up pyethereum, which includes the tools used to test Ethereum smart contracts from python scripts.<br>
-(again, can be done as your preferred user from your home directory)
-
-Pyethereum Installation:
-```
-git clone https://github.com/ethereum/pyethereum.git
-cd pyethereum
-git checkout develop
-sudo pip install -r requirements.txt
-sudo python setup.py install
-```
 
 To install the augur-core Ethereum contracts:<br>
 (again, can be done as your preferred user from your home directory or wherever you'd like them installed)
@@ -50,8 +48,8 @@ Now we can try running some tests to make sure our installation worked.
 
 Run some tests:
 ```
-cd augur-core/tests
-python ./runtests.py
+cd tests
+python runtests.py
 ```
 
 
