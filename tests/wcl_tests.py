@@ -370,7 +370,7 @@ def test_bidOrders(contracts, eventID, marketID, fxpAmount, fxpPrice, MAKER, TAK
         # taker first buys a complete set
         # buy the amount the taker plans to take from the order
         contracts._ContractLoader__state.mine(1)
-        utils.buyCompleteSets(contracts, marketID, fxpAmount, sender=TAKER_KEY)
+        utils.buyCompleteSets(contracts, marketID, fxpAmount, TAKER_KEY)
         contracts._ContractLoader__state.mine(1)
         # get initial cash
         makerInitialCash = contracts.cash.balanceOf(MAKER)
@@ -498,7 +498,7 @@ def test_askOrders(contracts, eventID, marketID, fxpAmount, fxpPrice, MAKER, TAK
         # taker first buys a complete set
         # buy the amount the taker plans to take from the order
         contracts._ContractLoader__state.mine(1)
-        utils.buyCompleteSets(contracts, marketID, fxpAmount, sender=TAKER_KEY)
+        utils.buyCompleteSets(contracts, marketID, fxpAmount, TAKER_KEY)
         contracts._ContractLoader__state.mine(1)
         # get initial cash/shares
         makerInitialCash = contracts.cash.balanceOf(MAKER)

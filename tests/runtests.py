@@ -46,14 +46,14 @@ def test_trading():
     trade.test_Trade(contracts)
     tradingEscapeHatch.test_EscapeHatch(contracts)
 
+def test_helpers():
+    helper_tests.test_assertZeroValue()
+    helper_tests.test_float()
+
 def test_wcl():
     global contracts
     # contracts, amount of tests through fuzzer
     wcl_tests.test_wcl(contracts, 5)
-
-def test_helpers():
-    helper_tests.test_assertZeroValue()
-    helper_tests.test_float()
 
 if __name__ == "__main__":
     test_data_api()
