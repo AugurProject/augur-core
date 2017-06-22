@@ -1,0 +1,5 @@
+ethereum==1.6.1
+iocapture==0.1.2
+numpy==1.13.0
+pytest==3.1.2
+serpent==1.22
