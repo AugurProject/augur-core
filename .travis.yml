@@ -21,7 +21,7 @@ before_install:
 
 install:
   - pip install -U pip
-  - pip install ethereum -r test_requirements.txt
+  - pip install -r test_requirements.txt
 
 script:
   - travis_wait 60 py.test -s tests/runtests.py
