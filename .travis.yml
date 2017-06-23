@@ -15,13 +15,9 @@ addons:
       - liblapack-dev
       - gfortran
 
-before_install:
-  - git clone https://github.com/ethereum/serpent
-  - cd serpent && make && sudo make install && sudo python setup.py install && cd ..
-
 install:
   - pip install -U pip
-  - pip install -r test_requirements.txt
+  - pip install -r requirements.txt
 
 script:
   - travis_wait 60 py.test -s tests/runtests.py

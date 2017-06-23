@@ -1,5 +1,5 @@
+-e git+https://github.com/ethereum/serpent.git@3ec98d01813167cc8725a951bd384c629158af2b#egg=ethereum-serpent
 ethereum==1.6.1
 iocapture==0.1.2
 numpy==1.13.0
 pytest==3.1.2
-serpent==1.22
