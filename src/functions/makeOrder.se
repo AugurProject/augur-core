@@ -76,6 +76,8 @@ def makeOrder(sender: address, type: uint256, fxpAmount: uint256, fxpPrice, mark
     orderID = ripemd160(order, items=10)
     if(ORDERS.getAmount(orderID, type, market, outcome) > 0):
         ~invalid()
+    if(fxpMoneyEscrowed == 0 and fxpSharesEscrowed == 0):
+        ~invalid()
     ORDERS.saveOrder(orderID, type, market, fxpAmount, fxpPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID, tx.gasprice)
 
     return(orderID)
@@ -98,12 +100,11 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
         fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
         if(fxpCostPerShare >= fxpCumulativeScale):
             ~invalid()
-        if(fxpCost < MIN_ORDER_VALUE):
-            ~invalid()
-        fxpFill = min(fxpSharesHeld, fxpAmount)
-        fxpAmount -= fxpFill
-        fxpSharesEscrowed += fxpFill
-        MARKETS.getOutcomeShareContract(market, outcome).transferFrom(sender, MARKETS.getOutcomeShareWallet(market, outcome), fxpFill)
+        if(fxpCost >= MIN_ORDER_VALUE):
+            fxpFill = min(fxpSharesHeld, fxpAmount)
+            fxpAmount -= fxpFill
+            fxpSharesEscrowed += fxpFill
+            MARKETS.getOutcomeShareContract(market, outcome).transferFrom(sender, MARKETS.getOutcomeShareWallet(market, outcome), fxpFill)
 
     # Take max minus price they want to sell at for the remainder of the amount
     # that wasn't able to be used up above
@@ -116,11 +117,10 @@ def placeAsk(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
         fxpOrderCost = safeFxpMul(fxpAmount, fxpCostPerShareShorting)
         if(fxpCostPerShareShorting >= fxpCumulativeScale):
             ~invalid()
-        if(fxpOrderCost < MIN_ORDER_VALUE):
-            ~invalid()
-        fxpMoneyEscrowed += fxpOrderCost
-        if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), fxpOrderCost)):
-            ~invalid()
+        if(fxpOrderCost >= MIN_ORDER_VALUE):
+            fxpMoneyEscrowed += fxpOrderCost
+            if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), fxpOrderCost)):
+                ~invalid()
 
     return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
@@ -143,28 +143,29 @@ def placeBid(sender: address, fxpAmount: uint256, fxpPrice, market: address, out
     fxpCost = safeFxpMul(fxpAmount, fxpCostPerShare)
     if(fxpCostPerShare >= MARKETS.getCumulativeScale(market)):
         ~invalid()
-    if(fxpCost < MIN_ORDER_VALUE):
-        ~invalid()
+    if(fxpCost >= MIN_ORDER_VALUE):
+        fxpMoneyEscrowed = 0
+        fxpSharesEscrowed = 0
 
-    fxpMoneyEscrowed = 0
-    fxpSharesEscrowed = 0
+        if(fxpSharesHeld > 0):
+            # only get rid of shares if the user can do so without losing money, if fees + cost of the shares are > range then the trade is a guaranteed losing proposition
+            if((safeFxpMul(MARKETS.getTradingFee(market), MARKETS.getCumulativeScale(market)) + fxpCostPerShare) < MARKETS.getCumulativeScale(market)):
+                fxpFill = min(fxpSharesHeld, fxpAmount)
+                fxpAmount -= fxpFill
+                fxpSharesEscrowed += fxpFill
 
-    if(fxpSharesHeld > 0):
-        fxpFill = min(fxpSharesHeld, fxpAmount)
-        fxpAmount -= fxpFill
-        fxpSharesEscrowed += fxpFill
-        i = 1
-        while(i <= MARKETS.getMarketNumOutcomes(market)):
-            if(i != outcome):
-                MARKETS.getOutcomeShareContract(market, i).transferFrom(sender, MARKETS.getOutcomeShareWallet(market, i), fxpFill)
-            i += 1
+                i = 1
+                while(i <= MARKETS.getMarketNumOutcomes(market)):
+                    if(i != outcome):
+                        MARKETS.getOutcomeShareContract(market, i).transferFrom(sender, MARKETS.getOutcomeShareWallet(market, i), fxpFill)
+                    i += 1
 
-    # Take money in escrow for price - min for the remainder of amount that wasn't
-    # able to be used up above. Make sure price - min isn't more than range
-    if(fxpAmount > 0):
-        fxpMoneyEscrowed += fxpCost
-        if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), fxpCost)):
-            ~invalid()
+        # Take money in escrow for price - min for the remainder of amount that wasn't
+        # able to be used up above. Make sure price - min isn't more than range
+        if(fxpAmount > 0):
+            fxpMoneyEscrowed += fxpCost
+            if(!INFO.getCurrency(market).transferFrom(sender, INFO.getWallet(market), fxpCost)):
+                ~invalid()
 
     return([fxpMoneyEscrowed, fxpSharesEscrowed]: arr)
 
