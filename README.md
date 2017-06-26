@@ -95,6 +95,8 @@ https://medium.com/@AugurProject/augur-master-plan-42dda65a3e3d
 
 [More in depth diagram](https://www.websequencediagrams.com/files/render?link=kUm7MBHLoO87M3m2dXzE)
 
+[Market object graph](https://pasteboard.co/1WHGfXjB3.png)
+
 # Trading wcl info
 
 More on worst case loss / value at risk: https://github.com/AugurProject/augur-core/blob/develop/tests/wcl.txt
