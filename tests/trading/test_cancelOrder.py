@@ -25,17 +25,20 @@ BETTER_ORDER_ID = 6
 WORSE_ORDER_ID = 7
 GAS_PRICE = 8
 
-def test_cancelBid():
-    fixture = ContractsFixture()
-    (_, cash, market, orders, makeOrder, cancelOrder) = fixture.prepOrders()
+def test_cancelBid(contractsFixture):
+    cash = contractsFixture.cash
+    market = contractsFixture.binaryMarket
+    orders = contractsFixture.contracts['orders']
+    makeOrder = contractsFixture.contracts['makeOrder']
+    cancelOrder = contractsFixture.contracts['cancelOrder']
 
     orderType = BID
     fxpAmount = fix(1)
     fxpPrice = fix("0.6")
     outcomeID = YES
     tradeGroupID = 42
-    yesShareToken = fixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
     assert cash.publicDepositEther(value = fix(10000), sender = tester.k1) == 1, "Deposit cash"
     assert(cash.approve(makeOrder.address, fix(10000), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
     makerInitialCash = cash.balanceOf(tester.a1)
@@ -56,17 +59,20 @@ def test_cancelBid():
     assert(marketInitialYesShares == yesShareToken.totalSupply()), "Market's yes shares should be unchanged"
     assert marketInitialNoShares == noShareToken.totalSupply(), "Market's no shares should be unchanged"
 
-def test_cancelAsk():
-    fixture = ContractsFixture()
-    (_, cash, market, orders, makeOrder, cancelOrder) = fixture.prepOrders()
+def test_cancelAsk(contractsFixture):
+    cash = contractsFixture.cash
+    market = contractsFixture.binaryMarket
+    orders = contractsFixture.contracts['orders']
+    makeOrder = contractsFixture.contracts['makeOrder']
+    cancelOrder = contractsFixture.contracts['cancelOrder']
 
     orderType = ASK
     fxpAmount = fix(1)
     fxpPrice = fix("0.6")
     outcomeID = 1
     tradeGroupID = 42
-    yesShareToken = fixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
     assert cash.publicDepositEther(value = fix(10000), sender = tester.k1) == 1, "Deposit cash"
     assert(cash.approve(makeOrder.address, fix(10000), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
     makerInitialCash = cash.balanceOf(tester.a1)
@@ -87,9 +93,12 @@ def test_cancelAsk():
     assert(marketInitialYesShares == yesShareToken.totalSupply()), "Market's yes shares should be unchanged"
     assert marketInitialNoShares == noShareToken.totalSupply(), "Market's no shares should be unchanged"
 
-def test_exceptions():
-    fixture = ContractsFixture()
-    (_, cash, market, orders, makeOrder, cancelOrder) = fixture.prepOrders()
+def test_exceptions(contractsFixture):
+    cash = contractsFixture.cash
+    market = contractsFixture.binaryMarket
+    orders = contractsFixture.contracts['orders']
+    makeOrder = contractsFixture.contracts['makeOrder']
+    cancelOrder = contractsFixture.contracts['cancelOrder']
 
     orderType = BID
     fxpAmount = fix(1)
