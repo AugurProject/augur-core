@@ -2,6 +2,8 @@ from __future__ import print_function
 import os
 import serpent
 
+# TODO: only regenerate this file if one of the source files has changed since this file was created
+
 def generateExternForFile(filePath):
     name = os.path.splitext(os.path.basename(filePath))[0]
     signatureOutput = serpent.mk_signature(filePath)

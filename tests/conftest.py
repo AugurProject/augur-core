@@ -172,7 +172,7 @@ class NewContractsFixture:
 
     def getSeededCash(self):
         cash = self.contracts['cash']
-        cash.publicDepositEther(value = 1)
+        cash.publicDepositEther(value = 1, sender = tester.k9)
         return cash
 
     def uploadShareToken(self, controllerAddress = None):
