@@ -1,4 +1,3 @@
-from ethereum import tester
 from binascii import hexlify
 from datetime import timedelta
 from ethereum import tester
@@ -11,6 +10,17 @@ import re
 import serpent
 from utils import bytesToLong
 
+# used to resolve relative paths
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+
+
+def resolveRelativePath(relativeFilePath):
+    return os.path.abspath(os.path.join(BASE_PATH, relativeFilePath))
+
+
+COMPILATION_CACHE = resolveRelativePath('./compilation_cache')
+
+
 class ContractsFixture:
     # TODO: figure out if these are cached across tests in pytest
     signatures = {}
@@ -22,14 +32,14 @@ class ContractsFixture:
 
     @staticmethod
     def ensureCacheDirectoryExists():
-        if not os.path.exists('./compilation_cache/'):
-            os.makedirs('./compilation_cache/')
+        if not os.path.exists(COMPILATION_CACHE):
+            makedirs(COMPILATION_CACHE)
 
     @staticmethod
     def generateSignature(relativeFilePath):
         ContractsFixture.ensureCacheDirectoryExists()
         name = os.path.splitext(os.path.basename(relativeFilePath))[0]
-        outputPath = './compilation_cache/' + name + 'Signature'
+        outputPath = os.path.join(COMPILATION_CACHE,  name + 'Signature')
         lastCompilationTime = os.path.getmtime(outputPath) if os.path.isfile(outputPath) else 0
         if os.path.getmtime(relativeFilePath) > lastCompilationTime:
             print('generating signature for ' + name)
@@ -50,7 +60,7 @@ class ContractsFixture:
         dependencySet = set()
         ContractsFixture.getAllDependencies(relativeFilePath, dependencySet)
         ContractsFixture.ensureCacheDirectoryExists()
-        compiledOutputPath = './compilation_cache/' + name
+        compiledOutputPath = os.path.join(COMPILATION_CACHE, name)
         lastCompilationTime = os.path.getmtime(compiledOutputPath) if os.path.isfile(compiledOutputPath) else 0
         needsRecompile = False
         for path in dependencySet:
@@ -109,12 +119,13 @@ class ContractsFixture:
         return(contract)
 
     def upload(self, relativeFilePath, lookupKey = None):
-        lookupKey = lookupKey if lookupKey else os.path.splitext(os.path.basename(relativeFilePath))[0]
+        resolvedFilePath = resolveRelativePath(relativeFilePath)
+        lookupKey = lookupKey if lookupKey else os.path.splitext(os.path.basename(resolvedFilePath))[0]
         if lookupKey in self.contracts:
             return(self.contracts[lookupKey])
-        compiledCode = ContractsFixture.getCompiledCode(relativeFilePath)
+        compiledCode = ContractsFixture.getCompiledCode(resolvedFilePath)
         if lookupKey not in ContractsFixture.signatures:
-            ContractsFixture.signatures[lookupKey] = ContractsFixture.generateSignature(relativeFilePath)
+            ContractsFixture.signatures[lookupKey] = ContractsFixture.generateSignature(resolvedFilePath)
         signature = ContractsFixture.signatures[lookupKey]
         contractAddress = long(hexlify(self.state.evm(compiledCode)), 16)
         contract = ABIContract(self.state, ContractTranslator(signature), contractAddress)
