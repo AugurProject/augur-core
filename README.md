@@ -17,6 +17,11 @@ programming language:
 sudo pip install -r requirements.txt
 ```
 
+On macOS you will need to use a
+[virtualenv](https://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/)
+or use a [homebrew](https://brew.sh/) Python to work around System Integrity
+Protection.
+
 Now we can try running some tests to make sure our installation worked:
 
 ```
