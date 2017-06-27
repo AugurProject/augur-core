@@ -1,102 +1,97 @@
-augur-core
-----------
+# augur-core
 
 [![Build Status](https://travis-ci.org/AugurProject/augur-core.svg)](https://travis-ci.org/AugurProject/augur-core)
 
-### Ethereum contracts for a decentralized prediction market platform
+Ethereum contracts for a decentralized prediction market platform.
 
-Depends on Serpent and Pyethereum
+## Installation
 
-# Installation
+You should already have a system-wide installation of Python and it should be
+Python 2.7.
 
-You should already have a system-wide installation of python, and it should be set to python-2.7.x.
+First install the dependencies, which include PyEthereum (the tool used to test
+Ethereum smart contracts from Python scripts) and the Serpent smart contract
+programming language:
 
-First set up pyethereum, which includes the tools used to test Ethereum smart contracts from python scripts, and the serpent smart contract programming language. <br>
-(can be done as your preferred user from your home directory)
-
-Pyethereum & Serpent Installation:
 ```
 sudo pip install -r requirements.txt
 ```
 
+(If installed outside of a Python virtualenv Serpent will be installed to
+`./src/serpent`. This isn't ideal but won't hurt anything.)
 
-Serpent can also be installed system-wide if available on your OS or distribution so you can do things like serpent compile and serpent mk_full_signature.<br>
-It is recommended to install the dev version of serpent directly from github as your user in your home directory as follows:
+Now we can try running some tests to make sure our installation worked:
 
-Serpent Installation:
-```
-git clone https://github.com/ethereum/serpent.git
-cd serpent
-git checkout develop
-sudo pip install pytest
-sudo make && sudo make install
-sudo python setup.py install
-```
-
-Now we can try running some tests to make sure our installation worked.
-
-Run some tests:
 ```
 cd tests
 python runtests.py
 ```
 
-
-# Docker
+## Docker
 
 You may run augur-core using docker as follows:
 
 ### Build:
+
 ```
 docker image build --tag augur-core-tests --file Dockerfile-test .
 ```
 
 ### Run:
+
 ```
-docker container rm -f augur-core-tests; docker container run --rm -it --name augur-core-tests augur-core-tests
+docker container rm -f augur-core-tests
+docker container run --rm -it --name augur-core-tests augur-core-tests
 ```
 
 ### Debug:
+
 ```
-docker container rm -f augur-core-tests; docker container run --rm -it --name augur-core-tests --entrypoint /bin/bash augur-core-tests
+docker container rm -f augur-core-tests
+docker container run --rm -it --name augur-core-tests --entrypoint /bin/bash augur-core-tests
 py.test -s tests/trading_tests.py
 ```
 
+## Additional notes
 
-# Additional Notes:
+There are no floats in Serpent.
 
-There are no floats in the serpent language.
-In cases where strings are used, they are actually stored numerically as integers.
+Strings are stored numerically as integers.
 
-All augur-core contracts use fixedpoint (no floats).  So sub-ether values in serpent would be represented as integers whose value
-is in wei (attoEthers or 10**-18 Ethers).
+All augur-core contracts use fixedpoint (no floats). So sub-ether values in
+Serpent would be represented as integers whose value is in wei (attoEthers or
+10**-18 Ethers).
 
-To give an example, 200\*base / 5 would be 40 in that base.  To multiply two fixed point numbers like 5 times 10 an example in 
-base 10\*\*18 would be 5\*10\*\*18 \* 10\*10\*\*18 / 10\*\*18
-[we divide by the base to keep it in base 10\*\*18].  For a division example, 18/10 would be 18\*10\*\*18 \* 10\*\*18 / (10\*10\*\*18).
+To give an example, 200\*base / 5 would be 40 in that base.
 
-Also note, Mist uses a different contract abi style than usual, to convert use the following regex \((.\*?)\) and replace with nothing [except don't do it for events].
+To multiply two
+fixed point numbers like 5 times 10 an example in base 10\*\*18 would be
+5\*10\*\*18 \* 10\*10\*\*18 / 10\*\*18 (we divide by the base to keep it in
+base 10\*\*18).
 
-# Resources to learn about serpent
+For a division example, 18/10 would be 18\*10\*\*18 \* 10\*\*18 /
+(10\*10\*\*18).
 
-https://github.com/ethereum/wiki/wiki/Serpent
+Also note, Mist uses a different contract abi style than usual, to convert use
+the regex `((.*?))` and replace with nothing (except don't do it for
+events).
 
-https://www.cs.umd.edu/~elaine/smartcontract/guide.pdf
+## General information about Serpent
 
-# More on Augur / high level
+- [The Serpent wiki](https://github.com/ethereum/wiki/wiki/Serpent)
+- [The Serpent guide](https://www.cs.umd.edu/~elaine/smartcontract/guide.pdf) (PDF)
 
-https://medium.com/@AugurProject/a-roadmap-for-augur-and-whats-next-930fe6c7f75a
+## General information about Augur
 
-https://medium.com/@AugurProject/augur-master-plan-42dda65a3e3d
+- [A Roadmap For Augur and What’s Next](https://medium.com/@AugurProject/a-roadmap-for-augur-and-whats-next-930fe6c7f75a)
+- [Augur Master Plan](https://medium.com/@AugurProject/augur-master-plan-42dda65a3e3d)
 
-# New reporting system info
+## Information about the new reporting system
 
-[Flow diagram](https://pasteboard.co/1FcgIDWR2.png)
+- [Flow diagram](https://pasteboard.co/1FcgIDWR2.png)
+- [More in depth diagram](https://www.websequencediagrams.com/files/render?link=kUm7MBHLoO87M3m2dXzE)
+- [Market object graph](https://pasteboard.co/1WHGfXjB3.png)
 
-[More in depth diagram](https://www.websequencediagrams.com/files/render?link=kUm7MBHLoO87M3m2dXzE)
+## Information about trading worst case loss (WCL)
 
-[Market object graph](https://pasteboard.co/1WHGfXjB3.png)
-
-# Trading wcl info
-
-More on worst case loss / value at risk: https://github.com/AugurProject/augur-core/blob/develop/tests/wcl.txt
+- [Some notes on WCL/value at risk](https://github.com/AugurProject/augur-core/blob/develop/tests/wcl.txt)
