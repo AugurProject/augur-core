@@ -37,21 +37,14 @@ docker image build --tag augur-core-tests --file Dockerfile-test .
 ### Run:
 
 ```
-docker container run --rm -it --name augur-core-tests augur-core-tests
+docker container run --rm -it augur-core-tests
 ```
 
 ### Debug:
 
 ```
-docker container run --rm -it --name augur-core-tests --entrypoint /bin/bash augur-core-tests
+docker container run --rm -it --entrypoint /bin/bash augur-core-tests
 py.test -s tests/trading_tests.py
-```
-
-If docker fails to remove the container when it exits you may get an error when
-you try to run it again. You must remove the pre-existing container first:
-
-```
-docker container rm -f augur-core-tests
 ```
 
 ## Additional notes
