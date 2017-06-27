@@ -56,7 +56,7 @@ rpc.connect({
                 console.log("success:", contractName, r.hash);
                 rpc.getTransactionReceipt(r.hash, (receipt) => {
                   if (!receipt || receipt.error) return nextContract(receipt || new Error("upload error"));
-                  contractAddresses[contractName] = abi.format_address(receipt.contractAddress);
+                  contractAddresses[contractName.charAt(0).toUpperCase() + contractName.slice(1)] = abi.format_address(receipt.contractAddress);
 
                   // 4a) do controller.setValue('contract', address) and self.controller.addToWhitelist(address) [can be in same block]
                   async.each([{
