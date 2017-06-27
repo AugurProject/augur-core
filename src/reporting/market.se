@@ -85,11 +85,13 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     self.denominationToken = denominationToken
     self.creator = creator
     self.reportingTokens = create('../libraries/map.se')
-    i = 0
-    while(i < numOutcomes):
-        self.shareTokens[i] = SHARE_TOKEN_FACTORY.createShareToken(self.controller)
-        i += 1
+    outcome = 0
+    while(outcome < numOutcomes):
+        self.shareTokens[outcome] = SHARE_TOKEN_FACTORY.createShareToken(self.controller, self, outcome)
+        outcome += 1
     self.approveSpenders()
+    require(self.controller.lookup('cash') == denominationToken or self.getBranch().isContainerForShareToken(denominationToken))
+
     # TODO: log short description
     # TODO: log long description
     # TODO: log tags (up to 0-2)
@@ -404,6 +406,9 @@ def getTopic():
     assertNoValue()
     return(self.topic)
 
+def shouldCollectReportingFees():
+    self.getBranch().isContainerForShareToken(self.denominationToken)
+
 def isDoneWithAutomatedReporters():
     assertNoValue()
     return(self.automatedReporterPayoutDistributionHash != 0 or block.timestamp > self.getAutomatedReportDueTimestamp())
@@ -505,6 +510,13 @@ def isContainerForReportingToken(shadyToken: address):
     if (self.reportingTokens.getValue(shadyId) != shadyToken):
         return(0)
     return(1)
+
+def isContainerForShareToken(shadyShareToken: address):
+    outcome = shadyShareToken.getOutcome()
+    if self.getShareToken(outcome) == shadyShareToken:
+        return(1)
+    else:
+        return(0)
 
 def canBeReportedOn():
     assertNoValue()
