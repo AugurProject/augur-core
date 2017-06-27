@@ -92,7 +92,7 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
         i += 1
     self.approveSpenders()
 
-    if self.shouldCollectReportingFees():
+    if self.shouldCollectReportingFees(denominationToken):
         reportingWindow = market.getReportingWindow()
         reportingFeeRate = MARKET_FEE_CALCULATOR.getReportingFeeInAttoethPerEth(reportingWindow)
         reportingFee = safeFxpMul(safeFxpMul(reportingFeeRate, fxpAmount), cumulativeScale)

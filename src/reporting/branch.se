@@ -144,8 +144,7 @@ def isContainerForShareToken(denominationToken):
     denominationTokenMarket = denominationToken.getMarket()
     if (not denominationTokenMarket):
         return(0)
-    denominationTokenBranch = denominationTokenMarket.getBranch()
-    if (not denominationTokenBranch):
+    if (not denominationTokenMarket.getBranch()):
         return(0)
     if (not denominationToken.isShareToken()):
         return(0)
