@@ -140,12 +140,12 @@ def isParentOf(shadyChild: address):
     branchId = shadyChild.getParentPayoutDistributionHash()
     return(self.childBranches[branchId] == shadyChild)
 
-def isContainerForShareToken(denominationToken):
-    denominationTokenMarket = denominationToken.getMarket()
-    if (not denominationTokenMarket):
+def isContainerForShareToken(shadyShareToken):
+    shadyMarket = shadyShareToken.getMarket()
+    if not shadyMarket:
         return(0)
-    if (not denominationTokenMarket.getBranch()):
+    if not self.isContainerForMarket(shadyMarket):
         return(0)
-    if (not denominationToken.isShareToken()):
+    if not shadyMarket.isContainerForShareToken(shadyToken):
         return(0)
     return(1)
