@@ -17,9 +17,6 @@ programming language:
 sudo pip install -r requirements.txt
 ```
 
-(If installed outside of a Python virtualenv Serpent will be installed to
-`./src/serpent`. This isn't ideal but won't hurt anything.)
-
 Now we can try running some tests to make sure our installation worked:
 
 ```
@@ -71,10 +68,6 @@ base 10\*\*18).
 
 For a division example, 18/10 would be 18\*10\*\*18 \* 10\*\*18 /
 (10\*10\*\*18).
-
-Also note, Mist uses a different contract abi style than usual, to convert use
-the regex `((.*?))` and replace with nothing (except don't do it for
-events).
 
 ## General information about Serpent
 
