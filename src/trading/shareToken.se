@@ -25,9 +25,16 @@ data name
 data symbol
 # amount of decimals per unit of shares
 data decimals
+data outcome
 
 event Transfer(from: address: indexed, to: address: indexed, value: int256)
 event Approval(owner: address: indexed, spender: address: indexed, value: int256)
+
+def initialize(market: address, outcome: int256):
+    require(not initialized)
+    self.initialized = 1
+    self.market = market
+    self.outcome = outcome
 
 def any():
     assertNoValue()
@@ -97,6 +104,12 @@ def totalSupply():
 # @return fxp
 def balanceOf(address: address):
     return(self.accounts[address].balance)
+
+def getMarket():
+    return(self.market)
+
+def getOutcome():
+    return(self.outcome)
 
 def getName():
     return(NAME)

@@ -88,13 +88,26 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     i = 0
     while(i < numOutcomes):
         self.shareTokens[i] = SHARE_TOKEN_FACTORY.createShareToken(self.controller)
+        self.shareTokens[i].initialize(self, i)
         i += 1
     self.approveSpenders()
+
+    if self.shouldCollectReportingFees():
+        reportingWindow = market.getReportingWindow()
+        reportingFeeRate = MARKET_FEE_CALCULATOR.getReportingFeeInAttoethPerEth(reportingWindow)
+        reportingFee = safeFxpMul(safeFxpMul(reportingFeeRate, fxpAmount), cumulativeScale)
+    else:
+        require(self.controller.lookup('cash') == denominationToken)
+        reportingFee = 0
+
     # TODO: log short description
     # TODO: log long description
     # TODO: log tags (up to 0-2)
     # TODO: log outcome labels (same number as numOutcomes)
     # TODO: log type (scalar, binary, categorical)
+
+def shouldCollectReportingFees(denominationToken):
+    market.getBranch().isContainerForShareToken(denominationToken)
 
 # this will need to be called manually for each open market if a spender contract is updated
 def approveSpenders():

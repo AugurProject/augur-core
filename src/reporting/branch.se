@@ -139,3 +139,14 @@ def isContainerForReportingToken(shadyReportingToken: address):
 def isParentOf(shadyChild: address):
     branchId = shadyChild.getParentPayoutDistributionHash()
     return(self.childBranches[branchId] == shadyChild)
+
+def isContainerForShareToken(denominationToken):
+    denominationTokenMarket = denominationToken.getMarket()
+    if (not denominationTokenMarket):
+        return(0)
+    denominationTokenBranch = denominationTokenMarket.getBranch()
+    if (not denominationTokenBranch):
+        return(0)
+    if (not denominationToken.isShareToken()):
+        return(0)
+    return(1)

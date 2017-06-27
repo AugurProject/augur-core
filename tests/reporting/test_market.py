@@ -14,6 +14,14 @@ def test_market_creation():
     shadyReportingToken = fixture.upload('../src/reporting/reportingToken.se', 'shadyReportingToken')
     shadyReportingToken.initialize(market.address, [0,2])
 
+    shadyBranch = fixture.createBranch(0, 0)
+    regularMarket = fixture.createReasonableBinaryMarket(branch, cash)
+    shadyDenominationToken = fixture.applySignature('shareToken', regularMarket.getShareToken(0))
+    try:
+        raise Exception(fixture.createReasonableBinaryMarket(shadyBranch, shadyDenominationToken))
+    except Exception as exc:
+        assert(isinstance(exc, ethereum.tester.TransactionFailed)), "Shady share token should be failing due to being in a separate branch"
+
     assert(market.getBranch() == branch.address)
     assert(market.getNumberOfOutcomes() == 2)
     assert(market.getPayoutDenominator() == 2)
