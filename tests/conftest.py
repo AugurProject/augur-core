@@ -1,4 +1,3 @@
-from ethereum import tester
 from binascii import hexlify
 from datetime import timedelta
 from ethereum import tester
@@ -12,6 +11,17 @@ import re
 import serpent
 from utils import bytesToLong
 
+# used to resolve relative paths
+BASE_PATH = path.dirname(path.abspath(__file__))
+
+
+def resolveRelativePath(relativeFilePath):
+    return path.abspath(path.join(BASE_PATH, relativeFilePath))
+
+
+COMPILATION_CACHE = resolveRelativePath('./compilation_cache')
+
+
 class NewContractsFixture:
     # TODO: figure out if these are cached across tests in pytest
     signatures = {}
@@ -23,14 +33,14 @@ class NewContractsFixture:
 
     @staticmethod
     def ensureCacheDirectoryExists():
-        if not path.exists('./compilation_cache/'):
-            makedirs('./compilation_cache/')
+        if not path.exists(COMPILATION_CACHE):
+            makedirs(COMPILATION_CACHE)
 
     @staticmethod
     def generateSignature(relativeFilePath):
         NewContractsFixture.ensureCacheDirectoryExists()
         name = path.splitext(path.basename(relativeFilePath))[0]
-        outputPath = './compilation_cache/' + name + 'Signature'
+        outputPath = path.join(COMPILATION_CACHE,  name + 'Signature')
         lastCompilationTime = path.getmtime(outputPath) if path.isfile(outputPath) else 0
         if path.getmtime(relativeFilePath) > lastCompilationTime:
             print('generating signature for ' + name)
@@ -51,7 +61,7 @@ class NewContractsFixture:
         dependencySet = set()
         NewContractsFixture.getAllDependencies(relativeFilePath, dependencySet)
         NewContractsFixture.ensureCacheDirectoryExists()
-        compiledOutputPath = './compilation_cache/' + name
+        compiledOutputPath = path.join(COMPILATION_CACHE, name)
         lastCompilationTime = path.getmtime(compiledOutputPath) if path.isfile(compiledOutputPath) else 0
         needsRecompile = False
         for dependencyPath in dependencySet:
@@ -116,12 +126,13 @@ class NewContractsFixture:
         return(contract)
 
     def upload(self, relativeFilePath, lookupKey = None):
-        lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
+        resolvedPath = resolveRelativePath(relativeFilePath)
+        lookupKey = lookupKey if lookupKey else path.splitext(path.basename(resolvedPath))[0]
         if lookupKey in self.contracts:
             return(self.contracts[lookupKey])
-        compiledCode = NewContractsFixture.getCompiledCode(relativeFilePath)
+        compiledCode = NewContractsFixture.getCompiledCode(resolvedPath)
         if lookupKey not in NewContractsFixture.signatures:
-            NewContractsFixture.signatures[lookupKey] = NewContractsFixture.generateSignature(relativeFilePath)
+            NewContractsFixture.signatures[lookupKey] = NewContractsFixture.generateSignature(resolvedPath)
         signature = NewContractsFixture.signatures[lookupKey]
         contractAddress = long(hexlify(self.state.evm(compiledCode)), 16)
         contract = ABIContract(self.state, ContractTranslator(signature), contractAddress)
@@ -142,7 +153,7 @@ class NewContractsFixture:
     ####
 
     def uploadAllContracts(self):
-        for directory, _, filenames in walk('../src'):
+        for directory, _, filenames in walk(resolveRelativePath('../src')):
             for filename in filenames:
                 name = path.splitext(filename)[0]
                 extension = path.splitext(filename)[1]
@@ -151,7 +162,7 @@ class NewContractsFixture:
                 self.uploadAndAddToController(path.join(directory, filename))
 
     def whitelistTradingContracts(self):
-        for filename in listdir('../src/trading'):
+        for filename in listdir(resolveRelativePath('../src/trading')):
             name = path.splitext(filename)[0]
             self.controller.addToWhitelist(self.contracts[name].address)
 
