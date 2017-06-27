@@ -91,7 +91,7 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
         self.shareTokens[i].initialize(self, i)
         i += 1
     self.approveSpenders()
-    require(self.getBranch().isContainerForShareToken(denominationToken) or self.controller.lookup('cash') == denominationToken)
+    require(self.controller.lookup('cash') == denominationToken or self.getBranch().isContainerForShareToken(denominationToken))
 
     # TODO: log short description
     # TODO: log long description
@@ -99,8 +99,8 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     # TODO: log outcome labels (same number as numOutcomes)
     # TODO: log type (scalar, binary, categorical)
 
-def shouldCollectReportingFees(denominationToken):
-    self.getBranch().isContainerForShareToken(denominationToken)
+def shouldCollectReportingFees():
+    self.getBranch().isContainerForShareToken(self.denominationToken)
 
 def isContainerForShareToken(shadyShareToken):
     outcome = shadyShareToken.getOutcome()
