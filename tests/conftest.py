@@ -13,17 +13,12 @@ from utils import bytesToLong
 
 # used to resolve relative paths
 BASE_PATH = path.dirname(path.abspath(__file__))
-
-
 def resolveRelativePath(relativeFilePath):
     return path.abspath(path.join(BASE_PATH, relativeFilePath))
-
-
 COMPILATION_CACHE = resolveRelativePath('./compilation_cache')
 
-
 class NewContractsFixture:
-    # TODO: figure out if these are cached across tests in pytest
+    # TODO: figure out how to disable logging events to stdout (they are super noisy)
     signatures = {}
     compiledCode = {}
 
@@ -116,6 +111,8 @@ class NewContractsFixture:
         self.branch = self.createBranch(0, 0)
         self.cash = self.getSeededCash()
         self.binaryMarket = self.createReasonableBinaryMarket(self.branch, self.cash)
+        self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)
+        self.scalarMarket = self.createReasonableScalarMarket(self.branch, -10 * 10**18, 30 * 10**18, self.cash)
         self.state.mine(1)
         self.snapshot = self.state.snapshot()
 
@@ -214,20 +211,51 @@ class NewContractsFixture:
         return(childBranch)
 
     def createBinaryMarket(self, branch, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic):
+        return self.createCategoricalMarket(branch, 2, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic)
+
+    def createCategoricalMarket(self, branch, numOutcomes, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic):
         marketCreationFee = self.contracts['marketFeeCalculator'].getValidityBond() + self.contracts['marketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['marketCreation'].createCategoricalMarket(branch.address, endTime, 2, feePerEthInWei, denominationToken.address, automatedReporterAddress, topic, value = marketCreationFee)
+        marketAddress = self.contracts['marketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, automatedReporterAddress, topic, value = marketCreationFee)
+        assert marketAddress
+        market = ABIContract(self.state, ContractTranslator(NewContractsFixture.signatures['market']), marketAddress)
+        return market
+
+    def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic):
+        marketCreationFee = self.contracts['marketFeeCalculator'].getValidityBond() + self.contracts['marketFeeCalculator'].getTargetReporterGasCosts()
+        marketAddress = self.contracts['marketCreation'].createScalarMarket(branch.address, endTime, feePerEthInWei, denominationToken.address, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = marketCreationFee)
         assert marketAddress
         market = ABIContract(self.state, ContractTranslator(NewContractsFixture.signatures['market']), marketAddress)
         return market
 
     def createReasonableBinaryMarket(self, branch, denominationToken):
         return self.createBinaryMarket(
-            branch=branch,
-            endTime=long(self.state.block.timestamp + timedelta(days=1).total_seconds()),
-            feePerEthInWei=10**16,
-            denominationToken=denominationToken,
-            automatedReporterAddress=0,
-            topic='Sports'.ljust(32, '\x00'))
+            branch = branch,
+            endTime = long(self.state.block.timestamp + timedelta(days=1).total_seconds()),
+            feePerEthInWei = 10**16,
+            denominationToken = denominationToken,
+            automatedReporterAddress = 0,
+            topic = 'Sports'.ljust(32, '\x00'))
+
+    def createReasonableCategoricalMarket(self, branch, numOutcomes, denominationToken):
+        return self.createCategoricalMarket(
+            branch = branch,
+            numOutcomes = numOutcomes,
+            endTime = long(self.state.block.timestamp + timedelta(days=1).total_seconds()),
+            feePerEthInWei = 10**16,
+            denominationToken = denominationToken,
+            automatedReporterAddress = 0,
+            topic = 'Sports'.ljust(32, '\x00'))
+
+    def createReasonableScalarMarket(self, branch, minDisplayPrice, maxDisplayPrice, denominationToken):
+        return self.createScalarMarket(
+            branch = branch,
+            endTime = long(self.state.block.timestamp + timedelta(days=1).total_seconds()),
+            feePerEthInWei = 10**16,
+            denominationToken = denominationToken,
+            minDisplayPrice = minDisplayPrice,
+            maxDisplayPrice = maxDisplayPrice,
+            automatedReporterAddress = 0,
+            topic = 'Sports'.ljust(32, '\x00'))
 
 @fixture(scope="session")
 def sessionFixture():

@@ -64,7 +64,7 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     require(not (payoutDenominator % numOutcomes))
     require(0 <= feePerEthInWei and feePerEthInWei <= 5*10**17)
     require(-2**254 <= maxDisplayPrice and maxDisplayPrice <= 2**254)
-    require(-2**256 <= minDisplayPrice and minDisplayPrice <= 2**254)
+    require(-2**254 <= minDisplayPrice and minDisplayPrice <= 2**254)
     completeSetCostMultiplier = maxDisplayPrice - minDisplayPrice
     require(1 <= completeSetCostMultiplier and completeSetCostMultiplier <= 2**254)
     require(0 < denominationToken.totalSupply())

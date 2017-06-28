@@ -50,10 +50,10 @@ def takeAskOrder(taker: address, orderID: address, market: address, outcome: int
     maker = order[OWNER]
     makerSharesEscrowed = min(order[SHARES_ESCROWED], fxpAmountTakerWants)
     require(maker != taker)
-    require(orderDisplayPrice)
 
     sharePriceShort = safeSub(market.getMaxDisplayPrice(), orderDisplayPrice)
-    sharePriceLong = safeSub(orderDisplayPrice, market.getMinDisplayPrice())
+    # FIXME: we can't use safeSub here because it disallows subtracting negative numbers, but we need to protect against overflows
+    sharePriceLong = orderDisplayPrice - market.getMinDisplayPrice()
     shareToken = market.getShareToken(outcome)
     denominationToken = market.getDenominationToken()
     numberOfOutcomes = market.getNumberOfOutcomes()

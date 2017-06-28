@@ -57,6 +57,8 @@ def makeOrder(sender: address, type: int256, attoshares: int256, displayPrice: i
     require(market)
     require(0 <= outcome and outcome < market.getNumberOfOutcomes())
     require(market.getMinDisplayPrice() < displayPrice and displayPrice < market.getMaxDisplayPrice())
+    # FIXME: disallow making an order with shares such that the market creator fees are greater than the taker will get from the deal
+    # FIXME: figure out how to deal with the same problem for reporting fees
 
     attotokensPerShare = displayPrice - market.getMinDisplayPrice()
     if(type == ASK):
