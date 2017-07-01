@@ -1,0 +1,91 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+#### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+####
+
+inset('../macros/externs.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/require.sem')
+
+data initialized
+data market
+data bondHolder
+data payoutDistributionHash #disputed outcome
+data bondRemainingToBePaidOut
+data tokens[2**160]
+data spenders[2**160][2**160]
+data supply
+
+def any():
+    assertNoValue()
+
+def initialize(market: address, bondHolder: address, bondAmount: int256, payoutDistributionHash: int256):
+    require(not self.initialized)
+    self.initialized = 1
+    self.market = market
+    self.bondHolder = bondHolder
+    self.payoutDistributionHash = payoutDistributionHash
+    self.bondRemainingToBePaidOut = bondAmount * 2
+    self.market.getReputationToken().transferFrom(msg.sender, self, bondAmount)
+
+#CONSIDER: Should we decrease that value when REP is sent to the contract, or when REP is withdrawn?
+def withdraw(amountToWithdraw: int256, payoutDistributionHash: int256):
+    require(msg.sender == self.bondHolder)
+    require(self.market.isFinalized())
+    require(payoutDistributionHash == self.payoutDistributionHash)
+    if (self.bondRemainingToBePaidOut > 0):
+        amountToTransfer = min(amountToWithdraw, self.bondRemainingToBePaidOut)
+        self.market.getReputationToken().transfer(self.bondHolder, amountToTransfer)
+        self.bondRemainingToBePaidOut = safeSub(self.bondRemainingToBePaidOut, amountToTransfer)
+
+####
+#### Getters
+####
+
+def getReputationToken():
+    return self.market.getReputationToken()
+
+def getBondRemainingToBePaidOut():
+    return(self.bondRemainingToBePaidOut)
+
+
+####
+#### ERC20 Implementation
+####
+
+event Transfer(from:address:indexed, to:address:indexed, attotokens:int256)
+event Approval(owner:address:indexed, spender:address:indexed, attotokens:int256)
+
+def totalSupply():
+    return(self.supply)
+
+def balanceOf(address: address):
+    return(self.tokens[address])
+
+def transfer(destinationAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    self.tokens[msg.sender] = safeSub(self.tokens[msg.sender], attotokens)
+    self.tokens[destinationAddress] = safeAdd(self.tokens[destinationAddress], attotokens)
+    log(type = Transfer, msg.sender, destinationAddress, attotokens)
+    return(1)
+
+def transferFrom(sourceAddress: address, destinationAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    require(self.spenders[sourceAddress][msg.sender] >= attotokens)
+    self.spenders[sourceAddress][msg.sender] = safeSub(self.spenders[sourceAddress][msg.sender], attotokens)
+    self.tokens[sourceAddress] = safeSub(self.tokens[sourceAddress], attotokens)
+    self.tokens[destinationAddress] = safeAdd(self.tokens[destinationAddress], attotokens)
+    log(type = Transfer, sourceAddress, destinationAddress, attotokens)
+    return(1)
+
+def approve(spenderAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    self.spenders[msg.sender][spenderAddress] = attotokens
+    log(type = Approval, msg.sender, spenderAddress, attotokens)
+    return(1)
+
+def allowance(ownerAddress: address, spenderAddress: address):
+    return(self.spenders[ownerAddress][spenderAddress])

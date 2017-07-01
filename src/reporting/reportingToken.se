@@ -61,6 +61,11 @@ def redeemForkedToken(reporter: address):
     self.getReputationToken().migrateOut(destinationReputationToken, reporterReputationShare)
     destinationReputationToken.transfer(reportor, reporterReputationShare)
 
+#Right now `migrateLosingTokens` just transfers _all_ REP from the losing token contract to the winning token contract.
+#Instead it should siphon off REP to the bond holder until they are made whole, then transfer the remaining to the winning token contract.
+#This means we'll need to track how much the bond holder has been paid so far, and in the migrate code we'll have to update that.
+#There are 3 different bonds, all behave the same but have different sizes and holders.
+#Right now that function only transfers to the winning token.  It needs to prioritize sending to unfulfilled dispute bonds first, then reporting tokens second.
 def migrateLosingTokens():
     require(self.market.isFinalized())
     require(self.market.isContainerForReportingToken(self))
@@ -68,6 +73,16 @@ def migrateLosingTokens():
     require(self.market.getFinalWinningReportingToken() != self)
     self.supply = 0
     reputationSupply = self.getReputationToken().balanceOf(self)
+    reputationToken = self.market.getReputationToken()
+    disputeBondToken = self.market.getAutomatedReporterDisputeBondToken()
+    amount = min(disputeBondToken.getBondRemainingToBePaidOut(), reputationToken.balanceOf(self))
+    reputationToken.transfer(disputeBondToken, amount)
+    disputeBondToken = self.market.getLimitedReporterDisputeBondToken()
+    amount = min(disputeBondToken.getBondRemainingToBePaidOut(), reputationToken.balanceOf(self))
+    reputationToken.transfer(disputeBondToken, amount)
+    disputeBondToken = self.market.getAllReporterDisputeBondToken()
+    amount = min(disputeBondToken.getBondRemainingToBePaidOut(), reputationToken.balanceOf(self))
+    reputationToken.transfer(disputeBondToken, amount)
     self.getReputationToken().transfer(self.market.getFinalWinningReportingToken(), reputationSupply)
 
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
