@@ -22,11 +22,10 @@ data bestOrder[][][]
 data worstOrder[][][]
 
 
-event CancelOrder(market: indexed, sender: indexed, fxpPrice, fxpAmount, orderID, outcome, type, cashRefund, sharesRefund, timestamp)
-event CompleteSets(sender: indexed, market: indexed, type: indexed, fxpAmount, numOutcomes, marketCreatorFee, reportingFee, timestamp)
-event MakeOrder(market: address: indexed, sender: address: indexed, type, fxpPrice, fxpAmount, outcome, orderID: address, fxpMoneyEscrowed, fxpSharesEscrowed, timestamp, tradeGroupID)
-event TakeAskOrder(market: address: indexed, sender: address: indexed, owner: address: indexed, type: int256, fxpPrice, fxpAmount: int256, timestamp: int256, orderID: address, outcome: int256, fxpAskerSharesFilled: int256, fxpAskerMoneyFilled: int256, fxpBidderMoneyFilled: int256)
-event TakeBidOrder(market: address: indexed, sender: address: indexed, owner: address: indexed, type: int256, fxpPrice, fxpAmount: int256, timestamp: int256, orderID: address, outcome: int256, fxpAskerSharesFilled: int256, fxpAskerMoneyFilled: int256, fxpBidderSharesFilled: int256, fxpBidderMoneyFilled: int256)
+event CancelOrder(market: address: indexed, sender: address: indexed, fxpPrice: int256, fxpAmount, orderID: address, outcome: int256, type: int256, cashRefund: int256, sharesRefund: int256)
+event CompleteSets(sender: address: indexed, market: address: indexed, type: indexed, fxpAmount: int256, numOutcomes: int256, marketCreatorFee: int256, reportingFee: int256)
+event MakeOrder(market: address: indexed, sender: address: indexed, type, fxpPrice: int256, fxpAmount: int256, outcome: int256, orderID: address, fxpMoneyEscrowed: int256, fxpSharesEscrowed: int256, tradeGroupID: int256)
+event TakeOrder(market: address: indexed, outcome: int256: indexed, type: int256: indexed, orderId: address, price: int256, maker: address, taker:address, makerShares: int256, makerTokens: int256, takerShares: int256, takerTokens: int256)
 
 # Trade types
 macro BID: 1
@@ -93,11 +92,10 @@ def getOrderIDs(type: int256, market: address, outcome: int256, startingOrderID:
 
 # @public
 def getOrder(orderID: address, type: int256, market: address, outcome: int256):
-    order = array(9)
+    order = array(8)
     order[ATTOSHARES] = self.orders[market][outcome][type][orderID].fxpAmount
     order[DISPLAY_PRICE] = self.orders[market][outcome][type][orderID].fxpPrice
     order[OWNER] = self.orders[market][outcome][type][orderID].owner
-    order[OUTCOME] = outcome
     order[TOKENS_ESCROWED] = self.orders[market][outcome][type][orderID].fxpMoneyEscrowed
     order[SHARES_ESCROWED] = self.orders[market][outcome][type][orderID].fxpSharesEscrowed
     order[BETTER_ORDER_ID] = self.orders[market][outcome][type][orderID].betterOrderID
@@ -246,24 +244,7 @@ def saveOrder(orderID: address, type: int256, market: address, fxpAmount: int256
     self.orders[market][outcome][type][orderID].fxpMoneyEscrowed = fxpMoneyEscrowed
     self.orders[market][outcome][type][orderID].fxpSharesEscrowed = fxpSharesEscrowed
     self.orders[market][outcome][type][orderID].gasPrice = gasPrice
-    log(type=MakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp, tradeGroupID)
-    return(1)
-
-# @internal
-def removeOrderFromList(orderID: address, type: int256, market: address, outcome: int256):
-    self.controller.assertIsWhitelisted(msg.sender)
-    betterOrderID = self.orders[market][outcome][type][orderID].betterOrderID
-    worseOrderID = self.orders[market][outcome][type][orderID].worseOrderID
-    if(self.bestOrder[market][outcome][type] == orderID):
-        self.bestOrder[market][outcome][type] = worseOrderID
-    if(self.worstOrder[market][outcome][type] == orderID):
-        self.worstOrder[market][outcome][type] = betterOrderID
-    if(betterOrderID != 0):
-        self.orders[market][outcome][type][betterOrderID].worseOrderID = worseOrderID
-    if(worseOrderID != 0):
-        self.orders[market][outcome][type][worseOrderID].betterOrderID = betterOrderID
-    self.orders[market][outcome][type][orderID].betterOrderID = 0
-    self.orders[market][outcome][type][orderID].worseOrderID = 0
+    log(type=MakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, tradeGroupID)
     return(1)
 
 # @internal
@@ -280,41 +261,55 @@ def removeOrder(orderID: address, type: int256, market: address, outcome: int256
     return(1)
 
 # @internal
-def fillOrder(orderID: address, type: int256, market: address, outcome: int256, fill: int256, money: int256, shares: int256):
+def fillOrder(orderId: address, orderType: int256, market: address, orderOutcome: int256, sharesFilled: int256, tokensFilled: int256):
     self.controller.assertIsWhitelisted(msg.sender)
-    require(fill <= self.orders[market][outcome][type][orderID].fxpAmount)
-    require(money <= self.orders[market][outcome][type][orderID].fxpMoneyEscrowed)
-    require(shares <= self.orders[market][outcome][type][orderID].fxpSharesEscrowed)
-    require(tx.gasprice <= self.orders[market][outcome][type][orderID].gasPrice)
-    self.orders[market][outcome][type][orderID].fxpAmount -= fill
-    self.orders[market][outcome][type][orderID].fxpMoneyEscrowed -= money
-    self.orders[market][outcome][type][orderID].fxpSharesEscrowed -= shares
+    require(market)
+    require(0 <= orderOutcome and orderOutcome < market.getNumberOfOutcomes())
+    require(orderType == BID or orderType == ASK)
+    require(orderId)
+    require(sharesFilled <= self.orders[market][orderOutcome][orderType][orderId].fxpSharesEscrowed)
+    require(tokensFilled <= self.orders[market][orderOutcome][orderType][orderId].fxpMoneyEscrowed)
+    require(tx.gasprice <= self.orders[market][orderOutcome][orderType][orderId].gasPrice)
+    fill = 0
+    if orderType == BID:
+        # FIXME: we can't use safeSub here because we might be subtracting a negative, but we need to protect against overflows
+        fill = sharesFilled + safeFxpDiv(tokensFilled, self.orders[market][orderOutcome][orderType][orderId].fxpPrice - market.getMinDisplayPrice())
+    if orderType == ASK:
+        # FIXME: we can't use safeSub here because we might be subtracting a negative, but we need to protect against overflows
+        fill = sharesFilled + safeFxpDiv(tokensFilled, market.getMaxDisplayPrice() - self.orders[market][orderOutcome][orderType][orderId].fxpPrice)
+    require(fill <= self.orders[market][orderOutcome][orderType][orderId].fxpAmount)
+    self.orders[market][orderOutcome][orderType][orderId].fxpAmount -= fill
+    self.orders[market][orderOutcome][orderType][orderId].fxpMoneyEscrowed -= tokensFilled
+    self.orders[market][orderOutcome][orderType][orderId].fxpSharesEscrowed -= sharesFilled
+    if self.orders[market][orderOutcome][orderType][orderId].fxpAmount == 0:
+        require(self.orders[market][orderOutcome][orderType][orderId].fxpMoneyEscrowed == 0)
+        require(self.orders[market][orderOutcome][orderType][orderId].fxpSharesEscrowed == 0)
+        self.removeOrderFromList(orderId, orderType, market, orderOutcome)
+        self.orders[market][orderOutcome][orderType][orderId].fxpPrice = 0
+        self.orders[market][orderOutcome][orderType][orderId].owner = 0
+        self.orders[market][orderOutcome][orderType][orderId].gasPrice = 0
+        self.orders[market][orderOutcome][orderType][orderId].betterOrderID = 0
+        self.orders[market][orderOutcome][orderType][orderId].worseOrderID = 0
     return(1)
 
-# Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
-# @ internal
-def takeBidOrderLog(market: address, sender: address, owner: address, fxpPrice: int256, fxpSumOfFills: int256, orderID: address, outcome: int256, fxpAskerSharesFilled: int256, fxpAskerMoneyFilled: int256, fxpBidderSharesFilled: int256, fxpBidderMoneyFilled: int256):
+# @internal
+def takeOrderLog(market: address, orderOutcome: int256, orderType: int256, orderId: address, taker: address, makerSharesFilled: int256, makerTokensFilled: int256, takerSharesFilled: int256, takerTokensFilled: int256):
     self.controller.assertIsWhitelisted(msg.sender)
-    log(type=TakeBidOrder, market, sender, owner, BID, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderSharesFilled, fxpBidderMoneyFilled)
+    price = self.orders[market][orderOutcome][orderType][orderId].fxpPrice
+    maker = self.orders[market][orderOutcome][orderType][orderId].owner
+    log(type=TakeOrder, market, orderOutcome, orderType, orderId, price, maker, taker, makerSharesFilled, makerTokensFilled, takerSharesFilled, takerTokensFilled)
     return(1)
 
-# Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
-# @ internal
-def takeAskOrderLog(market: address, sender: address, owner: address, fxpPrice: int256, fxpSumOfFills: int256, orderID: address, outcome: int256, fxpAskerSharesFilled: int256, fxpAskerMoneyFilled: int256, fxpBidderMoneyFilled: int256):
-    self.controller.assertIsWhitelisted(msg.sender)
-    log(type=TakeAskOrder, market, sender, owner, ASK, fxpPrice, fxpSumOfFills, block.timestamp, orderID, outcome, fxpAskerSharesFilled, fxpAskerMoneyFilled, fxpBidderMoneyFilled)
-    return(1)
-
-# @ internal
+# @internal
 def completeSetsLog(sender, market, type, fxpAmount, numOutcomes, marketCreatorFee, reportingFee):
     self.controller.assertIsWhitelisted(msg.sender)
-    log(type=CompleteSets, sender, market, type, fxpAmount, numOutcomes, marketCreatorFee, reportingFee, block.timestamp)
+    log(type=CompleteSets, sender, market, type, fxpAmount, numOutcomes, marketCreatorFee, reportingFee)
     return(1)
 
-# @ internal
+# @internal
 def cancelOrderLog(market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed):
     self.controller.assertIsWhitelisted(msg.sender)
-    log(type=CancelOrder, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed, block.timestamp)
+    log(type=CancelOrder, market, sender, fxpPrice, fxpAmount, orderID, outcome, type, fxpMoneyEscrowed, fxpSharesEscrowed)
     return(1: uint256)
 
 # @internal
@@ -329,6 +324,23 @@ def setPrice(market: address, outcome: int256, fxpPrice: int256):
     self.controller.assertIsWhitelisted(msg.sender)
     self.marketOrderData[market].prices[outcome] = fxpPrice
     return(1: uint256)
+
+# @private
+def removeOrderFromList(orderID: address, type: int256, market: address, outcome: int256):
+    assertPrivateCall()
+    betterOrderID = self.orders[market][outcome][type][orderID].betterOrderID
+    worseOrderID = self.orders[market][outcome][type][orderID].worseOrderID
+    if(self.bestOrder[market][outcome][type] == orderID):
+        self.bestOrder[market][outcome][type] = worseOrderID
+    if(self.worstOrder[market][outcome][type] == orderID):
+        self.worstOrder[market][outcome][type] = betterOrderID
+    if(betterOrderID != 0):
+        self.orders[market][outcome][type][betterOrderID].worseOrderID = worseOrderID
+    if(worseOrderID != 0):
+        self.orders[market][outcome][type][worseOrderID].betterOrderID = betterOrderID
+    self.orders[market][outcome][type][orderID].betterOrderID = 0
+    self.orders[market][outcome][type][orderID].worseOrderID = 0
+    return(1)
 
 # If best bid is not set or price higher than best bid price, this order is the new best bid.
 # @private

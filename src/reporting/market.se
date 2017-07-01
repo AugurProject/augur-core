@@ -178,8 +178,9 @@ def tryFinalize():
     self.tryFinalizeFork()
     if (self.isFinalized()):
         return(1)
+    return(0)
 
-    # FIXME: when the market is finalized, we need to add its fees to the pool for self.reportingWindow and we need to make note of `self.reportingTokens[self.finalPayoutDistributionHash].totalSupply()`to the reporting window.  These are necessary for fee collection which is a cross-market operation.
+    # FIXME: when the market is finalized, we need to add `self.reportingTokens[self.finalPayoutDistributionHash].totalSupply()` to the reporting window.  This is necessary for fee collection which is a cross-market operation.
     # TODO: figure out how to make it so fee distribution is delayed until all markets have been finalized; we can enforce it contract side and let the UI deal with the actual work
     # FIXME: if finalPayoutDistributionHash != getIdentityDistributionId(), pay back validity bond holder
     # FIXME: if finalPayoutDistributionHash == getIdentityDistributionId(), transfer validity bond to reportingWindow (reporter fee pot)

@@ -17,12 +17,11 @@ ASK = 2
 ATTOSHARES = 0
 DISPLAY_PRICE = 1
 OWNER = 2
-OUTCOME = 3
-TOKENS_ESCROWED = 4
-SHARES_ESCROWED = 5
-BETTER_ORDER_ID = 6
-WORSE_ORDER_ID = 7
-GAS_PRICE = 8
+TOKENS_ESCROWED = 3
+SHARES_ESCROWED = 4
+BETTER_ORDER_ID = 5
+WORSE_ORDER_ID = 6
+GAS_PRICE = 7
 
 # TODO: turn these into 24 parameterized tests rather than 3 tests that each execute 8 sub-tests
 
@@ -99,7 +98,6 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     assert order[ATTOSHARES] == orderSize
     assert order[DISPLAY_PRICE] == orderPrice
     assert order[OWNER] == bytesToLong(makerAddress)
-    assert order[OUTCOME] == orderOutcome
     assert order[TOKENS_ESCROWED] == makerTokens
     assert order[SHARES_ESCROWED] == makerLongShares or makerShortShares
 
@@ -127,7 +125,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     shortCost = long(fxpAmount * (market.getMaxDisplayPrice() - fxpPrice) / 10**18)
     completeSetFees = long(fxpAmount * market.getCompleteSetCostInAttotokens() * fix(0.0101) / 10**18 / 10**18)
 
-    # maker escrows cash, taker pays with cash
+    print "maker escrows cash, taker pays with cash"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -148,7 +146,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         expectedTakerShortShares = fxpAmount,
         expectedTakerTokens = 0)
 
-    # maker escrows shares, taker pays with shares
+    print "maker escrows shares, taker pays with shares"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -169,7 +167,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         expectedTakerShortShares = 0,
         expectedTakerTokens = longCost - completeSetFees)
 
-    # maker escrows cash, taker pays with shares
+    print "maker escrows cash, taker pays with shares"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -190,7 +188,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         expectedTakerShortShares = 0,
         expectedTakerTokens = longCost)
 
-    # maker escrows shares, taker pays with cash
+    print "maker escrows shares, taker pays with cash"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -216,7 +214,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     shortCost = long(fxpAmount * (market.getMaxDisplayPrice() - fxpPrice) / 10**18)
     completeSetFees = long(fxpAmount * market.getCompleteSetCostInAttotokens() * fix(0.0101) / 10**18 / 10**18)
 
-    # maker escrows cash, taker pays with cash
+    print "maker escrows cash, taker pays with cash"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -237,7 +235,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         expectedTakerShortShares = 0,
         expectedTakerTokens = 0)
 
-    # maker escrows shares, taker pays with shares
+    print "maker escrows shares, taker pays with shares"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -258,7 +256,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         expectedTakerShortShares = 0,
         expectedTakerTokens = shortCost - completeSetFees)
 
-    # maker escrows cash, taker pays with shares
+    print "maker escrows cash, taker pays with shares"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -279,7 +277,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         expectedTakerShortShares = 0,
         expectedTakerTokens = shortCost)
 
-    # maker escrows shares, taker pays with cash
+    print "maker escrows shares, taker pays with cash"
     execute(
         contractsFixture = contractsFixture,
         market = market,

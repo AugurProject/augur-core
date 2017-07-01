@@ -90,6 +90,9 @@ def getReportingWindowByMarketEndTime(endTime: int256, hasAutomatedReporter: int
     else:
         return(self.getReportingWindowByTimestamp(endTime + 1 + self.getReportingPeriodDurationInSeconds()))
 
+def getPreviousReportingWindow():
+    return(self.getReportingWindowByTimestamp(block.timestamp - self.getReportingPeriodDurationInSeconds()))
+
 def getCurrentReportingWindow():
     return(self.getReportingWindowByTimestamp(block.timestamp))
 

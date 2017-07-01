@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from ContractsFixture import ContractsFixture
 from datetime import timedelta
 from ethereum import tester
 from ethereum.tester import TransactionFailed

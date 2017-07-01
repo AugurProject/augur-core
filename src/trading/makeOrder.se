@@ -83,6 +83,7 @@ def placeBid(sender: address, attoshares: int256, attotokensPerShare: int256, ma
     assertNoValue()
     assertPrivateCall()
     orderValueInAttotokens = safeFxpMul(attoshares, safeSub(market.getCompleteSetCostInAttotokens(), attotokensPerShare))
+    # FIXME: assert against MIN_ORDER_VALUE
     require(orderValueInAttotokens)
 
     attotokensEscrowed = 0

@@ -18,7 +18,7 @@ macro BID: 1
 macro ASK: 2
 
 # Field counts
-macro ORDER_FIELDS: 9
+macro ORDER_FIELDS: 8
 
 def any():
     assertNoValue()
@@ -51,7 +51,8 @@ def takeAskOrder(taker: address, orderID: address, market: address, outcome: int
     makerSharesEscrowed = min(order[SHARES_ESCROWED], fxpAmountTakerWants)
     require(maker != taker)
 
-    sharePriceShort = safeSub(market.getMaxDisplayPrice(), orderDisplayPrice)
+    # FIXME: we can't use safeSub here because it disallows subtracting negative numbers, but we need to protect against overflows
+    sharePriceShort = market.getMaxDisplayPrice() - orderDisplayPrice
     # FIXME: we can't use safeSub here because it disallows subtracting negative numbers, but we need to protect against overflows
     sharePriceLong = orderDisplayPrice - market.getMinDisplayPrice()
     shareToken = market.getShareToken(outcome)
@@ -63,6 +64,10 @@ def takeAskOrder(taker: address, orderID: address, market: address, outcome: int
     while i < numberOfOutcomes:
         require(not market.getShareToken(i).balanceOf(self))
         i += 1
+    makerSharesDepleted = 0
+    makerTokensDepleted = 0
+    takerSharesDepleted = 0
+    takerTokensDepleted = 0
 
     # figure out how much of the taker's target will be leftover at the end
     fxpAmountTakerWants = safeSub(fxpAmountTakerWants, takerDesiredShares)
@@ -91,6 +96,7 @@ def takeAskOrder(taker: address, orderID: address, market: address, outcome: int
             i += 1
         # sell the complete sets (this will pay fees)
         COMPLETE_SETS.sellCompleteSets(self, market, completeSets)
+        # FIXME: in order to ensure that we can always cover fees, fees should be split proportionately to maker and taker based on how much cash each party will get.
         # maker gets full share of cash
         makerShare = safeFxpMul(completeSets, sharePriceLong)
         denominationToken.transfer(maker, makerShare)
@@ -98,6 +104,10 @@ def takeAskOrder(taker: address, orderID: address, market: address, outcome: int
         takerShare = denominationToken.balanceOf(self)
         denominationToken.transfer(taker, takerShare)
         # adjust internal accounting
+        makerSharesDepleted += completeSets
+        makerTokensDepleted += 0
+        takerSharesDepleted += completeSets
+        takerTokensDepleted += 0
         takerSharesAvailable = safeSub(takerSharesAvailable, completeSets)
         makerSharesEscrowed = safeSub(makerSharesEscrowed, completeSets)
         takerDesiredShares = safeSub(takerDesiredShares, completeSets)
@@ -110,6 +120,10 @@ def takeAskOrder(taker: address, orderID: address, market: address, outcome: int
         tokensRequiredToCoverTaker = safeFxpMul(makerSharesEscrowed, sharePriceLong)
         denominationToken.transferFrom(taker, maker, tokensRequiredToCoverTaker)
         # adjust internal accounting
+        makerSharesDepleted += makerSharesEscrowed
+        makerTokensDepleted += 0
+        takerSharesDepleted += 0
+        takerTokensDepleted += tokensRequiredToCoverTaker
         takerDesiredShares = safeSub(takerDesiredShares, makerSharesEscrowed)
         makerSharesEscrowed = 0
 
@@ -125,6 +139,10 @@ def takeAskOrder(taker: address, orderID: address, market: address, outcome: int
         tokensRequiredToCoverMaker = safeFxpMul(takerSharesAvailable, sharePriceShort)
         denominationToken.transferFrom(market, taker, tokensRequiredToCoverMaker)
         # adjust internal accounting
+        makerSharesDepleted += 0
+        makerTokensDepleted += tokensRequiredToCoverMaker
+        takerSharesDepleted += takerSharesAvailable
+        takerTokensDepleted += 0
         takerDesiredShares = safeSub(takerDesiredShares, takerSharesAvailable)
         takerSharesAvailable = 0
 
@@ -147,7 +165,14 @@ def takeAskOrder(taker: address, orderID: address, market: address, outcome: int
                 market.getShareToken(i).transfer(maker, takerDesiredShares)
             i +=1
         # adjust internal accounting
+        makerSharesDepleted += 0
+        makerTokensDepleted += makerPortionOfCompleteSetCost
+        takerSharesDepleted += 0
+        takerTokensDepleted += takerPortionOfCompleteSetCost
         takerDesiredShares = 0
+
+    ORDERS.takeOrderLog(market, outcome, ASK, orderID, taker, makerSharesDepleted, makerTokensDepleted, takerSharesDepleted, takerTokensDepleted)
+    ORDERS.fillOrder(orderID, ASK, market, outcome, makerSharesDepleted, makerTokensDepleted)
 
     # make sure we didn't accidentally leave anything behind
     require(not denominationToken.balanceOf(self))

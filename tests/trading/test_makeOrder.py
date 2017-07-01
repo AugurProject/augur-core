@@ -18,12 +18,11 @@ ASK = 2
 ATTOSHARES = 0
 DISPLAY_PRICE = 1
 OWNER = 2
-OUTCOME = 3
-TOKENS_ESCROWED = 4
-SHARES_ESCROWED = 5
-BETTER_ORDER_ID = 6
-WORSE_ORDER_ID = 7
-GAS_PRICE = 8
+TOKENS_ESCROWED = 3
+SHARES_ESCROWED = 4
+BETTER_ORDER_ID = 5
+WORSE_ORDER_ID = 6
+GAS_PRICE = 7
 
 def test_initialize():
     fixture = ContractsFixture()
@@ -65,7 +64,6 @@ def test_publicMakeOrder_bid():
     assert order[ATTOSHARES] == 10**18
     assert order[DISPLAY_PRICE] == 10**17
     assert order[OWNER] == bytesToLong(tester.a0)
-    assert order[OUTCOME] == 1
     assert order[TOKENS_ESCROWED] == 10**17
     assert order[SHARES_ESCROWED] == 0
     assert order[BETTER_ORDER_ID] == 0
@@ -84,7 +82,6 @@ def test_publicMakeOrder_ask():
     assert order[ATTOSHARES] == 10**18
     assert order[DISPLAY_PRICE] == 10**17
     assert order[OWNER] == bytesToLong(tester.a0)
-    assert order[OUTCOME] == 0
     assert order[TOKENS_ESCROWED] == 10**18 - 10**17
     assert order[SHARES_ESCROWED] == 0
     assert order[BETTER_ORDER_ID] == 0
@@ -112,11 +109,10 @@ def test_publicMakeOrder_bid2():
     logMakeOrder = parseCapturedLogs(logged)[-1]
     assert orderID != 0, "Order ID should be non-zero"
     order = orders.getOrder(orderID, orderType, market.address, outcome)
-    assert len(order) == 9, "Order array length should be 13"
+    assert len(order) == 8, "Order array length should be 8"
     assert order[ATTOSHARES] == fxpAmount, "order[ATTOSHARES] should be the amount of the order"
     assert order[DISPLAY_PRICE] == fxpPrice, "order[DISPLAY_PRICE] should be the order's price"
     assert order[OWNER] == bytesToLong(tester.a1), "order[OWNER] should be the sender's address"
-    assert order[OUTCOME] == outcome, "order[OUTCOME] should be the outcome ID"
     assert order[TOKENS_ESCROWED] == 0.6 * 10**18, "order[TOKENS_ESCROWED] should be the amount of money escrowed"
     assert order[SHARES_ESCROWED] == 0, "order[SHARES_ESCROWED] should be the number of shares escrowed"
     assert makerInitialCash - cash.balanceOf(tester.a1) == order[TOKENS_ESCROWED], "Decrease in maker's cash balance should equal money escrowed"
@@ -125,7 +121,6 @@ def test_publicMakeOrder_bid2():
     assert logMakeOrder["tradeGroupID"] == tradeGroupID, "Logged tradeGroupID should match input"
     assert logMakeOrder["fxpMoneyEscrowed"] == order[TOKENS_ESCROWED], "Logged fxpMoneyEscrowed should match amount in order"
     assert logMakeOrder["fxpSharesEscrowed"] == order[SHARES_ESCROWED], "Logged fxpSharesEscrowed should match amount in order"
-    assert logMakeOrder["timestamp"] == fixture.state.block.timestamp, "Logged timestamp should match the current block timestamp"
     assert logMakeOrder["orderID"] == longToHexString(orderID), "Logged orderID should match returned orderID"
     assert logMakeOrder["outcome"] == outcome, "Logged outcome should match input"
     assert logMakeOrder["market"] == longToHexString(market.address), "Logged market should match input"
@@ -221,11 +216,10 @@ def test_ask_withPartialShares():
     # validate the order contains expected results
     assert orderID != 0, "Order ID should be non-zero"
     order = orders.getOrder(orderID, ASK, market.address, YES)
-    assert len(order) == 9, "Order array length should be 13"
+    assert len(order) == 8, "Order array length should be 13"
     assert order[ATTOSHARES] == fix(2), "order[ATTOSHARES] should be the amount of the order"
     assert order[DISPLAY_PRICE] == fix(0.6), "order[DISPLAY_PRICE] should be the order's price"
     assert order[OWNER] == bytesToLong(tester.a1), "order[OWNER] should be the sender's address"
-    assert order[OUTCOME] == YES, "order[6] should be the outcome ID"
     assert order[TOKENS_ESCROWED] == fix(0.32), "order[TOKENS_ESCROWED] should be the amount of money escrowed"
     assert order[SHARES_ESCROWED] == fix(1.2), "order[SHARES_ESCROWED] should be the number of shares escrowed"
 
@@ -234,7 +228,6 @@ def test_ask_withPartialShares():
     assert logMakeOrder["tradeGroupID"] == 42, "Logged tradeGroupID should match input"
     assert logMakeOrder["fxpMoneyEscrowed"] == order[TOKENS_ESCROWED], "Logged fxpMoneyEscrowed should match amount in order"
     assert logMakeOrder["fxpSharesEscrowed"] == order[SHARES_ESCROWED], "Logged fxpSharesEscrowed should match amount in order"
-    assert logMakeOrder["timestamp"] == fixture.state.block.timestamp, "Logged timestamp should match the current block timestamp"
     assert logMakeOrder["orderID"] == longToHexString(orderID), "Logged orderID should match returned orderID"
     assert logMakeOrder["outcome"] == YES, "Logged outcome should match input"
     assert logMakeOrder["market"] == longToHexString(market.address), "Logged market should match input"

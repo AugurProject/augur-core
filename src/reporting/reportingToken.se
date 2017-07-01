@@ -27,6 +27,7 @@ def initialize(market: address, payoutNumerators: arr):
     self.market = market
     require(market.getNumberOfOutcomes() == len(payoutNumerators))
     save(self.payoutNumerators[0], payoutNumerators, items = len(payoutNumerators))
+    # TODO: call a function on `self.getBranch()` that logs the creation of this token with an index for the market, function needs to verify that caller is `branch.isContainerForReportingToken(thisToken)`
 
 def buy(attotokens: int256):
     require(attotokens >= 1)
@@ -40,26 +41,33 @@ def buy(attotokens: int256):
     self.supply = safeAdd(self.supply, attotokens)
     self.market.updateTentativeWinningPayoutDistributionHash(self.getPayoutDistributionHash())
     self.getReportingWindow().noteReport(self.market, reporter, self.getPayoutDistributionHash())
+    log(type=Transfer, 0, reporter, attotokens)
 
 def redeemDisavowedTokens(reporter: address):
     require(not self.market.isContainerForReportingToken(self))
     reputationSupply = self.getReputationToken().balanceOf(self)
-    reporterReputationShare = reputationSupply * self.tokens[reporter] / self.supply
-    self.supply -= self.tokens[reporter]
+    attotokens = self.tokens[reporter]
+    reporterReputationShare = reputationSupply * attotokens / self.supply
+    self.supply -= attotokens
     self.tokens[reporter] = 0
     self.getReputationToken().transfer(reporter, reporterReputationShare)
+    log(type=Transfer, reporter, 0, attotokens)
 
-def redeemForkedToken(reporter: address):
+# NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
+def redeemForkedTokens(reporter: address):
+    # FIXME: this needs to be secured (msg.sender only?) since calling this before liquidation is an attack
     require(self.market.isFinalized())
     require(self.market.isContainerForReportingToken(self))
     require(self.getBranch().getForkingMarket() == self.market)
     reputationSupply = self.getReputationToken().balanceOf(self)
-    reporterReputationShare = reputationSupply * self.tokens[reporter] / self.supply
-    self.supply -= self.tokens[reporter]
+    attotokens = self.tokens[reporter]
+    reporterReputationShare = reputationSupply * attotokens / self.supply
+    self.supply -= attotokens
     self.tokens[reporter] = 0
     destinationReputationToken = self.getBranch().getChildBranch(self.getPayoutDistributionHash()).getReputationToken()
     self.getReputationToken().migrateOut(destinationReputationToken, reporterReputationShare)
     destinationReputationToken.transfer(reportor, reporterReputationShare)
+    log(type=Transfer, reporter, 0, attotokens)
 
 def migrateLosingTokens():
     require(self.market.isFinalized())
@@ -72,16 +80,19 @@ def migrateLosingTokens():
 
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
 def redeemWinningTokens(reporter: address):
+    # FIXME: this needs to be secured (msg.sender only?) since calling this before liquidation is an attack
     require(self.market.isFinalized())
     require(self.market.isContainerForReportingToken(self))
     require(self.getBranch().getForkingMarket() != self.market)
     require(self.market.getFinalWinningReportingToken() == self)
     self.extractBondHolderPayments()
     reputationSupply = self.getReputationToken().balanceOf(self)
-    reporterReputationShare = reputationSupply * self.tokens[reporter] / self.supply
-    self.supply -= self.tokens[reporter]
+    attotokens = self.tokens[reporter]
+    reporterReputationShare = reputationSupply * attotokens / self.supply
+    self.supply -= attotokens
     self.tokens[reporter] = 0
     self.getReputationToken().transfer(reporter, reporterReputationShare)
+    log(type=Transfer, reporter, 0, attotokens)
 
 # FIXME: bond holders have already been paid at this point (they are paid as soon as market finalization occurs)
 # CONSIDER: track how much bond holders are owed, then as REP is extracted from losing tokens it initially goes into

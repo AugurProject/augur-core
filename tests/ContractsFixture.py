@@ -106,7 +106,7 @@ class ContractsFixture:
         self.contracts = {}
         self.state.block.number += 2000000
         self.state.block.timestamp = 1
-        tester.gas_limit = long(4.2 * 10**6)
+        tester.gas_limit = long(4.7 * 10**6)
         self.controller = self.upload('../src/controller.se')
         assert self.controller.getOwner() == bytesToLong(tester.a0)
         self.uploadAndAddToController('../src/mutex.se').initialize(self.controller.address)

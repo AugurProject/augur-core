@@ -22,7 +22,7 @@ macro BID: 1
 macro ASK: 2
 
 # Field counts
-macro ORDER_FIELDS: 9
+macro ORDER_FIELDS: 8
 
 def init():
     self.owner = msg.sender

@@ -6,7 +6,7 @@ ORDERS = self.controller.lookup('orders')
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
 
-macro ORDER_FIELDS: 9
+macro ORDER_FIELDS: 8
 
 data controller
 

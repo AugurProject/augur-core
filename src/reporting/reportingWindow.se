@@ -127,6 +127,18 @@ def getStartTime():
     assertNoValue()
     return(self.startTime)
 
+def getEndTime():
+    assertNoValue()
+    return(self.getDisputeEndTime())
+
+def getStartBlock():
+    # TODO: implement.  We probably need to change everything to use blocks instead of time, both for security and to make this function work
+    ~invalid()
+
+def getEndBlock():
+    # TODO: implement.  We probably need to change everything to use blocks instead of time, both for security and to make this function work
+    ~invalid()
+
 def getReportingStartTime():
     assertNoValue()
     return(self.getStartTime())
@@ -142,10 +154,6 @@ def getDisputeStartTime():
 def getDisputeEndTime():
     assertNoValue()
     return(self.getDisputeStartTime() + REPORTING_DISPUTE_DURATION_SECONDS)
-
-def getEndTime():
-    assertNoValue()
-    return(self.getDisputeEndTime())
 
 def isActive():
     assertNoValue()

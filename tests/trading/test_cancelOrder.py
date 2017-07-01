@@ -18,12 +18,11 @@ NO = 0
 ATTOSHARES = 0
 DISPLAY_PRICE = 1
 OWNER = 2
-OUTCOME = 3
-TOKENS_ESCROWED = 4
-SHARES_ESCROWED = 5
-BETTER_ORDER_ID = 6
-WORSE_ORDER_ID = 7
-GAS_PRICE = 8
+TOKENS_ESCROWED = 3
+SHARES_ESCROWED = 4
+BETTER_ORDER_ID = 5
+WORSE_ORDER_ID = 6
+GAS_PRICE = 7
 
 def test_cancelBid(contractsFixture):
     cash = contractsFixture.cash
@@ -52,7 +51,7 @@ def test_cancelBid(contractsFixture):
 
     assert(cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "publicCancelOrder should succeed"
 
-    assert(orders.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, 0, 1, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+    assert(orders.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(makerInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
@@ -86,7 +85,7 @@ def test_cancelAsk(contractsFixture):
 
     assert(cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "publicCancelOrder should succeed"
 
-    assert(orders.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, 0, 1, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+    assert(orders.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(makerInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
