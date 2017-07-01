@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
 from ethereum import tester
-from pytest import fixture
+from os import getenv
+from pytest import fixture, mark
 from random import randint, random as randfloat
 from utils import bytesToLong, fix
+
+pytestmark = mark.skipif(not getenv('INCLUDE_FUZZY_TESTS'), reason="take forever to run")
 
 # binary outcomes
 YES = 1

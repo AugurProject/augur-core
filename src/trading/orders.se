@@ -55,7 +55,7 @@ def getPrice(orderID: address, type: int256, market: address, outcome: int256):
 
 # @public
 def getOrderOwner(orderID: address, type: int256, market: address, outcome: int256):
-    return(self.orders[market][outcome][type][orderID].owner: address)
+    return(self.orders[market][outcome][type][orderID].owner)
 
 # @public
 # @return fxp

@@ -30,7 +30,7 @@ def test_topics(contracts):
     WEI_TO_ETH = 10**18
 
     def test_defaults():
-        assert(c.getNumTopicsInBranch(branch1) == 0), "numTopicsInBranch for branch1 should be 1 at this point"
+        assert(c.getNumTopicsInBranch(branch1) == 0), "numTopicsInBranch for branch1 should be 0 at this point"
         assert(c.getTopicsInBranch(branch1, 0, 5) == []), "topicsInBranch for branch1 ranging from topic 0 to 5 should return an array containing only topic0 from the markets tests"
         assert(c.getTopicsInfo(branch1, 0, 5) == []), "topicsInfo for branch1 should ranging from topic 0 to 5 should return only topic0 from the markets tests and its popularity"
         assert(c.getTopicPopularity(branch1, topic1) == 0), "topicPopularity for branch1 and topic1 should be 0 by default as topic1 shouldn't exist yet"
