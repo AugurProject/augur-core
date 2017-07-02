@@ -21,18 +21,16 @@ data banana
 data cherry
 data durian
 data eggplant
-data fruit
 
 def init():
     self.apple = 5
 
-def setNumber(apple, banana, cherry, durian, eggplant, fruit):
+def setNumber(apple, banana, cherry, durian, eggplant):
     self.apple = apple
     self.banana = banana
     self.cherry = cherry
     self.durian = durian
     self.eggplant = eggplant
-    self.fruit = fruit
 
 def getApple():
     return(self.apple)
@@ -45,7 +43,9 @@ def getDurian():
 def getEggplant():
     return(self.eggplant)
 def getFruit():
-    return(self.fruit)
+    return([3, 5, 7, 11, 13]: arr)
+def getFirstFruit():
+    return(self.getFruit(outitems = 5)[0])
 """
 
 factoryCode = """
@@ -98,12 +98,14 @@ try:
     delegate = ABIContract(state, library.translator, delegateAddress)
 
     print("Starting Apple: " + str(delegate.getApple()))
-    delegate.setNumber(1, 3, 5, 7, 11, 13)
+    delegate.setNumber(1, 3, 5, 7, 11)
     print("Apple: " + str(delegate.getApple()))
     print("Banana: " + str(delegate.getBanana()))
     print("Cherry: " + str(delegate.getCherry()))
     print("Durian: " + str(delegate.getDurian()))
     print("Eggplant: " + str(delegate.getEggplant()))
-    print("Fruit: " + str(delegate.getFruit()))
+    print("Library Fruit: " + str(library.getFruit()))
+    print("Delegate Fruit: " + str(delegate.getFruit()))
+    print("Delegate First Fruit: " + str(delegate.getFirstFruit()))
 finally:
     os.remove("garbage.se")

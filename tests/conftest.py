@@ -174,6 +174,7 @@ class NewContractsFixture:
         self.contracts['takeOrder'].initialize(self.controller.address)
         self.contracts['cancelOrder'].initialize(self.controller.address)
         self.contracts['trade'].initialize(self.controller.address)
+        self.contracts['claimProceeds'].initialize(self.controller.address)
 
     ####
     #### Helpers
@@ -234,7 +235,7 @@ class NewContractsFixture:
             endTime = long(self.state.block.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
-            automatedReporterAddress = 0,
+            automatedReporterAddress = tester.a0,
             topic = 'Sports'.ljust(32, '\x00'))
 
     def createReasonableCategoricalMarket(self, branch, numOutcomes, denominationToken):
@@ -244,7 +245,7 @@ class NewContractsFixture:
             endTime = long(self.state.block.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
-            automatedReporterAddress = 0,
+            automatedReporterAddress = tester.a0,
             topic = 'Sports'.ljust(32, '\x00'))
 
     def createReasonableScalarMarket(self, branch, minDisplayPrice, maxDisplayPrice, denominationToken):
@@ -255,7 +256,7 @@ class NewContractsFixture:
             denominationToken = denominationToken,
             minDisplayPrice = minDisplayPrice,
             maxDisplayPrice = maxDisplayPrice,
-            automatedReporterAddress = 0,
+            automatedReporterAddress = tester.a0,
             topic = 'Sports'.ljust(32, '\x00'))
 
 @fixture(scope="session")

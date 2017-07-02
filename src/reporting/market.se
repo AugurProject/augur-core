@@ -105,6 +105,7 @@ def approveSpenders():
     self.denominationToken.approve(self.controller.lookup('completeSets'), 2**254)
     self.denominationToken.approve(self.controller.lookup('takeOrder'), 2**254)
     self.denominationToken.approve(self.controller.lookup('tradingEscapeHatch'), 2**254)
+    self.denominationToken.approve(self.controller.lookup('claimProceeds'), 2**254)
     i = 0
     while i < self.numOutcomes:
         self.shareTokens[i].approve(self.controller.lookup('takeOrder'), 2**254)
@@ -127,6 +128,8 @@ def automatedReport(payoutNumerators: arr):
     # intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
     require(msg.sender == self.automatedReporterAddress)
     require(self.isInAutomatedReportingPhase())
+    # we have to create the reporting token so the rest of the system works (winning reporting token must exist)
+    self.getReportingToken(payoutNumerators)
     payoutDistributionHash = self.derivePayoutDistributionHash(payoutNumerators)
     self.automatedReporterPayoutDistributionHash = payoutDistributionHash
     self.reportingWindow.updateMarketPhase()
@@ -335,8 +338,7 @@ def validatePayoutNumerators(payoutNumerators: arr):
     sum = 0
     require(len(payoutNumerators) == self.numOutcomes)
     while (i < self.numOutcomes):
-        require(payoutNumerators[i] >= 0)
-        require(payoutNumerators[i] <= self.payoutDenominator)
+        require(0 <= payoutNumerators[i] and payoutNumerators[i] <= self.payoutDenominator)
         sum += payoutNumerators[i]
         i += 1
     require(sum == self.payoutDenominator)

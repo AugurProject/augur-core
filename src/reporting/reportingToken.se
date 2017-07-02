@@ -21,6 +21,7 @@ data supply
 def any():
     assertNoValue()
 
+event Foo(bar)
 def initialize(market: address, payoutNumerators: arr):
     require(not self.initialized)
     self.initialized = 1
@@ -128,12 +129,12 @@ def getRegistrationToken():
     return(self.market.getRegistrationToken())
 
 def getPayoutDistributionHash():
-    payoutNumerators = array(self.market.getNumberOfOutcomes())
     payoutNumerators = load(self.payoutNumerators[0], items = self.market.getNumberOfOutcomes())
     return(self.market.derivePayoutDistributionHash(payoutNumerators))
 
-def getPayoutNumerators():
-    return(payoutNumerators: arr)
+def getPayoutNumerator(index: int256):
+    require(0 <= index and index < self.market.getNumberOfOutcomes())
+    return(load(self.payoutNumerators[0], items = self.market.getNumberOfOutcomes())[index])
 
 
 ####

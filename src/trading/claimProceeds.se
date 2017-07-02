@@ -2,12 +2,14 @@
 
 ### This allows users to claim their money from a market by exchanging their shares which hold value
 
-MUTEX = self.controller.lookup('mutex')
+macro MUTEX: self.controller.lookup('mutex')
+macro MARKET_FEE_CALCULATOR: self.controller.lookup('marketFeeCalculator')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
 inset('../macros/unitConversions.sem')
 inset('../macros/require.sem')
+inset('../macros/safeMath.sem')
 
 data owner
 data controller
@@ -47,21 +49,35 @@ def claimProceeds(sender: address, market: address):
 
     denominationToken = market.getDenominationToken()
     numberOfOutcomes = market.getNumberOfOutcomes()
-    payoutNumerators = market.getFinalWinningReportingToken().getPayoutNumerators(outitems = numberOfOutcomes)
     payoutDenominator = market.getPayoutDenominator()
-    outcome = 0
 
+    outcome = 0
     while outcome < numberOfOutcomes:
-        payoutNumerator = payoutNumerators[outcome]
+        payoutNumerator = market.getFinalWinningReportingToken().getPayoutNumerator(outcome)
         shareToken = market.getShareToken(outcome)
         balance = shareToken.balanceOf(sender)
-        proceedAmount = balance * payoutNumerator / payoutDenominator
+        # CONSIDER: should we put the / 10**18 at the end?  There are 3 multiplications here, are we at risk of overflow?  Some of the numbers can get pretty large
+        proceedAmount = balance * market.getCompleteSetCostInAttotokens() / 10**18 * payoutNumerator / payoutDenominator
         # always zero out the balance, even if the shares are worthless as it yields a gas refund
-        shareToken.transferFrom(sender, 0, balance)
+        if balance:
+            shareToken.destroyShares(sender, balance)
         if proceedAmount:
+            # FIXME: transfer fees to appropriate parties
+            reportingWindow = market.getReportingWindow()
+            marketCreatorFeeRate = market.getMarketCreatorSettlementFeeInAttoethPerEth()
+            marketCreatorFee = safeFxpMul(proceedAmount, marketCreatorFeeRate)
+            marketCreator = market.getCreator()
+            if market.shouldCollectReportingFees():
+                reportingFeeRate = MARKET_FEE_CALCULATOR.getReportingFeeInAttoethPerEth(reportingWindow)
+                reportingFee = safeFxpMul(proceedAmount, reportingFeeRate)
+            else:
+                reportingFee = 0
+            tokenHolderPayout = proceedAmount - marketCreatorFee - reportingFee
             # NOTE: rounding error here will result in _very_ tiny amounts of denominationToken left in the market
-            require(denominationToken.transferFrom(market, sender, proceedAmount))
-        i += 1
+            require(denominationToken.transferFrom(market, sender, tokenHolderPayout))
+            require(denominationToken.transferFrom(market, marketCreator, marketCreatorFee))
+            require(denominationToken.transferFrom(market, reportingWindow, reportingFee))
+        outcome += 1
 
     return 1
 
