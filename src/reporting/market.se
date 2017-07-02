@@ -68,7 +68,7 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     require(not (payoutDenominator % numOutcomes))
     require(0 <= feePerEthInWei and feePerEthInWei <= 5*10**17)
     require(-2**254 <= maxDisplayPrice and maxDisplayPrice <= 2**254)
-    require(-2**256 <= minDisplayPrice and minDisplayPrice <= 2**254)
+    require(-2**254 <= minDisplayPrice and minDisplayPrice <= 2**254)
     completeSetCostMultiplier = maxDisplayPrice - minDisplayPrice
     require(1 <= completeSetCostMultiplier and completeSetCostMultiplier <= 2**254)
     require(0 < denominationToken.totalSupply())
@@ -135,19 +135,11 @@ def automatedReport(payoutNumerators: arr):
     self.automatedReporterPayoutDistributionHash = payoutDistributionHash
     self.reportingWindow.updateMarketPhase()
 
-#These will need to be changed such that instead of doing the transfer and
-#updating dispute bond holder, they will instantiate (via factory) the
-#`disputeBond` contract with `msg.sender` as the bond holder and
-#`*_DISPUTE_BOND_AMOUNT` as the bond size.
-#Once instantiated, the reputation contract can then do:
-#```self.getReputationToken().transferFrom(msg.sender, newDisputeBondContract, *_DISPUTE_BOND_AMOUNT)```
 def disputeAutomatedReport():
     assertNoValue()
     # intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
     require(not self.isFinalized())
     require(self.isInAutomatedDisputePhase())
-    #self.getReputationToken().transferFrom(msg.sender, self, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT)
-    #self.automatedReporterDisputeBondHolder = msg.sender
     if (not self.automatedReporterDisputeBondToken):
         self.automatedReporterDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBond(self.controller, self, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, self.automatedReporterPayoutDistributionHash)
     self.reportingWindow.updateMarketPhase()
@@ -156,8 +148,6 @@ def disputeLimitedReporters():
     assertNoValue()
     self.migrateThroughAllForks()
     require(self.isInLimitedDisutePhase())
-    #self.getReputationToken().transferFrom(msg.sender, self, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT)
-    #self.limitedReportersDisputeBondHolder = msg.sender
     if (not self.limitedReportersDisputeBondToken):
         self.limitedReportersDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBond(self.controller, self, msg.sender, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT, self.tentativeWinningPayoutDistributionHash)
     self.limitedReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
@@ -170,8 +160,6 @@ def disputeAllReporters():
     assertNoValue()
     self.migrateThroughAllForks()
     require(self.isInAllDisputePhase())
-    #self.getReputationToken().transferFrom(msg.sender, self, ALL_REPORTERS_DISPUTE_BOND_AMOUNT)
-    #self.allReportersDisputeBondHolder = msg.sender
     if (not self.automatedReporterDisputeBondToken):
         self.automatedReporterDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBond(self.controller, self, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, self.tentativeWinningPayoutDistributionHash)
     self.allReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
@@ -223,7 +211,6 @@ def tryFinalizeAutomatedReport():
         return(0)
     self.finalPayoutDistributionHash = self.automatedReporterPayoutDistributionHash
     self.finalizationTime = block.timestamp
-    #self.privateRewardBondHolders()
     #Call reportingToken.migrateLosingTokens() on all losing tokens to transfer to bond holder & then to correct reportingToken
     self.reportingWindow.updateMarketPhase()
     return(1)
@@ -240,7 +227,6 @@ def tryFinalizeLimitedReporting():
     self.limitedReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
     self.finalPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
     self.finalizationTime = block.timestamp
-    #self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()
     return(1)
 
@@ -260,7 +246,6 @@ def tryFinalizeAllReporting():
     self.allReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
     self.finalPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
     self.finalizationTime = block.timestamp
-    #self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()
     return(1)
 
@@ -285,7 +270,6 @@ def tryFinalizeFork():
         return(0)
     self.finalPayoutDistributionHash = winningDestination.getBranch().getParentPayoutDistributionHash()
     self.finalizationTime = block.timestamp
-    #self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()
     return(1)
 
@@ -579,21 +563,6 @@ def needsMigration():
         return(0)
     return(1)
 
-# CONSIDER: calling this without finalizing doesn't yield reasonable results so it throws, should it still be called a getter?
-#Micah note: We can probably get rid of it, we'll need to add getters for each of the disputeBond contracts to market so `reportingToken` can access them.
-#The logic for getDesiredDisputeRewardPot can then live in `reportingToken`, it will probably look significantly different as well.
-#def getDesiredDisputeRewardPot():
-#    assertNoValue()
-#    require(self.isFinalized())
-#    desiredBondPot = 0
-#    if (self.automatedReporterDisputeBondHolder and self.automatedReporterPayoutDistributionHash != self.finalPayoutDistributionHash):
-#        desiredBondPot += AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT * 2
-#    if (self.limitedReportersDisputeBondHolder and self.limitedReportersPayoutDistributionHash != self.finalPayoutDistributionHash):
-#        desiredBondPot += LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT * 2
-#    if (self.allReportersDisputeBondHolder and self.allReportersPayoutDistributionHash != self.finalPayoutDistributionHash):
-#        desiredBondPot += ALL_REPORTERS_DISPUTE_BOND_AMOUNT * 2
-#    return(desiredBondPot)
-
 def getAutomatedReportDueTimestamp():
     assertNoValue()
     return(self.endTime + AUTOMATED_REPORTING_DURATION_SECONDS)
@@ -605,38 +574,3 @@ def getAutomatedReportDisputeDueTimestamp():
 def receiveToken():
     if (msg.sender == self.getReputationToken())
         #treat it like a dispute bond receipt.
-####
-#### Private
-####
-
-# FIXME: update to new mechanics and figure out a way to extract bond holder payments before redeeming bonds, current code will payout bond holders before extracting losing REP which means bond holders really only get 1x their bond at the moment
-#def privateRewardBondHolders():
-    #assertPrivateCall()
-    # require(self.isFinalized())
-    # availableRep = self.getReputationToken().balanceOf(self)
-    # desiredBondPot = self.getDesiredDisputeRewardPot()
-    # leftoverRep = availableRep - desiredBondPot
-    # # send any leftover REP to the reporting contract for distribution to REP holders
-    # if (leftoverRep > 0):
-    #     self.getReputationToken().transfer(self.getFinalWinningReportingToken(), leftoverRep)
-    # # if our pot doesn't have enough REP to cover bond holders, then take some REP holders
-    # elif (leftoverRep < 0):
-    #     self.getFinalWinningReportingToken().extractBondHolderPayments()
-    # automatedReporterPayoutPortion = 0
-    # limitedReportersPayoutPortion = 0
-    # allReportersPayoutPortion = 0
-    # if (self.automatedReporterPayoutDistributionHash != self.finalPayoutDistributionHash && self.automatedReporterDisputeBondHolder):
-    #     automatedReporterPayoutPortion = AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT
-    # if (self.limitedReportersPayoutDistributionHash != finalPayoutDistributionHash && self.limitedReportersDisputeBondHolder):
-    #     limitedReportersPayoutPortion = LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT
-    # if (self.allReportersPayoutDistributionHash != finalPayoutDistributionHash && self.allReportersDisputeBondHolder):
-    #     allReportersPayoutPortion = ALL_REPORTERS_DISPUTE_BOND_AMOUNT
-    # automatedReporterBondPayout = availableRep * automatedReporterPayoutPortion / (automatedReporterPayoutPortion + limitedReportersPayoutPortion + allReportersPayoutPortion)
-    # limitedReportersBondPayout = (availableRep - automatedReporterBondPayout) * limitedReportersPayoutPortion / (limitedReportersPayoutPortion + allReportersPayoutPortion)
-    # allReportersBondPayout = availableRep - automatedReporterBondPayout - limitedReportersBondPayout
-    # if (automatedReporterBondPayout):
-    #     self.getReputationToken().transfer(self.automatedReporterDisputeBondHolder, automatedReporterBondPayout)
-    # if (limitedReportersBondPayout):
-    #     self.getReputationToken().transfer(self.limitedReportersDisputeBondHolder, limitedReportersBondPayout)
-    # if (allReportersBondPayout):
-    #     self.getReputationToken().transfer(self.allReportersDisputeBondHolder, allReportersBondPayout)
