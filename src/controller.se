@@ -124,10 +124,12 @@ def release():
 def stopInEmergency():
     if(self.stopped):
         ~invalid()
+    return(1)
 
 def onlyInEmergency():
     if(!self.stopped):
         ~invalid()
+    return(1)
 
 
 ### Helper Macros ###

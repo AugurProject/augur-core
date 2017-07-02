@@ -1,19 +1,12 @@
 #!/usr/bin/env python
 
+from ethereum import tester
 from ethereum.tester import TransactionFailed
+from os import path
 from pytest import raises, fixture
 from utils import fix
 
-import ethereum
-from ethereum import tester
-import math
-import random
-import os
-import sys
-import time
-import binascii
-
-SERPENT_TEST_HELPERS = os.path.join(os.path.dirname(os.path.realpath(__file__)), "serpent_test_helpers")
+SERPENT_TEST_HELPERS = path.join(path.dirname(path.realpath(__file__)), "serpent_test_helpers")
 
 def nearly_equal(a, b, sig_fig=8):
     return(a == b or int(a * 10**sig_fig) == int(b * 10**sig_fig))
@@ -105,8 +98,8 @@ def block(state):
 
 @fixture(scope="session")
 def assertNoValue(state):
-    return state.abi_contract(os.path.join(SERPENT_TEST_HELPERS, "assertNoValue.se"))
+    return state.abi_contract(path.join(SERPENT_TEST_HELPERS, "assertNoValue.se"))
 
 @fixture(scope="session")
 def floatTest(state):
-    return state.abi_contract(os.path.join(SERPENT_TEST_HELPERS, "safeMath.se"))
+    return state.abi_contract(path.join(SERPENT_TEST_HELPERS, "safeMath.se"))
