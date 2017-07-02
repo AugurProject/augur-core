@@ -94,13 +94,13 @@ def test_publicMakeOrder_bid2():
     (_, cash, market, orders, makeOrder, _) = fixture.prepOrders()
 
     orderType = BID
-    fxpAmount = fix(1)
-    fxpPrice = fix("0.6")
+    fxpAmount = fix('1')
+    fxpPrice = fix('0.6')
     outcome = 0
     tradeGroupID = 42
 
-    assert cash.publicDepositEther(value = fix(10), sender = tester.k1) == 1, "Deposit cash"
-    assert cash.approve(makeOrder.address, fix(10), sender = tester.k1) == 1, "Approve makeOrder contract to spend cash"
+    assert cash.publicDepositEther(value = fix('10'), sender = tester.k1) == 1, "Deposit cash"
+    assert cash.approve(makeOrder.address, fix('10'), sender = tester.k1) == 1, "Approve makeOrder contract to spend cash"
     makerInitialCash = cash.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
     with capture() as captured:
@@ -139,45 +139,45 @@ def test_makeOrder_failure():
     noShareToken = fixture.applySignature('shareToken', market.getShareToken(NO))
 
     with raises(TransactionFailed):
-        makeOrder.makeOrder(tester.a1, ASK, fix(1), fix(0.6), market.address, YES, 0, 0, 42, sender=tester.k1)
+        makeOrder.makeOrder(tester.a1, ASK, fix('1'), fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
     with raises(TransactionFailed):
-        makeOrder.placeAsk(tester.a1, fix(1), fix(0.6), market.address, YES, sender=tester.k1)
+        makeOrder.placeAsk(tester.a1, fix('1'), fix('0.6'), market.address, YES, sender=tester.k1)
     with raises(TransactionFailed):
-        makeOrder.placeBid(tester.a1, fix(1), fix(0.6), market.address, YES, sender=tester.k1)
+        makeOrder.placeBid(tester.a1, fix('1'), fix('0.6'), market.address, YES, sender=tester.k1)
 
     # makeOrder exceptions (pre-placeBid/placeAsk)
     with raises(TransactionFailed):
-        makeOrder.publicMakeOrder(ASK, fix(1), fix(0.6), market.address - 1, YES, 0, 0, 42, sender=tester.k1)
+        makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address - 1, YES, 0, 0, 42, sender=tester.k1)
     with raises(TransactionFailed):
-        makeOrder.publicMakeOrder(3, fix(1), fix(0.6), market.address, YES, 0, 0, 42, sender=tester.k1)
+        makeOrder.publicMakeOrder(3, fix('1'), fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
 
     # placeBid exceptions
     with raises(TransactionFailed):
-        makeOrder.publicMakeOrder(BID, fix(1), fix(3), market.address, YES, 0, 0, 42, sender=tester.k1)
+        makeOrder.publicMakeOrder(BID, fix('1'), fix('3'), market.address, YES, 0, 0, 42, sender=tester.k1)
     with raises(TransactionFailed):
-        makeOrder.publicMakeOrder(BID, 1, fix(0.6), market.address, YES, 0, 0, 42, sender=tester.k1)
+        makeOrder.publicMakeOrder(BID, 1, fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
 
     # placeAsk exceptions
     with raises(TransactionFailed):
-        makeOrder.publicMakeOrder(ASK, fix(1), 1, market.address, YES, 0, 0, 42, sender=tester.k1)
+        makeOrder.publicMakeOrder(ASK, fix('1'), 1, market.address, YES, 0, 0, 42, sender=tester.k1)
     with raises(TransactionFailed):
-        makeOrder.publicMakeOrder(ASK, 1, fix(0.6), market.address, YES, 0, 0, 42, sender=tester.k1)
-    assert cash.publicDepositEther(value=fix(2), sender=tester.k1)
-    assert cash.approve(completeSets.address, fix(2), sender=tester.k1)
-    assert completeSets.publicBuyCompleteSets(market.address, fix(2), sender=tester.k1)
+        makeOrder.publicMakeOrder(ASK, 1, fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
+    assert cash.publicDepositEther(value=fix('2'), sender=tester.k1)
+    assert cash.approve(completeSets.address, fix('2'), sender=tester.k1)
+    assert completeSets.publicBuyCompleteSets(market.address, fix('2'), sender=tester.k1)
     with raises(TransactionFailed):
-        makeOrder.publicMakeOrder(ASK, fix(1), fix(3), market.address, YES, 0, 0, 42, sender=tester.k1)
+        makeOrder.publicMakeOrder(ASK, fix('1'), fix('3'), market.address, YES, 0, 0, 42, sender=tester.k1)
     with raises(TransactionFailed):
-        makeOrder.publicMakeOrder(ASK, 1, fix(0.6), market.address, YES, 0, 0, 42, sender=tester.k1)
+        makeOrder.publicMakeOrder(ASK, 1, fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
 
-    assert cash.approve(makeOrder.address, fix(100), sender=tester.k1) == 1, "Approve makeOrder contract to spend cash from account 1"
-    assert yesShareToken.approve(makeOrder.address, fix(12), sender=tester.k1) == 1, "Approve makeOrder contract to spend shares from the user's account (account 1)"
-    assert yesShareToken.allowance(tester.a1, makeOrder.address) == fix(12), "makeOrder contract's allowance should be equal to the amount approved"
-    assert makeOrder.publicMakeOrder(ASK, fix(1), fix(0.6), market.address, YES, 0, 0, 42, sender=tester.k1) != 0, "Order ID should be non-zero"
+    assert cash.approve(makeOrder.address, fix('100'), sender=tester.k1) == 1, "Approve makeOrder contract to spend cash from account 1"
+    assert yesShareToken.approve(makeOrder.address, fix('12'), sender=tester.k1) == 1, "Approve makeOrder contract to spend shares from the user's account (account 1)"
+    assert yesShareToken.allowance(tester.a1, makeOrder.address) == fix('12'), "makeOrder contract's allowance should be equal to the amount approved"
+    assert makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1) != 0, "Order ID should be non-zero"
 
     # makeOrder exceptions (post-placeBid/Ask)
     with raises(TransactionFailed):
-        makeOrder.publicMakeOrder(ASK, fix(1), fix(0.6), market.address, YES, 0, 0, 42, sender=tester.k1)
+        makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
 
 def test_ask_withPartialShares():
     fixture = ContractsFixture()
@@ -192,36 +192,36 @@ def test_ask_withPartialShares():
     noShareToken = fixture.applySignature('shareToken', market.getShareToken(NO))
 
     # buy 1.2 complete sets
-    assert cash.publicDepositEther(value=fix(1.2), sender = tester.k1)
-    assert cash.approve(completeSets.address, fix(1.2), sender = tester.k1)
-    assert completeSets.publicBuyCompleteSets(market.address, fix(1.2), sender = tester.k1)
-    assert cash.balanceOf(tester.a1) == fix(0)
-    assert yesShareToken.balanceOf(tester.a1) == fix(1.2)
-    assert noShareToken.balanceOf(tester.a1) == fix(1.2)
+    assert cash.publicDepositEther(value=fix('1.2'), sender = tester.k1)
+    assert cash.approve(completeSets.address, fix('1.2'), sender = tester.k1)
+    assert completeSets.publicBuyCompleteSets(market.address, fix('1.2'), sender = tester.k1)
+    assert cash.balanceOf(tester.a1) == fix('0')
+    assert yesShareToken.balanceOf(tester.a1) == fix('1.2')
+    assert noShareToken.balanceOf(tester.a1) == fix('1.2')
 
     # get enough cash to cover shorting 0.8 more shares
-    assert cash.publicDepositEther(value=long(fix(0.8) * 0.4), sender = tester.k1)
-    assert cash.balanceOf(tester.a1) == fix(0.32)
+    assert cash.publicDepositEther(value=fix('0.8', '0.4'), sender = tester.k1)
+    assert cash.balanceOf(tester.a1) == fix('0.32')
 
     # create ASK order for 2 shares with a mix of shares and cash
-    assert yesShareToken.approve(makeOrder.address, fix(1.2), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix(0.32), sender = tester.k1)
+    assert yesShareToken.approve(makeOrder.address, fix('1.2'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('0.32'), sender = tester.k1)
     with capture() as captured:
-        orderID = makeOrder.publicMakeOrder(ASK, fix(2), fix(0.6), market.address, YES, 0, 0, 42, sender=tester.k1)
+        orderID = makeOrder.publicMakeOrder(ASK, fix('2'), fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
         logMakeOrder = parseCapturedLogs(captured.stdout)[-1]
-    assert cash.balanceOf(tester.a1) == fix(0)
-    assert yesShareToken.balanceOf(tester.a1) == fix(0)
-    assert noShareToken.balanceOf(tester.a1) == fix(1.2)
+    assert cash.balanceOf(tester.a1) == fix('0')
+    assert yesShareToken.balanceOf(tester.a1) == fix('0')
+    assert noShareToken.balanceOf(tester.a1) == fix('1.2')
 
     # validate the order contains expected results
     assert orderID != 0, "Order ID should be non-zero"
     order = orders.getOrder(orderID, ASK, market.address, YES)
     assert len(order) == 8, "Order array length should be 13"
-    assert order[ATTOSHARES] == fix(2), "order[ATTOSHARES] should be the amount of the order"
-    assert order[DISPLAY_PRICE] == fix(0.6), "order[DISPLAY_PRICE] should be the order's price"
+    assert order[ATTOSHARES] == fix('2'), "order[ATTOSHARES] should be the amount of the order"
+    assert order[DISPLAY_PRICE] == fix('0.6'), "order[DISPLAY_PRICE] should be the order's price"
     assert order[OWNER] == bytesToLong(tester.a1), "order[OWNER] should be the sender's address"
-    assert order[TOKENS_ESCROWED] == fix(0.32), "order[TOKENS_ESCROWED] should be the amount of money escrowed"
-    assert order[SHARES_ESCROWED] == fix(1.2), "order[SHARES_ESCROWED] should be the number of shares escrowed"
+    assert order[TOKENS_ESCROWED] == fix('0.32'), "order[TOKENS_ESCROWED] should be the amount of money escrowed"
+    assert order[SHARES_ESCROWED] == fix('1.2'), "order[SHARES_ESCROWED] should be the number of shares escrowed"
 
     # validate the log output of the order
     assert logMakeOrder["_event_type"] == "MakeOrder", "Should emit a MakeOrder event"

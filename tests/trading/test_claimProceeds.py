@@ -63,9 +63,9 @@ def test_redeem_shares_in_binary_market(contractsFixture):
     expectedPayout = expectedValue - expectedFees
 
     # get YES shares with a1
-    acquireLongShares(contractsFixture, market, YES, fix(1.2), claimProceeds.address, sender = tester.k1)
+    acquireLongShares(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k1)
     # get NO shares with a2
-    acquireShortShareSet(contractsFixture, market, YES, fix(1.2), claimProceeds.address, sender = tester.k2)
+    acquireShortShareSet(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
     contractsFixture.state.block.timestamp = market.getEndTime() + 1
     # have tester.a0 subimt automated report
@@ -102,9 +102,9 @@ def test_redeem_shares_in_categorical_market(contractsFixture):
     expectedPayout = expectedValue - expectedFees
 
     # get long shares with a1
-    acquireLongShares(contractsFixture, market, 2, fix(1.2), claimProceeds.address, sender = tester.k1)
+    acquireLongShares(contractsFixture, market, 2, fix('1.2'), claimProceeds.address, sender = tester.k1)
     # get short shares with a2
-    acquireShortShareSet(contractsFixture, market, 2, fix(1.2), claimProceeds.address, sender = tester.k2)
+    acquireShortShareSet(contractsFixture, market, 2, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
     contractsFixture.state.block.timestamp = market.getEndTime() + 1
     # have a0 subimt automated report
@@ -142,9 +142,9 @@ def test_redeem_shares_in_scalar_market(contractsFixture):
     expectedPayout = expectedValue - expectedFees
 
     # get YES shares with a1
-    acquireLongShares(contractsFixture, market, YES, fix(1.2), claimProceeds.address, sender = tester.k1)
+    acquireLongShares(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k1)
     # get NO shares with a2
-    acquireShortShareSet(contractsFixture, market, YES, fix(1.2), claimProceeds.address, sender = tester.k2)
+    acquireShortShareSet(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
     contractsFixture.state.block.timestamp = market.getEndTime() + 1
     # have tester.a0 subimt automated report (75% high, 25% low, range -10*10^18 to 30*10^18)
@@ -175,9 +175,9 @@ def test_reedem_failure(contractsFixture):
     claimProceeds = contractsFixture.contracts['claimProceeds']
 
     # get YES shares with a1
-    acquireLongShares(contractsFixture, market, YES, fix(1.2), claimProceeds.address, sender = tester.k1)
+    acquireLongShares(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k1)
     # get NO shares with a2
-    acquireShortShareSet(contractsFixture, market, YES, fix(1.2), claimProceeds.address, sender = tester.k2)
+    acquireShortShareSet(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
     contractsFixture.state.block.timestamp = market.getEndTime() + 1
     # have tester.a0 subimt automated report (75% high, 25% low, range -10*10^18 to 30*10^18)

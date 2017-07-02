@@ -11,19 +11,19 @@ import utils
 def test_EscapeHatch(contracts):
     t = contracts._ContractLoader__tester
     def test_escapeHatch():
-        fxpEtherDepositValue = utils.fix(100)
+        fxpEtherDepositValue = utils.fix('100')
         assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k1) == 1), "publicDepositEther to account 1 should succeed"
         assert(contracts.cash.publicDepositEther(value=fxpEtherDepositValue, sender=t.k2) == 1), "publicDepositEther to account 1 should succeed"
         contracts._ContractLoader__state.mine(1)
         orderType = 2                   # ask
-        fxpAmount = utils.fix(1)
-        fxpPrice = utils.fix("1.6")
+        fxpAmount = utils.fix('1')
+        fxpPrice = utils.fix('1.6')
         outcomeID = 2
         tradeGroupID = 42
         eventID = utils.createBinaryEvent(contracts)
         marketID = utils.createMarket(contracts, eventID)
-        assert(contracts.cash.approve(contracts.makeOrder.address, utils.fix(10), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
-        assert(contracts.cash.approve(contracts.takeOrder.address, utils.fix(10), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
+        assert(contracts.cash.approve(contracts.makeOrder.address, utils.fix('10'), sender=t.k1) == 1), "Approve makeOrder contract to spend cash from account 1"
+        assert(contracts.cash.approve(contracts.takeOrder.address, utils.fix('10'), sender=t.k2) == 1), "Approve takeOrder contract to spend cash from account 2"
         makerInitialCash = contracts.cash.balanceOf(t.a1)
         takerInitialCash = contracts.cash.balanceOf(t.a2)
         marketInitialCash = contracts.cash.balanceOf(contracts.info.getWallet(marketID))

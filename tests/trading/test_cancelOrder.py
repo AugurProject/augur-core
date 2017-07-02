@@ -32,14 +32,14 @@ def test_cancelBid(contractsFixture):
     cancelOrder = contractsFixture.contracts['cancelOrder']
 
     orderType = BID
-    fxpAmount = fix(1)
-    fxpPrice = fix("0.6")
+    fxpAmount = fix('1')
+    fxpPrice = fix('0.6')
     outcomeID = YES
     tradeGroupID = 42
     yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
-    assert cash.publicDepositEther(value = fix(10000), sender = tester.k1) == 1, "Deposit cash"
-    assert(cash.approve(makeOrder.address, fix(10000), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
+    assert cash.publicDepositEther(value = fix('10000'), sender = tester.k1) == 1, "Deposit cash"
+    assert(cash.approve(makeOrder.address, fix('10000'), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
     makerInitialCash = cash.balanceOf(tester.a1)
     makerInitialShares = yesShareToken.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
@@ -66,14 +66,14 @@ def test_cancelAsk(contractsFixture):
     cancelOrder = contractsFixture.contracts['cancelOrder']
 
     orderType = ASK
-    fxpAmount = fix(1)
-    fxpPrice = fix("0.6")
+    fxpAmount = fix('1')
+    fxpPrice = fix('0.6')
     outcomeID = 1
     tradeGroupID = 42
     yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
-    assert cash.publicDepositEther(value = fix(10000), sender = tester.k1) == 1, "Deposit cash"
-    assert(cash.approve(makeOrder.address, fix(10000), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
+    assert cash.publicDepositEther(value = fix('10000'), sender = tester.k1) == 1, "Deposit cash"
+    assert(cash.approve(makeOrder.address, fix('10000'), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
     makerInitialCash = cash.balanceOf(tester.a1)
     makerInitialShares = yesShareToken.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
@@ -100,12 +100,12 @@ def test_exceptions(contractsFixture):
     cancelOrder = contractsFixture.contracts['cancelOrder']
 
     orderType = BID
-    fxpAmount = fix(1)
-    fxpPrice = fix("0.6")
+    fxpAmount = fix('1')
+    fxpPrice = fix('0.6')
     outcomeID = YES
     tradeGroupID = 42
-    assert cash.publicDepositEther(value = fix(10000), sender = tester.k1) == 1, "Deposit cash"
-    assert(cash.approve(makeOrder.address, fix(10000), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
+    assert cash.publicDepositEther(value = fix('10000'), sender = tester.k1) == 1, "Deposit cash"
+    assert(cash.approve(makeOrder.address, fix('10000'), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
     makerInitialCash = cash.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, tradeGroupID, sender=tester.k1)

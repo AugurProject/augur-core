@@ -126,7 +126,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
 def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * (fxpPrice - market.getMinDisplayPrice()) / 10**18)
     shortCost = long(fxpAmount * (market.getMaxDisplayPrice() - fxpPrice) / 10**18)
-    completeSetFees = long(fxpAmount * market.getCompleteSetCostInAttotokens() * fix(0.0101) / 10**18 / 10**18)
+    completeSetFees = long(fxpAmount * market.getCompleteSetCostInAttotokens() * fix('0.0101') / 10**18 / 10**18)
 
     print "maker escrows cash, taker pays with cash"
     execute(
@@ -215,7 +215,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
 def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * (fxpPrice - market.getMinDisplayPrice()) / 10**18)
     shortCost = long(fxpAmount * (market.getMaxDisplayPrice() - fxpPrice) / 10**18)
-    completeSetFees = long(fxpAmount * market.getCompleteSetCostInAttotokens() * fix(0.0101) / 10**18 / 10**18)
+    completeSetFees = long(fxpAmount * market.getCompleteSetCostInAttotokens() * fix('0.0101') / 10**18 / 10**18)
 
     print "maker escrows cash, taker pays with cash"
     execute(
@@ -363,7 +363,7 @@ def check_randoms(market, price):
     fxpPrice = fix(price)
     fxpMinDisplayPrice = market.getMinDisplayPrice()
     fxpMaxDisplayPrice = market.getMaxDisplayPrice()
-    fxpTradingFee = fix(0.0101)
+    fxpTradingFee = fix('0.0101')
     if fxpPrice <= fxpMinDisplayPrice:
         return 0
     if fxpPrice >= fxpMaxDisplayPrice:
