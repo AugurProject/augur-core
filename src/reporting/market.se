@@ -70,7 +70,7 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     require(-2**254 <= maxDisplayPrice and maxDisplayPrice <= 2**254)
     require(-2**254 <= minDisplayPrice and minDisplayPrice <= 2**254)
     completeSetCostMultiplier = maxDisplayPrice - minDisplayPrice
-    require(1 <= completeSetCostMultiplier and completeSetCostMultiplier <= 2**254)
+    require(1 <= completeSetCostMultiplier and completeSetCostMultiplier <= 2**254)21
     require(0 < denominationToken.totalSupply())
     require(creator)
     # FIXME: require market to be on a non-forking branch; repeat this check up the stack as well if necessary (e.g., in reporting window)
@@ -215,7 +215,6 @@ def tryFinalizeAutomatedReport():
         return(0)
     self.finalPayoutDistributionHash = self.automatedReporterPayoutDistributionHash
     self.finalizationTime = block.timestamp
-    #Call reportingToken.migrateLosingTokens() on all losing tokens to transfer to bond holder & then to correct reportingToken
     self.reportingWindow.updateMarketPhase()
     return(1)
 

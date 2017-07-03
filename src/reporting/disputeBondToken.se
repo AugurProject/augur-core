@@ -13,7 +13,7 @@ inset('../macros/require.sem')
 data initialized
 data market
 data bondHolder
-data payoutDistributionHash #disputed outcome
+data payoutDistributionHash #Disputed outcome
 data bondRemainingToBePaidOut
 data tokens[2**160]
 data spenders[2**160][2**160]
@@ -31,7 +31,6 @@ def initialize(market: address, bondHolder: address, bondAmount: int256, payoutD
     self.bondRemainingToBePaidOut = bondAmount * 2
     self.market.getReputationToken().transferFrom(msg.sender, self, bondAmount)
 
-#CONSIDER: Should we decrease that value when REP is sent to the contract, or when REP is withdrawn?
 def withdraw(amountToWithdraw: int256, payoutDistributionHash: int256):
     require(msg.sender == self.bondHolder)
     require(self.market.isFinalized())
