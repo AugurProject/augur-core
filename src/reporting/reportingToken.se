@@ -80,13 +80,16 @@ def migrateLosingTokens():
     reputationToken = self.market.getReputationToken()
     disputeBondToken = self.market.getAutomatedReporterDisputeBondToken()
     amount = min(disputeBondToken.getBondRemainingToBePaidOut(), reputationToken.balanceOf(self))
-    reputationToken.transfer(disputeBondToken, amount)
+    if (amount > 0):
+        reputationToken.transfer(disputeBondToken, amount)
     disputeBondToken = self.market.getLimitedReporterDisputeBondToken()
     amount = min(disputeBondToken.getBondRemainingToBePaidOut(), reputationToken.balanceOf(self))
-    reputationToken.transfer(disputeBondToken, amount)
+    if (amount > 0):
+        reputationToken.transfer(disputeBondToken, amount)
     disputeBondToken = self.market.getAllReporterDisputeBondToken()
     amount = min(disputeBondToken.getBondRemainingToBePaidOut(), reputationToken.balanceOf(self))
-    reputationToken.transfer(disputeBondToken, amount)
+    if (amount > 0):
+        reputationToken.transfer(disputeBondToken, amount)
     self.getReputationToken().transfer(self.market.getFinalWinningReportingToken(), reputationSupply)
 
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
