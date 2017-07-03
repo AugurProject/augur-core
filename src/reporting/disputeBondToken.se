@@ -29,23 +29,36 @@ def initialize(market: address, bondHolder: address, bondAmount: int256, payoutD
     self.bondHolder = bondHolder
     self.payoutDistributionHash = payoutDistributionHash
     self.bondRemainingToBePaidOut = bondAmount * 2
-    self.market.getReputationToken().transferFrom(msg.sender, self, bondAmount)
+    reputationToken = self.market.getReputationToken()
+    reputationToken.approve(market, 2**254)
+    reputationToken.transferFrom(msg.sender, self, bondAmount)
 
-def withdraw(amountToWithdraw: int256, payoutDistributionHash: int256):
+def withdraw():
     require(msg.sender == self.bondHolder)
     require(self.market.isFinalized())
-    require(payoutDistributionHash == self.payoutDistributionHash)
-    if (self.bondRemainingToBePaidOut > 0):
-        amountToTransfer = min(amountToWithdraw, self.bondRemainingToBePaidOut)
-        self.market.getReputationToken().transfer(self.bondHolder, amountToTransfer)
-        self.bondRemainingToBePaidOut = safeSub(self.bondRemainingToBePaidOut, amountToTransfer)
+    require(self.market.getFinalPayoutDistributionHash() == self.payoutDistributionHash)
+    require(not self.market.isContainerForDisputeBond(self) or self.market.isFinalized())
+    reputationToken = self.market.getReputationToken()
+    amountToTransfer = reputationToken.balanceOf(self)
+    reputationToken.transfer(self.bondHolder, amountToTransfer)
+    self.bondRemainingToBePaidOut = safeSub(self.bondRemainingToBePaidOut, amountToTransfer)
+
 
 ####
 #### Getters
 ####
 
+def getMarket():
+    return(self.market)
+
 def getReputationToken():
     return(self.market.getReputationToken())
+
+def getBondHolder():
+    return(self.bondHolder)
+
+def getPayoutDistributionHash():
+    return(self.payoutDistributionHash)
 
 def getBondRemainingToBePaidOut():
     return(self.bondRemainingToBePaidOut)

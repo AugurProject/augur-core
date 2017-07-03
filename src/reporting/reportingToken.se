@@ -78,18 +78,9 @@ def migrateLosingTokens():
     self.supply = 0
     reputationSupply = self.getReputationToken().balanceOf(self)
     reputationToken = self.market.getReputationToken()
-    disputeBondToken = self.market.getAutomatedReporterDisputeBondToken()
-    amount = min(disputeBondToken.getBondRemainingToBePaidOut(), reputationToken.balanceOf(self))
-    if (amount > 0):
-        reputationToken.transfer(disputeBondToken, amount)
-    disputeBondToken = self.market.getLimitedReporterDisputeBondToken()
-    amount = min(disputeBondToken.getBondRemainingToBePaidOut(), reputationToken.balanceOf(self))
-    if (amount > 0):
-        reputationToken.transfer(disputeBondToken, amount)
-    disputeBondToken = self.market.getAllReporterDisputeBondToken()
-    amount = min(disputeBondToken.getBondRemainingToBePaidOut(), reputationToken.balanceOf(self))
-    if (amount > 0):
-        reputationToken.transfer(disputeBondToken, amount)
+    self.transferBondAmount(self.market.getAutomatedReporterDisputeBondToken(), reputationToken)
+    self.transferBondAmount(self.market.getLimitedReporterDisputeBondToken(), reputationToken)
+    self.transferBondAmount(self.market.getAllReporterDisputeBondToken(), reputationToken)
     self.getReputationToken().transfer(self.market.getFinalWinningReportingToken(), reputationSupply)
 
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
@@ -120,6 +111,17 @@ def extractBondHolderPayments():
     excessAttorepAvailable = self.getReputationToken().balanceOf(self) - self.supply
     amountToSend = min(bondPotIncrease, excessAttorepAvailable)
     self.getReputationToken().transfer(self.market, amountToSend)
+
+
+####
+#### Helpers
+####
+
+def transferBondAmount():
+    amountNeeded = disputeBondToken.getBondRemainingToBePaidOut() - reputationToken.balanceOf(disputeBondToken)
+    amount = min(amountNeeded, reputationToken.balanceOf(self))
+    if (amount > 0):
+        reputationToken.transfer(disputeBondToken, amount)
 
 
 ####
