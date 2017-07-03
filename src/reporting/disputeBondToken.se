@@ -45,7 +45,7 @@ def withdraw(amountToWithdraw: int256, payoutDistributionHash: int256):
 ####
 
 def getReputationToken():
-    return self.market.getReputationToken()
+    return(self.market.getReputationToken())
 
 def getBondRemainingToBePaidOut():
     return(self.bondRemainingToBePaidOut)
