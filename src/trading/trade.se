@@ -109,6 +109,7 @@ def takeBestOrder(sender: address, direction: int256, market: address, outcome: 
             isAcceptablePrice = fxpOrderPrice <= fxpPrice
         if isAcceptablePrice:
             ORDERS.setPrice(market, outcome, fxpOrderPrice)
+            ORDERS.modifyMarketVolume(market, fxpAmount)
             orderOwner = ORDERS.getOrderOwner(orderID, type, market, outcome)
             nextOrderID = ORDERS.getWorseOrderID(orderID, type, market, outcome)
             if(orderOwner != sender):
