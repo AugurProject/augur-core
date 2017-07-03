@@ -572,7 +572,3 @@ def getAutomatedReportDueTimestamp():
 def getAutomatedReportDisputeDueTimestamp():
     assertNoValue()
     return(self.getAutomatedReportDueTimestamp() + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS)
-
-def receiveToken():
-    if (msg.sender == self.getReputationToken())
-        #treat it like a dispute bond receipt.
