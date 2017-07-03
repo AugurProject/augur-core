@@ -145,7 +145,7 @@ def disputeAutomatedReport():
     require(not self.isFinalized())
     require(self.isInAutomatedDisputePhase())
     if (not self.automatedReporterDisputeBondToken):
-        self.automatedReporterDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBond(self.controller, self, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, self.automatedReporterPayoutDistributionHash)
+        self.automatedReporterDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBondToken(self.controller, self, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, self.automatedReporterPayoutDistributionHash)
     self.reportingWindow.updateMarketPhase()
 
 def disputeLimitedReporters():
@@ -153,7 +153,7 @@ def disputeLimitedReporters():
     self.migrateThroughAllForks()
     require(self.isInLimitedDisutePhase())
     if (not self.limitedReportersDisputeBondToken):
-        self.limitedReportersDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBond(self.controller, self, msg.sender, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT, self.tentativeWinningPayoutDistributionHash)
+        self.limitedReportersDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBondToken(self.controller, self, msg.sender, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT, self.tentativeWinningPayoutDistributionHash)
     self.limitedReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
     newReportingWindow = self.getBranch().getNextReportingWindow()
     newReportingWindow.migrateMarketInFromSibling()
@@ -165,7 +165,7 @@ def disputeAllReporters():
     self.migrateThroughAllForks()
     require(self.isInAllDisputePhase())
     if (not self.automatedReporterDisputeBondToken):
-        self.automatedReporterDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBond(self.controller, self, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, self.tentativeWinningPayoutDistributionHash)
+        self.automatedReporterDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBondToken(self.controller, self, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, self.tentativeWinningPayoutDistributionHash)
     self.allReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
     self.reportingWindow.getBranch().fork(self)
     newReportingWindow = self.getBranch().getReportingWindowByTimestamp(self.getBranch().getForkEndTime())
