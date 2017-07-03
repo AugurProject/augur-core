@@ -63,7 +63,6 @@ def transferFrom(from: address, to: address, value: int256):
     require(from != to)
     require(1 <= value and value <= self.accounts[from].balance)
     require(value <= self.accounts[from].spenders[msg.sender].maxValue)
-    self.controller.stopInEmergency()
     self.accounts[from].spenders[msg.sender].maxValue = safeSub(self.accounts[from].spenders[msg.sender].maxValue, value)
     self.accounts[from].balance = safeSub(self.accounts[from].balance, value)
     self.accounts[to].balance = safeAdd(self.accounts[to].balance, value)
@@ -74,7 +73,6 @@ def approve(spender: address, value: int256):
     assertNoValue()
     require(spender != msg.sender)
     require(0 <= value and value <= 2**254)
-    self.controller.stopInEmergency()
     self.accounts[msg.sender].spenders[spender].maxValue = value
     log(type=Approval, msg.sender, spender, value)
     return(1)
