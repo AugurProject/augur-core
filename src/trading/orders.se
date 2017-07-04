@@ -272,10 +272,10 @@ def fillOrder(orderId: address, orderType: int256, market: address, orderOutcome
     require(tx.gasprice <= self.orders[market][orderOutcome][orderType][orderId].gasPrice)
     fill = 0
     if orderType == BID:
-        # FIXME: we can't use safeSub here because we might be subtracting a negative, but we need to protect against overflows
+        # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 which won't overflow
         fill = sharesFilled + safeFxpDiv(tokensFilled, self.orders[market][orderOutcome][orderType][orderId].fxpPrice - market.getMinDisplayPrice())
     if orderType == ASK:
-        # FIXME: we can't use safeSub here because we might be subtracting a negative, but we need to protect against overflows
+        # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 which won't overflow
         fill = sharesFilled + safeFxpDiv(tokensFilled, market.getMaxDisplayPrice() - self.orders[market][orderOutcome][orderType][orderId].fxpPrice)
     require(fill <= self.orders[market][orderOutcome][orderType][orderId].fxpAmount)
     self.orders[market][orderOutcome][orderType][orderId].fxpAmount -= fill
