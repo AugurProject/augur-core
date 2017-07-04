@@ -270,12 +270,15 @@ def fillOrder(orderId: address, orderType: int256, market: address, orderOutcome
     require(sharesFilled <= self.orders[market][orderOutcome][orderType][orderId].fxpSharesEscrowed)
     require(tokensFilled <= self.orders[market][orderOutcome][orderType][orderId].fxpMoneyEscrowed)
     require(tx.gasprice <= self.orders[market][orderOutcome][orderType][orderId].gasPrice)
+    require(self.orders[market][orderOutcome][orderType][orderId].fxpPrice <= market.getMaxDisplayPrice())
+    require(self.orders[market][orderOutcome][orderType][orderId].fxpPrice >= market.getMinDisplayPrice())
+    require(market.getMaxDisplayPrice() + market.getMinDisplayPrice() <= 2**254)
     fill = 0
     if orderType == BID:
-        # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 which won't overflow
+        # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
         fill = sharesFilled + safeFxpDiv(tokensFilled, self.orders[market][orderOutcome][orderType][orderId].fxpPrice - market.getMinDisplayPrice())
     if orderType == ASK:
-        # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 which won't overflow
+        # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
         fill = sharesFilled + safeFxpDiv(tokensFilled, market.getMaxDisplayPrice() - self.orders[market][orderOutcome][orderType][orderId].fxpPrice)
     require(fill <= self.orders[market][orderOutcome][orderType][orderId].fxpAmount)
     self.orders[market][orderOutcome][orderType][orderId].fxpAmount -= fill

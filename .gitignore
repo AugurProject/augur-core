@@ -62,9 +62,6 @@ target/
 *~
 \#*\#
 
-#vscode
-.vscode/
-
 bower_components
 serpent/ui
 .gitstats
@@ -75,7 +72,6 @@ python
 Downloads
 src-extern
 notes
-.pylintrc
 
 local/*.py
 *build-*.json
