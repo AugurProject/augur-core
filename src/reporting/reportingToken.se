@@ -79,8 +79,8 @@ def migrateLosingTokens():
     reputationSupply = self.getReputationToken().balanceOf(self)
     reputationToken = self.market.getReputationToken()
     self.transferBondAmount(self.market.getAutomatedReporterDisputeBondToken(), reputationToken)
-    self.transferBondAmount(self.market.getLimitedReporterDisputeBondToken(), reputationToken)
-    self.transferBondAmount(self.market.getAllReporterDisputeBondToken(), reputationToken)
+    self.transferBondAmount(self.market.getLimitedReportersDisputeBondToken(), reputationToken)
+    self.transferBondAmount(self.market.getAllReportersDisputeBondToken(), reputationToken)
     self.getReputationToken().transfer(self.market.getFinalWinningReportingToken(), reputationSupply)
 
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
@@ -104,7 +104,7 @@ def redeemWinningTokens(reporter: address):
 def extractBondHolderPayments():
     require(self.market.isFinalized())
     marketReputationBalance = self.getReputationToken().balanceOf(self.market)
-    desiredBondPot = self.market.getDesiredDisputeRewardPot()
+    desiredBondPot = self.getDesiredDisputeRewardPot()
     bondPotIncrease = desiredBondPot - marketReputationBalance
     if (bondPotIncrease <= 0):
         return
@@ -113,11 +113,23 @@ def extractBondHolderPayments():
     self.getReputationToken().transfer(self.market, amountToSend)
 
 
+def getDesiredDisputeRewardPot():
+    assertNoValue()
+    require(self.market.isFinalized())
+    desiredBondPot = 0
+    if (self.market.getAutomatedReporterDisputeBondToken() and self.market.getAutomatedReporterDisputeBondToken().getPayoutDistributionHash() != self.market.getFinalPayoutDistributionHash()):
+        desiredBondPot += AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT * 2
+    if (self.market.getLimitedReportersDisputeBondToken() and self.market.getLimitedReportersDisputeBondToken().getPayoutDistributionHash() != self.market.getFinalPayoutDistributionHash()):
+        desiredBondPot += LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT * 2
+    if (self.market.getAllReportersDisputeBondToken() and self.market.getAllReportersDisputeBondToken().getPayoutDistributionHash() != self.market.getFinalPayoutDistributionHash()):
+        desiredBondPot += ALL_REPORTERS_DISPUTE_BOND_AMOUNT * 2
+    return(desiredBondPot)
+
 ####
 #### Helpers
 ####
 
-def transferBondAmount():
+def transferBondAmount(disputeBondToken, reputationToken):
     amountNeeded = disputeBondToken.getBondRemainingToBePaidOut() - reputationToken.balanceOf(disputeBondToken)
     amount = min(amountNeeded, reputationToken.balanceOf(self))
     if (amount > 0):

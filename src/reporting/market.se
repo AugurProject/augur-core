@@ -13,8 +13,6 @@ macro DISPUTE_BOND_TOKEN_FACTORY: self.controller.lookup('disputeBondTokenFactor
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
 inset('../macros/require.sem')
-inset('../macros/assertPrivateCall.sem')
-inset('../macros/unitConversions.sem')
 inset('../macros/durations.sem')
 
 # CONSIDER: figure out approprate values for these
@@ -368,6 +366,18 @@ def getReputationToken():
 def getRegistrationToken():
     assertNoValue()
     return(self.reportingWindow.getRegistrationToken())
+
+def getAutomatedReporterDisputeBondToken():
+    assertNoValue()
+    return(self.automatedReporterDisputeBondToken)
+
+def getLimitedReportersDisputeBondToken():
+    assertNoValue()
+    return(self.limitedReportersDisputeBondToken)
+
+def getAllReportersDisputeBondToken():
+    assertNoValue()
+    return(self.allReportersDisputeBondToken)
 
 def getNumberOfOutcomes():
     assertNoValue()
