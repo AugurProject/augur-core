@@ -1,7 +1,7 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
 extern delegateExtern: [setup:[int256,int256]:_]
-extern disputeBondToken: [initialize:[address,int256,int256]:_]
+extern disputeBondToken: [initialize:[address,address,int256,int256]:_]
 
 # workaround for https://github.com/ethereum/serpent/issues/119
 data lastDisputeBondToken
@@ -10,7 +10,7 @@ def createDisputeBondToken(controller: address, market: address, bondHolder: add
     disputeBondToken = create('../libraries/delegator.se')
     disputeBondToken.setup(controller, 'disputeBondToken')
     disputeBondToken.initialize(market, bondHolder, bondAmount, payoutDistributionHash)
-    self.lastDisputeBond = disputeBondToken
+    self.lastDisputeBondToken = disputeBondToken
     return(disputeBondToken)
 
 def getLastDisputeBond():
