@@ -51,9 +51,13 @@ def takeAskOrder(taker: address, orderID: address, market: address, outcome: int
     makerSharesEscrowed = min(order[SHARES_ESCROWED], fxpAmountTakerWants)
     require(maker != taker)
 
-    # FIXME: we can't use safeSub here because it disallows subtracting negative numbers, but we need to protect against overflows
+    require(orderDisplayPrice <= market.getMaxDisplayPrice())
+    require(orderDisplayPrice >= market.getMinDisplayPrice())
+    require(market.getMaxDisplayPrice() + market.getMinDisplayPrice() <= 2**254)
+
+    # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
     sharePriceShort = market.getMaxDisplayPrice() - orderDisplayPrice
-    # FIXME: we can't use safeSub here because it disallows subtracting negative numbers, but we need to protect against overflows
+    # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
     sharePriceLong = orderDisplayPrice - market.getMinDisplayPrice()
     shareToken = market.getShareToken(outcome)
     denominationToken = market.getDenominationToken()
