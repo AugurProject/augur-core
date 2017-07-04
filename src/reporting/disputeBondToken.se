@@ -37,7 +37,7 @@ def withdraw():
     require(msg.sender == self.bondHolder)
     require(self.market.isFinalized())
     require(self.market.getFinalPayoutDistributionHash() == self.payoutDistributionHash)
-    require(not self.market.isContainerForDisputeBond(self) or self.market.isFinalized())
+    require(not self.market.isContainerForDisputeBondToken(self) or self.market.isFinalized())
     reputationToken = self.market.getReputationToken()
     amountToTransfer = reputationToken.balanceOf(self)
     reputationToken.transfer(self.bondHolder, amountToTransfer)
