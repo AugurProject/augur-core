@@ -1,16 +1,7 @@
 #!/usr/bin/env python
 
 from ethereum import tester
-from utils import longToHexString, bytesToLong, bytesToHexString, fix
-
-# TODO: figure out which of these imports (if any) are actually needed and change them to from ... import ... so this is clear
-
-import os
-import sys
-import iocapture
-import ethereum.tester
-from decimal import *
-import utils
+from utils import longToHexString, bytesToLong, bytesToHexString, fix, captureFilteredLogs
 
 NO = 0
 YES = 1
@@ -21,11 +12,6 @@ ASK = 2
 # complete set log type
 BUY = 1
 SELL = 2
-
-def captureLog(contract, logs, message):
-    translated = contract.translator.listen(message)
-    if not translated: return
-    logs.append(translated)
 
 def test_one_bid_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
@@ -44,7 +30,7 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicSell(market.address, YES, fix('1.2'), fix('0.6'), 42, sender = tester.k2)
 
     # assert
@@ -94,7 +80,7 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('0.7', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('0.7', '0.4'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicSell(market.address, YES, fix('0.7'), fix('0.6'), 42, sender = tester.k2)
 
     # assert
@@ -145,7 +131,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
     assert cash.publicDepositEther(value=fix('1.5', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
     assert cash.approve(makeOrder.address, fix('0.3', '0.4'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicSell(market.address, YES, fix('1.5'), fix('0.6'), 42, sender = tester.k2)
 
     # assert
@@ -212,7 +198,7 @@ def test_two_bids_on_books_buy_both(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('1.5', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.5', '0.4'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicSell(market.address, YES, fix('1.5'), fix('0.6'), 42, sender = tester.k2)
 
     # assert
@@ -291,7 +277,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('1.5', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.5', '0.4'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicSell(market.address, YES, fix('1.5'), fix('0.6'), 42, sender = tester.k2)
 
     # assert
@@ -371,7 +357,7 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     assert cash.publicDepositEther(value=fix('1.5', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
     assert cash.approve(makeOrder.address, fix('0.3', '0.4'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicSell(market.address, YES, fix('1.5'), fix('0.6'), 42, sender = tester.k2)
 
     # assert
@@ -435,7 +421,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicBuy(market.address, YES, fix('1.2'), fix('0.6'), 42, sender = tester.k2)
 
     # assert
@@ -485,7 +471,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('0.7', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('0.7', '0.6'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicBuy(market.address, YES, fix('0.7'), fix('0.6'), 42, sender = tester.k2)
 
     # assert
@@ -536,7 +522,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
     assert cash.publicDepositEther(value=fix('1.5', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
     assert cash.approve(makeOrder.address, fix('0.3', '0.6'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicBuy(market.address, YES, fix('1.5'), fix('0.6'), 42, sender = tester.k2)
 
     # assert
@@ -603,7 +589,7 @@ def test_two_asks_on_books_buy_both(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('1.5', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.5', '0.6'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicBuy(market.address, YES, fix('1.5'), fix('0.6'), 42, sender = tester.k2)
 
     # assert
@@ -682,7 +668,7 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('1.5', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.5', '0.6'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicBuy(market.address, YES, fix('1.5'), fix('0.6'), 42, sender = tester.k2)
 
     # assert
@@ -762,7 +748,7 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     assert cash.publicDepositEther(value=fix('1.5', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
     assert cash.approve(makeOrder.address, fix('0.3', '0.6'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = trade.publicBuy(market.address, YES, fix('1.5'), fix('0.6'), 42, sender = tester.k2)
 
     # assert

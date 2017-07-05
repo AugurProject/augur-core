@@ -175,6 +175,7 @@ class NewContractsFixture:
         self.contracts['cancelOrder'].initialize(self.controller.address)
         self.contracts['trade'].initialize(self.controller.address)
         self.contracts['claimProceeds'].initialize(self.controller.address)
+        self.contracts['tradingEscapeHatch'].initialize(self.controller.address)
 
     ####
     #### Helpers

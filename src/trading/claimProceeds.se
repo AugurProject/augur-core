@@ -62,7 +62,6 @@ def claimProceeds(sender: address, market: address):
         if balance:
             shareToken.destroyShares(sender, balance)
         if proceedAmount:
-            # FIXME: transfer fees to appropriate parties
             reportingWindow = market.getReportingWindow()
             marketCreatorFeeRate = market.getMarketCreatorSettlementFeeInAttoethPerEth()
             marketCreatorFee = safeFxpMul(proceedAmount, marketCreatorFeeRate)

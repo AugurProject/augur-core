@@ -9,9 +9,6 @@ def fix(n, m = 1):
 def unfix(n):
     return n // 10**18
 
-def hex2str(h):
-    return hex(h)[2:-1]
-
 def longToHexString(value):
     return hex(value)[2:-1]
 
@@ -20,6 +17,13 @@ def bytesToLong(value):
 
 def bytesToHexString(value):
     return longToHexString(bytesToLong(value))
+
+def captureFilteredLogs(state, contract, logs):
+    def captureLog(contract, logs, message):
+        translated = contract.translator.listen(message)
+        if not translated: return
+        logs.append(translated)
+    state.block.log_listeners.append(lambda x: captureLog(contract, logs, x))
 
 # FIXME: relapce all usages of this with pyethereum log filtering (see trading/test_trade.py for an example)
 def parseCapturedLogs(logs):

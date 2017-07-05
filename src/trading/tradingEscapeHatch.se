@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-ORDERS = self.controller.lookup('orders')
+macro ORDERS: self.controller.lookup('orders')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
@@ -11,9 +11,7 @@ inset('../macros/unitConversions.sem')
 data controller
 data owner
 
-data marketPricesFrozen[][]
-
-data marketPricesFrozenDenominator[]
+data frozenShareValue[][]
 
 macro BID: 1
 macro ASK: 2
@@ -32,66 +30,71 @@ def initialize(controller: address):
 # this is necessary because once we are in decentralized mode, contract "upgrades" will be in the form of the UI pointing at new contracts and the old ones slowly dying off.  We will _not_ be using the delegated cotnract updater long term, which means we need an emergency exit that allows one to halt everything and liquidate the system as _fairly_ as possible
 def claimSharesInUpdate(market: address):
     self.controller.onlyInEmergency()
+    require(market)
 
-    # if this is the first time this is called for this market, make an educated guess as to the trading value
     numOutcomes = market.getNumberOfOutcomes()
-    if(!self.marketPricesFrozen[market][1]):
-        i = 0
-        while i < numOutcomes:
-            bestBid = ORDERS.getBestOrderID(BID, market, i)
-            if(bestBid == 0):
-                frozenPriceForOutcome = ORDERS.getLastOutcomePrice(market, i)
-            else:
-                frozenPriceForOutcome = ORDERS.getPrice(bestBid, BID, market, i)
-            self.marketPricesFrozen[market][i] = frozenPriceForOutcome
-            self.marketPricesFrozenDenominator[market] += frozenPriceForOutcome
-            i += 1
-
     marketCurrency = market.getDenominationToken()
-    # Fetch min/max values for the event.
+
+    outcome = 0
+    while outcome < numOutcomes:
+        shareToken = market.getShareToken(outcome)
+        sharesOwned = shareToken.balanceOf(msg.sender)
+        if(sharesOwned > 0):
+            frozenShareValue = self.getFrozenShareValue(market, outcome)
+            shareToken.destroyShares(msg.sender, sharesOwned)
+            amountToTransfer = safeFxpMul(sharesOwned, frozenShareValue)
+            require(marketCurrency.transferFrom(market, msg.sender, amountToTransfer))
+        outcome += 1
+    return(1)
+
+def getFrozenShareValue(market: address, outcome: int256):
+    numberOfOutcomes = market.getNumberOfOutcomes()
+    require(0 <= outcome and outcome < numberOfOutcomes)
+    require(market)
+
+    if self.frozenShareValue[market][outcome]:
+        return self.frozenShareValue[market][outcome]
+
     minValue = market.getMinDisplayPrice()
     maxValue = market.getMaxDisplayPrice()
+    range = maxValue - minValue
+    numberOfMissingBids = 0
+    shiftedPrices = array(numberOfOutcomes)
+    sumOfBids = 0
 
-    # FIXME: this code should be normalized and all market types treated the same, there is no need to have multiple code paths by market type
+    # fill in any outcome prices that have an order history
+    tempOutcome = 0
+    while tempOutcome < numberOfOutcomes:
+        lastTradePrice = ORDERS.getLastOutcomePrice(market, tempOutcome)
+        # intentionally not a safeSub since minValue may be negate
+        lastTradePriceShifted = lastTradePrice - minValue
+        if lastTradePriceShifted:
+            shiftedPrices[tempOutcome] = lastTradePriceShifted
+            sumOfBids += lastTradePriceShifted
+        else:
+            numberOfMissingBids += 1
+        tempOutcome += 1
 
-    # categorical
-    if(numOutcomes > 2):
-        denominator = self.marketPricesFrozenDenominator[market]
-        i = 0
-        while i < numOutcomes:
-            # FIXME: always multiple first, then divide
-            shareValue = safeFxpMul(safeFxpDiv(self.marketPricesFrozen[market][i], denominator), ONE)
-            shareToken = market.getShareToken(i)
-            sharesOwned = shareToken.balanceOf(msg.sender)
-            if(sharesOwned > 0):
-                shareToken.destroyShares(msg.sender, sharesOwned)
-                shareValue = safeFxpMul(sharesOwned, shareValue)
-                require(marketCurrency.transferFrom(market, msg.sender, shareValue))
-    # binary or scalar
-    else:
-        range = maxValue - minValue
-        # outcome is 1 if we're 0 indexing now
-        outcome = 1
-        shareValue = self.marketPricesFrozen[market][outcome] - minValue
-        otherSideShareValue = maxValue - self.marketPricesFrozen[market][outcome]
-        denominator = safeAdd(shareValue, otherSideShareValue)
-        # FIXME: always multiple first, then divide
-        shareValue = safeFxpMul(safeFxpDiv(shareValue, denominator), range)
-        shareToken = market.getShareToken(outcome)
-        sharesOwned = shareToken.balanceOf(msg.sender)
-        if(sharesOwned > 0):
-            shareToken.destroyShares(msg.sender, sharesOwned)
-            shareValue = safeFxpMul(sharesOwned, shareValue)
-            require(marketCurrency.transferFrom(market, msg.sender, shareValue))
+    # fill in any outcome prices that have no order history
+    if numberOfMissingBids:
+        fauxBidPrice = (market.getCompleteSetCostInAttotokens() - sumOfBids) / numberOfMissingBids
+        # to avoid any oddities, every share is worth _something_, even if it is just 1 attotoken
+        if fauxBidPrice <= 0:
+            fauxBidPrice = 1
+        tempOutcome = 0
+        while tempOutcome < numberOfOutcomes:
+            if not shiftedPrices[tempOutcome]:
+                shiftedPrices[tempOutcome] = fauxBidPrice
+                sumOfBids += fauxBidPrice
+            tempOutcome += 1
 
-        # outcome is 0 if we're 0 indexing now
-        outcome = 0
-        # FIXME: always multiple first, then divide
-        shareValue = safeFxpMul(safeFxpDiv(otherSideShareValue, denominator), range)
-        shareToken = market.getShareToken(outcome)
-        sharesOwned = shareToken.balanceOf(msg.sender)
-        if(sharesOwned > 0):
-            shareToken.destroyShares(msg.sender, sharesOwned)
-            shareValue = safeFxpMul(sharesOwned, shareValue)
-            require(marketCurrency.transferFrom(market, msg.sender, shareValue))
-    return(1)
+    denominator = sumOfBids
+
+    # set the final prices to be what should be paid out to each outcome share holder
+    tempOutcome = 0
+    while tempOutcome < numberOfOutcomes:
+        # FIXME: think about this math, can shiftedPrice * range be greater than 2*254?  Can shiftedPrice / denominator lead to rounding errors?  Should we * then / or / then *?
+        self.frozenShareValue[market][tempOutcome] = safeFxpDiv(safeFxpMul(shiftedPrices[tempOutcome], range), denominator)
+        tempOutcome += 1
+
+    return self.frozenShareValue[market][outcome]

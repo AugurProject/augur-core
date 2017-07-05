@@ -27,7 +27,7 @@ data endTime
 data numOutcomes
 # CONSIDER: change the payoutNumerator/payoutDenominator to use fixed point numbers instead of integers; PRO: some people find fixed point decimal values easier to grok; CON: rounding errors can occur and it is easier to screw up the math if you don't handle fixed point values correctly
 data payoutDenominator
-data feePerEthInWei
+data feePerEthInAttoeth
 # CONSIDER: we really don't need these
 data maxDisplayPrice
 data minDisplayPrice
@@ -54,7 +54,7 @@ data automatedReporterBondAttoeth
 
 # intentionally does not refund on `any()`, this contract will receive ETH when a market is created through it, should refund in all other calls though
 
-def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, payoutDenominator: int256, feePerEthInWei: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
+def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, payoutDenominator: int256, feePerEthInAttoeth: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
     require(not self.initialized)
     self.initialized = 1
     require(reportingWindow)
@@ -62,7 +62,7 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     require(2 <= numOutcomes and numOutcomes <= 8)
     # payoutDenominator must be a multiple of numOutcomes so we can evenly split complete set share payout on indeterminate
     require(not (payoutDenominator % numOutcomes))
-    require(0 <= feePerEthInWei and feePerEthInWei <= 5*10**17)
+    require(0 <= feePerEthInAttoeth and feePerEthInAttoeth <= 5*10**17)
     require(-2**254 <= maxDisplayPrice and maxDisplayPrice <= 2**254)
     require(-2**254 <= minDisplayPrice and minDisplayPrice <= 2**254)
     completeSetCostMultiplier = maxDisplayPrice - minDisplayPrice
@@ -76,7 +76,8 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     self.endTime = endTime
     self.numOutcomes = numOutcomes
     self.payoutDenominator = payoutDenominator
-    self.feePerEthInWei = feePerEthInWei
+    # FIXME: markets may be denominated in tokens that aren't 10^18, deal with that
+    self.feePerEthInAttoeth = feePerEthInAttoeth
     self.maxDisplayPrice = maxDisplayPrice
     self.minDisplayPrice = minDisplayPrice
     self.marketCreationBlock = block.number
@@ -95,9 +96,12 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     # TODO: we need to update this signature (and all of the places that call it) to allow the creator (UI) to pass in a number of other things which will all be logged here
     # TODO: log short description
     # TODO: log long description
-    # TODO: log tags (up to 0-2)
+    # TODO: log min display price
+    # TODO: log max display price
+    # TODO: log tags (0-2)
     # TODO: log outcome labels (same number as numOutcomes)
     # TODO: log type (scalar, binary, categorical)
+    # TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, payoutDenominator, denominationToken address, etc.)
 
 # this will need to be called manually for each open market if a spender contract is updated
 def approveSpenders():
@@ -106,6 +110,7 @@ def approveSpenders():
     self.denominationToken.approve(self.controller.lookup('takeOrder'), 2**254)
     self.denominationToken.approve(self.controller.lookup('tradingEscapeHatch'), 2**254)
     self.denominationToken.approve(self.controller.lookup('claimProceeds'), 2**254)
+    self.denominationToken.approve(self.controller.lookup('tradingEscapeHatch'), 2**254)
     i = 0
     while i < self.numOutcomes:
         self.shareTokens[i].approve(self.controller.lookup('takeOrder'), 2**254)
@@ -118,9 +123,9 @@ def changeCreator(newCreator: address):
     return 1
 
 def decreaseMarketCreatorSettlementFeeInAttoethPerEth(newFeePerEthInWei: int256):
-    require(0 <= newFeePerEthInWei and newFeePerEthInWei < self.feePerEthInWei)
+    require(0 <= newFeePerEthInWei and newFeePerEthInWei < self.feePerEthInAttoeth)
     require(msg.sender == self.creator)
-    self.feePerEthInWei = newFeePerEthInWei
+    self.feePerEthInAttoeth = newFeePerEthInWei
     return 1
 
 def automatedReport(payoutNumerators: arr):
@@ -400,7 +405,7 @@ def getCreator():
     return(self.creator)
 
 def getMarketCreatorSettlementFeeInAttoethPerEth():
-    return(self.feePerEthInWei)
+    return(self.feePerEthInAttoeth)
 
 def getMaxDisplayPrice():
     assertNoValue()
