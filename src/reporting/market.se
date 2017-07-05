@@ -127,6 +127,7 @@ def automatedReport(payoutNumerators: arr):
     require(self.isInAutomatedReportingPhase())
     # we have to create the reporting token so the rest of the system works (winning reporting token must exist)
     self.getReportingToken(payoutNumerators)
+    self.tentativeWinningPayoutDistributionHash = self.derivePayoutDistributionHash(payoutNumerators)
     self.reportingWindow.updateMarketPhase()
 
 def disputeAutomatedReport():
@@ -135,7 +136,7 @@ def disputeAutomatedReport():
     require(not self.isFinalized())
     require(self.isInAutomatedDisputePhase())
     require(not self.automatedReporterDisputeBondToken)
-    self.automatedReporterDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBondToken(self.controller, self, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, self.automatedReporterDisputeBondToken.getPayoutDistributionHash())
+    self.automatedReporterDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBondToken(self.controller, self, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, self.tentativeWinningPayoutDistributionHash)
     self.reportingWindow.updateMarketPhase()
 
 def disputeLimitedReporters():
@@ -166,6 +167,8 @@ def updateTentativeWinningPayoutDistributionHash(payoutDistributionHash: int256)
     require(self.reportingTokens.contains(payoutDistributionHash))
     if (not self.tentativeWinningPayoutDistributionHash):
         self.tentativeWinningPayoutDistributionHash = payoutDistributionHash
+    if not self.reportingTokens.contains(self.tentativeWinningPayoutDistributionHash):
+        self.tentativeWinningPayoutDistributionHash = payoutDistributionHash
     if (self.reportingTokens.getValue(payoutDistributionHash).totalSupply() > self.reportingTokens.getValue(self.tentativeWinningPayoutDistributionHash).totalSupply()):
         self.tentativeWinningPayoutDistributionHash = payoutDistributionHash
 
@@ -195,13 +198,13 @@ def tryFinalizeAutomatedReport():
     assertNoValue()
     if (self.isFinalized()):
         return(1)
-    if (not self.automatedReporterDisputeBondToken.getPayoutDistributionHash()):
+    if (not self.tentativeWinningPayoutDistributionHash):
         return(0)
     if (self.automatedReporterDisputeBondToken.getBondHolder()):
         return(0)
     if (block.timestamp < self.getAutomatedReportDisputeDueTimestamp()):
         return(0)
-    self.finalPayoutDistributionHash = self.automatedReporterDisputeBondToken.getPayoutDistributionHash()
+    self.finalPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
     self.finalizationTime = block.timestamp
     self.transferPayoutToBondHolders()
     self.reportingWindow.updateMarketPhase()
@@ -438,7 +441,7 @@ def shouldCollectReportingFees():
 
 def isDoneWithAutomatedReporters():
     assertNoValue()
-    return(self.automatedReporterDisputeBondToken.getPayoutDistributionHash() != 0 or block.timestamp > self.getAutomatedReportDueTimestamp())
+    return(self.tentativeWinningPayoutDistributionHash != 0 or block.timestamp > self.getAutomatedReportDueTimestamp())
 
 def isDoneWithLimitedReporters():
     assertNoValue()
@@ -483,7 +486,7 @@ def isInLimitedReportingPhase():
         return(0)
     if (self.limitedReportersDisputeBondToken.getPayoutDistributionHash()):
         return(0)
-    if (self.automatedReporterDisputeBondToken.getPayoutDistributionHash() and not self.automatedReporterDisputeBondToken.getBondHolder()):
+    if (self.tentativeWinningPayoutDistributionHash and not self.automatedReporterDisputeBondToken.getBondHolder()):
         return(0)
     return(1)
 
@@ -495,7 +498,7 @@ def isInLimitedDisutePhase():
         return(0)
     if (self.limitedReportersDisputeBondToken.getBondHolder()):
         return(0)
-    if (self.automatedReporterDisputeBondToken.getPayoutDistributionHash() and not self.automatedReporterDisputeBondToken.getBondHolder()):
+    if (self.tentativeWinningPayoutDistributionHash and not self.automatedReporterDisputeBondToken.getBondHolder()):
         return(0)
     return(1)
 
@@ -509,7 +512,7 @@ def isInAllReportingPhase():
         return(0)
     if (self.allReportersDisputeBondToken.getPayoutDistributionHash()):
         return(0)
-    if (self.automatedReporterDisputeBondToken.getPayoutDistributionHash() and not self.automatedReporterDisputeBondToken.getBondHolder()):
+    if (self.tentativeWinningPayoutDistributionHash and not self.automatedReporterDisputeBondToken.getBondHolder()):
         return(0)
     return(1)
 
@@ -523,7 +526,7 @@ def isInAllDisputePhase():
         return(0)
     if (self.allReportersDisputeBondToken.getBondHolder()):
         return(0)
-    if (self.automatedReporterDisputeBondToken.getPayoutDistributionHash() and not self.automatedReporterDisputeBondToken.getBondHolder()):
+    if (self.tentativeWinningPayoutDistributionHash and not self.automatedReporterDisputeBondToken.getBondHolder()):
         return(0)
     return(1)
 
