@@ -8,61 +8,39 @@ data controllerLookupName
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
 inset('../macros/require.sem')
+inset('../macros/safeMath.sem')
 
-# numTopics is the number of distinct topics
-# topics[] is an array with all distinct topics
-# popularity[] is indexed by topic, values are the total "popularity" of all markets using the topic.
-#   (Volume is a crude popularity metric which will be refined by testing.)
-# Note: sorting and/or ranking must be done by the client!
-data topics(numTopics, topics[], popularity[])
+# an iterable map of topics to popularity
+data topics
 
-def updateTopicPopularity(topic, fxpAmount):
+# FIXME: topics needs to be sorted on-chain, which means we need a sorted linked list collection with hinted sorting at insertion/update time instead of a simple iterableMap
+def initialize():
+    require(not self.topics)
+    # TODO: change iterableMap to a delegated contract so it can be updated
+    self.topics = create('../libraries/iterableMap.se')
+
+def any():
     assertNoValue()
+
+def updatePopularity(topic: int256, fxpAmount: int256):
     self.controller.assertIsWhitelisted(msg.sender)
-    if(self.topics.popularity[topic] == 0):
-        self.topics.topics[self.topics.numTopics] = topic
-        self.topics.numTopics += 1
-    self.topics.popularity[topic] += fxpAmount
+    oldAmount = self.topics.getByKeyOrZero(topic)
+    newAmount = safeAdd(oldAmount, fxpAmount)
+    self.topics.addOrUpdate(topic, newAmount)
     return(1)
 
-def getChunkOfTopics(offset, numTopicsToLoad):
-    numTopics = self.topics.numTopics
-    if(offset > numTopics or numTopics == 0):
-        return([]: arr)
-    if(numTopicsToLoad == 0):
-        numTopicsToLoad = numTopics
-    numTopicsToLoad = min(numTopicsToLoad, numTopics - offset)
-    topics = array(numTopicsToLoad)
-    i = 0
-    while(i < numTopicsToLoad):
-        topics[i] = self.topics.topics[i + offset]
-        i += 1
-    return(topics: arr)
+def getPopularity(topic: int256):
+    return self.topics.getByKey(topic)
 
-def getTopicsInfo(offset, numTopicsToLoad):
-    numTopics = self.topics.numTopics
-    if(offset > numTopics or numTopics == 0):
-        return([]: arr)
-    if(numTopicsToLoad == 0):
-        numTopicsToLoad = numTopics
-    numTopicsToLoad = min(numTopicsToLoad, numTopics - offset)
-    topicsInfo = array(numTopicsToLoad * 2)
-    i = 0
-    j = 0
-    while(i < numTopicsToLoad):
-        topic = self.topics.topics[i + offset]
-        topicsInfo[j] = topic
-        topicsInfo[j + 1] = self.topics.popularity[topic]
-        i += 1
-        j += 2
-    return(topicsInfo: arr)
+def getTopicByOffset(offset: int256):
+    return self.topics.getByOffset(offset)
 
-# @return fxp
-def getTopicPopularity(topic):
-    return(self.topics.popularity[topic])
+def getPopularityByOffset(offset: int256):
+    topic = self.getTopicByOffset(offset)
+    return self.topics.getByKey(topic)
 
-def getNumTopics():
-    return(self.topics.numTopics)
+def count():
+    return self.topics.count()
 
 def setController(newController: address):
     require(msg.sender == self.controller)

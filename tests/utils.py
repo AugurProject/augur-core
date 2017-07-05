@@ -9,9 +9,6 @@ def fix(n, m = 1):
 def unfix(n):
     return n // 10**18
 
-def hex2str(h):
-    return hex(h)[2:-1]
-
 def longToHexString(value):
     return hex(value)[2:-1]
 
