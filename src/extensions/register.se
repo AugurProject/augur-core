@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-inset('../macros/assertZeroValue.sem')
+inset('../macros/assertNoValue.sem')
 
 extern controller: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]:int256, assertOnlySpecifiedCaller:[int256,int256]:_, changeMode:[int256]:int256, emergencyStop:[]:int256, getMode:[]:int256, getOwner:[]:int256, lookup:[int256]:int256, onlyInEmergency:[]:_, release:[]:int256, removeFromWhitelist:[int256,int256]:int256, setValue:[int256,int256]:int256, stopInEmergency:[]:_, suicide:[int256,int256,int256]:int256, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:_, transferOwnership:[int256,int256,int256,int256]:int256, updateController:[int256,int256]:int256]
 
@@ -12,7 +12,7 @@ def init():
     self.controller = 0x0
 
 def register():
-    assertZeroValue()
+    assertNoValue()
     log(type=registration, msg.sender, block.timestamp)
     return(1)
 

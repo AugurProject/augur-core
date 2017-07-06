@@ -1,0 +1,15 @@
+extern delegateExtern: [setup:[int256,int256]:_]
+extern reputationToken: [initialize:[address]:_]
+
+# workaround for https://github.com/ethereum/serpent/issues/119
+data lastReputationToken
+
+def createReputationToken(controller: address, branch: address):
+    reputationToken = create('../libraries/delegator.se')
+    reputationToken.setup(controller, 'reputationToken')
+    reputationToken.initialize(branch)
+    self.lastReputationToken = reputationToken
+    return(reputationToken)
+
+def getLastReputationToken():
+    return(self.lastReputationToken)

@@ -1,0 +1,51 @@
+inset('../macros/require.sem')
+
+data owner
+data itemsArray[]
+data itemsMap[](hasValue, value)
+data numberOfItems
+
+def init():
+    self.owner = msg.sender
+
+def any():
+    require(msg.sender == self.owner or msg.sender == self)
+
+def add(key, value):
+    require(not self.contains(key))
+    self.itemsArray[self.numberOfItems] = key
+    self.itemsMap[key].hasValue = 1
+    self.itemsMap[key].value = value
+    self.numberOfItems += 1
+
+def update(key, value):
+    require(self.contains(key))
+    self.itemsMap[key].value = value
+
+def addOrUpdate(key, value):
+    if not self.contains(key):
+        self.add(key, value)
+    else:
+        self.update(key, value)
+
+# TODO: add support for item removal, note that this requires moving the last item in the collection to the newly opened slot so we don't end up with a sparse collection
+
+def getByKeyOrZero(key):
+    return self.itemsMap[key].value
+
+def getByKey(key):
+    require(self.itemsMap[key].hasValue)
+    return self.itemsMap[key].value
+
+def getByOffset(offset):
+    require(0 <= offset and offset < self.numberOfItems)
+    return self.itemsArray[offset]
+
+def contains(key):
+    if self.itemsMap[key].hasValue:
+        return 1
+    else:
+        return 0
+
+def count():
+    return self.numberOfItems

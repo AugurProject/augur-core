@@ -1,5 +1,0 @@
-inset('../../src/macros/assertZeroValue.sem')
-
-def testAssertZeroValue():
-    assertZeroValue()
-    return(5)

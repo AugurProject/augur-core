@@ -1,0 +1,624 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+#### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+####
+
+macro MARKET_FEE_CALCULATOR: self.controller.lookup('marketFeeCalculator')
+macro REPORTING_TOKEN_FACTORY: self.controller.lookup('reportingTokenFactory')
+macro SHARE_TOKEN_FACTORY: self.controller.lookup('shareTokenFactory')
+
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/require.sem')
+inset('../macros/assertPrivateCall.sem')
+inset('../macros/unitConversions.sem')
+inset('../macros/durations.sem')
+
+# CONSIDER: figure out approprate values for these
+macro AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT: 11 * 10**20
+macro LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT: 11 * 10**21
+macro ALL_REPORTERS_DISPUTE_BOND_AMOUNT: 11 * 10**22
+
+data initialized
+data reportingWindow
+data endTime
+data numOutcomes
+# CONSIDER: change the payoutNumerator/payoutDenominator to use fixed point numbers instead of integers; PRO: some people find fixed point decimal values easier to grok; CON: rounding errors can occur and it is easier to screw up the math if you don't handle fixed point values correctly
+data payoutDenominator
+data feePerEthInAttoeth
+# CONSIDER: we really don't need these
+data maxDisplayPrice
+data minDisplayPrice
+data marketCreationBlock
+data topic
+data automatedReporterAddress
+data reportingTokens
+data denominationToken
+data creator
+data shareTokens[]
+data finalizationTime
+
+data tentativeWinningPayoutDistributionHash
+data finalPayoutDistributionHash
+data automatedReporterPayoutDistributionHash
+data automatedReporterDisputeBondHolder
+data limitedReportersPayoutDistributionHash
+data limitedReportersDisputeBondHolder
+data allReportersPayoutDistributionHash
+data allReportersDisputeBondHolder
+
+data validityBondAttoeth
+data automatedReporterBondAttoeth
+
+# intentionally does not refund on `any()`, this contract will receive ETH when a market is created through it, should refund in all other calls though
+
+def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, payoutDenominator: int256, feePerEthInAttoeth: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
+    require(not self.initialized)
+    self.initialized = 1
+    require(reportingWindow)
+    require(2 <= payoutDenominator and payoutDenominator <= 2**254)
+    require(2 <= numOutcomes and numOutcomes <= 8)
+    # payoutDenominator must be a multiple of numOutcomes so we can evenly split complete set share payout on indeterminate
+    require(not (payoutDenominator % numOutcomes))
+    require(0 <= feePerEthInAttoeth and feePerEthInAttoeth <= 5*10**17)
+    require(-2**254 <= maxDisplayPrice and maxDisplayPrice <= 2**254)
+    require(-2**254 <= minDisplayPrice and minDisplayPrice <= 2**254)
+    completeSetCostMultiplier = maxDisplayPrice - minDisplayPrice
+    require(1 <= completeSetCostMultiplier and completeSetCostMultiplier <= 2**254)
+    require(0 < denominationToken.totalSupply())
+    require(creator)
+    # FIXME: require market to be on a non-forking branch; repeat this check up the stack as well if necessary (e.g., in reporting window)
+    # CONSIDER: should we allow creator to send extra ETH, is there risk of variability in bond requirements?
+    require(msg.value == MARKET_FEE_CALCULATOR.getValidityBond() + MARKET_FEE_CALCULATOR.getTargetReporterGasCosts())
+    self.reportingWindow = reportingWindow
+    self.endTime = endTime
+    self.numOutcomes = numOutcomes
+    self.payoutDenominator = payoutDenominator
+    # FIXME: markets may be denominated in tokens that aren't 10^18, deal with that
+    self.feePerEthInAttoeth = feePerEthInAttoeth
+    self.maxDisplayPrice = maxDisplayPrice
+    self.minDisplayPrice = minDisplayPrice
+    self.marketCreationBlock = block.number
+    self.topic = topic
+    self.automatedReporterAddress = automatedReporterAddress
+    self.denominationToken = denominationToken
+    self.creator = creator
+    self.reportingTokens = create('../libraries/map.se')
+    outcome = 0
+    while(outcome < numOutcomes):
+        self.shareTokens[outcome] = SHARE_TOKEN_FACTORY.createShareToken(self.controller, self, outcome)
+        outcome += 1
+    self.approveSpenders()
+    require(self.controller.lookup('cash') == denominationToken or self.getBranch().isContainerForShareToken(denominationToken))
+
+    # TODO: we need to update this signature (and all of the places that call it) to allow the creator (UI) to pass in a number of other things which will all be logged here
+    # TODO: log short description
+    # TODO: log long description
+    # TODO: log min display price
+    # TODO: log max display price
+    # TODO: log tags (0-2)
+    # TODO: log outcome labels (same number as numOutcomes)
+    # TODO: log type (scalar, binary, categorical)
+    # TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, payoutDenominator, denominationToken address, etc.)
+
+# this will need to be called manually for each open market if a spender contract is updated
+def approveSpenders():
+    self.denominationToken.approve(self.controller.lookup('cancelOrder'), 2**254)
+    self.denominationToken.approve(self.controller.lookup('completeSets'), 2**254)
+    self.denominationToken.approve(self.controller.lookup('takeOrder'), 2**254)
+    self.denominationToken.approve(self.controller.lookup('tradingEscapeHatch'), 2**254)
+    self.denominationToken.approve(self.controller.lookup('claimProceeds'), 2**254)
+    self.denominationToken.approve(self.controller.lookup('tradingEscapeHatch'), 2**254)
+    i = 0
+    while i < self.numOutcomes:
+        self.shareTokens[i].approve(self.controller.lookup('takeOrder'), 2**254)
+        i += 1
+    return 1
+
+def changeCreator(newCreator: address):
+    require(msg.sender == self.creator)
+    self.creator = newCreator
+    return 1
+
+def decreaseMarketCreatorSettlementFeeInAttoethPerEth(newFeePerEthInWei: int256):
+    require(0 <= newFeePerEthInWei and newFeePerEthInWei < self.feePerEthInAttoeth)
+    require(msg.sender == self.creator)
+    self.feePerEthInAttoeth = newFeePerEthInWei
+    return 1
+
+def automatedReport(payoutNumerators: arr):
+    assertNoValue()
+    # intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
+    require(msg.sender == self.automatedReporterAddress)
+    require(self.isInAutomatedReportingPhase())
+    # we have to create the reporting token so the rest of the system works (winning reporting token must exist)
+    self.getReportingToken(payoutNumerators)
+    payoutDistributionHash = self.derivePayoutDistributionHash(payoutNumerators)
+    self.automatedReporterPayoutDistributionHash = payoutDistributionHash
+    self.reportingWindow.updateMarketPhase()
+
+def disputeAutomatedReport():
+    assertNoValue()
+    # intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
+    require(not self.isFinalized())
+    require(self.isInAutomatedDisputePhase())
+    self.getReputationToken().transferFrom(msg.sender, self, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT)
+    self.automatedReporterDisputeBondHolder = msg.sender
+    self.reportingWindow.updateMarketPhase()
+
+def disputeLimitedReporters():
+    assertNoValue()
+    self.migrateThroughAllForks()
+    require(self.isInLimitedDisutePhase())
+    self.getReputationToken().transferFrom(msg.sender, self, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT)
+    self.limitedReportersDisputeBondHolder = msg.sender
+    self.limitedReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
+    newReportingWindow = self.getBranch().getNextReportingWindow()
+    newReportingWindow.migrateMarketInFromSibling()
+    self.reportingWindow.removeMarket()
+    self.reportingWindow = newReportingWindow
+
+def disputeAllReporters():
+    assertNoValue()
+    self.migrateThroughAllForks()
+    require(self.isInAllDisputePhase())
+    self.getReputationToken().transferFrom(msg.sender, self, ALL_REPORTERS_DISPUTE_BOND_AMOUNT)
+    self.allReportersDisputeBondHolder = msg.sender
+    self.allReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
+    self.reportingWindow.getBranch().fork(self)
+    newReportingWindow = self.getBranch().getReportingWindowByTimestamp(self.getBranch().getForkEndTime())
+    newReportingWindow.migrateMarketInFromSibling()
+    self.reportingWindow.removeMarket()
+    self.reportingWindow = newReportingWindow
+
+def updateTentativeWinningPayoutDistributionHash(payoutDistributionHash: int256):
+    assertNoValue()
+    require(self.reportingTokens.contains(payoutDistributionHash))
+    if (not self.tentativeWinningPayoutDistributionHash):
+        self.tentativeWinningPayoutDistributionHash = payoutDistributionHash
+    if (self.reportingTokens.getValue(payoutDistributionHash).totalSupply() > self.reportingTokens.getValue(self.tentativeWinningPayoutDistributionHash).totalSupply()):
+        self.tentativeWinningPayoutDistributionHash = payoutDistributionHash
+
+def tryFinalize():
+    assertNoValue()
+    self.tryFinalizeAutomatedReport()
+    if (self.isFinalized()):
+        return(1)
+    self.tryFinalizeLimitedReporting()
+    if (self.isFinalized()):
+        return(1)
+    self.tryFinalizeAllReporting()
+    if (self.isFinalized()):
+        return(1)
+    self.tryFinalizeFork()
+    if (self.isFinalized()):
+        return(1)
+    return(0)
+
+    # FIXME: when the market is finalized, we need to add `self.reportingTokens[self.finalPayoutDistributionHash].totalSupply()` to the reporting window.  This is necessary for fee collection which is a cross-market operation.
+    # TODO: figure out how to make it so fee distribution is delayed until all markets have been finalized; we can enforce it contract side and let the UI deal with the actual work
+    # FIXME: if finalPayoutDistributionHash != getIdentityDistributionId(), pay back validity bond holder
+    # FIXME: if finalPayoutDistributionHash == getIdentityDistributionId(), transfer validity bond to reportingWindow (reporter fee pot)
+    # FIXME: if automated report is wrong, transfer automated report bond to reportingWindow
+    # FIXME: if automated report is right, transfer automated report bond to market creator
+    # FIXME: handle markets that get 0 reports during their scheduled reporting window
+
+def tryFinalizeAutomatedReport():
+    assertNoValue()
+    if (self.isFinalized()):
+        return(1)
+    if (not self.automatedReporterPayoutDistributionHash):
+        return(0)
+    if (self.automatedReporterDisputeBondHolder):
+        return(0)
+    if (block.timestamp < self.getAutomatedReportDisputeDueTimestamp()):
+        return(0)
+    self.finalPayoutDistributionHash = self.automatedReporterPayoutDistributionHash
+    self.finalizationTime = block.timestamp
+    self.privateRewardBondHolders()
+    self.reportingWindow.updateMarketPhase()
+    return(1)
+
+def tryFinalizeLimitedReporting():
+    assertNoValue()
+    self.migrateThroughAllForks()
+    if (self.isFinalized()):
+        return(1)
+    if (self.limitedReportersDisputeBondHolder):
+        return(0)
+    if (block.timestamp <= self.reportingWindow.getEndTime()):
+        return(0)
+    self.limitedReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
+    self.finalPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
+    self.finalizationTime = block.timestamp
+    self.privateRewardBondHolders()
+    self.reportingWindow.updateMarketPhase()
+    return(1)
+
+def tryFinalizeAllReporting():
+    assertNoValue()
+    self.migrateThroughAllForks()
+    if (self.isFinalized()):
+        return(1)
+    if (not self.limitedReportersPayoutDistributionHash):
+        return(0)
+    if (not self.limitedReportersDisputeBondHolder):
+        return(0)
+    if (self.allReportersDisputeBondHolder):
+        return(0)
+    if (block.timestamp <= self.reportingWindow.getEndTime()):
+        return(0)
+    self.allReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
+    self.finalPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
+    self.finalizationTime = block.timestamp
+    self.privateRewardBondHolders()
+    self.reportingWindow.updateMarketPhase()
+    return(1)
+
+def tryFinalizeFork():
+    assertNoValue()
+    if (self.isFinalized()):
+        return(1)
+    if (not self.limitedReportersPayoutDistributionHash):
+        return(0)
+    if (not self.limitedReportersDisputeBondHolder):
+        return(0)
+    if (not self.allReportersPayoutDistributionHash):
+        return(0)
+    if (not self.allReportersDisputeBondHolder):
+        return(0)
+    if (self.reportingWindow.getBranch().getForkingMarket() != self):
+        return(0)
+    winningDestination = self.getReputationToken().getTopMigrationDestination()
+    if (not winningDestination):
+        return(0)
+    if (winningDestination.totalSupply() < 11 * 10**6 * 10**18 / 2 and block.timestamp < self.getBranch().getForkEndTime()):
+        return(0)
+    self.finalPayoutDistributionHash = winningDestination.getBranch().getParentPayoutDistributionHash()
+    self.finalizationTime = block.timestamp
+    self.privateRewardBondHolders()
+    self.reportingWindow.updateMarketPhase()
+    return(1)
+
+def migrateThroughAllForks():
+    assertNoValue()
+    # this will loop until we run out of gas, follow forks until there are no more, or have reached an active fork (which will throw)
+    while (self.migrateThroughOneFork()):
+        noop = 1
+
+# returns 0 if no move occurs, 1 if move occurred, throws if a fork not yet resolved
+def migrateThroughOneFork():
+    assertNoValue()
+    if (self.isFinalized()):
+        return(1)
+    if (not self.needsMigration()):
+        return(0)
+    # only proceed if the forking market is finalized
+    require(self.reportingWindow.getBranch().getForkingMarket().isFinalized())
+    if (self.limitedReportersDisputeBondHolder):
+        self.getReputationToken().transfer(self.limitedReportersDisputeBondHolder, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT)
+        self.limitedReportersDisputeBondHolder = 0
+    if (self.allReportersDisputeBondHolder):
+        self.getReputationToken().transfer(self.allReportersDisputeBondHolder, ALL_REPORTERS_DISPUTE_BOND_AMOUNT)
+        self.allReportersDisputeBondHolder = 0
+    currentBranch = self.getBranch()
+    # follow the forking market to its branch and then attach to the next reporting window on that branch
+    winningForkPayoutDistributionHash = currentBranch.getForkingMarket().getFinalPayoutDistributionHash()
+    destinationBranch = currentBranch.getChildBranch(winningForkPayoutDistributionHash)
+    newReportingWindow = destinationBranch.getNextReportingWindow()
+    newReportingWindow.migrateMarketInFromNibling()
+    self.reportingWindow.removeMarket()
+    self.reportingWindow = newReportingWindow
+    # reset to unreported state
+    self.limitedReportersPayoutDistributionHash = 0
+    self.allReportersPayoutDistributionHash = 0
+    self.tentativeWinningPayoutDistributionHash = 0
+    self.reportingTokens = create('../libraries/map.se')
+    return(1)
+
+
+####
+#### Helpers
+####
+
+def getReportingToken(payoutNumerators: arr):
+    assertNoValue()
+    payoutDistributionHash = self.derivePayoutDistributionHash(payoutNumerators)
+    if (not self.reportingTokens.contains(payoutDistributionHash)):
+        self.reportingTokens.addMapItem(payoutDistributionHash, REPORTING_TOKEN_FACTORY.createReportingToken(self.controller, self, payoutNumerators))
+    return(self.reportingTokens.getValue(payoutDistributionHash))
+
+def getReportingTokenOrZeroByPayoutDistributionHash(payoutDistributionHash: int256):
+    assertNoValue()
+    return(self.reportingTokens.getValueOrZero(payoutDistributionHash))
+
+def derivePayoutDistributionHash(payoutNumerators: arr):
+    assertNoValue()
+    self.validatePayoutNumerators(payoutNumerators)
+    return(sha3(payoutNumerators, items = len(payoutNumerators)))
+
+def validatePayoutNumerators(payoutNumerators: arr):
+    assertNoValue()
+    i = 0
+    sum = 0
+    require(len(payoutNumerators) == self.numOutcomes)
+    while (i < self.numOutcomes):
+        require(0 <= payoutNumerators[i] and payoutNumerators[i] <= self.payoutDenominator)
+        sum += payoutNumerators[i]
+        i += 1
+    require(sum == self.payoutDenominator)
+
+
+####
+#### Getters
+####
+
+def getReportingWindow():
+    assertNoValue()
+    return(self.reportingWindow)
+
+def getBranch():
+    assertNoValue()
+    return(self.reportingWindow.getBranch())
+
+def getReputationToken():
+    assertNoValue()
+    return(self.reportingWindow.getReputationToken())
+
+def getRegistrationToken():
+    assertNoValue()
+    return(self.reportingWindow.getRegistrationToken())
+
+def getNumberOfOutcomes():
+    assertNoValue()
+    return(self.numOutcomes)
+
+def getEndTime():
+    return self.endTime
+
+def getTentativeWinningPayoutDistributionHash():
+    assertNoValue()
+    return(self.tentativeWinningPayoutDistributionHash)
+
+def getFinalWinningReportingToken():
+    assertNoValue()
+    return(self.reportingTokens.getValue(self.finalPayoutDistributionHash))
+
+def getShareToken(outcome: int256):
+    assertNoValue()
+    require(0 <= outcome and outcome < self.numOutcomes)
+    return(self.shareTokens[outcome])
+
+def getFinalPayoutDistributionHash():
+    assertNoValue()
+    return(self.finalPayoutDistributionHash)
+
+def getPayoutDenominator():
+    assertNoValue()
+    return(self.payoutDenominator)
+
+def getDenominationToken():
+    assertNoValue()
+    return(self.denominationToken)
+
+def getCreator():
+    return(self.creator)
+
+def getMarketCreatorSettlementFeeInAttoethPerEth():
+    return(self.feePerEthInAttoeth)
+
+def getMaxDisplayPrice():
+    assertNoValue()
+    return(self.maxDisplayPrice)
+
+def getMinDisplayPrice():
+    assertNoValue()
+    return(self.minDisplayPrice)
+
+def getCompleteSetCostInAttotokens():
+    assertNoValue()
+    return(self.maxDisplayPrice - self.minDisplayPrice)
+
+def getTopic():
+    assertNoValue()
+    return(self.topic)
+
+def shouldCollectReportingFees():
+    self.getBranch().isContainerForShareToken(self.denominationToken)
+
+def isDoneWithAutomatedReporters():
+    assertNoValue()
+    return(self.automatedReporterPayoutDistributionHash != 0 or block.timestamp > self.getAutomatedReportDueTimestamp())
+
+def isDoneWithLimitedReporters():
+    assertNoValue()
+    return(self.limitedReportersPayoutDistributionHash != 0)
+
+def isDoneWithAllReporters():
+    assertNoValue()
+    return(self.allReportersPayoutDistributionHash != 0)
+
+def isFinalized():
+    assertNoValue()
+    return(self.finalPayoutDistributionHash != 0)
+
+def getFinalizationTime():
+    return self.finalizationTime
+
+def isInAutomatedReportingPhase():
+    assertNoValue()
+    if (self.isFinalized()):
+        return(0)
+    if (block.timestamp < self.endTime):
+        return(0)
+    if (block.timestamp > self.getAutomatedReportDueTimestamp()):
+        return(0)
+    return(1)
+
+def isInAutomatedDisputePhase():
+    assertNoValue()
+    if (self.isFinalized()):
+        return(0)
+    if (block.timestamp < self.getAutomatedReportDueTimestamp()):
+        return(0)
+    if (block.timestamp > self.getAutomatedReportDisputeDueTimestamp()):
+        return(0)
+    return(1)
+
+def isInLimitedReportingPhase():
+    assertNoValue()
+    if (self.isFinalized()):
+        return(0)
+    if (not self.reportingWindow.isReportingActive()):
+        return(0)
+    if (self.limitedReportersPayoutDistributionHash):
+        return(0)
+    if (self.automatedReporterPayoutDistributionHash and not self.automatedReporterDisputeBondHolder):
+        return(0)
+    return(1)
+
+def isInLimitedDisutePhase():
+    assertNoValue()
+    if (self.isFinalized()):
+        return(0)
+    if (not self.reportingWindow.isDisputeActive()):
+        return(0)
+    if (self.limitedReportersDisputeBondHolder):
+        return(0)
+    if (self.automatedReporterPayoutDistributionHash and not self.automatedReporterDisputeBondHolder):
+        return(0)
+    return(1)
+
+def isInAllReportingPhase():
+    assertNoValue()
+    if (self.isFinalized()):
+        return(0)
+    if (not self.reportingWindow.isReportingActive()):
+        return(0)
+    if (not self.limitedReportersDisputeBondHolder):
+        return(0)
+    if (self.allReportersPayoutDistributionHash):
+        return(0)
+    if (self.automatedReporterPayoutDistributionHash and not self.automatedReporterDisputeBondHolder):
+        return(0)
+    return(1)
+
+def isInAllDisputePhase():
+    assertNoValue()
+    if (self.isFinalized()):
+        return(0)
+    if (not self.reportingWindow.isDisputeActive()):
+        return(0)
+    if (not self.limitedReportersPayoutDistributionHash):
+        return(0)
+    if (self.allReportersDisputeBondHolder):
+        return(0)
+    if (self.automatedReporterPayoutDistributionHash and not self.automatedReporterDisputeBondHolder):
+        return(0)
+    return(1)
+
+def isContainerForReportingToken(shadyToken: address):
+    assertNoValue()
+    if (not shadyToken):
+        return(0)
+    shadyId = shadyToken.getPayoutDistributionHash()
+    if (not self.reportingTokens.contains(shadyId)):
+        return(0)
+    if (self.reportingTokens.getValue(shadyId) != shadyToken):
+        return(0)
+    return(1)
+
+def isContainerForShareToken(shadyShareToken: address):
+    outcome = shadyShareToken.getOutcome()
+    if self.getShareToken(outcome) == shadyShareToken:
+        return(1)
+    else:
+        return(0)
+
+def canBeReportedOn():
+    assertNoValue()
+    # CONSIDER: should we check if migration is necessary here?
+    if (self.isFinalized()):
+        return(0)
+    if (not self.reportingWindow.isReportingActive()):
+        return(0)
+    return(1)
+
+def needsMigration():
+    assertNoValue()
+    if (self.isFinalized()):
+        return(0)
+    forkingMarket = self.getBranch().getForkingMarket()
+    if (not forkingMarket):
+        return(0)
+    if (forkingMarket == self):
+        return(0)
+    if (block.timestamp < self.endTime):
+        return(0)
+    if (self.automatedReporterAddress and block.timestamp < self.getAutomatedReportDueTimestamp()):
+        return(0)
+    if (self.automatedReporterPayoutDistributionHash and block.timestamp < self.getAutomatedReportDisputeDueTimestamp()):
+        return(0)
+    if (self.automatedReporterPayoutDistributionHash and not self.automatedReporterDisputeBondHolder):
+        return(0)
+    return(1)
+
+# CONSIDER: calling this without finalizing doesn't yield reasonable results so it throws, should it still be called a getter?
+def getDesiredDisputeRewardPot():
+    assertNoValue()
+    require(self.isFinalized())
+    desiredBondPot = 0
+    if (self.automatedReporterDisputeBondHolder and self.automatedReporterPayoutDistributionHash != self.finalPayoutDistributionHash):
+        desiredBondPot += AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT * 2
+    if (self.limitedReportersDisputeBondHolder and self.limitedReportersPayoutDistributionHash != self.finalPayoutDistributionHash):
+        desiredBondPot += LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT * 2
+    if (self.allReportersDisputeBondHolder and self.allReportersPayoutDistributionHash != self.finalPayoutDistributionHash):
+        desiredBondPot += ALL_REPORTERS_DISPUTE_BOND_AMOUNT * 2
+    return(desiredBondPot)
+
+def getAutomatedReportDueTimestamp():
+    assertNoValue()
+    return(self.endTime + AUTOMATED_REPORTING_DURATION_SECONDS)
+
+def getAutomatedReportDisputeDueTimestamp():
+    assertNoValue()
+    return(self.getAutomatedReportDueTimestamp() + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS)
+
+
+####
+#### Private
+####
+
+# FIXME: update to new mechanics and figure out a way to extract bond holder payments before redeeming bonds, current code will payout bond holders before extracting losing REP which means bond holders really only get 1x their bond at the moment
+def privateRewardBondHolders():
+    assertPrivateCall()
+    # require(self.isFinalized())
+    # availableRep = self.getReputationToken().balanceOf(self)
+    # desiredBondPot = self.getDesiredDisputeRewardPot()
+    # leftoverRep = availableRep - desiredBondPot
+    # # send any leftover REP to the reporting contract for distribution to REP holders
+    # if (leftoverRep > 0):
+    #     self.getReputationToken().transfer(self.getFinalWinningReportingToken(), leftoverRep)
+    # # if our pot doesn't have enough REP to cover bond holders, then take some REP holders
+    # elif (leftoverRep < 0):
+    #     self.getFinalWinningReportingToken().extractBondHolderPayments()
+    # automatedReporterPayoutPortion = 0
+    # limitedReportersPayoutPortion = 0
+    # allReportersPayoutPortion = 0
+    # if (self.automatedReporterPayoutDistributionHash != self.finalPayoutDistributionHash && self.automatedReporterDisputeBondHolder):
+    #     automatedReporterPayoutPortion = AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT
+    # if (self.limitedReportersPayoutDistributionHash != finalPayoutDistributionHash && self.limitedReportersDisputeBondHolder):
+    #     limitedReportersPayoutPortion = LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT
+    # if (self.allReportersPayoutDistributionHash != finalPayoutDistributionHash && self.allReportersDisputeBondHolder):
+    #     allReportersPayoutPortion = ALL_REPORTERS_DISPUTE_BOND_AMOUNT
+    # automatedReporterBondPayout = availableRep * automatedReporterPayoutPortion / (automatedReporterPayoutPortion + limitedReportersPayoutPortion + allReportersPayoutPortion)
+    # limitedReportersBondPayout = (availableRep - automatedReporterBondPayout) * limitedReportersPayoutPortion / (limitedReportersPayoutPortion + allReportersPayoutPortion)
+    # allReportersBondPayout = availableRep - automatedReporterBondPayout - limitedReportersBondPayout
+    # if (automatedReporterBondPayout):
+    #     self.getReputationToken().transfer(self.automatedReporterDisputeBondHolder, automatedReporterBondPayout)
+    # if (limitedReportersBondPayout):
+    #     self.getReputationToken().transfer(self.limitedReportersDisputeBondHolder, limitedReportersBondPayout)
+    # if (allReportersBondPayout):
+    #     self.getReputationToken().transfer(self.allReportersDisputeBondHolder, allReportersBondPayout)

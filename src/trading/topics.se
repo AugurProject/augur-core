@@ -1,0 +1,52 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+##### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+#####
+
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/require.sem')
+inset('../macros/safeMath.sem')
+
+# an iterable map of topics to popularity
+data topics
+
+# FIXME: topics needs to be sorted on-chain, which means we need a sorted linked list collection with hinted sorting at insertion/update time instead of a simple iterableMap
+def initialize():
+    require(not self.topics)
+    # TODO: change iterableMap to a delegated contract so it can be updated
+    self.topics = create('../libraries/iterableMap.se')
+
+def any():
+    assertNoValue()
+
+def updatePopularity(topic: int256, fxpAmount: int256):
+    self.controller.assertIsWhitelisted(msg.sender)
+    oldAmount = self.topics.getByKeyOrZero(topic)
+    newAmount = safeAdd(oldAmount, fxpAmount)
+    self.topics.addOrUpdate(topic, newAmount)
+    return(1)
+
+def getPopularity(topic: int256):
+    return self.topics.getByKey(topic)
+
+def getTopicByOffset(offset: int256):
+    return self.topics.getByOffset(offset)
+
+def getPopularityByOffset(offset: int256):
+    topic = self.getTopicByOffset(offset)
+    return self.topics.getByKey(topic)
+
+def count():
+    return self.topics.count()
+
+def setController(newController: address):
+    require(msg.sender == self.controller)
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to: address):
+    require(msg.sender == self.controller)
+    suicide(to)

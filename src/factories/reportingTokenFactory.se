@@ -1,0 +1,15 @@
+extern delegateExtern: [setup:[int256,int256]:_]
+extern reportingToken: [initialize:[address,int256[]]:_]
+
+# workaround for https://github.com/ethereum/serpent/issues/119
+data lastReportingToken
+
+def createReportingToken(controller: address, market: address, payoutNumerators: arr):
+    reportingToken = create('../libraries/delegator.se')
+    reportingToken.setup(controller, 'reportingToken')
+    reportingToken.initialize(market, payoutNumerators)
+    self.lastReportingToken = reportingToken
+    return(reportingToken)
+
+def getLastReportingToken():
+    return(self.lastReportingToken)

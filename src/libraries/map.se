@@ -1,0 +1,40 @@
+inset('../macros/require.sem')
+
+data collection[](hasValue, value)
+data count
+data owner
+
+def init():
+    self.owner = msg.sender
+
+def any():
+    require(msg.sender == self.owner or msg.sender == self)
+
+def addMapItem(key, value):
+    if (self.contains(key)):
+        return(0)
+    self.collection[key].hasValue = 1
+    self.collection[key].value = value
+    self.count += 1
+    return(1)
+
+def remove(key):
+    if (not self.contains(key)):
+        return (0)
+    self.collection[key].hasValue = 0
+    self.collection[key].value = 0
+    self.count -= 1
+    return(1)
+
+def contains(key):
+    return(self.collection[key].hasValue)
+
+def getValueOrZero(key):
+    return(self.collection[key].value)
+
+def getValue(key):
+    require(self.contains(key))
+    return(self.collection[key].value)
+
+def count():
+    return(self.count)

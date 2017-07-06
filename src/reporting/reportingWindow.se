@@ -1,0 +1,250 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+##### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+#####
+
+macro MARKET_FACTORY: self.controller.lookup('marketFactory')
+macro REGISTRATION_TOKEN_FACTORY: self.controller.lookup('registrationTokenFactory')
+
+inset('../macros/externs.sem')
+inset('../macros/assertPrivateCall.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/require.sem')
+inset('../macros/unitConversions.sem')
+inset('../macros/durations.sem')
+
+data initialized
+data branch
+data startTime
+data registrationToken
+data markets
+data limitedReporterMarkets
+data allReporterMarkets
+data reportsByReporter[2**160]
+data numberOfReportsByMarket[]
+
+# intentionally does not refund in `any`, this contract will receive ETH when a market is created through it, should refund in all other calls though
+
+def initialize(branch: address, reportingWindowId: int256):
+    require(not self.initialized)
+    self.initialized = 1
+    self.branch = branch
+    self.startTime = reportingWindowId * self.branch.getReportingPeriodDurationInSeconds()
+    self.registrationToken = REGISTRATION_TOKEN_FACTORY.createRegistrationToken(self.controller, self)
+    self.markets = create('../libraries/set.se')
+    self.limitedReporterMarkets = create('../libraries/set.se')
+    self.allReporterMarkets = create('../libraries/set.se')
+
+def createNewMarket(endTime: int256, numOutcomes: int256, payoutDenominator: int256, feePerEthInWei: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
+    require(2 <= numOutcomes and numOutcomes <= 8)
+    require(2 <= payoutDenominator and payoutDenominator <= 2**254)
+    require(block.timestamp < self.startTime)
+    require(self.branch.getReportingWindowByMarketEndTime(endTime, automatedReporterAddress != 0))
+    newMarket = MARKET_FACTORY.createMarket(self.controller, self, endTime, numOutcomes, payoutDenominator, feePerEthInWei, denominationToken, creator, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = msg.value)
+    self.markets.addSetItem(newMarket)
+    self.limitedReporterMarkets.addSetItem(newMarket)
+    return(newMarket)
+
+def migrateMarketInFromSibling():
+    assertNoValue()
+    shadyReportingWindow = msg.sender.getReportingWindow()
+    require(self.branch.isContainerForReportingWindow(shadyReportingWindow))
+    originalReportingWindow = shadyReportingWindow
+    require(originalReportingWindow.isContainerForMarket(msg.sender))
+    market = msg.sender
+    self.privateAddMarket(market)
+
+def migrateMarketInFromNibling():
+    assertNoValue()
+    shadyBranch = msg.sender.getBranch()
+    require(self.branch.isParentOf(shadyBranch))
+    originalBranch = shadyBranch
+    shadyReportingWindow = msg.sender.getReportingWindow()
+    require(originalBranch.isContainerForReportingWindow(shadyReportingWindow))
+    originalReportingWindow = shadyReportingWindow
+    require(originalReportingWindow.isContainerForMarket(msg.sender))
+    market = msg.sender
+    self.privateAddMarket(market)
+
+def removeMarket():
+    assertNoValue()
+    require(self.markets.contains(msg.sender))
+    market = msg.sender
+    self.markets.remove(market)
+    self.limitedReporterMarkets.remove(market)
+    self.allReporterMarkets.remove(market)
+
+def updateMarketPhase():
+    assertNoValue()
+    require(self.markets.contains(msg.sender))
+    market = msg.sender
+    if (market.isDoneWithAllReporters()):
+        self.allReporterMarkets.remove(market)
+        self.limitedReporterMarkets.remove(market)
+        return
+    if (market.isDoneWithLimitedReporters()):
+        self.allReporterMarkets.addSetItem(market)
+        self.limitedReporterMarkets.remove(market)
+        return
+    # defaults to in limited reporter markets
+    self.allReporterMarkets.remove(market)
+    self.limitedReporterMarkets.addSetItem(market)
+
+def noteReport(market: address, reporter: address, payoutDistributionHash: int256):
+    assertNoValue()
+    require(self.markets.contains(market))
+    require(market.getReportingTokenOrZeroByPayoutDistributionHash(payoutDistributionHash) == msg.sender)
+    require(market.isInAllReportingPhase() or market.isInLimitedReportingPhase())
+    if (market.isInAllReportingPhase()):
+        # always give credit for events in all-reporters phase
+        self.privateNoteReport(market, reporter)
+    elif (self.numberOfReportsByMarket[market] < self.getMaxReportsPerLimitedReporterMarket()):
+        # only give credit for limited reporter markets up to the max reporters for that market
+        self.privateNoteReport(market, reporter)
+    # no credit in all other cases (but user can still report)
+
+
+####
+#### Getters
+####
+
+def getBranch():
+    assertNoValue()
+    return(self.branch)
+
+def getRegistrationToken():
+    assertNoValue()
+    return(self.registrationToken)
+
+def getReputationToken():
+    assertNoValue()
+    return(self.branch.getReputationToken())
+
+def getStartTime():
+    assertNoValue()
+    return(self.startTime)
+
+def getEndTime():
+    assertNoValue()
+    return(self.getDisputeEndTime())
+
+def getStartBlock():
+    # TODO: implement.  We probably need to change everything to use blocks instead of time, both for security and to make this function work
+    ~invalid()
+
+def getEndBlock():
+    # TODO: implement.  We probably need to change everything to use blocks instead of time, both for security and to make this function work
+    ~invalid()
+
+def getReportingStartTime():
+    assertNoValue()
+    return(self.getStartTime())
+
+def getReportingEndTime():
+    assertNoValue()
+    return(self.getStartTime() + REPORTING_DURATION_SECONDS)
+
+def getDisputeStartTime():
+    assertNoValue()
+    return(self.getReportingEndTime())
+
+def getDisputeEndTime():
+    assertNoValue()
+    return(self.getDisputeStartTime() + REPORTING_DISPUTE_DURATION_SECONDS)
+
+def isActive():
+    assertNoValue()
+    if (block.timestamp <= self.getStartTime()):
+        return(0)
+    if (block.timestamp >= self.getEndTime()):
+        return(0)
+    return(1)
+
+def isReportingActive():
+    assertNoValue()
+    if (block.timestamp <= self.getStartTime()):
+        return(0)
+    if (block.timestamp >= self.getReportingEndTime()):
+        return(0)
+    return(1)
+
+def isDisputeActive():
+    assertNoValue()
+    if (block.timestamp <= self.getDisputeStartTime()):
+        return(0)
+    if (block.timestamp >= self.getEndTime()):
+        return(0)
+    return(1)
+
+def getTargetReportsPerLimitedReporterMarket():
+    assertNoValue()
+    limitedReporterMarketCount = self.limitedReporterMarkets.count()
+    registeredReporters = self.registrationToken.getPeakSupply()
+    minimumReportsPerMarket = 7
+    totalReportsForAllLimitedReporterMarkets = minimumReportsPerMarket * limitedReporterMarketCount
+
+    if (registeredReporters > totalReportsForAllLimitedReporterMarkets):
+        factor = registeredReporters / totalReportsForAllLimitedReporterMarkets
+        minimumReportsPerMarket = minimumReportsPerMarket * factor
+
+    return(minimumReportsPerMarket)
+
+def getMaxReportsPerLimitedReporterMarket():
+    assertNoValue()
+    return(self.getTargetReportsPerLimitedReporterMarket() + 2)
+
+def getRequiredReportsPerReporterForlimitedReporterMarkets():
+    assertNoValue()
+    return(self.getTargetReportsPerLimitedReporterMarket() * self.limitedReporterMarkets.count() / self.registrationToken.totalSupply())
+
+def getTargetReportsPerReporter():
+    assertNoValue()
+    limitedMarketReportsPerReporter = self.getRequiredReportsPerReporterForlimitedReporterMarkets()
+    return(self.allReporterMarkets.count() + limitedMarketReportsPerReporter)
+
+def getReportsByReporter(reporter: address):
+    assertNoValue()
+    if (not self.reportsByReporter[reporter]):
+        self.reportsByReporter[reporter] = create('../libraries/set.se')
+    return(self.reportsByReporter[reporter])
+
+def isContainerForRegistrationToken(shadyRegistrationToken: address):
+    assertNoValue()
+    return(self.registrationToken == shadyRegistrationToken)
+
+def isContainerForMarket(shadyMarket: address):
+    assertNoValue()
+    return(self.markets.contains(shadyMarket))
+
+def isDoneReporting(reporter: address):
+    assertNoValue()
+    return(self.getReportsByReporter(reporter).count() >= self.getTargetReportsPerReporter())
+
+
+####
+#### Private
+####
+
+def privateAddMarket(market: address):
+    assertPrivateCall()
+    require(not self.markets.contains(market))
+    require(not self.limitedReporterMarkets.contains(market))
+    require(not self.allReporterMarkets.contains(market))
+    self.markets.addSetItem(market)
+    if (market.isDoneWithAllReporters()):
+        return
+    if (market.isDoneWithLimitedReporters()):
+        self.allReporterMarkets.addSetItem(market)
+        return
+    self.limitedReporterMarkets.addSetItem(market)
+
+def privateNoteReport(market: address, reporter: address):
+    assertPrivateCall()
+    reports = self.getReportsByReporter(reporter)
+    if (reports.contains(market)):
+        return
+    reports.addSetItem(market)
+    self.numberOfReportsByMarket[market] += 1

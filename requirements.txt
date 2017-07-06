@@ -16,6 +16,7 @@ pycparser==2.17           # via cffi
 pycryptodome==3.4.6       # via ethereum
 pyethash==0.1.27          # via ethereum
 pysha3==1.0.2             # via ethereum
+pytest-lazy-fixture==0.3.0
 pytest==3.1.2
 pyyaml==3.12              # via ethereum
 repoze.lru==0.6           # via ethereum

@@ -1,0 +1,176 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+##### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+#####
+
+inset('../macros/require.sem')
+inset('../macros/externs.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/assertPrivateCall.sem')
+inset('../macros/safeMath.sem')
+
+data initialized
+data market
+data payoutNumerators[]
+data tokens[2**160]
+data spenders[2**160][2**160]
+data supply
+
+def any():
+    assertNoValue()
+
+event Foo(bar)
+def initialize(market: address, payoutNumerators: arr):
+    require(not self.initialized)
+    self.initialized = 1
+    self.market = market
+    require(market.getNumberOfOutcomes() == len(payoutNumerators))
+    save(self.payoutNumerators[0], payoutNumerators, items = len(payoutNumerators))
+    # TODO: call a function on `self.getBranch()` that logs the creation of this token with an index for the market, function needs to verify that caller is `branch.isContainerForReportingToken(thisToken)`
+
+def buy(attotokens: int256):
+    require(attotokens >= 1)
+    require(attotokens <= 2**254)
+    reporter = msg.sender
+    require(self.market.canBeReportedOn())
+    require(self.getRegistrationToken().balanceOf(reporter) >= 1)
+    require(self.market.isContainerForReportingToken(self))
+    self.getReputationToken().transferFrom(reporter, self, attotokens)
+    self.tokens[reporter] = safeAdd(self.tokens[reporter], attotokens)
+    self.supply = safeAdd(self.supply, attotokens)
+    self.market.updateTentativeWinningPayoutDistributionHash(self.getPayoutDistributionHash())
+    self.getReportingWindow().noteReport(self.market, reporter, self.getPayoutDistributionHash())
+    log(type=Transfer, 0, reporter, attotokens)
+
+def redeemDisavowedTokens(reporter: address):
+    require(not self.market.isContainerForReportingToken(self))
+    reputationSupply = self.getReputationToken().balanceOf(self)
+    attotokens = self.tokens[reporter]
+    reporterReputationShare = reputationSupply * attotokens / self.supply
+    self.supply -= attotokens
+    self.tokens[reporter] = 0
+    self.getReputationToken().transfer(reporter, reporterReputationShare)
+    log(type=Transfer, reporter, 0, attotokens)
+
+# NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
+def redeemForkedTokens(reporter: address):
+    require(msg.sender == reporter)
+    require(self.market.isFinalized())
+    require(self.market.isContainerForReportingToken(self))
+    require(self.getBranch().getForkingMarket() == self.market)
+    reputationSupply = self.getReputationToken().balanceOf(self)
+    attotokens = self.tokens[reporter]
+    reporterReputationShare = reputationSupply * attotokens / self.supply
+    self.supply -= attotokens
+    self.tokens[reporter] = 0
+    destinationReputationToken = self.getBranch().getChildBranch(self.getPayoutDistributionHash()).getReputationToken()
+    self.getReputationToken().migrateOut(destinationReputationToken, reporterReputationShare)
+    destinationReputationToken.transfer(reportor, reporterReputationShare)
+    log(type=Transfer, reporter, 0, attotokens)
+
+def migrateLosingTokens():
+    require(self.market.isFinalized())
+    require(self.market.isContainerForReportingToken(self))
+    require(self.getBranch().getForkingMarket() != self.market)
+    require(self.market.getFinalWinningReportingToken() != self)
+    self.supply = 0
+    reputationSupply = self.getReputationToken().balanceOf(self)
+    self.getReputationToken().transfer(self.market.getFinalWinningReportingToken(), reputationSupply)
+
+# NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
+def redeemWinningTokens(reporter: address):
+    require(msg.sender == reporter)
+    require(self.market.isFinalized())
+    require(self.market.isContainerForReportingToken(self))
+    require(self.getBranch().getForkingMarket() != self.market)
+    require(self.market.getFinalWinningReportingToken() == self)
+    self.extractBondHolderPayments()
+    reputationSupply = self.getReputationToken().balanceOf(self)
+    attotokens = self.tokens[reporter]
+    reporterReputationShare = reputationSupply * attotokens / self.supply
+    self.supply -= attotokens
+    self.tokens[reporter] = 0
+    self.getReputationToken().transfer(reporter, reporterReputationShare)
+    log(type=Transfer, reporter, 0, attotokens)
+
+# FIXME: bond holders have already been paid at this point (they are paid as soon as market finalization occurs)
+# CONSIDER: track how much bond holders are owed, then as REP is extracted from losing tokens it initially goes into
+def extractBondHolderPayments():
+    require(self.market.isFinalized())
+    marketReputationBalance = self.getReputationToken().balanceOf(self.market)
+    desiredBondPot = self.market.getDesiredDisputeRewardPot()
+    bondPotIncrease = desiredBondPot - marketReputationBalance
+    if (bondPotIncrease <= 0):
+        return
+    excessAttorepAvailable = self.getReputationToken().balanceOf(self) - self.supply
+    amountToSend = min(bondPotIncrease, excessAttorepAvailable)
+    self.getReputationToken().transfer(self.market, amountToSend)
+
+
+####
+#### Getters
+####
+
+def getMarket():
+    return(self.market)
+
+def getReportingWindow():
+    return(self.market.getReportingWindow())
+
+def getBranch():
+    return(self.market.getBranch())
+
+def getReputationToken():
+    return(self.market.getReputationToken())
+
+def getRegistrationToken():
+    return(self.market.getRegistrationToken())
+
+def getPayoutDistributionHash():
+    payoutNumerators = load(self.payoutNumerators[0], items = self.market.getNumberOfOutcomes())
+    return(self.market.derivePayoutDistributionHash(payoutNumerators))
+
+def getPayoutNumerator(index: int256):
+    require(0 <= index and index < self.market.getNumberOfOutcomes())
+    return(load(self.payoutNumerators[0], items = self.market.getNumberOfOutcomes())[index])
+
+
+####
+#### ERC20 Implementation
+####
+
+event Transfer(from:address:indexed, to:address:indexed, attotokens:int256)
+event Approval(owner:address:indexed, spender:address:indexed, attotokens:int256)
+
+def totalSupply():
+    return(self.supply)
+
+def balanceOf(address: address):
+    return(self.tokens[address])
+
+def transfer(destinationAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    self.tokens[msg.sender] = safeSub(self.tokens[msg.sender], attotokens)
+    self.tokens[destinationAddress] = safeAdd(self.tokens[destinationAddress], attotokens)
+    log(type = Transfer, msg.sender, destinationAddress, attotokens)
+    return(1)
+
+def transferFrom(sourceAddress: address, destinationAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    require(self.spenders[sourceAddress][msg.sender] >= attotokens)
+    self.spenders[sourceAddress][msg.sender] = safeSub(self.spenders[sourceAddress][msg.sender], attotokens)
+    self.tokens[sourceAddress] = safeSub(self.tokens[sourceAddress], attotokens)
+    self.tokens[destinationAddress] = safeAdd(self.tokens[destinationAddress], attotokens)
+    log(type = Transfer, sourceAddress, destinationAddress, attotokens)
+    return(1)
+
+def approve(spenderAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    self.spenders[msg.sender][spenderAddress] = attotokens
+    log(type = Approval, msg.sender, spenderAddress, attotokens)
+    return(1)
+
+def allowance(ownerAddress: address, spenderAddress: address):
+    return(self.spenders[ownerAddress][spenderAddress])
