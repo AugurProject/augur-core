@@ -100,11 +100,17 @@ def takeAskOrder(taker: address, orderID: address, market: address, outcome: int
             i += 1
         # sell the complete sets (this will pay fees)
         COMPLETE_SETS.sellCompleteSets(self, market, completeSets)
-        # FIXME: in order to ensure that we can always cover fees, fees should be split proportionately to maker and taker based on how much cash each party will get.
-        # maker gets full share of cash
-        makerShare = safeFxpMul(completeSets, sharePriceLong)
+        # figure out the expected payout before fees
+        cost = COMPLETE_SETS.getCompleteSetsValue(market, completeSets)
+        # get the completeSetFee
+        payout = denominationToken.balanceOf(self)
+        completeSetFee = safeSub(cost, payout)
+        # maker gets their share minus proportional fee
+        cumulativeScale = market.getCompleteSetCostInAttotokens()
+        longFee = safeDiv(safeMul(completeSetFee, sharePriceLong), cumulativeScale)
+        makerShare = safeFxpMul(completeSets, sharePriceLong) - longFee
         denominationToken.transfer(maker, makerShare)
-        # taker gets remainder (taker pays fees)
+        # taker gets remainder
         takerShare = denominationToken.balanceOf(self)
         denominationToken.transfer(taker, takerShare)
         # adjust internal accounting

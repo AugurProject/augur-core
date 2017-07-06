@@ -47,9 +47,11 @@ def test_make_ask_with_shares_take_with_shares(contractsFixture):
     # 3. take ASK order for YES with NO shares
     assert noShareToken.approve(takeOrder.address, fix('1.2'), sender = tester.k2)
     fxpAmountRemaining = takeOrder.publicTakeOrder(askOrderID, ASK, market.address, YES, fix('1.2'), sender = tester.k2)
+    makerFee = completeSetFees * 0.6
+    takerFee = completeSetFees * 0.4
     assert fxpAmountRemaining == 0
-    assert cash.balanceOf(tester.a1) == fix('1.2', '0.6')
-    assert cash.balanceOf(tester.a2) == fix('1.2', '0.4') - completeSetFees
+    assert cash.balanceOf(tester.a1) == fix('1.2', '0.6') - makerFee
+    assert cash.balanceOf(tester.a2) == fix('1.2', '0.4') - takerFee
     assert yesShareToken.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a2) == fix('1.2')
     assert noShareToken.balanceOf(tester.a1) == fix('1.2')
@@ -198,9 +200,13 @@ def test_make_bid_with_shares_take_with_shares(contractsFixture):
     # 3. take BID order for YES with shares of YES
     assert yesShareToken.approve(takeOrder.address, fix('1.2'), sender = tester.k2)
     leftoverInOrder = takeOrder.publicTakeOrder(orderId, BID, market.address, YES, fix('1.2'), sender = tester.k2)
+    makerFee = completeSetFees * 0.4
+    takerFee = completeSetFees * 0.6
     assert leftoverInOrder == 0
-    assert cash.balanceOf(tester.a1) == fix('1.2', '0.4')
-    assert cash.balanceOf(tester.a2) == fix('1.2', '0.6') - completeSetFees
+    makerBalance = fix('1.2', '0.4') - makerFee
+    takerBalance = fix('1.2', '0.6') - takerFee
+    assert cash.balanceOf(tester.a1) == makerBalance
+    assert cash.balanceOf(tester.a2) == takerBalance
     assert yesShareToken.balanceOf(tester.a1) == fix('1.2')
     assert yesShareToken.balanceOf(tester.a2) == fix('0')
     assert noShareToken.balanceOf(tester.a1) == fix('0')
@@ -319,36 +325,36 @@ def placeholder_context():
     yield None
 
 @mark.parametrize('type,outcome,displayPrice,orderSize,makerYesShares,makerNoShares,makerTokens,takeSize,takerYesShares,takerNoShares,takerTokens,expectMakeRaise,expectedMakerYesShares,expectedMakerNoShares,expectedMakerTokens,expectTakeRaise,expectedTakerYesShares,expectedTakerNoShares,expectedTakerTokens,fixture', [
-    # | ------ ORDER ------ |   | ------ MAKER START ------ |   | ------ TAKER START ------ |  | ------ MAKER FINISH ------ |  | ------- TAKER FINISH ------- |
-    #   type,outcome,  price,   size,    yes,     no,   tkns,   size,    yes,     no,   tkns,  raise,    yes,     no,   tkns,  raise,    yes,     no,     tkns,
-    (    BID,    YES,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',  '1.2',    '0',    '0',  False,  '1.2',    '0',    '0',  False,    '0',    '0',   '0.72', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '1.2',    '0',  '1.2',    '0',  '1.2',  '1.2',    '0',    '0',  False,    '0',    '0', '0.48',  False,    '0',    '0','0.70788', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',    '0', '0.48',  False,  '1.2',    '0',    '0',  False,    '0',  '1.2',      '0', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '1.2',    '0',  '1.2',    '0',  '1.2',    '0',    '0', '0.48',  False,    '0',    '0', '0.48',  False,    '0',  '1.2',      '0', lazy_fixture('contractsFixture')),
+    # | ------ ORDER ------ |   | ------ MAKER START ------ |   | ------ TAKER START ------ |  | ------- MAKER FINISH -------  |    | ------- TAKER FINISH -------  |
+    #   type,outcome,  price,   size,    yes,     no,   tkns,   size,    yes,     no,   tkns,  raise,    yes,     no,      tkns,    raise,    yes,     no,      tkns,
+    (    BID,    YES,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',  '1.2',    '0',    '0',  False,  '1.2',    '0',       '0',    False,    '0',    '0',    '0.72', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '1.2',    '0',  '1.2',    '0',  '1.2',  '1.2',    '0',    '0',  False,    '0',    '0','0.475152',    False,    '0',    '0','0.712728', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',    '0', '0.48',  False,  '1.2',    '0',       '0',    False,    '0',  '1.2',       '0', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '1.2',    '0',  '1.2',    '0',  '1.2',    '0',    '0', '0.48',  False,    '0',    '0',    '0.48',    False,    '0',  '1.2',       '0', lazy_fixture('contractsFixture')),
 
-    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',  '2.4',    '0',    '0',  False,  '1.2',    '0', '0.48',  False,    '0',    '0','1.42788', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',    '0',    '0', '0.96',  False,  '1.2',    '0', '0.48',  False,    '0',  '2.4',      '0', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '2.4',    '0',    '0', '1.44',  '2.4',  '1.2',    '0', '0.48',  False,  '2.4',    '0',    '0',  False,    '0',  '1.2',   '0.72', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '2.4',    '0',  '2.4',    '0',  '2.4',  '1.2',    '0', '0.48',  False,    '0',    '0', '0.96',  False,    '0',  '1.2','0.70788', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',  '2.4',    '0',    '0',  False,  '1.2',    '0','0.475152',    False,    '0',    '0','1.432728', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',    '0',    '0', '0.96',  False,  '1.2',    '0',    '0.48',    False,    '0',  '2.4',       '0', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '2.4',    '0',    '0', '1.44',  '2.4',  '1.2',    '0', '0.48',  False,  '2.4',    '0',       '0',    False,    '0',  '1.2',    '0.72', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '2.4',    '0',  '2.4',    '0',  '2.4',  '1.2',    '0', '0.48',  False,    '0',    '0','0.955152',    False,    '0',  '1.2','0.712728', lazy_fixture('contractsFixture')),
 
-    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',  '1.2',    '0', '0.48',  False,  '1.2',    '0', '0.48',  False,    '0',  '1.2','0.70788', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',  '1.2',    '0', '0.48',  False,  '1.2',    '0','0.475152',    False,    '0',  '1.2','0.712728', lazy_fixture('contractsFixture')),
 
-    (    BID,     NO,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',  '1.2',    '0',  False,    '0',  '1.2',    '0',  False,    '0',    '0',   '0.72', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',  '1.2',    '0',  False,    '0',    '0', '0.48',  False,    '0',    '0','0.70788', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',    '0', '0.48',  False,    '0',  '1.2',    '0',  False,  '1.2',    '0',      '0', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',    '0', '0.48',  False,    '0',    '0', '0.48',  False,  '1.2',    '0',      '0', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',  '1.2',    '0',  False,    '0',  '1.2',       '0',    False,    '0',    '0',    '0.72', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',  '1.2',    '0',  False,    '0',    '0','0.475152',    False,    '0',    '0','0.712728', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',    '0', '0.48',  False,    '0',  '1.2',       '0',    False,  '1.2',    '0',       '0', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',    '0', '0.48',  False,    '0',    '0',    '0.48',    False,  '1.2',    '0',       '0', lazy_fixture('contractsFixture')),
 
-    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',  '2.4',    '0',  False,    '0',  '1.2', '0.48',  False,    '0',    '0','1.42788', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',    '0', '0.96',  False,    '0',  '1.2', '0.48',  False,  '2.4',    '0',      '0', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '2.4',    '0',    '0', '1.44',  '2.4',    '0',  '1.2', '0.48',  False,    '0',  '2.4',    '0',  False,  '1.2',    '0',   '0.72', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '2.4',  '2.4',    '0',    '0',  '2.4',    '0',  '1.2', '0.48',  False,    '0',    '0', '0.96',  False,  '1.2',    '0','0.70788', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',  '2.4',    '0',  False,    '0',  '1.2','0.475152',    False,    '0',    '0','1.432728', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',    '0', '0.96',  False,    '0',  '1.2',    '0.48',    False,  '2.4',    '0',       '0', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '2.4',    '0',    '0', '1.44',  '2.4',    '0',  '1.2', '0.48',  False,    '0',  '2.4',       '0',    False,  '1.2',    '0',    '0.72', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '2.4',  '2.4',    '0',    '0',  '2.4',    '0',  '1.2', '0.48',  False,    '0',    '0','0.955152',    False,  '1.2',    '0','0.712728', lazy_fixture('contractsFixture')),
 
-    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',  '1.2', '0.48',  False,    '0',  '1.2', '0.48',  False,  '1.2',    '0','0.70788', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',  '1.2', '0.48',  False,    '0',  '1.2','0.475152',    False,  '1.2',    '0','0.712728', lazy_fixture('contractsFixture')),
 
-    (    ASK,    YES,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',    '0', '0.72',  False,    '0',    '0', '0.72',  False,  '1.2',    '0',      '0', lazy_fixture('contractsFixture')),
-    (    ASK,    YES,  '0.6',  '1.2',    '0',    '0', '0.48',  '1.2',    '0',    '0', '0.72',  False,    '0',  '1.2',    '0',  False,  '1.2',    '0',      '0', lazy_fixture('contractsFixture')),
-    (    ASK,    YES,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',  '1.2',    '0',  False,    '0',    '0', '0.72',  False,    '0',    '0','0.46788', lazy_fixture('contractsFixture')),
-    (    ASK,    YES,  '0.6',  '1.2',    '0',    '0', '0.48',  '1.2',    '0',  '1.2',    '0',  False,    '0',  '1.2',    '0',  False,    '0',    '0',   '0.48', lazy_fixture('contractsFixture')),
+    (    ASK,    YES,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',    '0', '0.72',  False,    '0',    '0',    '0.72',    False,  '1.2',    '0',       '0', lazy_fixture('contractsFixture')),
+    (    ASK,    YES,  '0.6',  '1.2',    '0',    '0', '0.48',  '1.2',    '0',    '0', '0.72',  False,    '0',  '1.2',       '0',    False,  '1.2',    '0',       '0', lazy_fixture('contractsFixture')),
+    (    ASK,    YES,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',  '1.2',    '0',  False,    '0',    '0','0.712728',    False,    '0',    '0','0.475152', lazy_fixture('contractsFixture')),
+    (    ASK,    YES,  '0.6',  '1.2',    '0',    '0', '0.48',  '1.2',    '0',  '1.2',    '0',  False,    '0',  '1.2',       '0',    False,    '0',    '0',    '0.48', lazy_fixture('contractsFixture')),
 ])
 def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, makerNoShares, makerTokens, takeSize, takerYesShares, takerNoShares, takerTokens, expectMakeRaise, expectedMakerYesShares, expectedMakerNoShares, expectedMakerTokens, expectTakeRaise, expectedTakerYesShares, expectedTakerNoShares, expectedTakerTokens, fixture):
     # TODO: add support for wider range markets

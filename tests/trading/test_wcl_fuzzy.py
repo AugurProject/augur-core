@@ -127,6 +127,8 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * (fxpPrice - market.getMinDisplayPrice()) / 10**18)
     shortCost = long(fxpAmount * (market.getMaxDisplayPrice() - fxpPrice) / 10**18)
     completeSetFees = long(fxpAmount * market.getCompleteSetCostInAttotokens() * fix('0.0101') / 10**18 / 10**18)
+    shortFee = long((completeSetFees * shortCost) / (longCost + shortCost))
+    longFee = completeSetFees - shortFee
 
     print "maker escrows cash, taker pays with cash"
     execute(
@@ -165,10 +167,10 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         takerTokens = 0,
         expectedMakerLongShares = 0,
         expectedMakerShortShares = 0,
-        expectedMakerTokens = shortCost,
+        expectedMakerTokens = shortCost - shortFee,
         expectedTakerLongShares = 0,
         expectedTakerShortShares = 0,
-        expectedTakerTokens = longCost - completeSetFees)
+        expectedTakerTokens = longCost - longFee)
 
     print "maker escrows cash, taker pays with shares"
     execute(
@@ -216,6 +218,8 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * (fxpPrice - market.getMinDisplayPrice()) / 10**18)
     shortCost = long(fxpAmount * (market.getMaxDisplayPrice() - fxpPrice) / 10**18)
     completeSetFees = long(fxpAmount * market.getCompleteSetCostInAttotokens() * fix('0.0101') / 10**18 / 10**18)
+    longFee = long((completeSetFees * longCost) / (longCost + shortCost))
+    shortFee = completeSetFees - longFee
 
     print "maker escrows cash, taker pays with cash"
     execute(
@@ -254,10 +258,10 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         takerTokens = 0,
         expectedMakerLongShares = 0,
         expectedMakerShortShares = 0,
-        expectedMakerTokens = longCost,
+        expectedMakerTokens = longCost - longFee,
         expectedTakerLongShares = 0,
         expectedTakerShortShares = 0,
-        expectedTakerTokens = shortCost - completeSetFees)
+        expectedTakerTokens = shortCost - shortFee)
 
     print "maker escrows cash, taker pays with shares"
     execute(
