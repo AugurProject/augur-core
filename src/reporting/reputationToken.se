@@ -125,7 +125,7 @@ def transfer(destinationAddress: address, attotokens: int256):
 
 def transferFrom(sourceAddress: address, destinationAddress: address, attotokens: int256):
     require(1 <= attotokens and attotokens <= 2**254)
-    require(self.branch.isContainerForReportingWindow(msg.sender) or self.branch.isContainerForRegistrationToken(msg.sender) or self.branch.isContainerForMarket(msg.sender) or self.branch.isContainerForReportingToken(msg.sender) or self.safeDeductAllowance(sourceAddress, msg.sender, attotokens))
+    require(self.branch.isContainerForReportingWindow(msg.sender) or self.branch.isContainerForRegistrationToken(msg.sender) or self.branch.isContainerForMarket(msg.sender) or self.branch.isContainerForReportingToken(msg.sender) or self.branch.isContainerForDisputeBondToken(msg.sender) or self.safeDeductAllowance(sourceAddress, msg.sender, attotokens))
     self.tokens[sourceAddress] = safeSub(self.tokens[sourceAddress], attotokens)
     self.tokens[destinationAddress] = safeAdd(self.tokens[destinationAddress], attotokens)
     log(type = Transfer, sourceAddress, destinationAddress, attotokens)

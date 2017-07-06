@@ -1,0 +1,103 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+#### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+####
+
+inset('../macros/externs.sem')
+inset('../macros/safeMath.sem')
+inset('../macros/assertNoValue.sem')
+inset('../macros/require.sem')
+
+data initialized
+data market
+data bondHolder
+data payoutDistributionHash #Disputed outcome
+data bondRemainingToBePaidOut
+data tokens[2**160]
+data spenders[2**160][2**160]
+data supply
+
+def any():
+    assertNoValue()
+
+def initialize(market: address, bondHolder: address, bondAmount: int256, payoutDistributionHash: int256):
+    require(not self.initialized)
+    self.initialized = 1
+    self.market = market
+    self.bondHolder = bondHolder
+    self.payoutDistributionHash = payoutDistributionHash
+    self.bondRemainingToBePaidOut = bondAmount * 2
+    reputationToken = self.market.getReputationToken()
+    reputationToken.approve(market, 2**254)
+    reputationToken.transferFrom(msg.sender, self, bondAmount)
+
+def withdraw():
+    require(msg.sender == self.bondHolder)
+    require(self.market.isFinalized())
+    require(self.market.getFinalPayoutDistributionHash() == self.payoutDistributionHash)
+    require(not self.market.isContainerForDisputeBondToken(self) or self.market.isFinalized())
+    reputationToken = self.market.getReputationToken()
+    amountToTransfer = reputationToken.balanceOf(self)
+    reputationToken.transfer(self.bondHolder, amountToTransfer)
+    self.bondRemainingToBePaidOut = safeSub(self.bondRemainingToBePaidOut, amountToTransfer)
+
+
+####
+#### Getters
+####
+
+def getMarket():
+    return(self.market)
+
+def getReputationToken():
+    return(self.market.getReputationToken())
+
+def getBondHolder():
+    return(self.bondHolder)
+
+def getPayoutDistributionHash():
+    return(self.payoutDistributionHash)
+
+def getBondRemainingToBePaidOut():
+    return(self.bondRemainingToBePaidOut)
+
+
+####
+#### ERC20 Implementation
+####
+
+event Transfer(from:address:indexed, to:address:indexed, attotokens:int256)
+event Approval(owner:address:indexed, spender:address:indexed, attotokens:int256)
+
+def totalSupply():
+    return(self.supply)
+
+def balanceOf(address: address):
+    return(self.tokens[address])
+
+def transfer(destinationAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    self.tokens[msg.sender] = safeSub(self.tokens[msg.sender], attotokens)
+    self.tokens[destinationAddress] = safeAdd(self.tokens[destinationAddress], attotokens)
+    log(type = Transfer, msg.sender, destinationAddress, attotokens)
+    return(1)
+
+def transferFrom(sourceAddress: address, destinationAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    require(self.spenders[sourceAddress][msg.sender] >= attotokens)
+    self.spenders[sourceAddress][msg.sender] = safeSub(self.spenders[sourceAddress][msg.sender], attotokens)
+    self.tokens[sourceAddress] = safeSub(self.tokens[sourceAddress], attotokens)
+    self.tokens[destinationAddress] = safeAdd(self.tokens[destinationAddress], attotokens)
+    log(type = Transfer, sourceAddress, destinationAddress, attotokens)
+    return(1)
+
+def approve(spenderAddress: address, attotokens: int256):
+    require(1 <= attotokens and attotokens <= 2**254)
+    self.spenders[msg.sender][spenderAddress] = attotokens
+    log(type = Approval, msg.sender, spenderAddress, attotokens)
+    return(1)
+
+def allowance(ownerAddress: address, spenderAddress: address):
+    return(self.spenders[ownerAddress][spenderAddress])
