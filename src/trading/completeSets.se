@@ -108,6 +108,11 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: int256):
     ORDERS.completeSetsLog(sender, market, 2, fxpAmount, numOutcomes, marketCreatorFee, reportingFee)
     return(1)
 
+# Provides the total worth of the number of completeSets in the market
+# @internal
+def getCompleteSetsValue(market: address, numberOfSets: int256):
+    return safeFxpMul(numberOfSets, market.getCompleteSetCostInAttotokens())
+
 def setController(newController: address):
     require(msg.sender == self.controller)
     self.controller = newController

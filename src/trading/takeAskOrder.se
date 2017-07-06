@@ -101,14 +101,14 @@ def takeAskOrder(taker: address, orderID: address, market: address, outcome: int
         # sell the complete sets (this will pay fees)
         COMPLETE_SETS.sellCompleteSets(self, market, completeSets)
         # figure out the expected payout before fees
-        cumulativeScale = market.getCompleteSetCostInAttotokens()
-        cost = safeFxpMul(completeSets, cumulativeScale)
+        cost = COMPLETE_SETS.getCompleteSetsValue(market, completeSets)
         # get the completeSetFee
         payout = denominationToken.balanceOf(self)
         completeSetFee = safeSub(cost, payout)
         # maker gets their share minus proportional fee
-        makerFee = safeDiv(safeMul(completeSetFee, sharePriceLong), cumulativeScale)
-        makerShare = safeFxpMul(completeSets, sharePriceLong) - makerFee
+        cumulativeScale = market.getCompleteSetCostInAttotokens()
+        longFee = safeDiv(safeMul(completeSetFee, sharePriceLong), cumulativeScale)
+        makerShare = safeFxpMul(completeSets, sharePriceLong) - longFee
         denominationToken.transfer(maker, makerShare)
         # taker gets remainder
         takerShare = denominationToken.balanceOf(self)
