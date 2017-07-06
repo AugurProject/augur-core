@@ -201,6 +201,8 @@ def tryFinalize():
     # TODO: figure out how to make it so fee distribution is delayed until all markets have been finalized; we can enforce it contract side and let the UI deal with the actual work
     # FIXME: if finalPayoutDistributionHash != getIdentityDistributionId(), pay back validity bond holder
     # FIXME: if finalPayoutDistributionHash == getIdentityDistributionId(), transfer validity bond to reportingWindow (reporter fee pot)
+    # FIXME: if automated report is wrong, transfer automated report bond to reportingWindow
+    # FIXME: if automated report is right, transfer automated report bond to market creator
     # FIXME: handle markets that get 0 reports during their scheduled reporting window
 
 def tryFinalizeAutomatedReport():
