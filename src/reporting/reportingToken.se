@@ -56,7 +56,7 @@ def redeemDisavowedTokens(reporter: address):
 
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
 def redeemForkedTokens(reporter: address):
-    # FIXME: this needs to be secured (msg.sender only?) since calling this before liquidation is an attack
+    require(msg.sender == reporter)
     require(self.market.isFinalized())
     require(self.market.isContainerForReportingToken(self))
     require(self.getBranch().getForkingMarket() == self.market)
@@ -81,7 +81,7 @@ def migrateLosingTokens():
 
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
 def redeemWinningTokens(reporter: address):
-    # FIXME: this needs to be secured (msg.sender only?) since calling this before liquidation is an attack
+    require(msg.sender == reporter)
     require(self.market.isFinalized())
     require(self.market.isContainerForReportingToken(self))
     require(self.getBranch().getForkingMarket() != self.market)
