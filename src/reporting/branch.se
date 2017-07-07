@@ -113,6 +113,15 @@ def isContainerForReportingWindow(shadyReportingWindow: address):
     legitReportingWindow = self.reportingWindows[reportingWindowId]
     return(legitReportingWindow == shadyReportingWindow)
 
+def isContainerForDisputeBondToken(shadyBondToken: address):
+    shadyMarket = shadyBondToken.getMarket()
+    if (not shadyMarket):
+        return(0)
+    if (not self.isContainerForMarket(shadyMarket)):
+        return(0)
+    legitMarket = shadyMarket
+    return(legitMarket.isContainerForDisputeBondToken(shadyBondToken))
+
 def isContainerForRegistrationToken(shadyRegistrationToken: address):
     shadyReportingWindow = shadyRegistrationToken.getReportingWindow()
     if (not shadyReportingWindow):
@@ -140,17 +149,15 @@ def isContainerForReportingToken(shadyReportingToken: address):
     legitMarket = shadyMarket
     return(legitMarket.isContainerForReportingToken(shadyReportingToken))
 
+def isContainerForShareToken(shadyShareToken: address):
+    shadyMarket = shadyShareToken.getMarket()
+    if (not shadyMarket):
+        return(0)
+    if (not self.isContainerForMarket(shadyMarket)):
+        return(0)
+    legitMarket = shadyMarket
+    return(legitMarket.isContainerForShareToken(shadyToken))
+
 def isParentOf(shadyChild: address):
     branchId = shadyChild.getParentPayoutDistributionHash()
     return(self.childBranches[branchId] == shadyChild)
-
-def isContainerForShareToken(shadyShareToken: address):
-    shadyMarket = shadyShareToken.getMarket()
-    if not shadyMarket:
-        return(0)
-    if not self.isContainerForMarket(shadyMarket):
-        return(0)
-    legitMarket = shadyMarket
-    if not legitMarket.isContainerForShareToken(shadyToken):
-        return(0)
-    return(1)

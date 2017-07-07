@@ -21,7 +21,6 @@ data supply
 def any():
     assertNoValue()
 
-event Foo(bar)
 def initialize(market: address, payoutNumerators: arr):
     require(not self.initialized)
     self.initialized = 1
@@ -70,8 +69,8 @@ def redeemForkedTokens(reporter: address):
     self.supply -= attotokens
     self.tokens[reporter] = 0
     destinationReputationToken = self.getBranch().getChildBranch(self.getPayoutDistributionHash()).getReputationToken()
-    self.getReputationToken().migrateOut(destinationReputationToken, reporterReputationShare)
-    destinationReputationToken.transfer(reportor, reporterReputationShare)
+    self.getReputationToken().migrateOut(destinationReputationToken, self, reporterReputationShare)
+    destinationReputationToken.transfer(reporter, reporterReputationShare)
     log(type=Transfer, reporter, 0, attotokens)
     return 1
 
@@ -81,8 +80,25 @@ def migrateLosingTokens():
     require(self.getBranch().getForkingMarket() != self.market)
     require(self.market.getFinalWinningReportingToken() != self)
     self.supply = 0
-    reputationSupply = self.getReputationToken().balanceOf(self)
-    self.getReputationToken().transfer(self.market.getFinalWinningReportingToken(), reputationSupply)
+    # Send losing reporting token REP to correct dispute bonds until bond holders are paid out (either all REP are sent or they hit 2x limit)
+    # Pay out to earlier disputers as much as possible before paying out to later disputers
+    reputationToken = self.getReputationToken()
+    automatedReporterDisputeBondToken = self.market.getAutomatedReporterDisputeBondToken()
+    limitedReportersDisputeBondToken = self.market.getLimitedReportersDisputeBondToken()
+    allReportersDisputeBondToken = self.market.getAllReportersDisputeBondToken()
+    if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != self.market.getFinalPayoutDistributionHash()):
+        amountNeeded = automatedReporterDisputeBondToken.getBondRemainingToBePaidOut() - reputationToken.balanceOf(automatedReporterDisputeBondToken)
+        amountToTransfer = min(amountNeeded, reputationToken.balanceOf(self))
+        if (amountToTransfer > 0):
+            reputationToken.transfer(automatedReporterDisputeBondToken, amountToTransfer)
+    if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() != self.market.getFinalPayoutDistributionHash()):
+        amountNeeded = limitedReportersDisputeBondToken.getBondRemainingToBePaidOut() - reputationToken.balanceOf(limitedReportersDisputeBondToken)
+        amountToTransfer = min(amountNeeded, reputationToken.balanceOf(self))
+        if (amountToTransfer > 0):
+            reputationToken.transfer(limitedReportersDisputeBondToken, amountToTransfer)
+    selfBalance = reputationToken.balanceOf(self)
+    if (selfBalance > 0):
+        reputationToken.transfer(self.market.getFinalWinningReportingToken(), selfBalance)
     return 1
 
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
@@ -98,23 +114,46 @@ def redeemWinningTokens(reporter: address):
     reporterReputationShare = reputationSupply * attotokens / self.supply
     self.supply -= attotokens
     self.tokens[reporter] = 0
-    self.getReputationToken().transfer(reporter, reporterReputationShare)
-    log(type=Transfer, reporter, 0, attotokens)
+    if (reporterReputationShare > 0):
+        self.getReputationToken().transfer(reporter, reporterReputationShare)
+        log(type=Transfer, reporter, 0, attotokens)
     return 1
 
-# FIXME: bond holders have already been paid at this point (they are paid as soon as market finalization occurs)
-# CONSIDER: track how much bond holders are owed, then as REP is extracted from losing tokens it initially goes into
+# FIXME: Do we still need this function? I believe now the mechanic is to extract
+# REP from losing tokens during the losing token migration process, rather than
+# at redeemWinningToken time so attempting to extract them again here is wasteful
+# since it will never do anything.
+# This would explain why the getDesiredDisputeRewardPot function is not causing
+# test failures despite the undefined constants.
 def extractBondHolderPayments():
     require(self.market.isFinalized())
     marketReputationBalance = self.getReputationToken().balanceOf(self.market)
-    desiredBondPot = self.market.getDesiredDisputeRewardPot()
+    desiredBondPot = self.getDesiredDisputeRewardPot()
     bondPotIncrease = desiredBondPot - marketReputationBalance
     if (bondPotIncrease <= 0):
-        return(0)
+        return(1)
     excessAttorepAvailable = self.getReputationToken().balanceOf(self) - self.supply
     amountToSend = min(bondPotIncrease, excessAttorepAvailable)
-    self.getReputationToken().transfer(self.market, amountToSend)
+    if (amountToSend):
+        self.getReputationToken().transfer(self.market, amountToSend)
     return 1
+
+# FIXME: It feels like this method should be on market rather than on the
+# reporting token. I don't see any variables being accessed from this contract,
+# they are all off of market. Also, aren't those constants only defined over in
+# market.se meaning this currently doesn't do the right thing?
+def getDesiredDisputeRewardPot():
+    assertNoValue()
+    require(self.market.isFinalized())
+    desiredBondPot = 0
+    if (self.market.getAutomatedReporterDisputeBondToken() and self.market.getAutomatedReporterDisputeBondToken().getDisputedPayoutDistributionHash() != self.market.getFinalPayoutDistributionHash()):
+        desiredBondPot += AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT * 2
+    if (self.market.getLimitedReportersDisputeBondToken() and self.market.getLimitedReportersDisputeBondToken().getDisputedPayoutDistributionHash() != self.market.getFinalPayoutDistributionHash()):
+        desiredBondPot += LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT * 2
+    if (self.market.getAllReportersDisputeBondToken() and self.market.getAllReportersDisputeBondToken().getDisputedPayoutDistributionHash() != self.market.getFinalPayoutDistributionHash()):
+        desiredBondPot += ALL_REPORTERS_DISPUTE_BOND_AMOUNT * 2
+    return(desiredBondPot)
+
 
 ####
 #### Getters
