@@ -24,7 +24,7 @@ def initialize(comparor: address):
 
 def add(item: int256, hints: arr):
     if (self.contains(item)):
-        return(0)
+        self.remove(item)
 
     # If this is the only node it is the head / tail and we can early out
     if (self.count == 0):
@@ -38,34 +38,42 @@ def add(item: int256, hints: arr):
     nodeValue = self.head
 
     # If hints are provided (and valid) we will use the first still present value to begin the search
-    numHints = len(hints)
     hintIndex = 0
-    while(hintIndex < numHints and node == self.head):
+    while(hintIndex < len(hints) and nodeValue == self.head):
         hint = hints[hintIndex]
         if (self.contains(hint) and self.comparor.compare(hint, item) == 1):
             nodeValue = hint
+        hintIndex += 1
 
     # Do traversal to find the insertion point
-    while(self.hasPrev(nodeValue) and self.comparor.compare(nodeValue, item) == 1):
+    while(self.hasPrev(nodeValue) and self.comparor.compare(nodeValue, item) >= 0):
         nodeValue = self.getPrev(nodeValue)
     
     # Actually insert the node
-    if (self.comparor.compare(nodeValue, item) == 1):
+    # if the node we stop on is greater than or equal to this item we insert before it 
+    if (self.comparor.compare(nodeValue, item) >= 0):
+        if (self.hasPrev(nodeValue)):
+            self.collection[self.getPrev(nodeValue)].next = item
+            self.collection[item].prev = self.getPrev(nodeValue)
         self.collection[nodeValue].prev = item
         self.collection[item].next = nodeValue
-        self.tail = item
+    # otherwise we insert after the node
     else:
         if (self.hasNext(nodeValue)):
             self.collection[self.getNext(nodeValue)].prev = item
             self.collection[item].next = self.getNext(nodeValue)
-        else:
-            self.head = item
-        self.collection[item].prev = nodeValue
         self.collection[nodeValue].next = item
+        self.collection[item].prev = nodeValue
     
     # Do basic inclusion in the actual set
     self.collection[item].exists = 1
     self.count += 1
+
+    # set head and tail if needed
+    if (!self.hasNext(item)):
+        self.head = item
+    if (!self.hasPrev(item)):
+        self.tail = item
 
     self.assertInvariants()
     return(1)
@@ -96,29 +104,29 @@ def remove(item: int256):
     return(1)
 
 def getHead():
-    self.assertNotEmpty()
+    require(self.count > 0)
     return(self.head)
 
 def getTail():
-    self.assertNotEmpty()
+    require(self.count > 0)
     return(self.tail)
 
 def getNext(item: int256):
-    self.assertContains(item)
-    self.assertHasNext(item)
+    require(self.contains(item))
+    require(self.hasNext(item))
     return(self.collection[item].next)
 
 def getPrev(item: int256):
-    self.assertContains(item)
-    self.assertHasPrev(item)
+    require(self.contains(item))
+    require(self.hasPrev(item))
     return(self.collection[item].prev)
 
 def hasNext(item: int256):
-    self.assertContains(item)
+    require(self.contains(item))
     return(self.collection[self.collection[item].next].exists)
 
 def hasPrev(item: int256):
-    self.assertContains(item)
+    require(self.contains(item))
     return(self.collection[self.collection[item].prev].exists)
 
 def contains(item: int256):
@@ -130,35 +138,15 @@ def count():
 def isEmpty():
     return(self.count == 0)
 
-def assertContains(item: int256):
-    if (!self.contains(item)):
-        ~invalid()
-
-def assertNotEmpty():
-    if (self.count == 0):
-        ~invalid()
-
-def assertHasPrev(item: int256):
-    if (!self.hasPrev(item)):
-        ~invalid()
-
-def assertHasNext(item: int256):
-    if (!self.hasNext(item)):
-        ~invalid()
-
 def assertInvariants():
     if (not self.head):
-        if (self.tail):
-            ~invalid()
-        if (self.count):
-            ~invalid()
+        require(self.tail)
+        require(self.count)
+
     if (not self.tail):
-        if (self.head):
-            ~invalid()
-        if (self.count):
-            ~invalid()
+        require(self.head)
+        require(self.count)
+
     if (not self.count):
-        if (self.head):
-            ~invalid()
-        if (self.tail):
-            ~invalid()
+        require(self.head)
+        require(self.tail)
