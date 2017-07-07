@@ -11,5 +11,5 @@ def createReportingWindow(controller: address, comparor: address):
     self.sortedLinkedList = sortedLinkedList
     return(sortedLinkedList)
 
-def getLastReportingWindow():
+def getLastSortedLinkedList():
     return(self.lastSortedLinkedList)
