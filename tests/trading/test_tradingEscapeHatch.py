@@ -3,7 +3,7 @@
 from ethereum import tester
 from ethereum.tester import TransactionFailed
 from pytest import raises
-from utils import fix, captureFilteredLogs
+from utils import fix
 
 BID = 1
 ASK = 2
