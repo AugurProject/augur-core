@@ -24,14 +24,3 @@ def captureFilteredLogs(state, contract, logs):
         if not translated: return
         logs.append(translated)
     state.block.log_listeners.append(lambda x: captureLog(contract, logs, x))
-
-# FIXME: relapce all usages of this with pyethereum log filtering (see trading/test_trade.py for an example)
-def parseCapturedLogs(logs):
-    arrayOfLogs = logs.strip().split("\n")
-    arrayOfParsedLogs = []
-    for log in arrayOfLogs:
-        parsedLog = loads(log.replace("'", '"').replace("L", "").replace('u"', '"'))
-        arrayOfParsedLogs.append(parsedLog)
-    if len(arrayOfParsedLogs) == 0:
-        return arrayOfParsedLogs[0]
-    return arrayOfParsedLogs

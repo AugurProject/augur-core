@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from ethereum import tester
-from utils import fix, longToHexString, bytesToHexString
+from utils import fix, longToHexString, bytesToHexString, captureFilteredLogs
 
 BID = 1
 ASK = 2
@@ -11,11 +11,6 @@ YES = 1
 
 BUY = 1
 SELL = 2
-
-def captureLog(contract, logs, message):
-    translated = contract.translator.listen(message)
-    if not translated: return
-    logs.append(translated)
 
 def test_publicTakeOrder_bid(contractsFixture):
     cash = contractsFixture.cash
@@ -33,7 +28,7 @@ def test_publicTakeOrder_bid(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = takeOrder.publicTakeOrder(orderId, BID, market.address, YES, fix('1.2'), sender = tester.k2)
 
     # assert
@@ -82,7 +77,7 @@ def test_publicTakeOrder_ask(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
-    contractsFixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     fillOrderId = takeOrder.publicTakeOrder(orderId, ASK, market.address, YES, fix('1.2'), sender = tester.k2)
 
     # assert

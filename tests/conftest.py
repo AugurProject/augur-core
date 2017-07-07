@@ -118,7 +118,7 @@ class NewContractsFixture:
 
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
-        contract = self.upload(relativeFilePath)
+        contract = self.upload(relativeFilePath, lookupKey)
         self.controller.setValue(lookupKey.ljust(32, '\x00'), contract.address)
         return(contract)
 

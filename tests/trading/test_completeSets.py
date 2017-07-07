@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
-from ContractsFixture import ContractsFixture
 from datetime import timedelta
 from ethereum import tester
 from ethereum.tester import TransactionFailed
 from iocapture import capture
 from pytest import raises
-from utils import parseCapturedLogs, bytesToHexString, longToHexString, bytesToLong, fix
+from utils import bytesToHexString, longToHexString, bytesToLong, fix, captureFilteredLogs
 
 YES = 1
 NO = 0
@@ -14,20 +13,14 @@ NO = 0
 BUY = 1
 SELL = 2
 
-def captureLog(contract, logs, message):
-    translated = contract.translator.listen(message)
-    if not translated: return
-    logs.append(translated)
-
-def test_publicBuyCompleteSets():
-    fixture = ContractsFixture()
-    completeSets = fixture.initializeCompleteSets()
-    orders = fixture.initializeOrders()
-    branch = fixture.createBranch(3, 5)
-    cash = fixture.getSeededCash()
-    market = fixture.createReasonableBinaryMarket(branch, cash)
-    yesShareToken = fixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fixture.applySignature('shareToken', market.getShareToken(NO))
+def test_publicBuyCompleteSets(contractsFixture):
+    branch = contractsFixture.branch
+    cash = contractsFixture.cash
+    market = contractsFixture.binaryMarket
+    completeSets = contractsFixture.contracts['completeSets']
+    orders = contractsFixture.contracts['orders']
+    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
     logs = []
 
     assert not cash.balanceOf(tester.a1)
@@ -37,7 +30,7 @@ def test_publicBuyCompleteSets():
 
     cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender=tester.k1)
-    fixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     assert completeSets.publicBuyCompleteSets(market.address, fix('10'), sender=tester.k1)
 
     assert logs == [
@@ -59,13 +52,12 @@ def test_publicBuyCompleteSets():
     assert yesShareToken.totalSupply() == fix('10'), "Increase in yes shares purchased for this market should be 18"
     assert noShareToken.totalSupply() == fix('10'), "Increase in yes shares purchased for this market should be 18"
 
-def test_publicBuyCompleteSets_failure():
-    fixture = ContractsFixture()
-    completeSets = fixture.initializeCompleteSets()
-    orders = fixture.initializeOrders()
-    branch = fixture.createBranch(3, 5)
-    cash = fixture.getSeededCash()
-    market = fixture.createReasonableBinaryMarket(branch, cash)
+def test_publicBuyCompleteSets_failure(contractsFixture):
+    branch = contractsFixture.branch
+    cash = contractsFixture.cash
+    market = contractsFixture.binaryMarket
+    completeSets = contractsFixture.contracts['completeSets']
+    orders = contractsFixture.contracts['orders']
 
     fxpAmount = fix('10')
     cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
@@ -86,16 +78,15 @@ def test_publicBuyCompleteSets_failure():
     with raises(TransactionFailed):
         completeSets.publicBuyCompleteSets(market.address, fxpAmount, sender=tester.k1)
 
-def test_publicSellCompleteSets():
-    fixture = ContractsFixture()
-    completeSets = fixture.initializeCompleteSets()
-    orders = fixture.initializeOrders()
-    branch = fixture.createBranch(3, 5)
-    cash = fixture.getSeededCash()
-    market = fixture.createReasonableBinaryMarket(branch, cash)
-    yesShareToken = fixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fixture.applySignature('shareToken', market.getShareToken(NO))
-    cash.transfer(0, 1)
+def test_publicSellCompleteSets(contractsFixture):
+    branch = contractsFixture.branch
+    cash = contractsFixture.cash
+    market = contractsFixture.binaryMarket
+    completeSets = contractsFixture.contracts['completeSets']
+    orders = contractsFixture.contracts['orders']
+    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    cash.transfer(0, cash.balanceOf(tester.a9), sender = tester.k9)
     logs = []
 
     assert not cash.balanceOf(tester.a0)
@@ -107,7 +98,7 @@ def test_publicSellCompleteSets():
     cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender = tester.k1)
     completeSets.publicBuyCompleteSets(market.address, fix('10'), sender = tester.k1)
-    fixture.state.block.log_listeners.append(lambda x: captureLog(orders, logs, x))
+    captureFilteredLogs(contractsFixture.state, orders, logs)
     result = completeSets.publicSellCompleteSets(market.address, fix('9'), sender=tester.k1)
 
     assert logs == [
@@ -131,13 +122,12 @@ def test_publicSellCompleteSets():
     assert cash.balanceOf(tester.a0) == fix('0.09')
     assert cash.balanceOf(market.getReportingWindow()) == fix('0.0009')
 
-def test_exceptions():
-    fixture = ContractsFixture()
-    completeSets = fixture.initializeCompleteSets()
-    orders = fixture.initializeOrders()
-    branch = fixture.createBranch(3, 5)
-    cash = fixture.getSeededCash()
-    market = fixture.createReasonableBinaryMarket(branch, cash)
+def test_exceptions(contractsFixture):
+    branch = contractsFixture.branch
+    cash = contractsFixture.cash
+    market = contractsFixture.binaryMarket
+    completeSets = contractsFixture.contracts['completeSets']
+    orders = contractsFixture.contracts['orders']
     cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
 
     cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
@@ -149,7 +139,7 @@ def test_exceptions():
         completeSets.sellCompleteSets(tester.a1, market.address, fix('10'), sender=tester.k1)
 
     # sellCompleteSets exceptions
-    fixture.state.mine(1)
+    contractsFixture.state.mine(1)
     with raises(TransactionFailed):
         completeSets.publicSellCompleteSets(market.address, fix('-10'), sender=tester.k1)
     with raises(TransactionFailed):
