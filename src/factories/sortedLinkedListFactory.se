@@ -4,7 +4,7 @@ extern sortedLinkedList: [initialize:[address]:_]
 # workaround for https://github.com/ethereum/serpent/issues/119
 data lastSortedLinkedList
 
-def createReportingWindow(controller: address, comparor: address):
+def createSortedLinkedList(controller: address, comparor: address):
     sortedLinkedList = create('../libraries/delegator.se')
     sortedLinkedList.setup(controller, 'sortedLinkedList')
     sortedLinkedList.initialize(comparor)
