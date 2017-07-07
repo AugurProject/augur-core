@@ -8,7 +8,7 @@ def createReportingWindow(controller: address, comparor: address):
     sortedLinkedList = create('../libraries/delegator.se')
     sortedLinkedList.setup(controller, 'sortedLinkedList')
     sortedLinkedList.initialize(comparor)
-    self.sortedLinkedList = sortedLinkedList
+    self.lastSortedLinkedList = sortedLinkedList
     return(sortedLinkedList)
 
 def getLastSortedLinkedList():
