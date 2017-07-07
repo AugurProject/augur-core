@@ -1,0 +1,164 @@
+data comparor
+data collection[](exists, prev, next)
+data count
+data head
+data tail
+data owner
+data initialized
+
+inset('../macros/require.sem')
+
+extern comparisonProviderInterface: [compare:[int256, int256]:int256]
+
+def init():
+    self.owner = msg.sender
+
+def any():
+    require(msg.sender == self.owner or msg.sender == self)
+
+def initialize(comparor: address):
+    require(not self.initialized)
+    self.initialized = 1
+    self.comparor = comparor
+    return(1)
+
+def add(item: int256, hints: arr):
+    if (self.contains(item)):
+        return(0)
+
+    # If this is the only node it is the head / tail and we can early out
+    if (self.count == 0):
+        self.head = item
+        self.tail = item
+        self.collection[item].exists = 1
+        self.count += 1
+        return(1)
+
+    # By default we begin the insertion search at the head
+    nodeValue = self.head
+
+    # If hints are provided (and valid) we will use the first still present value to begin the search
+    numHints = len(hints)
+    hintIndex = 0
+    while(hintIndex < numHints and node == self.head):
+        hint = hints[hintIndex]
+        if (self.contains(hint) and self.comparor.compare(hint, item) == 1):
+            nodeValue = hint
+
+    # Do traversal to find the insertion point
+    while(self.hasPrev(nodeValue) and self.comparor.compare(nodeValue, item) == 1):
+        nodeValue = self.getPrev(nodeValue)
+    
+    # Actually insert the node
+    if (self.comparor.compare(nodeValue, item) == 1):
+        self.collection[nodeValue].prev = item
+        self.collection[item].next = nodeValue
+        self.tail = item
+    else:
+        if (self.hasNext(nodeValue)):
+            self.collection[self.getNext(nodeValue)].prev = item
+            self.collection[item].next = self.getNext(nodeValue)
+        else:
+            self.head = item
+        self.collection[item].prev = nodeValue
+        self.collection[nodeValue].next = item
+    
+    # Do basic inclusion in the actual set
+    self.collection[item].exists = 1
+    self.count += 1
+
+    self.assertInvariants()
+    return(1)
+
+def remove(item: int256):
+    if (!self.contains(item)):
+        return(0)
+
+    hasPrev = self.hasPrev(item)
+    hasNext = self.hasNext(item)
+
+    if (hasPrev):
+        if (hasNext):
+            self.collection[self.collection[item].prev].next = self.getNext(item)
+        else:
+            self.head = self.getPrev(item)
+
+    if (hasNext):
+        if (hasPrev):
+            self.collection[self.collection[item].next].prev = self.getPrev(item)
+        else:
+            self.tail = self.getNext(item)
+
+    self.collection[item].exists = 0
+
+    self.count -= 1
+    self.assertInvariants()
+    return(1)
+
+def getHead():
+    self.assertNotEmpty()
+    return(self.head)
+
+def getTail():
+    self.assertNotEmpty()
+    return(self.tail)
+
+def getNext(item: int256):
+    self.assertContains(item)
+    self.assertHasNext(item)
+    return(self.collection[item].next)
+
+def getPrev(item: int256):
+    self.assertContains(item)
+    self.assertHasPrev(item)
+    return(self.collection[item].prev)
+
+def hasNext(item: int256):
+    self.assertContains(item)
+    return(self.collection[self.collection[item].next].exists)
+
+def hasPrev(item: int256):
+    self.assertContains(item)
+    return(self.collection[self.collection[item].prev].exists)
+
+def contains(item: int256):
+    return(self.collection[item].exists)
+
+def count():
+    return(self.count)
+
+def isEmpty():
+    return(self.count == 0)
+
+def assertContains(item: int256):
+    if (!self.contains(item)):
+        ~invalid()
+
+def assertNotEmpty():
+    if (self.count == 0):
+        ~invalid()
+
+def assertHasPrev(item: int256):
+    if (!self.hasPrev(item)):
+        ~invalid()
+
+def assertHasNext(item: int256):
+    if (!self.hasNext(item)):
+        ~invalid()
+
+def assertInvariants():
+    if (not self.head):
+        if (self.tail):
+            ~invalid()
+        if (self.count):
+            ~invalid()
+    if (not self.tail):
+        if (self.head):
+            ~invalid()
+        if (self.count):
+            ~invalid()
+    if (not self.count):
+        if (self.head):
+            ~invalid()
+        if (self.tail):
+            ~invalid()

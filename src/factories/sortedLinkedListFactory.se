@@ -1,0 +1,15 @@
+extern delegateExtern: [setup:[int256,int256]:_]
+extern sortedLinkedList: [initialize:[address]:_]
+
+# workaround for https://github.com/ethereum/serpent/issues/119
+data lastSortedLinkedList
+
+def createReportingWindow(controller: address, comparor: address):
+    sortedLinkedList = create('../libraries/delegator.se')
+    sortedLinkedList.setup(controller, 'sortedLinkedList')
+    sortedLinkedList.initialize(comparor)
+    self.sortedLinkedList = sortedLinkedList
+    return(sortedLinkedList)
+
+def getLastReportingWindow():
+    return(self.lastSortedLinkedList)
