@@ -23,6 +23,8 @@ def initialize(comparor: address):
     return(1)
 
 def add(item: int256, hints: arr):
+    require(item != 0)
+
     if (self.contains(item)):
         self.remove(item)
 
@@ -90,12 +92,14 @@ def remove(item: int256):
             self.collection[self.collection[item].prev].next = self.getNext(item)
         else:
             self.head = self.getPrev(item)
+            self.collection[self.getPrev(item)].next = 0
 
     if (hasNext):
         if (hasPrev):
             self.collection[self.collection[item].next].prev = self.getPrev(item)
         else:
             self.tail = self.getNext(item)
+            self.collection[self.getNext(item)].prev = 0
 
     self.collection[item].exists = 0
 

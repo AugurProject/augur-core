@@ -39,6 +39,14 @@ def test_sortedLinkedListInitialState(sortedLinkedListContractsFixture):
     with raises(TransactionFailed):
         assert sortedLinkedList.getTail()
 
+def test_sortedLinkedListRequireNotZero(sortedLinkedListContractsFixture):
+
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+
+    # we don't allow adding 0
+    with raises(TransactionFailed):
+        sortedLinkedList.add(0)
+
 def test_sortedLinkedListAddOneItem(sortedLinkedListContractsFixture):
 
     sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
