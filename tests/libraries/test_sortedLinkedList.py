@@ -204,6 +204,41 @@ def test_sortedLinkedListHints(sortedLinkedListContractsFixture):
     assert sortedLinkedList.count() == 4
     assert sortedLinkedList.getNext(36) == 37
 
+def test_sortedLinkedListMultipleHints(sortedLinkedListContractsFixture):
+
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+
+    # Add some elements to start
+    assert sortedLinkedList.add(3)
+    assert sortedLinkedList.add(5)
+    assert sortedLinkedList.add(10)
+
+    # We can provide multiple hints
+    assert sortedLinkedList.add(2, [11,5,1])
+
+def test_test_sortedLinkedListTryFunctions(sortedLinkedListContractsFixture):
+
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+
+    # Add some elements to start
+    assert sortedLinkedList.add(3)
+    assert sortedLinkedList.add(5)
+    assert sortedLinkedList.add(10)
+
+    # We provide "try" helper functions to safely get a prev or next node
+    assert sortedLinkedList.tryGetNext(5) == 10
+    assert sortedLinkedList.tryGetPrev(5) == 3
+
+    # They return 0 when no requested node exists
+    assert sortedLinkedList.tryGetNext(10) == 0
+    assert sortedLinkedList.tryGetPrev(3) == 0
+
+    # They raise an exception when we make an invalid request
+    with raises(TransactionFailed):
+        sortedLinkedList.tryGetNext(11)
+    with raises(TransactionFailed):
+        sortedLinkedList.tryGetPrev(11)
+
 def doOrderValidation(sortedLinkedList):
     # Ordered backward
     val = sortedLinkedList.getHead()
