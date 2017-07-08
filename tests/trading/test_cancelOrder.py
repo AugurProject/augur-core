@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
-from ContractsFixture import ContractsFixture
 from ethereum import tester
 from ethereum.tester import TransactionFailed
 from iocapture import capture
 from pytest import raises, fixture
-from utils import parseCapturedLogs, bytesToLong, fix, unfix
+from utils import bytesToLong, fix, unfix
 
 tester.gas_limit = long(4.2 * 10**6)
 

@@ -6,14 +6,6 @@ from os import path
 from pytest import raises, fixture
 from utils import fix
 
-SERPENT_TEST_HELPERS = path.join(path.dirname(path.realpath(__file__)), "serpent_test_helpers")
-
-def nearly_equal(a, b, sig_fig=8):
-    return(a == b or int(a * 10**sig_fig) == int(b * 10**sig_fig))
-
-def isclose(a, b, rel_tol=1e-10, abs_tol=0.0):
-    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
-
 def test_assertNoValue(block, assertNoValue):
     balanceBefore = 0
     balanceAfter = 0
@@ -95,6 +87,8 @@ def state():
 @fixture(scope="session")
 def block(state):
     return state.block
+
+SERPENT_TEST_HELPERS = path.join(path.dirname(path.realpath(__file__)), "serpent_test_helpers")
 
 @fixture(scope="session")
 def assertNoValue(state):
