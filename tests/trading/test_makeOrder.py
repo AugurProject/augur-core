@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from ethereum import tester
-from ethereum.tester import TransactionFailed
+from ethereum.tools import tester
+from ethereum.tools.tester import TransactionFailed
 from iocapture import capture
 from pytest import raises, fixture
 from utils import bytesToLong, longToHexString, bytesToHexString, fix, unfix, captureFilteredLogs
@@ -37,7 +37,7 @@ def test_initialize_failure(contractsFixture):
     with raises(TransactionFailed):
         makeOrder.initialize(tester.a0, sender = tester.k1)
     with raises(TransactionFailed):
-        # NOTE: must be last since it changes contract state
+        # NOTE: must be last since it changes contract chain
         makeOrder.initialize(tester.a0)
         makeOrder.initialize(tester.a1)
 
@@ -107,7 +107,7 @@ def test_publicMakeOrder_bid2(contractsFixture):
     assert cash.approve(makeOrder.address, fix('10'), sender = tester.k1) == 1, "Approve makeOrder contract to spend cash"
     makerInitialCash = cash.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
-    captureFilteredLogs(contractsFixture.state, orders, logs)
+    captureFilteredLogs(contractsFixture.chain, orders, logs)
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcome, 0, 0, tradeGroupID, sender=tester.k1)
     assert orderID != 0, "Order ID should be non-zero"
     order = orders.getOrder(orderID, orderType, market.address, outcome)
@@ -214,7 +214,7 @@ def test_ask_withPartialShares(contractsFixture):
     # create ASK order for 2 shares with a mix of shares and cash
     assert yesShareToken.approve(makeOrder.address, fix('1.2'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('0.32'), sender = tester.k1)
-    captureFilteredLogs(contractsFixture.state, orders, logs)
+    captureFilteredLogs(contractsFixture.chain, orders, logs)
     orderID = makeOrder.publicMakeOrder(ASK, fix('2'), fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == fix('0')

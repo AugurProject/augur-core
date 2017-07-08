@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from ethereum import tester
-from ethereum.tester import TransactionFailed
+from ethereum.tools import tester
+from ethereum.tools.tester import TransactionFailed
 import numpy as np
 from pytest import fixture, mark, lazy_fixture, raises
 from utils import fix, bytesToLong, bytesToHexString

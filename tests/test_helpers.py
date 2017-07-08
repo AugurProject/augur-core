@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from ethereum import tester
-from ethereum.tester import TransactionFailed
+from ethereum.tools import tester
+from ethereum.tools.tester import TransactionFailed
 from os import path
 from pytest import raises, fixture
 from utils import fix
@@ -81,19 +81,19 @@ def test_fxp_divide(floatTest):
         floatTest.fxpDivide(2**250, fix('-10'))
 
 @fixture(scope="session")
-def state():
-    return tester.state()
+def chain():
+    return tester.chain()
 
 @fixture(scope="session")
-def block(state):
-    return state.block
+def block(chain):
+    return chain.block
 
 SERPENT_TEST_HELPERS = path.join(path.dirname(path.realpath(__file__)), "serpent_test_helpers")
 
 @fixture(scope="session")
-def assertNoValue(state):
-    return state.abi_contract(path.join(SERPENT_TEST_HELPERS, "assertNoValue.se"))
+def assertNoValue(chain):
+    return chain.contract(path.join(SERPENT_TEST_HELPERS, "assertNoValue.se"), language="serpent")
 
 @fixture(scope="session")
-def floatTest(state):
-    return state.abi_contract(path.join(SERPENT_TEST_HELPERS, "safeMath.se"))
+def floatTest(chain):
+    return chain.contract(path.join(SERPENT_TEST_HELPERS, "safeMath.se"), language="serpent")

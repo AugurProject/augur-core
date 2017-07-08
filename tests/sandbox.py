@@ -1,4 +1,4 @@
-from ethereum import tester
+from ethereum.tools import tester
 import os
 import serpent
 
@@ -17,9 +17,9 @@ with open("garbage.se", "w") as file:
     file.write(library)
 
 try:
-    state = tester.state()
-    state.block.number += 2000000
-    contract = state.abi_contract(code)
+    chain = tester.chain()
+    chain.block.number += 2000000
+    contract = chain.contract(code, language="serpent")
     contract.foo("hello goodbye")
 finally:
     os.remove("garbage.se")

@@ -1,4 +1,4 @@
-from ethereum import tester
+from ethereum.tools import tester
 import numpy as np
 from os import getenv
 from pytest import fixture, mark, lazy_fixture

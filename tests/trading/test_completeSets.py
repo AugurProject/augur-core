@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from datetime import timedelta
-from ethereum import tester
-from ethereum.tester import TransactionFailed
+from ethereum.tools import tester
+from ethereum.tools.tester import TransactionFailed
 from iocapture import capture
 from pytest import raises
 from utils import bytesToHexString, longToHexString, bytesToLong, fix, captureFilteredLogs
@@ -30,7 +30,7 @@ def test_publicBuyCompleteSets(contractsFixture):
 
     cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender=tester.k1)
-    captureFilteredLogs(contractsFixture.state, orders, logs)
+    captureFilteredLogs(contractsFixture.chain, orders, logs)
     assert completeSets.publicBuyCompleteSets(market.address, fix('10'), sender=tester.k1)
 
     assert logs == [
@@ -98,7 +98,7 @@ def test_publicSellCompleteSets(contractsFixture):
     cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender = tester.k1)
     completeSets.publicBuyCompleteSets(market.address, fix('10'), sender = tester.k1)
-    captureFilteredLogs(contractsFixture.state, orders, logs)
+    captureFilteredLogs(contractsFixture.chain, orders, logs)
     result = completeSets.publicSellCompleteSets(market.address, fix('9'), sender=tester.k1)
 
     assert logs == [
@@ -139,7 +139,7 @@ def test_exceptions(contractsFixture):
         completeSets.sellCompleteSets(tester.a1, market.address, fix('10'), sender=tester.k1)
 
     # sellCompleteSets exceptions
-    contractsFixture.state.mine(1)
+    contractsFixture.chain.mine(1)
     with raises(TransactionFailed):
         completeSets.publicSellCompleteSets(market.address, fix('-10'), sender=tester.k1)
     with raises(TransactionFailed):

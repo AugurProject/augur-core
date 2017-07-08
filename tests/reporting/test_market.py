@@ -1,6 +1,6 @@
 from datetime import timedelta
-from ethereum import tester
-from ethereum.tester import TransactionFailed
+from ethereum.tools import tester
+from ethereum.tools.tester import TransactionFailed
 from pytest import raises
 
 tester.gas_limit = long(4.2 * 10**6)

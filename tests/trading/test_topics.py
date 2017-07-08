@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from ethereum import tester
+from ethereum.tools import tester
 from utils import fix, longToHexString, bytesToLong
 
 NO = 0

@@ -3,8 +3,8 @@
 # Test the functions in src/functions/controller.se
 # Uses tests/controller_test.se as a helper (to set the controller, etc.)
 
-from ethereum import tester
-from ethereum.tester import TransactionFailed
+from ethereum.tools import tester
+from ethereum.tools.tester import TransactionFailed
 from os import path
 from pytest import raises, fixture
 from utils import bytesToLong
@@ -78,13 +78,13 @@ def test_switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed_failures(contro
 class Fixture:
     def __init__(self):
         THIS_FILE_DIRECTORY_PATH = path.dirname(path.realpath(__file__))
-        self.state = tester.state()
-        self.controller = self.state.abi_contract(path.join(THIS_FILE_DIRECTORY_PATH, "../src/controller.se"))
-        self.decentralizedController = self.state.abi_contract(path.join(THIS_FILE_DIRECTORY_PATH, "../src/controller.se"))
-        self.controllerUser = self.state.abi_contract(path.join(THIS_FILE_DIRECTORY_PATH, "serpent_test_helpers/controllerUser.se"))
+        self.chain = tester.Chain()
+        self.controller = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "../src/controller.se"), language="serpent")
+        self.decentralizedController = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "../src/controller.se"), language="serpent")
+        self.controllerUser = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "serpent_test_helpers/controllerUser.se"), language="serpent")
         self.decentralizedController.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k0)
-        self.state.mine(1)
-        self.snapshot = self.state.snapshot()
+        self.chain.mine(1)
+        self.snapshot = self.chain.snapshot()
 
 @fixture(scope="session")
 def sessionFixture():
@@ -92,7 +92,7 @@ def sessionFixture():
 
 @fixture
 def localFixture(sessionFixture):
-    sessionFixture.state.revert(sessionFixture.snapshot)
+    sessionFixture.chain.revert(sessionFixture.snapshot)
     return sessionFixture
 
 @fixture

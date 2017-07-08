@@ -1,6 +1,6 @@
-from ethereum import tester
+from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
-from ethereum.tester import ABIContract
+from ethereum.tools.tester import ABIContract
 import json
 import os
 import serpent
@@ -81,21 +81,21 @@ with open("garbage.se", "w") as file:
     file.write(delegateCode)
 
 try:
-    state = tester.state()
-    state.block.number += 2000000
+    chain = tester.Chain()
+    chain.block.number += 2000000
 
-    controller = state.abi_contract(controllerCode)
-    library = state.abi_contract(libraryCode)
+    controller = chain.contract(controllerCode, language="serpent")
+    library = chain.contract(libraryCode, language="serpent")
     controller.add('library'.ljust(32, '\x00'), library.address)
     print(serpent.mk_signature(factoryCode))
-    factory = state.abi_contract(factoryCode)
+    factory = chain.contract(factoryCode, language="serpent")
 
-    startingGasUsed = state.block.gas_used
+    startingGasUsed = chain.block.gas_used
     factory.createLibrary(controller.address)
     delegateAddress = factory.getLastLibrary()
-    print("Creation Gas Used: " + str(state.block.gas_used - startingGasUsed))
+    print("Creation Gas Used: " + str(chain.block.gas_used - startingGasUsed))
 
-    delegate = ABIContract(state, library.translator, delegateAddress)
+    delegate = ABIContract(chain, library.translator, delegateAddress)
 
     print("Starting Apple: " + str(delegate.getApple()))
     delegate.setNumber(1, 3, 5, 7, 11)

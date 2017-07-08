@@ -1,4 +1,4 @@
-from ethereum import tester
+from ethereum.tools import tester
 
 def test_legacyRep(contractsFixture):
     legacyRep = contractsFixture.contracts['legacyRepContract']
@@ -6,7 +6,7 @@ def test_legacyRep(contractsFixture):
     accounts = [tester.a0, tester.a1, tester.a2, tester.a3, tester.a4, tester.a5]
     legacyRep.setSaleDistribution(accounts, amounts)
     legacyRep.setSaleDistribution([tester.a6], [11 * 10**6 * 10**18 - sum(amounts)])
-    contractsFixture.state.block.timestamp += 15000
+    contractsFixture.chain.block.timestamp += 15000
     assert legacyRep.getSeeded()
     assert legacyRep.decimals() == 18
     assert legacyRep.totalSupply() == 11 * 10**6 * 10**18
