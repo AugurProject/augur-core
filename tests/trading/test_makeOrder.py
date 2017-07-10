@@ -7,7 +7,7 @@ from pytest import raises, fixture
 from utils import bytesToLong, longToHexString, bytesToHexString, fix, unfix, captureFilteredLogs
 from uuid import uuid4
 
-tester.gas_limit = long(4.2 * 10**6)
+tester.STARTGAS = long(6.7 * 10**6)
 
 YES = 1
 NO = 0

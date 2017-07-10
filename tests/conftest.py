@@ -98,11 +98,11 @@ class NewContractsFixture:
     ####
 
     def __init__(self):
-        self.chain = tester.Chain()
+        self.chain = tester.Chain(env='metropolis')
         self.contracts = {}
         self.chain.block.number += 2000000
         self.chain.block.timestamp = 1
-        tester.gas_limit = long(5.0 * 10**6)
+        tester.STARTGAS = long(6.7 * 10**6)
       	self.chain.head_state.gas_limit = 2**128
 	self.controller = self.upload('../src/controller.se')
         assert self.controller.getOwner() == bytesToLong(tester.a0)

@@ -82,7 +82,7 @@ def test_fxp_divide(floatTest):
 
 @fixture(scope="session")
 def chain():
-    return tester.Chain()
+    return tester.Chain(env='metropolis')
 
 @fixture(scope="session")
 def block(chain):

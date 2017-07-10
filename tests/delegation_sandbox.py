@@ -81,7 +81,7 @@ with open("garbage.se", "w") as file:
     file.write(delegateCode)
 
 try:
-    chain = tester.Chain()
+    chain = tester.Chain(env='metropolis')
     chain.block.number += 2000000
 
     controller = chain.contract(controllerCode, language="serpent")

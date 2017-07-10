@@ -6,7 +6,7 @@ from iocapture import capture
 from pytest import raises, fixture
 from utils import bytesToLong, fix, unfix
 
-tester.gas_limit = long(4.2 * 10**6)
+tester.STARTGAS = long(6.7 * 10**6)
 
 BID = 1
 ASK = 2

@@ -17,7 +17,7 @@ with open("garbage.se", "w") as file:
     file.write(library)
 
 try:
-    chain = tester.chain()
+    chain = tester.Chain(env='metropolis')
     chain.block.number += 2000000
     contract = chain.contract(code, language="serpent")
     contract.foo("hello goodbye")

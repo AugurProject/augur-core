@@ -78,7 +78,7 @@ def test_switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed_failures(contro
 class Fixture:
     def __init__(self):
         THIS_FILE_DIRECTORY_PATH = path.dirname(path.realpath(__file__))
-        self.chain = tester.Chain()
+        self.chain = tester.Chain(env='metropolis')
         self.controller = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "../src/controller.se"), language="serpent")
         self.decentralizedController = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "../src/controller.se"), language="serpent")
         self.controllerUser = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "serpent_test_helpers/controllerUser.se"), language="serpent")

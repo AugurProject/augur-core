@@ -3,7 +3,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
 
-tester.gas_limit = long(4.2 * 10**6)
+tester.STARTGAS = long(6.7 * 10**6)
 
 def test_market_creation(contractsFixture):
     branch = contractsFixture.branch

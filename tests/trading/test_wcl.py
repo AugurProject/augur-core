@@ -5,7 +5,7 @@ from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture, mark, lazy_fixture
 from utils import bytesToLong, longToHexString, bytesToHexString, fix, unfix
 
-tester.gas_limit = long(4.2 * 10**6)
+tester.STARTGAS = long(6.7 * 10**6)
 
 YES = 1
 NO = 0

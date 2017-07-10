@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from datetime import timedelta
 
-tester.gas_limit = long(4.2 * 10**6)
+tester.STARTGAS = long(6.7 * 10**6)
 
 def test_reporting(contractsFixture):
     # seed legacy rep contract
