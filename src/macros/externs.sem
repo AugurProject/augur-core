@@ -6,6 +6,7 @@ extern reportingWindowFactoryExtern: [createReportingWindow:[address,address,int
 extern reputationTokenFactoryExtern: [createReputationToken:[address,address]:int256, getLastReputationToken:[]:int256]
 extern shareTokenFactoryExtern: [createShareToken:[address,address,int256]:int256, getLastShareToken:[]:int256]
 extern topicsFactoryExtern: [createTopics:[address]:int256, getLastTopics:[]:int256]
+extern sortedLinkedListFactoryExtern: [createSortedLinkedList:[address]:int256, getLastSortedLinkedList:[]:int256]
 extern delegatorExtern: [setup:[int256,int256]:_]
 extern iterableMapExtern: [add:[int256,int256]:_, addOrUpdate:[int256,int256]:_, contains:[int256]:int256, count:[]:int256, getByKey:[int256]:int256, getByKeyOrZero:[int256]:int256, getByOffset:[int256]:int256, update:[int256,int256]:_]
 extern mapExtern: [addMapItem:[int256,int256]:int256, contains:[int256]:int256, count:[]:int256, getValue:[int256]:int256, getValueOrZero:[int256]:int256, remove:[int256]:int256]
@@ -41,3 +42,4 @@ extern registerExtern: [register:[]:int256, setController:[address]:int256, suic
 extern reputationFaucetExtern: [reputationFaucet:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 extern controllerExtern: [addToWhitelist:[int256]:int256, assertIsWhitelisted:[int256]:int256, assertOnlySpecifiedCaller:[int256,int256]:int256, emergencyStop:[]:int256, getOwner:[]:int256, lookup:[int256]:int256, onlyInEmergency:[]:int256, release:[]:int256, removeFromWhitelist:[int256]:int256, setValue:[int256,int256]:int256, stopInEmergency:[]:int256, suicide:[int256,int256]:int256, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:int256, transferOwnership:[int256]:int256, updateController:[int256,int256]:int256]
 extern mutexExtern: [acquire:[]:int256, initialize:[address]:_, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
+extern sortedLinkedListExtern: [initialize:[address]:int256, add:[int256,arr]:int256, remove:[int256]:int256, getHead:[]:int256, getTail:[]:int256, getNext:[int256]:int256, getPrev:[int256]:int256, hasNext:[int256]:int256, hasPrev:[int256]:int256, contains:[int256]:int256, count:[]:int256, isEmpty:[]:int256]
