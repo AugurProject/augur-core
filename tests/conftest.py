@@ -102,8 +102,9 @@ class NewContractsFixture:
         self.contracts = {}
         self.chain.block.number += 2000000
         self.chain.block.timestamp = 1
-        tester.gas_limit = long(4.7 * 10**6)
-        self.controller = self.upload('../src/controller.se')
+        tester.gas_limit = long(5.0 * 10**6)
+      	self.chain.head_state.gas_limit = 2**128
+	self.controller = self.upload('../src/controller.se')
         assert self.controller.getOwner() == bytesToLong(tester.a0)
         self.uploadAllContracts()
         self.whitelistTradingContracts()
@@ -131,10 +132,13 @@ class NewContractsFixture:
         if lookupKey not in NewContractsFixture.signatures:
             NewContractsFixture.signatures[lookupKey] = NewContractsFixture.generateSignature(resolvedPath)
         signature = NewContractsFixture.signatures[lookupKey]
-        contractAddress = long(hexlify(self.chain.evm(compiledCode)), 16)
+        contractAddress = long(hexlify(self.chain.contract(compiledCode)), 16)
+	#print(contractAddress)
+        #contractAddress = long(hexlify(self.chain.evm(compiledCode)), 16)
         contract = ABIContract(self.chain, ContractTranslator(signature), contractAddress)
         self.contracts[lookupKey] = contract
-        return(contract)
+       	print(self.chain.chain.state.gas_used)
+	return(contract)
 
     def applySignature(self, signatureName, address):
         assert address
