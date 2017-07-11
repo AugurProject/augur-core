@@ -3,6 +3,7 @@ from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
 from ethereum.tools.tester import ABIContract
+from ethereum import utils as u
 import io
 import json
 from os import path, walk, makedirs, listdir
@@ -100,11 +101,8 @@ class NewContractsFixture:
     def __init__(self):
         self.chain = tester.Chain(env='metropolis')
         self.contracts = {}
-        self.chain.block.number += 2000000
-        self.chain.block.timestamp = 1
-        tester.STARTGAS = long(6.7 * 10**6)
       	self.chain.head_state.gas_limit = 2**128
-	self.controller = self.upload('../src/controller.se')
+      	self.controller = self.upload('../src/controller.se')
         assert self.controller.getOwner() == bytesToLong(tester.a0)
         self.uploadAllContracts()
         self.whitelistTradingContracts()
@@ -132,9 +130,8 @@ class NewContractsFixture:
         if lookupKey not in NewContractsFixture.signatures:
             NewContractsFixture.signatures[lookupKey] = NewContractsFixture.generateSignature(resolvedPath)
         signature = NewContractsFixture.signatures[lookupKey]
-        contractAddress = long(hexlify(self.chain.contract(compiledCode)), 16)
-	#print(contractAddress)
-        #contractAddress = long(hexlify(self.chain.evm(compiledCode)), 16)
+        print lookupKey
+        contractAddress = long(hexlify(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6))), 16)
         contract = ABIContract(self.chain, ContractTranslator(signature), contractAddress)
         self.contracts[lookupKey] = contract
        	print(self.chain.chain.state.gas_used)
