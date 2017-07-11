@@ -100,7 +100,7 @@ class NewContractsFixture:
 
     def __init__(self):
         self.chain = tester.Chain(env='metropolis')
-        self.contracts = {}
+	self.contracts = {}
       	self.chain.head_state.gas_limit = 2**128
       	self.controller = self.upload('../src/controller.se')
         assert self.controller.getOwner() == bytesToLong(tester.a0)

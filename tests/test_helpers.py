@@ -2,6 +2,7 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
+from ethereum.exceptions import InsufficientBalance
 from os import path
 from pytest import raises, fixture
 from utils import fix
@@ -9,13 +10,17 @@ from utils import fix
 def test_assertNoValue(block, assertNoValue):
     balanceBefore = 0
     balanceAfter = 0
-    balanceBefore = block.get_balance(tester.a2)
-    startingGasUsed = block.gas_used
-    assertNoValue.assertNoValue(sender=tester.k2)
-    with raises(TransactionFailed):
-        assertNoValue.assertNoValue(value=500*10**18, sender=tester.k2)
-    gasSpent = block.gas_used - startingGasUsed
-    balanceAfter = block.get_balance(tester.a2)
+    chain = assertNoValue[0]   
+
+    balanceBefore = chain.head_state.get_balance(tester.a2)
+    startingGasUsed = chain.head_state.gas_used 
+
+    (assertNoValue[1].assertNoValue)(sender=tester.k2)
+    with raises(InsufficientBalance):
+        (assertNoValue[1].assertNoValue)(value=500*10**18, sender=tester.k2)
+
+    gasSpent = chain.head_state.gas_used - startingGasUsed
+    balanceAfter = chain.head_state.get_balance(tester.a2)
     assert balanceBefore - gasSpent == balanceAfter
 
 def test_add(floatTest):
@@ -82,7 +87,9 @@ def test_fxp_divide(floatTest):
 
 @fixture(scope="session")
 def chain():
-    return tester.Chain(env='metropolis')
+    chain = tester.Chain(env='metropolis')
+    chain.head_state.gas_limit = 2**128
+    return chain 
 
 @fixture(scope="session")
 def block(chain):
@@ -92,8 +99,8 @@ SERPENT_TEST_HELPERS = path.join(path.dirname(path.realpath(__file__)), "serpent
 
 @fixture(scope="session")
 def assertNoValue(chain):
-    return chain.contract(path.join(SERPENT_TEST_HELPERS, "assertNoValue.se"), language="serpent")
+    return chain, chain.contract(path.join(SERPENT_TEST_HELPERS, "assertNoValue.se"), language="serpent", startgas=long(6.7 * 10**6))
 
 @fixture(scope="session")
 def floatTest(chain):
-    return chain.contract(path.join(SERPENT_TEST_HELPERS, "safeMath.se"), language="serpent")
+    return chain.contract(path.join(SERPENT_TEST_HELPERS, "safeMath.se"), language="serpent", startgas=long(6.7 * 10**6))
