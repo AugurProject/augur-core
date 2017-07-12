@@ -21,9 +21,9 @@ def test_assertNoValue(block, assertNoValue):
     balanceBefore = chain.head_state.get_balance(tester.a2)
     startingGasUsed = chain.head_state.gas_used
 
-    (assertNoValue[1].assertNoValue)(sender=tester.k2)
+    assertNoValue[1].assertNoValue(sender=tester.k2)
     with raises(InsufficientBalance):
-        (assertNoValue[1].assertNoValue)(value=500*10**18, sender=tester.k2)
+        assertNoValue[1].assertNoValue(value=500*10**18, sender=tester.k2)
 
     gasSpent = chain.head_state.gas_used - startingGasUsed
     balanceAfter = chain.head_state.get_balance(tester.a2)
