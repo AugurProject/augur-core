@@ -7,7 +7,7 @@
 bitcoin==1.1.42           # via ethereum
 cffi==1.10.0              # via secp256k1
 ethereum-serpent-augur-temp==2.0.2
-ethereum==2.0.4
+ethereum-augur-temp
 iocapture==0.1.2
 numpy==1.13.0
 pbkdf2==1.3               # via ethereum
