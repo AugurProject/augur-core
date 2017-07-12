@@ -116,6 +116,40 @@ def test_sortedLinkedListAddTwoItems(sortedLinkedListContractsFixture):
     # Validate order
     doOrderValidation(sortedLinkedList)
 
+def test_sortedLinkedListReAdding(sortedLinkedListContractsFixture):
+
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+
+    # We add multiple items
+    assert sortedLinkedList.addSortedLinkedListItem(42)
+    assert sortedLinkedList.addSortedLinkedListItem(43)
+    assert sortedLinkedList.addSortedLinkedListItem(44)
+    assert sortedLinkedList.addSortedLinkedListItem(45)
+
+    assert sortedLinkedList.count() == 4
+
+    # Validate order
+    doOrderValidation(sortedLinkedList)
+
+    # Re add the elements
+    assert sortedLinkedList.addSortedLinkedListItem(45)
+    assert sortedLinkedList.addSortedLinkedListItem(44)
+    assert sortedLinkedList.addSortedLinkedListItem(43)
+
+    # Validate order
+    doOrderValidation(sortedLinkedList)
+
+    # We can re-add the head with no errors
+    assert sortedLinkedList.addSortedLinkedListItem(45)
+    assert sortedLinkedList.count() == 4
+
+    # We can re-add the head with no errors
+    assert sortedLinkedList.addSortedLinkedListItem(45)
+    assert sortedLinkedList.count() == 4
+
+    # Validate order
+    doOrderValidation(sortedLinkedList)
+
 def test_sortedLinkedListAddMultipleItems(sortedLinkedListContractsFixture):
 
     sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']

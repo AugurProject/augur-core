@@ -5,13 +5,6 @@ from ethereum.tester import TransactionFailed
 from pytest import fixture, mark, lazy_fixture, raises
 from utils import bytesToHexString, longToHexString, bytesToLong, fix, captureFilteredLogs
 
-
-YES = 1
-NO = 0
-
-BUY = 1
-SELL = 2
-
 def test_market_creation(contractsFixture):
     branch = contractsFixture.branch
     cash = contractsFixture.cash
@@ -21,33 +14,32 @@ def test_market_creation(contractsFixture):
     market1 = contractsFixture.binaryMarket
     scalarMarket = contractsFixture.scalarMarket
     categoricalMarket = contractsFixture.categoricalMarket
-
-    yesShareToken1 = contractsFixture.applySignature('shareToken', market1.getShareToken(YES))
-    noShareToken1 = contractsFixture.applySignature('shareToken', market1.getShareToken(NO))
-
+    
     reportingWindow = contractsFixture.applySignature('reportingWindow', market1.getReportingWindow())
-
     market2 = contractsFixture.createReasonableBinaryMarket(branch, cash)
-    yesShareToken2 = contractsFixture.applySignature('shareToken', market2.getShareToken(YES))
-    noShareToken2 = contractsFixture.applySignature('shareToken', market2.getShareToken(NO))
 
     assert reportingWindow.getNumMarkets() == 4
 
     AssertOrder(market1, categoricalMarket, scalarMarket, market2, reportingWindow=reportingWindow)
 
-    assert not cash.balanceOf(tester.a1)
-    assert not cash.balanceOf(market2.address)
-    assert not yesShareToken2.totalSupply()
-    assert not noShareToken2.totalSupply()
-
     cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender=tester.k1)
-    assert completeSets.publicBuyCompleteSets(market2.address, fix('1000'), sender=tester.k1)
 
-    assert yesShareToken2.totalSupply()
-    assert noShareToken2.totalSupply()
-
+    # We buy 10 complete sets in the new binary market, causing it to move to the top of the list
+    assert completeSets.publicBuyCompleteSets(market2.address, fix('10'), sender=tester.k1)
     AssertOrder(market2, market1, categoricalMarket, scalarMarket, reportingWindow=reportingWindow)
+
+    # Buying 5 complete sets of the categorical market will move it ahead of market1 into second
+    assert completeSets.publicBuyCompleteSets(categoricalMarket.address, fix('5'), sender=tester.k1)
+    AssertOrder(market2, categoricalMarket, market1, scalarMarket, reportingWindow=reportingWindow)
+
+    # Buying 3 complete sets of the first binary market will not change its order
+    assert completeSets.publicBuyCompleteSets(market1.address, fix('3'), sender=tester.k1)
+    AssertOrder(market2, categoricalMarket, market1, scalarMarket, reportingWindow=reportingWindow)
+
+    # Selling 8 complete sets of the new binary market will move it into third place
+    assert completeSets.publicSellCompleteSets(market2.address, fix('8'), sender=tester.k1)
+    AssertOrder(categoricalMarket, market1, market2, scalarMarket, reportingWindow=reportingWindow)
 
 def AssertOrder(*args, **kwargs):
     reportingWindow = kwargs["reportingWindow"]
