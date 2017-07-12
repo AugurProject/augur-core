@@ -17,10 +17,12 @@ def add(key, value):
     self.itemsMap[key].hasValue = 1
     self.itemsMap[key].value = value
     self.numberOfItems += 1
+    return(1)
 
 def update(key, value):
     require(self.contains(key))
     self.itemsMap[key].value = value
+    return(1)
 
 def addOrUpdate(key, value):
     if not self.contains(key):

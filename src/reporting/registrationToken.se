@@ -27,6 +27,7 @@ def initialize(reportingWindow: address):
     require(not self.initialized)
     self.initialized = 1
     self.reportingWindow = reportingWindow
+    return(1)
 
 def register():
     # do not allow for registration for reporting in the current window or past windows
@@ -37,6 +38,7 @@ def register():
     self.supply += 1
     if (self.supply > self.peakSupply):
         self.peakSupply = supply
+    return(1)
 
 def redeem():
     require(block.timestamp > self.reportingWindow.getEndTime())
@@ -45,7 +47,7 @@ def redeem():
     self.tokens[msg.sender] -= 1
     self.supply -= 1
     self.getReputationToken().transfer(msg.sender, BOND_AMOUNT)
-
+    return(1)
 
 ####
 #### Getters

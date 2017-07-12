@@ -37,6 +37,7 @@ def initialize(controller: address):
     require(not self.controller)
     require(msg.sender == self.owner)
     self.controller = controller
+    return(1)
 
 # @public
 def publicMakeOrder(type: int256, attoshares: int256, displayPrice: int256, market: address, outcome: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID: int256):

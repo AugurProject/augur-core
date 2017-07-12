@@ -41,6 +41,7 @@ def initialize(branch: address):
     faucetDistribution = 1000000 * WEI_TO_ETH
     self.tokens[self.controller.lookup('reputationFaucet')] += faucetDistribution
     self.supply += faucetDistribution
+    return(1)
 
 # CONSIDER: this would be better if we used approvals and burned tokens on the parent contract instead of pushing tokens manually onto the child contract, but we need to track topMigrationDestination
 def migrateOut(destinationReputationToken: address, reporter: address, attotokens: int256):
@@ -53,19 +54,21 @@ def migrateOut(destinationReputationToken: address, reporter: address, attotoken
     destinationReputationToken.migrateIn(reporter, attotokens)
     if (not self.topMigrationDestination or destinationReputationToken.totalSupply() > self.topMigrationDestination.totalSupply()):
         self.topMigrationDestination = destinationReputationToken
+    return(1)
 
 def migrateIn(reporter: address, attotokens: int256):
     require(1 <= attotokens and attotokens <= 2**254)
     require(msg.sender == self.branch.getParentBranch().getReputationToken())
     self.tokens[reporter] = safeAdd(self.tokens[reporter], attotokens)
     self.supply = safeAdd(self.supply, attotokens)
+    return(1)
 
 def migrateFromLegacyRepContract(branch: address):
     legacyBalance = LEGACY_REP_CONTRACT.balanceOf(msg.sender)
     LEGACY_REP_CONTRACT.transferFrom(msg.sender, 0x0000000000000000000000000000000000000000, legacyBalance)
     self.tokens[msg.sender] = safeAdd(self.tokens[msg.sender], legacyBalance)
     self.supply = safeAdd(self.supply, legacyBalance)
-
+    return(1)
 
 ####
 #### Getters
