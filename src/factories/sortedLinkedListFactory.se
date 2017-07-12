@@ -1,13 +1,13 @@
 extern delegateExtern: [setup:[int256,int256]:_]
-extern sortedLinkedList: [initialize:[address]:_]
+extern sortedLinkedList: [initialize:[address,address]:_]
 
 # workaround for https://github.com/ethereum/serpent/issues/119
 data lastSortedLinkedList
 
-def createSortedLinkedList(controller: address, comparor: address):
+def createSortedLinkedList(controller: address, comparor: address, owner: address):
     sortedLinkedList = create('../libraries/delegator.se')
     sortedLinkedList.setup(controller, 'sortedLinkedList')
-    sortedLinkedList.initialize(comparor)
+    sortedLinkedList.initialize(comparor, owner)
     self.lastSortedLinkedList = sortedLinkedList
     return(sortedLinkedList)
 

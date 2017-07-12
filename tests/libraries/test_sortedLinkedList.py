@@ -45,18 +45,18 @@ def test_sortedLinkedListRequireNotZero(sortedLinkedListContractsFixture):
 
     # we don't allow adding 0
     with raises(TransactionFailed):
-        sortedLinkedList.add(0)
+        sortedLinkedList.addSortedLinkedListItem(0)
 
 def test_sortedLinkedListAddOneItem(sortedLinkedListContractsFixture):
 
     sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
 
     # We can add an item
-    assert sortedLinkedList.add(42)
+    assert sortedLinkedList.addSortedLinkedListItem(42)
     assert sortedLinkedList.count() == 1
 
     # Adding the same item just removes the item and places it again.
-    assert sortedLinkedList.add(42)
+    assert sortedLinkedList.addSortedLinkedListItem(42)
 
     # head and tail are the same node with 1 item
     assert sortedLinkedList.getHead() == 42
@@ -67,11 +67,11 @@ def test_sortedLinkedListMakeEmpty(sortedLinkedListContractsFixture):
     sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
 
     # We can add an item then remove it
-    assert sortedLinkedList.add(42)
-    assert sortedLinkedList.remove(42)
+    assert sortedLinkedList.addSortedLinkedListItem(42)
+    assert sortedLinkedList.removeSortedLinkedListItem(42)
 
     # If we try to remove again we get back a failure value
-    assert sortedLinkedList.remove(42) == 0
+    assert sortedLinkedList.removeSortedLinkedListItem(42) == 0
 
     assert sortedLinkedList.count() == 0
 
@@ -86,8 +86,8 @@ def test_sortedLinkedListAddTwoItems(sortedLinkedListContractsFixture):
     sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
 
     # We can add multiple items
-    assert sortedLinkedList.add(42)
-    assert sortedLinkedList.add(43)
+    assert sortedLinkedList.addSortedLinkedListItem(42)
+    assert sortedLinkedList.addSortedLinkedListItem(43)
 
     assert sortedLinkedList.count() == 2
 
@@ -105,7 +105,7 @@ def test_sortedLinkedListAddTwoItems(sortedLinkedListContractsFixture):
     doOrderValidation(sortedLinkedList)
 
     # We can remove a specific item by value and the other remains
-    assert sortedLinkedList.remove(42)
+    assert sortedLinkedList.removeSortedLinkedListItem(42)
     assert sortedLinkedList.count() == 1
 
     assert sortedLinkedList.getTail() == 43
@@ -119,9 +119,9 @@ def test_sortedLinkedListAddMultipleItems(sortedLinkedListContractsFixture):
     sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
 
     # Let's add many items and confirm the behavior is as expected
-    assert sortedLinkedList.add(42)
-    assert sortedLinkedList.add(41)
-    assert sortedLinkedList.add(43)
+    assert sortedLinkedList.addSortedLinkedListItem(42)
+    assert sortedLinkedList.addSortedLinkedListItem(41)
+    assert sortedLinkedList.addSortedLinkedListItem(43)
 
     assert sortedLinkedList.count() == 3
 
@@ -138,9 +138,9 @@ def test_sortedLinkedListAddMultipleItems(sortedLinkedListContractsFixture):
     assert sortedLinkedList.hasPrev(41) == 0
 
     # Add to the ends and inbetween
-    assert sortedLinkedList.add(45)
-    assert sortedLinkedList.add(35)
-    assert sortedLinkedList.add(40)
+    assert sortedLinkedList.addSortedLinkedListItem(45)
+    assert sortedLinkedList.addSortedLinkedListItem(35)
+    assert sortedLinkedList.addSortedLinkedListItem(40)
 
     # Validate order
     doOrderValidation(sortedLinkedList)
@@ -159,7 +159,7 @@ def test_sortedLinkedListAddMultipleItems(sortedLinkedListContractsFixture):
     doOrderValidation(sortedLinkedList)
 
     # Remove an inbetween
-    assert sortedLinkedList.remove(42)
+    assert sortedLinkedList.removeSortedLinkedListItem(42)
     assert sortedLinkedList.getPrev(43) == 41
     assert sortedLinkedList.getNext(41) == 43
 
@@ -167,14 +167,14 @@ def test_sortedLinkedListAddMultipleItems(sortedLinkedListContractsFixture):
     doOrderValidation(sortedLinkedList)
 
     # Remove ends
-    assert sortedLinkedList.remove(35)
+    assert sortedLinkedList.removeSortedLinkedListItem(35)
     assert sortedLinkedList.getTail() == 40
     assert sortedLinkedList.hasPrev(40) == 0
 
     # Validate order
     doOrderValidation(sortedLinkedList)
 
-    assert sortedLinkedList.remove(45)
+    assert sortedLinkedList.removeSortedLinkedListItem(45)
     assert sortedLinkedList.getHead() == 43
     assert sortedLinkedList.hasNext(43) == 0
 
@@ -186,20 +186,20 @@ def test_sortedLinkedListHints(sortedLinkedListContractsFixture):
     sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
 
     # Add two to start
-    assert sortedLinkedList.add(35)
-    assert sortedLinkedList.add(40)
+    assert sortedLinkedList.addSortedLinkedListItem(35)
+    assert sortedLinkedList.addSortedLinkedListItem(40)
 
     # We can provide hints to optimize node ordering during insertion
     # note that the optimization itself is not tested here. We're merely
     # doing code coverage
-    assert sortedLinkedList.add(36, [40])
+    assert sortedLinkedList.addSortedLinkedListItem(36, [40])
 
     assert sortedLinkedList.count() == 3
     assert sortedLinkedList.getNext(35) == 36
 
     # nothing bad happens if we provide invalid hints
     assert sortedLinkedList.contains(38) == 0
-    assert sortedLinkedList.add(37, [38])
+    assert sortedLinkedList.addSortedLinkedListItem(37, [38])
 
     assert sortedLinkedList.count() == 4
     assert sortedLinkedList.getNext(36) == 37
@@ -209,21 +209,21 @@ def test_sortedLinkedListMultipleHints(sortedLinkedListContractsFixture):
     sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
 
     # Add some elements to start
-    assert sortedLinkedList.add(3)
-    assert sortedLinkedList.add(5)
-    assert sortedLinkedList.add(10)
+    assert sortedLinkedList.addSortedLinkedListItem(3)
+    assert sortedLinkedList.addSortedLinkedListItem(5)
+    assert sortedLinkedList.addSortedLinkedListItem(10)
 
     # We can provide multiple hints
-    assert sortedLinkedList.add(2, [11,5,1])
+    assert sortedLinkedList.addSortedLinkedListItem(2, [11,5,1])
 
 def test_test_sortedLinkedListTryFunctions(sortedLinkedListContractsFixture):
 
     sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
 
     # Add some elements to start
-    assert sortedLinkedList.add(3)
-    assert sortedLinkedList.add(5)
-    assert sortedLinkedList.add(10)
+    assert sortedLinkedList.addSortedLinkedListItem(3)
+    assert sortedLinkedList.addSortedLinkedListItem(5)
+    assert sortedLinkedList.addSortedLinkedListItem(10)
 
     # We provide "try" helper functions to safely get a prev or next node
     assert sortedLinkedList.tryGetNext(5) == 10
