@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 
-from ethereum.tools import tester
+from ethereum.tools import tester as tester
+from ethereum.abi import ContractTranslator
+from ethereum.tools.tester import ABIContract
+from ethereum import utils as u
+from ethereum.config import config_metropolis, Env
 from ethereum.tools.tester import TransactionFailed
 from os import path
 from pytest import raises, fixture
 from utils import fix
+
+config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
 
 def test_assertNoValue(block, assertNoValue):
     balanceBefore = 0
@@ -82,7 +88,7 @@ def test_fxp_divide(floatTest):
 
 @fixture(scope="session")
 def chain():
-    return tester.Chain(env='metropolis')
+    return tester.Chain(env=Env(config=config_metropolis))
 
 @fixture(scope="session")
 def block(chain):

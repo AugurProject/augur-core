@@ -3,11 +3,17 @@
 # Test the functions in src/functions/controller.se
 # Uses tests/controller_test.se as a helper (to set the controller, etc.)
 
-from ethereum.tools import tester
+from ethereum.tools import tester as tester
+from ethereum.abi import ContractTranslator
+from ethereum.tools.tester import ABIContract
+from ethereum import utils as u
+from ethereum.config import config_metropolis, Env
 from ethereum.tools.tester import TransactionFailed
 from os import path
 from pytest import raises, fixture
 from utils import bytesToLong
+
+config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
 
 def test_whitelists(controller):
     assert controller.assertIsWhitelisted(tester.a0, sender = tester.k2)
@@ -78,7 +84,7 @@ def test_switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed_failures(contro
 class Fixture:
     def __init__(self):
         THIS_FILE_DIRECTORY_PATH = path.dirname(path.realpath(__file__))
-        self.chain = tester.Chain(env='metropolis')
+        self.chain = tester.Chain(env=Env(config=config_metropolis))
         self.controller = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "../src/controller.se"), language="serpent")
         self.decentralizedController = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "../src/controller.se"), language="serpent")
         self.controllerUser = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "serpent_test_helpers/controllerUser.se"), language="serpent")

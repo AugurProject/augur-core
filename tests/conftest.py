@@ -1,9 +1,10 @@
 from binascii import hexlify
 from datetime import timedelta
-from ethereum.tools import tester
+from ethereum.tools import tester as tester
 from ethereum.abi import ContractTranslator
 from ethereum.tools.tester import ABIContract
 from ethereum import utils as u
+from ethereum.config import config_metropolis, Env
 import io
 import json
 from os import path, walk, makedirs, listdir
@@ -11,6 +12,8 @@ from pytest import fixture
 import re
 import serpent
 from utils import bytesToLong
+
+config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
 
 # used to resolve relative paths
 BASE_PATH = path.dirname(path.abspath(__file__))
@@ -99,9 +102,8 @@ class NewContractsFixture:
     ####
 
     def __init__(self):
-        self.chain = tester.Chain(env='metropolis')
+        self.chain = tester.Chain(env=Env(config=config_metropolis))
         self.contracts = {}
-      	self.chain.head_state.gas_limit = 2**128
       	self.controller = self.upload('../src/controller.se')
         assert self.controller.getOwner() == bytesToLong(tester.a0)
         self.uploadAllContracts()

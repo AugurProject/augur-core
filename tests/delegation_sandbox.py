@@ -1,9 +1,14 @@
-from ethereum.tools import tester
+from ethereum.tools import tester as tester
 from ethereum.abi import ContractTranslator
 from ethereum.tools.tester import ABIContract
+from ethereum import utils as u
+from ethereum.config import config_metropolis, Env
+
 import json
 import os
 import serpent
+
+config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
 
 controllerCode = """
 data addresses[]
@@ -81,7 +86,7 @@ with open("garbage.se", "w") as file:
     file.write(delegateCode)
 
 try:
-    chain = tester.Chain(env='metropolis')
+    chain = tester.Chain(env=Env(config=config_metropolis))
     chain.block.number += 2000000
 
     controller = chain.contract(controllerCode, language="serpent")
