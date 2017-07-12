@@ -40,6 +40,7 @@ def initialize(parentBranch: address, parentPayoutDistributionHash: int256):
     self.reputationToken = REPUTATION_TOKEN_FACTORY.createReputationToken(self.controller, self)
     self.topics = TOPICS_FACTORY.createTopics(self.controller)
     require(self.reputationToken)
+    return(1)
 
 def fork(shadyMarket: address):
     require(msg.sender == shadyMarket)
@@ -47,7 +48,7 @@ def fork(shadyMarket: address):
     require(self.isContainerForMarket(shadyMarket))
     self.forkingMarket = shadyMarket
     self.forkEndTime = block.timestamp + 60*SECONDS_PER_DAY
-
+    return(1)
 
 ####
 #### Getters
