@@ -325,6 +325,8 @@ def migrateThroughOneFork():
     self.reportingTokens = create('../libraries/map.se')
     return(1)
 
+def updateInReportingWindow():
+    self.reportingWindow.updateMarket()
 
 ####
 #### Helpers

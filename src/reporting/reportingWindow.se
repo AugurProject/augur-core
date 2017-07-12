@@ -7,6 +7,7 @@ data controllerLookupName
 
 macro MARKET_FACTORY: self.controller.lookup('marketFactory')
 macro REGISTRATION_TOKEN_FACTORY: self.controller.lookup('registrationTokenFactory')
+macro SORTED_LINKED_LIST_FACTORY: self.controller.lookup('sortedLinkedListFactory')
 
 inset('../macros/externs.sem')
 inset('../macros/assertPrivateCall.sem')
@@ -34,7 +35,7 @@ def initialize(branch: address, reportingWindowId: int256):
     self.branch = branch
     self.startTime = reportingWindowId * self.branch.getReportingPeriodDurationInSeconds()
     self.registrationToken = REGISTRATION_TOKEN_FACTORY.createRegistrationToken(self.controller, self)
-    self.markets = create('../libraries/set.se')
+    self.markets = SORTED_LINKED_LIST_FACTORY.createSortedLinkedList(self.controller, self, self)
     self.limitedReporterMarkets = create('../libraries/set.se')
     self.allReporterMarkets = create('../libraries/set.se')
     return(1)
@@ -45,7 +46,7 @@ def createNewMarket(endTime: int256, numOutcomes: int256, payoutDenominator: int
     require(block.timestamp < self.startTime)
     require(self.branch.getReportingWindowByMarketEndTime(endTime, automatedReporterAddress != 0))
     newMarket = MARKET_FACTORY.createMarket(self.controller, self, endTime, numOutcomes, payoutDenominator, feePerEthInWei, denominationToken, creator, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = msg.value)
-    self.markets.addSetItem(newMarket)
+    self.markets.addSortedLinkedListItem(newMarket, [])
     self.limitedReporterMarkets.addSetItem(newMarket)
     return(newMarket)
 
@@ -72,11 +73,16 @@ def migrateMarketInFromNibling():
     self.privateAddMarket(market)
     return(1)
 
+def updateMarket():
+    require(self.markets.contains(msg.sender))
+    market = msg.sender
+    self.markets.addSortedLinkedListItem(market, [])
+
 def removeMarket():
     assertNoValue()
     require(self.markets.contains(msg.sender))
     market = msg.sender
-    self.markets.remove(market)
+    self.markets.removeSortedLinkedListItem(market)
     self.limitedReporterMarkets.remove(market)
     self.allReporterMarkets.remove(market)
     return(1)
@@ -110,7 +116,20 @@ def noteReport(market: address, reporter: address, payoutDistributionHash: int25
         # only give credit for limited reporter markets up to the max reporters for that market
         self.privateNoteReport(market, reporter)
     # no credit in all other cases (but user can still report)
+<<<<<<< b64026b4289e577637f36311905ec4fc91f7b49c
     return(1)
+=======
+
+def compare(firstMarket: int256, secondMarket: int256):
+    firstOI = firstMarket.getShareToken(0).totalSupply()
+    secondOI = secondMarket.getShareToken(0).totalSupply()
+
+    if (firstOI > secondOI):
+        return(1)
+    if (firstOI < secondOI):
+        return(-1)
+    return(0)
+>>>>>>> Checkpoint commit. Sorted markets within reporting window based on OI
 
 ####
 #### Getters
@@ -220,6 +239,17 @@ def isDoneReporting(reporter: address):
     assertNoValue()
     return(self.getReportsByReporter(reporter).count() >= self.getTargetReportsPerReporter())
 
+def getNumMarkets():
+    return self.markets.count()
+
+def getMarketsHead():
+    return self.markets.getHead()
+
+def hasMarket(market: int256):
+    return self.markets.contains(market)
+
+def tryGetPrevMarket(market: int256):
+    return self.markets.tryGetPrev(market)
 
 ####
 #### Private
@@ -230,7 +260,7 @@ def privateAddMarket(market: address):
     require(not self.markets.contains(market))
     require(not self.limitedReporterMarkets.contains(market))
     require(not self.allReporterMarkets.contains(market))
-    self.markets.addSetItem(market)
+    self.markets.addSortedLinkedListItem(market, [])
     if (market.isDoneWithAllReporters()):
         return
     if (market.isDoneWithLimitedReporters()):

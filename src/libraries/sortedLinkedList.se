@@ -1,3 +1,8 @@
+#### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+####
+
 data comparor
 data collection[](exists, prev, next)
 data count
@@ -11,23 +16,22 @@ inset('../macros/assertPrivateCall.sem')
 
 extern comparisonProviderInterface: [compare:[int256, int256]:int256]
 
-def init():
-    self.owner = msg.sender
-
 def any():
-    require(msg.sender == self.owner or msg.sender == self)
+    if (self.owner):
+        require(msg.sender == self.owner or msg.sender == self)
 
-def initialize(comparor: address):
+def initialize(comparor: address, owner: address):
     require(not self.initialized)
     self.initialized = 1
+    self.owner = owner
     self.comparor = comparor
     return(1)
 
-def add(item: int256, hints: arr):
+def addSortedLinkedListItem(item: int256, hints: arr):
     require(item != 0)
 
     if self.contains(item):
-        self.remove(item)
+        self.removeSortedLinkedListItem(item)
 
     # Insert node into an empty list
     if self.count == 0:
@@ -122,7 +126,7 @@ def getBestHint(hints: arr, item: int256):
 
     return self.head
 
-def remove(item: int256):
+def removeSortedLinkedListItem(item: int256):
     if (!self.contains(item)):
         return(0)
 
