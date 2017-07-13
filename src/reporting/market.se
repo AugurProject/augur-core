@@ -92,7 +92,9 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
         outcome += 1
     self.approveSpenders()
     require(self.controller.lookup('cash') == denominationToken or self.getBranch().isContainerForShareToken(denominationToken))
+    self.reportingWindow.getBranch().addOrUpdateSortedMarket(self, [])
     return(1)
+    # Update the branch's sorted list of markets
 
     # TODO: we need to update this signature (and all of the places that call it) to allow the creator (UI) to pass in a number of other things which will all be logged here
     # TODO: log short description
@@ -325,8 +327,8 @@ def migrateThroughOneFork():
     self.reportingTokens = create('../libraries/map.se')
     return(1)
 
-def updateInReportingWindow():
-    self.reportingWindow.updateMarket()
+def updateInBranch():
+    self.reportingWindow.getBranch().addOrUpdateSortedMarket(self, [])
 
 ####
 #### Helpers

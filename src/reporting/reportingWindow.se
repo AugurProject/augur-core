@@ -35,7 +35,7 @@ def initialize(branch: address, reportingWindowId: int256):
     self.branch = branch
     self.startTime = reportingWindowId * self.branch.getReportingPeriodDurationInSeconds()
     self.registrationToken = REGISTRATION_TOKEN_FACTORY.createRegistrationToken(self.controller, self)
-    self.markets = SORTED_LINKED_LIST_FACTORY.createSortedLinkedList(self.controller, self, self)
+    self.markets = create('../libraries/set.se')
     self.limitedReporterMarkets = create('../libraries/set.se')
     self.allReporterMarkets = create('../libraries/set.se')
     return(1)
@@ -46,7 +46,7 @@ def createNewMarket(endTime: int256, numOutcomes: int256, payoutDenominator: int
     require(block.timestamp < self.startTime)
     require(self.branch.getReportingWindowByMarketEndTime(endTime, automatedReporterAddress != 0))
     newMarket = MARKET_FACTORY.createMarket(self.controller, self, endTime, numOutcomes, payoutDenominator, feePerEthInWei, denominationToken, creator, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = msg.value)
-    self.markets.addSortedLinkedListItem(newMarket, [])
+    self.markets.addSetItem(newMarket)
     self.limitedReporterMarkets.addSetItem(newMarket)
     return(newMarket)
 
@@ -73,16 +73,12 @@ def migrateMarketInFromNibling():
     self.privateAddMarket(market)
     return(1)
 
-def updateMarket():
-    require(self.markets.contains(msg.sender))
-    market = msg.sender
-    self.markets.addSortedLinkedListItem(market, [])
-
 def removeMarket():
     assertNoValue()
     require(self.markets.contains(msg.sender))
     market = msg.sender
-    self.markets.removeSortedLinkedListItem(market)
+    self.getBranch().removeSortedMarket(market)
+    self.markets.remove(market)
     self.limitedReporterMarkets.remove(market)
     self.allReporterMarkets.remove(market)
     return(1)
@@ -120,6 +116,7 @@ def noteReport(market: address, reporter: address, payoutDistributionHash: int25
     return(1)
 =======
 
+<<<<<<< d15ef6eb6281f767bd076a6798f8647bce71862c
 def compare(firstMarket: int256, secondMarket: int256):
     firstOI = firstMarket.getShareToken(0).totalSupply()
     secondOI = secondMarket.getShareToken(0).totalSupply()
@@ -131,6 +128,8 @@ def compare(firstMarket: int256, secondMarket: int256):
     return(0)
 >>>>>>> Checkpoint commit. Sorted markets within reporting window based on OI
 
+=======
+>>>>>>> Move sorting of markets to branches. Also add attempt at optimizing internal re-adds of items in sortedLinkedLists
 ####
 #### Getters
 ####
@@ -239,18 +238,6 @@ def isDoneReporting(reporter: address):
     assertNoValue()
     return(self.getReportsByReporter(reporter).count() >= self.getTargetReportsPerReporter())
 
-def getNumMarkets():
-    return self.markets.count()
-
-def getMarketsHead():
-    return self.markets.getHead()
-
-def hasMarket(market: int256):
-    return self.markets.contains(market)
-
-def tryGetPrevMarket(market: int256):
-    return self.markets.tryGetPrev(market)
-
 ####
 #### Private
 ####
@@ -260,7 +247,7 @@ def privateAddMarket(market: address):
     require(not self.markets.contains(market))
     require(not self.limitedReporterMarkets.contains(market))
     require(not self.allReporterMarkets.contains(market))
-    self.markets.addSortedLinkedListItem(market, [])
+    self.markets.addSetItem(market)
     if (market.isDoneWithAllReporters()):
         return
     if (market.isDoneWithLimitedReporters()):
