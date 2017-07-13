@@ -16,10 +16,12 @@ inset('../macros/safeMath.sem')
 data topicPopularity
 # a sorted list of topics for iteration
 data topics
+data owner
 
 # FIXME: topics needs to be sorted on-chain, which means we need a sorted linked list collection with hinted sorting at insertion/update time instead of a simple iterableMap
-def initialize():
+def initialize(owner: address):
     require(not self.topics)
+    self.owner = owner
     # TODO: change map to a delegated contract so it can be updated
     self.topicPopularity = create('../libraries/map.se')
     self.topics = SORTED_LINKED_LIST_FACTORY.createSortedLinkedList(self.controller, self, self)
@@ -29,9 +31,12 @@ def any():
     assertNoValue()
 
 def updatePopularity(topic: int256, fxpAmount: int256):
-    self.controller.assertIsWhitelisted(msg.sender)
+    require(msg.sender == self.owner or msg.sender == self)
     oldAmount = self.topicPopularity.getValueOrZero(topic)
-    newAmount = safeAdd(oldAmount, fxpAmount)
+    # NOTE: We don't do a safe add here as the fxpAmount provided is a delta that can be negative when popularity decreases
+    # We still require a non negative result as it wouldn't make sense to drop below 0
+    newAmount = oldAmount + fxpAmount
+    require(newAmount >= 0)
     self.topicPopularity.addOrUpdateMapItem(topic, newAmount)
     self.topics.addSortedLinkedListItem(topic, [])
     return(1)

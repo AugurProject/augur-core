@@ -78,6 +78,7 @@ def removeMarket():
     require(self.markets.contains(msg.sender))
     market = msg.sender
     self.getBranch().removeSortedMarket(market)
+    self.getBranch().updateTopicPopularity(market.getTopic(), -market.getShareToken(0).totalSupply())
     self.markets.remove(market)
     self.limitedReporterMarkets.remove(market)
     self.allReporterMarkets.remove(market)
@@ -254,7 +255,12 @@ def privateAddMarket(market: address):
         self.allReporterMarkets.addSetItem(market)
         return(1)
     self.limitedReporterMarkets.addSetItem(market)
+<<<<<<< f7cb457d0476bf00c27ec7e45e9c287814c2894a
     return(1)
+=======
+    # Update sorted topic popularity based just on OI
+    self.getBranch().updateTopicPopularity(market.getTopic(), market.getShareToken(0).totalSupply())
+>>>>>>> - Add more tests
 
 def privateNoteReport(market: address, reporter: address):
     assertPrivateCall()

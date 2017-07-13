@@ -322,7 +322,7 @@ def modifyMarketVolume(market: address, fxpAmount: int256):
     self.marketOrderData[market].volume += fxpAmount
     # Volume is not currently part of topic popularity. We may change this later
     # depending on how OI pans out
-    #market.getBranch().getTopics().updatePopularity(market.getTopic(), fxpAmount)
+    #market.getBranch().updateTopicPopularity(market.getTopic(), fxpAmount)
     return(1)
 
 # @internal
