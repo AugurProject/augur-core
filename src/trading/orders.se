@@ -319,7 +319,9 @@ def cancelOrderLog(market, sender, fxpPrice, fxpAmount, orderID, outcome, type, 
 def modifyMarketVolume(market: address, fxpAmount: int256):
     self.controller.assertIsWhitelisted(msg.sender)
     self.marketOrderData[market].volume += fxpAmount
-    market.getBranch().getTopics().updatePopularity(market.getTopic(), fxpAmount)
+    # Volume is not currently part of topic popularity. We may change this later
+    # depending on how OI pans out
+    #market.getBranch().getTopics().updatePopularity(market.getTopic(), fxpAmount)
     return(1)
 
 # @internal
