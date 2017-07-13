@@ -31,6 +31,10 @@ def addSortedLinkedListItem(item: int256, hints: arr):
     require(item != 0)
 
     if self.contains(item):
+        # try to optimize the update operation by finding a hint based on existing position
+        hint = self.getHintForExisting(item)
+        if hint:
+            hints = [hint]
         self.removeSortedLinkedListItem(item)
 
     # Insert node into an empty list
@@ -130,6 +134,22 @@ def getBestHint(hints: arr, item: int256):
 
     return self.head
 
+def getHintForExisting(item: int256):
+    # If the item's previous node is now greater than this item it is a valid hint
+    prev = self.tryGetPrev(item)
+    if (prev):
+        if(self.comparor.compare(item, prev) < 1):
+            return prev
+    
+    # Find the next node that is actually greater
+    nextNode = self.tryGetNext(item)
+    while (nextNode):
+        if (self.comparor.compare(item, nextNode) < 1):
+            return nextNode
+        nextNode = self.tryGetNext(nextNode)
+
+    return nextNode
+
 def removeSortedLinkedListItem(item: int256):
     if (!self.contains(item)):
         return(0)
@@ -206,7 +226,7 @@ def count():
 def isEmpty():
     return(self.count == 0)
 
-def isValidHint(hint: int256, index: int256):
+def isValidHint(hint: int256, item: int256):
     if not self.contains(hint):
         return 0
     if not self.comparor.compare(hint, item) == 1:

@@ -67,7 +67,7 @@ def buyCompleteSets(sender: address, market: address, fxpAmount: int256):
         n += 1
 
     ORDERS.completeSetsLog(sender, market, 1, fxpAmount, numOutcomes, 0, 0)
-    market.updateInReportingWindow()
+    market.updateInBranch()
     return(1)
 
 # Sells fxpAmount of every outcome [if user owns it]
@@ -107,7 +107,7 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: int256):
     require(denominationToken.transferFrom(market, sender, sellerPayout))
 
     ORDERS.completeSetsLog(sender, market, 2, fxpAmount, numOutcomes, marketCreatorFee, reportingFee)
-    market.updateInReportingWindow()
+    market.updateInBranch()
     return(1)
 
 # Provides the total worth of the number of completeSets in the market
