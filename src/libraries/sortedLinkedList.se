@@ -18,7 +18,7 @@ extern comparisonProviderInterface: [compare:[int256, int256]:int256]
 
 def any():
     if (self.owner):
-        require(msg.sender == self.owner or msg.sender == self)
+        require(msg.sender == self.owner or msg.sender == self or self.contains(msg.sender))
 
 def initialize(comparor: address, owner: address):
     require(not self.initialized)

@@ -5,7 +5,7 @@ from ethereum.tester import TransactionFailed
 from pytest import fixture, mark, lazy_fixture, raises
 from utils import bytesToHexString, longToHexString, bytesToLong, fix, captureFilteredLogs
 
-def test_market_creation(contractsFixture):
+def test_market_sorting(contractsFixture):
     branch = contractsFixture.branch
     cash = contractsFixture.cash
     completeSets = contractsFixture.contracts['completeSets']

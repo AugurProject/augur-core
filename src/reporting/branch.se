@@ -172,6 +172,9 @@ def isContainerForShareToken(shadyShareToken: address):
         return(0)
     return(1)
 
+def getSortedMarkets():
+    return self.markets
+
 def getNumMarkets():
     return self.markets.count()
 
