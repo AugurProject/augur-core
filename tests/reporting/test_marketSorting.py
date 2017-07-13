@@ -9,7 +9,6 @@ def test_market_sorting(contractsFixture):
     branch = contractsFixture.branch
     cash = contractsFixture.cash
     completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['orders']
 
     market1 = contractsFixture.binaryMarket
     market2 = contractsFixture.createReasonableBinaryMarket(branch, cash)
@@ -20,8 +19,8 @@ def test_market_sorting(contractsFixture):
 
     AssertOrder(market1, categoricalMarket, scalarMarket, market2, branch=branch)
 
-    cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
-    cash.approve(completeSets.address, fix('10000'), sender=tester.k1)
+    assert cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
+    assert cash.approve(completeSets.address, fix('10000'), sender=tester.k1)
 
     # We buy 10 complete sets in the new binary market, causing it to move to the top of the list
     assert completeSets.publicBuyCompleteSets(market2.address, fix('10'), sender=tester.k1)

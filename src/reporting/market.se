@@ -330,10 +330,14 @@ def migrateThroughOneFork():
     self.reportingTokens = create('../libraries/map.se')
     return(1)
 
+# TODO: Add test case when forking has finished implementation (tests)
 def migrateMarketToSortedList(hints: arr):
     require(self.getBranch().getSortedMarkets() != self.shadySortedMarketsList)
     self.shadySortedMarketsList.remove(self)
+    # Update the sorted list of markets
     self.getBranch().addOrUpdateSortedMarket(market, hints)
+    # Update sorted topic popularity
+    self.getBranch().getTopics().updatePopularity(self.topic, getShareToken(0).totalSupply())
     self.shadySortedMarketsList = self.getBranch().getSortedMarkets()
     return(1)
 
