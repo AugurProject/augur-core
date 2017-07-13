@@ -10,7 +10,10 @@ def unfix(n):
     return n // 10**18
 
 def longToHexString(value):
-    return hex(value)[2:-1]
+    hexstr = hex(value)[2:-1]
+    if len(hexstr) % 2 != 0:
+        hexstr = '0' + hexstr
+    return hexstr
 
 def bytesToLong(value):
     return long(value.encode('hex'), 16)
