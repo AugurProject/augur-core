@@ -185,6 +185,13 @@ def updateTentativeWinningPayoutDistributionHash(payoutDistributionHash: int256)
     if (self.reportingTokens.getValue(payoutDistributionHash).totalSupply() > self.reportingTokens.getValue(self.tentativeWinningPayoutDistributionHash).totalSupply()):
         self.tentativeWinningPayoutDistributionHash = payoutDistributionHash
 
+# FIXME: use this during market finalization
+#def removeFromSortedLists():
+#    assertPrivateCall()
+#    self.getBranch().removeSortedMarket(self)
+#    self.getBranch().updateTopicPopularity(self.getTopic(), self.getShareToken(0).totalSupply())
+#    return(1)
+
 def tryFinalize():
     assertNoValue()
     self.tryFinalizeAutomatedReport()
@@ -208,6 +215,7 @@ def tryFinalize():
     # FIXME: if automated report is wrong, transfer automated report bond to reportingWindow
     # FIXME: if automated report is right, transfer automated report bond to market creator
     # FIXME: handle markets that get 0 reports during their scheduled reporting window
+    # FIXME: Call the removeFromSortedLists function during market finalization
 
 def tryFinalizeAutomatedReport():
     assertNoValue()
@@ -223,6 +231,7 @@ def tryFinalizeAutomatedReport():
     self.finalizationTime = block.timestamp
     self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()
+    #self.removeFromSortedLists()
     return(1)
 
 def tryFinalizeLimitedReporting():
@@ -239,6 +248,7 @@ def tryFinalizeLimitedReporting():
     self.finalizationTime = block.timestamp
     self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()
+    #self.removeFromSortedLists()
     return(1)
 
 def tryFinalizeAllReporting():
@@ -259,6 +269,7 @@ def tryFinalizeAllReporting():
     self.finalizationTime = block.timestamp
     self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()
+    #self.removeFromSortedLists()
     return(1)
 
 def tryFinalizeFork():
@@ -284,6 +295,7 @@ def tryFinalizeFork():
     self.finalizationTime = block.timestamp
     self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()
+    #self.removeFromSortedLists()
     return(1)
 
 def migrateThroughAllForks():
@@ -328,8 +340,6 @@ def migrateMarketToSortedList(hints: arr):
     self.shadySortedMarketsList.remove(self)
     # Update the sorted list of markets
     self.getBranch().addOrUpdateSortedMarket(market, hints)
-    # Update sorted topic popularity
-    # self.getBranch().getTopics().updatePopularity(self.topic, self.getShareToken(0).totalSupply())
     self.shadySortedMarketsList = self.getBranch().getSortedMarkets()
     return(1)
 

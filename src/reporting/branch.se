@@ -41,7 +41,7 @@ def initialize(parentBranch: address, parentPayoutDistributionHash: int256):
     self.parentPayoutDistributionHash = parentPayoutDistributionHash
     self.reputationToken = REPUTATION_TOKEN_FACTORY.createReputationToken(self.controller, self)
     self.markets = SORTED_LINKED_LIST_FACTORY.createSortedLinkedList(self.controller, self, self)
-    self.topics = TOPICS_FACTORY.createTopics(self.controller)
+    self.topics = TOPICS_FACTORY.createTopics(self.controller, self)
     require(self.reputationToken)
 
 def fork(shadyMarket: address):
@@ -56,6 +56,10 @@ def addOrUpdateSortedMarket(market: address, hints: arr):
 
 def removeSortedMarket(market: address):
     self.markets.removeSortedLinkedListItem(market)
+
+def updateTopicPopularity(topic: int256, popularityDelta: int256):
+    self.topics.updatePopularity(topic, popularityDelta)
+    return(1)
 
 def compare(firstMarket: int256, secondMarket: int256):
     firstOI = firstMarket.getShareToken(0).totalSupply()

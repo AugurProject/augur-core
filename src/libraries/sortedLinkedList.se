@@ -126,6 +126,11 @@ def getBestHint(hints: arr, item: int256):
     if (self.comparor.compare(item, self.head) == 1):
         return 0
 
+    # if the item is less than or equal to the tail we can early out
+    # this is really common when adding new items that have no relative value compared to other items in the list 
+    if (self.comparor.compare(item, self.tail) < 1):
+        return self.tail
+
     while hintIndex < len(hints):
         hint = hints[hintIndex]
         if self.isValidHint(hint, item):
