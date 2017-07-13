@@ -41,7 +41,7 @@ def initialize(controller: address):
 #  - Bidder (maker) has escrowed price - minValue for their shares
 # @internal
 # @return fxp
-def takeBidOrder(taker: address, orderID: address, market: address, outcome: int256, fxpAmountTakerWants: int256):
+def takeBidOrder(taker: address, orderID: address, market: address, outcome: int256, fxpAmountTakerWants: int256, tradeGroupID: int256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
@@ -179,7 +179,7 @@ def takeBidOrder(taker: address, orderID: address, market: address, outcome: int
         takerTokensDepleted += takerPortionOfCompleteSetCost
         takerDesiredSharesForThisOrder = 0
 
-    ORDERS.takeOrderLog(market, outcome, BID, orderID, taker, makerSharesDepleted, makerTokensDepleted, takerSharesDepleted, takerTokensDepleted)
+    ORDERS.takeOrderLog(market, outcome, BID, orderID, taker, makerSharesDepleted, makerTokensDepleted, takerSharesDepleted, takerTokensDepleted, tradeGroupID)
     ORDERS.fillOrder(orderID, BID, market, outcome, makerSharesDepleted, makerTokensDepleted)
 
     # make sure we didn't accidentally leave anything behind
