@@ -39,6 +39,7 @@ data denominationToken
 data creator
 data shareTokens[]
 data finalizationTime
+data shadySortedMarketsList
 
 data tentativeWinningPayoutDistributionHash
 data finalPayoutDistributionHash
@@ -92,6 +93,8 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
         outcome += 1
     self.approveSpenders()
     require(self.controller.lookup('cash') == denominationToken or self.getBranch().isContainerForShareToken(denominationToken))
+    # Update the branch's sorted list of markets
+    self.shadySortedMarketsList = self.reportingWindow.getBranch().getSortedMarkets()
     self.reportingWindow.getBranch().addOrUpdateSortedMarket(self, [])
     return(1)
     # Update the branch's sorted list of markets
@@ -327,8 +330,16 @@ def migrateThroughOneFork():
     self.reportingTokens = create('../libraries/map.se')
     return(1)
 
+def migrateMarketToSortedList(hints: arr):
+    require(self.getBranch().getSortedMarkets() != self.shadySortedMarketsList)
+    self.shadySortedMarketsList.remove(self)
+    self.getBranch().addOrUpdateSortedMarket(market, hints)
+    self.shadySortedMarketsList = self.getBranch().getSortedMarkets()
+    return(1)
+
 def updateInBranch():
     self.reportingWindow.getBranch().addOrUpdateSortedMarket(self, [])
+    return(1)
 
 ####
 #### Helpers
@@ -597,6 +608,8 @@ def getAutomatedReportDisputeDueTimestamp():
     assertNoValue()
     return(self.getAutomatedReportDueTimestamp() + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS)
 
+def getShadySortedMarketsList():
+    return self.shadySortedMarketsList
 
 ####
 #### Private
