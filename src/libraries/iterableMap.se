@@ -31,12 +31,16 @@ def addOrUpdate(key, value):
 
 def remove(key):
     require(self.contains(key))
-    # move last item in collection to the newly opened slot
-    self.itemsArray[self.itemsMap[key].offset] = self.getByOffset(self.numberOfItems)
+    keyRemovedOffset = self.itemsMap[key].offset
+    self.itemsArray[keyRemovedOffset] = 0
     self.itemsMap[key].hasValue = 0
     self.itemsMap[key].value = 0
+    if(self.numberOfItems > 1):
+        # move last item in collection to the newly opened slot from the key we just removed
+        lastItemKey = self.getByOffset(self.numberOfItems)
+        self.itemsArray[keyRemovedOffset] = lastItemKey
+        self.itemsMap[lastItemKey].offset = self.numberOfItems - 1
     self.numberOfItems -= 1
-    self.itemsMap[self.getByOffset(self.numberOfItems)].offset = self.numberOfItems
 
 def getByKeyOrZero(key):
     return self.itemsMap[key].value
