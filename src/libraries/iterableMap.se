@@ -36,7 +36,7 @@ def remove(key):
     self.itemsMap[key].hasValue = 0
     self.itemsMap[key].value = 0
     self.numberOfItems -= 1
-    self.itemsMap[key].offset = self.numberOfItems
+    self.itemsMap[self.getByOffset(self.numberOfItems)].offset = self.numberOfItems
 
 def getByKeyOrZero(key):
     return self.itemsMap[key].value
@@ -57,6 +57,3 @@ def contains(key):
 
 def count():
     return self.numberOfItems
-
-def getOffsetByKey(key):
-    return self.itemsMap[key].offset
