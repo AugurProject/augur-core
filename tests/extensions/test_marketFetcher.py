@@ -99,7 +99,7 @@ def test_marketFetcherGetMarketInfoHappyPath(marketFetcherContractsFixture):
     numOutcomes = market.getNumberOfOutcomes()
     expectedLength = NUM_GET_MARKET_INFO_FIELDS + numOutcomes
     marketInfo = marketFetcher.getMarketInfo(market.address, expectedLength)
-    AssertMarketInfoCorrect(categoricalMarket, marketInfo, orders)
+    AssertMarketInfoCorrect(market, marketInfo, orders)
 
     # The fields returned are variable in length since we include outcome data and for categorical markets this is variable
     numOutcomes = categoricalMarket.getNumberOfOutcomes()
