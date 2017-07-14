@@ -5,14 +5,13 @@ from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, lazy_fixture, raises
 from ethereum.config import config_metropolis
 
-config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
+#config_metropolis['BLOCK_GAS_LIMIT'] = 2**128
  
 @fixture(scope="session")
 def sortedLinkedListSnapshot(sessionFixture):
     int256Comparor = sessionFixture.upload('serpent_test_helpers/int256Comparor.se')
     sortedLinkedList = sessionFixture.upload('../src/libraries/sortedLinkedList.se')
     sortedLinkedList.initialize(int256Comparor.address)
-    sessionFixture.chain.mine(1)
     return sessionFixture.chain.snapshot()
 
 @fixture
