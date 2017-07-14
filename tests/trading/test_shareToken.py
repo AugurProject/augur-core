@@ -115,7 +115,6 @@ def test_setController(contractsFixture):
     newController = contractsFixture.upload('../src/controller.se', 'newController')
     newController.setValue('shareToken'.ljust(32, '\x00'), shareToken.address)
 
-    # FIXME: this depends on dev mode to work
     contractsFixture.controller.updateController(shareToken.address, newController.address, sender=tester.k0)
     with raises(TransactionFailed):
         shareToken.setController(tester.a0, sender=tester.k0)
