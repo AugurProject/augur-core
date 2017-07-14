@@ -35,11 +35,12 @@ def remove(key):
     self.itemsArray[keyRemovedOffset] = 0
     self.itemsMap[key].hasValue = 0
     self.itemsMap[key].value = 0
+    self.itemsMap[key].offset = 0
     if(self.numberOfItems > 1):
-        # move last item in collection to the newly opened slot from the key we just removed
-        lastItemKey = self.getByOffset(self.numberOfItems)
-        self.itemsArray[keyRemovedOffset] = lastItemKey
-        self.itemsMap[lastItemKey].offset = self.numberOfItems - 1
+        # move tail item in collection to the newly opened slot from the key we just removed
+        tailItemKey = self.getByOffset(self.numberOfItems)
+        self.itemsArray[keyRemovedOffset] = tailItemKey
+        self.itemsMap[tailItemKey].offset = self.numberOfItems - 1
     self.numberOfItems -= 1
 
 def getByKeyOrZero(key):
