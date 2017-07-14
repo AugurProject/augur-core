@@ -625,6 +625,10 @@ def getAutomatedReportDisputeDueTimestamp():
 def getShadySortedMarketsList():
     return self.shadySortedMarketsList
 
+# FIXME: add this to the returned value in marketFetcher.se
+#def getMarketCreationBlock():
+#    return self.marketCreationBlock
+
 ####
 #### Private
 ####

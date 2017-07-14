@@ -1,6 +1,114 @@
-# TODO: allow user to query for all markets in a particular branch/reporting window and get back a tuple of market + market creation block
-# TODO: allow user to provide an array of market addresses and get back an array of tuples consisting of:
-# TODO: * market finalization time
-# TODO: * market creator fee
-# TODO: * market last trade price for each outcome (found in ORDERS)
-# TODO: * market volume (found in ORDERS)
+#Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+macro ORDERS: self.controller.lookup('orders')
+
+macro NUM_GET_MARKET_FIELDS: 2
+
+macro MARKET_ADDRESS: 0
+macro MARKET_CREATION_BLOCK: 1
+
+macro NUM_GET_MARKET_INFO_FIELDS: 5
+
+# macro MARKET_ADDRESS: 0
+macro MARKET_FINALIZATION_TIME: 1
+macro MARKET_CREATOR_FEE: 2
+macro MARKET_VOLUME: 3
+macro MARKET_NUM_OUTCOMES: 4
+
+# using refund
+inset('../macros/assertNoValue.sem')
+inset('../macros/externs.sem')
+inset('../macros/require.sem')
+
+data controller
+data owner
+data initialized
+
+def init():
+    self.owner = msg.sender
+
+def initialize(controller: address):
+    require(msg.sender == self.owner)
+    require(not self.initialized)
+    self.initialized = 1
+    self.controller = controller
+
+def getMarkets(branch: address, start: int256, numMarketsToLoad: int256):
+    if branch.getNumMarkets() == 0:
+        return([]: arr)
+
+    if start == 0:
+        start = branch.getMarketsHead()
+    elif branch.hasMarket(start):
+        start = branch.tryGetPrevMarket(start)
+
+    if not branch.hasMarket(start):
+        return([]: arr)
+
+    if numMarketsToLoad == 0:
+        numMarketsToLoad = 10 # TODO use a reasonable default to prevent flooding the caller
+
+    totalLen = numMarketsToLoad * NUM_GET_MARKET_FIELDS
+
+    marketIDs = array(totalLen)
+
+    marketIndex = 0
+    market = start
+
+    while (market and marketIndex < numMarketsToLoad):
+        marketData = self.getMarketData(market, outitems=NUM_GET_MARKET_FIELDS)
+        field = 0
+        while (field < NUM_GET_MARKET_FIELDS):
+            marketIDs[NUM_GET_MARKET_FIELDS * marketIndex + field] = marketData[field]
+            field += 1
+
+        market = branch.tryGetPrevMarket(market)
+        marketIndex += 1
+
+    marketIDs = slice(marketIDs, items=0, items=marketIndex * NUM_GET_MARKET_FIELDS)
+    return(marketIDs: arr)
+
+def getMarketsInfo(markets: arr):
+    numMarkets = len(markets)
+    totalLength = 0
+    marketInfoLengths = array(numMarkets)
+    i = 0
+    while i < numMarkets:
+        market = markets[i]
+        numOutcomes = market.getNumberOfOutcomes()
+        marketInfoLengths[i] = NUM_GET_MARKET_INFO_FIELDS + numOutcomes
+        totalLength += marketInfoLengths[i]
+        i += 1
+    marketsInfo = array(totalLength)
+    index = 0
+    i = 0
+    while i < numMarkets:
+        marketInfo = self.getMarketInfo(markets[i], marketInfoLengths[i], outitems=marketInfoLengths[i])
+        j = 0
+        while j < marketInfoLengths[i] - 1:
+            marketsInfo[index + j] = marketInfo[j]
+            j += 1
+        index += marketInfoLengths[i]
+        i += 1
+    return(marketsInfo: arr)
+
+def getMarketData(market: address):
+    marketData = array(NUM_GET_MARKET_FIELDS)
+    marketData[MARKET_ADDRESS] = market
+    marketData[MARKET_CREATION_BLOCK] = 42# FIXME: market.getMarketCreationBlock()
+    return(marketData: arr)
+
+def getMarketInfo(market: address, marketInfoLen: int256):
+    marketInfo = array(marketInfoLen)
+    marketInfo[MARKET_ADDRESS] = market
+    marketInfo[MARKET_FINALIZATION_TIME] = market.getFinalizationTime()
+    marketInfo[MARKET_CREATOR_FEE] = market.getMarketCreatorSettlementFeeInAttoethPerEth()
+    marketInfo[MARKET_VOLUME] = ORDERS.getVolume(market)
+    numOutcomes = market.getNumberOfOutcomes()
+    marketInfo[MARKET_NUM_OUTCOMES] = numOutcomes
+    outcomeIndex = 0
+    while outcomeIndex < numOutcomes:
+        marketInfo[NUM_GET_MARKET_INFO_FIELDS + outcomeIndex] = ORDERS.getLastOutcomePrice(market, outcomeIndex)
+        outcomeIndex += 1
+
+    return(marketInfo: arr)
