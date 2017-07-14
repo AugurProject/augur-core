@@ -94,10 +94,10 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     acquireLongShares(orderOutcome, makerLongShares, makeOrder.address, sender = makerKey)
     acquireShortShareSet(orderOutcome, makerShortShares, makeOrder.address, sender = makerKey)
     acquireTokens(makerTokens, makeOrder.address, sender = makerKey)
-    orderId = makeOrder.publicMakeOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, 0, 0, 42, sender = makerKey)
+    orderID = makeOrder.publicMakeOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, 0, 0, 42, sender = makerKey)
 
     # validate the order
-    order = orders.getOrder(orderId, orderType, market.address, orderOutcome)
+    order = orders.getOrder(orderID, orderType, market.address, orderOutcome)
     assert order[ATTOSHARES] == orderSize
     assert order[DISPLAY_PRICE] == orderPrice
     assert order[OWNER] == bytesToLong(makerAddress)
@@ -108,7 +108,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     acquireLongShares(orderOutcome, takerLongShares, takeOrder.address, sender = takerKey)
     acquireShortShareSet(orderOutcome, takerShortShares, takeOrder.address, sender = takerKey)
     acquireTokens(takerTokens, takeOrder.address, sender = takerKey)
-    remaining = takeOrder.publicTakeOrder(orderId, orderType, market.address, orderOutcome, orderSize, sender = takerKey)
+    remaining = takeOrder.publicTakeOrder(orderID, orderType, market.address, orderOutcome, orderSize, sender = takerKey)
     assert not remaining
 
     # assert final state
