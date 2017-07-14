@@ -136,7 +136,6 @@ class NewContractsFixture:
         contractAddress = long(hexlify(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6))), 16)
         contract = ABIContract(self.chain, ContractTranslator(signature), contractAddress)
         self.contracts[lookupKey] = contract
-       	print(self.chain.chain.state.gas_used)
 	return(contract)
 
     def applySignature(self, signatureName, address):
