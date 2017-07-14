@@ -29,10 +29,6 @@ def addOrUpdate(key, value):
     else:
         self.update(key, value)
 
-# 5-10-0, 11-2-1, 3-4-2
-
-# [5, 11, 3]
-
 def remove(key):
     require(self.contains(key))
     keyRemovedOffset = self.itemsMap[key].offset
