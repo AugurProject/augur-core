@@ -57,8 +57,6 @@ def makeOrder(sender: address, type: int256, attoshares: int256, displayPrice: i
     require(market)
     require(0 <= outcome and outcome < market.getNumberOfOutcomes())
     require(market.getMinDisplayPrice() < displayPrice and displayPrice < market.getMaxDisplayPrice())
-    # FIXME: disallow making an order with shares such that the market creator fees are greater than the taker will get from the deal
-    # FIXME: figure out how to deal with the same problem for reporting fees
 
     attotokensPerShare = displayPrice - market.getMinDisplayPrice()
     if(type == ASK):
@@ -83,8 +81,7 @@ def placeBid(sender: address, attoshares: int256, attotokensPerShare: int256, ma
     assertNoValue()
     assertPrivateCall()
     orderValueInAttotokens = safeFxpMul(attoshares, safeSub(market.getCompleteSetCostInAttotokens(), attotokensPerShare))
-    # FIXME: assert against MIN_ORDER_VALUE
-    require(orderValueInAttotokens)
+    require(orderValueInAttotokens >= MIN_ORDER_VALUE)
 
     attotokensEscrowed = 0
     attosharesEscrowed = 0
