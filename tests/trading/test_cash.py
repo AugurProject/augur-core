@@ -75,7 +75,7 @@ def test_transfer(contractsFixture):
     startingBalance1 = cash.balanceOf(tester.a1)
     startingSupply = cash.totalSupply()
     logs = []
-    contractsFixture.chain.block.log_listeners.append(lambda x: logs.append(cash.translator.listen(x)))
+    contractsFixture.chain.head_state.log_listeners.append(lambda x: logs.append(cash.translator.listen(x)))
 
     assert cash.transfer(tester.a1, 5, sender = tester.k0)
     assert cash.transfer(tester.a1, 2, sender = tester.k0)
@@ -105,7 +105,7 @@ def test_approve(contractsFixture):
     cash = contractsFixture.cash
     cash.publicDepositEther(value = 7, sender = tester.k0)
     logs = []
-    contractsFixture.chain.block.log_listeners.append(lambda x: logs.append(cash.translator.listen(x)))
+    contractsFixture.chain.head_state.log_listeners.append(lambda x: logs.append(cash.translator.listen(x)))
 
     assert cash.approve(tester.a1, 10, sender = tester.k0)
 
@@ -131,7 +131,7 @@ def test_transferFrom(contractsFixture):
     startingBalance1 = cash.balanceOf(tester.a1)
     startingSupply = cash.totalSupply()
     logs = []
-    contractsFixture.chain.block.log_listeners.append(lambda x: logs.append(cash.translator.listen(x)))
+    contractsFixture.chain.head_state.log_listeners.append(lambda x: logs.append(cash.translator.listen(x)))
 
     assert cash.transferFrom(tester.a0, tester.a2, 5, sender = tester.k1)
 

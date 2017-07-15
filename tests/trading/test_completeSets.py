@@ -30,7 +30,7 @@ def test_publicBuyCompleteSets(contractsFixture):
 
     cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender=tester.k1)
-    captureFilteredLogs(contractsFixture.chain, orders, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     assert completeSets.publicBuyCompleteSets(market.address, fix('10'), sender=tester.k1)
 
     assert logs == [
@@ -98,7 +98,7 @@ def test_publicSellCompleteSets(contractsFixture):
     cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender = tester.k1)
     completeSets.publicBuyCompleteSets(market.address, fix('10'), sender = tester.k1)
-    captureFilteredLogs(contractsFixture.chain, orders, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     result = completeSets.publicSellCompleteSets(market.address, fix('9'), sender=tester.k1)
 
     assert logs == [

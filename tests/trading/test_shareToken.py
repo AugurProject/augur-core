@@ -57,7 +57,7 @@ def test_transfer(contractsFixture):
     with raises(TransactionFailed):
         shareToken.transfer(tester.a0, 5, sender = tester.k1)
 
-    captureFilteredLogs(contractsFixture.chain, shareToken, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, shareToken, logs)
     retval = shareToken.transfer(tester.a1, 5, sender=tester.k0)
     afterTransferBalance0 = shareToken.balanceOf(tester.a0)
     afterTransferBalance1 = shareToken.balanceOf(tester.a1)
@@ -82,7 +82,7 @@ def test_approve(contractsFixture):
     logs = []
 
     assert(shareToken.allowance(tester.a0, tester.a1) == 0), "initial allowance is 0"
-    captureFilteredLogs(contractsFixture.chain, shareToken, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, shareToken, logs)
     retval = shareToken.approve(tester.a1, 10, sender=tester.k0)
     assert(retval == 1), "approve a2 to spend 10 cash from a1"
     assert(shareToken.allowance(tester.a0, tester.a1) == 10), "allowance is 10 after approval"

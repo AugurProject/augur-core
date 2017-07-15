@@ -23,4 +23,4 @@ def captureFilteredLogs(state, contract, logs):
         translated = contract.translator.listen(message)
         if not translated: return
         logs.append(translated)
-    state.block.log_listeners.append(lambda x: captureLog(contract, logs, x))
+    state.log_listeners.append(lambda x: captureLog(contract, logs, x))
