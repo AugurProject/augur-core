@@ -90,9 +90,6 @@ def getForkingMarket():
 def getForkEndTime():
     return(self.forkEndTime)
 
-def getTopics():
-    return(self.topics)
-
 def getReportingWindowId(timestamp: int256):
     return(timestamp / self.getReportingPeriodDurationInSeconds())
 
@@ -190,3 +187,6 @@ def hasMarket(market: int256):
 
 def tryGetPrevMarket(market: int256):
     return self.markets.tryGetPrev(market)
+
+def getTopics():
+    return(self.topics)

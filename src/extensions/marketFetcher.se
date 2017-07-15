@@ -15,7 +15,6 @@ macro MARKET_CREATOR_FEE: 2
 macro MARKET_VOLUME: 3
 macro MARKET_NUM_OUTCOMES: 4
 
-# using refund
 inset('../macros/assertNoValue.sem')
 inset('../macros/externs.sem')
 inset('../macros/require.sem')
@@ -26,6 +25,9 @@ data initialized
 
 def init():
     self.owner = msg.sender
+
+def any():
+    assertNoValue()
 
 def initialize(controller: address):
     require(msg.sender == self.owner)

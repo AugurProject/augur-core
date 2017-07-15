@@ -1,0 +1,59 @@
+# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
+
+inset('../macros/assertNoValue.sem')
+inset('../macros/externs.sem')
+inset('../macros/require.sem')
+
+data controller
+data owner
+data initialized
+
+def init():
+    self.owner = msg.sender
+
+def any():
+    assertNoValue()
+
+def initialize(controller: address):
+    require(msg.sender == self.owner)
+    require(not self.initialized)
+    self.initialized = 1
+    self.controller = controller
+
+def getTopicsInfo(branch: address, start: int256, numTopicsToLoad: int256):
+    numTopics = self.getNumTopicsInBranch(branch)
+
+    if (numTopics == 0):
+        return([]: arr)
+
+    if start == 0:
+        start = branch.getTopics().getTopicsHead()
+    elif branch.getTopics().hasTopic(start):
+        start = branch.getTopics().tryGetPrevTopic(start)
+
+    if(not branch.getTopics().hasTopic(start)):
+        return([]: arr)
+
+    if(numTopicsToLoad == 0):
+        numTopicsToLoad = 10 # come up with reasonable default so as not to flood the caller
+
+    topicsInfo = array(numTopicsToLoad * 2)
+
+    i = 0
+    j = 0
+    topic = start
+    while(topic and i < numTopicsToLoad):
+        topicsInfo[j] = topic
+        topicsInfo[j + 1] = self.getTopicPopularity(branch, topic)
+        topic = branch.getTopics().tryGetPrevTopic(topic)
+        i += 1
+        j += 2
+
+    return(slice(topicsInfo, items=0, items=i * 2): arr)
+
+# @return fxp
+def getTopicPopularity(branch: address, topic: int256):
+    return(branch.getTopics().getPopularity(topic))
+
+def getNumTopicsInBranch(branch: address):
+    return(branch.getTopics().count())
