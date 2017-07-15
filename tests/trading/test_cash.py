@@ -14,16 +14,16 @@ def test_init(contractsFixture):
 
 def test_publicDepositEther(contractsFixture):
     cash = contractsFixture.cash
-    startingUserEthBalance = contractsFixture.chain.block.get_balance(tester.a0)
+    startingUserEthBalance = contractsFixture.chain.head_state.get_balance(tester.a0)
     startingUserCashBalance = cash.balanceOf(tester.a0)
-    startingCashEthBalance = contractsFixture.chain.block.get_balance(hex(cash.address)[2:-1])
+    startingCashEthBalance = contractsFixture.chain.head_state.get_balance(hex(cash.address)[2:-1])
     startingCashSupply = cash.totalSupply()
 
     assert cash.publicDepositEther(value = 7, sender = tester.k0)
 
-    assert startingUserEthBalance - 7 == contractsFixture.chain.block.get_balance(tester.a0)
+    assert startingUserEthBalance - 7 == contractsFixture.chain.head_state.get_balance(tester.a0)
     assert startingUserCashBalance + 7 == cash.balanceOf(tester.a0)
-    assert startingCashEthBalance + 7 == contractsFixture.chain.block.get_balance(hex(cash.address)[2:-1])
+    assert startingCashEthBalance + 7 == contractsFixture.chain.head_state.get_balance(hex(cash.address)[2:-1])
     assert startingCashSupply + 7 == cash.totalSupply()
 
 def test_publicDepositEther_failures(contractsFixture):
@@ -37,18 +37,18 @@ def test_publicDepositEther_failures(contractsFixture):
 def test_publicWithdrawEther(contractsFixture):
     cash = contractsFixture.cash
     cash.publicDepositEther(value = 7)
-    startingUserEthBalance = contractsFixture.chain.block.get_balance(tester.a0)
+    startingUserEthBalance = contractsFixture.chain.head_state.get_balance(tester.a0)
     startingUserCashBalance = cash.balanceOf(tester.a0)
-    startingCashEthBalance = contractsFixture.chain.block.get_balance(hex(cash.address)[2:-1])
+    startingCashEthBalance = contractsFixture.chain.head_state.get_balance(hex(cash.address)[2:-1])
     startingCashSupply = cash.totalSupply()
 
     assert cash.publicWithdrawEther(tester.a0, 5)
     contractsFixture.chain.block.timestamp += long(timedelta(days=3).total_seconds())
     assert cash.publicWithdrawEther(tester.a0, 5)
 
-    assert startingUserEthBalance + 5 == contractsFixture.chain.block.get_balance(tester.a0)
+    assert startingUserEthBalance + 5 == contractsFixture.chain.head_state.get_balance(tester.a0)
     assert startingUserCashBalance - 5 == cash.balanceOf(tester.a0)
-    assert startingCashEthBalance - 5 == contractsFixture.chain.block.get_balance(hex(cash.address)[2:-1])
+    assert startingCashEthBalance - 5 == contractsFixture.chain.head_state.get_balance(hex(cash.address)[2:-1])
     assert startingCashSupply - 5 == cash.totalSupply()
 
 def test_publicWithdrawEther_failures(contractsFixture):
