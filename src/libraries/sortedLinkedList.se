@@ -32,9 +32,10 @@ def addSortedLinkedListItem(item: int256, hints: arr):
 
     if self.contains(item):
         # try to optimize the update operation by finding a hint based on existing position
-        hint = self.getHintForExisting(item)
-        if hint:
-            hints = [hint]
+        if len(hints) == 0:
+            hint = self.getHintForExisting(item)
+            if hint:
+                hints = [hint]
         self.removeSortedLinkedListItem(item)
 
     # Insert node into an empty list

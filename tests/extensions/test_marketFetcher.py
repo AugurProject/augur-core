@@ -32,11 +32,7 @@ def marketFetcherContractsFixture(sessionFixture, marketFetcherSnapshot):
 
 def test_marketFetcherGetMarketDataHappyPath(marketFetcherContractsFixture):
 
-    branch = marketFetcherContractsFixture.branch
-    cash = marketFetcherContractsFixture.cash
-
     market = marketFetcherContractsFixture.binaryMarket
-
     marketFetcher = marketFetcherContractsFixture.contracts['marketFetcher']
 
     # We can use the getMarketData function to return a market address and market creation block
@@ -47,10 +43,7 @@ def test_marketFetcherGetMarketDataHappyPath(marketFetcherContractsFixture):
 def test_marketFetcherGetMarketsHappyPath(marketFetcherContractsFixture):
 
     branch = marketFetcherContractsFixture.branch
-    cash = marketFetcherContractsFixture.cash
-
     market = marketFetcherContractsFixture.binaryMarket
-
     marketFetcher = marketFetcherContractsFixture.contracts['marketFetcher']
 
     # We can request markets from the market fetcher and get back market address and creation block for each market returned
@@ -70,13 +63,14 @@ def test_marketFetcherGetMarketsHappyPath(marketFetcherContractsFixture):
     assert markets[MARKET_ADDRESS] != market.address
     assert markets[NUM_GET_MARKET_FIELDS + MARKET_ADDRESS] != market.address
 
+    # We can also begin the markets returned from an existing market (exclusive of the provided market) and limit the number returned
+    markets = marketFetcher.getMarkets(branch.address, market.address, 1)
+    assert len(markets) == 1 * NUM_GET_MARKET_FIELDS
+    assert markets[MARKET_ADDRESS] != market.address
+
 def test_marketFetcherGetMarketsNoResults(marketFetcherContractsFixture):
 
     branch = marketFetcherContractsFixture.branch
-    cash = marketFetcherContractsFixture.cash
-
-    firstMarket = branch.getMarketsHead()
-
     marketFetcher = marketFetcherContractsFixture.contracts['marketFetcher']
 
     # If we provide a starting market that doesn't exist we'll get back no results
@@ -85,14 +79,9 @@ def test_marketFetcherGetMarketsNoResults(marketFetcherContractsFixture):
 
 def test_marketFetcherGetMarketInfoHappyPath(marketFetcherContractsFixture):
 
-    branch = marketFetcherContractsFixture.branch
-    cash = marketFetcherContractsFixture.cash
     orders = marketFetcherContractsFixture.contracts['orders']
-
     market = marketFetcherContractsFixture.binaryMarket
     categoricalMarket = marketFetcherContractsFixture.categoricalMarket
-    scalarMarket = marketFetcherContractsFixture.scalarMarket
-
     marketFetcher = marketFetcherContractsFixture.contracts['marketFetcher']
 
     # We can request market info for a market address and get back relevant metadata for that market
@@ -109,10 +98,7 @@ def test_marketFetcherGetMarketInfoHappyPath(marketFetcherContractsFixture):
 
 def test_marketFetcherGetMarketsInfoHappyPath(marketFetcherContractsFixture):
 
-    branch = marketFetcherContractsFixture.branch
-    cash = marketFetcherContractsFixture.cash
     orders = marketFetcherContractsFixture.contracts['orders']
-
     market = marketFetcherContractsFixture.binaryMarket
     categoricalMarket = marketFetcherContractsFixture.categoricalMarket
     scalarMarket = marketFetcherContractsFixture.scalarMarket
