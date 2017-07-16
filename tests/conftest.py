@@ -118,6 +118,7 @@ class NewContractsFixture:
         self.scalarMarket = self.createReasonableScalarMarket(self.branch, -10 * 10**18, 30 * 10**18, self.cash)
         self.chain.mine(1)
         self.originalHead = self.chain.head_state
+        self.originalBlock = self.chain.block
         self.snapshot = self.chain.snapshot()
 
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None):
@@ -148,6 +149,7 @@ class NewContractsFixture:
         return contract
 
     def resetSnapshot(self):
+        self.chain.block = self.originalBlock
         self.chain.head_state = self.originalHead
         self.chain.revert(self.snapshot)
 
