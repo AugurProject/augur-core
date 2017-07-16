@@ -86,8 +86,8 @@ def test_transfer(contractsFixture):
     assert startingBalance1 + 7 == cash.balanceOf(tester.a1)
     assert startingSupply == cash.totalSupply()
     assert logs == [
-        { "_event_type": "Transfer", "from": tester.a0.encode("hex"), "to": tester.a1.encode("hex"), "value": 5 },
-        { "_event_type": "Transfer", "from": tester.a0.encode("hex"), "to": tester.a1.encode("hex"), "value": 2 },
+        { "_event_type": "Transfer", "from": '0x'+tester.a0.encode("hex"), "to": '0x'+tester.a1.encode("hex"), "value": 5L },
+        { "_event_type": "Transfer", "from": '0x'+tester.a0.encode("hex"), "to": '0x'+tester.a1.encode("hex"), "value": 2L },
     ]
 
 def test_transfer_failures(contractsFixture):
@@ -112,7 +112,7 @@ def test_approve(contractsFixture):
     assert cash.approve(tester.a1, 10, sender = tester.k0)
 
     assert 10 == cash.allowance(tester.a0, tester.a1)
-    assert logs == [ { "_event_type": "Approval", "owner": tester.a0.encode("hex"), "spender": tester.a1.encode("hex"), "value": 10 } ]
+    assert logs == [ { "_event_type": "Approval", "owner": '0x'+tester.a0.encode("hex"), "spender": '0x'+tester.a1.encode("hex"), "value": 10 } ]
 
 def test_approve_failures(contractsFixture):
     cash = contractsFixture.cash
@@ -140,7 +140,7 @@ def test_transferFrom(contractsFixture):
     assert startingBalance0 - 5 == cash.balanceOf(tester.a0)
     assert startingBalance1 + 5 == cash.balanceOf(tester.a2)
     assert startingSupply == cash.totalSupply()
-    assert logs == [ { "_event_type": "Transfer", "from": tester.a0.encode("hex"), "to": tester.a2.encode("hex"), "value": 5 } ]
+    assert logs == [ { "_event_type": "Transfer", "from": '0x'+tester.a0.encode("hex"), "to": '0x'+tester.a2.encode("hex"), "value": 5 } ]
 
 def test_transferFrom_failures(contractsFixture):
     cash = contractsFixture.cash

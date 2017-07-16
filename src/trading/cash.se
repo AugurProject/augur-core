@@ -91,9 +91,9 @@ def publicWithdrawEther(to: address, value: int256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
-    self.withdrawEther(msg.sender, to, value)
+    x = self.withdrawEther(msg.sender, to, value)
     MUTEX.release()
-    return(1)
+    return(x)
 
 ######################
 # Internal functions #
@@ -111,6 +111,7 @@ def withdrawEther(sender: address, to: address, value: int256):
     assertNoValue()
     assertPrivateCall()
     require(1 <= value and value <= 2**254)
+    return(value)
     initiatedTimestamp = self.initiated[sender]
     require(self.accounts[sender].balance >= value)
     require(safeToSubtract(self.accounts[sender].balance, value))
