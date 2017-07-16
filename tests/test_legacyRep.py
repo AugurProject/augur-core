@@ -6,7 +6,7 @@ def test_legacyRep(contractsFixture):
     accounts = [tester.a0, tester.a1, tester.a2, tester.a3, tester.a4, tester.a5]
     legacyRep.setSaleDistribution(accounts, amounts)
     legacyRep.setSaleDistribution([tester.a6], [11 * 10**6 * 10**18 - sum(amounts)])
-    contractsFixture.chain.block.timestamp += 15000
+    contractsFixture.chain.head_state.timestamp += 15000
     assert legacyRep.getSeeded()
     assert legacyRep.decimals() == 18
     assert legacyRep.totalSupply() == 11 * 10**6 * 10**18

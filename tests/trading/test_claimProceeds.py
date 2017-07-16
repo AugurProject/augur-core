@@ -67,15 +67,15 @@ def test_redeem_shares_in_binary_market(contractsFixture):
     # get NO shares with a2
     acquireShortShareSet(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
-    contractsFixture.chain.block.timestamp = market.getEndTime() + 1
+    contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have tester.a0 subimt automated report
     market.automatedReport([0, 2], sender = tester.k0)
     # set timestamp to after automated dispute end
-    contractsFixture.chain.block.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
+    contractsFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
     # finalize the market
     assert market.tryFinalizeAutomatedReport()
     # set timestamp to 3 days later (waiting period)
-    contractsFixture.chain.block.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
+    contractsFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
 
     # redeem shares with a1
     claimProceeds.publicClaimProceeds(market.address, sender = tester.k1)
@@ -106,15 +106,15 @@ def test_redeem_shares_in_categorical_market(contractsFixture):
     # get short shares with a2
     acquireShortShareSet(contractsFixture, market, 2, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
-    contractsFixture.chain.block.timestamp = market.getEndTime() + 1
+    contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have a0 subimt automated report
     market.automatedReport([0, 0, 3], sender = tester.k0)
     # set timestamp to after automated dispute end
-    contractsFixture.chain.block.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
+    contractsFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
     # finalize the market
     assert market.tryFinalizeAutomatedReport()
     # set timestamp to 3 days later (waiting period)
-    contractsFixture.chain.block.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
+    contractsFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
 
     # redeem shares with a1
     claimProceeds.publicClaimProceeds(market.address, sender = tester.k1)
@@ -146,15 +146,15 @@ def test_redeem_shares_in_scalar_market(contractsFixture):
     # get NO shares with a2
     acquireShortShareSet(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
-    contractsFixture.chain.block.timestamp = market.getEndTime() + 1
+    contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have tester.a0 subimt automated report (75% high, 25% low, range -10*10^18 to 30*10^18)
     market.automatedReport([10**19, 3*10**19], sender = tester.k0)
     # set timestamp to after automated dispute end
-    contractsFixture.chain.block.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
+    contractsFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
     # finalize the market
     assert market.tryFinalizeAutomatedReport()
     # set timestamp to 3 days later (waiting period)
-    contractsFixture.chain.block.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
+    contractsFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
 
     # redeem shares with a1
     claimProceeds.publicClaimProceeds(market.address, sender = tester.k1)
@@ -179,11 +179,11 @@ def test_reedem_failure(contractsFixture):
     # get NO shares with a2
     acquireShortShareSet(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
-    contractsFixture.chain.block.timestamp = market.getEndTime() + 1
+    contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have tester.a0 subimt automated report (75% high, 25% low, range -10*10^18 to 30*10^18)
     market.automatedReport([0, 2], sender = tester.k0)
     # set timestamp to after automated dispute end
-    contractsFixture.chain.block.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
+    contractsFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
 
     # market not finalized
     with raises(TransactionFailed):
@@ -195,6 +195,6 @@ def test_reedem_failure(contractsFixture):
         claimProceeds.publicClaimProceeds(market.address, sender = tester.k1)
 
     # set timestamp to 3 days later (waiting period)
-    contractsFixture.chain.block.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
+    contractsFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
     # validate that everything else is OK
     assert claimProceeds.publicClaimProceeds(market.address, sender = tester.k1)

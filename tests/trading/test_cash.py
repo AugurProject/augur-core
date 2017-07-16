@@ -5,6 +5,8 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
 
+tester.GASPRICE = 0
+
 def test_init(contractsFixture):
     cash = contractsFixture.cash
 
@@ -43,7 +45,7 @@ def test_publicWithdrawEther(contractsFixture):
     startingCashSupply = cash.totalSupply()
 
     assert cash.publicWithdrawEther(tester.a0, 5)
-    contractsFixture.chain.block.timestamp += long(timedelta(days=3).total_seconds())
+    contractsFixture.chain.head_state.timestamp += long(timedelta(days=3).total_seconds())
     assert cash.publicWithdrawEther(tester.a0, 5)
 
     assert startingUserEthBalance + 5 == contractsFixture.chain.head_state.get_balance(tester.a0)

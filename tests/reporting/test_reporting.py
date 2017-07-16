@@ -7,7 +7,7 @@ def test_reporting(contractsFixture):
     # seed legacy rep contract
     legacyRepContract = contractsFixture.contracts['legacyRepContract']
     legacyRepContract.setSaleDistribution([tester.a0], [long(11 * 10**6 * 10**18)])
-    contractsFixture.chain.block.timestamp += 15000
+    contractsFixture.chain.head_state.timestamp += 15000
     branch = contractsFixture.branch
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
@@ -33,7 +33,7 @@ def test_reporting(contractsFixture):
 
     # fast forward to one second after the next reporting window
     reportingWindow = contractsFixture.applySignature('reportingWindow', branch.getNextReportingWindow())
-    contractsFixture.chain.block.timestamp = reportingWindow.getStartTime() + 1
+    contractsFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
 
     # both reporters report on the outcome
     reportingTokenNo = contractsFixture.getReportingToken(market, [2,0])
@@ -48,7 +48,7 @@ def test_reporting(contractsFixture):
     assert tentativeWinner == reportingTokenYes.getPayoutDistributionHash()
 
     # contest the results
-    contractsFixture.chain.block.timestamp = reportingWindow.getDisputeStartTime() + 1
+    contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     market.disputeLimitedReporters(sender=tester.k0)
     assert not reportingWindow.isContainerForMarket(market.address)
     assert branch.isContainerForMarket(market.address)
@@ -62,13 +62,13 @@ def test_reporting(contractsFixture):
     assert reputationToken.balanceOf(tester.a2) == 1 * 10**6 * 10**18 - 10**18
 
     # report some more
-    contractsFixture.chain.block.timestamp = reportingWindow.getStartTime() + 1
+    contractsFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
     reportingTokenNo.buy(2, sender=tester.k2)
     assert reportingTokenNo.balanceOf(tester.a2) == 2
     assert reputationToken.balanceOf(tester.a2) == 1 * 10**6 * 10 **18 - 10**18 - 2
 
     # fork
-    contractsFixture.chain.block.timestamp = reportingWindow.getDisputeStartTime() + 1
+    contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     market.disputeAllReporters(sender=tester.k1)
     assert branch.getForkingMarket() == market.address
     assert not reportingWindow.isContainerForMarket(market.address)
@@ -96,7 +96,7 @@ def test_reporting(contractsFixture):
     assert noBranchReputationToken.balanceOf(tester.a2) == 1 * 10**6 * 10**18 - 10**18 - 2
 
     # finalize
-    contractsFixture.chain.block.timestamp = branch.getForkEndTime() + 1
+    contractsFixture.chain.head_state.timestamp = branch.getForkEndTime() + 1
     market.tryFinalize()
     assert market.isFinalized()
     assert market.getFinalWinningReportingToken() == reportingTokenNo.address

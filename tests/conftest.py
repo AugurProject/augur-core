@@ -13,6 +13,8 @@ import re
 import serpent
 from utils import bytesToLong
 
+tester.GASPRICE = 0
+
 config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
 
 # used to resolve relative paths
@@ -235,7 +237,7 @@ class NewContractsFixture:
     def createReasonableBinaryMarket(self, branch, denominationToken):
         return self.createBinaryMarket(
             branch = branch,
-            endTime = long(self.chain.block.timestamp + timedelta(days=1).total_seconds()),
+            endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             automatedReporterAddress = tester.a0,
@@ -245,7 +247,7 @@ class NewContractsFixture:
         return self.createCategoricalMarket(
             branch = branch,
             numOutcomes = numOutcomes,
-            endTime = long(self.chain.block.timestamp + timedelta(days=1).total_seconds()),
+            endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             automatedReporterAddress = tester.a0,
@@ -254,7 +256,7 @@ class NewContractsFixture:
     def createReasonableScalarMarket(self, branch, minDisplayPrice, maxDisplayPrice, denominationToken):
         return self.createScalarMarket(
             branch = branch,
-            endTime = long(self.chain.block.timestamp + timedelta(days=1).total_seconds()),
+            endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             minDisplayPrice = minDisplayPrice,
