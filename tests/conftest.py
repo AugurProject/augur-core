@@ -148,7 +148,7 @@ class NewContractsFixture:
         return contract
 
     def resetSnapshot(self):
-        self.chain.head_state = self.originalH
+        self.chain.head_state = self.originalHead
         self.chain.revert(self.snapshot)
 
     ####
