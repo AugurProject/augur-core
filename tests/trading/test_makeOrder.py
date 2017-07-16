@@ -67,7 +67,7 @@ def test_publicMakeOrder_bid(contractsFixture):
     assert order[SHARES_ESCROWED] == 0
     assert order[BETTER_ORDER_ID] == 0
     assert order[WORSE_ORDER_ID] == 0
-    assert order[GAS_PRICE] == 1
+    assert order[GAS_PRICE] == 0
 
 def test_publicMakeOrder_ask(contractsFixture):
     cash = contractsFixture.cash
@@ -87,7 +87,7 @@ def test_publicMakeOrder_ask(contractsFixture):
     assert order[SHARES_ESCROWED] == 0
     assert order[BETTER_ORDER_ID] == 0
     assert order[WORSE_ORDER_ID] == 0
-    assert order[GAS_PRICE] == 1
+    assert order[GAS_PRICE] == 0
     assert cash.balanceOf(market.address) == 10**18 - 10**17
 
 def test_publicMakeOrder_bid2(contractsFixture):

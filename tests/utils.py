@@ -10,13 +10,13 @@ def unfix(n):
     return n // 10**18
 
 def longToHexString(value):
-    return hex(value)[2:-1]
+    return '0x'+hex(value)[2:-1]
 
 def bytesToLong(value):
     return long(value.encode('hex'), 16)
 
 def bytesToHexString(value):
-    return longToHexString(bytesToLong(value))
+    return '0x'+longToHexString(bytesToLong(value))
 
 def captureFilteredLogs(state, contract, logs):
     def captureLog(contract, logs, message):
