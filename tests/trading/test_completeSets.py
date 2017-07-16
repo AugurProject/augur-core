@@ -139,7 +139,6 @@ def test_exceptions(contractsFixture):
         completeSets.sellCompleteSets(tester.a1, market.address, fix('10'), sender=tester.k1)
 
     # sellCompleteSets exceptions
-    contractsFixture.chain.mine(1)
     with raises(TransactionFailed):
         completeSets.publicSellCompleteSets(market.address, fix('-10'), sender=tester.k1)
     with raises(TransactionFailed):
