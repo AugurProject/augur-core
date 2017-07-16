@@ -37,11 +37,11 @@ def test_publicBuyCompleteSets(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": bytesToHexString(tester.a1),
-            "reportingFee": 0,
+	    "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('10'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
     ]

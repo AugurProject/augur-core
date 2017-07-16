@@ -16,7 +16,7 @@ def bytesToLong(value):
     return long(value.encode('hex'), 16)
 
 def bytesToHexString(value):
-    return '0x'+longToHexString(bytesToLong(value))
+    return longToHexString(bytesToLong(value))
 
 def captureFilteredLogs(state, contract, logs):
     def captureLog(contract, logs, message):
