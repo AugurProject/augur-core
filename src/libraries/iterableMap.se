@@ -38,7 +38,7 @@ def remove(key):
     self.itemsMap[key].hasValue = 0
     self.itemsMap[key].value = 0
     self.itemsMap[key].offset = 0
-    if(self.numberOfItems > 1 and keyRemovedOffset != self.numberOfItems):
+    if(self.numberOfItems > 1 and keyRemovedOffset != (self.numberOfItems - 1)):
         # move tail item in collection to the newly opened slot from the key we just removed if not last or only item being removed
         tailItemKey = self.getByOffset(self.numberOfItems - 1)
         self.itemsArray[self.numberOfItems - 1] = 0
