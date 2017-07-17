@@ -22,8 +22,7 @@ macro BUYING: 1
 macro SELLING: 2
 
 # Minimum gas needed to execute the make and/or take functions
-macro MINIMUM_GAS_NEEDED_TO_MAKE_ORDER: 282556
-macro MINIMUM_GAS_NEEDED_TO_TAKE_ORDER: 316476
+macro MINIMUM_GAS_NEEDED: 300000
 
 def init():
     self.owner = msg.sender
@@ -41,7 +40,7 @@ def publicBuy(market: address, outcome: int256, fxpAmount: int256, fxpPrice: int
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
-    output = self.buy(msg.sender, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
+    output = self.trade(msg.sender, BUYING, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
     MUTEX.release()
     return(output)
 
@@ -51,36 +50,30 @@ def publicSell(market: address, outcome: int256, fxpAmount: int256, fxpPrice: in
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
-    output = self.sell(msg.sender, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
+    output = self.trade(msg.sender, SELLING, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
+    MUTEX.release()
+    return(output)
+
+# @public
+# @return fxp
+def publicTrade(direction: int256, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
+    assertNoValue()
+    MUTEX.acquire()
+    self.controller.stopInEmergency()
+    output = self.trade(msg.sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
     MUTEX.release()
     return(output)
 
 # Match an order with the best bid or ask.
 # @public
 # @return fxp
-def publicTakeBestOrder(direction: int256, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256):
+def publicTakeBestOrder(direction: int256, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
-    fxpAmountRemaining = self.takeBestOrder(msg.sender, direction, market, outcome, fxpAmount, fxpPrice)
+    fxpAmountRemaining = self.takeBestOrder(msg.sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
     MUTEX.release()
     return(fxpAmountRemaining)
-
-# Take ask orders from the head of the order list while prices are below the limit price; then make.
-# @internal
-# @return fxp
-def buy(sender: address, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
-    assertNoValue()
-    self.controller.assertIsWhitelisted(msg.sender)
-    return(self.trade(sender, BUYING, market, outcome, fxpAmount, fxpPrice, tradeGroupID))
-
-# Take bid orders from the head of the order list while prices are above the limit price; then make.
-# @internal
-# @return fxp
-def sell(sender: address, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
-    assertNoValue()
-    self.controller.assertIsWhitelisted(msg.sender)
-    return(self.trade(sender, SELLING, market, outcome, fxpAmount, fxpPrice, tradeGroupID))
 
 # Take orders from the head of the order list while prices are better than the limit price; then make.
 # @internal
@@ -88,21 +81,21 @@ def sell(sender: address, market: address, outcome: int256, fxpAmount: int256, f
 def trade(sender: address, direction: int256, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
-    fxpAmount = self.takeBestOrder(sender, direction, market, outcome, fxpAmount, fxpPrice)
-    if(fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED_TO_MAKE_ORDER):
+    fxpAmount = self.takeBestOrder(sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
+    if(fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED):
         return MAKEORDER.makeOrder(sender, direction, fxpAmount, fxpPrice, market, outcome, 0, 0, tradeGroupID)
     return 0
 
 # @internal
 # @return fxp
-def takeBestOrder(sender: address, direction: int256, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256):
+def takeBestOrder(sender: address, direction: int256, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(direction == BUYING or direction == SELLING)
     # we need to take a BID (1) if we want to SELL (2) and we need to take an ASK (2) if we want to BUY (1)
     type = (not (direction - 1)) + 1
     orderID = ORDERS.getBestOrderID(type, market, outcome)
-    while(orderID != 0 and fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED_TO_TAKE_ORDER):
+    while(orderID != 0 and fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED):
         fxpOrderPrice = ORDERS.getPrice(orderID, type, market, outcome)
         if type == BID:
             isAcceptablePrice = fxpOrderPrice >= fxpPrice
@@ -114,7 +107,7 @@ def takeBestOrder(sender: address, direction: int256, market: address, outcome: 
             orderOwner = ORDERS.getOrderOwner(orderID, type, market, outcome)
             nextOrderID = ORDERS.getWorseOrderID(orderID, type, market, outcome)
             if(orderOwner != sender):
-                fxpAmount = TAKEORDER.takeOrder(sender, orderID, type, market, outcome, fxpAmount)
+                fxpAmount = TAKEORDER.takeOrder(sender, orderID, type, market, outcome, fxpAmount, tradeGroupID)
             orderID = nextOrderID
         else:
             orderID = 0

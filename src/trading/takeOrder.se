@@ -48,25 +48,25 @@ def initialize(controller: address):
 # "Snipe" an order on the orderbook using its ID.
 # @public
 # @return fxp
-def publicTakeOrder(orderID: address, type: int256, market: address, outcome: int256, fxpAmountTakerWants: int256):
+def publicTakeOrder(orderID: address, type: int256, market: address, outcome: int256, fxpAmountTakerWants: int256, tradeGroupID: int256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
-    fxpAmountRemaining = self.takeOrder(msg.sender, orderID, type, market, outcome, fxpAmountTakerWants)
+    fxpAmountRemaining = self.takeOrder(msg.sender, orderID, type, market, outcome, fxpAmountTakerWants, tradeGroupID)
     MUTEX.release()
     return(fxpAmountRemaining)
 
 # @internal
 # @return fxp
-def takeOrder(sender: address, orderID: address, type: int256, market: address, outcome: int256, fxpAmountTakerWants: int256):
+def takeOrder(sender: address, orderID: address, type: int256, market: address, outcome: int256, fxpAmountTakerWants: int256, tradeGroupID: int256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(fxpAmountTakerWants)
     # Fill orders
     if(type == BID):
-        fxpAmountRemaining = TAKE_BID_ORDER.takeBidOrder(sender, orderID, market, outcome, fxpAmountTakerWants, call=delegate)
+        fxpAmountRemaining = TAKE_BID_ORDER.takeBidOrder(sender, orderID, market, outcome, fxpAmountTakerWants, tradeGroupID, call=delegate)
     elif(type == ASK):
-        fxpAmountRemaining = FILL_ASK_ORDER.takeAskOrder(sender, orderID, market, outcome, fxpAmountTakerWants, call=delegate)
+        fxpAmountRemaining = FILL_ASK_ORDER.takeAskOrder(sender, orderID, market, outcome, fxpAmountTakerWants, tradeGroupID, call=delegate)
     else:
         ~invalid()
     return(fxpAmountRemaining)

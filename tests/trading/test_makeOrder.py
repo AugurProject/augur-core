@@ -56,10 +56,10 @@ def test_publicMakeOrder_bid(contractsFixture):
     cash.publicDepositEther(value = 10**17)
     cash.approve(makeOrder.address, 10**17)
 
-    orderId = makeOrder.publicMakeOrder(BID, 10**18, 10**17, market.address, 1, 0, 0, 7)
-    assert orderId
+    orderID = makeOrder.publicMakeOrder(BID, 10**18, 10**17, market.address, 1, 0, 0, 7)
+    assert orderID
 
-    order = orders.getOrder(orderId, BID, market.address, 1)
+    order = orders.getOrder(orderID, BID, market.address, 1)
     assert order[ATTOSHARES] == 10**18
     assert order[DISPLAY_PRICE] == 10**17
     assert order[OWNER] == bytesToLong(tester.a0)
@@ -77,9 +77,9 @@ def test_publicMakeOrder_ask(contractsFixture):
     cash.publicDepositEther(value = 10**18)
     cash.approve(makeOrder.address, 10**18)
 
-    orderId = makeOrder.publicMakeOrder(ASK, 10**18, 10**17, market.address, 0, 0, 0, 7)
+    orderID = makeOrder.publicMakeOrder(ASK, 10**18, 10**17, market.address, 0, 0, 0, 7)
 
-    order = orders.getOrder(orderId, ASK, market.address, 0)
+    order = orders.getOrder(orderID, ASK, market.address, 0)
     assert order[ATTOSHARES] == 10**18
     assert order[DISPLAY_PRICE] == 10**17
     assert order[OWNER] == bytesToLong(tester.a0)

@@ -32,18 +32,17 @@ def initialize(branch: address):
     require(not self.initialized)
     self.initialized = 1
     self.branch = branch
-    # CONSIDER: these won't be unique (every branch has an instance of this contract)... is that OK?
     self.name = "Reputation"
     self.symbol = "REP"
     self.decimals = 18
     # CONSIDER: should we copy over contents of 0x0000000000000000000000000000000000000000 from LEGACYREPCONTRACT? if so what do we do with them?
+        # yes, redistribute them in the first reporting period
     # FIXME: DELETE THIS BEFORE LAUNCH!
     faucetDistribution = 1000000 * WEI_TO_ETH
     self.tokens[self.controller.lookup('reputationFaucet')] += faucetDistribution
     self.supply += faucetDistribution
     return(1)
 
-# CONSIDER: this would be better if we used approvals and burned tokens on the parent contract instead of pushing tokens manually onto the child contract, but we need to track topMigrationDestination
 def migrateOut(destinationReputationToken: address, reporter: address, attotokens: int256):
     require(1 <= attotokens and attotokens <= 2**254)
     self.assertReputationTokenIsLegit(destinationReputationToken)

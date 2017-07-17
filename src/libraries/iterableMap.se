@@ -2,7 +2,7 @@ inset('../macros/require.sem')
 
 data owner
 data itemsArray[]
-data itemsMap[](hasValue, value)
+data itemsMap[](hasValue, value, offset)
 data numberOfItems
 
 def init():
@@ -16,6 +16,7 @@ def add(key, value):
     self.itemsArray[self.numberOfItems] = key
     self.itemsMap[key].hasValue = 1
     self.itemsMap[key].value = value
+    self.itemsMap[key].offset = self.numberOfItems
     self.numberOfItems += 1
     return(1)
 
@@ -30,7 +31,20 @@ def addOrUpdate(key, value):
     else:
         self.update(key, value)
 
-# TODO: add support for item removal, note that this requires moving the last item in the collection to the newly opened slot so we don't end up with a sparse collection
+def remove(key):
+    require(self.contains(key))
+    keyRemovedOffset = self.itemsMap[key].offset
+    self.itemsArray[keyRemovedOffset] = 0
+    self.itemsMap[key].hasValue = 0
+    self.itemsMap[key].value = 0
+    self.itemsMap[key].offset = 0
+    if(self.numberOfItems > 1 and keyRemovedOffset != self.numberOfItems):
+        # move tail item in collection to the newly opened slot from the key we just removed if not last or only item being removed
+        tailItemKey = self.getByOffset(self.numberOfItems - 1)
+        self.itemsArray[self.numberOfItems - 1] = 0
+        self.itemsArray[keyRemovedOffset] = tailItemKey
+        self.itemsMap[tailItemKey].offset = self.numberOfItems - 2
+    self.numberOfItems -= 1
 
 def getByKeyOrZero(key):
     return self.itemsMap[key].value

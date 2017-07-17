@@ -18,18 +18,19 @@ def test_publicTakeOrder_bid(contractsFixture):
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['orders']
     market = contractsFixture.binaryMarket
+    tradeGroupID = 42
     logs = []
 
     # create order
     assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderId = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, 42, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderId = takeOrder.publicTakeOrder(orderId, BID, market.address, YES, fix('1.2'), sender = tester.k2)
+    fillOrderID = takeOrder.publicTakeOrder(orderID, BID, market.address, YES, fix('1.2'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
@@ -38,28 +39,29 @@ def test_publicTakeOrder_bid(contractsFixture):
             "sender": longToHexString(takeOrder.address),
             "reportingFee": 0,
             "type": BUY,
-            "fxpAmount": fix('1.2'),
+            "fxpAmount": int(fix('1.2')),
             "marketCreatorFee": 0,
             "numOutcomes": 2,
-            "market": longToHexString(market.address)
+            "market": longToHexString(market.address),
         },
         {
             "_event_type": "TakeOrder",
             "market": longToHexString(market.address),
             "outcome": YES,
             "type": BID,
-            "orderId": longToHexString(orderId),
-            "price": fix('0.6'),
+            "orderID": longToHexString(orderID),
+            "price": int(fix('0.6')),
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0,
-            "makerTokens": fix('1.2', '0.6'),
+            "makerTokens": int(fix('1.2', '0.6')),
             "takerShares": 0,
-            "takerTokens": fix('1.2', '0.4'),
+            "takerTokens": int(fix('1.2', '0.4')),
+            "tradeGroupID": 42,
         },
     ]
-    assert orders.getOrder(orderId, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
-    assert fillOrderId == 0
+    assert orders.getOrder(orderID, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert fillOrderID == 0
 
 def test_publicTakeOrder_ask(contractsFixture):
     cash = contractsFixture.cash
@@ -67,18 +69,19 @@ def test_publicTakeOrder_ask(contractsFixture):
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['orders']
     market = contractsFixture.binaryMarket
+    tradeGroupID = 42
     logs = []
 
     # create order
     assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderId = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, 42, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderId = takeOrder.publicTakeOrder(orderId, ASK, market.address, YES, fix('1.2'), sender = tester.k2)
+    fillOrderID = takeOrder.publicTakeOrder(orderID, ASK, market.address, YES, fix('1.2'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
@@ -97,7 +100,7 @@ def test_publicTakeOrder_ask(contractsFixture):
             "market": longToHexString(market.address),
             "outcome": YES,
             "type": ASK,
-            "orderId": longToHexString(orderId),
+            "orderID": longToHexString(orderID),
             "price": fix('0.6'),
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
@@ -105,7 +108,8 @@ def test_publicTakeOrder_ask(contractsFixture):
             "makerTokens": fix('1.2', '0.4'),
             "takerShares": 0,
             "takerTokens": fix('1.2', '0.6'),
+            "tradeGroupID": tradeGroupID
         },
     ]
-    assert orders.getOrder(orderId, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
-    assert fillOrderId == 0
+    assert orders.getOrder(orderID, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert fillOrderID == 0
