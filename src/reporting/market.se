@@ -8,6 +8,7 @@ data controllerLookupName
 macro MARKET_FEE_CALCULATOR: self.controller.lookup('marketFeeCalculator')
 macro REPORTING_TOKEN_FACTORY: self.controller.lookup('reportingTokenFactory')
 macro SHARE_TOKEN_FACTORY: self.controller.lookup('shareTokenFactory')
+macro MAP_FACTORY: self.controller.lookup('mapFactory')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
@@ -85,7 +86,7 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     self.automatedReporterAddress = automatedReporterAddress
     self.denominationToken = denominationToken
     self.creator = creator
-    self.reportingTokens = create('../libraries/map.se')
+    self.reportingTokens = MAP_FACTORY.createMap(self.controller, self)
     outcome = 0
     while(outcome < numOutcomes):
         self.shareTokens[outcome] = SHARE_TOKEN_FACTORY.createShareToken(self.controller, self, outcome)
@@ -315,7 +316,7 @@ def migrateThroughOneFork():
     self.limitedReportersPayoutDistributionHash = 0
     self.allReportersPayoutDistributionHash = 0
     self.tentativeWinningPayoutDistributionHash = 0
-    self.reportingTokens = create('../libraries/map.se')
+    self.reportingTokens = MAP_FACTORY.createMap(self.controller, self)
     return(1)
 
 

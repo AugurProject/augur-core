@@ -1,0 +1,15 @@
+extern delegateExtern: [setup:[int256,int256]:_]
+extern mapExtern: [initialize:[address]:_]
+
+# workaround for https://github.com/ethereum/serpent/issues/119
+data lastMap
+
+def createMap(controller: address, owner: address):
+    mapObj = create('../libraries/delegator.se')
+    mapObj.setup(controller, 'map')
+    mapObj.initialize(owner)
+    self.lastMap = mapObj
+    return(mapObj)
+
+def getlastMap():
+    return(self.lastMap)

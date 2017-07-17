@@ -5,6 +5,8 @@ data controller
 data controllerLookupName
 #####
 
+macro ITERABLE_MAP_FACTORY: self.controller.lookup('iterableMapFactory')
+
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
 inset('../macros/require.sem')
@@ -16,8 +18,7 @@ data topics
 # FIXME: topics needs to be sorted on-chain, which means we need a sorted linked list collection with hinted sorting at insertion/update time instead of a simple iterableMap
 def initialize():
     require(not self.topics)
-    # TODO: change iterableMap to a delegated contract so it can be updated
-    self.topics = create('../libraries/iterableMap.se')
+    self.topics = ITERABLE_MAP_FACTORY.createIterableMap(self.controller, self)
 
 def any():
     assertNoValue()
