@@ -43,6 +43,7 @@ def initialize(controller: address):
     require(not self.controller)
     require(msg.sender == self.owner)
     self.controller = controller
+    return 1
 
 # "Snipe" an order on the orderbook using its ID.
 # @public

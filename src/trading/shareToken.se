@@ -36,6 +36,7 @@ def initialize(market: address, outcome: int256):
     self.initialized = 1
     self.market = market
     self.outcome = outcome
+    return 1
 
 def any():
     assertNoValue()

@@ -32,6 +32,7 @@ def initialize(controller: address):
     require(not self.initialized)
     self.initialized = 1
     self.controller = controller
+    return 1
 
 # @public
 def publicCancelOrder(orderID: address, type: int256, market: address, outcome: int256):
