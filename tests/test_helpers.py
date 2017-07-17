@@ -22,12 +22,11 @@ def test_assertNoValue(block, assertNoValue):
     startingGasUsed = chain.head_state.gas_used
 
     assertNoValue[1].assertNoValue(sender=tester.k2)
-    with raises(InsufficientBalance):
+    with raises(TransactionFailed):
         assertNoValue[1].assertNoValue(value=500*10**18, sender=tester.k2)
 
-    gasSpent = chain.head_state.gas_used - startingGasUsed
     balanceAfter = chain.head_state.get_balance(tester.a2)
-    assert balanceBefore - gasSpent == balanceAfter
+    assert balanceBefore == balanceAfter
 
 def test_add(floatTest):
     assert(floatTest.add(5, 10)==15)
