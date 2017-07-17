@@ -62,8 +62,8 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
             "tradeGroupID": tradeGroupID,
         },
     ]
-    assert orders.getOrder(orderId, BID, market.address, YES) == [0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L]
-    assert fillOrderId == 0
+    assert orders.getOrder(orderID, BID, market.address, YES) == [0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L]
+    assert fillOrderID == 0
 
 def test_one_bid_on_books_buy_partial_order(contractsFixture):
     cash = contractsFixture.cash
@@ -114,8 +114,8 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
             "tradeGroupID": tradeGroupID,
         },
     ]
-    assert orders.getOrder(orderId, BID, market.address, YES) == [fix('0.5'), fix('0.6'), bytesToLong(tester.a1), fix('0.5', '0.6'), 0, 0, 0, 0L]
-    assert fillOrderId == 0
+    assert orders.getOrder(orderID, BID, market.address, YES) == [fix('0.5'), fix('0.6'), bytesToLong(tester.a1), fix('0.5', '0.6'), 0, 0, 0, 0L]
+    assert fillOrderID == 0
 
 def test_one_bid_on_books_buy_excess_order(contractsFixture):
     cash = contractsFixture.cash
@@ -180,8 +180,8 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
             "tradeGroupID": tradeGroupID,
         },
     ]
-    assert orders.getOrder(orderId, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
-    assert orders.getOrder(fillOrderId, ASK, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToLong(tester.a2), fix('0.3', '0.4'), 0, 0, 0, 0]
+    assert orders.getOrder(orderID, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert orders.getOrder(fillOrderID, ASK, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToLong(tester.a2), fix('0.3', '0.4'), 0, 0, 0, 0]
 
 def test_two_bids_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
@@ -343,9 +343,9 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
             "tradeGroupID": tradeGroupID,
         },
     ]
-    assert orders.getOrder(orderId1, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
-    assert orders.getOrder(orderId2, BID, market.address, YES) == [fix('0.4'), fix('0.6'), bytesToLong(tester.a3), fix('0.4', '0.6'), 0, 0, 0, 0]
-    assert fillOrderId == 0
+    assert orders.getOrder(orderID1, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert orders.getOrder(orderID2, BID, market.address, YES) == [fix('0.4'), fix('0.6'), bytesToLong(tester.a3), fix('0.4', '0.6'), 0, 0, 0, 0]
+    assert fillOrderID == 0
 
 def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     cash = contractsFixture.cash
@@ -414,9 +414,9 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
             "tradeGroupID": tradeGroupID,
         },
     ]
-    assert orders.getOrder(orderId1, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
-    assert orders.getOrder(orderId2, BID, market.address, YES) == [fix('0.7'), fix('0.5'), bytesToLong(tester.a3), fix('0.7', '0.5'), 0, 0, 0, 0]
-    assert orders.getOrder(fillOrderId, ASK, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToLong(tester.a2), fix('0.3', '0.4'), 0, 0, 0, 0]
+    assert orders.getOrder(orderID1, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert orders.getOrder(orderID2, BID, market.address, YES) == [fix('0.7'), fix('0.5'), bytesToLong(tester.a3), fix('0.7', '0.5'), 0, 0, 0, 0]
+    assert orders.getOrder(fillOrderID, ASK, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToLong(tester.a2), fix('0.3', '0.4'), 0, 0, 0, 0]
 
 def test_one_ask_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
@@ -519,8 +519,8 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
             "tradeGroupID": tradeGroupID,
         },
     ]
-    assert orders.getOrder(orderId, ASK, market.address, YES) == [fix('0.5'), fix('0.6'), bytesToLong(tester.a1), fix('0.5', '0.4'), 0, 0, 0, 0]
-    assert fillOrderId == 0
+    assert orders.getOrder(orderID, ASK, market.address, YES) == [fix('0.5'), fix('0.6'), bytesToLong(tester.a1), fix('0.5', '0.4'), 0, 0, 0, 0]
+    assert fillOrderID == 0
 
 def test_one_ask_on_books_buy_excess_order(contractsFixture):
     cash = contractsFixture.cash
@@ -585,8 +585,8 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
             "tradeGroupID": tradeGroupID,
         },
     ]
-    assert orders.getOrder(orderId, ASK, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
-    assert orders.getOrder(fillOrderId, BID, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToLong(tester.a2), fix('0.3', '0.6'), 0, 0, 0, 0]
+    assert orders.getOrder(orderID, ASK, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert orders.getOrder(fillOrderID, BID, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToLong(tester.a2), fix('0.3', '0.6'), 0, 0, 0, 0]
 
 def test_two_asks_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
@@ -748,9 +748,9 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
             "tradeGroupID": tradeGroupID,
         },
     ]
-    assert orders.getOrder(orderId1, ASK, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
-    assert orders.getOrder(orderId2, ASK, market.address, YES) == [fix('0.4'), fix('0.6'), bytesToLong(tester.a3), fix('0.4', '0.4'), 0, 0, 0, 0]
-    assert fillOrderId == 0
+    assert orders.getOrder(orderID1, ASK, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert orders.getOrder(orderID2, ASK, market.address, YES) == [fix('0.4'), fix('0.6'), bytesToLong(tester.a3), fix('0.4', '0.4'), 0, 0, 0, 0]
+    assert fillOrderID == 0
 
 def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     cash = contractsFixture.cash
@@ -819,6 +819,6 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
             "tradeGroupID": tradeGroupID,
         },
     ]
-    assert orders.getOrder(orderId1, ASK, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
-    assert orders.getOrder(orderId2, ASK, market.address, YES) == [fix('0.7'), fix('0.7'), bytesToLong(tester.a3), fix('0.7', '0.3'), 0, 0, 0, 0]
-    assert orders.getOrder(fillOrderId, BID, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToLong(tester.a2), fix('0.3', '0.6'), 0, 0, 0, 0]
+    assert orders.getOrder(orderID1, ASK, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert orders.getOrder(orderID2, ASK, market.address, YES) == [fix('0.7'), fix('0.7'), bytesToLong(tester.a3), fix('0.7', '0.3'), 0, 0, 0, 0]
+    assert orders.getOrder(fillOrderID, BID, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToLong(tester.a2), fix('0.3', '0.6'), 0, 0, 0, 0]
