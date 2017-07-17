@@ -1,12 +1,10 @@
-sudo: required
-
 language: python
 
 notifications:
   email: false
 
 python:
-  - "2.7_with_system_site_packages"
+  - "2.7"
 
 addons:
   apt:
