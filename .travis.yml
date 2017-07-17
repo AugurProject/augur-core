@@ -1,12 +1,10 @@
-sudo: required
-
 language: python
 
 notifications:
   email: false
 
 python:
-  - "2.7_with_system_site_packages"
+  - "2.7"
 
 addons:
   apt:
@@ -18,7 +16,6 @@ addons:
 install:
   - pip install -U pip
   - pip install pip-tools
-  - pip-compile --output-file requirements.txt requirements.in
   - pip install -r requirements.txt
 
 script:
