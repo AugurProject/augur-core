@@ -1,5 +1,5 @@
 ethereum-serpent-augur-temp==2.0.2
-ethereum-augur-temp
+ethereum-augur-temp==2.1.0
 iocapture==0.1.2
 numpy==1.13.0
 pytest==3.1.2

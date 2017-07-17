@@ -13,6 +13,9 @@ import re
 import serpent
 from utils import bytesToLong
 
+# adds keywords for Solidity code
+true, false = True, False
+
 tester.GASPRICE = 0
 
 config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
