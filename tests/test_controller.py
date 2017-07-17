@@ -89,6 +89,8 @@ class Fixture:
         self.decentralizedController = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "../src/controller.se"), language="serpent", startgas=long(6.7 * 10**6))
         self.controllerUser = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "serpent_test_helpers/controllerUser.se"), language="serpent", startgas=long(6.7 * 10**6))
         self.decentralizedController.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k0)
+        self.originalHead = self.chain.head_state
+        self.originalBlock = self.chain.block
         self.snapshot = self.chain.snapshot()
 
 @fixture(scope="session")
@@ -97,6 +99,8 @@ def sessionFixture():
 
 @fixture
 def localFixture(sessionFixture):
+    sessionFixture.chain.block = sessionFixture.originalBlock
+    sessionFixture.chain.head_state = sessionFixture.originalHead
     sessionFixture.chain.revert(sessionFixture.snapshot)
     return sessionFixture
 

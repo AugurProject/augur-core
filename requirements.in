@@ -1,5 +1,7 @@
 ethereum-serpent-augur-temp==2.0.2
-ethereum
+py_ecc==1.0.0
+-e libs/py_ecc-1.1.0
+-e libs/ethereum
 iocapture==0.1.2
 numpy==1.13.0
 pytest==3.1.2
