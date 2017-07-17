@@ -4,6 +4,7 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
+pycryptodome==3.4.6
 ethereum-augur-temp==2.1.0
 ethereum-serpent-augur-temp==2.0.2
 iocapture==0.1.2
