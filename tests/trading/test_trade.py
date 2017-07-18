@@ -91,11 +91,11 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.7'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -144,11 +144,11 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -176,7 +176,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
             "sender": bytesToHexString(tester.a2),
             "fxpAmount": fix('0.3'),
             "fxpMoneyEscrowed": fix('0.3', '0.4'),
-            "fxpSharesEscrowed": 0,
+            "fxpSharesEscrowed": 0L,
             "tradeGroupID": tradeGroupID,
         },
     ]
@@ -213,11 +213,11 @@ def test_two_bids_on_books_buy_both(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -238,11 +238,11 @@ def test_two_bids_on_books_buy_both(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -295,11 +295,11 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -320,11 +320,11 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -378,11 +378,11 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -410,7 +410,7 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
             "sender": bytesToHexString(tester.a2),
             "fxpAmount": fix('0.3'),
             "fxpMoneyEscrowed": fix('0.3', '0.4'),
-            "fxpSharesEscrowed": 0,
+            "fxpSharesEscrowed": 0L,
             "tradeGroupID": tradeGroupID,
         },
     ]
@@ -444,11 +444,11 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -496,11 +496,11 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.7'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -549,11 +549,11 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -581,7 +581,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
             "sender": bytesToHexString(tester.a2),
             "fxpAmount": fix('0.3'),
             "fxpMoneyEscrowed": fix('0.3', '0.6'),
-            "fxpSharesEscrowed": 0,
+            "fxpSharesEscrowed": 0L,
             "tradeGroupID": tradeGroupID,
         },
     ]
@@ -618,11 +618,11 @@ def test_two_asks_on_books_buy_both(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -643,11 +643,11 @@ def test_two_asks_on_books_buy_both(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -700,11 +700,11 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -725,11 +725,11 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -783,11 +783,11 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": longToHexString(takeOrder.address),
-            "reportingFee": 0,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0,
-            "numOutcomes": 2,
+            "marketCreatorFee": 0L,
+            "numOutcomes": 2L,
             "market": longToHexString(market.address)
         },
         {
@@ -815,7 +815,7 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
             "sender": bytesToHexString(tester.a2),
             "fxpAmount": fix('0.3'),
             "fxpMoneyEscrowed": fix('0.3', '0.6'),
-            "fxpSharesEscrowed": 0,
+            "fxpSharesEscrowed": 0L,
             "tradeGroupID": tradeGroupID,
         },
     ]
