@@ -3,22 +3,14 @@ from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
 from ethereum.tools.tester import ABIContract
-from ethereum import utils as u
 from ethereum.config import config_metropolis, Env
-import io
-import json
+from io import open as io_open
+from json import dump as json_dump, load as json_load
 from os import path, walk, makedirs, listdir
 from pytest import fixture
-import re
-import serpent
+from re import findall
+from serpent import mk_full_signature, compile as compile_serpent
 from utils import bytesToLong
-
-# adds keywords for Solidity code
-true, false = True, False
-
-tester.GASPRICE = 0
-
-config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
 
 # used to resolve relative paths
 BASE_PATH = path.dirname(path.abspath(__file__))
@@ -50,13 +42,13 @@ class ContractsFixture:
         lastCompilationTime = path.getmtime(outputPath) if path.isfile(outputPath) else 0
         if path.getmtime(relativeFilePath) > lastCompilationTime:
             print('generating signature for ' + name)
-            signature = serpent.mk_full_signature(relativeFilePath)
+            signature = mk_full_signature(relativeFilePath)
             with open(outputPath, mode='w') as file:
-                json.dump(signature, file)
+                json_dump(signature, file)
         else:
             print('using cached signature for ' + name)
         with open(outputPath, 'r') as file:
-            signature = json.load(file)
+            signature = json_load(file)
         return(signature)
 
     @staticmethod
@@ -76,12 +68,12 @@ class ContractsFixture:
                 break
         if (needsRecompile):
             print('compiling ' + name + '...')
-            compiledCode = serpent.compile(relativeFilePath)
-            with io.open(compiledOutputPath, mode='wb') as file:
+            compiledCode = compile_serpent(relativeFilePath)
+            with io_open(compiledOutputPath, mode='wb') as file:
                 file.write(compiledCode)
         else:
             print('using cached compilation for ' + name)
-        with io.open(compiledOutputPath, mode='rb') as file:
+        with io_open(compiledOutputPath, mode='rb') as file:
             compiledCode = file.read()
             ContractsFixture.compiledCode[name] = compiledCode
             return(compiledCode)
@@ -92,12 +84,12 @@ class ContractsFixture:
         fileDirectory = path.dirname(filePath)
         with open(filePath, 'r') as file:
             fileContents = file.read()
-        matches = re.findall("inset\('(.*?)'\)", fileContents)
+        matches = findall("inset\('(.*?)'\)", fileContents)
         for match in matches:
             dependencyPath = path.abspath(path.join(fileDirectory, match))
             if not dependencyPath in knownDependencies:
                 ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
-        matches = re.findall("create\('(.*?)'\)", fileContents)
+        matches = findall("create\('(.*?)'\)", fileContents)
         for match in matches:
             dependencyPath = path.abspath(path.join(fileDirectory, match))
             if not dependencyPath in knownDependencies:
@@ -109,6 +101,8 @@ class ContractsFixture:
     ####
 
     def __init__(self):
+        tester.GASPRICE = 0
+        config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
         self.chain = tester.Chain(env=Env(config=config_metropolis))
         self.contracts = {}
       	self.controller = self.upload('../src/controller.se')
@@ -183,6 +177,8 @@ class ContractsFixture:
     def whitelistTradingContracts(self):
         for filename in listdir(resolveRelativePath('../src/trading')):
             name = path.splitext(filename)[0]
+            extension = path.splitext(filename)[1]
+            if extension != '.se': continue
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
