@@ -2,8 +2,8 @@ dist: trusty
 sudo: false
 
 cache:
-  apt: true
-  pip: true
+  - apt
+  - pip
 
 language: python
 
