@@ -199,6 +199,13 @@ def updateTentativeWinningPayoutDistributionHash(payoutDistributionHash: int256)
 #    self.getBranch().updateTopicPopularity(self.getTopic(), self.getShareToken(0).totalSupply())
 #    return(1)
 
+# FIXME: use this during market finalization
+#def removeFromSortedLists():
+#    assertPrivateCall()
+#    self.getBranch().removeSortedMarket(self)
+#    self.getBranch().updateTopicPopularity(self.getTopic(), self.getShareToken(0).totalSupply())
+#    return(1)
+
 def tryFinalize():
     assertNoValue()
     self.tryFinalizeAutomatedReport()

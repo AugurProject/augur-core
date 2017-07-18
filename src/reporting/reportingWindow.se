@@ -113,11 +113,8 @@ def noteReport(market: address, reporter: address, payoutDistributionHash: int25
         # only give credit for limited reporter markets up to the max reporters for that market
         self.privateNoteReport(market, reporter)
     # no credit in all other cases (but user can still report)
-<<<<<<< b64026b4289e577637f36311905ec4fc91f7b49c
     return(1)
-=======
 
-<<<<<<< d15ef6eb6281f767bd076a6798f8647bce71862c
 def compare(firstMarket: int256, secondMarket: int256):
     firstOI = firstMarket.getShareToken(0).totalSupply()
     secondOI = secondMarket.getShareToken(0).totalSupply()
@@ -127,10 +124,7 @@ def compare(firstMarket: int256, secondMarket: int256):
     if (firstOI < secondOI):
         return(-1)
     return(0)
->>>>>>> Checkpoint commit. Sorted markets within reporting window based on OI
 
-=======
->>>>>>> Move sorting of markets to branches. Also add attempt at optimizing internal re-adds of items in sortedLinkedLists
 ####
 #### Getters
 ####
@@ -255,12 +249,9 @@ def privateAddMarket(market: address):
         self.allReporterMarkets.addSetItem(market)
         return(1)
     self.limitedReporterMarkets.addSetItem(market)
-<<<<<<< f7cb457d0476bf00c27ec7e45e9c287814c2894a
-    return(1)
-=======
     # Update sorted topic popularity based just on OI
     self.getBranch().updateTopicPopularity(market.getTopic(), market.getShareToken(0).totalSupply())
->>>>>>> - Add more tests
+    return(1)
 
 def privateNoteReport(market: address, reporter: address):
     assertPrivateCall()
