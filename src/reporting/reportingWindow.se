@@ -37,6 +37,7 @@ def initialize(branch: address, reportingWindowId: int256):
     self.markets = create('../libraries/set.se')
     self.limitedReporterMarkets = create('../libraries/set.se')
     self.allReporterMarkets = create('../libraries/set.se')
+    return(1)
 
 def createNewMarket(endTime: int256, numOutcomes: int256, payoutDenominator: int256, feePerEthInWei: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
     require(2 <= numOutcomes and numOutcomes <= 8)
@@ -56,6 +57,7 @@ def migrateMarketInFromSibling():
     require(originalReportingWindow.isContainerForMarket(msg.sender))
     market = msg.sender
     self.privateAddMarket(market)
+    return(1)
 
 def migrateMarketInFromNibling():
     assertNoValue()
@@ -68,6 +70,7 @@ def migrateMarketInFromNibling():
     require(originalReportingWindow.isContainerForMarket(msg.sender))
     market = msg.sender
     self.privateAddMarket(market)
+    return(1)
 
 def removeMarket():
     assertNoValue()
@@ -76,6 +79,7 @@ def removeMarket():
     self.markets.remove(market)
     self.limitedReporterMarkets.remove(market)
     self.allReporterMarkets.remove(market)
+    return(1)
 
 def updateMarketPhase():
     assertNoValue()
@@ -84,14 +88,15 @@ def updateMarketPhase():
     if (market.isDoneWithAllReporters()):
         self.allReporterMarkets.remove(market)
         self.limitedReporterMarkets.remove(market)
-        return
+        return(0)
     if (market.isDoneWithLimitedReporters()):
         self.allReporterMarkets.addSetItem(market)
         self.limitedReporterMarkets.remove(market)
-        return
+        return(0)
     # defaults to in limited reporter markets
     self.allReporterMarkets.remove(market)
     self.limitedReporterMarkets.addSetItem(market)
+    return(1)
 
 def noteReport(market: address, reporter: address, payoutDistributionHash: int256):
     assertNoValue()
@@ -105,7 +110,7 @@ def noteReport(market: address, reporter: address, payoutDistributionHash: int25
         # only give credit for limited reporter markets up to the max reporters for that market
         self.privateNoteReport(market, reporter)
     # no credit in all other cases (but user can still report)
-
+    return(1)
 
 ####
 #### Getters
@@ -230,13 +235,15 @@ def privateAddMarket(market: address):
         return
     if (market.isDoneWithLimitedReporters()):
         self.allReporterMarkets.addSetItem(market)
-        return
+        return(1)
     self.limitedReporterMarkets.addSetItem(market)
+    return(1)
 
 def privateNoteReport(market: address, reporter: address):
     assertPrivateCall()
     reports = self.getReportsByReporter(reporter)
     if (reports.contains(market)):
-        return
+        return(1)
     reports.addSetItem(market)
     self.numberOfReportsByMarket[market] += 1
+    return(1)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from ethereum import tester
+from ethereum.tools import tester
 from os import getenv
 from pytest import fixture, mark
 from random import randint, random as randfloat

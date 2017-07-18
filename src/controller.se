@@ -36,7 +36,6 @@ def init():
     # starts in dev mode [where escape hatches and contract reuploads are allowed], will eventually switch to decentralized [where escape hatches are allowed, and contract updates are done through migration of users/tokens]
     self.whitelist[msg.sender] = 1
 
-
 ### Whitelisting [whitelisted augur contracts and dev mode can use it] ###
 
 def addToWhitelist(address):

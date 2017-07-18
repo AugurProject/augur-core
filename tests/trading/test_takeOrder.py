@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from ethereum import tester
+from ethereum.tools import tester
 from utils import fix, longToHexString, bytesToHexString, captureFilteredLogs
 
 BID = 1
@@ -29,7 +29,7 @@ def test_publicTakeOrder_bid(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
-    captureFilteredLogs(contractsFixture.state, orders, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     fillOrderID = takeOrder.publicTakeOrder(orderID, BID, market.address, YES, fix('1.2'), tradeGroupID, sender = tester.k2)
 
     # assert
@@ -80,7 +80,7 @@ def test_publicTakeOrder_ask(contractsFixture):
     # take best order
     assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
-    captureFilteredLogs(contractsFixture.state, orders, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     fillOrderID = takeOrder.publicTakeOrder(orderID, ASK, market.address, YES, fix('1.2'), tradeGroupID, sender = tester.k2)
 
     # assert

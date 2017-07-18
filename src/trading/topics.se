@@ -18,6 +18,7 @@ def initialize():
     require(not self.topics)
     # TODO: change iterableMap to a delegated contract so it can be updated
     self.topics = create('../libraries/iterableMap.se')
+    return(1)
 
 def any():
     assertNoValue()

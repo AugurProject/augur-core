@@ -1,6 +1,12 @@
-from ethereum import tester
 import os
 import serpent
+from ethereum.tools import tester as tester
+from ethereum.abi import ContractTranslator
+from ethereum.tools.tester import ABIContract
+from ethereum import utils as u
+from ethereum.config import config_metropolis, Env
+
+config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
 
 library = """
 def bar():
@@ -17,9 +23,9 @@ with open("garbage.se", "w") as file:
     file.write(library)
 
 try:
-    state = tester.state()
-    state.block.number += 2000000
-    contract = state.abi_contract(code)
+    chain = tester.Chain(env=Env(config=config_metropolis))
+    chain.block.number += 2000000
+    contract = chain.contract(code, language="serpent")
     contract.foo("hello goodbye")
 finally:
     os.remove("garbage.se")

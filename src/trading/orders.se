@@ -42,6 +42,7 @@ def initialize(controller: address):
     require(not self.initialized)
     self.initialized = 1
     self.controller = controller
+    return(1)
 
 # @public
 # @return fxp
