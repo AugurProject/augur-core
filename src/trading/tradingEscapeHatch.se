@@ -1,5 +1,10 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
+#### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+####
+
 macro ORDERS: self.controller.lookup('orders')
 
 inset('../macros/externs.sem')
@@ -8,8 +13,8 @@ inset('../macros/require.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
-data controller
 data owner
+data initialized
 
 data frozenShareValue[][]
 
@@ -23,8 +28,8 @@ def init():
     self.owner = msg.sender
 
 def initialize(controller: address):
-    require(not self.controller)
-    require(msg.sender == self.owner)
+    require(not self.initialized)
+    self.initialized = 1
     self.controller = controller
     return(1)
 
