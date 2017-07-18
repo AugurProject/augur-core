@@ -4,6 +4,7 @@
 
 macro ORDERS: self.controller.lookup('orders')
 macro MUTEX: self.controller.lookup('mutex')
+macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
@@ -53,7 +54,7 @@ def cancelOrder(sender: address, orderID: address, type: int256, market: address
     require(market)
 
     # Look up the order the sender wants to cancel
-    order = ORDERS.getOrder(orderID, type, market, outcome, outitems = ORDER_FIELDS)
+    order = ORDERS_FETCHER.getOrder(orderID, type, market, outcome, outitems = ORDER_FIELDS)
     fxpAmount = order[ATTOSHARES]
     fxpPrice = order[DISPLAY_PRICE]
     owner = order[OWNER]

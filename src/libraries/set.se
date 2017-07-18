@@ -1,14 +1,24 @@
+#### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+####
+
 inset('../macros/require.sem')
 
 data collection[]
 data count
 data owner
-
-def init():
-    self.owner = msg.sender
+data initialized
 
 def any():
-    require(self.owner == msg.sender or self == msg.sender)
+    if (self.initialized):
+        require(msg.sender == self.owner or msg.sender == self)
+
+def initialize(owner: address):
+    require(not self.initialized)
+    self.initialized = 1
+    self.owner = owner
+    return(1)
 
 def addSetItem(item):
     if (self.contains(item)):

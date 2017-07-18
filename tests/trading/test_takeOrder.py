@@ -17,6 +17,7 @@ def test_publicTakeOrder_bid(contractsFixture):
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     market = contractsFixture.binaryMarket
     tradeGroupID = 42
     logs = []
@@ -60,7 +61,7 @@ def test_publicTakeOrder_bid(contractsFixture):
             "tradeGroupID": 42,
         },
     ]
-    assert orders.getOrder(orderID, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
     assert fillOrderID == 0
 
 def test_publicTakeOrder_ask(contractsFixture):
@@ -68,6 +69,7 @@ def test_publicTakeOrder_ask(contractsFixture):
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     market = contractsFixture.binaryMarket
     tradeGroupID = 42
     logs = []
@@ -111,5 +113,5 @@ def test_publicTakeOrder_ask(contractsFixture):
             "tradeGroupID": tradeGroupID
         },
     ]
-    assert orders.getOrder(orderID, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
     assert fillOrderID == 0
