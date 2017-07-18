@@ -1,3 +1,10 @@
+dist: trusty
+sudo: false
+
+cache:
+  - apt
+  - pip
+
 language: python
 
 notifications:
@@ -14,8 +21,7 @@ addons:
       - gfortran
 
 install:
-  - pip install -U pip
-  - pip install pip-tools
+  - pip install -U pip setuptools
   - pip install -r requirements.txt
 
 script:
