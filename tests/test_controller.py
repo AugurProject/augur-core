@@ -3,7 +3,7 @@
 # Test the functions in src/functions/controller.se
 # Uses tests/controller_test.se as a helper (to set the controller, etc.)
 
-from ethereum.tools import tester as tester
+from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
 from ethereum.tools.tester import ABIContract
 from ethereum import utils as u

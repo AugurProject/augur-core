@@ -1,6 +1,6 @@
 import os
 import serpent
-from ethereum.tools import tester as tester
+from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
 from ethereum.tools.tester import ABIContract
 from ethereum import utils as u
