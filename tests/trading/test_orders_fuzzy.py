@@ -66,6 +66,7 @@ def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbab
     contractsFixture.resetSnapshot()
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     outcomeID = 1
     orderIDs = np.arange(1, numOrders + 1)
     # Generate random prices on [0, 1) and rank them (smallest price @ rank 0)
@@ -110,7 +111,7 @@ def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbab
     assert(bestOrderID == int(orders.getBestOrderID(orderType, market.address, outcomeID), 16)), "Verify best order ID"
     assert(worstOrderID == int(orders.getWorstOrderID(orderType, market.address, outcomeID), 16)), "Verify worst order ID"
     for orderID in orderIDs:
-        order = orders.getOrder(orderID, orderType, market.address, outcomeID)
+        order = ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)
         orderPrice = order[DISPLAY_PRICE]
         betterOrderID = order[BETTER_ORDER_ID]
         worseOrderID = order[WORSE_ORDER_ID]
@@ -123,11 +124,11 @@ def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbab
             if betterOrderPrice: assert(orderPrice >= betterOrderPrice), "Order price >= better order price"
             if worseOrderPrice: assert(orderPrice <= worseOrderPrice), "Order price <= worse order price"
         if betterOrderID:
-            assert(orders.getOrder(betterOrderID, orderType, market.address, outcomeID)[WORSE_ORDER_ID] == orderID), "Better order's worseOrderID should equal orderID"
+            assert(ordersFetcher.getOrder(betterOrderID, orderType, market.address, outcomeID)[WORSE_ORDER_ID] == orderID), "Better order's worseOrderID should equal orderID"
         else:
             assert(orderID == bestOrderID), "Should be the best order ID"
         if worseOrderID:
-            assert(orders.getOrder(worseOrderID, orderType, market.address, outcomeID)[BETTER_ORDER_ID] == orderID), "Worse order's betterOrderID should equal orderID"
+            assert(ordersFetcher.getOrder(worseOrderID, orderType, market.address, outcomeID)[BETTER_ORDER_ID] == orderID), "Worse order's betterOrderID should equal orderID"
         else:
             assert(orderID == worstOrderID), "Should be the worst order ID"
     for orderID in orderIDs:

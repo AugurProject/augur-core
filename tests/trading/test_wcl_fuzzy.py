@@ -81,6 +81,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
 
     cash = contractsFixture.cash
     orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['completeSets']
@@ -97,7 +98,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     orderID = makeOrder.publicMakeOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, 0, 0, 42, sender = makerKey)
 
     # validate the order
-    order = orders.getOrder(orderID, orderType, market.address, orderOutcome)
+    order = ordersFetcher.getOrder(orderID, orderType, market.address, orderOutcome)
     assert order[ATTOSHARES] == orderSize
     assert order[DISPLAY_PRICE] == orderPrice
     assert order[OWNER] == bytesToLong(makerAddress)

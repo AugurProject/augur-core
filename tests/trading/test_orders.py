@@ -26,6 +26,7 @@ GAS_PRICE = 7
 def test_walkOrderList_bids(contractsFixture):
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     outcomeID = 1
     order = {
         "orderID": 5,
@@ -46,17 +47,17 @@ def test_walkOrderList_bids(contractsFixture):
     assert(bestOrderID == 5)
     assert(worstOrderID == 5)
     # walk down order list starting from bestOrderID
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.6'), bestOrderID) == [5, 0])
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.59'), bestOrderID) == [5, 0])
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.61'), bestOrderID) == [0, 5])
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.58'), bestOrderID) == [5, 0])
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [5, 0])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.6'), bestOrderID) == [5, 0])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.59'), bestOrderID) == [5, 0])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.61'), bestOrderID) == [0, 5])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.58'), bestOrderID) == [5, 0])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [5, 0])
     # walk up order list starting from worstOrderID
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.6'), worstOrderID) == [5, 0])
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.59'), worstOrderID) == [5, 0])
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.61'), worstOrderID) == [0, 5])
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.58'), worstOrderID) == [5, 0])
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [5, 0])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.6'), worstOrderID) == [5, 0])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.59'), worstOrderID) == [5, 0])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.61'), worstOrderID) == [0, 5])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.58'), worstOrderID) == [5, 0])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [5, 0])
     order = {
         "orderID": 6,
         "type": 1,
@@ -76,17 +77,17 @@ def test_walkOrderList_bids(contractsFixture):
     assert(bestOrderID == 5)
     assert(worstOrderID == 6)
     # walk down order list starting from bestOrderID
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.6'), bestOrderID) == [5, 6])
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.59'), bestOrderID) == [6, 0])
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.61'), bestOrderID) == [0, 5])
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.58'), bestOrderID) == [6, 0])
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [5, 6])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.6'), bestOrderID) == [5, 6])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.59'), bestOrderID) == [6, 0])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.61'), bestOrderID) == [0, 5])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.58'), bestOrderID) == [6, 0])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [5, 6])
     # walk up order list starting from worstOrderID
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.6'), worstOrderID) == [5, 6])
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.59'), worstOrderID) == [6, 0])
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.61'), worstOrderID) == [0, 5])
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.58'), worstOrderID) == [6, 0])
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [5, 6])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.6'), worstOrderID) == [5, 6])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.59'), worstOrderID) == [6, 0])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.61'), worstOrderID) == [0, 5])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.58'), worstOrderID) == [6, 0])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [5, 6])
     order = {
         "orderID": 7,
         "type": 1,
@@ -106,15 +107,15 @@ def test_walkOrderList_bids(contractsFixture):
     assert(bestOrderID == 5)
     assert(worstOrderID == 6)
     # walk down order list starting from bestOrderID
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.6'), bestOrderID) == [5, 7])
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.59'), bestOrderID) == [6, 0])
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.61'), bestOrderID) == [0, 5])
-    assert(orders.descendOrderList(1, market.address, outcomeID, fix('0.58'), bestOrderID) == [6, 0])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.6'), bestOrderID) == [5, 7])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.59'), bestOrderID) == [6, 0])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.61'), bestOrderID) == [0, 5])
+    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.58'), bestOrderID) == [6, 0])
     # walk up order list starting from worstOrderID
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.6'), worstOrderID) == [5, 7])
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.59'), worstOrderID) == [6, 0])
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.61'), worstOrderID) == [0, 5])
-    assert(orders.ascendOrderList(1, market.address, outcomeID, fix('0.58'), worstOrderID) == [6, 0])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.6'), worstOrderID) == [5, 7])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.59'), worstOrderID) == [6, 0])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.61'), worstOrderID) == [0, 5])
+    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.58'), worstOrderID) == [6, 0])
     assert(orders.removeOrder(5, BID, market.address, outcomeID) == 1), "Remove order 5"
     assert(orders.removeOrder(6, BID, market.address, outcomeID) == 1), "Remove order 6"
     assert(orders.removeOrder(7, BID, market.address, outcomeID) == 1), "Remove order 7"
@@ -122,6 +123,7 @@ def test_walkOrderList_bids(contractsFixture):
 def test_walkOrderList_asks(contractsFixture):
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     outcomeID = 1
     order = {
         "orderID": 8,
@@ -142,15 +144,15 @@ def test_walkOrderList_asks(contractsFixture):
     assert(bestOrderID == 8)
     assert(worstOrderID == 8)
     # walk down order list starting from bestOrderID
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.6'), bestOrderID) == [8, 0])
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.59'), bestOrderID) == [0, 8])
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.61'), bestOrderID) == [8, 0])
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.58'), bestOrderID) == [0, 8])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.6'), bestOrderID) == [8, 0])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.59'), bestOrderID) == [0, 8])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.61'), bestOrderID) == [8, 0])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.58'), bestOrderID) == [0, 8])
     # walk up order list starting from worstOrderID
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.6'), worstOrderID) == [8, 0])
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.59'), worstOrderID) == [0, 8])
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.61'), worstOrderID) == [8, 0])
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.58'), worstOrderID) == [0, 8])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.6'), worstOrderID) == [8, 0])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.59'), worstOrderID) == [0, 8])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.61'), worstOrderID) == [8, 0])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.58'), worstOrderID) == [0, 8])
     order = {
         "orderID": 9,
         "type": 2,
@@ -170,17 +172,17 @@ def test_walkOrderList_asks(contractsFixture):
     assert(bestOrderID == 9)
     assert(worstOrderID == 8)
     # walk down order list starting from bestOrderID
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.6'), bestOrderID) == [8, 0])
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.59'), bestOrderID) == [9, 8])
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.61'), bestOrderID) == [8, 0])
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.58'), bestOrderID) == [0, 9])
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.595'), bestOrderID) == [9, 8])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.6'), bestOrderID) == [8, 0])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.59'), bestOrderID) == [9, 8])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.61'), bestOrderID) == [8, 0])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.58'), bestOrderID) == [0, 9])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.595'), bestOrderID) == [9, 8])
     # walk up order list starting from worstOrderID
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.6'), worstOrderID) == [8, 0])
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.59'), worstOrderID) == [9, 8])
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.61'), worstOrderID) == [8, 0])
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.58'), worstOrderID) == [0, 9])
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.595'), bestOrderID) == [9, 8])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.6'), worstOrderID) == [8, 0])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.59'), worstOrderID) == [9, 8])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.61'), worstOrderID) == [8, 0])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.58'), worstOrderID) == [0, 9])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.595'), bestOrderID) == [9, 8])
     order = {
         "orderID": 10,
         "type": 2,
@@ -200,15 +202,15 @@ def test_walkOrderList_asks(contractsFixture):
     assert(bestOrderID == 9)
     assert(worstOrderID == 8)
     # walk down order list starting from bestOrderID
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.6'), bestOrderID) == [8, 0])
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.59'), bestOrderID) == [9, 10])
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.61'), bestOrderID) == [8, 0])
-    assert(orders.descendOrderList(2, market.address, outcomeID, fix('0.58'), bestOrderID) == [0, 9])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.6'), bestOrderID) == [8, 0])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.59'), bestOrderID) == [9, 10])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.61'), bestOrderID) == [8, 0])
+    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.58'), bestOrderID) == [0, 9])
     # walk up order list starting from worstOrderID
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.6'), worstOrderID) == [8, 0])
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.59'), worstOrderID) == [9, 10])
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.61'), worstOrderID) == [8, 0])
-    assert(orders.ascendOrderList(2, market.address, outcomeID, fix('0.58'), worstOrderID) == [0, 9])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.6'), worstOrderID) == [8, 0])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.59'), worstOrderID) == [9, 10])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.61'), worstOrderID) == [8, 0])
+    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.58'), worstOrderID) == [0, 9])
     assert(orders.removeOrder(8, ASK, market.address, outcomeID) == 1), "Remove order 8"
     assert(orders.removeOrder(9, ASK, market.address, outcomeID) == 1), "Remove order 9"
     assert(orders.removeOrder(10, ASK, market.address, outcomeID) == 1), "Remove order 10"
@@ -217,6 +219,7 @@ def test_orderSorting(contractsFixture):
     def runtest(testCase):
         market = contractsFixture.binaryMarket
         orders = contractsFixture.contracts['orders']
+        ordersFetcher = contractsFixture.contracts['ordersFetcher']
         ordersCollection = []
         for order in testCase["orders"]:
             output = orders.saveOrder(
@@ -234,7 +237,7 @@ def test_orderSorting(contractsFixture):
                 order["tradeGroupID"], 1)
             assert(output == 1), "saveOrder wasn't executed successfully"
         for order in testCase["orders"]:
-            ordersCollection.append(orders.getOrder(order["orderID"], order["type"], market.address, order["outcome"]))
+            ordersCollection.append(ordersFetcher.getOrder(order["orderID"], order["type"], market.address, order["outcome"]))
         assert(len(ordersCollection) == len(testCase["expected"]["orders"])), "Number of orders not as expected"
         for i, order in enumerate(ordersCollection):
             outcomeID = testCase["orders"][i]["outcome"]
@@ -1056,14 +1059,15 @@ def test_orderSorting(contractsFixture):
 def test_saveOrder(contractsFixture):
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     order1 = 12345
     order2 = 98765
 
     assert(orders.saveOrder(order1, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), 0, 0, 2, 1) == 1), "saveOrder wasn't executed successfully"
     assert(orders.saveOrder(order2, ASK, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, 0, 0, 1, 1) == 1), "saveOrder wasn't executed successfully"
 
-    assert(orders.getOrder(order1, BID, market.address, NO) == [fix('10'), fix('0.5'), bytesToLong(tester.a1), 0, fix('10'), 0, 0, 1]), "getOrder for order1 didn't return the expected array of data"
-    assert(orders.getOrder(order2, ASK, market.address, NO) == [fix('10'), fix('0.5'), bytesToLong(tester.a2), fix('5'), 0, 0, 0, 1]), "getOrder for order2 didn't return the expected array of data"
+    assert(ordersFetcher.getOrder(order1, BID, market.address, NO) == [fix('10'), fix('0.5'), bytesToLong(tester.a1), 0, fix('10'), 0, 0, 1]), "getOrder for order1 didn't return the expected array of data"
+    assert(ordersFetcher.getOrder(order2, ASK, market.address, NO) == [fix('10'), fix('0.5'), bytesToLong(tester.a2), fix('5'), 0, 0, 0, 1]), "getOrder for order2 didn't return the expected array of data"
 
     assert(orders.getAmount(order1, BID, market.address, NO) == fix('10')), "amount for order1 should be set to 10 ETH"
     assert(orders.getAmount(order2, ASK, market.address, NO) == fix('10')), "amount for order2 should be set to 10 ETH"
@@ -1080,6 +1084,7 @@ def test_saveOrder(contractsFixture):
 def test_fillOrder(contractsFixture):
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     order1 = 12345
     order2 = 98765
 
@@ -1096,26 +1101,27 @@ def test_fillOrder(contractsFixture):
     # fully fill
     assert(orders.fillOrder(order1, BID, market.address, NO, fix('10'), 0) == 1), "fillOrder wasn't executed successfully"
     # prove all
-    assert(orders.getOrder(order1, BID, market.address, NO) == [0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order1 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(order1, BID, market.address, NO) == [0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order1 didn't return the expected data array"
     # test partial fill
     assert(orders.fillOrder(order2, BID, market.address, NO, 0, fix('3')) == 1), "fillOrder wasn't executed successfully"
     # confirm partial fill
-    assert(orders.getOrder(order2, BID, market.address, NO) == [fix('4'), fix('0.5'), bytesToLong(tester.a2), fix('2'), 0, 0, 0, 1]), "getOrder for order2 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(order2, BID, market.address, NO) == [fix('4'), fix('0.5'), bytesToLong(tester.a2), fix('2'), 0, 0, 0, 1]), "getOrder for order2 didn't return the expected data array"
     # fill rest of order2
     assert(orders.fillOrder(order2, BID, market.address, NO, 0, fix('2')) == 1), "fillOrder wasn't executed successfully"
-    assert(orders.getOrder(order2, BID, market.address, NO) == [0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order2 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(order2, BID, market.address, NO) == [0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order2 didn't return the expected data array"
 
 def test_removeOrder(contractsFixture):
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     order1 = 12345
     order2 = 98765
     order3 = 321321321
     assert(orders.saveOrder(order1, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), 0, 0, 2, 1) == 1), "saveOrder wasn't executed successfully"
     assert(orders.saveOrder(order2, BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, 0, 0, 1, 1) == 1), "saveOrder wasn't executed successfully"
     assert(orders.saveOrder(order3, BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), 0, 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
-    assert(orders.getOrder(order3, BID, market.address, YES) == [fix('10'), fix('0.5'), bytesToLong(tester.a1), 0, fix('10'), 0, 0, 1]), "getOrder for order3 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(order3, BID, market.address, YES) == [fix('10'), fix('0.5'), bytesToLong(tester.a1), 0, fix('10'), 0, 0, 1]), "getOrder for order3 didn't return the expected data array"
     assert(orders.removeOrder(order3, BID, market.address, YES) == 1), "removeOrder wasn't executed successfully"
-    assert(orders.getOrder(order3, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
+    assert(ordersFetcher.getOrder(order3, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
     assert(orders.removeOrder(order1, BID, market.address, NO) == 1), "Remove order 1"
     assert(orders.removeOrder(order2, BID, market.address, NO) == 1), "Remove order 2"

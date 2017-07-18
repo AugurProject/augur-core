@@ -2,6 +2,7 @@
 
 macro MUTEX: self.controller.lookup('mutex')
 macro ORDERS: self.controller.lookup('orders')
+macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
 macro TAKEORDER: self.controller.lookup('takeOrder')
 macro MAKEORDER: self.controller.lookup('makeOrder')
 
@@ -103,7 +104,7 @@ def takeBestOrder(sender: address, direction: int256, market: address, outcome: 
         if isAcceptablePrice:
             ORDERS.setPrice(market, outcome, fxpOrderPrice)
             ORDERS.modifyMarketVolume(market, fxpAmount)
-            orderOwner = ORDERS.getOrderOwner(orderID, type, market, outcome)
+            orderOwner = ORDERS_FETCHER.getOrderOwner(orderID, type, market, outcome)
             nextOrderID = ORDERS.getWorseOrderID(orderID, type, market, outcome)
             if(orderOwner != sender):
                 fxpAmount = TAKEORDER.takeOrder(sender, orderID, type, market, outcome, fxpAmount, tradeGroupID)
