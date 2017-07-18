@@ -9,9 +9,9 @@ def fix(n, m = 1):
 def unfix(n):
     return n // 10**18
 
-def longToHexString(value):
+def longToHexString(value, leftPad=40):
     hexstr = hex(value)[2:-1]
-    if len(hexstr) % 2 != 0:
+    while len(hexstr) < leftPad:
         hexstr = '0' + hexstr
     return hexstr
 
