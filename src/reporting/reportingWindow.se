@@ -88,11 +88,11 @@ def updateMarketPhase():
     if (market.isDoneWithAllReporters()):
         self.allReporterMarkets.remove(market)
         self.limitedReporterMarkets.remove(market)
-        return
+        return(0)
     if (market.isDoneWithLimitedReporters()):
         self.allReporterMarkets.addSetItem(market)
         self.limitedReporterMarkets.remove(market)
-        return
+        return(0)
     # defaults to in limited reporter markets
     self.allReporterMarkets.remove(market)
     self.limitedReporterMarkets.addSetItem(market)
@@ -235,7 +235,7 @@ def privateAddMarket(market: address):
         return
     if (market.isDoneWithLimitedReporters()):
         self.allReporterMarkets.addSetItem(market)
-        return
+        return(1)
     self.limitedReporterMarkets.addSetItem(market)
     return 1
 
@@ -243,7 +243,7 @@ def privateNoteReport(market: address, reporter: address):
     assertPrivateCall()
     reports = self.getReportsByReporter(reporter)
     if (reports.contains(market)):
-        return
+        return(1)
     reports.addSetItem(market)
     self.numberOfReportsByMarket[market] += 1
     return 1

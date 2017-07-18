@@ -57,7 +57,6 @@ def redeemDisavowedTokens(reporter: address):
     log(type=Transfer, reporter, 0, attotokens)
     return 1
 
-
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
 def redeemForkedTokens(reporter: address):
     require(msg.sender == reporter)
@@ -110,7 +109,7 @@ def extractBondHolderPayments():
     desiredBondPot = self.market.getDesiredDisputeRewardPot()
     bondPotIncrease = desiredBondPot - marketReputationBalance
     if (bondPotIncrease <= 0):
-        return
+        return(0)
     excessAttorepAvailable = self.getReputationToken().balanceOf(self) - self.supply
     amountToSend = min(bondPotIncrease, excessAttorepAvailable)
     self.getReputationToken().transfer(self.market, amountToSend)

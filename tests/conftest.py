@@ -1,8 +1,10 @@
 from binascii import hexlify
 from datetime import timedelta
-from ethereum import tester
+from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
-from ethereum.tester import ABIContract
+from ethereum.tools.tester import ABIContract
+from ethereum import utils as u
+from ethereum.config import config_metropolis, Env
 import io
 import json
 from os import path, walk, makedirs, listdir
@@ -11,13 +13,20 @@ import re
 import serpent
 from utils import bytesToLong
 
+# adds keywords for Solidity code
+true, false = True, False
+
+tester.GASPRICE = 0
+
+config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
+
 # used to resolve relative paths
 BASE_PATH = path.dirname(path.abspath(__file__))
 def resolveRelativePath(relativeFilePath):
     return path.abspath(path.join(BASE_PATH, relativeFilePath))
 COMPILATION_CACHE = resolveRelativePath('./compilation_cache')
 
-class NewContractsFixture:
+class ContractsFixture:
     # TODO: figure out how to disable logging events to stdout (they are super noisy)
     signatures = {}
     compiledCode = {}
@@ -33,7 +42,7 @@ class NewContractsFixture:
 
     @staticmethod
     def generateSignature(relativeFilePath):
-        NewContractsFixture.ensureCacheDirectoryExists()
+        ContractsFixture.ensureCacheDirectoryExists()
         name = path.splitext(path.basename(relativeFilePath))[0]
         outputPath = path.join(COMPILATION_CACHE,  name + 'Signature')
         lastCompilationTime = path.getmtime(outputPath) if path.isfile(outputPath) else 0
@@ -51,11 +60,11 @@ class NewContractsFixture:
     @staticmethod
     def getCompiledCode(relativeFilePath):
         name = path.splitext(path.basename(relativeFilePath))[0]
-        if name in NewContractsFixture.compiledCode:
-            return NewContractsFixture.compiledCode[name]
+        if name in ContractsFixture.compiledCode:
+            return ContractsFixture.compiledCode[name]
         dependencySet = set()
-        NewContractsFixture.getAllDependencies(relativeFilePath, dependencySet)
-        NewContractsFixture.ensureCacheDirectoryExists()
+        ContractsFixture.getAllDependencies(relativeFilePath, dependencySet)
+        ContractsFixture.ensureCacheDirectoryExists()
         compiledOutputPath = path.join(COMPILATION_CACHE, name)
         lastCompilationTime = path.getmtime(compiledOutputPath) if path.isfile(compiledOutputPath) else 0
         needsRecompile = False
@@ -72,7 +81,7 @@ class NewContractsFixture:
             print('using cached compilation for ' + name)
         with io.open(compiledOutputPath, mode='rb') as file:
             compiledCode = file.read()
-            NewContractsFixture.compiledCode[name] = compiledCode
+            ContractsFixture.compiledCode[name] = compiledCode
             return(compiledCode)
 
     @staticmethod
@@ -85,12 +94,12 @@ class NewContractsFixture:
         for match in matches:
             dependencyPath = path.abspath(path.join(fileDirectory, match))
             if not dependencyPath in knownDependencies:
-                NewContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
+                ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
         matches = re.findall("create\('(.*?)'\)", fileContents)
         for match in matches:
             dependencyPath = path.abspath(path.join(fileDirectory, match))
             if not dependencyPath in knownDependencies:
-                NewContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
+                ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
         return(knownDependencies)
 
     ####
@@ -98,12 +107,9 @@ class NewContractsFixture:
     ####
 
     def __init__(self):
-        self.state = tester.state()
+        self.chain = tester.Chain(env=Env(config=config_metropolis))
         self.contracts = {}
-        self.state.block.number += 2000000
-        self.state.block.timestamp = 1
-        tester.gas_limit = long(4.7 * 10**6)
-        self.controller = self.upload('../src/controller.se')
+      	self.controller = self.upload('../src/controller.se')
         assert self.controller.getOwner() == bytesToLong(tester.a0)
         self.uploadAllContracts()
         self.whitelistTradingContracts()
@@ -113,8 +119,10 @@ class NewContractsFixture:
         self.binaryMarket = self.createReasonableBinaryMarket(self.branch, self.cash)
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)
         self.scalarMarket = self.createReasonableScalarMarket(self.branch, -10 * 10**18, 30 * 10**18, self.cash)
-        self.state.mine(1)
-        self.snapshot = self.state.snapshot()
+        self.chain.mine(1)
+        self.originalHead = self.chain.head_state
+        self.originalBlock = self.chain.block
+        self.snapshot = self.chain.snapshot()
 
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
@@ -127,23 +135,26 @@ class NewContractsFixture:
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(resolvedPath))[0]
         if lookupKey in self.contracts:
             return(self.contracts[lookupKey])
-        compiledCode = NewContractsFixture.getCompiledCode(resolvedPath)
-        if lookupKey not in NewContractsFixture.signatures:
-            NewContractsFixture.signatures[lookupKey] = NewContractsFixture.generateSignature(resolvedPath)
-        signature = NewContractsFixture.signatures[lookupKey]
-        contractAddress = long(hexlify(self.state.evm(compiledCode)), 16)
-        contract = ABIContract(self.state, ContractTranslator(signature), contractAddress)
+        compiledCode = ContractsFixture.getCompiledCode(resolvedPath)
+        if lookupKey not in ContractsFixture.signatures:
+            ContractsFixture.signatures[lookupKey] = ContractsFixture.generateSignature(resolvedPath)
+        signature = ContractsFixture.signatures[lookupKey]
+        print lookupKey
+        contractAddress = long(hexlify(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6))), 16)
+        contract = ABIContract(self.chain, ContractTranslator(signature), contractAddress)
         self.contracts[lookupKey] = contract
-        return(contract)
+	return(contract)
 
     def applySignature(self, signatureName, address):
         assert address
-        translator = ContractTranslator(NewContractsFixture.signatures[signatureName])
-        contract = ABIContract(self.state, translator, address)
+        translator = ContractTranslator(ContractsFixture.signatures[signatureName])
+        contract = ABIContract(self.chain, translator, address)
         return contract
 
     def resetSnapshot(self):
-        self.state.revert(self.snapshot)
+        self.chain.block = self.originalBlock
+        self.chain.head_state = self.originalHead
+        self.chain.revert(self.snapshot)
 
     ####
     #### Bulk Operations
@@ -202,7 +213,7 @@ class NewContractsFixture:
     def getReportingToken(self, market, payoutDistribution):
         reportingTokenAddress = market.getReportingToken(payoutDistribution)
         assert reportingTokenAddress
-        reportingToken = ABIContract(self.state, ContractTranslator(NewContractsFixture.signatures['reportingToken']), reportingTokenAddress)
+        reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['reportingToken']), reportingTokenAddress)
         return reportingToken
 
     def getChildBranch(self, parentBranch, market, payoutDistribution):
@@ -210,7 +221,7 @@ class NewContractsFixture:
         assert payoutDistributionHash
         childBranchAddress = parentBranch.getChildBranch(payoutDistributionHash)
         assert childBranchAddress
-        childBranch = ABIContract(self.state, ContractTranslator(NewContractsFixture.signatures['branch']), childBranchAddress)
+        childBranch = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['branch']), childBranchAddress)
         return(childBranch)
 
     def createBinaryMarket(self, branch, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic):
@@ -220,20 +231,20 @@ class NewContractsFixture:
         marketCreationFee = self.contracts['marketFeeCalculator'].getValidityBond() + self.contracts['marketFeeCalculator'].getTargetReporterGasCosts()
         marketAddress = self.contracts['marketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, automatedReporterAddress, topic, value = marketCreationFee)
         assert marketAddress
-        market = ABIContract(self.state, ContractTranslator(NewContractsFixture.signatures['market']), marketAddress)
+        market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['market']), marketAddress)
         return market
 
     def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic):
         marketCreationFee = self.contracts['marketFeeCalculator'].getValidityBond() + self.contracts['marketFeeCalculator'].getTargetReporterGasCosts()
         marketAddress = self.contracts['marketCreation'].createScalarMarket(branch.address, endTime, feePerEthInWei, denominationToken.address, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = marketCreationFee)
         assert marketAddress
-        market = ABIContract(self.state, ContractTranslator(NewContractsFixture.signatures['market']), marketAddress)
+        market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['market']), marketAddress)
         return market
 
     def createReasonableBinaryMarket(self, branch, denominationToken):
         return self.createBinaryMarket(
             branch = branch,
-            endTime = long(self.state.block.timestamp + timedelta(days=1).total_seconds()),
+            endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             automatedReporterAddress = tester.a0,
@@ -243,7 +254,7 @@ class NewContractsFixture:
         return self.createCategoricalMarket(
             branch = branch,
             numOutcomes = numOutcomes,
-            endTime = long(self.state.block.timestamp + timedelta(days=1).total_seconds()),
+            endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             automatedReporterAddress = tester.a0,
@@ -252,7 +263,7 @@ class NewContractsFixture:
     def createReasonableScalarMarket(self, branch, minDisplayPrice, maxDisplayPrice, denominationToken):
         return self.createScalarMarket(
             branch = branch,
-            endTime = long(self.state.block.timestamp + timedelta(days=1).total_seconds()),
+            endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             minDisplayPrice = minDisplayPrice,
@@ -262,7 +273,7 @@ class NewContractsFixture:
 
 @fixture(scope="session")
 def sessionFixture():
-    return NewContractsFixture()
+    return ContractsFixture()
 
 @fixture
 def contractsFixture(sessionFixture):

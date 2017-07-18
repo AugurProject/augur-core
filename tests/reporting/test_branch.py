@@ -1,4 +1,4 @@
-from ethereum import tester
+from ethereum.tools import tester
 
 def test_branch_creation(contractsFixture):
     branch = contractsFixture.createBranch(3, 5)

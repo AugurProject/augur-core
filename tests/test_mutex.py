@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from ethereum.tester import TransactionFailed
+from ethereum.tools.tester import TransactionFailed
 from pytest import raises
 
 def test_mutex(contractsFixture):
