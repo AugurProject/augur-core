@@ -1,25 +1,16 @@
 dist: trusty
-sudo: false
+sudo: required
 
-cache:
-  - apt
-  - pip
+language: bash
 
-language: python
+services:
+  - docker
 
 notifications:
   email: false
 
-addons:
-  apt:
-    packages:
-      - libblas-dev
-      - liblapack-dev
-      - gfortran
+before_install: ./.travis/ci-setup.sh
+script: ./.travis/ci.sh
 
-install:
-  - pip install -U pip setuptools
-  - pip install -r requirements.txt
-
-script:
-  - travis_wait 60 pytest -vv tests
+git:
+  depth: 5

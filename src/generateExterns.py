@@ -1,12 +1,12 @@
 from __future__ import print_function
-import os
-import serpent
+from os import path, listdir
+from serpent import mk_signature
 
 # TODO: only regenerate this file if one of the source files has changed since this file was created
 
 def generateExternForFile(filePath):
-    name = os.path.splitext(os.path.basename(filePath))[0]
-    signatureOutput = serpent.mk_signature(filePath)
+    name = path.splitext(path.basename(filePath))[0]
+    signatureOutput = mk_signature(filePath)
     signature = signatureOutput.split(': ', 1)[1]
     signature = signature.replace(':,', ':int256,').replace(':]', ':int256]')
     externLine = 'extern ' + name + 'Extern: ' + signature
@@ -15,13 +15,14 @@ def generateExternForFile(filePath):
 def getAllFilesInDirectories(sourceDirectories):
     allFilePaths = []
     for directory in sourceDirectories:
-        files = os.listdir(directory)
-        for file in files:
-            allFilePaths.append(directory + file)
+        files = listdir(directory)
+        for filename in files:
+            if path.splitext(filename)[1] != '.se': continue
+            allFilePaths.append(directory + filename)
     return(allFilePaths)
 
 externLines = []
-for filePath in (getAllFilesInDirectories(['./factories/', './libraries/', './reporting/', './trading/', './extensions/']) + ['./controller.se', './mutex.se']):
+for filePath in (getAllFilesInDirectories(['./factories/', './libraries/', './reporting/', './trading/', './extensions/']) + ['./mutex.se']):
     externLines.append(generateExternForFile(filePath))
 
 with open('./macros/externs.sem', 'w') as externsFile:

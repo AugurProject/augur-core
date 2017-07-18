@@ -118,14 +118,14 @@ def totalSupply():
 def balanceOf(address: address):
     return(self.tokens[address])
 
-def transfer(destinationAddress: address, attotokens: int256):
+def transfer(destinationAddress: address, attotokens: uint256):
     require(1 <= attotokens and attotokens <= 2**254)
     self.tokens[msg.sender] = safeSub(self.tokens[msg.sender], attotokens)
     self.tokens[destinationAddress] = safeAdd(self.tokens[destinationAddress], attotokens)
     log(type = Transfer, msg.sender, destinationAddress, attotokens)
     return(1)
 
-def transferFrom(sourceAddress: address, destinationAddress: address, attotokens: int256):
+def transferFrom(sourceAddress: address, destinationAddress: address, attotokens: uint256):
     require(1 <= attotokens and attotokens <= 2**254)
     require(self.branch.isContainerForReportingWindow(msg.sender) or self.branch.isContainerForRegistrationToken(msg.sender) or self.branch.isContainerForMarket(msg.sender) or self.branch.isContainerForReportingToken(msg.sender) or self.safeDeductAllowance(sourceAddress, msg.sender, attotokens))
     self.tokens[sourceAddress] = safeSub(self.tokens[sourceAddress], attotokens)
@@ -133,7 +133,7 @@ def transferFrom(sourceAddress: address, destinationAddress: address, attotokens
     log(type = Transfer, sourceAddress, destinationAddress, attotokens)
     return(1)
 
-def approve(spenderAddress: address, attotokens: int256):
+def approve(spenderAddress: address, attotokens: uint256):
     require(1 <= attotokens and attotokens <= 2**254)
     self.spenders[msg.sender][spenderAddress] = attotokens
     log(type = Approval, msg.sender, spenderAddress, attotokens)
