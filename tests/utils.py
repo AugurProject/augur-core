@@ -11,8 +11,8 @@ def unfix(n):
 
 def longToHexString(value):
     hexStr = hex(value)[2:-1]
-    while len(hexstr) < leftPad:
-        hexstr = '0' + hexstr
+    while len(hexStr) < leftPad:
+        hexStr = '0' + hexStr
     if(hexStr[0:2] == '0x'):
         return hexStr
     else:
