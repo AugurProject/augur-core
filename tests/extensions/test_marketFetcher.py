@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from ethereum import tester
-from ethereum.tester import TransactionFailed
+from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, lazy_fixture, raises
 
 # These should match the macros in marketFetcher.se
@@ -22,12 +22,12 @@ MARKET_NUM_OUTCOMES = 4
 def marketFetcherSnapshot(sessionFixture):
     marketFetcher = sessionFixture.upload('../src/extensions/marketFetcher.se')
     marketFetcher.initialize(sessionFixture.controller.address)
-    sessionFixture.state.mine(1)
-    return sessionFixture.state.snapshot()
+    sessionFixture.chain.mine(1)
+    return sessionFixture.chain.snapshot()
 
 @fixture
 def marketFetcherContractsFixture(sessionFixture, marketFetcherSnapshot):
-    sessionFixture.state.revert(marketFetcherSnapshot)
+    sessionFixture.chain.revert(marketFetcherSnapshot)
     return sessionFixture
 
 def test_marketFetcherGetMarketDataHappyPath(marketFetcherContractsFixture):

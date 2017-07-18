@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from ethereum import tester
-from ethereum.tester import TransactionFailed
+from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, lazy_fixture, raises
 
 POLITICS = 'Politics'.ljust(32, '\x00')
@@ -12,12 +12,12 @@ ENTERTAINMENT = 'Entertainment'.ljust(32, '\x00')
 def topicFetcherSnapshot(sessionFixture):
     topicFetcher = sessionFixture.upload('../src/extensions/topicFetcher.se')
     topicFetcher.initialize(sessionFixture.controller.address)
-    sessionFixture.state.mine(1)
-    return sessionFixture.state.snapshot()
+    sessionFixture.chain.mine(1)
+    return sessionFixture.chain.snapshot()
 
 @fixture
 def topicFetcherContractsFixture(sessionFixture, topicFetcherSnapshot):
-    sessionFixture.state.revert(topicFetcherSnapshot)
+    sessionFixture.chain.revert(topicFetcherSnapshot)
     return sessionFixture
 
 def test_topicFetcherHelperFunctions(topicFetcherContractsFixture):
