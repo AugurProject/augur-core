@@ -59,12 +59,6 @@ def addOrUpdateSortedMarket(market: address, hints: arr):
 def removeSortedMarket(market: address):
     self.markets.removeSortedLinkedListItem(market)
 
-def addOrUpdateSortedMarket(market: address, hints: arr):
-    self.markets.addSortedLinkedListItem(market, hints)
-
-def removeSortedMarket(market: address):
-    self.markets.removeSortedLinkedListItem(market)
-
 def updateTopicPopularity(topic: int256, popularityDelta: int256):
     self.topics.updatePopularity(topic, popularityDelta)
     return(1)
