@@ -10,23 +10,14 @@ def unfix(n):
     return n // 10**18
 
 def longToHexString(value, leftPad=40):
-    hexStr = hex(value)[2:-1]
-    while len(hexStr) < leftPad:
-        hexStr = '0' + hexStr
-    if(hexStr[0:2] == '0x'):
-        return hexStr
-    else:
-        return '0x' + hexStr
+    # convert the value to a hex string, strip off the `0x`, strip off any trailing `L`, pad with zeros, prefix with `0x`
+    return '0x' + hex(value)[2:].rstrip('L').zfill(leftPad)
 
 def bytesToLong(value):
     return long(value.encode('hex'), 16)
 
 def bytesToHexString(value):
-    hexStr = longToHexString(bytesToLong(value))
-    if(hexStr[0:2] == '0x'):
-        return hexStr
-    else:
-        return '0x' + hexStr
+    return longToHexString(bytesToLong(value))
 
 def captureFilteredLogs(state, contract, logs):
     def captureLog(contract, logs, message):

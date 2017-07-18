@@ -60,6 +60,7 @@ def redeemDisavowedTokens(reporter: address):
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
 def redeemForkedTokens(reporter: address):
     require(msg.sender == reporter)
+    # FIXME: this doesn't need to wait for finalization, instead as soon as the fork occurs anyone can redeem on the branch they reported on (but no other)
     require(self.market.isFinalized())
     require(self.market.isContainerForReportingToken(self))
     require(self.getBranch().getForkingMarket() == self.market)
@@ -156,14 +157,14 @@ def totalSupply():
 def balanceOf(address: address):
     return(self.tokens[address])
 
-def transfer(destinationAddress: address, attotokens: int256):
+def transfer(destinationAddress: address, attotokens: uint256):
     require(1 <= attotokens and attotokens <= 2**254)
     self.tokens[msg.sender] = safeSub(self.tokens[msg.sender], attotokens)
     self.tokens[destinationAddress] = safeAdd(self.tokens[destinationAddress], attotokens)
     log(type = Transfer, msg.sender, destinationAddress, attotokens)
     return(1)
 
-def transferFrom(sourceAddress: address, destinationAddress: address, attotokens: int256):
+def transferFrom(sourceAddress: address, destinationAddress: address, attotokens: uint256):
     require(1 <= attotokens and attotokens <= 2**254)
     require(self.spenders[sourceAddress][msg.sender] >= attotokens)
     self.spenders[sourceAddress][msg.sender] = safeSub(self.spenders[sourceAddress][msg.sender], attotokens)
@@ -172,7 +173,7 @@ def transferFrom(sourceAddress: address, destinationAddress: address, attotokens
     log(type = Transfer, sourceAddress, destinationAddress, attotokens)
     return(1)
 
-def approve(spenderAddress: address, attotokens: int256):
+def approve(spenderAddress: address, attotokens: uint256):
     require(1 <= attotokens and attotokens <= 2**254)
     self.spenders[msg.sender][spenderAddress] = attotokens
     log(type = Approval, msg.sender, spenderAddress, attotokens)
