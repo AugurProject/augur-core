@@ -25,6 +25,8 @@ BASE_PATH = path.dirname(path.abspath(__file__))
 def resolveRelativePath(relativeFilePath):
     return path.abspath(path.join(BASE_PATH, relativeFilePath))
 COMPILATION_CACHE = resolveRelativePath('./compilation_cache')
+CONTRACTS = ['mutex','cash','orders','completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','cancelOrder','trade','claimProceeds','tradingEscapeHatch','ordersFetcher']
+DELEGATED_CONTRACTS = ['orders','tradingEscapeHatch']
 
 class ContractsFixture:
     # TODO: figure out how to disable logging events to stdout (they are super noisy)
@@ -124,21 +126,22 @@ class ContractsFixture:
         self.originalBlock = self.chain.block
         self.snapshot = self.chain.snapshot()
 
-    def uploadAndAddToController(self, relativeFilePath, lookupKey = None):
+    def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
-        contract = self.upload(relativeFilePath, lookupKey)
+        contract = self.upload(relativeFilePath, lookupKey, signatureKey)
         self.controller.setValue(lookupKey.ljust(32, '\x00'), contract.address)
         return(contract)
 
-    def upload(self, relativeFilePath, lookupKey = None):
+    def upload(self, relativeFilePath, lookupKey = None, signatureKey = None):
         resolvedPath = resolveRelativePath(relativeFilePath)
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(resolvedPath))[0]
+        signatureKey = signatureKey if signatureKey else lookupKey
         if lookupKey in self.contracts:
             return(self.contracts[lookupKey])
         compiledCode = ContractsFixture.getCompiledCode(resolvedPath)
-        if lookupKey not in ContractsFixture.signatures:
-            ContractsFixture.signatures[lookupKey] = ContractsFixture.generateSignature(resolvedPath)
-        signature = ContractsFixture.signatures[lookupKey]
+        if signatureKey not in ContractsFixture.signatures:
+            ContractsFixture.signatures[signatureKey] = ContractsFixture.generateSignature(resolvedPath)
+        signature = ContractsFixture.signatures[signatureKey]
         print lookupKey
         contractAddress = long(hexlify(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6))), 16)
         contract = ABIContract(self.chain, ContractTranslator(signature), contractAddress)
@@ -167,7 +170,15 @@ class ContractsFixture:
                 extension = path.splitext(filename)[1]
                 if extension != '.se': continue
                 if name == 'controller': continue
-                self.uploadAndAddToController(path.join(directory, filename))
+                if name in DELEGATED_CONTRACTS:
+                    delegationTargetName = "".join([name, "Target"])
+                    self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
+                    self.uploadAndAddToController("../src/libraries/delegator.se", name, "delegator")
+                    self.contracts[name].setup(self.controller.address, delegationTargetName.ljust(32, '\x00'))
+                    self.contracts[name] = self.applySignature(name, self.contracts[name].address)
+                else:
+                    self.uploadAndAddToController(path.join(directory, filename))
+
 
     def whitelistTradingContracts(self):
         for filename in listdir(resolveRelativePath('../src/trading')):
@@ -175,18 +186,8 @@ class ContractsFixture:
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        self.contracts['mutex'].initialize(self.controller.address)
-        self.contracts['cash'].initialize(self.controller.address)
-        self.contracts['orders'].initialize(self.controller.address)
-        self.contracts['completeSets'].initialize(self.controller.address)
-        self.contracts['makeOrder'].initialize(self.controller.address)
-        self.contracts['takeBidOrder'].initialize(self.controller.address)
-        self.contracts['takeAskOrder'].initialize(self.controller.address)
-        self.contracts['takeOrder'].initialize(self.controller.address)
-        self.contracts['cancelOrder'].initialize(self.controller.address)
-        self.contracts['trade'].initialize(self.controller.address)
-        self.contracts['claimProceeds'].initialize(self.controller.address)
-        self.contracts['tradingEscapeHatch'].initialize(self.controller.address)
+        for contractName in CONTRACTS:
+            self.contracts[contractName].initialize(self.controller.address)
 
     ####
     #### Helpers

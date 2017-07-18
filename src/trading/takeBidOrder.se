@@ -2,6 +2,7 @@
 
 macro ORDERS: self.controller.lookup('orders')
 macro COMPLETE_SETS: self.controller.lookup('completeSets')
+macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
@@ -47,7 +48,7 @@ def takeBidOrder(taker: address, orderID: address, market: address, outcome: int
 
     # Get order
     order = array(ORDER_FIELDS)
-    order = ORDERS.getOrder(orderID, BID, market, outcome, outitems=ORDER_FIELDS)
+    order = ORDERS_FETCHER.getOrder(orderID, BID, market, outcome, outitems=ORDER_FIELDS)
     takerDesiredSharesForThisOrder = min(fxpAmountTakerWants, order[ATTOSHARES])
     orderDisplayPrice = order[DISPLAY_PRICE]
     maker = order[OWNER]
