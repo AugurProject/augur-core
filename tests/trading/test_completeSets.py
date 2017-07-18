@@ -3,7 +3,6 @@
 from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from iocapture import capture
 from pytest import raises
 from utils import bytesToHexString, longToHexString, bytesToLong, fix, captureFilteredLogs
 

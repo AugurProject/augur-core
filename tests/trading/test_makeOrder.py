@@ -2,7 +2,6 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from iocapture import capture
 from pytest import raises, fixture
 from utils import bytesToLong, longToHexString, bytesToHexString, fix, unfix, captureFilteredLogs
 from uuid import uuid4
