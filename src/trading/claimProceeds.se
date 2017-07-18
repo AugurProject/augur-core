@@ -23,6 +23,7 @@ def initialize(controller: address):
     require(not self.controller)
     require(msg.sender == self.owner)
     self.controller = controller
+    return 1
 
 # Claim trading profits/value per share after a market is resolved.
 # @public

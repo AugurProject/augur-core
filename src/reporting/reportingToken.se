@@ -29,7 +29,7 @@ def initialize(market: address, payoutNumerators: arr):
     require(market.getNumberOfOutcomes() == len(payoutNumerators))
     save(self.payoutNumerators[0], payoutNumerators, items = len(payoutNumerators))
     # TODO: call a function on `self.getBranch()` that logs the creation of this token with an index for the market, function needs to verify that caller is `branch.isContainerForReportingToken(thisToken)`
-    return(1)
+    return 1
 
 def buy(attotokens: int256):
     require(attotokens >= 1)
@@ -44,7 +44,7 @@ def buy(attotokens: int256):
     self.market.updateTentativeWinningPayoutDistributionHash(self.getPayoutDistributionHash())
     self.getReportingWindow().noteReport(self.market, reporter, self.getPayoutDistributionHash())
     log(type=Transfer, 0, reporter, attotokens)
-    return(1)
+    return 1
 
 def redeemDisavowedTokens(reporter: address):
     require(not self.market.isContainerForReportingToken(self))
@@ -55,7 +55,7 @@ def redeemDisavowedTokens(reporter: address):
     self.tokens[reporter] = 0
     self.getReputationToken().transfer(reporter, reporterReputationShare)
     log(type=Transfer, reporter, 0, attotokens)
-    return(1)
+    return 1
 
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
 def redeemForkedTokens(reporter: address):
@@ -72,7 +72,7 @@ def redeemForkedTokens(reporter: address):
     self.getReputationToken().migrateOut(destinationReputationToken, reporterReputationShare)
     destinationReputationToken.transfer(reportor, reporterReputationShare)
     log(type=Transfer, reporter, 0, attotokens)
-    return(1)
+    return 1
 
 def migrateLosingTokens():
     require(self.market.isFinalized())
@@ -82,7 +82,7 @@ def migrateLosingTokens():
     self.supply = 0
     reputationSupply = self.getReputationToken().balanceOf(self)
     self.getReputationToken().transfer(self.market.getFinalWinningReportingToken(), reputationSupply)
-    return(1)
+    return 1
 
 # NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
 def redeemWinningTokens(reporter: address):
@@ -99,7 +99,7 @@ def redeemWinningTokens(reporter: address):
     self.tokens[reporter] = 0
     self.getReputationToken().transfer(reporter, reporterReputationShare)
     log(type=Transfer, reporter, 0, attotokens)
-    return(1)
+    return 1
 
 # FIXME: bond holders have already been paid at this point (they are paid as soon as market finalization occurs)
 # CONSIDER: track how much bond holders are owed, then as REP is extracted from losing tokens it initially goes into
@@ -113,7 +113,7 @@ def extractBondHolderPayments():
     excessAttorepAvailable = self.getReputationToken().balanceOf(self) - self.supply
     amountToSend = min(bondPotIncrease, excessAttorepAvailable)
     self.getReputationToken().transfer(self.market, amountToSend)
-    return(1)
+    return 1
 
 ####
 #### Getters

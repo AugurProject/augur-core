@@ -62,6 +62,7 @@ def insertFirstItem(item: int256):
     self.count += 1
 
     self.assertInvariants()
+    return 1
 
 def insertAtHead(item: int256):
     assertPrivateCall()
@@ -73,6 +74,7 @@ def insertAtHead(item: int256):
     self.count += 1
 
     self.assertInvariants()
+    return 1
 
 def insertAtTail(item: int256):
     assertPrivateCall()
@@ -84,6 +86,7 @@ def insertAtTail(item: int256):
     self.count += 1
 
     self.assertInvariants()
+    return 1
 
 def insertInMiddle(item: int256, itemNext: int256):
     assertPrivateCall()
@@ -96,6 +99,7 @@ def insertInMiddle(item: int256, itemNext: int256):
     self.count += 1
 
     self.assertInvariants()
+    return 1
 
 def findNodeToInsertBefore(item: int256, nodeValue: int256):
     # Do traversal to find the insertion point

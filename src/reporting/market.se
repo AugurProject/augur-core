@@ -140,7 +140,7 @@ def automatedReport(payoutNumerators: arr):
     payoutDistributionHash = self.derivePayoutDistributionHash(payoutNumerators)
     self.automatedReporterPayoutDistributionHash = payoutDistributionHash
     self.reportingWindow.updateMarketPhase()
-    return(1)
+    return 1
 
 def disputeAutomatedReport():
     assertNoValue()
@@ -150,7 +150,7 @@ def disputeAutomatedReport():
     self.getReputationToken().transferFrom(msg.sender, self, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT)
     self.automatedReporterDisputeBondHolder = msg.sender
     self.reportingWindow.updateMarketPhase()
-    return(1)
+    return 1
 
 def disputeLimitedReporters():
     assertNoValue()
@@ -163,7 +163,7 @@ def disputeLimitedReporters():
     newReportingWindow.migrateMarketInFromSibling()
     self.reportingWindow.removeMarket()
     self.reportingWindow = newReportingWindow
-    return(1)
+    return 1
 
 def disputeAllReporters():
     assertNoValue()
@@ -177,7 +177,7 @@ def disputeAllReporters():
     newReportingWindow.migrateMarketInFromSibling()
     self.reportingWindow.removeMarket()
     self.reportingWindow = newReportingWindow
-    return(1)
+    return 1
 
 def updateTentativeWinningPayoutDistributionHash(payoutDistributionHash: int256):
     assertNoValue()
@@ -186,7 +186,7 @@ def updateTentativeWinningPayoutDistributionHash(payoutDistributionHash: int256)
         self.tentativeWinningPayoutDistributionHash = payoutDistributionHash
     if (self.reportingTokens.getValue(payoutDistributionHash).totalSupply() > self.reportingTokens.getValue(self.tentativeWinningPayoutDistributionHash).totalSupply()):
         self.tentativeWinningPayoutDistributionHash = payoutDistributionHash
-    return(1)
+    return 1
 
 def tryFinalize():
     assertNoValue()
@@ -294,7 +294,7 @@ def migrateThroughAllForks():
     # this will loop until we run out of gas, follow forks until there are no more, or have reached an active fork (which will throw)
     while (self.migrateThroughOneFork()):
         noop = 1
-    return(1)
+    return 1
 
 # returns 0 if no move occurs, 1 if move occurred, throws if a fork not yet resolved
 def migrateThroughOneFork():
@@ -357,7 +357,7 @@ def validatePayoutNumerators(payoutNumerators: arr):
         sum += payoutNumerators[i]
         i += 1
     require(sum == self.payoutDenominator)
-
+    return 1
 
 ####
 #### Getters
@@ -435,6 +435,7 @@ def getTopic():
 
 def shouldCollectReportingFees():
     self.getBranch().isContainerForShareToken(self.denominationToken)
+    return 1
 
 def isDoneWithAutomatedReporters():
     assertNoValue()

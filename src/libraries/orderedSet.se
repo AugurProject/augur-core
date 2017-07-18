@@ -35,7 +35,7 @@ def push(value):
         self.tail = itemId
     self.count += 1
     self.assertInvariants()
-    return(1)
+    return 1
 
 def pop():
     self.assertNotEmpty()
@@ -69,7 +69,7 @@ def insertAfter(previousItem, newItem):
         self.head = itemId
     self.count += 1
     self.assertInvariants()
-    return(1)
+    return 1
 
 def insertBefore(nextItem, newItem):
     self.assertContains(nextItem)
@@ -88,7 +88,7 @@ def insertBefore(nextItem, newItem):
         self.tail = itemId
     self.count += 1
     self.assertInvariants()
-    return(1)
+    return 1
 
 def getHead():
     return(self.collection[self.head].value)

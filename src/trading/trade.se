@@ -33,7 +33,7 @@ def initialize(controller: address):
     require(not self.initialized)
     initialized = 1
     self.controller = controller
-    return(1)
+    return 1
 
 # @public
 # @return fxp
@@ -85,7 +85,7 @@ def trade(sender: address, direction: int256, market: address, outcome: int256, 
     fxpAmount = self.takeBestOrder(sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
     if(fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED):
         return MAKEORDER.makeOrder(sender, direction, fxpAmount, fxpPrice, market, outcome, 0, 0, tradeGroupID)
-    return 0
+    return 1
 
 # @internal
 # @return fxp

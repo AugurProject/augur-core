@@ -23,6 +23,7 @@ def initialize(controller: address):
     require(not self.initialized)
     self.initialized = 1
     self.controller = controller
+    return 1
 
 # Buys fxpAmount shares of every outcome in the specified market
 # @public
