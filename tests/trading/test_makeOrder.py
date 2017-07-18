@@ -51,7 +51,7 @@ def test_setController_failure(contractsFixture):
 def test_publicMakeOrder_bid(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     cash.publicDepositEther(value = 10**17)
     cash.approve(makeOrder.address, 10**17)
@@ -59,7 +59,7 @@ def test_publicMakeOrder_bid(contractsFixture):
     orderID = makeOrder.publicMakeOrder(BID, 10**18, 10**17, market.address, 1, 0, 0, 7)
     assert orderID
 
-    order = orders.getOrder(orderID, BID, market.address, 1)
+    order = ordersFetcher.getOrder(orderID, BID, market.address, 1)
     assert order[ATTOSHARES] == 10**18
     assert order[DISPLAY_PRICE] == 10**17
     assert order[OWNER] == bytesToLong(tester.a0)
@@ -72,14 +72,14 @@ def test_publicMakeOrder_bid(contractsFixture):
 def test_publicMakeOrder_ask(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     cash.publicDepositEther(value = 10**18)
     cash.approve(makeOrder.address, 10**18)
 
     orderID = makeOrder.publicMakeOrder(ASK, 10**18, 10**17, market.address, 0, 0, 0, 7)
 
-    order = orders.getOrder(orderID, ASK, market.address, 0)
+    order = ordersFetcher.getOrder(orderID, ASK, market.address, 0)
     assert order[ATTOSHARES] == 10**18
     assert order[DISPLAY_PRICE] == 10**17
     assert order[OWNER] == bytesToLong(tester.a0)
@@ -94,6 +94,7 @@ def test_publicMakeOrder_bid2(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     logs = []
 
@@ -110,7 +111,7 @@ def test_publicMakeOrder_bid2(contractsFixture):
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcome, 0, 0, tradeGroupID, sender=tester.k1)
     assert orderID != 0, "Order ID should be non-zero"
-    order = orders.getOrder(orderID, orderType, market.address, outcome)
+    order = ordersFetcher.getOrder(orderID, orderType, market.address, outcome)
     assert len(order) == 8, "Order array length should be 8"
     assert order[ATTOSHARES] == fxpAmount, "order[ATTOSHARES] should be the amount of the order"
     assert order[DISPLAY_PRICE] == fxpPrice, "order[DISPLAY_PRICE] should be the order's price"
@@ -192,6 +193,7 @@ def test_ask_withPartialShares(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['completeSets']
@@ -222,7 +224,7 @@ def test_ask_withPartialShares(contractsFixture):
 
     # validate the order contains expected results
     assert orderID != 0, "Order ID should be non-zero"
-    order = orders.getOrder(orderID, ASK, market.address, YES)
+    order = ordersFetcher.getOrder(orderID, ASK, market.address, YES)
     assert len(order) == 8, "Order array length should be 13"
     assert order[ATTOSHARES] == fix('2'), "order[ATTOSHARES] should be the amount of the order"
     assert order[DISPLAY_PRICE] == fix('0.6'), "order[DISPLAY_PRICE] should be the order's price"

@@ -1,7 +1,8 @@
 #Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-MARKETS = self.controller.lookup('markets')
-ORDERS = self.controller.lookup('orders')
+macro MARKETS: self.controller.lookup('markets')
+macro ORDERS: self.controller.lookup('orders')
+macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
@@ -15,14 +16,14 @@ def init():
 
 def getOrderBook(type: uint256, marketID: address, outcomeID: uint256, offset: uint256, numOrdersToLoad: uint256):
     assertNoValue()
-    orders = slice(ORDERS.getOrderIDs(type, marketID, outcomeID, 0, numOrdersToLoad, outitems=numOrdersToLoad), items=offset, items=offset+numOrdersToLoad)
+    orders = slice(ORDERS_FETCHER.getOrderIDs(type, marketID, outcomeID, 0, numOrdersToLoad, outitems=numOrdersToLoad), items=offset, items=offset+numOrdersToLoad)
     if(len(orders) == 0):
         return([]: arr)
     orderBook = array(ORDER_FIELDS*numOrdersToLoad)
     numAvailableOrders = 0
     i = 0
     while i < numOrdersToLoad:
-        orderInfo = ORDERS.getOrder(orders[i], type, marketID, outcomeID, outitems=ORDER_FIELDS)
+        orderInfo = ORDERS_FETCHER.getOrder(orders[i], type, marketID, outcomeID, outitems=ORDER_FIELDS)
         if orderInfo[0] != 0:
             j = 0
             while j < 8:
