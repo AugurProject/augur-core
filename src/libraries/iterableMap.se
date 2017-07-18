@@ -28,18 +28,19 @@ def add(key, value):
     self.itemsMap[key].value = value
     self.itemsMap[key].offset = self.numberOfItems
     self.numberOfItems += 1
-    return(1)
+    return 1
 
 def update(key, value):
     require(self.contains(key))
     self.itemsMap[key].value = value
-    return(1)
+    return 1
 
 def addOrUpdate(key, value):
     if not self.contains(key):
         self.add(key, value)
     else:
         self.update(key, value)
+    return 1
 
 def remove(key):
     require(self.contains(key))
@@ -55,6 +56,7 @@ def remove(key):
         self.itemsArray[keyRemovedOffset] = tailItemKey
         self.itemsMap[tailItemKey].offset = self.numberOfItems - 2
     self.numberOfItems -= 1
+    return 1
 
 def getByKeyOrZero(key):
     return self.itemsMap[key].value

@@ -21,4 +21,4 @@ def any():
 def setup(controller, key):
     self.controller = controller
     self.key = key
-    return(1)
+    return 1

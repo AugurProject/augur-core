@@ -59,7 +59,7 @@ def migrateMarketInFromSibling():
     require(originalReportingWindow.isContainerForMarket(msg.sender))
     market = msg.sender
     self.privateAddMarket(market)
-    return(1)
+    return 1
 
 def migrateMarketInFromNibling():
     assertNoValue()
@@ -72,7 +72,7 @@ def migrateMarketInFromNibling():
     require(originalReportingWindow.isContainerForMarket(msg.sender))
     market = msg.sender
     self.privateAddMarket(market)
-    return(1)
+    return 1
 
 def removeMarket():
     assertNoValue()
@@ -83,7 +83,7 @@ def removeMarket():
     self.markets.remove(market)
     self.limitedReporterMarkets.remove(market)
     self.allReporterMarkets.remove(market)
-    return(1)
+    return 1
 
 def updateMarketPhase():
     assertNoValue()
@@ -100,7 +100,7 @@ def updateMarketPhase():
     # defaults to in limited reporter markets
     self.allReporterMarkets.remove(market)
     self.limitedReporterMarkets.addSetItem(market)
-    return(1)
+    return 1
 
 def noteReport(market: address, reporter: address, payoutDistributionHash: int256):
     assertNoValue()
@@ -114,7 +114,7 @@ def noteReport(market: address, reporter: address, payoutDistributionHash: int25
         # only give credit for limited reporter markets up to the max reporters for that market
         self.privateNoteReport(market, reporter)
     # no credit in all other cases (but user can still report)
-    return(1)
+    return 1
 
 def compare(firstMarket: int256, secondMarket: int256):
     firstOI = firstMarket.getShareToken(0).totalSupply()
@@ -261,4 +261,4 @@ def privateNoteReport(market: address, reporter: address):
         return(1)
     reports.addSetItem(market)
     self.numberOfReportsByMarket[market] += 1
-    return(1)
+    return 1
