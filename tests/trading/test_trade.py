@@ -432,6 +432,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     orders = contractsFixture.contracts['orders']
     ordersFetcher = contractsFixture.contracts['ordersFetcher']
     tradeGroupID = 42L
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     market = contractsFixture.binaryMarket
     logs = []
 
