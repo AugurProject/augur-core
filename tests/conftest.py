@@ -26,7 +26,7 @@ def resolveRelativePath(relativeFilePath):
     return path.abspath(path.join(BASE_PATH, relativeFilePath))
 COMPILATION_CACHE = resolveRelativePath('./compilation_cache')
 
-class NewContractsFixture:
+class ContractsFixture:
     # TODO: figure out how to disable logging events to stdout (they are super noisy)
     signatures = {}
     compiledCode = {}
@@ -42,7 +42,7 @@ class NewContractsFixture:
 
     @staticmethod
     def generateSignature(relativeFilePath):
-        NewContractsFixture.ensureCacheDirectoryExists()
+        ContractsFixture.ensureCacheDirectoryExists()
         name = path.splitext(path.basename(relativeFilePath))[0]
         outputPath = path.join(COMPILATION_CACHE,  name + 'Signature')
         lastCompilationTime = path.getmtime(outputPath) if path.isfile(outputPath) else 0
@@ -60,11 +60,11 @@ class NewContractsFixture:
     @staticmethod
     def getCompiledCode(relativeFilePath):
         name = path.splitext(path.basename(relativeFilePath))[0]
-        if name in NewContractsFixture.compiledCode:
-            return NewContractsFixture.compiledCode[name]
+        if name in ContractsFixture.compiledCode:
+            return ContractsFixture.compiledCode[name]
         dependencySet = set()
-        NewContractsFixture.getAllDependencies(relativeFilePath, dependencySet)
-        NewContractsFixture.ensureCacheDirectoryExists()
+        ContractsFixture.getAllDependencies(relativeFilePath, dependencySet)
+        ContractsFixture.ensureCacheDirectoryExists()
         compiledOutputPath = path.join(COMPILATION_CACHE, name)
         lastCompilationTime = path.getmtime(compiledOutputPath) if path.isfile(compiledOutputPath) else 0
         needsRecompile = False
@@ -81,7 +81,7 @@ class NewContractsFixture:
             print('using cached compilation for ' + name)
         with io.open(compiledOutputPath, mode='rb') as file:
             compiledCode = file.read()
-            NewContractsFixture.compiledCode[name] = compiledCode
+            ContractsFixture.compiledCode[name] = compiledCode
             return(compiledCode)
 
     @staticmethod
@@ -94,12 +94,12 @@ class NewContractsFixture:
         for match in matches:
             dependencyPath = path.abspath(path.join(fileDirectory, match))
             if not dependencyPath in knownDependencies:
-                NewContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
+                ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
         matches = re.findall("create\('(.*?)'\)", fileContents)
         for match in matches:
             dependencyPath = path.abspath(path.join(fileDirectory, match))
             if not dependencyPath in knownDependencies:
-                NewContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
+                ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
         return(knownDependencies)
 
     ####
@@ -135,10 +135,10 @@ class NewContractsFixture:
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(resolvedPath))[0]
         if lookupKey in self.contracts:
             return(self.contracts[lookupKey])
-        compiledCode = NewContractsFixture.getCompiledCode(resolvedPath)
-        if lookupKey not in NewContractsFixture.signatures:
-            NewContractsFixture.signatures[lookupKey] = NewContractsFixture.generateSignature(resolvedPath)
-        signature = NewContractsFixture.signatures[lookupKey]
+        compiledCode = ContractsFixture.getCompiledCode(resolvedPath)
+        if lookupKey not in ContractsFixture.signatures:
+            ContractsFixture.signatures[lookupKey] = ContractsFixture.generateSignature(resolvedPath)
+        signature = ContractsFixture.signatures[lookupKey]
         print lookupKey
         contractAddress = long(hexlify(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6))), 16)
         contract = ABIContract(self.chain, ContractTranslator(signature), contractAddress)
@@ -147,7 +147,7 @@ class NewContractsFixture:
 
     def applySignature(self, signatureName, address):
         assert address
-        translator = ContractTranslator(NewContractsFixture.signatures[signatureName])
+        translator = ContractTranslator(ContractsFixture.signatures[signatureName])
         contract = ABIContract(self.chain, translator, address)
         return contract
 
@@ -213,7 +213,7 @@ class NewContractsFixture:
     def getReportingToken(self, market, payoutDistribution):
         reportingTokenAddress = market.getReportingToken(payoutDistribution)
         assert reportingTokenAddress
-        reportingToken = ABIContract(self.chain, ContractTranslator(NewContractsFixture.signatures['reportingToken']), reportingTokenAddress)
+        reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['reportingToken']), reportingTokenAddress)
         return reportingToken
 
     def getChildBranch(self, parentBranch, market, payoutDistribution):
@@ -221,7 +221,7 @@ class NewContractsFixture:
         assert payoutDistributionHash
         childBranchAddress = parentBranch.getChildBranch(payoutDistributionHash)
         assert childBranchAddress
-        childBranch = ABIContract(self.chain, ContractTranslator(NewContractsFixture.signatures['branch']), childBranchAddress)
+        childBranch = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['branch']), childBranchAddress)
         return(childBranch)
 
     def createBinaryMarket(self, branch, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic):
@@ -231,14 +231,14 @@ class NewContractsFixture:
         marketCreationFee = self.contracts['marketFeeCalculator'].getValidityBond() + self.contracts['marketFeeCalculator'].getTargetReporterGasCosts()
         marketAddress = self.contracts['marketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, automatedReporterAddress, topic, value = marketCreationFee)
         assert marketAddress
-        market = ABIContract(self.chain, ContractTranslator(NewContractsFixture.signatures['market']), marketAddress)
+        market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['market']), marketAddress)
         return market
 
     def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic):
         marketCreationFee = self.contracts['marketFeeCalculator'].getValidityBond() + self.contracts['marketFeeCalculator'].getTargetReporterGasCosts()
         marketAddress = self.contracts['marketCreation'].createScalarMarket(branch.address, endTime, feePerEthInWei, denominationToken.address, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = marketCreationFee)
         assert marketAddress
-        market = ABIContract(self.chain, ContractTranslator(NewContractsFixture.signatures['market']), marketAddress)
+        market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['market']), marketAddress)
         return market
 
     def createReasonableBinaryMarket(self, branch, denominationToken):
@@ -273,7 +273,7 @@ class NewContractsFixture:
 
 @fixture(scope="session")
 def sessionFixture():
-    return NewContractsFixture()
+    return ContractsFixture()
 
 @fixture
 def contractsFixture(sessionFixture):
