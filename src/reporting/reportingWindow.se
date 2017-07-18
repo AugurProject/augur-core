@@ -8,6 +8,7 @@ data controllerLookupName
 macro MARKET_FACTORY: self.controller.lookup('marketFactory')
 macro REGISTRATION_TOKEN_FACTORY: self.controller.lookup('registrationTokenFactory')
 macro SORTED_LINKED_LIST_FACTORY: self.controller.lookup('sortedLinkedListFactory')
+macro SET_FACTORY: self.controller.lookup('setFactory')
 
 inset('../macros/externs.sem')
 inset('../macros/assertPrivateCall.sem')
@@ -35,9 +36,9 @@ def initialize(branch: address, reportingWindowId: int256):
     self.branch = branch
     self.startTime = reportingWindowId * self.branch.getReportingPeriodDurationInSeconds()
     self.registrationToken = REGISTRATION_TOKEN_FACTORY.createRegistrationToken(self.controller, self)
-    self.markets = create('../libraries/set.se')
-    self.limitedReporterMarkets = create('../libraries/set.se')
-    self.allReporterMarkets = create('../libraries/set.se')
+    self.markets = SET_FACTORY.createSet(self.controller, self)
+    self.limitedReporterMarkets = SET_FACTORY.createSet(self.controller, self)
+    self.allReporterMarkets = SET_FACTORY.createSet(self.controller, self)
     return(1)
 
 def createNewMarket(endTime: int256, numOutcomes: int256, payoutDenominator: int256, feePerEthInWei: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
@@ -218,7 +219,7 @@ def getTargetReportsPerReporter():
 def getReportsByReporter(reporter: address):
     assertNoValue()
     if (not self.reportsByReporter[reporter]):
-        self.reportsByReporter[reporter] = create('../libraries/set.se')
+        self.reportsByReporter[reporter] = SET_FACTORY.createSet(self.controller, self)
     return(self.reportsByReporter[reporter])
 
 def isContainerForRegistrationToken(shadyRegistrationToken: address):

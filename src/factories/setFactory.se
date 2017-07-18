@@ -1,0 +1,15 @@
+extern delegateExtern: [setup:[int256,int256]:_]
+extern setExtern: [initialize:[address]:_]
+
+# workaround for https://github.com/ethereum/serpent/issues/119
+data lastSet
+
+def createSet(controller: address, owner: address):
+    setObj = create('../libraries/delegator.se')
+    setObj.setup(controller, 'set')
+    setObj.initialize(owner)
+    self.lastSet = setObj
+    return(setObj)
+
+def getlastSet():
+    return(self.lastSet)

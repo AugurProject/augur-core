@@ -6,6 +6,7 @@ data controllerLookupName
 #####
 
 macro SORTED_LINKED_LIST_FACTORY: self.controller.lookup('sortedLinkedListFactory')
+macro ITERABLE_MAP_FACTORY: self.controller.lookup('iterableMapFactory')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
