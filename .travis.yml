@@ -10,9 +10,6 @@ language: python
 notifications:
   email: false
 
-python:
-  - "2.7.6"
-
 addons:
   apt:
     packages:
