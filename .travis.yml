@@ -1,6 +1,10 @@
 dist: trusty
 sudo: false
 
+cache:
+  apt: true
+  pip: true
+
 language: python
 
 notifications:
