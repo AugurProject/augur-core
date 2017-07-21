@@ -2,4 +2,4 @@
 **/*.pyc
 **/.cache/
 **/compilation_cache/
-src/macros/externs.sem
+.git/

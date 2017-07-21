@@ -1,42 +1,23 @@
-FROM python:2.7.13-alpine3.6
+FROM python:2.7.13
 
-# install a nice prompt
-RUN apk --no-cache --update add bash \
-	&& rm -rf /var/cache/apk/*
-
-# install Solidity compiler (solc)
-RUN apk --no-cache --update add build-base cmake boost-dev git ca-certificates wget openssl \
-	&& update-ca-certificates \
-	&& sed -i -E -e 's/include <sys\/poll.h>/include <poll.h>/' /usr/include/boost/asio/detail/socket_types.hpp \
-	&& mkdir /solidity \
-	&& wget -qO- https://github.com/ethereum/solidity/releases/download/v0.4.13/solidity_0.4.13.tar.gz | tar -xvz -C /solidity --strip 1 \
-	&& cd /solidity && cmake -DCMAKE_BUILD_TYPE=Release -DTESTS=0 -DSTATIC_LINKING=1 \
-	&& cd /solidity && make solc && install -s  solc/solc /usr/bin \
-	&& cd / && rm -rf solidity \
-	&& apk del sed build-base git make cmake gcc g++ musl-dev curl-dev boost-dev \
-	&& rm -rf /var/cache/apk/*
+RUN wget --quiet --output-document /usr/local/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.13/solc-static-linux \
+	&& chmod a+x /usr/local/bin/solc
 
 ENV PYTHONUNBUFFERED=1
 
 # install dependencies
-WORKDIR /app
 COPY requirements.txt /app/requirements.txt
-RUN apk --no-cache --update add gcc g++ openssl-dev \
-	&& pip install -U pip \
-	&& pip install -r requirements.txt \
-	&& apk del gcc g++ openssl-dev \
-	&& rm -rf /var/cache/apk/*
 
-# install runtime dependencies
-RUN apk --no-cache --update add libstdc++ libssl1.0 \
-	&& rm -rf /var/cache/apk/*
+RUN cd /app \
+	&& pip install --upgrade pip setuptools && \
+	&& pip install -r requirements.txt
 
 # copy over the source
-WORKDIR /app/src
 COPY src/ /app/src/
 
 # copy over the tests
-WORKDIR /app/tests
 COPY tests/ /app/tests/
+
+WORKDIR /app
 
 ENTRYPOINT ["pytest"]
