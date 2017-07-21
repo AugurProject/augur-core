@@ -12,6 +12,7 @@ from re import findall
 from serpent import mk_full_signature, compile as compile_serpent
 from solc import compile_standard
 from utils import bytesToHexString, bytesToLong
+from copy import deepcopy
 
 # used to resolve relative paths
 BASE_PATH = path.dirname(path.abspath(__file__))
@@ -105,13 +106,13 @@ class ContractsFixture:
                 }
             },
             'settings': {
-                'remappings': [ 'ROOT=/augur-core/src' ]
+                'remappings': [ 'ROOT=%s' % resolveRelativePath("../src") ]
             },
             'outputSelection': {
                 '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
             }
         }
-        return compile_standard(compilerParameter, allow_paths="/augur-core/src")['contracts'][filename][contractName]
+        return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../src"))['contracts'][filename][contractName]
 
     @staticmethod
     def getAllDependencies(filePath, knownDependencies):
@@ -158,6 +159,7 @@ class ContractsFixture:
         self.chain.mine(1)
         self.originalHead = self.chain.head_state
         self.originalBlock = self.chain.block
+        self.originalContracts = deepcopy(self.contracts)
         self.snapshot = self.chain.snapshot()
 
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None):
@@ -191,6 +193,7 @@ class ContractsFixture:
         self.chain.block = self.originalBlock
         self.chain.revert(self.snapshot)
         self.chain.head_state = self.originalHead
+        self.contracts = deepcopy(self.originalContracts)
 
     ####
     #### Bulk Operations
