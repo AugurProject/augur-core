@@ -83,16 +83,11 @@ def controller(contractsFixture):
 def controllerUser(contractsFixture):
     return contractsFixture.upload('serpent_test_helpers/controllerUser.se')
 
-@fixture(scope="session")
-def decentralizedControllerSnapShot(sessionFixture):
-    decentralizedController = sessionFixture.upload('../src/Controller.sol', 'decentralizedController')
+@fixture
+def decentralizedController(contractsFixture):
+    decentralizedController = contractsFixture.upload('../src/Controller.sol', 'decentralizedController')
     assert decentralizedController.foo()
     assert decentralizedController.assertIsWhitelisted(tester.a0)
     assert decentralizedController.owner() == bytesToHexString(tester.a0)
     decentralizedController.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k0)
-    return sessionFixture.chain.snapshot()
-
-@fixture
-def decentralizedController(sessionFixture, decentralizedControllerSnapShot):
-    sessionFixture.chain.revert(decentralizedControllerSnapShot)
-    return sessionFixture.contracts['decentralizedController']
+    return decentralizedController
