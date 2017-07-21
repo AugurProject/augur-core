@@ -106,13 +106,13 @@ class ContractsFixture:
                 }
             },
             'settings': {
-                'remappings': [ 'ROOT=%s' % resolveRelativePath("../../augur-core/src") ]
+                'remappings': [ 'ROOT=%s' % resolveRelativePath("../src") ]
             },
             'outputSelection': {
                 '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
             }
         }
-        return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../../augur-core/src"))['contracts'][filename][contractName]
+        return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../src"))['contracts'][filename][contractName]
 
     @staticmethod
     def getAllDependencies(filePath, knownDependencies):
@@ -146,7 +146,6 @@ class ContractsFixture:
         config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
         self.chain = tester.Chain(env=Env(config=config_metropolis))
         self.contracts = {}
-        self.originalContracts = {}
         self.controller = self.upload('../src/Controller.sol')
         assert self.controller.owner() == bytesToHexString(tester.a0)
         self.uploadAllContracts()
