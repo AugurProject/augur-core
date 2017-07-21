@@ -14,6 +14,8 @@ Ethereum smart contracts from Python scripts) and the Serpent smart contract
 programming language:
 
 ```
+npm install -g solc
+
 sudo pip install -r requirements.txt
 ```
 
