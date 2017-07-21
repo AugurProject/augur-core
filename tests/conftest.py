@@ -105,13 +105,13 @@ class ContractsFixture:
                 }
             },
             'settings': {
-                'remappings': [ 'ROOT=/augur-core/src' ]
+                'remappings': [ 'ROOT=%' % resolveRelativePath("/augur-core/src") ]
             },
             'outputSelection': {
                 '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
             }
         }
-        return compile_standard(compilerParameter, allow_paths="/augur-core/src")['contracts'][filename][contractName]
+        return compile_standard(compilerParameter, allow_paths=resolveRelativePath("augur-core/src"))['contracts'][filename][contractName]
 
     @staticmethod
     def getAllDependencies(filePath, knownDependencies):

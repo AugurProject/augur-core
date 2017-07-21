@@ -37,8 +37,7 @@ def test_registry(controller, decentralizedController):
 
 def test_suicide(controller, decentralizedController, controllerUser):
     with raises(TransactionFailed): controller.suicide(controllerUser.address, tester.a0, sender = tester.k2)
-    assert decentralizedController.owner() == tester.a0
-    assert decentralizedController.assertIsWhitelisted(tester.a0)
+    assert decentralizedController.owner() == bytesToHexString(tester.a0)
     with raises(TransactionFailed): decentralizedController.suicide(controllerUser.address, tester.a0, sender = tester.k0)
     assert controller.suicide(controllerUser.address, tester.a0, sender = tester.k0)
     assert controllerUser.getSuicideFundsDestination() == bytesToLong(tester.a0)
@@ -54,7 +53,7 @@ def test_transferOwnership(controller, decentralizedController):
     assert controller.transferOwnership(tester.a1, sender = tester.k0)
     with raises(TransactionFailed): controller.assertIsWhitelisted(tester.a0, sender = tester.k2)
     assert controller.assertIsWhitelisted(tester.a1, sender = tester.k2)
-    assert controller.getOwner() == bytesToLong(tester.a1)
+    assert controller.owner() == bytesToLong(tester.a1)
 
     assert decentralizedController.transferOwnership(tester.a1, sender = tester.k0)
     with raises(TransactionFailed): decentralizedController.assertIsWhitelisted(tester.a0, sender = tester.k2)
@@ -84,11 +83,16 @@ def controller(contractsFixture):
 def controllerUser(contractsFixture):
     return contractsFixture.upload('serpent_test_helpers/controllerUser.se')
 
-@fixture
-def decentralizedController(contractsFixture):
-    decentralizedController = contractsFixture.upload('../src/Controller.sol', 'decentralizedController')
+@fixture(scope="session")
+def decentralizedControllerSnapShot(sessionFixture):
+    decentralizedController = sessionFixture.upload('../src/Controller.sol', 'decentralizedController')
     assert decentralizedController.foo()
     assert decentralizedController.assertIsWhitelisted(tester.a0)
     assert decentralizedController.owner() == bytesToHexString(tester.a0)
     decentralizedController.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k0)
-    return decentralizedController
+    return sessionFixture.chain.snapshot()
+
+@fixture
+def decentralizedController(sessionFixture, decentralizedControllerSnapShot):
+    sessionFixture.chain.revert(decentralizedControllerSnapShot)
+    return sessionFixture.contracts['decentralizedController']
