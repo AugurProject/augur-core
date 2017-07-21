@@ -1,3 +1,8 @@
+#### must be first data members to match delegator.se
+data controller
+data controllerLookupName
+####
+
 data comparor
 data collection[](exists, prev, next)
 data count
@@ -11,23 +16,27 @@ inset('../macros/assertPrivateCall.sem')
 
 extern comparisonProviderInterface: [compare:[int256, int256]:int256]
 
-def init():
-    self.owner = msg.sender
-
 def any():
-    require(msg.sender == self.owner or msg.sender == self)
+    if (self.owner):
+        require(msg.sender == self.owner or msg.sender == self or self.contains(msg.sender))
 
-def initialize(comparor: address):
+def initialize(comparor: address, owner: address):
     require(not self.initialized)
     self.initialized = 1
+    self.owner = owner
     self.comparor = comparor
     return(1)
 
-def add(item: int256, hints: arr):
+def addSortedLinkedListItem(item: int256, hints: arr):
     require(item != 0)
 
     if self.contains(item):
-        self.remove(item)
+        # try to optimize the update operation by finding a hint based on existing position
+        if len(hints) == 0:
+            hint = self.getHintForExisting(item)
+            if hint:
+                hints = [hint]
+        self.removeSortedLinkedListItem(item)
 
     # Insert node into an empty list
     if self.count == 0:
@@ -58,6 +67,8 @@ def insertFirstItem(item: int256):
 
     self.tail = item
     self.head = item
+    self.collection[item].next = 0
+    self.collection[item].prev = 0
     self.collection[item].exists = 1
     self.count += 1
 
@@ -69,6 +80,7 @@ def insertAtHead(item: int256):
 
     self.collection[item].prev = self.head
     self.collection[self.head].next = item
+    self.collection[item].next = 0
     self.head = item
     self.collection[item].exists = 1
     self.count += 1
@@ -81,6 +93,7 @@ def insertAtTail(item: int256):
 
     self.collection[item].next = self.tail
     self.collection[self.tail].prev = item
+    self.collection[item].prev = 0
     self.tail = item
     self.collection[item].exists = 1
     self.count += 1
@@ -118,6 +131,11 @@ def getBestHint(hints: arr, item: int256):
     if (self.comparor.compare(item, self.head) == 1):
         return 0
 
+    # if the item is less than or equal to the tail we can early out
+    # this is really common when adding new items that have no relative value compared to other items in the list 
+    if (self.comparor.compare(item, self.tail) < 1):
+        return self.tail
+
     while hintIndex < len(hints):
         hint = hints[hintIndex]
         if self.isValidHint(hint, item):
@@ -126,7 +144,23 @@ def getBestHint(hints: arr, item: int256):
 
     return self.head
 
-def remove(item: int256):
+def getHintForExisting(item: int256):
+    # If the item's previous node is now greater than this item it is a valid hint
+    prev = self.tryGetPrev(item)
+    if (prev):
+        if(self.comparor.compare(item, prev) < 1):
+            return prev
+    
+    # Find the next node that is actually greater
+    nextNode = self.tryGetNext(item)
+    while (nextNode):
+        if (self.comparor.compare(item, nextNode) < 1):
+            return nextNode
+        nextNode = self.tryGetNext(nextNode)
+
+    return nextNode
+
+def removeSortedLinkedListItem(item: int256):
     if (!self.contains(item)):
         return(0)
 
@@ -147,6 +181,8 @@ def remove(item: int256):
             self.tail = self.getNext(item)
             self.collection[self.getNext(item)].prev = 0
 
+    self.collection[item].next = 0
+    self.collection[item].prev = 0
     self.collection[item].exists = 0
 
     self.count -= 1
@@ -200,7 +236,7 @@ def count():
 def isEmpty():
     return(self.count == 0)
 
-def isValidHint(hint: int256, index: int256):
+def isValidHint(hint: int256, item: int256):
     if not self.contains(hint):
         return 0
     if not self.comparor.compare(hint, item) == 1:

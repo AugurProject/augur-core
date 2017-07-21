@@ -7,6 +7,7 @@ data controllerLookupName
 
 macro MARKET_FACTORY: self.controller.lookup('marketFactory')
 macro REGISTRATION_TOKEN_FACTORY: self.controller.lookup('registrationTokenFactory')
+macro SORTED_LINKED_LIST_FACTORY: self.controller.lookup('sortedLinkedListFactory')
 macro SET_FACTORY: self.controller.lookup('setFactory')
 
 inset('../macros/externs.sem')
@@ -77,6 +78,8 @@ def removeMarket():
     assertNoValue()
     require(self.markets.contains(msg.sender))
     market = msg.sender
+    self.getBranch().removeSortedMarket(market)
+    self.getBranch().updateTopicPopularity(market.getTopic(), -market.getShareToken(0).totalSupply())
     self.markets.remove(market)
     self.limitedReporterMarkets.remove(market)
     self.allReporterMarkets.remove(market)
@@ -112,6 +115,16 @@ def noteReport(market: address, reporter: address, payoutDistributionHash: int25
         self.privateNoteReport(market, reporter)
     # no credit in all other cases (but user can still report)
     return 1
+
+def compare(firstMarket: int256, secondMarket: int256):
+    firstOI = firstMarket.getShareToken(0).totalSupply()
+    secondOI = secondMarket.getShareToken(0).totalSupply()
+
+    if (firstOI > secondOI):
+        return(1)
+    if (firstOI < secondOI):
+        return(-1)
+    return(0)
 
 ####
 #### Getters
@@ -221,7 +234,6 @@ def isDoneReporting(reporter: address):
     assertNoValue()
     return(self.getReportsByReporter(reporter).count() >= self.getTargetReportsPerReporter())
 
-
 ####
 #### Private
 ####
@@ -238,7 +250,9 @@ def privateAddMarket(market: address):
         self.allReporterMarkets.addSetItem(market)
         return(1)
     self.limitedReporterMarkets.addSetItem(market)
-    return 1
+    # Update sorted topic popularity based just on OI
+    self.getBranch().updateTopicPopularity(market.getTopic(), market.getShareToken(0).totalSupply())
+    return(1)
 
 def privateNoteReport(market: address, reporter: address):
     assertPrivateCall()

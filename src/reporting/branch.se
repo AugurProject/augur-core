@@ -9,6 +9,7 @@ macro BRANCH_FACTORY: self.controller.lookup('branchFactory')
 macro REPUTATION_TOKEN_FACTORY: self.controller.lookup('reputationTokenFactory')
 macro REPORTING_WINDOW_FACTORY: self.controller.lookup('reportingWindowFactory')
 macro TOPICS_FACTORY: self.controller.lookup('topicsFactory')
+macro SORTED_LINKED_LIST_FACTORY: self.controller.lookup('sortedLinkedListFactory')
 
 inset('../macros/externs.sem')
 inset('../macros/unitConversions.sem')
@@ -28,6 +29,7 @@ data forkingMarket
 # the timestamp at which the fork ends (0 until a fork occurs)
 data forkEndTime
 data topics
+data markets
 
 def any():
     assertNoValue()
@@ -38,7 +40,8 @@ def initialize(parentBranch: address, parentPayoutDistributionHash: int256):
     self.parentBranch = parentBranch
     self.parentPayoutDistributionHash = parentPayoutDistributionHash
     self.reputationToken = REPUTATION_TOKEN_FACTORY.createReputationToken(self.controller, self)
-    self.topics = TOPICS_FACTORY.createTopics(self.controller)
+    self.markets = SORTED_LINKED_LIST_FACTORY.createSortedLinkedList(self.controller, self, self)
+    self.topics = TOPICS_FACTORY.createTopics(self.controller, self)
     require(self.reputationToken)
     return(1)
 
@@ -49,6 +52,26 @@ def fork(shadyMarket: address):
     self.forkingMarket = shadyMarket
     self.forkEndTime = block.timestamp + 60*SECONDS_PER_DAY
     return(1)
+
+def addOrUpdateSortedMarket(market: address, hints: arr):
+    self.markets.addSortedLinkedListItem(market, hints)
+
+def removeSortedMarket(market: address):
+    self.markets.removeSortedLinkedListItem(market)
+
+def updateTopicPopularity(topic: int256, popularityDelta: int256):
+    self.topics.updatePopularity(topic, popularityDelta)
+    return(1)
+
+def compare(firstMarket: int256, secondMarket: int256):
+    firstOI = firstMarket.getShareToken(0).totalSupply()
+    secondOI = secondMarket.getShareToken(0).totalSupply()
+
+    if (firstOI > secondOI):
+        return(1)
+    if (firstOI < secondOI):
+        return(-1)
+    return(0)
 
 ####
 #### Getters
@@ -68,9 +91,6 @@ def getForkingMarket():
 
 def getForkEndTime():
     return(self.forkEndTime)
-
-def getTopics():
-    return(self.topics)
 
 def getReportingWindowId(timestamp: int256):
     return(timestamp / self.getReportingPeriodDurationInSeconds())
@@ -154,3 +174,21 @@ def isContainerForShareToken(shadyShareToken: address):
     if not legitMarket.isContainerForShareToken(shadyToken):
         return(0)
     return(1)
+
+def getSortedMarkets():
+    return self.markets
+
+def getNumMarkets():
+    return self.markets.count()
+
+def getMarketsHead():
+    return self.markets.getHead()
+
+def hasMarket(market: int256):
+    return self.markets.contains(market)
+
+def tryGetPrevMarket(market: int256):
+    return self.markets.tryGetPrev(market)
+
+def getTopics():
+    return(self.topics)

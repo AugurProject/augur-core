@@ -5,6 +5,7 @@ data controller
 data controllerLookupName
 #####
 
+macro SORTED_LINKED_LIST_FACTORY: self.controller.lookup('sortedLinkedListFactory')
 macro ITERABLE_MAP_FACTORY: self.controller.lookup('iterableMapFactory')
 
 inset('../macros/externs.sem')
@@ -12,37 +13,59 @@ inset('../macros/assertNoValue.sem')
 inset('../macros/require.sem')
 inset('../macros/safeMath.sem')
 
-# an iterable map of topics to popularity
+# a map of topics to popularity
+data topicPopularity
+# a sorted list of topics for iteration
 data topics
+data owner
 
 # FIXME: topics needs to be sorted on-chain, which means we need a sorted linked list collection with hinted sorting at insertion/update time instead of a simple iterableMap
-def initialize():
+def initialize(owner: address):
     require(not self.topics)
-    self.topics = ITERABLE_MAP_FACTORY.createIterableMap(self.controller, self)
+    self.owner = owner
+    # TODO: change map to a delegated contract so it can be updated
+    self.topicPopularity = create('../libraries/map.se')
+    self.topics = SORTED_LINKED_LIST_FACTORY.createSortedLinkedList(self.controller, self, self)
     return(1)
 
 def any():
     assertNoValue()
 
 def updatePopularity(topic: int256, fxpAmount: int256):
-    self.controller.assertIsWhitelisted(msg.sender)
-    oldAmount = self.topics.getByKeyOrZero(topic)
-    newAmount = safeAdd(oldAmount, fxpAmount)
-    self.topics.addOrUpdate(topic, newAmount)
+    require(msg.sender == self.owner or msg.sender == self)
+    oldAmount = self.topicPopularity.getValueOrZero(topic)
+    # NOTE: We don't do a safe add here as the fxpAmount provided is a delta that can be negative when popularity decreases
+    # We still require a non negative result as it wouldn't make sense to drop below 0
+    newAmount = oldAmount + fxpAmount
+    require(newAmount >= 0)
+    self.topicPopularity.addOrUpdateMapItem(topic, newAmount)
+    self.topics.addSortedLinkedListItem(topic, [])
     return(1)
 
 def getPopularity(topic: int256):
-    return self.topics.getByKey(topic)
-
-def getTopicByOffset(offset: int256):
-    return self.topics.getByOffset(offset)
-
-def getPopularityByOffset(offset: int256):
-    topic = self.getTopicByOffset(offset)
-    return self.topics.getByKey(topic)
+    return self.topicPopularity.getValue(topic)
 
 def count():
-    return self.topics.count()
+    return self.topicPopularity.count()
+
+def getTopicsHead():
+    return self.topics.getHead()
+
+def hasTopic(topic: int256):
+    return self.topics.contains(topic)
+
+def tryGetPrevTopic(topic: int256):
+    return self.topics.tryGetPrev(topic)
+
+def compare(firstTopic: int256, secondTopic: int256):
+    firstPopularity = self.getPopularity(firstTopic)
+    secondPopularity = self.getPopularity(secondTopic)
+
+    if (firstPopularity > secondPopularity):
+        return(1)
+    if (firstPopularity < secondPopularity):
+        return(-1)
+    return(0)
 
 def setController(newController: address):
     require(msg.sender == self.controller)

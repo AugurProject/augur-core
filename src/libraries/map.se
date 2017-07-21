@@ -36,6 +36,11 @@ def remove(key):
     self.count -= 1
     return(1)
 
+def addOrUpdateMapItem(key, value):
+    if (self.contains(key)):
+        self.remove(key)
+    return self.addMapItem(key, value)
+
 def contains(key):
     return(self.collection[key].hasValue)
 

@@ -40,6 +40,7 @@ data denominationToken
 data creator
 data shareTokens[]
 data finalizationTime
+data shadySortedMarketsList
 
 data tentativeWinningPayoutDistributionHash
 data finalPayoutDistributionHash
@@ -93,7 +94,11 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
         outcome += 1
     self.approveSpenders()
     require(self.controller.lookup('cash') == denominationToken or self.getBranch().isContainerForShareToken(denominationToken))
+    # Update the branch's sorted list of markets
+    self.shadySortedMarketsList = self.reportingWindow.getBranch().getSortedMarkets()
+    self.reportingWindow.getBranch().addOrUpdateSortedMarket(self, [])
     return(1)
+    # Update the branch's sorted list of markets
 
     # TODO: we need to update this signature (and all of the places that call it) to allow the creator (UI) to pass in a number of other things which will all be logged here
     # TODO: log short description
@@ -188,6 +193,20 @@ def updateTentativeWinningPayoutDistributionHash(payoutDistributionHash: int256)
         self.tentativeWinningPayoutDistributionHash = payoutDistributionHash
     return 1
 
+# FIXME: use this during market finalization
+#def removeFromSortedLists():
+#    assertPrivateCall()
+#    self.getBranch().removeSortedMarket(self)
+#    self.getBranch().updateTopicPopularity(self.getTopic(), self.getShareToken(0).totalSupply())
+#    return(1)
+
+# FIXME: use this during market finalization
+#def removeFromSortedLists():
+#    assertPrivateCall()
+#    self.getBranch().removeSortedMarket(self)
+#    self.getBranch().updateTopicPopularity(self.getTopic(), self.getShareToken(0).totalSupply())
+#    return(1)
+
 def tryFinalize():
     assertNoValue()
     self.tryFinalizeAutomatedReport()
@@ -211,6 +230,7 @@ def tryFinalize():
     # FIXME: if automated report is wrong, transfer automated report bond to reportingWindow
     # FIXME: if automated report is right, transfer automated report bond to market creator
     # FIXME: handle markets that get 0 reports during their scheduled reporting window
+    # FIXME: Call the removeFromSortedLists function during market finalization
 
 def tryFinalizeAutomatedReport():
     assertNoValue()
@@ -226,6 +246,7 @@ def tryFinalizeAutomatedReport():
     self.finalizationTime = block.timestamp
     self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()
+    #self.removeFromSortedLists()
     return(1)
 
 def tryFinalizeLimitedReporting():
@@ -242,6 +263,7 @@ def tryFinalizeLimitedReporting():
     self.finalizationTime = block.timestamp
     self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()
+    #self.removeFromSortedLists()
     return(1)
 
 def tryFinalizeAllReporting():
@@ -262,6 +284,7 @@ def tryFinalizeAllReporting():
     self.finalizationTime = block.timestamp
     self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()
+    #self.removeFromSortedLists()
     return(1)
 
 def tryFinalizeFork():
@@ -287,6 +310,7 @@ def tryFinalizeFork():
     self.finalizationTime = block.timestamp
     self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()
+    #self.removeFromSortedLists()
     return(1)
 
 def migrateThroughAllForks():
@@ -326,6 +350,18 @@ def migrateThroughOneFork():
     self.reportingTokens = MAP_FACTORY.createMap(self.controller, self)
     return(1)
 
+# TODO: Add test case when forking has finished implementation (tests)
+def migrateMarketToSortedList(hints: arr):
+    require(self.getBranch().getSortedMarkets() != self.shadySortedMarketsList)
+    self.shadySortedMarketsList.remove(self)
+    # Update the sorted list of markets
+    self.getBranch().addOrUpdateSortedMarket(market, hints)
+    self.shadySortedMarketsList = self.getBranch().getSortedMarkets()
+    return(1)
+
+def updateInBranch():
+    self.reportingWindow.getBranch().addOrUpdateSortedMarket(self, [])
+    return(1)
 
 ####
 #### Helpers
@@ -595,6 +631,12 @@ def getAutomatedReportDisputeDueTimestamp():
     assertNoValue()
     return(self.getAutomatedReportDueTimestamp() + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS)
 
+def getShadySortedMarketsList():
+    return self.shadySortedMarketsList
+
+# FIXME: add this to the returned value in marketFetcher.se
+#def getMarketCreationBlock():
+#    return self.marketCreationBlock
 
 ####
 #### Private
