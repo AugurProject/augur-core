@@ -1,205 +1,176 @@
 pragma solidity ^0.4.13;
 
-contract Controlled
-{
-	Controller internal controller;
 
-	modifier onlyWhitelistedCallers
-	{
-		require(controller.assertIsWhitelisted(msg.sender));
-		_;
-	}
+contract Controlled {
+    Controller internal controller;
 
-	modifier onlyControllerCaller
-	{
-		require(Controller(msg.sender) == controller);
-		_;
-	}
+    modifier onlyWhitelistedCallers {
+        require(controller.assertIsWhitelisted(msg.sender));
+        _;
+    }
 
-	modifier onlyInGoodTimes
-	{
-		require(controller.stopInEmergency());
-		_;
-	}
+    modifier onlyControllerCaller {
+        require(Controller(msg.sender) == controller);
+        _;
+    }
 
-	modifier onlyInBadTimes
-	{
-		require(controller.onlyInEmergency());
-		_;
-	}
+    modifier onlyInGoodTimes {
+        require(controller.stopInEmergency());
+        _;
+    }
 
-	function Controlled()
-	{
-		controller = Controller(msg.sender);
-	}
+    modifier onlyInBadTimes {
+        require(controller.onlyInEmergency());
+        _;
+    }
 
-	// TODO: existst for backward compatibility during migration, switch to providing controller via constructor parameter (ideal) or call `setController` directly
-	function initialize(Controller _controller) external onlyControllerCaller returns(bool)
-	{
-		return setController(_controller);
-	}
+    function Controlled() {
+        controller = Controller(msg.sender);
+    }
 
-	function setController(Controller _controller) public onlyControllerCaller returns(bool)
-	{
-		controller = _controller;
-		return true;
-	}
+    // TODO: existst for backward compatibility during migration, switch to providing controller via constructor parameter (ideal) or call `setController` directly
+    function initialize(Controller _controller) external onlyControllerCaller returns(bool) {
+        return setController(_controller);
+    }
 
-	function suicideFunds(address _target) public onlyControllerCaller returns(bool)
-	{
-		selfdestruct(_target);
-		return true;
-	}
+    function setController(Controller _controller) public onlyControllerCaller returns(bool) {
+        controller = _controller;
+        return true;
+    }
+
+    function suicideFunds(address _target) public onlyControllerCaller returns(bool) {
+        selfdestruct(_target);
+        return true;
+    }
 }
 
-contract Controller
-{
-	address public owner;
-	mapping(address => bool) public whitelist;
-	mapping(bytes32 => address) public registry;
-	bool public stopped = false;
 
-	modifier onlyWhitelistedCallers
-	{
-		assertIsWhitelisted(msg.sender);
-		_;
-	}
+contract Controller {
+    address public owner;
+    mapping(address => bool) public whitelist;
+    mapping(bytes32 => address) public registry;
+    bool public stopped = false;
 
-	modifier devModeOwnerOnly
-	{
-		require(msg.sender == owner);
-		require(whitelist[owner]);
-		_;
-	}
+    modifier onlyWhitelistedCallers {
+        assertIsWhitelisted(msg.sender);
+        _;
+    }
 
-	modifier onlyOwnerCaller
-	{
-		require(msg.sender == owner);
-		_;
-	}
+    modifier devModeOwnerOnly {
+        require(msg.sender == owner);
+        require(whitelist[owner]);
+        _;
+    }
 
-	modifier onlyInBadTimes
-	{
-		require(stopped);
-		_;
-	}
+    modifier onlyOwnerCaller {
+        require(msg.sender == owner);
+        _;
+    }
 
-	modifier onlyInGoodTimes
-	{
-		require(!stopped);
-		_;
-	}
+    modifier onlyInBadTimes {
+        require(stopped);
+        _;
+    }
 
-	function Controller()
-	{
-		owner = msg.sender;
-		whitelist[owner] = true;
-	}
+    modifier onlyInGoodTimes {
+        require(!stopped);
+        _;
+    }
 
-	/*
-	 * Whitelisting [whitelisted augur contracts and dev mode can use it]
-	 */
+    function Controller() {
+        owner = msg.sender;
+        whitelist[owner] = true;
+    }
 
-	function addToWhitelist(address _target) public onlyWhitelistedCallers returns(bool)
-	{
-		whitelist[_target] = true;
-		return true;
-	}
+    /*
+     * Whitelisting [whitelisted augur contracts and dev mode can use it]
+     */
 
-	function removeFromWhitelist(address _target) public onlyWhitelistedCallers returns(bool)
-	{
-		whitelist[_target] = false;
-		return true;
-	}
+    function addToWhitelist(address _target) public onlyWhitelistedCallers returns(bool) {
+        whitelist[_target] = true;
+        return true;
+    }
 
-	function assertIsWhitelisted(address _target) public returns(bool)
-	{
-		require(whitelist[_target]);
-		return true;
-	}
+    function removeFromWhitelist(address _target) public onlyWhitelistedCallers returns(bool) {
+        whitelist[_target] = false;
+        return true;
+    }
 
-	/*
-	 * Registry for lookups [whitelisted augur contracts and dev mode can use it]
-	 */
+    function assertIsWhitelisted(address _target) public returns(bool) {
+        require(whitelist[_target]);
+        return true;
+    }
 
-	function setValue(bytes32 _key, address _value) public onlyWhitelistedCallers returns(bool)
-	{
-		registry[_key] = _value;
-		return true;
-	}
+    /*
+     * Registry for lookups [whitelisted augur contracts and dev mode can use it]
+     */
 
-	function lookup(bytes32 _key) public returns(address)
-	{
-		return registry[_key];
-	}
+    function setValue(bytes32 _key, address _value) public onlyWhitelistedCallers returns(bool) {
+        registry[_key] = _value;
+        return true;
+    }
 
-	function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) public returns(bool)
-	{
-		require(registry[_allowedCaller] == _caller || (msg.sender == owner && whitelist[owner]));
-		return true;
-	}
+    function lookup(bytes32 _key) public returns(address) {
+        return registry[_key];
+    }
 
-	/*
-	 * Contract Administration [dev mode can use it]
-	 */
+    function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) public returns(bool) {
+        require(registry[_allowedCaller] == _caller || (msg.sender == owner && whitelist[owner]));
+        return true;
+    }
 
-	function suicide(Controlled _target, address _destination) public devModeOwnerOnly returns(bool)
-	{
-		_target.suicideFunds(_destination);
-		return true;
-	}
+    /*
+     * Contract Administration [dev mode can use it]
+     */
 
-	function updateController(Controlled _target, Controller _newController) public devModeOwnerOnly returns(bool)
-	{
-		_target.setController(_newController);
-		return true;
-	}
+    function suicide(Controlled _target, address _destination) public devModeOwnerOnly returns(bool) {
+        _target.suicideFunds(_destination);
+        return true;
+    }
 
-	 /*
-	 * Controller Administration [dev can transfer ownership anytime, mode can only switched from dev mode -> decentralized]
-	 */
+    function updateController(Controlled _target, Controller _newController) public devModeOwnerOnly returns(bool) {
+        _target.setController(_newController);
+        return true;
+    }
 
-	function transferOwnership(address _newOwner) onlyOwnerCaller returns(bool)
-	{
-		// if in dev mode, blacklist old owner and whitelist new owner
-		if (whitelist[owner])
-		{
-			whitelist[owner] = false;
-			whitelist[_newOwner] = true;
-		}
-		owner = _newOwner;
-		return true;
-	}
+     /*
+     * Controller Administration [dev can transfer ownership anytime, mode can only switched from dev mode -> decentralized]
+     */
 
-	function switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed() public devModeOwnerOnly returns(bool)
-	{
-		whitelist[owner] = false;
-		return true;
-	}
+    function transferOwnership(address _newOwner) onlyOwnerCaller returns(bool) {
+        // if in dev mode, blacklist old owner and whitelist new owner
+        if (whitelist[owner]) {
+            whitelist[owner] = false;
+            whitelist[_newOwner] = true;
+        }
+        owner = _newOwner;
+        return true;
+    }
 
-	/*
-	 * Emergency Stop Functions [dev can use it anytime in or out of dev mode]
-	 */
+    function switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed() public devModeOwnerOnly returns(bool) {
+        whitelist[owner] = false;
+        return true;
+    }
 
-	function emergencyStop() public onlyOwnerCaller onlyInGoodTimes returns(bool)
-	{
-		stopped = true;
-		return true;
-	}
+    /*
+     * Emergency Stop Functions [dev can use it anytime in or out of dev mode]
+     */
 
-	function release() public onlyOwnerCaller onlyInBadTimes returns(bool)
-	{
-		stopped = false;
-		return true;
-	}
+    function emergencyStop() public onlyOwnerCaller onlyInGoodTimes returns(bool) {
+        stopped = true;
+        return true;
+    }
 
-	function stopInEmergency() public onlyInGoodTimes returns(bool)
-	{
-		return true;
-	}
+    function release() public onlyOwnerCaller onlyInBadTimes returns(bool) {
+        stopped = false;
+        return true;
+    }
 
-	function onlyInEmergency() public onlyInBadTimes returns(bool)
-	{
-		return true;
-	}
+    function stopInEmergency() public onlyInGoodTimes returns(bool) {
+        return true;
+    }
+
+    function onlyInEmergency() public onlyInBadTimes returns(bool) {
+        return true;
+    }
 }
