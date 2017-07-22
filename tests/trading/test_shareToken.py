@@ -50,8 +50,6 @@ def test_transfer(contractsFixture):
     with raises(TransactionFailed):
         shareToken.transfer(tester.a0, 11, sender=tester.k0)
     with raises(TransactionFailed):
-        shareToken.transfer(tester.a0, -13, sender=tester.k0)
-    with raises(TransactionFailed):
         shareToken.transfer(tester.a0, 0, sender = tester.k0)
     with raises(TransactionFailed):
         shareToken.transfer(tester.a0, 5, sender = tester.k1)
@@ -111,7 +109,7 @@ def test_transferFrom(contractsFixture):
 
 def test_setController(contractsFixture):
     shareToken = contractsFixture.applySignature('shareToken', contractsFixture.binaryMarket.getShareToken())
-    newController = contractsFixture.upload('../src/controller.se', 'newController')
+    newController = contractsFixture.upload('../src/Controller.sol', 'newController')
     newController.setValue('shareToken'.ljust(32, '\x00'), shareToken.address)
 
     contractsFixture.controller.updateController(shareToken.address, newController.address, sender=tester.k0)

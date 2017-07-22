@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-extern controllerExtern: [lookup:[int256]:address]
+extern controllerExtern: [lookup:[bytes32]:address]
 
 data controller
 data key

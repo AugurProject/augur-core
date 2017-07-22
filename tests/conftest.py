@@ -10,18 +10,17 @@ from os import path, walk, makedirs, listdir
 from pytest import fixture
 from re import findall
 from serpent import mk_full_signature, compile as compile_serpent
-from utils import bytesToLong
+from solc import compile_standard
+from utils import bytesToHexString, bytesToLong
+from copy import deepcopy
 
 # used to resolve relative paths
 BASE_PATH = path.dirname(path.abspath(__file__))
 def resolveRelativePath(relativeFilePath):
     return path.abspath(path.join(BASE_PATH, relativeFilePath))
 COMPILATION_CACHE = resolveRelativePath('./compilation_cache')
-CONTRACTS = ['mutex','cash','orders','completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','cancelOrder','trade','claimProceeds','tradingEscapeHatch','ordersFetcher']
-DELEGATED_CONTRACTS = ['orders','tradingEscapeHatch']
 
 class ContractsFixture:
-    # TODO: figure out how to disable logging events to stdout (they are super noisy)
     signatures = {}
     compiledCode = {}
 
@@ -37,12 +36,20 @@ class ContractsFixture:
     @staticmethod
     def generateSignature(relativeFilePath):
         ContractsFixture.ensureCacheDirectoryExists()
-        name = path.splitext(path.basename(relativeFilePath))[0]
+        filename = path.basename(relativeFilePath)
+        name = path.splitext(filename)[0]
         outputPath = path.join(COMPILATION_CACHE,  name + 'Signature')
         lastCompilationTime = path.getmtime(outputPath) if path.isfile(outputPath) else 0
         if path.getmtime(relativeFilePath) > lastCompilationTime:
             print('generating signature for ' + name)
-            signature = mk_full_signature(relativeFilePath)
+            extension = path.splitext(filename)[1]
+            signature = None
+            if extension == '.se':
+                signature = mk_full_signature(relativeFilePath)
+            elif extension == '.sol':
+                signature = ContractsFixture.compileSolidity(relativeFilePath)['abi']
+            else:
+                raise
             with open(outputPath, mode='w') as file:
                 json_dump(signature, file)
         else:
@@ -53,7 +60,8 @@ class ContractsFixture:
 
     @staticmethod
     def getCompiledCode(relativeFilePath):
-        name = path.splitext(path.basename(relativeFilePath))[0]
+        filename = path.basename(relativeFilePath)
+        name = path.splitext(filename)[0]
         if name in ContractsFixture.compiledCode:
             return ContractsFixture.compiledCode[name]
         dependencySet = set()
@@ -68,7 +76,14 @@ class ContractsFixture:
                 break
         if (needsRecompile):
             print('compiling ' + name + '...')
-            compiledCode = compile_serpent(relativeFilePath)
+            extension = path.splitext(filename)[1]
+            compiledCode = None
+            if extension == '.se':
+                compiledCode = compile_serpent(relativeFilePath)
+            elif extension == '.sol':
+                compiledCode = bytearray.fromhex(ContractsFixture.compileSolidity(relativeFilePath)['evm']['bytecode']['object'])
+            else:
+                raise
             with io_open(compiledOutputPath, mode='wb') as file:
                 file.write(compiledCode)
         else:
@@ -77,6 +92,27 @@ class ContractsFixture:
             compiledCode = file.read()
             ContractsFixture.compiledCode[name] = compiledCode
             return(compiledCode)
+
+    @staticmethod
+    def compileSolidity(relativeFilePath):
+        absoluteFilePath = resolveRelativePath(relativeFilePath)
+        filename = path.basename(relativeFilePath)
+        contractName = path.splitext(filename)[0]
+        compilerParameter = {
+            'language': 'Solidity',
+            'sources': {
+                filename: {
+                    'urls': [ absoluteFilePath ]
+                }
+            },
+            'settings': {
+                'remappings': [ 'ROOT=%s' % resolveRelativePath("../src") ]
+            },
+            'outputSelection': {
+                '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
+            }
+        }
+        return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../src"))['contracts'][filename][contractName]
 
     @staticmethod
     def getAllDependencies(filePath, knownDependencies):
@@ -94,6 +130,11 @@ class ContractsFixture:
             dependencyPath = path.abspath(path.join(fileDirectory, match))
             if not dependencyPath in knownDependencies:
                 ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
+        matches = findall("import ['\"]ROOT/(.*?)['\"]", fileContents)
+        for match in matches:
+            dependencyPath = path.join(BASE_PATH, '..', 'src', match)
+            if not dependencyPath in knownDependencies:
+                ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
         return(knownDependencies)
 
     ####
@@ -105,8 +146,8 @@ class ContractsFixture:
         config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
         self.chain = tester.Chain(env=Env(config=config_metropolis))
         self.contracts = {}
-      	self.controller = self.upload('../src/controller.se')
-        assert self.controller.getOwner() == bytesToLong(tester.a0)
+        self.controller = self.upload('../src/Controller.sol')
+        assert self.controller.owner() == bytesToHexString(tester.a0)
         self.uploadAllContracts()
         self.whitelistTradingContracts()
         self.initializeAllContracts()
@@ -118,6 +159,7 @@ class ContractsFixture:
         self.chain.mine(1)
         self.originalHead = self.chain.head_state
         self.originalBlock = self.chain.block
+        self.originalContracts = deepcopy(self.contracts)
         self.snapshot = self.chain.snapshot()
 
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None):
@@ -136,11 +178,10 @@ class ContractsFixture:
         if signatureKey not in ContractsFixture.signatures:
             ContractsFixture.signatures[signatureKey] = ContractsFixture.generateSignature(resolvedPath)
         signature = ContractsFixture.signatures[signatureKey]
-        print lookupKey
-        contractAddress = long(hexlify(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6))), 16)
+        contractAddress = bytesToLong(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6)))
         contract = ABIContract(self.chain, ContractTranslator(signature), contractAddress)
         self.contracts[lookupKey] = contract
-	return(contract)
+        return(contract)
 
     def applySignature(self, signatureName, address):
         assert address
@@ -150,8 +191,9 @@ class ContractsFixture:
 
     def resetSnapshot(self):
         self.chain.block = self.originalBlock
-        self.chain.head_state = self.originalHead
         self.chain.revert(self.snapshot)
+        self.chain.head_state = self.originalHead
+        self.contracts = deepcopy(self.originalContracts)
 
     ####
     #### Bulk Operations
@@ -162,9 +204,10 @@ class ContractsFixture:
             for filename in filenames:
                 name = path.splitext(filename)[0]
                 extension = path.splitext(filename)[1]
-                if extension != '.se': continue
+                if extension != '.se' and extension != '.sol': continue
                 if name == 'controller': continue
-                if name in DELEGATED_CONTRACTS:
+                contractsToDelegate = ['orders','tradingEscapeHatch']
+                if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
                     self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
                     self.uploadAndAddToController("../src/libraries/delegator.se", name, "delegator")
@@ -182,7 +225,8 @@ class ContractsFixture:
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        for contractName in CONTRACTS:
+        contractsToInitialize = ['mutex','Cash','orders','completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','cancelOrder','trade','claimProceeds','tradingEscapeHatch','ordersFetcher']
+        for contractName in contractsToInitialize:
             self.contracts[contractName].initialize(self.controller.address)
 
     ####
@@ -190,7 +234,7 @@ class ContractsFixture:
     ####
 
     def getSeededCash(self):
-        cash = self.contracts['cash']
+        cash = self.contracts['Cash']
         cash.publicDepositEther(value = 1, sender = tester.k9)
         return cash
 

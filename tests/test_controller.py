@@ -4,16 +4,9 @@
 # Uses tests/controller_test.se as a helper (to set the controller, etc.)
 
 from ethereum.tools import tester
-from ethereum.abi import ContractTranslator
-from ethereum.tools.tester import ABIContract
-from ethereum import utils as u
-from ethereum.config import config_metropolis, Env
 from ethereum.tools.tester import TransactionFailed
-from os import path
 from pytest import raises, fixture
-from utils import bytesToLong
-
-config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
+from utils import bytesToLong, longToHexString, bytesToHexString
 
 def test_whitelists(controller):
     assert controller.assertIsWhitelisted(tester.a0, sender = tester.k2)
@@ -30,10 +23,10 @@ def test_registry(controller, decentralizedController):
     key1 = 'abc'.ljust(32, '\x00')
     key2 = 'foo'.ljust(32, '\x00')
     with raises(TransactionFailed): controller.setValue(key1, 123, sender = tester.k2)
-    assert controller.lookup(key1, sender = tester.k2) == 0
+    assert controller.lookup(key1, sender = tester.k2) == longToHexString(0)
     assert controller.addToWhitelist(tester.a1, sender = tester.k0)
     assert controller.setValue(key1, 123, sender = tester.k1)
-    assert controller.lookup(key1, sender = tester.k2) == 123
+    assert controller.lookup(key1, sender = tester.k2) == longToHexString(123)
     with raises(TransactionFailed): controller.assertOnlySpecifiedCaller(tester.a1, key2, sender = tester.k2)
     assert controller.setValue(key2, tester.a1, sender = tester.k0)
     assert controller.assertOnlySpecifiedCaller(tester.a1, key2, sender = tester.k2)
@@ -44,6 +37,7 @@ def test_registry(controller, decentralizedController):
 
 def test_suicide(controller, decentralizedController, controllerUser):
     with raises(TransactionFailed): controller.suicide(controllerUser.address, tester.a0, sender = tester.k2)
+    assert decentralizedController.owner() == bytesToHexString(tester.a0)
     with raises(TransactionFailed): decentralizedController.suicide(controllerUser.address, tester.a0, sender = tester.k0)
     assert controller.suicide(controllerUser.address, tester.a0, sender = tester.k0)
     assert controllerUser.getSuicideFundsDestination() == bytesToLong(tester.a0)
@@ -59,12 +53,12 @@ def test_transferOwnership(controller, decentralizedController):
     assert controller.transferOwnership(tester.a1, sender = tester.k0)
     with raises(TransactionFailed): controller.assertIsWhitelisted(tester.a0, sender = tester.k2)
     assert controller.assertIsWhitelisted(tester.a1, sender = tester.k2)
-    assert controller.getOwner() == bytesToLong(tester.a1)
+    assert controller.owner() == bytesToHexString(tester.a1)
 
     assert decentralizedController.transferOwnership(tester.a1, sender = tester.k0)
     with raises(TransactionFailed): decentralizedController.assertIsWhitelisted(tester.a0, sender = tester.k2)
     with raises(TransactionFailed): decentralizedController.assertIsWhitelisted(tester.a1, sender = tester.k2)
-    assert decentralizedController.getOwner() == bytesToLong(tester.a1)
+    assert decentralizedController.owner() == bytesToHexString(tester.a1)
 
 def test_emergencyStop(controller):
     with raises(TransactionFailed): controller.emergencyStop(sender = tester.k2)
@@ -81,37 +75,16 @@ def test_emergencyStop(controller):
 def test_switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed_failures(controller):
     with raises(TransactionFailed): controller.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k2)
 
-class Fixture:
-    def __init__(self):
-        THIS_FILE_DIRECTORY_PATH = path.dirname(path.realpath(__file__))
-        self.chain = tester.Chain(env=Env(config=config_metropolis))
-        self.controller = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "../src/controller.se"), language="serpent", startgas=long(6.7 * 10**6))
-        self.decentralizedController = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "../src/controller.se"), language="serpent", startgas=long(6.7 * 10**6))
-        self.controllerUser = self.chain.contract(path.join(THIS_FILE_DIRECTORY_PATH, "serpent_test_helpers/controllerUser.se"), language="serpent", startgas=long(6.7 * 10**6))
-        self.decentralizedController.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k0)
-        self.originalHead = self.chain.head_state
-        self.originalBlock = self.chain.block
-        self.snapshot = self.chain.snapshot()
-
-@fixture(scope="session")
-def sessionFixture():
-    return Fixture()
+@fixture
+def controller(contractsFixture):
+    return contractsFixture.controller
 
 @fixture
-def localFixture(sessionFixture):
-    sessionFixture.chain.block = sessionFixture.originalBlock
-    sessionFixture.chain.head_state = sessionFixture.originalHead
-    sessionFixture.chain.revert(sessionFixture.snapshot)
-    return sessionFixture
+def controllerUser(contractsFixture):
+    return contractsFixture.upload('serpent_test_helpers/controllerUser.se')
 
 @fixture
-def controller(localFixture):
-    return localFixture.controller
-
-@fixture
-def controllerUser(localFixture):
-    return localFixture.controllerUser
-
-@fixture
-def decentralizedController(localFixture):
-    return localFixture.decentralizedController
+def decentralizedController(contractsFixture):
+    decentralizedController = contractsFixture.upload('../src/Controller.sol', 'decentralizedController')
+    decentralizedController.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k0)
+    return decentralizedController

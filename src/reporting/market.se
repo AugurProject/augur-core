@@ -68,7 +68,6 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     require(-2**254 <= minDisplayPrice and minDisplayPrice <= 2**254)
     completeSetCostMultiplier = maxDisplayPrice - minDisplayPrice
     require(1 <= completeSetCostMultiplier and completeSetCostMultiplier <= 2**254)
-    require(0 < denominationToken.totalSupply())
     require(creator)
     # FIXME: require market to be on a non-forking branch; repeat this check up the stack as well if necessary (e.g., in reporting window)
     # CONSIDER: should we allow creator to send extra ETH, is there risk of variability in bond requirements?
@@ -92,7 +91,7 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
         self.shareTokens[outcome] = SHARE_TOKEN_FACTORY.createShareToken(self.controller, self, outcome)
         outcome += 1
     self.approveSpenders()
-    require(self.controller.lookup('cash') == denominationToken or self.getBranch().isContainerForShareToken(denominationToken))
+    require(self.controller.lookup('Cash') == denominationToken or self.getBranch().isContainerForShareToken(denominationToken))
     return(1)
 
     # TODO: we need to update this signature (and all of the places that call it) to allow the creator (UI) to pass in a number of other things which will all be logged here
@@ -283,6 +282,7 @@ def tryFinalizeFork():
         return(0)
     if (winningDestination.totalSupply() < 11 * 10**6 * 10**18 / 2 and block.timestamp < self.getBranch().getForkEndTime()):
         return(0)
+    # FIXME: we need to consider staked REP and dispute bond REP (which needs to count negatively against the disputed outcome)
     self.finalPayoutDistributionHash = winningDestination.getBranch().getParentPayoutDistributionHash()
     self.finalizationTime = block.timestamp
     self.privateRewardBondHolders()
