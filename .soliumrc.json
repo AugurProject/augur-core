@@ -5,7 +5,7 @@
     "variable-declarations": true,
     "array-declarations": true,
     "operator-whitespace": true,
-    "lbrace": false,
+    "lbrace": true,
     "mixedcase": true,
     "camelcase": true,
     "uppercase": true,
@@ -14,7 +14,7 @@
     "no-unused-vars": true,
     "double-quotes": true,
     "blank-lines": true,
-    "indentation": false,
+    "indentation": true,
     "whitespace": true,
     "deprecated-suicide": true,
     "pragma-on-top": true
