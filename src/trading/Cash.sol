@@ -43,7 +43,7 @@ contract Cash is StandardToken, Controlled
 			return WithdrawState.Initiated;
 		}
 
-		// FIXME: attacker can initiate a withdraw of 1 unit, wait 3 days, then launch an attack and then immeadiately withdraw everything
+		// FIXME: attacker can initiate a withdraw of 1 unit, wait 3 days, then launch an attack and then immediately withdraw everything
 		require(_initiatedTimestamp + 3 days <= block.timestamp);
 		balances[msg.sender] = balances[msg.sender].sub(_amount);
 		totalSupply = totalSupply.sub(_amount);
