@@ -3,7 +3,7 @@
 ### This allows you to place orders on the book
 
 macro ORDERS: self.controller.lookup('orders')
-macro MUTEX: self.controller.lookup('mutex')
+macro MUTEX: self.controller.lookup('Mutex')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')

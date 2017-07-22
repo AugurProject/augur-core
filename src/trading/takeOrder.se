@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-macro MUTEX: self.controller.lookup('mutex')
+macro MUTEX: self.controller.lookup('Mutex')
 macro FILL_ASK_ORDER: self.controller.lookup('takeAskOrder')
 macro TAKE_BID_ORDER: self.controller.lookup('takeBidOrder')
 

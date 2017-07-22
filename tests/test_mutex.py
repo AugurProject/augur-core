@@ -4,9 +4,9 @@ from ethereum.tools.tester import TransactionFailed
 from pytest import raises
 
 def test_mutex(contractsFixture):
-    mutex = contractsFixture.contracts['mutex']
+    mutex = contractsFixture.contracts['Mutex']
 
-    assert mutex.acquire() == 1
+    assert mutex.acquire() == True
     with raises(TransactionFailed):
         mutex.acquire()
-    assert mutex.release() == 1
+    assert mutex.release() == True

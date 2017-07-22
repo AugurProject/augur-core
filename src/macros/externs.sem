@@ -47,4 +47,4 @@ extern orderBookExtern: [getOrderBook:[uint256,address,uint256,uint256,uint256]:
 extern registerExtern: [register:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 extern reputationFaucetExtern: [reputationFaucet:[int256]:int256, setController:[address]:int256, suicideFunds:[address]:_]
 extern controllerExtern: [addToWhitelist:[address]:bool, assertIsWhitelisted:[address]:bool, assertOnlySpecifiedCaller:[address,bytes32]:bool, emergencyStop:[]:bool, getOwner:[]:address, lookup:[bytes32]:address, onlyInEmergency:[]:bool, release:[]:bool, removeFromWhitelist:[address]:bool, setValue:[bytes32,address]:bool, stopInEmergency:[]:bool, suicide:[address,address]:bool, switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed:[]:bool, transferOwnership:[address]:bool, updateController:[address,address]:bool]
-extern mutexExtern: [acquire:[]:int256, initialize:[address]:int256, release:[]:int256, setController:[address]:int256, suicideFunds:[address]:_]
+extern mutexExtern: [acquire:[]:int256, release:[]:int256]

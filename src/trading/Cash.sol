@@ -22,7 +22,6 @@ contract Cash is StandardToken, Controlled {
     mapping(address => uint256) public initiated;
 
     function publicDepositEther() external payable onlyInGoodTimes returns(bool) {
-        // TODO: add mutex
         balances[msg.sender] = balances[msg.sender].add(msg.value);
         totalSupply = totalSupply.add(msg.value);
         DepositEther(msg.sender, msg.value, balances[msg.sender]);
