@@ -2,7 +2,7 @@
 
 ### This allows users to claim their money from a market by exchanging their shares which hold value
 
-macro MUTEX: self.controller.lookup('mutex')
+macro MUTEX: self.controller.lookup('Mutex')
 macro MARKET_FEE_CALCULATOR: self.controller.lookup('marketFeeCalculator')
 
 inset('../macros/externs.sem')
