@@ -13,9 +13,9 @@ def test_reporting(contractsFixture):
     market = contractsFixture.binaryMarket
 
     # get the reputation token for this branch and migrate legacy REP to it
-    reputationToken = contractsFixture.applySignature('reputationToken', branch.getReputationToken())
+    reputationToken = contractsFixture.applySignature('ReputationToken', branch.getReputationToken())
     legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
-    reputationToken.migrateFromLegacyRepContract(branch.address)
+    reputationToken.migrateFromLegacyRepContract()
 
     # give some REP to someone else to make things interesting
     reputationToken.transfer(tester.a1, 4 * 10**6 * 10**18)
@@ -78,10 +78,10 @@ def test_reporting(contractsFixture):
 
     # participate in the fork by moving REP
     noBranch = contractsFixture.getChildBranch(branch, market, [2,0])
-    noBranchReputationToken = contractsFixture.applySignature('reputationToken', noBranch.getReputationToken())
+    noBranchReputationToken = contractsFixture.applySignature('ReputationToken', noBranch.getReputationToken())
     assert noBranch.address != branch.address
     yesBranch = contractsFixture.getChildBranch(branch, market, [0,2])
-    yesBranchReputationToken = contractsFixture.applySignature('reputationToken', yesBranch.getReputationToken())
+    yesBranchReputationToken = contractsFixture.applySignature('ReputationToken', yesBranch.getReputationToken())
     assert yesBranch.address != branch.address
     assert yesBranch.address != noBranch.address
 

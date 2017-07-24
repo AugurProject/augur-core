@@ -33,7 +33,7 @@ def register():
     # do not allow for registration for reporting in the current window or past windows
     require(block.timestamp < self.reportingWindow.getStartTime())
     require(self.tokens[msg.sender] == 0)
-    self.getReputationToken().transferFrom(msg.sender, self, BOND_AMOUNT)
+    self.getReputationToken().trustedTransfer(msg.sender, self, BOND_AMOUNT)
     self.tokens[msg.sender] += 1
     self.supply += 1
     if (self.supply > self.peakSupply):
