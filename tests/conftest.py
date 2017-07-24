@@ -216,7 +216,6 @@ class ContractsFixture:
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 
-
     def whitelistTradingContracts(self):
         for filename in listdir(resolveRelativePath('../src/trading')):
             name = path.splitext(filename)[0]

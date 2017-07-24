@@ -6,7 +6,8 @@ insert_final_newline = true
 charset = utf-8
 
 [*.sol]
-indent_style = tab
+indent_style = space
+indent_size = 4
 
 [*.{se,py}]
 indent_style = space
