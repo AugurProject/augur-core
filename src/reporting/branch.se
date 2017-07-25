@@ -38,8 +38,8 @@ def initialize(parentBranch: address, parentPayoutDistributionHash: int256):
     self.parentBranch = parentBranch
     self.parentPayoutDistributionHash = parentPayoutDistributionHash
     self.reputationToken = REPUTATION_TOKEN_FACTORY.createReputationToken(self.controller, self)
-    self.topics = TOPICS_FACTORY.createTopics(self.controller)
     require(self.reputationToken)
+    self.topics = TOPICS_FACTORY.createTopics(self.controller)
     return(1)
 
 def fork(shadyMarket: address):

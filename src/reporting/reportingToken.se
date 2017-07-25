@@ -38,7 +38,7 @@ def buy(attotokens: int256):
     require(self.market.canBeReportedOn())
     require(self.getRegistrationToken().balanceOf(reporter) >= 1)
     require(self.market.isContainerForReportingToken(self))
-    self.getReputationToken().transferFrom(reporter, self, attotokens)
+    self.getReputationToken().trustedTransfer(reporter, self, attotokens)
     self.tokens[reporter] = safeAdd(self.tokens[reporter], attotokens)
     self.supply = safeAdd(self.supply, attotokens)
     self.market.updateTentativeWinningPayoutDistributionHash(self.getPayoutDistributionHash())

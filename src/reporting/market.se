@@ -146,7 +146,7 @@ def disputeAutomatedReport():
     # intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
     require(not self.isFinalized())
     require(self.isInAutomatedDisputePhase())
-    self.getReputationToken().transferFrom(msg.sender, self, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT)
+    self.getReputationToken().trustedTransfer(msg.sender, self, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT)
     self.automatedReporterDisputeBondHolder = msg.sender
     self.reportingWindow.updateMarketPhase()
     return 1
@@ -155,7 +155,7 @@ def disputeLimitedReporters():
     assertNoValue()
     self.migrateThroughAllForks()
     require(self.isInLimitedDisutePhase())
-    self.getReputationToken().transferFrom(msg.sender, self, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT)
+    self.getReputationToken().trustedTransfer(msg.sender, self, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT)
     self.limitedReportersDisputeBondHolder = msg.sender
     self.limitedReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
     newReportingWindow = self.getBranch().getNextReportingWindow()
@@ -168,7 +168,7 @@ def disputeAllReporters():
     assertNoValue()
     self.migrateThroughAllForks()
     require(self.isInAllDisputePhase())
-    self.getReputationToken().transferFrom(msg.sender, self, ALL_REPORTERS_DISPUTE_BOND_AMOUNT)
+    self.getReputationToken().trustedTransfer(msg.sender, self, ALL_REPORTERS_DISPUTE_BOND_AMOUNT)
     self.allReportersDisputeBondHolder = msg.sender
     self.allReportersPayoutDistributionHash = self.tentativeWinningPayoutDistributionHash
     self.reportingWindow.getBranch().fork(self)
@@ -277,13 +277,13 @@ def tryFinalizeFork():
         return(0)
     if (self.reportingWindow.getBranch().getForkingMarket() != self):
         return(0)
-    winningDestination = self.getReputationToken().getTopMigrationDestination()
+    winningDestination = self.getReputationToken().topMigrationDestination()
     if (not winningDestination):
         return(0)
     if (winningDestination.totalSupply() < 11 * 10**6 * 10**18 / 2 and block.timestamp < self.getBranch().getForkEndTime()):
         return(0)
     # FIXME: we need to consider staked REP and dispute bond REP (which needs to count negatively against the disputed outcome)
-    self.finalPayoutDistributionHash = winningDestination.getBranch().getParentPayoutDistributionHash()
+    self.finalPayoutDistributionHash = winningDestination.branch().getParentPayoutDistributionHash()
     self.finalizationTime = block.timestamp
     self.privateRewardBondHolders()
     self.reportingWindow.updateMarketPhase()

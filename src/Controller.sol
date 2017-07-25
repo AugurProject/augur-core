@@ -96,7 +96,7 @@ contract Controller {
         return true;
     }
 
-    function assertIsWhitelisted(address _target) public returns(bool) {
+    function assertIsWhitelisted(address _target) constant returns(bool) {
         require(whitelist[_target]);
         return true;
     }
@@ -110,11 +110,16 @@ contract Controller {
         return true;
     }
 
-    function lookup(bytes32 _key) public returns(address) {
+    function removeValue(bytes32 _key) public onlyWhitelistedCallers returns(bool) {
+        registry[_key] = address(0);
+        return true;
+    }
+
+    function lookup(bytes32 _key) constant returns(address) {
         return registry[_key];
     }
 
-    function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) public returns(bool) {
+    function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) constant returns(bool) {
         require(registry[_allowedCaller] == _caller || (msg.sender == owner && whitelist[owner]));
         return true;
     }
@@ -166,11 +171,11 @@ contract Controller {
         return true;
     }
 
-    function stopInEmergency() public onlyInGoodTimes returns(bool) {
+    function stopInEmergency() constant onlyInGoodTimes returns(bool) {
         return true;
     }
 
-    function onlyInEmergency() public onlyInBadTimes returns(bool) {
+    function onlyInEmergency() constant onlyInBadTimes returns(bool) {
         return true;
     }
 }
