@@ -1,0 +1,19 @@
+{
+    "files.exclude": {
+        ".cache": true,
+        ".idea": true,
+        ".mypy_cache": true,
+        "tests/compilation_cache": true,
+        "venv": true,
+        "*/__pycache__": true,
+        "**/__pycache__": true,
+        "*/*.pyc": true,
+        "**/*.pyc": true
+    },
+    "solidity.compilerRemappings": [
+        {
+            "prefix": "ROOT",
+            "target": "./src"
+        }
+    ]
+}
