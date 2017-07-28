@@ -201,6 +201,8 @@ class ContractsFixture:
 
     def uploadAllContracts(self):
         for directory, _, filenames in walk(resolveRelativePath('../src')):
+            # skip the legacy reputation directory since it is unnecessary and we don't support uploads of contracts with constructors yet
+            if 'legacy_reputation' in directory: continue
             for filename in filenames:
                 name = path.splitext(filename)[0]
                 extension = path.splitext(filename)[1]

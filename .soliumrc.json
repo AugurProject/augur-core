@@ -8,7 +8,7 @@
     "lbrace": true,
     "mixedcase": true,
     "camelcase": true,
-    "uppercase": true,
+    "uppercase": false,
     "no-with": true,
     "no-empty-blocks": true,
     "no-unused-vars": true,
