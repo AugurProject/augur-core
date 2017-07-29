@@ -31,7 +31,7 @@ def test_market_creation(contractsFixture):
     assert(market.isInAutomatedReportingPhase() == 0)
     assert(market.isInAutomatedDisputePhase() == 0)
     assert(market.isInLimitedReportingPhase() == 0)
-    assert(market.isInLimitedDisutePhase() == 0)
+    assert(market.isInLimitedDisputePhase() == 0)
     assert(market.isInAllReportingPhase() == 0)
     assert(market.isInAllDisputePhase() == 0)
     assert(market.isContainerForReportingToken(shadyReportingToken.address) == 0)

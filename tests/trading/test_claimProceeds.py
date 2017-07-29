@@ -68,7 +68,7 @@ def test_redeem_shares_in_binary_market(contractsFixture):
     acquireShortShareSet(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
     contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
-    # have tester.a0 subimt automated report
+    # have tester.a0 submit automated report
     market.automatedReport([0, 2], sender = tester.k0)
     # set timestamp to after automated dispute end
     contractsFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
@@ -107,7 +107,7 @@ def test_redeem_shares_in_categorical_market(contractsFixture):
     acquireShortShareSet(contractsFixture, market, 2, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
     contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
-    # have a0 subimt automated report
+    # have a0 submit automated report
     market.automatedReport([0, 0, 3], sender = tester.k0)
     # set timestamp to after automated dispute end
     contractsFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
@@ -147,7 +147,7 @@ def test_redeem_shares_in_scalar_market(contractsFixture):
     acquireShortShareSet(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
     contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
-    # have tester.a0 subimt automated report (75% high, 25% low, range -10*10^18 to 30*10^18)
+    # have tester.a0 submit automated report (75% high, 25% low, range -10*10^18 to 30*10^18)
     market.automatedReport([10**19, 3*10**19], sender = tester.k0)
     # set timestamp to after automated dispute end
     contractsFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1

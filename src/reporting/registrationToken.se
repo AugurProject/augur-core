@@ -42,7 +42,7 @@ def register():
 
 def redeem():
     require(block.timestamp > self.reportingWindow.getEndTime())
-    require(tokens[msg.sender] > 0)
+    require(self.tokens[msg.sender] > 0)
     require(self.reportingWindow.isDoneReporting(msg.sender))
     self.tokens[msg.sender] -= 1
     self.supply -= 1
