@@ -16,13 +16,14 @@ contract Branch {
     function isContainerForReportingToken(address _shadyReportingToken) public returns (bool);
 }
 
-
 contract ReputationToken is DelegationTarget, StandardToken {
     using SafeMath for uint256;
 
-    string public name = "Reputation";
-    string public symbol = "REP";
-    uint256 public decimals = 18;
+    // Delegation targets do not have their storage updated with values declared here
+    // We set them in the initialize function instead
+    string public name;
+    string public symbol;
+    uint256 public decimals;
     Branch public branch;
     ReputationToken public topMigrationDestination;
 
@@ -30,6 +31,9 @@ contract ReputationToken is DelegationTarget, StandardToken {
         require(_branch != address(0));
         require(branch == address(0));
         branch = _branch;
+        name = "Reputation";
+        symbol = "REP";
+        decimals = 18;
         // FIXME: DELETE THIS BEFORE LAUNCH
         var _reputationFaucet = controller.lookup("reputationFaucet");
         balances[_reputationFaucet] = balances[_reputationFaucet].add(1000000 ether);

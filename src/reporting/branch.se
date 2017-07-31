@@ -1,14 +1,14 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-##### must be first data members to match delegator.se
+##### must be first data members to match Delegator.sol
 data controller
 data controllerLookupName
 #####
 
-macro BRANCH_FACTORY: self.controller.lookup('branchFactory')
-macro REPUTATION_TOKEN_FACTORY: self.controller.lookup('reputationTokenFactory')
-macro REPORTING_WINDOW_FACTORY: self.controller.lookup('reportingWindowFactory')
-macro TOPICS_FACTORY: self.controller.lookup('topicsFactory')
+macro BRANCH_FACTORY: self.controller.lookup('BranchFactory')
+macro REPUTATION_TOKEN_FACTORY: self.controller.lookup('ReputationTokenFactory')
+macro REPORTING_WINDOW_FACTORY: self.controller.lookup('ReportingWindowFactory')
+macro TOPICS_FACTORY: self.controller.lookup('TopicsFactory')
 
 inset('../macros/externs.sem')
 inset('../macros/unitConversions.sem')

@@ -2,6 +2,7 @@
 
 inset('../macros/externs.sem')
 inset('../macros/durations.sem')
+inset('../macros/require.sem')
 
 def createScalarMarket(branch: address, endTime: int256, feePerEthInWei: int256, denominationToken: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
     numOutcomes = 2
