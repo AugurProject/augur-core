@@ -3,7 +3,8 @@ pragma solidity ^0.4.13;
 import 'ROOT/Controller.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
 
-contract Delegator is DelegationTarget{
+
+contract Delegator is DelegationTarget {
 
     function Delegator(address controllerAddress, bytes32 keyVal) {
         controller = Controller(controllerAddress);

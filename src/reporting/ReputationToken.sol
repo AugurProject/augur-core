@@ -16,6 +16,7 @@ contract Branch {
     function isContainerForReportingToken(address _shadyReportingToken) public returns (bool);
 }
 
+
 contract ReputationToken is DelegationTarget, StandardToken {
     using SafeMath for uint256;
 
