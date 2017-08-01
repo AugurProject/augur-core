@@ -1,13 +1,13 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-##### must be first data members to match delegator.se
+##### must be first data members to match Delegator.sol
 data controller
 data controllerLookupName
 #####
 
-macro MARKET_FACTORY: self.controller.lookup('marketFactory')
-macro REGISTRATION_TOKEN_FACTORY: self.controller.lookup('registrationTokenFactory')
-macro SET_FACTORY: self.controller.lookup('setFactory')
+macro MARKET_FACTORY: self.controller.lookup('MarketFactory')
+macro REGISTRATION_TOKEN_FACTORY: self.controller.lookup('RegistrationTokenFactory')
+macro SET_FACTORY: self.controller.lookup('SetFactory')
 
 inset('../macros/externs.sem')
 inset('../macros/assertPrivateCall.sem')

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import 'ROOT/legacy_reputation/Initializable.sol';
 import 'ROOT/legacy_reputation/PausableToken.sol';

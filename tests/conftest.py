@@ -162,13 +162,13 @@ class ContractsFixture:
         self.originalContracts = deepcopy(self.contracts)
         self.snapshot = self.chain.snapshot()
 
-    def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None):
+    def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
-        contract = self.upload(relativeFilePath, lookupKey, signatureKey)
+        contract = self.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs)
         self.controller.setValue(lookupKey.ljust(32, '\x00'), contract.address)
         return(contract)
 
-    def upload(self, relativeFilePath, lookupKey = None, signatureKey = None):
+    def upload(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         resolvedPath = resolveRelativePath(relativeFilePath)
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(resolvedPath))[0]
         signatureKey = signatureKey if signatureKey else lookupKey
@@ -178,8 +178,11 @@ class ContractsFixture:
         if signatureKey not in ContractsFixture.signatures:
             ContractsFixture.signatures[signatureKey] = ContractsFixture.generateSignature(resolvedPath)
         signature = ContractsFixture.signatures[signatureKey]
+        contractTranslator = ContractTranslator(signature)
+        if len(constructorArgs) > 0:
+            compiledCode += contractTranslator.encode_constructor_arguments(constructorArgs)
         contractAddress = bytesToLong(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6)))
-        contract = ABIContract(self.chain, ContractTranslator(signature), contractAddress)
+        contract = ABIContract(self.chain, contractTranslator, contractAddress)
         self.contracts[lookupKey] = contract
         return(contract)
 
@@ -212,8 +215,7 @@ class ContractsFixture:
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
                     self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
-                    self.uploadAndAddToController("../src/libraries/delegator.se", name, "delegator")
-                    self.contracts[name].setup(self.controller.address, delegationTargetName.ljust(32, '\x00'))
+                    self.uploadAndAddToController("../src/libraries/Delegator.sol", name, "delegator", constructorArgs=[self.controller.address, delegationTargetName.ljust(32, '\x00')])
                     self.contracts[name] = self.applySignature(name, self.contracts[name].address)
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
@@ -242,15 +244,14 @@ class ContractsFixture:
     def uploadShareToken(self, controllerAddress = None):
         controllerAddress = controllerAddress if controllerAddress else self.controller.address
         self.ensureShareTokenDependencies()
-        shareTokenFactory = self.contracts['shareTokenFactory']
-        shareTokenFactory.createShareToken(controllerAddress)
-        shareToken = shareTokenFactory.getLastShareToken()
+        shareTokenFactory = self.contracts['ShareTokenFactory']
+        shareToken = shareTokenFactory.createShareToken(controllerAddress)
         return self.applySignature('shareToken', shareToken)
 
     def createBranch(self, parentBranch, payoutDistributionHash):
-        self.contracts['branchFactory'].createBranch(self.controller.address, parentBranch, payoutDistributionHash)
-        branchAddress = self.contracts['branchFactory'].getLastBranch()
-        return self.applySignature('branch', branchAddress)
+        branchAddress = self.contracts['BranchFactory'].createBranch(self.controller.address, parentBranch, payoutDistributionHash)
+        branch = self.applySignature('branch', branchAddress)
+        return branch
 
     def getReportingToken(self, market, payoutDistribution):
         reportingTokenAddress = market.getReportingToken(payoutDistribution)

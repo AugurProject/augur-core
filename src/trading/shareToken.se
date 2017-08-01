@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-##### must be first data members to match delegator.se
+##### must be first data members to match Delegator.sol
 data controller
 data controllerLookupName
 #####

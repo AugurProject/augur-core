@@ -2,6 +2,7 @@ from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
+from utils import longToHexString
 
 tester.STARTGAS = long(6.7 * 10**6)
 
@@ -19,7 +20,7 @@ def test_market_creation(contractsFixture):
     with raises(TransactionFailed, message="Shady share token should be failing since it is in a separate branch"):
         contractsFixture.createReasonableBinaryMarket(shadyBranch, shadyDenominationToken)
 
-    assert(market.getBranch() == branch.address)
+    assert(longToHexString(market.getBranch()) == branch.address)
     assert(market.getNumberOfOutcomes() == 2)
     assert(market.getPayoutDenominator() == 2)
     assert(market.getReputationToken() == branch.getReputationToken())

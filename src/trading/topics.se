@@ -1,11 +1,11 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-##### must be first data members to match delegator.se
+##### must be first data members to match Delegator.sol
 data controller
 data controllerLookupName
 #####
 
-macro ITERABLE_MAP_FACTORY: self.controller.lookup('iterableMapFactory')
+macro ITERABLE_MAP_FACTORY: self.controller.lookup('IterableMapFactory')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')

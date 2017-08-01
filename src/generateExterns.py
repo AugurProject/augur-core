@@ -22,7 +22,7 @@ def getAllFilesInDirectories(sourceDirectories):
     return(allFilePaths)
 
 externLines = []
-for filePath in (getAllFilesInDirectories(['./factories/', './libraries/', './reporting/', './trading/', './extensions/']) + ['./mutex.se']):
+for filePath in (getAllFilesInDirectories(['./factories/', './libraries/', './reporting/', './trading/', './extensions/'])):
     externLines.append(generateExternForFile(filePath))
 
 with open('./macros/externs.sem', 'w') as externsFile:

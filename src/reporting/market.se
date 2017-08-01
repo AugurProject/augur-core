@@ -1,15 +1,15 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-#### must be first data members to match delegator.se
+#### must be first data members to match Delegator.sol
 data controller
 data controllerLookupName
 ####
 
 macro MARKET_FEE_CALCULATOR: self.controller.lookup('marketFeeCalculator')
-macro REPORTING_TOKEN_FACTORY: self.controller.lookup('reportingTokenFactory')
-macro SHARE_TOKEN_FACTORY: self.controller.lookup('shareTokenFactory')
-macro MAP_FACTORY: self.controller.lookup('mapFactory')
-macro DISPUTE_BOND_TOKEN_FACTORY: self.controller.lookup('disputeBondTokenFactory')
+macro REPORTING_TOKEN_FACTORY: self.controller.lookup('ReportingTokenFactory')
+macro SHARE_TOKEN_FACTORY: self.controller.lookup('ShareTokenFactory')
+macro MAP_FACTORY: self.controller.lookup('MapFactory')
+macro DISPUTE_BOND_TOKEN_FACTORY: self.controller.lookup('DisputeBondTokenFactory')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
