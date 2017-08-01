@@ -178,11 +178,11 @@ class ContractsFixture:
         if signatureKey not in ContractsFixture.signatures:
             ContractsFixture.signatures[signatureKey] = ContractsFixture.generateSignature(resolvedPath)
         signature = ContractsFixture.signatures[signatureKey]
-        ct = ContractTranslator(signature)
+        contractTranslator = ContractTranslator(signature)
         if len(constructorArgs) > 0:
-            compiledCode += ct.encode_constructor_arguments(constructorArgs)
+            compiledCode += contractTranslator.encode_constructor_arguments(constructorArgs)
         contractAddress = bytesToLong(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6)))
-        contract = ABIContract(self.chain, ct, contractAddress)
+        contract = ABIContract(self.chain, contractTranslator, contractAddress)
         self.contracts[lookupKey] = contract
         return(contract)
 

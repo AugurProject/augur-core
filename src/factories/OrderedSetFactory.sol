@@ -1,20 +1,20 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
+import 'ROOT/Controller.sol';
 
 
 // FIXME: remove once this can be imported as a solidty contract
 contract OrderedSet {
-    function initialize(address owner);
+    function initialize(address _owner);
 }
 
 
 contract OrderedSetFactory {
-
-    function createOrderedSet(address controller, address owner) returns (OrderedSet) {
-        Delegator del = new Delegator(controller, "orderedSet");
-        OrderedSet orderedSet = OrderedSet(del);
-        orderedSet.initialize(owner);
-        return orderedSet;
+    function createOrderedSet(Controller _controller, address _owner) returns (OrderedSet) {
+        Delegator _delegator = new Delegator(_controller, "orderedSet");
+        OrderedSet _orderedSet = OrderedSet(_delegator);
+        _orderedSet.initialize(_owner);
+        return _orderedSet;
     }
 }

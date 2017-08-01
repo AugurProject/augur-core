@@ -1,20 +1,20 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
+import 'ROOT/Controller.sol';
 
 
 // FIXME: remove once this can be imported as a solidty contract
 contract SortedLinkedList {
-    function initialize(address comparor);
+    function initialize(address _comparor);
 }
 
 
 contract SortedLinkedListFactory {
-
-    function createSortedLinkedList(address controller, address comparor) returns (SortedLinkedList) {
-        Delegator del = new Delegator(controller, "sortedLinkedList");
-        SortedLinkedList sortedLinkedList = SortedLinkedList(del);
-        sortedLinkedList.initialize(comparor);
-        return sortedLinkedList;
+    function createSortedLinkedList(Controller _controller, address _comparor) returns (SortedLinkedList) {
+        Delegator _delegator = new Delegator(_controller, "sortedLinkedList");
+        SortedLinkedList _sortedLinkedList = SortedLinkedList(_delegator);
+        _sortedLinkedList.initialize(_comparor);
+        return _sortedLinkedList;
     }
 }

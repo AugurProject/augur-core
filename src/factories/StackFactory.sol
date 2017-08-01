@@ -1,6 +1,7 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
+import 'ROOT/Controller.sol';
 
 
 // FIXME: remove once this can be imported as a solidty contract
@@ -10,11 +11,10 @@ contract Stack {
 
 
 contract StackFactory {
-
-    function createStack(address controller) returns (Stack) {
-        Delegator del = new Delegator(controller, "stack");
-        Stack stack = Stack(del);
-        stack.initialize();
-        return stack;
+    function createStack(Controller _controller) returns (Stack) {
+        Delegator _delegator = new Delegator(_controller, "stack");
+        Stack _stack = Stack(_delegator);
+        _stack.initialize();
+        return _stack;
     }
 }

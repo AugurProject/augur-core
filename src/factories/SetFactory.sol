@@ -1,6 +1,7 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
+import 'ROOT/Controller.sol';
 
 
 // FIXME: remove once this can be imported as a solidty contract
@@ -10,11 +11,10 @@ contract Set {
 
 
 contract SetFactory {
-
-    function createSet(address controller, address owner) returns (Set) {
-        Delegator del = new Delegator(controller, "set");
-        Set set = Set(del);
-        set.initialize(owner);
-        return set;
+    function createSet(Controller _controller, address owner) returns (Set) {
+        Delegator _delegator = new Delegator(_controller, "set");
+        Set _set = Set(_delegator);
+        _set.initialize(owner);
+        return _set;
     }
 }

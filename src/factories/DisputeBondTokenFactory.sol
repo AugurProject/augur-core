@@ -1,20 +1,26 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
+import 'ROOT/Controller.sol';
+
+
+// FIXME: remove once this can be imported as a solidty contract
+contract Market {
+    function stub() {}
+}
 
 
 // FIXME: remove once this can be imported as a solidty contract
 contract DisputeBondToken {
-    function initialize(address market, address bondHolder, uint256 bondAmount, int256 payoutDistributionHash);
+    function initialize(Market _market, address _bondHolder, uint256 _bondAmount, int256 _payoutDistributionHash);
 }
 
 
 contract DisputeBondTokenFactory {
-
-    function createDisputeBondToken(address controller, address market, address bondHolder, uint256 bondAmount, int256 payoutDistributionHash) returns (DisputeBondToken) {
-        Delegator del = new Delegator(controller, "disputeBondToken");
-        DisputeBondToken disputeBondToken = DisputeBondToken(del);
-        disputeBondToken.initialize(market, bondHolder, bondAmount, payoutDistributionHash);
-        return disputeBondToken;
+    function createDisputeBondToken(Controller _controller, Market _market, address _bondHolder, uint256 _bondAmount, int256 _payoutDistributionHash) returns (DisputeBondToken) {
+        Delegator _delegator = new Delegator(_controller, "disputeBondToken");
+        DisputeBondToken _disputeBondToken = DisputeBondToken(_delegator);
+        _disputeBondToken.initialize(_market, _bondHolder, _bondAmount, _payoutDistributionHash);
+        return _disputeBondToken;
     }
 }

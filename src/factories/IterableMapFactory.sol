@@ -1,20 +1,20 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
+import 'ROOT/Controller.sol';
 
 
 // FIXME: remove once this can be imported as a solidty contract
 contract IterableMap {
-    function initialize(address owner);
+    function initialize(address _owner);
 }
 
 
 contract IterableMapFactory {
-
-    function createIterableMap(address controller, address owner) returns (IterableMap) {
-        Delegator del = new Delegator(controller, "iterableMap");
-        IterableMap iterableMap = IterableMap(del);
-        iterableMap.initialize(owner);
-        return iterableMap;
+    function createIterableMap(Controller _controller, address _owner) returns (IterableMap) {
+        Delegator _delegator = new Delegator(_controller, "iterableMap");
+        IterableMap _iterableMap = IterableMap(_delegator);
+        _iterableMap.initialize(_owner);
+        return _iterableMap;
     }
 }

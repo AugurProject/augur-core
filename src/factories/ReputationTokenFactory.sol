@@ -1,20 +1,26 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
+import 'ROOT/Controller.sol';
+
+
+// FIXME: remove once this can be imported as a solidty contract
+contract Branch {
+    function stub() {}
+}
 
 
 // FIXME: remove once this can be imported as a solidty contract
 contract ReputationToken {
-    function initialize(address branch);
+    function initialize(Branch _branch);
 }
 
 
 contract ReputationTokenFactory {
-
-    function createReputationToken(address controller, address branch) returns (ReputationToken) {
-        Delegator del = new Delegator(controller, "ReputationToken");
-        ReputationToken reputationToken = ReputationToken(del);
-        reputationToken.initialize(branch);
-        return reputationToken;
+    function createReputationToken(Controller _controller, Branch _branch) returns (ReputationToken) {
+        Delegator _delegator = new Delegator(_controller, "ReputationToken");
+        ReputationToken _reputationToken = ReputationToken(_delegator);
+        _reputationToken.initialize(_branch);
+        return _reputationToken;
     }
 }
