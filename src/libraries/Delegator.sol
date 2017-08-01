@@ -24,15 +24,29 @@ contract Delegator is DelegationTarget {
         address _target = controller.lookup(controllerLookupName);
 
         assembly {
-            let _o_code := mload(0x40) //0x40 is the address where the next free memory slot is stored in Solidity
+            //0x40 is the address where the next free memory slot is stored in Solidity
+            let _calldataMemoryOffset := mload(0x40)
+            // Update the pointer at 0x40 to point at new free memory location so any theoretical allocation doesn't stomp our memory in this call
+            let _size := 0
+            switch gt(calldatasize, 32)
+            case 1 {
+                _size := calldatasize
+            } default {
+                _size := 32
+            }
+            mstore(0x40, add(_calldataMemoryOffset, _size))
             // Copy method signature and parameters of this call into memory
-            calldatacopy(_o_code, 0x0, calldatasize)
-            // Call the actual method via delegation and store the result at offset o_code assuming size of 32
-            let _retval := delegatecall(sub(gas, 10000), _target, _o_code, calldatasize, _o_code, 32)
-            // 0 == it threw, so we do so as well by jumping to bad destination (02)
-            jumpi(0x02, iszero(_retval))
-            // Return the data in mem[o_code..32]
-            return(_o_code, 32)
+            calldatacopy(_calldataMemoryOffset, 0x0, calldatasize)
+            // Call the actual method via delegation and store the result at offset _calldataMemoryOffset assuming size of 32
+            let _retval := delegatecall(gas, _target, _calldataMemoryOffset, calldatasize, _calldataMemoryOffset, 32)
+            // 0 == it threw, so we revert
+            switch _retval
+            case 0 {
+                revert(0,0)
+            } default {
+                // If the call succeeded return the data in mem[_calldataMemoryOffset..32]
+                return(_calldataMemoryOffset, 32)
+            }            
         }
     }
 }
