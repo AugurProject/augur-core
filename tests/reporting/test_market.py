@@ -11,7 +11,7 @@ def test_market_creation(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     reportingWindow = contractsFixture.applySignature('reportingWindow', market.getReportingWindow())
-    shadyReportingToken = contractsFixture.upload('../src/reporting/reportingToken.se', 'shadyReportingToken')
+    shadyReportingToken = contractsFixture.upload('../src/reporting/ReportingToken.sol', 'shadyReportingToken')
     shadyReportingToken.initialize(market.address, [0,2])
 
     shadyBranch = contractsFixture.createBranch(0, 0)

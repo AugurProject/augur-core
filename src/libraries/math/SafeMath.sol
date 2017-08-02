@@ -29,4 +29,20 @@ library SafeMath {
         require(c >= a);
         return c;
     }
+
+    function min(uint256 a, uint256 b) internal constant returns (uint256) {
+        if (a <= b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    function max(uint256 a, uint256 b) internal constant returns (uint256) {
+        if (a >= b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
 }

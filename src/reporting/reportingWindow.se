@@ -117,6 +117,9 @@ def noteReport(market: address, reporter: address, payoutDistributionHash: int25
 #### Getters
 ####
 
+def getTypeName():
+    return "ReportingWindow"
+
 def getBranch():
     assertNoValue()
     return(self.branch)
@@ -190,6 +193,9 @@ def getTargetReportsPerLimitedReporterMarket():
 
     return(minimumReportsPerMarket)
 
+def getNumberOfReportsByMarket(market: address):
+    return(self.numberOfReportsByMarket[market])
+
 def getMaxReportsPerLimitedReporterMarket():
     assertNoValue()
     return(self.getTargetReportsPerLimitedReporterMarket() + 2)
@@ -203,6 +209,9 @@ def getTargetReportsPerReporter():
     limitedMarketReportsPerReporter = self.getRequiredReportsPerReporterForlimitedReporterMarkets()
     return(self.allReporterMarkets.count() + limitedMarketReportsPerReporter)
 
+def getLimitedReporterMarkets():
+    return(self.limitedReporterMarkets)
+
 def getReportsByReporter(reporter: address):
     assertNoValue()
     if (not self.reportsByReporter[reporter]):
@@ -211,10 +220,14 @@ def getReportsByReporter(reporter: address):
 
 def isContainerForRegistrationToken(shadyRegistrationToken: address):
     assertNoValue()
+    if (shadyRegistrationToken.getTypeName() != "RegistrationToken"):
+        return(0)
     return(self.registrationToken == shadyRegistrationToken)
 
 def isContainerForMarket(shadyMarket: address):
     assertNoValue()
+    if (shadyMarket.getTypeName() != "Market"):
+        return(0)
     return(self.markets.contains(shadyMarket))
 
 def isDoneReporting(reporter: address):

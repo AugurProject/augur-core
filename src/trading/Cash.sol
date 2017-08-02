@@ -1,5 +1,6 @@
 pragma solidity ^0.4.13;
 
+import 'ROOT/libraries/Typed.sol';
 import 'ROOT/libraries/token/StandardToken.sol';
 import 'ROOT/Controller.sol';
 
@@ -8,7 +9,7 @@ import 'ROOT/Controller.sol';
  * @title Cash
  * @dev ETH wrapper contract to make it look like an ERC20 token.
  */
-contract Cash is StandardToken, Controlled {
+contract Cash is Controlled, Typed, StandardToken {
     using SafeMath for uint256;
 
     event DepositEther(address indexed sender, uint256 value, uint256 balance);
@@ -50,7 +51,11 @@ contract Cash is StandardToken, Controlled {
     }
 
     // FIXME: this is necessary until we figure out a better way to check to see if a market's denomination token is a shareToken or not.  right now this is the only other valid denomination token so this hack works, but it won't when we support arbitrary denomination tokens.
-    function getMarket() constant returns(bool) {
+    function getMarket() constant returns (bool) {
         return false;
+    }
+
+    function getTypeName() constant returns (bytes32) {
+        return "Cash";
     }
 }

@@ -23,12 +23,12 @@ def test_reporting(contractsFixture):
 
     # buy registration tokens
     reportingWindow = contractsFixture.applySignature('reportingWindow', market.getReportingWindow())
-    registrationToken = contractsFixture.applySignature('registrationToken', reportingWindow.getRegistrationToken())
-    registrationToken.register(sender=tester.k0)
-    assert registrationToken.balanceOf(tester.a0) == 1
+    firstRegistrationToken = contractsFixture.applySignature('registrationToken', reportingWindow.getRegistrationToken())
+    firstRegistrationToken.register(sender=tester.k0)
+    assert firstRegistrationToken.balanceOf(tester.a0) == 1
     assert reputationToken.balanceOf(tester.a0) == 6 * 10**6 * 10**18 - 10**18
-    registrationToken.register(sender=tester.k1)
-    assert registrationToken.balanceOf(tester.a1) == 1
+    firstRegistrationToken.register(sender=tester.k1)
+    assert firstRegistrationToken.balanceOf(tester.a1) == 1
     assert reputationToken.balanceOf(tester.a1) == 4 * 10**6 * 10**18 - 10**18
 
     # fast forward to one second after the next reporting window
@@ -56,9 +56,9 @@ def test_reporting(contractsFixture):
     assert reportingWindow.isContainerForMarket(market.address)
 
     # register new reporter for new reporting window
-    registrationToken = contractsFixture.applySignature('registrationToken', reportingWindow.getRegistrationToken())
-    registrationToken.register(sender=tester.k2)
-    assert registrationToken.balanceOf(tester.a2) == 1
+    secondRegistrationToken = contractsFixture.applySignature('registrationToken', reportingWindow.getRegistrationToken())
+    secondRegistrationToken.register(sender=tester.k2)
+    assert secondRegistrationToken.balanceOf(tester.a2) == 1
     assert reputationToken.balanceOf(tester.a2) == 1 * 10**6 * 10**18 - 10**18
 
     # report some more
@@ -101,5 +101,8 @@ def test_reporting(contractsFixture):
     assert market.isFinalized()
     assert market.getFinalWinningReportingToken() == reportingTokenNo.address
 
-    # TODO: redeem REP
+    # TODO: redeem REP and registration token
+    assert reportingTokenNo.redeemForkedTokens(sender = tester.k0)
+    assert noBranchReputationToken.balanceOf(tester.a0) == 6 * 10**6 * 10**18 -10**18 - 11000 * 10**18
+
     # TODO: redeem registration tokens
