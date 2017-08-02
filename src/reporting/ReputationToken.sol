@@ -37,8 +37,8 @@ contract ReputationToken is DelegationTarget, StandardToken {
         decimals = 18;
         // FIXME: DELETE THIS BEFORE LAUNCH
         var _reputationFaucet = controller.lookup("reputationFaucet");
-        balances[_reputationFaucet] = balances[_reputationFaucet].add(1000000 ether);
-        totalSupply = totalSupply.add(1000000 ether);
+        balances[_reputationFaucet] = balances[_reputationFaucet].uint256Add(1000000 ether);
+        totalSupply = totalSupply.uint256Add(1000000 ether);
         return true;
     }
 
@@ -46,10 +46,10 @@ contract ReputationToken is DelegationTarget, StandardToken {
     function migrateOut(ReputationToken _destination, address _reporter, uint256 _attotokens) public returns (bool) {
         assertReputationTokenIsLegit(_destination);
         if (msg.sender != _reporter) {
-            allowed[_reporter][msg.sender] = allowed[_reporter][msg.sender].sub(_attotokens);
+            allowed[_reporter][msg.sender] = allowed[_reporter][msg.sender].uint256Sub(_attotokens);
         }
-        balances[_reporter] = balances[_reporter].sub(_attotokens);
-        totalSupply = totalSupply.sub(_attotokens);
+        balances[_reporter] = balances[_reporter].uint256Sub(_attotokens);
+        totalSupply = totalSupply.uint256Sub(_attotokens);
         _destination.migrateIn(_reporter, _attotokens);
         if (topMigrationDestination == address(0) || _destination.totalSupply() > topMigrationDestination.totalSupply()) {
             topMigrationDestination = _destination;
@@ -59,8 +59,8 @@ contract ReputationToken is DelegationTarget, StandardToken {
 
     function migrateIn(address _reporter, uint256 _attotokens) public returns (bool) {
         require(ReputationToken(msg.sender) == branch.getParentBranch().getReputationToken());
-        balances[_reporter] = balances[_reporter].add(_attotokens);
-        totalSupply = totalSupply.add(_attotokens);
+        balances[_reporter] = balances[_reporter].uint256Add(_attotokens);
+        totalSupply = totalSupply.uint256Add(_attotokens);
         return true;
     }
 
@@ -68,17 +68,17 @@ contract ReputationToken is DelegationTarget, StandardToken {
         var _legacyRepToken = ERC20(controller.lookup("legacyRepContract"));
         var _legacyBalance = _legacyRepToken.balanceOf(msg.sender);
         _legacyRepToken.transferFrom(msg.sender, address(0), _legacyBalance);
-        balances[msg.sender] = balances[msg.sender].add(_legacyBalance);
-        totalSupply = totalSupply.add(_legacyBalance);
+        balances[msg.sender] = balances[msg.sender].uint256Add(_legacyBalance);
+        totalSupply = totalSupply.uint256Add(_legacyBalance);
         return true;
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
         require(branch.isContainerForReportingWindow(msg.sender) || branch.isContainerForRegistrationToken(msg.sender) || branch.isContainerForMarket(msg.sender) || branch.isContainerForReportingToken(msg.sender));
-        balances[_source] = balances[_source].sub(_attotokens);
-        balances[_destination] = balances[_destination].add(_attotokens);
-        totalSupply = totalSupply.add(_attotokens);
+        balances[_source] = balances[_source].uint256Sub(_attotokens);
+        balances[_destination] = balances[_destination].uint256Add(_attotokens);
+        totalSupply = totalSupply.uint256Add(_attotokens);
         Transfer(_source, _destination, _attotokens);
         return true;
     }
