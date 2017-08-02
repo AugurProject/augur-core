@@ -28,9 +28,9 @@ contract StandardToken is ERC20, BasicToken {
         // Check is not needed because sub(_allowance, _value) will already throw if this condition is not met
         // require (_value <= _allowance);
 
-        balances[_to] = balances[_to].add(_value);
-        balances[_from] = balances[_from].sub(_value);
-        allowed[_from][msg.sender] = _allowance.sub(_value);
+        balances[_to] = balances[_to].uint256Add(_value);
+        balances[_from] = balances[_from].uint256Sub(_value);
+        allowed[_from][msg.sender] = _allowance.uint256Sub(_value);
         Transfer(_from, _to, _value);
         return true;
     }

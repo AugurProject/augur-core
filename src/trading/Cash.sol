@@ -22,8 +22,8 @@ contract Cash is StandardToken, Controlled {
     mapping(address => uint256) public initiated;
 
     function publicDepositEther() external payable onlyInGoodTimes returns(bool) {
-        balances[msg.sender] = balances[msg.sender].add(msg.value);
-        totalSupply = totalSupply.add(msg.value);
+        balances[msg.sender] = balances[msg.sender].uint256Add(msg.value);
+        totalSupply = totalSupply.uint256Add(msg.value);
         DepositEther(msg.sender, msg.value, balances[msg.sender]);
         return true;
     }
@@ -41,8 +41,8 @@ contract Cash is StandardToken, Controlled {
 
         // FIXME: attacker can initiate a withdraw of 1 unit, wait 3 days, then launch an attack and then immediately withdraw everything
         require(_initiatedTimestamp + 3 days <= block.timestamp);
-        balances[msg.sender] = balances[msg.sender].sub(_amount);
-        totalSupply = totalSupply.sub(_amount);
+        balances[msg.sender] = balances[msg.sender].uint256Sub(_amount);
+        totalSupply = totalSupply.uint256Sub(_amount);
         initiated[msg.sender] = 0;
         msg.sender.transfer(_amount);
         WithdrawEther(msg.sender, _amount, balances[msg.sender]);
