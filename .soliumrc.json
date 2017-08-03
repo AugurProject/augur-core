@@ -14,9 +14,14 @@
     "no-unused-vars": true,
     "double-quotes": true,
     "blank-lines": true,
-    "indentation": false,
+    "indentation": true,
     "whitespace": true,
     "deprecated-suicide": true,
-    "pragma-on-top": true
+    "pragma-on-top": true,
+    "comma-whitespace": true,
+    "function-whitespace": true,
+    "conditionals-whitespace": true,
+    "semicolon-whitespace": true,
+    "overflow-indentation": false
   }
 }
