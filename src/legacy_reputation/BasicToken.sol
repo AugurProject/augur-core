@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/legacy_reputation/ERC20Basic.sol';
-import 'ROOT/legacy_reputation/SafeMath.sol';
+import 'ROOT/legacy_reputation/SafeMathUint256.sol';
 
 
 /**
