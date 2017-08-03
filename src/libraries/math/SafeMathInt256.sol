@@ -2,8 +2,8 @@ pragma solidity ^0.4.13;
 
 
 /**
- * @title SafeMath
- * @dev Math operations with safety checks that throw on error
+ * @title SafeMathInt256
+ * @dev Int256 math operations with safety checks that throw on error
  */
 library SafeMathInt256 {
     function mul(int256 a, int256 b) internal constant returns (int256) {
