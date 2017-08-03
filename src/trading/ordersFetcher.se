@@ -1,5 +1,5 @@
 
-macro ORDERS: self.controller.lookup('orders')
+macro ORDERS: self.controller.lookup('Orders')
 
 inset('../macros/externs.sem')
 inset('../macros/require.sem')

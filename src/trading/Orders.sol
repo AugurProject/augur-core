@@ -52,7 +52,7 @@ contract ReportingWindow {
     Branch private branch;
 
     function getBranch() public constant returns (Branch) {
-
+        return branch;
     }
 }
 
@@ -69,12 +69,6 @@ contract Branch {
 contract Topics is Controlled {
     IterableMap topics;
     IterableMapFactory iterableMapFactory;
-
-    // function initialize() returns (bool) {
-    //     require(!topics);
-    //     topics = iterableMapFactory.createIterableMap(controller, self);
-    //     return(true);
-    // }
 
     function updatePopularity(int256 _topic, int256 _fxpAmount) onlyWhitelistedCallers returns (bool) {
         // _oldAmount = topics.getByKeyOrZero(_topic);

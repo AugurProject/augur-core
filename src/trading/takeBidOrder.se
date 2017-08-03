@@ -1,6 +1,6 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-macro ORDERS: self.controller.lookup('orders')
+macro ORDERS: self.controller.lookup('Orders')
 macro COMPLETE_SETS: self.controller.lookup('completeSets')
 macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
 

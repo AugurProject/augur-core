@@ -1,7 +1,7 @@
 #Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
 macro MARKETS: self.controller.lookup('markets')
-macro ORDERS: self.controller.lookup('orders')
+macro ORDERS: self.controller.lookup('Orders')
 macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
 
 inset('../macros/externs.sem')
