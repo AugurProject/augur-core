@@ -7,7 +7,7 @@ contract MarketFeeCalculator {
     mapping (address => uint256) private shareSettlementPerEthFee;
     mapping (address => uint256) private validityBondInAttoeth;
 
-    function getValidityBond(ReportingWindow _reportingWindow) returns (uint256) {
+    function getValidityBond(ReportingWindow _reportingWindow) public returns (uint256) {
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
         if (_currentValidityBondInAttoeth != 0) {
             return _currentValidityBondInAttoeth;
@@ -29,7 +29,7 @@ contract MarketFeeCalculator {
         return _currentValidityBondInAttoeth;
     }
 
-    function getTargetReporterGasCosts() constant returns (uint256) {
+    function getTargetReporterGasCosts() constant public returns (uint256) {
         // TODO: get number of registration tokens issued last period
         // TODO: get target reporter count + wiggle room
         // TODO: calculate estimated reporters per market
@@ -42,7 +42,7 @@ contract MarketFeeCalculator {
         return _estimatedReportingGas;
     }
 
-    function getReportingFeeInAttoethPerEth(ReportingWindow _reportingWindow) returns (uint256) {
+    function getReportingFeeInAttoethPerEth(ReportingWindow _reportingWindow) public returns (uint256) {
         // CONSIDER: store this on the reporting window rather than here
         uint256 _currentPerEthFee = shareSettlementPerEthFee[_reportingWindow];
         if (_currentPerEthFee != 0) {
@@ -65,20 +65,20 @@ contract MarketFeeCalculator {
         return _currentPerEthFee;
     }
 
-    function getRepMarketCapInAttoeth(Branch _branch) constant returns (uint256) {
+    function getRepMarketCapInAttoeth(Branch _branch) constant public returns (uint256) {
         // TODO: get these from an auto-generated market
         uint256 _attorepPerEth = 11 * 10 ** 18;
         uint256 _repMarketCapInAttoeth = _branch.getReputationToken().totalSupply() * _attorepPerEth;
         return _repMarketCapInAttoeth;
     }
 
-    function getTargetRepMarketCapInAttoeth(ReportingWindow _reportingWindow) constant returns (uint256) {
+    function getTargetRepMarketCapInAttoeth(ReportingWindow _reportingWindow) constant public returns (uint256) {
         uint256 _outstandingSharesInAttoeth = getOutstandingSharesInAttoeth(_reportingWindow);
         uint256 _targetRepMarketCapInAttoeth = _outstandingSharesInAttoeth * 5;
         return _targetRepMarketCapInAttoeth;
     }
 
-    function getOutstandingSharesInAttoeth(ReportingWindow _reportingWindow) constant returns (uint256) {
+    function getOutstandingSharesInAttoeth(ReportingWindow _reportingWindow) constant public returns (uint256) {
         // TODO: start tracking the real number and store it somewhere
         // NOTE: make sure we are getting the share value in attoeth, since complete set fees are not normalized across markets
         // NOTE: eventually we will need to support shares in multiple denominations
