@@ -1,11 +1,12 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/arrays/Uint256Arrays.sol';
-import 'ROOT/Controller.sol';
-
 // NOTE: We're using address[100] to get back orderIDs from the orderFetcher as Solidity currently lacks
 // the ability to receive dynamic arrays from external contract calls. The list gets shrunk to the desired size
 // before returning
+
+import 'ROOT/libraries/arrays/Uint256Arrays.sol';
+import 'ROOT/Controller.sol';
+
 
 // FIXME: Remove this stub once the contract is converted to Solidity
 contract OrdersFetcher {

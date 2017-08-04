@@ -8,7 +8,29 @@ import 'ROOT/libraries/token/StandardToken.sol';
 import 'ROOT/reporting/Interfaces.sol';
 
 
+<<<<<<< 159c8f756f42805bc3126b494fcd8f969eb22f4b
 contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToken, IReputationToken {
+=======
+contract ReportingWindow {
+    function getBranch() public returns (Branch);
+    function getStartTime() public returns (int256);
+}
+
+
+contract Branch {
+    function getParentBranch() public returns (Branch);
+    function getReputationToken() public returns (ReputationToken);
+    function getReportingWindowByTimestamp(int256 _timestamp) public returns (ReportingWindow);
+    function isParentOf(Branch _branch) public returns (bool);
+    function isContainerForReportingWindow(address _shadyReportingWindow) public returns (bool);
+    function isContainerForRegistrationToken(address _shadyRegistrationToken) public returns (bool);
+    function isContainerForMarket(address _shadyMarket) public returns (bool);
+    function isContainerForReportingToken(address _shadyReportingToken) public returns (bool);
+}
+
+
+contract ReputationToken is DelegationTarget, StandardToken {
+>>>>>>> Fix solium nits
     using SafeMath for uint256;
 
     string public name;

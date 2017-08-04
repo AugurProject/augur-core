@@ -18,6 +18,7 @@ contract Branch {
     function getReportingWindowByMarketEndTime(int256 _endTime, int256 _hasAutomatedReporter) returns (ReportingWindow);
 }
 
+
 contract MarketCreation {
     function createScalarMarket(Branch _branch, int256 _endTime, int256 _feePerEthInWei, address _denominationToken, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, int256 _topic) payable public returns (Market _market) {
         ReportingWindow _reportingWindow = _branch.getReportingWindowByMarketEndTime(_endTime, _automatedReporterAddress != 0 ? 1 : 0);
