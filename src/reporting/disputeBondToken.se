@@ -61,6 +61,9 @@ def withdrawToBranch(shadyBranch: address):
 #### Getters
 ####
 
+def getTypeName():
+    return "DisputeBondToken"
+
 def getMarket():
     return(self.market)
 

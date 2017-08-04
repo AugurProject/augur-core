@@ -10,10 +10,6 @@ data count
 data owner
 data initialized
 
-def any():
-    if (self.initialized):
-        require(msg.sender == self.owner or msg.sender == self)
-
 def initialize(owner: address):
     require(not self.initialized)
     self.initialized = 1
@@ -21,6 +17,8 @@ def initialize(owner: address):
     return(1)
 
 def addSetItem(item):
+    if (self.initialized):
+        require(msg.sender == self.owner or msg.sender == self)
     if (self.contains(item)):
         return(0)
     self.collection[item] = 1
@@ -28,6 +26,8 @@ def addSetItem(item):
     return(1)
 
 def remove(item):
+    if (self.initialized):
+        require(msg.sender == self.owner or msg.sender == self)
     if (not self.contains(item)):
         return (0)
     self.collection[item] = 0

@@ -106,6 +106,8 @@ def getChildBranch(parentPayoutDistributionHash: int256):
     return(self.childBranches[parentPayoutDistributionHash])
 
 def isContainerForReportingWindow(shadyReportingWindow: address):
+    if (shadyReportingWindow.getTypeName() != "ReportingWindow"):
+        return(0)
     startTime = shadyReportingWindow.getStartTime()
     if (not startTime):
         return(0)
@@ -114,6 +116,8 @@ def isContainerForReportingWindow(shadyReportingWindow: address):
     return(legitReportingWindow == shadyReportingWindow)
 
 def isContainerForDisputeBondToken(shadyBondToken: address):
+    if (shadyBondToken.getTypeName() != "DisputeBondToken"):
+        return(0)
     shadyMarket = shadyBondToken.getMarket()
     if (not shadyMarket):
         return(0)
@@ -123,6 +127,8 @@ def isContainerForDisputeBondToken(shadyBondToken: address):
     return(legitMarket.isContainerForDisputeBondToken(shadyBondToken))
 
 def isContainerForRegistrationToken(shadyRegistrationToken: address):
+    if (shadyRegistrationToken.getTypeName() != "RegistrationToken"):
+        return(0)
     shadyReportingWindow = shadyRegistrationToken.getReportingWindow()
     if (not shadyReportingWindow):
         return(0)
@@ -132,6 +138,8 @@ def isContainerForRegistrationToken(shadyRegistrationToken: address):
     return(legitReportingWindow.isContainerForRegistrationToken(shadyRegistrationToken))
 
 def isContainerForMarket(shadyMarket: address):
+    if (shadyMarket.getTypeName() != "Market"):
+        return(0)
     shadyReportingWindow = shadyMarket.getReportingWindow()
     if (not shadyReportingWindow):
         return(0)
@@ -141,6 +149,8 @@ def isContainerForMarket(shadyMarket: address):
     return(legitReportingWindow.isContainerForMarket(shadyMarket))
 
 def isContainerForReportingToken(shadyReportingToken: address):
+    if (shadyReportingToken.getTypeName() != "ReportingToken"):
+        return(0)
     shadyMarket = shadyReportingToken.getMarket()
     if (not shadyMarket):
         return(0)
@@ -150,6 +160,8 @@ def isContainerForReportingToken(shadyReportingToken: address):
     return(legitMarket.isContainerForReportingToken(shadyReportingToken))
 
 def isContainerForShareToken(shadyShareToken: address):
+    if (shadyShareToken.getTypeName() != "ShareToken"):
+        return(0)
     shadyMarket = shadyShareToken.getMarket()
     if (not shadyMarket):
         return(0)

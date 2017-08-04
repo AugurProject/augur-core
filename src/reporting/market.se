@@ -274,12 +274,12 @@ def tryFinalizeFork():
         return(0)
     if (self.reportingWindow.getBranch().getForkingMarket() != self):
         return(0)
-    winningDestination = self.getReputationToken().topMigrationDestination()
+    winningDestination = self.getReputationToken().getTopMigrationDestination()
     if (not winningDestination):
         return(0)
     if (winningDestination.totalSupply() < 11 * 10**6 * 10**18 / 2 and block.timestamp < self.getBranch().getForkEndTime()):
         return(0)
-    self.finalPayoutDistributionHash = winningDestination.branch().getParentPayoutDistributionHash()
+    self.finalPayoutDistributionHash = winningDestination.getBranch().getParentPayoutDistributionHash()
     self.finalizationTime = block.timestamp
     self.transferIncorrectDisputeBondsToWinningReportingToken()
     self.reportingWindow.updateMarketPhase()
@@ -376,6 +376,9 @@ def transferIncorrectDisputeBondsToWinningReportingToken():
 ####
 #### Getters
 ####
+
+def getTypeName():
+    return "Market"
 
 def getReportingWindow():
     assertNoValue()
@@ -569,6 +572,8 @@ def isContainerForReportingToken(shadyToken: address):
     assertNoValue()
     if (not shadyToken):
         return(0)
+    if (shadyToken.getTypeName() != "ReportingToken"):
+        return(0)
     shadyId = shadyToken.getPayoutDistributionHash()
     if (not self.reportingTokens.contains(shadyId)):
         return(0)
@@ -577,10 +582,14 @@ def isContainerForReportingToken(shadyToken: address):
     return(1)
 
 def isContainerForShareToken(shadyShareToken: address):
+    if (shadyShareToken.getTypeName() != "ShareToken"):
+        return(0)
     outcome = shadyShareToken.getOutcome()
     return(self.getShareToken(outcome) == shadyShareToken)
 
 def isContainerForDisputeBondToken(shadyBondToken: address):
+    if (shadyBondToken.getTypeName() != "DisputeBondToken"):
+        return(0)
     if (self.automatedReporterDisputeBondToken == shadyBondToken):
         return(1)
     elif (self.limitedReportersDisputeBondToken == shadyBondToken):

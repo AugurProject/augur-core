@@ -165,6 +165,7 @@ class ContractsFixture:
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
         contract = self.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs)
+        if not contract: return None
         self.controller.setValue(lookupKey.ljust(32, '\x00'), contract.address)
         return(contract)
 
@@ -175,6 +176,8 @@ class ContractsFixture:
         if lookupKey in self.contracts:
             return(self.contracts[lookupKey])
         compiledCode = ContractsFixture.getCompiledCode(resolvedPath)
+        # abstract contracts have a 0-length array for bytecode
+        if len(compiledCode) == 0: return None
         if signatureKey not in ContractsFixture.signatures:
             ContractsFixture.signatures[signatureKey] = ContractsFixture.generateSignature(resolvedPath)
         signature = ContractsFixture.signatures[signatureKey]
@@ -211,6 +214,8 @@ class ContractsFixture:
                 extension = path.splitext(filename)[1]
                 if extension != '.se' and extension != '.sol': continue
                 if name == 'controller': continue
+                # remove this and Interfaces.sol when https://github.com/ethereum/solidity/issues/2665 is fixed
+                if name == 'Interfaces': continue
                 contractsToDelegate = ['orders','tradingEscapeHatch']
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
@@ -256,7 +261,7 @@ class ContractsFixture:
     def getReportingToken(self, market, payoutDistribution):
         reportingTokenAddress = market.getReportingToken(payoutDistribution)
         assert reportingTokenAddress
-        reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['reportingToken']), reportingTokenAddress)
+        reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ReportingToken']), reportingTokenAddress)
         return reportingToken
 
     def getChildBranch(self, parentBranch, market, payoutDistribution):

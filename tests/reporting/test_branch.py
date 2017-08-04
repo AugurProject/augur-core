@@ -9,5 +9,5 @@ def test_branch_creation(contractsFixture):
     assert branch.getParentPayoutDistributionHash() == 5
     assert branch.getForkingMarket() == 0
     assert branch.getForkEndTime() == 0
-    assert reputationToken.branch() == branch.address
-    assert reputationToken.topMigrationDestination() == longToHexString(0)
+    assert reputationToken.getBranch() == branch.address
+    assert reputationToken.getTopMigrationDestination() == longToHexString(0)

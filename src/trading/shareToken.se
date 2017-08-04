@@ -94,6 +94,9 @@ def destroyShares(owner: address, fxpValue: int256):
 # Getter functions #
 ####################
 
+def getTypeName():
+    return "ShareToken"
+
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(owner: address, spender: address):
