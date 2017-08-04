@@ -5,7 +5,7 @@ data controller
 data controllerLookupName
 ####
 
-macro MARKET_FEE_CALCULATOR: self.controller.lookup('marketFeeCalculator')
+macro MARKET_FEE_CALCULATOR: self.controller.lookup('MarketFeeCalculator')
 macro REPORTING_TOKEN_FACTORY: self.controller.lookup('ReportingTokenFactory')
 macro SHARE_TOKEN_FACTORY: self.controller.lookup('ShareTokenFactory')
 macro MAP_FACTORY: self.controller.lookup('MapFactory')
@@ -70,7 +70,7 @@ def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, p
     require(creator)
     # FIXME: require market to be on a non-forking branch; repeat this check up the stack as well if necessary (e.g., in reporting window)
     # CONSIDER: should we allow creator to send extra ETH, is there risk of variability in bond requirements?
-    require(msg.value == MARKET_FEE_CALCULATOR.getValidityBond() + MARKET_FEE_CALCULATOR.getTargetReporterGasCosts())
+    require(msg.value == MARKET_FEE_CALCULATOR.getValidityBond(reportingWindow) + MARKET_FEE_CALCULATOR.getTargetReporterGasCosts())
     self.reportingWindow = reportingWindow
     self.endTime = endTime
     self.numOutcomes = numOutcomes

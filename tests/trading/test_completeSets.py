@@ -36,12 +36,12 @@ def test_publicBuyCompleteSets(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": bytesToHexString(tester.a1),
-	    "reportingFee": 0L,
+	        "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('10'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
     ]
     assert yesShareToken.balanceOf(tester.a1) == fix('10'), "Should have 10 shares of outcome 1"
@@ -68,7 +68,7 @@ def test_publicBuyCompleteSets_failure(contractsFixture):
 
     # buyCompleteSets exceptions
     with raises(TransactionFailed):
-        completeSets.publicBuyCompleteSets(market.address + 1, fxpAmount, sender=tester.k1)
+        completeSets.publicBuyCompleteSets(0, fxpAmount, sender=tester.k1)
     with raises(TransactionFailed):
         completeSets.publicBuyCompleteSets(market.address, fix('-10'), sender=tester.k1)
     with raises(TransactionFailed):
@@ -109,7 +109,7 @@ def test_publicSellCompleteSets(contractsFixture):
             "fxpAmount": fix('9'),
             "marketCreatorFee": fix('0.09'),
             "numOutcomes": 2,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
     ]
     assert yesShareToken.balanceOf(tester.a1) == fix('1'), "Should have 1 share of outcome yes"

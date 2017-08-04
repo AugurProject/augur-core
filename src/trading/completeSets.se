@@ -2,7 +2,7 @@
 
 macro MUTEX: self.controller.lookup('Mutex')
 macro ORDERS: self.controller.lookup('orders')
-macro MARKET_FEE_CALCULATOR: self.controller.lookup('marketFeeCalculator')
+macro MARKET_FEE_CALCULATOR: self.controller.lookup('MarketFeeCalculator')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
@@ -105,7 +105,7 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: int256):
     if reportingFee:
         require(denominationToken.transferFrom(market, reportingWindow, reportingFee))
     require(denominationToken.transferFrom(market, sender, sellerPayout))
-
+    
     ORDERS.completeSetsLog(sender, market, 2, fxpAmount, numOutcomes, marketCreatorFee, reportingFee)
     return(1)
 

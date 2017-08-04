@@ -25,7 +25,7 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         symbol = "REP";
         decimals = 18;
         // FIXME: DELETE THIS BEFORE LAUNCH
-        var _reputationFaucet = controller.lookup("reputationFaucet");
+        var _reputationFaucet = controller.lookup("ReputationFaucet");
         balances[_reputationFaucet] = balances[_reputationFaucet].add(1000000 ether);
         totalSupply = totalSupply.add(1000000 ether);
         return true;

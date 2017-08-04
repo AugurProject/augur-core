@@ -129,7 +129,7 @@ def test_publicMakeOrder_bid2(contractsFixture):
             "fxpSharesEscrowed": order[SHARES_ESCROWED],
             "orderID": longToHexString(orderID),
             "outcome": outcome,
-            "market": longToHexString(market.address),
+            "market": market.address,
             "sender": bytesToHexString(tester.a1),
             "type": BID,
         }
@@ -155,7 +155,7 @@ def test_makeOrder_failure(contractsFixture):
 
     # makeOrder exceptions (pre-placeBid/placeAsk)
     with raises(TransactionFailed):
-        makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address - 1, YES, 0, 0, 42, sender=tester.k1)
+        makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
     with raises(TransactionFailed):
         makeOrder.publicMakeOrder(3, fix('1'), fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
 
@@ -242,7 +242,7 @@ def test_ask_withPartialShares(contractsFixture):
             "fxpSharesEscrowed": order[SHARES_ESCROWED],
             "orderID": longToHexString(orderID),
             "outcome": YES,
-            "market": longToHexString(market.address),
+            "market": market.address,
             "sender": bytesToHexString(tester.a1),
             "type": ASK,
         }
