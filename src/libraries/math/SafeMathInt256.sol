@@ -18,6 +18,22 @@ library SafeMathInt256 {
         return INT256_MAX;
     }
 
+    function min(int256 a, int256 b) internal constant returns (int256) {
+        if (a <= b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    function max(int256 a, int256 b) internal constant returns (int256) {
+        if (a >= b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
     function mul(int256 a, int256 b) internal constant returns (int256) {
         int256 c = a * b;
         require(a == 0 || c / a == b);
