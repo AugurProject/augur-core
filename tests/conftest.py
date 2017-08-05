@@ -150,6 +150,7 @@ class ContractsFixture:
         assert self.controller.owner() == bytesToHexString(tester.a0)
         self.uploadAllContracts()
         self.whitelistTradingContracts()
+        self.whitelistLibraryTestContracts()
         self.initializeAllContracts()
         self.branch = self.createBranch(0, 0)
         self.cash = self.getSeededCash()
@@ -222,6 +223,13 @@ class ContractsFixture:
 
     def whitelistTradingContracts(self):
         for filename in listdir(resolveRelativePath('../src/trading')):
+            name = path.splitext(filename)[0]
+            extension = path.splitext(filename)[1]
+            if extension != '.se': continue
+            self.controller.addToWhitelist(self.contracts[name].address)
+
+    def whitelistLibraryTestContracts(self):
+        for filename in listdir(resolveRelativePath('../src/library_test_contracts')):
             name = path.splitext(filename)[0]
             extension = path.splitext(filename)[1]
             if extension != '.se': continue
