@@ -15,6 +15,7 @@ contract IBranch {
     function isContainerForMarket(address _shadyMarket) constant returns (bool);
     function isContainerForReportingToken(address _shadyReportingToken) constant returns (bool);
     function getReportingWindowByTimestamp(int256 _timestamp) constant public returns (IReportingWindow);
+    function getReportingWindowByMarketEndTime(int256 _endTime, int256 _hasAutomatedReporter) returns (IReportingWindow);
 }
 
 
@@ -30,6 +31,7 @@ contract IReportingWindow {
     function noteReport(IMarket, address, int256) public returns (bool);
     function getStartTime() public returns (int256);
     function getBranch() public returns (IBranch);
+    function createNewMarket(int256 _endTime, int256 _numOutcomes, int256 _payoutDenominator, int256 _feePerEthInWei, address _denominationToken, address _sender, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, int256 _topic) payable returns (IMarket);
 }
 
 
