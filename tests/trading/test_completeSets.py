@@ -36,7 +36,7 @@ def test_publicBuyCompleteSets(contractsFixture):
         {
             "_event_type": "CompleteSets",
             "sender": bytesToHexString(tester.a1),
-	        "reportingFee": 0L,
+            "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('10'),
             "marketCreatorFee": 0L,
@@ -68,7 +68,7 @@ def test_publicBuyCompleteSets_failure(contractsFixture):
 
     # buyCompleteSets exceptions
     with raises(TransactionFailed):
-        completeSets.publicBuyCompleteSets(0, fxpAmount, sender=tester.k1)
+        completeSets.publicBuyCompleteSets(tester.a1, fxpAmount, sender=tester.k1)
     with raises(TransactionFailed):
         completeSets.publicBuyCompleteSets(market.address, fix('-10'), sender=tester.k1)
     with raises(TransactionFailed):

@@ -155,8 +155,6 @@ def test_makeOrder_failure(contractsFixture):
 
     # makeOrder exceptions (pre-placeBid/placeAsk)
     with raises(TransactionFailed):
-        makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
-    with raises(TransactionFailed):
         makeOrder.publicMakeOrder(3, fix('1'), fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
 
     # placeBid exceptions
@@ -181,6 +179,10 @@ def test_makeOrder_failure(contractsFixture):
     assert cash.approve(makeOrder.address, fix('100'), sender=tester.k1) == 1, "Approve makeOrder contract to spend cash from account 1"
     assert yesShareToken.approve(makeOrder.address, fix('12'), sender=tester.k1) == 1, "Approve makeOrder contract to spend shares from the user's account (account 1)"
     assert yesShareToken.allowance(tester.a1, makeOrder.address) == fix('12'), "makeOrder contract's allowance should be equal to the amount approved"
+
+    with raises(TransactionFailed):
+        makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), tester.a1, YES, 0, 0, 42, sender=tester.k1)
+
     assert makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1) != 0, "Order ID should be non-zero"
 
     # makeOrder exceptions (post-placeBid/Ask)

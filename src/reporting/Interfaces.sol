@@ -14,6 +14,7 @@ contract IBranch {
     function isContainerForRegistrationToken(address _shadyRegistrationToken) constant returns (bool);
     function isContainerForMarket(address _shadyMarket) constant returns (bool);
     function isContainerForReportingToken(address _shadyReportingToken) constant returns (bool);
+    function getReportingWindowByTimestamp(int256 _timestamp) constant public returns (IReportingWindow);
 }
 
 
@@ -27,6 +28,8 @@ contract IReputationToken is ERC20 {
 
 contract IReportingWindow {
     function noteReport(IMarket, address, int256) public returns (bool);
+    function getStartTime() public returns (int256);
+    function getBranch() public returns (IBranch);
 }
 
 

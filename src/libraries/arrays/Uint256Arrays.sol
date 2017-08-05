@@ -18,11 +18,9 @@ library Uint256Arrays {
         if (_maxSize < _targetSize) {
             _targetSize = _maxSize;
         }
-        uint256 _index = 0;
         uint256[] memory _retval = new uint256[](_targetSize);
-        while (_index < _targetSize) {
+        for (uint8 _index; _index < _targetSize; _index++) {
             _retval[_index] = _self[_start + _index];
-            _index++;
         }
         return _retval;
 
