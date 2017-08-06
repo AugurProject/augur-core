@@ -17,7 +17,7 @@ contract MarketFeeCalculator {
         uint256 _indeterminateMarketsInPreviousWindow = 10;
         // TODO: get the real data for this
         uint256 _totalMarketsInPreviousWindow = 1000;
-        int256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
+        uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
         IBranch _branch = _reportingWindow.getBranch();
         IReportingWindow _previousReportingWindow = _branch.getReportingWindowByTimestamp(_previousTimestamp);
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
@@ -52,7 +52,7 @@ contract MarketFeeCalculator {
         IBranch _branch = _reportingWindow.getBranch();
         uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth(_branch);
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth(_reportingWindow);
-        int256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
+        uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
         IReportingWindow _previousReportingWindow = _branch.getReportingWindowByTimestamp(_previousTimestamp);
         uint256 _previousPerEthFee = shareSettlementPerEthFee[_previousReportingWindow];
         if (_previousPerEthFee == 0) {

@@ -39,7 +39,7 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
@@ -94,7 +94,7 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.7'),
@@ -149,7 +149,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
@@ -219,7 +219,7 @@ def test_two_bids_on_books_buy_both(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
@@ -244,7 +244,7 @@ def test_two_bids_on_books_buy_both(contractsFixture):
         },
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
@@ -302,7 +302,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
@@ -327,7 +327,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
         },
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
@@ -387,7 +387,7 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
@@ -455,7 +455,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
@@ -509,7 +509,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.7'),
@@ -565,7 +565,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
@@ -635,7 +635,7 @@ def test_two_asks_on_books_buy_both(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
@@ -660,7 +660,7 @@ def test_two_asks_on_books_buy_both(contractsFixture):
         },
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
@@ -719,7 +719,7 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
@@ -744,7 +744,7 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
         },
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
@@ -804,7 +804,7 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),

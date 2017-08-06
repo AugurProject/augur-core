@@ -29,7 +29,7 @@ data numberOfReportsByMarket[]
 
 # intentionally does not refund in `any`, this contract will receive ETH when a market is created through it, should refund in all other calls though
 
-def initialize(branch: address, reportingWindowId: int256):
+def initialize(branch: address, reportingWindowId: uint256):
     require(not self.initialized)
     self.initialized = 1
     self.branch = branch
@@ -40,7 +40,7 @@ def initialize(branch: address, reportingWindowId: int256):
     self.allReporterMarkets = SET_FACTORY.createSet(self.controller, self)
     return(1)
 
-def createNewMarket(endTime: int256, numOutcomes: int256, payoutDenominator: int256, feePerEthInWei: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
+def createNewMarket(endTime: uint256, numOutcomes: int256, payoutDenominator: int256, feePerEthInWei: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
     require(2 <= numOutcomes and numOutcomes <= 8)
     require(2 <= payoutDenominator and payoutDenominator <= 2**254)
     require(block.timestamp < self.startTime)
@@ -122,15 +122,15 @@ def getTypeName():
 
 def getBranch():
     assertNoValue()
-    return(self.branch)
+    return(self.branch: address)
 
 def getRegistrationToken():
     assertNoValue()
-    return(self.registrationToken)
+    return(self.registrationToken: address)
 
 def getReputationToken():
     assertNoValue()
-    return(self.branch.getReputationToken())
+    return(self.branch.getReputationToken(): address)
 
 def getStartTime():
     assertNoValue()

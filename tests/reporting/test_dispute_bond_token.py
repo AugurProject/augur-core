@@ -12,7 +12,7 @@
 
 from ethereum.tools import tester
 from pytest import raises, fixture, mark, lazy_fixture
-from utils import longToHexString, bytesToLong, bytesToHexString, fix
+from utils import bytesToLong, bytesToHexString, fix
 
 REP_TOTAL = 11 * 10**6 # Total number of REP tokens in existence
 REP_DIVISOR = 10**18 # Amount by which a single REP token can be divided
@@ -252,7 +252,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(automatedReporterDisputerAccountNum)))
             market.disputeAutomatedReport(sender=getattr(tester, 'k' + str(automatedReporterDisputerAccountNum)))
             automatedReporterDisputeBondToken = contractsFixture.applySignature('disputeBondToken', market.getAutomatedReporterDisputeBondToken())
-            assert longToHexString(automatedReporterDisputeBondToken.getMarket()) == market.address
+            assert automatedReporterDisputeBondToken.getMarket() == market.address
 
             # Ensure correct bond amount was sent to dispute bond token
             assert reputationToken.balanceOf(getattr(tester, 'a' + str(automatedReporterDisputerAccountNum))) == disputerAccountBalance - AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT
@@ -289,7 +289,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(limitedReportersDisputerAccountNum)))
         market.disputeLimitedReporters(sender=getattr(tester, 'k' + str(limitedReportersDisputerAccountNum)))
         limitedReportersDisputeBondToken = contractsFixture.applySignature('disputeBondToken', market.getLimitedReportersDisputeBondToken())
-        assert longToHexString(limitedReportersDisputeBondToken.getMarket()) == market.address
+        assert limitedReportersDisputeBondToken.getMarket() == market.address
 
         # Ensure correct bond amount was sent to dispute bond token
         assert reputationToken.balanceOf(getattr(tester, 'a' + str(limitedReportersDisputerAccountNum))) == disputerAccountBalance - LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT
@@ -324,7 +324,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(allReportersDisputerAccountNum)))
         market.disputeAllReporters(sender=getattr(tester, 'k' + str(allReportersDisputerAccountNum)))
         allReportersDisputeBondToken = contractsFixture.applySignature('disputeBondToken', market.getAllReportersDisputeBondToken())
-        assert longToHexString(allReportersDisputeBondToken.getMarket()) == market.address
+        assert allReportersDisputeBondToken.getMarket() == market.address
 
         # Ensure correct bond amount was sent to dispute bond token
         assert reputationToken.balanceOf(getattr(tester, 'a' + str(allReportersDisputerAccountNum))) == disputerAccountBalance - ALL_REPORTERS_DISPUTE_BOND_AMOUNT
