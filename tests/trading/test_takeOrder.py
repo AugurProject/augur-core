@@ -43,11 +43,11 @@ def test_publicTakeOrder_bid(contractsFixture):
             "fxpAmount": int(fix('1.2')),
             "marketCreatorFee": 0,
             "numOutcomes": 2,
-            "market": longToHexString(market.address),
+            "market": market.address,
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": BID,
             "orderID": longToHexString(orderID),
@@ -95,11 +95,11 @@ def test_publicTakeOrder_ask(contractsFixture):
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0,
             "numOutcomes": 2,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": ASK,
             "orderID": longToHexString(orderID),

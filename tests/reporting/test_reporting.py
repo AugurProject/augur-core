@@ -1,5 +1,6 @@
 from ethereum.tools import tester
 from datetime import timedelta
+from utils import longToHexString
 
 tester.STARTGAS = long(6.7 * 10**6)
 
@@ -70,7 +71,7 @@ def test_reporting(contractsFixture):
     # fork
     contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     market.disputeAllReporters(sender=tester.k1)
-    assert branch.getForkingMarket() == market.address
+    assert longToHexString(branch.getForkingMarket()) == market.address
     assert not reportingWindow.isContainerForMarket(market.address)
     assert branch.isContainerForMarket(market.address)
     reportingWindow = contractsFixture.applySignature('reportingWindow', market.getReportingWindow())
