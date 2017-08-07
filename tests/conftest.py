@@ -11,7 +11,7 @@ from pytest import fixture
 from re import findall
 from serpent import mk_full_signature, compile as compile_serpent
 from solc import compile_standard
-from utils import bytesToHexString, bytesToLong
+from utils import bytesToHexString, bytesToLong, longToHexString
 from copy import deepcopy
 
 # used to resolve relative paths
@@ -177,20 +177,24 @@ class ContractsFixture:
             return(self.contracts[lookupKey])
         compiledCode = ContractsFixture.getCompiledCode(resolvedPath)
         # abstract contracts have a 0-length array for bytecode
-        if len(compiledCode) == 0: return None
+        if len(compiledCode) == 0:
+            print "Skipping upload of " + lookupKey + " because it had no bytecode (likely a abstract class/interface)."
+            return None
         if signatureKey not in ContractsFixture.signatures:
             ContractsFixture.signatures[signatureKey] = ContractsFixture.generateSignature(resolvedPath)
         signature = ContractsFixture.signatures[signatureKey]
         contractTranslator = ContractTranslator(signature)
         if len(constructorArgs) > 0:
             compiledCode += contractTranslator.encode_constructor_arguments(constructorArgs)
-        contractAddress = bytesToLong(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6)))
+        contractAddress = bytesToHexString(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6)))
         contract = ABIContract(self.chain, contractTranslator, contractAddress)
         self.contracts[lookupKey] = contract
         return(contract)
 
     def applySignature(self, signatureName, address):
         assert address
+        if type(address) is long:
+            address = longToHexString(address)
         translator = ContractTranslator(ContractsFixture.signatures[signatureName])
         contract = ABIContract(self.chain, translator, address)
         return contract
@@ -255,7 +259,7 @@ class ContractsFixture:
 
     def createBranch(self, parentBranch, payoutDistributionHash):
         branchAddress = self.contracts['BranchFactory'].createBranch(self.controller.address, parentBranch, payoutDistributionHash)
-        branch = self.applySignature('branch', branchAddress)
+        branch = self.applySignature('Branch', branchAddress)
         return branch
 
     def getReportingToken(self, market, payoutDistribution):
@@ -269,7 +273,7 @@ class ContractsFixture:
         assert payoutDistributionHash
         childBranchAddress = parentBranch.getChildBranch(payoutDistributionHash)
         assert childBranchAddress
-        childBranch = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['branch']), childBranchAddress)
+        childBranch = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Branch']), childBranchAddress)
         return(childBranch)
 
     def createBinaryMarket(self, branch, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic):

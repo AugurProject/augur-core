@@ -37,7 +37,7 @@ def test_publicTakeOrder_bid(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0,
             "type": BUY,
             "fxpAmount": int(fix('1.2')),
@@ -89,7 +89,7 @@ def test_publicTakeOrder_ask(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0,
             "type": BUY,
             "fxpAmount": fix('1.2'),

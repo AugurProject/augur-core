@@ -20,22 +20,22 @@ def test_market_creation(contractsFixture):
     with raises(TransactionFailed, message="Shady share token should be failing since it is in a separate branch"):
         contractsFixture.createReasonableBinaryMarket(shadyBranch, shadyDenominationToken)
 
-    assert(longToHexString(market.getBranch()) == branch.address)
-    assert(market.getNumberOfOutcomes() == 2)
-    assert(market.getPayoutDenominator() == 2)
-    assert(market.getReputationToken() == branch.getReputationToken())
-    assert(market.getFinalPayoutDistributionHash() == 0)
-    assert(market.isDoneWithAutomatedReporters() == 0)
-    assert(market.isDoneWithAllReporters() == 0)
-    assert(market.isDoneWithLimitedReporters() == 0)
-    assert(market.isFinalized() == 0)
-    assert(market.isInAutomatedReportingPhase() == 0)
-    assert(market.isInAutomatedDisputePhase() == 0)
-    assert(market.isInLimitedReportingPhase() == 0)
-    assert(market.isInLimitedDisputePhase() == 0)
-    assert(market.isInAllReportingPhase() == 0)
-    assert(market.isInAllDisputePhase() == 0)
-    assert(market.isContainerForReportingToken(shadyReportingToken.address) == 0)
-    assert(market.canBeReportedOn() == 0)
-    assert(market.needsMigration() == 0)
-    assert(market.getAutomatedReportDueTimestamp() == market.getEndTime() + timedelta(days=3).total_seconds())
+    assert market.getBranch() == branch.address
+    assert market.getNumberOfOutcomes() == 2
+    assert market.getPayoutDenominator() == 2
+    assert market.getReputationToken() == branch.getReputationToken()
+    assert market.getFinalPayoutDistributionHash() == 0
+    assert market.isDoneWithAutomatedReporters() == 0
+    assert market.isDoneWithAllReporters() == 0
+    assert market.isDoneWithLimitedReporters() == 0
+    assert market.isFinalized() == 0
+    assert market.isInAutomatedReportingPhase() == 0
+    assert market.isInAutomatedDisputePhase() == 0
+    assert market.isInLimitedReportingPhase() == 0
+    assert market.isInLimitedDisputePhase() == 0
+    assert market.isInAllReportingPhase() == 0
+    assert market.isInAllDisputePhase() == 0
+    assert market.isContainerForReportingToken(shadyReportingToken.address) == 0
+    assert market.canBeReportedOn() == 0
+    assert market.needsMigration() == 0
+    assert market.getAutomatedReportDueTimestamp() == market.getEndTime() + timedelta(days=3).total_seconds()

@@ -1,6 +1,7 @@
 {
     "files.exclude": {
-        ".cache": true,
+        "**/.cache": true,
+        "node_modules/": true,
         ".idea": true,
         ".mypy_cache": true,
         "tests/compilation_cache": true,

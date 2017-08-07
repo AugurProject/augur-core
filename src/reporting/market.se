@@ -54,7 +54,7 @@ data automatedReporterBondAttoeth
 
 # intentionally does not refund on `any()`, this contract will receive ETH when a market is created through it, should refund in all other calls though
 
-def initialize(reportingWindow: address, endTime: int256, numOutcomes: int256, payoutDenominator: int256, feePerEthInAttoeth: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
+def initialize(reportingWindow: address, endTime: uint256, numOutcomes: int256, payoutDenominator: int256, feePerEthInAttoeth: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
     require(not self.initialized)
     self.initialized = 1
     require(reportingWindow)
@@ -170,7 +170,7 @@ def disputeAllReporters():
     require(self.limitedReportersDisputeBondToken)
     self.allReportersDisputeBondToken = DISPUTE_BOND_TOKEN_FACTORY.createDisputeBondToken(self.controller, self, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, self.tentativeWinningPayoutDistributionHash)
     self.fundDisputeBondWithReputation(msg.sender, self.allReportersDisputeBondToken, ALL_REPORTERS_DISPUTE_BOND_AMOUNT)
-    self.reportingWindow.getBranch().fork(self)
+    self.reportingWindow.getBranch().fork()
     newReportingWindow = self.getBranch().getReportingWindowByTimestamp(self.getBranch().getForkEndTime())
     newReportingWindow.migrateMarketInFromSibling()
     self.reportingWindow.removeMarket()
@@ -330,7 +330,7 @@ def getReportingToken(payoutNumerators: arr):
     payoutDistributionHash = self.derivePayoutDistributionHash(payoutNumerators)
     if (not self.reportingTokens.contains(payoutDistributionHash)):
         self.reportingTokens.addMapItem(payoutDistributionHash, REPORTING_TOKEN_FACTORY.createReportingToken(self.controller, self, payoutNumerators))
-    return(self.reportingTokens.getValue(payoutDistributionHash))
+    return(self.reportingTokens.getValue(payoutDistributionHash): address)
 
 def getReportingTokenOrZeroByPayoutDistributionHash(payoutDistributionHash: int256):
     assertNoValue()
@@ -382,31 +382,31 @@ def getTypeName():
 
 def getReportingWindow():
     assertNoValue()
-    return(self.reportingWindow)
+    return(self.reportingWindow: address)
 
 def getBranch():
     assertNoValue()
-    return(self.reportingWindow.getBranch())
+    return(self.reportingWindow.getBranch(): address)
 
 def getReputationToken():
     assertNoValue()
-    return(self.reportingWindow.getReputationToken())
+    return(self.reportingWindow.getReputationToken(): address)
 
 def getRegistrationToken():
     assertNoValue()
-    return(self.reportingWindow.getRegistrationToken())
+    return(self.reportingWindow.getRegistrationToken(): address)
 
 def getAutomatedReporterDisputeBondToken():
     assertNoValue()
-    return(self.automatedReporterDisputeBondToken)
+    return(self.automatedReporterDisputeBondToken: address)
 
 def getLimitedReportersDisputeBondToken():
     assertNoValue()
-    return(self.limitedReportersDisputeBondToken)
+    return(self.limitedReportersDisputeBondToken: address)
 
 def getAllReportersDisputeBondToken():
     assertNoValue()
-    return(self.allReportersDisputeBondToken)
+    return(self.allReportersDisputeBondToken: address)
 
 def getNumberOfOutcomes():
     assertNoValue()
@@ -421,12 +421,12 @@ def getTentativeWinningPayoutDistributionHash():
 
 def getFinalWinningReportingToken():
     assertNoValue()
-    return(self.reportingTokens.getValue(self.finalPayoutDistributionHash))
+    return(self.reportingTokens.getValue(self.finalPayoutDistributionHash): address)
 
 def getShareToken(outcome: int256):
     assertNoValue()
     require(0 <= outcome and outcome < self.numOutcomes)
-    return(self.shareTokens[outcome])
+    return(self.shareTokens[outcome]: address)
 
 def getFinalPayoutDistributionHash():
     assertNoValue()
@@ -438,10 +438,10 @@ def getPayoutDenominator():
 
 def getDenominationToken():
     assertNoValue()
-    return(self.denominationToken)
+    return(self.denominationToken: address)
 
 def getCreator():
-    return(self.creator)
+    return(self.creator: address)
 
 def getMarketCreatorSettlementFeeInAttoethPerEth():
     return(self.feePerEthInAttoeth)
