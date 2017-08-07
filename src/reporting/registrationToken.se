@@ -40,6 +40,7 @@ def register():
         self.peakSupply = supply
     return 1
 
+# FIXME: currently, if a market is disputed it is removed from the set of markets that need reporting.  this can lead to being unable to redeem registration tokens because there the function for calculating markets to be reported on may end up dividing by zero (especially during a fork when all markets migrate away from the reporting window).  it also generally messes with the math of how many reports a user needs to do since the result is calculated dynamically based on current state, not based on the state when reports were made
 def redeem():
     require(block.timestamp > self.reportingWindow.getEndTime())
     require(self.tokens[msg.sender] > 0)
@@ -52,6 +53,9 @@ def redeem():
 ####
 #### Getters
 ####
+
+def getTypeName():
+    return "RegistrationToken"
 
 def getReportingWindow():
     return(self.reportingWindow)

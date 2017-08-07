@@ -2,7 +2,7 @@
 
 macro MUTEX: self.controller.lookup('Mutex')
 macro ORDERS: self.controller.lookup('Orders')
-macro MARKET_FEE_CALCULATOR: self.controller.lookup('marketFeeCalculator')
+macro MARKET_FEE_CALCULATOR: self.controller.lookup('MarketFeeCalculator')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')

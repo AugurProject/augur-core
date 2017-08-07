@@ -12,7 +12,7 @@
 
 from ethereum.tools import tester
 from pytest import raises, fixture, mark, lazy_fixture
-from utils import longToHexString, bytesToLong, bytesToHexString, fix
+from utils import bytesToLong, bytesToHexString, fix
 
 REP_TOTAL = 11 * 10**6 # Total number of REP tokens in existence
 REP_DIVISOR = 10**18 # Amount by which a single REP token can be divided
@@ -393,7 +393,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
 
     # Verify that losing dispute bonds went to the winning reporting token
     if (allReportersDisputerAccountNum == None):
-        winningReportingToken = contractsFixture.applySignature('reportingToken', market.getFinalWinningReportingToken())
+        winningReportingToken = contractsFixture.applySignature('ReportingToken', market.getFinalWinningReportingToken())
         winningReportingTokenBalance = reputationToken.balanceOf(winningReportingToken.address)
 
         if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == market.getTentativeWinningPayoutDistributionHash()):
@@ -510,7 +510,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
                     expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.totalSupply()
                     print "accountBalanceBeforeRedemption: " + str(accountBalanceBeforeRedemption)
                     print "expectedWinnings: " + str(expectedWinnings)
-                    reportingToken.redeemForkedTokens(getattr(tester, 'a' + str(row[0])), sender=getattr(tester, 'k' + str(row[0])))
+                    reportingToken.redeemForkedTokens(sender=getattr(tester, 'k' + str(row[0])))
                     assert destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalanceBeforeRedemption + expectedWinnings
                     print "Transferred " + str(expectedWinnings) + " to account a" + str(row[0]) + "\n"
 
@@ -534,7 +534,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
                     expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.totalSupply()
                     print "accountBalanceBeforeRedemption: " + str(accountBalanceBeforeRedemption)
                     print "expectedWinnings: " + str(expectedWinnings)
-                    reportingToken.redeemForkedTokens(getattr(tester, 'a' + str(row[0])), sender=getattr(tester, 'k' + str(row[0])))
+                    reportingToken.redeemForkedTokens(sender=getattr(tester, 'k' + str(row[0])))
                     assert destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalanceBeforeRedemption + expectedWinnings
                     print "Transferred " + str(expectedWinnings) + " to account a" + str(row[0]) + "\n"
 
@@ -573,7 +573,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             for key in winningOutcomeStakes:
                 accountBalanceBeforeRedemption = reputationToken.balanceOf(getattr(tester, 'a' + str(key)))
                 expectedWinnings = reputationToken.balanceOf(winningReportingToken.address) * winningOutcomeStakes[key] / winningReportingToken.totalSupply()
-                winningReportingToken.redeemWinningTokens(getattr(tester, 'a' + str(key)), sender=getattr(tester, 'k' + str(key)))
+                winningReportingToken.redeemWinningTokens(sender=getattr(tester, 'k' + str(key)))
                 assert reputationToken.balanceOf(getattr(tester, 'a' + str(key))) == accountBalanceBeforeRedemption + expectedWinnings
                 print "Transferred " + str(expectedWinnings) + " to account a" + str(key)
             printTestAccountBalances(reputationToken, False)
