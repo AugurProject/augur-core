@@ -9,7 +9,7 @@ import 'ROOT/legacy_reputation/SafeMath.sol';
  * @dev Basic version of StandardToken, with no allowances. 
  */
 contract BasicToken is ERC20Basic {
-    using SafeMath for uint256;
+    using SafeMathUint256 for uint256;
 
     mapping(address => uint256) balances;
 
@@ -19,8 +19,8 @@ contract BasicToken is ERC20Basic {
      * @param _value The amount to be transferred.
      */
     function transfer(address _to, uint256 _value) returns (bool) {
-        balances[msg.sender] = balances[msg.sender].uint256Sub(_value);
-        balances[_to] = balances[_to].uint256Add(_value);
+        balances[msg.sender] = balances[msg.sender].sub(_value);
+        balances[_to] = balances[_to].add(_value);
         Transfer(msg.sender, _to, _value);
         return true;
     }

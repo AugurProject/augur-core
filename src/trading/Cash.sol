@@ -10,7 +10,7 @@ import 'ROOT/Controller.sol';
  * @dev ETH wrapper contract to make it look like an ERC20 token.
  */
 contract Cash is Controlled, Typed, StandardToken {
-    using SafeMath for uint256;
+    using SafeMathUint256 for uint256;
 
     event DepositEther(address indexed sender, uint256 value, uint256 balance);
     event InitiateWithdrawEther(address indexed sender, uint256 value, uint256 balance);
@@ -23,8 +23,8 @@ contract Cash is Controlled, Typed, StandardToken {
     mapping(address => uint256) public initiated;
 
     function publicDepositEther() external payable onlyInGoodTimes returns(bool) {
-        balances[msg.sender] = balances[msg.sender].uint256Add(msg.value);
-        totalSupply = totalSupply.uint256Add(msg.value);
+        balances[msg.sender] = balances[msg.sender].add(msg.value);
+        totalSupply = totalSupply.add(msg.value);
         DepositEther(msg.sender, msg.value, balances[msg.sender]);
         return true;
     }
@@ -42,8 +42,8 @@ contract Cash is Controlled, Typed, StandardToken {
 
         // FIXME: attacker can initiate a withdraw of 1 unit, wait 3 days, then launch an attack and then immediately withdraw everything
         require(_initiatedTimestamp + 3 days <= block.timestamp);
-        balances[msg.sender] = balances[msg.sender].uint256Sub(_amount);
-        totalSupply = totalSupply.uint256Sub(_amount);
+        balances[msg.sender] = balances[msg.sender].sub(_amount);
+        totalSupply = totalSupply.sub(_amount);
         initiated[msg.sender] = 0;
         msg.sender.transfer(_amount);
         WithdrawEther(msg.sender, _amount, balances[msg.sender]);
