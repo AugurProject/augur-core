@@ -2,7 +2,6 @@
 
 from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
-from ethereum.tools.tester import ABIContract
 from ethereum import utils as u
 from ethereum.config import config_metropolis, Env
 from ethereum.tools.tester import TransactionFailed

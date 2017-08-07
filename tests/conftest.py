@@ -11,7 +11,7 @@ from pytest import fixture
 from re import findall
 from serpent import mk_full_signature, compile as compile_serpent
 from solc import compile_standard
-from utils import bytesToHexString, bytesToLong
+from utils import bytesToHexString, bytesToLong, longToHexString
 from copy import deepcopy
 
 # used to resolve relative paths
@@ -112,7 +112,7 @@ class ContractsFixture:
                 '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
             }
         }
-        return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../src"))['contracts'][filename][contractName]
+        return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../"))['contracts'][filename][contractName]
 
     @staticmethod
     def getAllDependencies(filePath, knownDependencies):
@@ -166,6 +166,7 @@ class ContractsFixture:
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
         contract = self.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs)
+        if not contract: return None
         self.controller.setValue(lookupKey.ljust(32, '\x00'), contract.address)
         return(contract)
 
@@ -176,19 +177,25 @@ class ContractsFixture:
         if lookupKey in self.contracts:
             return(self.contracts[lookupKey])
         compiledCode = ContractsFixture.getCompiledCode(resolvedPath)
+        # abstract contracts have a 0-length array for bytecode
+        if len(compiledCode) == 0:
+            print "Skipping upload of " + lookupKey + " because it had no bytecode (likely a abstract class/interface)."
+            return None
         if signatureKey not in ContractsFixture.signatures:
             ContractsFixture.signatures[signatureKey] = ContractsFixture.generateSignature(resolvedPath)
         signature = ContractsFixture.signatures[signatureKey]
         contractTranslator = ContractTranslator(signature)
         if len(constructorArgs) > 0:
             compiledCode += contractTranslator.encode_constructor_arguments(constructorArgs)
-        contractAddress = bytesToLong(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6)))
+        contractAddress = bytesToHexString(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6)))
         contract = ABIContract(self.chain, contractTranslator, contractAddress)
         self.contracts[lookupKey] = contract
         return(contract)
 
     def applySignature(self, signatureName, address):
         assert address
+        if type(address) is long:
+            address = longToHexString(address)
         translator = ContractTranslator(ContractsFixture.signatures[signatureName])
         contract = ABIContract(self.chain, translator, address)
         return contract
@@ -212,6 +219,8 @@ class ContractsFixture:
                 extension = path.splitext(filename)[1]
                 if extension != '.se' and extension != '.sol': continue
                 if name == 'controller': continue
+                # remove this and Interfaces.sol when https://github.com/ethereum/solidity/issues/2665 is fixed
+                if name == 'Interfaces': continue
                 contractsToDelegate = ['orders','tradingEscapeHatch']
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
@@ -258,13 +267,13 @@ class ContractsFixture:
 
     def createBranch(self, parentBranch, payoutDistributionHash):
         branchAddress = self.contracts['BranchFactory'].createBranch(self.controller.address, parentBranch, payoutDistributionHash)
-        branch = self.applySignature('branch', branchAddress)
+        branch = self.applySignature('Branch', branchAddress)
         return branch
 
     def getReportingToken(self, market, payoutDistribution):
         reportingTokenAddress = market.getReportingToken(payoutDistribution)
         assert reportingTokenAddress
-        reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['reportingToken']), reportingTokenAddress)
+        reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ReportingToken']), reportingTokenAddress)
         return reportingToken
 
     def getChildBranch(self, parentBranch, market, payoutDistribution):
@@ -272,22 +281,22 @@ class ContractsFixture:
         assert payoutDistributionHash
         childBranchAddress = parentBranch.getChildBranch(payoutDistributionHash)
         assert childBranchAddress
-        childBranch = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['branch']), childBranchAddress)
+        childBranch = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Branch']), childBranchAddress)
         return(childBranch)
 
     def createBinaryMarket(self, branch, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic):
         return self.createCategoricalMarket(branch, 2, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic)
 
     def createCategoricalMarket(self, branch, numOutcomes, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic):
-        marketCreationFee = self.contracts['marketFeeCalculator'].getValidityBond() + self.contracts['marketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['marketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, automatedReporterAddress, topic, value = marketCreationFee)
+        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
+        marketAddress = self.contracts['MarketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, automatedReporterAddress, topic, value = marketCreationFee)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['market']), marketAddress)
         return market
 
     def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic):
-        marketCreationFee = self.contracts['marketFeeCalculator'].getValidityBond() + self.contracts['marketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['marketCreation'].createScalarMarket(branch.address, endTime, feePerEthInWei, denominationToken.address, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = marketCreationFee)
+        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
+        marketAddress = self.contracts['MarketCreation'].createScalarMarket(branch.address, endTime, feePerEthInWei, denominationToken.address, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = marketCreationFee)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['market']), marketAddress)
         return market

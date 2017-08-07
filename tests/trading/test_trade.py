@@ -39,17 +39,17 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": BID,
             "orderID": longToHexString(orderID),
@@ -94,17 +94,17 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.7'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": BID,
             "orderID": longToHexString(orderID),
@@ -149,17 +149,17 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": BID,
             "orderID": longToHexString(orderID),
@@ -174,7 +174,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
         },
         {
             "_event_type": "MakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": ASK,
             "orderID": longToHexString(fillOrderID),
@@ -219,17 +219,17 @@ def test_two_bids_on_books_buy_both(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": BID,
             "orderID": longToHexString(orderID1),
@@ -244,17 +244,17 @@ def test_two_bids_on_books_buy_both(contractsFixture):
         },
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": BID,
             "orderID": longToHexString(orderID2),
@@ -302,17 +302,17 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": BID,
             "orderID": longToHexString(orderID1),
@@ -327,17 +327,17 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
         },
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": BID,
             "orderID": longToHexString(orderID2),
@@ -387,17 +387,17 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": BID,
             "orderID": longToHexString(orderID1),
@@ -412,7 +412,7 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
         },
         {
             "_event_type": "MakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": ASK,
             "orderID": longToHexString(fillOrderID),
@@ -455,17 +455,17 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": ASK,
             "orderID": longToHexString(orderID),
@@ -509,17 +509,17 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.7'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": ASK,
             "orderID": longToHexString(orderID),
@@ -565,17 +565,17 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": ASK,
             "orderID": longToHexString(orderID),
@@ -590,7 +590,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
         },
         {
             "_event_type": "MakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": BUY,
             "orderID": longToHexString(fillOrderID),
@@ -635,17 +635,17 @@ def test_two_asks_on_books_buy_both(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": ASK,
             "orderID": longToHexString(orderID1),
@@ -660,17 +660,17 @@ def test_two_asks_on_books_buy_both(contractsFixture):
         },
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": ASK,
             "orderID": longToHexString(orderID2),
@@ -719,17 +719,17 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": ASK,
             "orderID": longToHexString(orderID1),
@@ -744,17 +744,17 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
         },
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('0.3'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": ASK,
             "orderID": longToHexString(orderID2),
@@ -804,17 +804,17 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     assert logs == [
         {
             "_event_type": "CompleteSets",
-            "sender": longToHexString(takeOrder.address),
+            "sender": takeOrder.address,
             "reportingFee": 0L,
             "type": BUY,
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
-            "market": longToHexString(market.address)
+            "market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": ASK,
             "orderID": longToHexString(orderID1),
@@ -829,7 +829,7 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
         },
         {
             "_event_type": "MakeOrder",
-            "market": longToHexString(market.address),
+            "market": market.address,
             "outcome": YES,
             "type": BUY,
             "orderID": longToHexString(fillOrderID),

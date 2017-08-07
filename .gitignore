@@ -79,3 +79,5 @@ local/*.py
 tests/compilation_cache/
 
 .mypy_cache/
+
+/node_modules/

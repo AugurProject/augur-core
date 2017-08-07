@@ -1,4 +1,13 @@
 from ethereum.tools import tester
+from utils import longToHexString
+
+def test_decimals(contractsFixture):
+    reputationTokenFactory = contractsFixture.contracts['ReputationTokenFactory']
+    assert reputationTokenFactory
+    reputationTokenAddress = reputationTokenFactory.createReputationToken(contractsFixture.controller.address, contractsFixture.branch.address)
+    reputationToken = contractsFixture.applySignature('ReputationToken', reputationTokenAddress)
+
+    assert reputationToken.decimals() == 18
 
 def test_redeem_legacy_rep(contractsFixture):
     branch = contractsFixture.branch

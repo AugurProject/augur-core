@@ -1,6 +1,0 @@
-# TODO: allow user to query for all markets in a particular branch/reporting window and get back a tuple of market + market creation block
-# TODO: allow user to provide an array of market addresses and get back an array of tuples consisting of:
-# TODO: * market finalization time
-# TODO: * market creator fee
-# TODO: * market last trade price for each outcome (found in ORDERS)
-# TODO: * market volume (found in ORDERS)
