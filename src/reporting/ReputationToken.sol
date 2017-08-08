@@ -11,7 +11,7 @@ import 'ROOT/reporting/Interfaces.sol';
 contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToken, IReputationToken {
     using SafeMath for uint256;
 
-    //FIXME: Delegated constracts cannot currently use string values, so we will need to find a workaround if this hasn't been fixed before we release
+    //FIXME: Delegated contracts cannot currently use string values, so we will need to find a workaround if this hasn't been fixed before we release
     string constant public name = "Reputation";
     string constant public symbol = "REP";
     uint256 constant public decimals = 18;
