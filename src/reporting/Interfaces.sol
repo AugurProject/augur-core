@@ -35,9 +35,12 @@ contract IReportingWindow is Typed {
     function initialize(IBranch, uint256) public returns (bool);
     function noteReport(IMarket, address, int256) public returns (bool);
     function getStartTime() constant returns (uint256);
+    function getEndTime() constant returns (uint256);
+    function isDoneReporting(address) constant returns (bool);
     function isContainerForRegistrationToken(Typed) constant returns (bool);
     function isContainerForMarket(Typed) constant returns (bool);
     function getBranch() constant returns (IBranch);
+    function getReputationToken() constant returns (IReputationToken);
     function createNewMarket(uint256 _endTime, int256 _numOutcomes, int256 _payoutDenominator, int256 _feePerEthInWei, address _denominationToken, address _sender, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, int256 _topic) public payable returns (IMarket);
 }
 

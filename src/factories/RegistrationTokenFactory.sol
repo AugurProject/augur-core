@@ -18,7 +18,7 @@ contract RegistrationToken {
 
 contract RegistrationTokenFactory {
     function createRegistrationToken(Controller _controller, ReportingWindow _reportingWindow) returns (RegistrationToken) {
-        Delegator _delegator = new Delegator(_controller, "registrationToken");
+        Delegator _delegator = new Delegator(_controller, "RegistrationToken");
         RegistrationToken _registrationToken = RegistrationToken(_delegator);
         _registrationToken.initialize(_reportingWindow);
         return _registrationToken;

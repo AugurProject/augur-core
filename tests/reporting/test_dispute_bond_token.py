@@ -251,7 +251,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             # Dispute the automated reporter outcome
             disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(automatedReporterDisputerAccountNum)))
             market.disputeAutomatedReport(sender=getattr(tester, 'k' + str(automatedReporterDisputerAccountNum)))
-            automatedReporterDisputeBondToken = contractsFixture.applySignature('disputeBondToken', market.getAutomatedReporterDisputeBondToken())
+            automatedReporterDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getAutomatedReporterDisputeBondToken())
             assert automatedReporterDisputeBondToken.getMarket() == market.address
 
             # Ensure correct bond amount was sent to dispute bond token
@@ -267,7 +267,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             # assert reportingWindow.isContainerForMarket(market.address)
 
             # Buy registration tokens
-            registrationToken = contractsFixture.applySignature('registrationToken', reportingWindow.getRegistrationToken())
+            registrationToken = contractsFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
             buyRegistrationTokens(automatedReporterDisputeStakes, registrationToken, reputationToken)
 
             # Fast forward to reporting start time
@@ -288,7 +288,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         # Dispute the limited reporters result
         disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(limitedReportersDisputerAccountNum)))
         market.disputeLimitedReporters(sender=getattr(tester, 'k' + str(limitedReportersDisputerAccountNum)))
-        limitedReportersDisputeBondToken = contractsFixture.applySignature('disputeBondToken', market.getLimitedReportersDisputeBondToken())
+        limitedReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getLimitedReportersDisputeBondToken())
         assert limitedReportersDisputeBondToken.getMarket() == market.address
 
         # Ensure correct bond amount was sent to dispute bond token
@@ -301,7 +301,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         assert reportingWindow.isContainerForMarket(market.address)
 
         # Buy registration tokens
-        registrationToken = contractsFixture.applySignature('registrationToken', reportingWindow.getRegistrationToken())
+        registrationToken = contractsFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
         buyRegistrationTokens(limitedReportersDisputeStakes, registrationToken, reputationToken)
 
         # Fast forward to reporting start time
@@ -323,7 +323,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         # Dispute the all reporters result
         disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(allReportersDisputerAccountNum)))
         market.disputeAllReporters(sender=getattr(tester, 'k' + str(allReportersDisputerAccountNum)))
-        allReportersDisputeBondToken = contractsFixture.applySignature('disputeBondToken', market.getAllReportersDisputeBondToken())
+        allReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getAllReportersDisputeBondToken())
         assert allReportersDisputeBondToken.getMarket() == market.address
 
         # Ensure correct bond amount was sent to dispute bond token
