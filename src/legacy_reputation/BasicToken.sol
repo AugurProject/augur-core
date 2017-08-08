@@ -9,7 +9,7 @@ import 'ROOT/legacy_reputation/SafeMath.sol';
  * @dev Basic version of StandardToken, with no allowances. 
  */
 contract BasicToken is ERC20Basic {
-    using SafeMathUint256 for uint256;
+    using SafeMath for uint256;
 
     mapping(address => uint256) balances;
 

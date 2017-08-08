@@ -4,7 +4,7 @@ import 'ROOT/libraries/token/StandardToken.sol';
 
 
 contract VariableSupplyToken is StandardToken {
-    using SafeMath for uint256;
+    using SafeMathUint256 for uint256;
 
     event Mint(address indexed target, uint256 value);
     event Burn(address indexed target, uint256 value);
