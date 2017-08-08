@@ -12,8 +12,8 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
     using SafeMath for uint256;
 
     // Delegated constracts cannot use string values, so we use bytes32 values here
-    bytes32 constant public name = "Reputation";
-    bytes32 constant public symbol = "REP";
+    string constant public name = "Reputation";
+    string constant public symbol = "REP";
     uint256 constant public decimals = 18;
     IBranch private branch;
     IReputationToken private topMigrationDestination;
