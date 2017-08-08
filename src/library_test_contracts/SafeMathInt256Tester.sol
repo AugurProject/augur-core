@@ -4,31 +4,30 @@ import 'ROOT/libraries/math/SafeMathInt256.sol';
 
 
 contract SafeMathInt256Tester {
-    function initialize() public constant {
-    }
+    using SafeMathInt256 for int256;
 
     function mul(int256 _a, int256 _b) public constant returns (int256) {
-        return SafeMathInt256.mul(_a, _b);
+        return _a.mul(_b);
     }
 
     function div(int256 _a, int256 _b) public constant returns (int256) {
-        return SafeMathInt256.div(_a, _b);
+        return _a.div(_b);
     }
 
     function sub(int256 _a, int256 _b) public constant returns (int256) {
-        return SafeMathInt256.sub(_a, _b);
+        return _a.sub(_b);
     }
 
     function add(int256 _a, int256 _b) public constant returns (int256) {
-        return SafeMathInt256.add(_a, _b);
+        return _a.add(_b);
     }
 
     function min(int256 _a, int256 _b) public constant returns (int256) {
-        return SafeMathInt256.min(_a, _b);
+        return _a.min(_b);
     }
 
     function max(int256 _a, int256 _b) public constant returns (int256) {
-        return SafeMathInt256.max(_a, _b);
+        return _a.max(_b);
     }
 
     function getInt256Min() public constant returns (int256) {
