@@ -8,7 +8,7 @@ import 'ROOT/reporting/Interfaces.sol';
 
 
 contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IReportingToken {
-    using SafeMath for uint256;
+    using SafeMathUint256 for uint256;
 
     IMarket public market;
     int256[] public payoutNumerators;
