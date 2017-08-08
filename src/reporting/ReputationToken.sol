@@ -11,9 +11,10 @@ import 'ROOT/reporting/Interfaces.sol';
 contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToken, IReputationToken {
     using SafeMath for uint256;
 
-    string public name;
-    string public symbol;
-    uint256 public decimals;
+    // Delegated constracts cannot use string values, so we use bytes32 values here
+    bytes32 constant public name = "Reputation";
+    bytes32 constant public symbol = "REP";
+    uint256 constant public decimals = 18;
     IBranch private branch;
     IReputationToken private topMigrationDestination;
 
@@ -21,9 +22,6 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         endInitialization();
         require(_branch != address(0));
         branch = _branch;
-        name = "Reputation";
-        symbol = "REP";
-        decimals = 18;
         // FIXME: DELETE THIS BEFORE LAUNCH
         var _reputationFaucet = controller.lookup("ReputationFaucet");
         balances[_reputationFaucet] = balances[_reputationFaucet].add(1000000 ether);
