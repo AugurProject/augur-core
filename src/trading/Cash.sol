@@ -17,9 +17,9 @@ contract Cash is Controlled, Typed, StandardToken {
     event WithdrawEther(address indexed sender, uint256 value, uint256 balance);
     enum WithdrawState { Failed, Withdrawn, Initiated }
 
-    string public name = "Cash";
-    string public symbol = "CASH";
-    uint256 public decimals = 18;
+    string constant public name = "Cash";
+    string constant public symbol = "CASH";
+    uint256 constant public decimals = 18;
     mapping(address => uint256) public initiated;
 
     function publicDepositEther() external payable onlyInGoodTimes returns(bool) {
