@@ -9,6 +9,9 @@ def fix(n, m = 1):
 def unfix(n):
     return n // 10**18
 
+def stringToBytes(value):
+    return value.ljust(32, '\x00')
+
 def longToHexString(value, leftPad=40):
     # convert the value to a hex string, strip off the `0x`, strip off any trailing `L`, pad with zeros, prefix with `0x`
     return '0x' + hex(value)[2:].rstrip('L').zfill(leftPad)
