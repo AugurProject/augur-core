@@ -6,10 +6,11 @@ import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/libraries/token/ERC20.sol';
 import 'ROOT/libraries/token/StandardToken.sol';
 import 'ROOT/reporting/Branch.sol';
+import 'ROOT/libraries/math/SafeMathUint256.sol';
 
 
 contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToken {
-    using SafeMath for uint256;
+    using SafeMathUint256 for uint256;
 
     //FIXME: Delegated contracts cannot currently use string values, so we will need to find a workaround if this hasn't been fixed before we release
     string constant public name = "Reputation";

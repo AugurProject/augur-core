@@ -8,10 +8,11 @@ import 'ROOT/reporting/Branch.sol';
 import 'ROOT/reporting/ReputationToken.sol';
 import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/Interfaces.sol';
+import 'ROOT/libraries/math/SafeMathUint256.sol';
 
 
 contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken {
-    using SafeMath for uint256;
+    using SafeMathUint256 for uint256;
 
     IMarket public market;
     int256[] public payoutNumerators;

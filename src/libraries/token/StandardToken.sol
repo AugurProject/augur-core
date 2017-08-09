@@ -12,7 +12,7 @@ import 'ROOT/libraries/token/ERC20.sol';
  * @dev Based on code by FirstBlood: https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
  */
 contract StandardToken is ERC20, BasicToken {
-    using SafeMath for uint256;
+    using SafeMathUint256 for uint256;
 
     mapping (address => mapping (address => uint256)) allowed;
 
