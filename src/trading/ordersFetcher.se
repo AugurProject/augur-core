@@ -43,16 +43,16 @@ def getOrderIDs(type: int256, market: address, outcome: int256, startingOrderID:
     return(slice(orderIDs, items=0, items=i): arr)
 
 # @public
-def getOrder(orderID: address, type: int256, market: address, outcome: int256):
+def getOrder(_orderId: uint256, _type: uint256, _market: address, _outcome: uint256):
     order = array(8)
-    order[ATTOSHARES] = ORDERS.getAmount(orderID, type, market, outcome)
-    order[DISPLAY_PRICE] = ORDERS.getPrice(orderID, type, market, outcome)
-    order[OWNER] = ORDERS.getOrderOwner(orderID, type, market, outcome)
-    order[TOKENS_ESCROWED] = ORDERS.getOrderMoneyEscrowed(orderID, type, market, outcome)
-    order[SHARES_ESCROWED] = ORDERS.getOrderSharesEscrowed(orderID, type, market, outcome)
-    order[BETTER_ORDER_ID] = ORDERS.getBetterOrderID(orderID, type, market, outcome)
-    order[WORSE_ORDER_ID] = ORDERS.getWorseOrderID(orderID, type, market, outcome)
-    order[GAS_PRICE] = ORDERS.getGasPrice(orderID, type, market, outcome)
+    order[ATTOSHARES] = ORDERS.getAmount(_orderId, _type, _market, _outcome)
+    order[DISPLAY_PRICE] = ORDERS.getPrice(_orderId, _type, _market, _outcome)
+    order[OWNER] = ORDERS.getOrderOwner(_orderId, _type, _market, _outcome)
+    order[TOKENS_ESCROWED] = ORDERS.getOrderMoneyEscrowed(_orderId, _type, _market, _outcome)
+    order[SHARES_ESCROWED] = ORDERS.getOrderSharesEscrowed(_orderId, _type, _market, _outcome)
+    order[BETTER_ORDER_ID] = ORDERS.getBetterOrderID(_orderId, _type, _market, _outcome)
+    order[WORSE_ORDER_ID] = ORDERS.getWorseOrderID(_orderId, _type, _market, _outcome)
+    order[GAS_PRICE] = ORDERS.getGasPrice(_orderId, _type, _market, _outcome)
     return(order: arr)
 
 # @public
