@@ -98,10 +98,11 @@ class ContractsFixture:
         absoluteFilePath = resolveRelativePath(relativeFilePath)
         filename = path.basename(relativeFilePath)
         contractName = path.splitext(filename)[0]
+        print absoluteFilePath
         compilerParameter = {
             'language': 'Solidity',
             'sources': {
-                filename: {
+                absoluteFilePath: {
                     'urls': [ absoluteFilePath ]
                 }
             },
@@ -112,7 +113,7 @@ class ContractsFixture:
                 '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
             }
         }
-        return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../"))['contracts'][filename][contractName]
+        return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../"))['contracts'][absoluteFilePath][contractName]
 
     @staticmethod
     def getAllDependencies(filePath, knownDependencies):

@@ -1,6 +1,8 @@
+pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/Typed.sol';
+
 
 contract DelegatorHelper is DelegationTarget, Typed {
     string public stringMember = "StringMember";
