@@ -336,6 +336,7 @@ def getReportingTokenOrZeroByPayoutDistributionHash(payoutDistributionHash: int2
     assertNoValue()
     return(self.reportingTokens.getValueOrZero(payoutDistributionHash))
 
+# CONSIDER: we treat the value returned here as an int256. sha3 returns a bytes32. Is there actually a need to cast it?
 def derivePayoutDistributionHash(payoutNumerators: arr):
     assertNoValue()
     self.validatePayoutNumerators(payoutNumerators)
