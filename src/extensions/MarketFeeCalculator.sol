@@ -1,6 +1,7 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/reporting/ReputationToken.sol';
+import 'ROOT/reporting/Branch.sol';
 import 'ROOT/reporting/Interfaces.sol';
 
 
@@ -18,7 +19,7 @@ contract MarketFeeCalculator {
         // TODO: get the real data for this
         uint256 _totalMarketsInPreviousWindow = 1000;
         uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
-        IBranch _branch = _reportingWindow.getBranch();
+        Branch _branch = _reportingWindow.getBranch();
         IReportingWindow _previousReportingWindow = _branch.getReportingWindowByTimestamp(_previousTimestamp);
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
         if (_previousValidityBondInAttoeth == 0) {
@@ -49,7 +50,7 @@ contract MarketFeeCalculator {
         if (_currentPerEthFee != 0) {
             return _currentPerEthFee;
         }
-        IBranch _branch = _reportingWindow.getBranch();
+        Branch _branch = _reportingWindow.getBranch();
         uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth(_branch);
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth(_reportingWindow);
         uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
@@ -66,7 +67,7 @@ contract MarketFeeCalculator {
         return _currentPerEthFee;
     }
 
-    function getRepMarketCapInAttoeth(IBranch _branch) constant public returns (uint256) {
+    function getRepMarketCapInAttoeth(Branch _branch) constant public returns (uint256) {
         // TODO: get these from an auto-generated market
         uint256 _attorepPerEth = 11 * 10 ** 18;
         uint256 _repMarketCapInAttoeth = _branch.getReputationToken().totalSupply() * _attorepPerEth;
