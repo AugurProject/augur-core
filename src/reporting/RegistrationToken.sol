@@ -4,6 +4,7 @@ pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/reporting/ReportingToken.sol';
+import 'ROOT/reporting/Branch.sol';
 import 'ROOT/reporting/Interfaces.sol';
 
 
@@ -51,7 +52,7 @@ contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardTo
         return reportingWindow;
     }
 
-    function getBranch() public constant returns (IBranch) {
+    function getBranch() public constant returns (Branch) {
         return reportingWindow.getBranch();
     }
 
