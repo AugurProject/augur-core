@@ -41,12 +41,12 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
     // target payout for bond holders during a fork.  Ideally, the amount minted is
     // capped at the amount of tokens redeemed on other branches, so we may have to
     // require the user to supply branches to deduct from with their call to this.
-    function withdrawToBranch(IBranch _shadyBranch) public returns (bool) {
+    function withdrawToBranch(Branch _shadyBranch) public returns (bool) {
         require(msg.sender == bondHolder);
         require(!market.isContainerForDisputeBondToken(this) || getBranch().getForkingMarket() == market);
         bool _isChildOfMarketBranch = market.getBranch().isParentOf(_shadyBranch);
         require(_isChildOfMarketBranch);
-        IBranch legitBranch = _shadyBranch;
+        Branch legitBranch = _shadyBranch;
         require(legitBranch.getParentPayoutDistributionHash() != disputedPayoutDistributionHash);
         IReputationToken reputationToken = getReputationToken();
         uint256 amountToTransfer = reputationToken.balanceOf(this);
@@ -65,7 +65,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
         return market;
     }
 
-    function getBranch() constant public returns (IBranch) {
+    function getBranch() constant public returns (Branch) {
         return market.getBranch();
     }
 
