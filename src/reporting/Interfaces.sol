@@ -3,41 +3,17 @@ pragma solidity ^0.4.13;
 import 'ROOT/libraries/token/ERC20.sol';
 import 'ROOT/libraries/token/VariableSupplyToken.sol';
 import 'ROOT/libraries/Typed.sol';
-
-
-contract IBranch is Typed {
-    function initialize(IBranch, int256) public returns (bool);
-    function getParentBranch() constant returns (IBranch);
-    function getChildBranch(int256 _payoutDistributionHash) public returns (IBranch);
-    function getReputationToken() constant returns (IReputationToken);
-    function getForkingMarket() constant returns (IMarket);
-    function getParentPayoutDistributionHash() constant returns (int256);
-    function isParentOf(IBranch _branch) constant returns (bool);
-    function isContainerForReportingWindow(Typed) constant returns (bool);
-    function isContainerForRegistrationToken(Typed) constant returns (bool);
-    function isContainerForMarket(Typed) constant returns (bool);
-    function isContainerForReportingToken(Typed) constant returns (bool);
-    function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow);
-    function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasAutomatedReporter) public returns (IReportingWindow);
-}
-
-
-contract IReputationToken is Typed, ERC20 {
-    function initialize(IBranch branch) public returns (bool);
-    function getBranch() constant returns (IBranch);
-    function migrateOut(IReputationToken _destination, address _reporter, uint256 _attotokens) public returns (bool);
-    function migrateIn(address _reporter, uint256 _attotokens) public returns (bool);
-    function trustedTransfer(address _source, address _destination, uint256 _amount) public returns (bool);
-}
+import 'ROOT/reporting/Branch.sol';
+import 'ROOT/reporting/ReportingToken.sol';
 
 
 contract IReportingWindow is Typed {
-    function initialize(IBranch, uint256) public returns (bool);
+    function initialize(Branch, uint256) public returns (bool);
     function noteReport(IMarket, address, int256) public returns (bool);
     function getStartTime() constant returns (uint256);
     function isContainerForRegistrationToken(Typed) constant returns (bool);
     function isContainerForMarket(Typed) constant returns (bool);
-    function getBranch() constant returns (IBranch);
+    function getBranch() constant returns (Branch);
     function createNewMarket(uint256 _endTime, int256 _numOutcomes, int256 _payoutDenominator, int256 _feePerEthInWei, address _denominationToken, address _sender, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, int256 _topic) public payable returns (IMarket);
 }
 
@@ -50,8 +26,8 @@ contract IRegistrationToken is Typed, VariableSupplyToken {
 
 
 contract IMarket is Typed {
-    function getBranch() constant returns (IBranch);
-    function getReputationToken() constant returns (IReputationToken);
+    function getBranch() constant returns (Branch);
+    function getReputationToken() constant returns (ReputationToken);
     function getReportingWindow() constant returns (IReportingWindow);
     function getRegistrationToken() constant returns (IRegistrationToken);
     function getNumberOfOutcomes() constant returns (uint8);
@@ -63,16 +39,10 @@ contract IMarket is Typed {
     function isContainerForShareToken(Typed) constant returns (bool);
     function isFinalized() constant returns (bool);
     function canBeReportedOn() constant returns (bool);
-    function getFinalWinningReportingToken() constant returns (IReportingToken);
+    function getFinalWinningReportingToken() constant returns (ReportingToken);
     function getFinalPayoutDistributionHash() constant returns (int256);
     function derivePayoutDistributionHash(int256[]) constant returns (int256);
     function updateTentativeWinningPayoutDistributionHash(int256) public returns (bool);
-}
-
-
-contract IReportingToken is Typed {
-    function buy(uint256 _amount) public returns (bool);
-    function getMarket() constant returns (IMarket);
 }
 
 

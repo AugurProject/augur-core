@@ -4,10 +4,14 @@ import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/Typed.sol';
 import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/libraries/token/VariableSupplyToken.sol';
+import 'ROOT/reporting/Branch.sol';
+import 'ROOT/reporting/ReputationToken.sol';
+import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/Interfaces.sol';
+import 'ROOT/libraries/math/SafeMathUint256.sol';
 
 
-contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IReportingToken {
+contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken {
     using SafeMathUint256 for uint256;
 
     IMarket public market;
@@ -119,11 +123,11 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return "ReportingToken";
     }
 
-    function getBranch() constant returns (IBranch) {
+    function getBranch() constant returns (Branch) {
         return market.getBranch();
     }
 
-    function getReputationToken() constant returns (IReputationToken) {
+    function getReputationToken() constant returns (ReputationToken) {
         return market.getReputationToken();
     }
 
