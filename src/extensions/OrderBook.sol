@@ -30,7 +30,7 @@ contract OrderBook is Controlled {
                 _orderBook[9 * _numAvailableOrders] = _orders[_i];
                 uint8 _j = 1;
                 while (_j < 9) {
-                    _orderBook[9 * _numAvailableOrders + _j] = _orderInfo[_j];
+                    _orderBook[9 * _numAvailableOrders + _j] = _orderInfo[_j - 1];
                     _j++;
                 }
                 _numAvailableOrders++;
