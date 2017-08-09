@@ -3,7 +3,11 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/reporting/Branch.sol';
+import 'ROOT/reporting/ReputationToken.sol';
 import 'ROOT/reporting/Interfaces.sol';
+import 'ROOT/libraries/DelegationTarget.sol';
+import 'ROOT/libraries/Typed.sol';
+import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/libraries/token/ERC20Basic.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 
@@ -30,7 +34,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
         require(msg.sender == bondHolder);
         require(!market.isContainerForDisputeBondToken(this) || (market.isFinalized() && market.getFinalPayoutDistributionHash() != disputedPayoutDistributionHash));
         require(getBranch().getForkingMarket() != market);
-        IReputationToken reputationToken = getReputationToken();
+        ReputationToken reputationToken = getReputationToken();
         uint256 amountToTransfer = reputationToken.balanceOf(this);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(amountToTransfer);
         reputationToken.transfer(bondHolder, amountToTransfer);
@@ -48,9 +52,9 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
         require(_isChildOfMarketBranch);
         Branch legitBranch = _shadyBranch;
         require(legitBranch.getParentPayoutDistributionHash() != disputedPayoutDistributionHash);
-        IReputationToken reputationToken = getReputationToken();
+        ReputationToken reputationToken = getReputationToken();
         uint256 amountToTransfer = reputationToken.balanceOf(this);
-        IReputationToken destinationReputationToken = legitBranch.getReputationToken();
+        ReputationToken destinationReputationToken = legitBranch.getReputationToken();
         reputationToken.migrateOut(destinationReputationToken, this, amountToTransfer);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(amountToTransfer);
         destinationReputationToken.transfer(bondHolder, amountToTransfer);
@@ -69,7 +73,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
         return market.getBranch();
     }
 
-    function getReputationToken() constant public returns (IReputationToken) {
+    function getReputationToken() constant public returns (ReputationToken) {
         return market.getReputationToken();
     }
 

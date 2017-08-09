@@ -3,8 +3,12 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/DelegationTarget.sol';
+import 'ROOT/libraries/Typed.sol';
+import 'ROOT/libraries/Initializable.sol';
+import 'ROOT/libraries/token/StandardToken.sol';
 import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/Branch.sol';
+import 'ROOT/reporting/ReputationToken.sol';
 import 'ROOT/reporting/Interfaces.sol';
 
 
@@ -56,7 +60,7 @@ contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardTo
         return reportingWindow.getBranch();
     }
 
-    function getReputationToken() public constant returns (IReputationToken) {
+    function getReputationToken() public constant returns (ReputationToken) {
         return reportingWindow.getReputationToken();
     }
 

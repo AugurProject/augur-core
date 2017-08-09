@@ -9,6 +9,8 @@ import 'ROOT/factories/ReportingWindowFactory.sol';
 import 'ROOT/factories/BranchFactory.sol';
 import 'ROOT/reporting/ReputationToken.sol';
 import 'ROOT/reporting/ReportingToken.sol';
+import 'ROOT/reporting/DisputeBondToken.sol';
+import 'ROOT/reporting/RegistrationToken.sol';
 import 'ROOT/reporting/Interfaces.sol';
 
 
@@ -138,7 +140,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         if (_shadyTarget.getTypeName() != "DisputeBondToken") {
             return false;
         }
-        IDisputeBondToken _shadyDisputeBondToken = IDisputeBondToken(_shadyTarget);
+        DisputeBondToken _shadyDisputeBondToken = DisputeBondToken(_shadyTarget);
         IMarket _shadyMarket = _shadyDisputeBondToken.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
@@ -154,7 +156,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         if (_shadyTarget.getTypeName() != "RegistrationToken") {
             return false;
         }
-        IRegistrationToken _shadyRegistrationToken = IRegistrationToken(_shadyTarget);
+        RegistrationToken _shadyRegistrationToken = RegistrationToken(_shadyTarget);
         IReportingWindow _shadyReportingWindow = _shadyRegistrationToken.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
