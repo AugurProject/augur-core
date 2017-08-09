@@ -10,7 +10,7 @@ import 'ROOT/Controller.sol';
  * @dev ETH wrapper contract to make it look like an ERC20 token.
  */
 contract Cash is Controlled, Typed, StandardToken {
-    using SafeMath for uint256;
+    using SafeMathUint256 for uint256;
 
     event DepositEther(address indexed sender, uint256 value, uint256 balance);
     event InitiateWithdrawEther(address indexed sender, uint256 value, uint256 balance);
