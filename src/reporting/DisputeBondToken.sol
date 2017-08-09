@@ -5,10 +5,11 @@ pragma solidity ^0.4.13;
 import 'ROOT/reporting/Branch.sol';
 import 'ROOT/reporting/Interfaces.sol';
 import 'ROOT/libraries/token/ERC20Basic.sol';
+import 'ROOT/libraries/math/SafeMathUint256.sol';
 
 
 contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic {
-    using SafeMath for uint256;
+    using SafeMathUint256 for uint256;
 
     IMarket private market;
     address private bondHolder;
