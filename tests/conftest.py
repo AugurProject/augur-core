@@ -153,7 +153,7 @@ class ContractsFixture:
         self.whitelistTradingContracts()
         self.whitelistLibraryTestContracts()
         self.initializeAllContracts()
-        self.branch = self.createBranch(0, 0)
+        self.branch = self.createBranch(0, "")
         self.cash = self.getSeededCash()
         self.binaryMarket = self.createReasonableBinaryMarket(self.branch, self.cash)
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)

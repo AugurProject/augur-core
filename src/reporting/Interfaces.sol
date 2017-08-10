@@ -11,7 +11,7 @@ import 'ROOT/reporting/RegistrationToken.sol';
 
 contract IReportingWindow is Typed {
     function initialize(Branch, uint256) public returns (bool);
-    function noteReport(IMarket, address, int256) public returns (bool);
+    function noteReport(IMarket, address, bytes32) public returns (bool);
     function getStartTime() constant returns (uint256);
     function getEndTime() constant returns (uint256);
     function isDoneReporting(address) constant returns (bool);
@@ -38,9 +38,9 @@ contract IMarket is Typed {
     function isFinalized() constant returns (bool);
     function canBeReportedOn() constant returns (bool);
     function getFinalWinningReportingToken() constant returns (ReportingToken);
-    function getFinalPayoutDistributionHash() constant returns (int256);
-    function derivePayoutDistributionHash(int256[]) constant returns (int256);
-    function updateTentativeWinningPayoutDistributionHash(int256) public returns (bool);
+    function getFinalPayoutDistributionHash() constant returns (bytes32);
+    function derivePayoutDistributionHash(int256[]) constant returns (bytes32);
+    function updateTentativeWinningPayoutDistributionHash(bytes32) public returns (bool);
 }
 
 

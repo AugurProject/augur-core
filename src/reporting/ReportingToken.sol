@@ -145,7 +145,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return market;
     }
 
-    function getPayoutDistributionHash() constant returns (int256) {
+    function getPayoutDistributionHash() constant returns (bytes32) {
         return market.derivePayoutDistributionHash(payoutNumerators);
     }
 

@@ -7,7 +7,7 @@ import 'ROOT/reporting/Interfaces.sol';
 
 
 contract BranchFactory {
-    function createBranch(Controller _controller, Branch _parentBranch, int256 _parentPayoutDistributionHash) returns (Branch) {
+    function createBranch(Controller _controller, Branch _parentBranch, bytes32 _parentPayoutDistributionHash) returns (Branch) {
         Delegator _delegator = new Delegator(_controller, "Branch");
         Branch _branch = Branch(_delegator);
         _branch.initialize(_parentBranch, _parentPayoutDistributionHash);
