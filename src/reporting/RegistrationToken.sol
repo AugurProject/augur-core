@@ -15,6 +15,7 @@ import 'ROOT/reporting/Interfaces.sol';
 contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardToken {
     IReportingWindow private reportingWindow;
     uint256 private peakSupply;
+    uint256 private constant BOND_AMOUNT = 1 ether;
 
     function initialize(IReportingWindow _reportingWindow) public beforeInitialized returns (bool) {
         endInitialization();
@@ -26,8 +27,7 @@ contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardTo
         // do not allow for registration for reporting in the current window or past windows
         require(block.timestamp < reportingWindow.getStartTime());
         require(balances[msg.sender] == 0);
-        // 10 ** 18 is the Bond Amount
-        getReputationToken().trustedTransfer(msg.sender, this, 10 ** 18);
+        getReputationToken().trustedTransfer(msg.sender, this, BOND_AMOUNT);
         balances[msg.sender] += 1;
         totalSupply += 1;
         if (totalSupply > peakSupply) {
@@ -43,8 +43,7 @@ contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardTo
         require(reportingWindow.isDoneReporting(msg.sender));
         balances[msg.sender] -= 1;
         totalSupply -= 1;
-        // 10 ** 18 is the Bond Amount
-        getReputationToken().transfer(msg.sender, 10 ** 18);
+        getReputationToken().transfer(msg.sender, BOND_AMOUNT);
         return true;
     }
 
