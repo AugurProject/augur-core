@@ -3,24 +3,28 @@ pragma solidity ^0.4.13;
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/Typed.sol';
 import 'ROOT/libraries/Initializable.sol';
-import 'ROOT/reporting/Interfaces.sol';
 import 'ROOT/factories/ReputationTokenFactory.sol';
 import 'ROOT/factories/TopicsFactory.sol';
 import 'ROOT/factories/ReportingWindowFactory.sol';
 import 'ROOT/factories/BranchFactory.sol';
+import 'ROOT/reporting/ReputationToken.sol';
+import 'ROOT/reporting/ReportingToken.sol';
+import 'ROOT/reporting/DisputeBondToken.sol';
+import 'ROOT/reporting/RegistrationToken.sol';
+import 'ROOT/reporting/Interfaces.sol';
 
 
-contract Branch is DelegationTarget, Typed, Initializable, IBranch {
-    IBranch private parentBranch;
-    int256 private parentPayoutDistributionHash;
-    IReputationToken private reputationToken;
+contract Branch is DelegationTarget, Typed, Initializable {
+    Branch private parentBranch;
+    bytes32 private parentPayoutDistributionHash;
+    ReputationToken private reputationToken;
     ITopics private topics;
     IMarket private forkingMarket;
     uint256 private forkEndTime;
     mapping(uint256 => IReportingWindow) private reportingWindows;
-    mapping(int256 => IBranch) private childBranches;
+    mapping(bytes32 => Branch) private childBranches;
 
-    function initialize(IBranch _parentBranch, int256 _parentPayoutDistributionHash) public beforeInitialized returns (bool) {
+    function initialize(Branch _parentBranch, bytes32 _parentPayoutDistributionHash) public beforeInitialized returns (bool) {
         endInitialization();
         parentBranch = _parentBranch;
         parentPayoutDistributionHash = _parentPayoutDistributionHash;
@@ -42,15 +46,15 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return "Branch";
     }
 
-    function getParentBranch() constant returns (IBranch) {
+    function getParentBranch() constant returns (Branch) {
         return parentBranch;
     }
 
-    function getParentPayoutDistributionHash() constant returns (int256) {
+    function getParentPayoutDistributionHash() constant returns (bytes32) {
         return parentPayoutDistributionHash;
     }
 
-    function getReputationToken() constant returns (IReputationToken) {
+    function getReputationToken() constant returns (ReputationToken) {
         return reputationToken;
     }
 
@@ -71,7 +75,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
     }
 
     // TODO: this has a signature conflict with the public version below.  for consistency, we should have this be the signature for the `constant` version and rename the `public` one
-    //function getChildBranch(int256 _parentPayoutDistributionHash) constant returns (IBranch);
+    //function getChildBranch(bytes32 _parentPayoutDistributionHash) constant returns (Branch);
 
     function getReportingWindowId(uint256 _timestamp) constant returns (uint256) {
         return _timestamp / getReportingPeriodDurationInSeconds();
@@ -111,7 +115,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return getReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
     }
 
-    function getChildBranch(int256 _parentPayoutDistributionHash) public returns (IBranch) {
+    function getChildBranch(bytes32 _parentPayoutDistributionHash) public returns (Branch) {
         if (childBranches[_parentPayoutDistributionHash] == address(0)) {
             childBranches[_parentPayoutDistributionHash] = BranchFactory(controller.lookup("BranchFactory")).createBranch(controller, this, _parentPayoutDistributionHash);
         }
@@ -136,7 +140,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         if (_shadyTarget.getTypeName() != "DisputeBondToken") {
             return false;
         }
-        IDisputeBondToken _shadyDisputeBondToken = IDisputeBondToken(_shadyTarget);
+        DisputeBondToken _shadyDisputeBondToken = DisputeBondToken(_shadyTarget);
         IMarket _shadyMarket = _shadyDisputeBondToken.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
@@ -152,7 +156,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         if (_shadyTarget.getTypeName() != "RegistrationToken") {
             return false;
         }
-        IRegistrationToken _shadyRegistrationToken = IRegistrationToken(_shadyTarget);
+        RegistrationToken _shadyRegistrationToken = RegistrationToken(_shadyTarget);
         IReportingWindow _shadyReportingWindow = _shadyRegistrationToken.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
@@ -184,7 +188,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         if (_shadyTarget.getTypeName() != "ReportingToken") {
             return false;
         }
-        IReportingToken _shadyReportingToken = IReportingToken(_shadyTarget);
+        ReportingToken _shadyReportingToken = ReportingToken(_shadyTarget);
         IMarket _shadyMarket = _shadyReportingToken.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
@@ -212,8 +216,8 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return _legitMarket.isContainerForShareToken(_shadyShareToken);
     }
 
-    function isParentOf(IBranch _shadyChild) constant returns (bool) {
-        int256 _parentPayoutDistributionHash = _shadyChild.getParentPayoutDistributionHash();
+    function isParentOf(Branch _shadyChild) constant returns (bool) {
+        bytes32 _parentPayoutDistributionHash = _shadyChild.getParentPayoutDistributionHash();
         return childBranches[_parentPayoutDistributionHash] == _shadyChild;
     }
 }

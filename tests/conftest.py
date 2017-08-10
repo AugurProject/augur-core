@@ -98,10 +98,11 @@ class ContractsFixture:
         absoluteFilePath = resolveRelativePath(relativeFilePath)
         filename = path.basename(relativeFilePath)
         contractName = path.splitext(filename)[0]
+        print absoluteFilePath
         compilerParameter = {
             'language': 'Solidity',
             'sources': {
-                filename: {
+                absoluteFilePath: {
                     'urls': [ absoluteFilePath ]
                 }
             },
@@ -112,7 +113,7 @@ class ContractsFixture:
                 '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
             }
         }
-        return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../"))['contracts'][filename][contractName]
+        return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../"))['contracts'][absoluteFilePath][contractName]
 
     @staticmethod
     def getAllDependencies(filePath, knownDependencies):
@@ -152,7 +153,7 @@ class ContractsFixture:
         self.whitelistTradingContracts()
         self.whitelistLibraryTestContracts()
         self.initializeAllContracts()
-        self.branch = self.createBranch(0, 0)
+        self.branch = self.createBranch(0, "")
         self.cash = self.getSeededCash()
         self.binaryMarket = self.createReasonableBinaryMarket(self.branch, self.cash)
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)
