@@ -11,7 +11,7 @@ import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/libraries/token/ERC20Basic.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 
-
+// CONSIDER: This could probably just be made Ownable instead if implementing ERC20Basic
 contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic {
     using SafeMathUint256 for uint256;
 
@@ -100,7 +100,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
     function transfer(address _destinationAddress, uint256 _attotokens) public returns (bool) {
         require(_attotokens == 1);
         require(msg.sender == bondHolder);
-        bondHolder == _destinationAddress;
+        bondHolder = _destinationAddress;
         return true;
     }
 }
