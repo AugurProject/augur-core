@@ -7,6 +7,8 @@ import 'ROOT/libraries/token/VariableSupplyToken.sol';
 import 'ROOT/reporting/Branch.sol';
 import 'ROOT/reporting/ReputationToken.sol';
 import 'ROOT/reporting/ReportingToken.sol';
+import 'ROOT/reporting/DisputeBondToken.sol';
+import 'ROOT/reporting/RegistrationToken.sol';
 import 'ROOT/reporting/Interfaces.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 
@@ -92,7 +94,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return true;
     }
 
-    function migrateLosingTokenRepToDisputeBond(IDisputeBondToken _disputeBondToken) private returns (bool) {
+    function migrateLosingTokenRepToDisputeBond(DisputeBondToken _disputeBondToken) private returns (bool) {
         if (_disputeBondToken == address(0)) {
             return true;
         }
@@ -135,7 +137,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return market.getReportingWindow();
     }
 
-    function getRegistrationToken() constant returns (IRegistrationToken) {
+    function getRegistrationToken() constant returns (RegistrationToken) {
         return market.getRegistrationToken();
     }
 
@@ -143,7 +145,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return market;
     }
 
-    function getPayoutDistributionHash() constant returns (int256) {
+    function getPayoutDistributionHash() constant returns (bytes32) {
         return market.derivePayoutDistributionHash(payoutNumerators);
     }
 

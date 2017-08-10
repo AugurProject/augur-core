@@ -2,7 +2,7 @@ from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
-from utils import longToHexString
+from utils import longToHexString, stringToBytes
 
 tester.STARTGAS = long(6.7 * 10**6)
 
@@ -14,7 +14,7 @@ def test_market_creation(contractsFixture):
     shadyReportingToken = contractsFixture.upload('../src/reporting/ReportingToken.sol', 'shadyReportingToken')
     shadyReportingToken.initialize(market.address, [0,2])
 
-    shadyBranch = contractsFixture.createBranch(0, 0)
+    shadyBranch = contractsFixture.createBranch(0, "")
     regularMarket = contractsFixture.createReasonableBinaryMarket(branch, cash)
     shadyDenominationToken = contractsFixture.applySignature('shareToken', regularMarket.getShareToken(0))
     with raises(TransactionFailed, message="Shady share token should be failing since it is in a separate branch"):
@@ -24,7 +24,7 @@ def test_market_creation(contractsFixture):
     assert market.getNumberOfOutcomes() == 2
     assert market.getPayoutDenominator() == 2
     assert market.getReputationToken() == branch.getReputationToken()
-    assert market.getFinalPayoutDistributionHash() == 0
+    assert market.getFinalPayoutDistributionHash() == stringToBytes("")
     assert market.isDoneWithAutomatedReporters() == 0
     assert market.isDoneWithAllReporters() == 0
     assert market.isDoneWithLimitedReporters() == 0

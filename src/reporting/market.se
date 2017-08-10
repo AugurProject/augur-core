@@ -177,7 +177,7 @@ def disputeAllReporters():
     self.reportingWindow = newReportingWindow
     return 1
 
-def updateTentativeWinningPayoutDistributionHash(payoutDistributionHash: int256):
+def updateTentativeWinningPayoutDistributionHash(payoutDistributionHash: bytes32):
     assertNoValue()
     require(self.reportingTokens.contains(payoutDistributionHash))
     if (not self.tentativeWinningPayoutDistributionHash):
@@ -332,14 +332,14 @@ def getReportingToken(payoutNumerators: arr):
         self.reportingTokens.addMapItem(payoutDistributionHash, REPORTING_TOKEN_FACTORY.createReportingToken(self.controller, self, payoutNumerators))
     return(self.reportingTokens.getValue(payoutDistributionHash): address)
 
-def getReportingTokenOrZeroByPayoutDistributionHash(payoutDistributionHash: int256):
+def getReportingTokenOrZeroByPayoutDistributionHash(payoutDistributionHash: bytes32):
     assertNoValue()
     return(self.reportingTokens.getValueOrZero(payoutDistributionHash))
 
 def derivePayoutDistributionHash(payoutNumerators: arr):
     assertNoValue()
     self.validatePayoutNumerators(payoutNumerators)
-    return(sha3(payoutNumerators, items = len(payoutNumerators)))
+    return(sha3(payoutNumerators, items = len(payoutNumerators)): bytes32)
 
 def validatePayoutNumerators(payoutNumerators: arr):
     assertNoValue()
@@ -417,7 +417,7 @@ def getEndTime():
 
 def getTentativeWinningPayoutDistributionHash():
     assertNoValue()
-    return(self.tentativeWinningPayoutDistributionHash)
+    return(self.tentativeWinningPayoutDistributionHash : bytes32)
 
 def getFinalWinningReportingToken():
     assertNoValue()
@@ -430,7 +430,7 @@ def getShareToken(outcome: int256):
 
 def getFinalPayoutDistributionHash():
     assertNoValue()
-    return(self.finalPayoutDistributionHash)
+    return(self.finalPayoutDistributionHash : bytes32)
 
 def getPayoutDenominator():
     assertNoValue()

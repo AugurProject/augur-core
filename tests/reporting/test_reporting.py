@@ -23,7 +23,7 @@ def test_reporting(contractsFixture):
 
     # buy registration tokens
     reportingWindow = contractsFixture.applySignature('reportingWindow', market.getReportingWindow())
-    firstRegistrationToken = contractsFixture.applySignature('registrationToken', reportingWindow.getRegistrationToken())
+    firstRegistrationToken = contractsFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
     firstRegistrationToken.register(sender=tester.k0)
     assert firstRegistrationToken.balanceOf(tester.a0) == 1
     assert reputationToken.balanceOf(tester.a0) == 6 * 10**6 * 10**18 - 10**18
@@ -56,7 +56,7 @@ def test_reporting(contractsFixture):
     assert reportingWindow.isContainerForMarket(market.address)
 
     # register new reporter for new reporting window
-    secondRegistrationToken = contractsFixture.applySignature('registrationToken', reportingWindow.getRegistrationToken())
+    secondRegistrationToken = contractsFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
     secondRegistrationToken.register(sender=tester.k2)
     assert secondRegistrationToken.balanceOf(tester.a2) == 1
     assert reputationToken.balanceOf(tester.a2) == 1 * 10**6 * 10**18 - 10**18

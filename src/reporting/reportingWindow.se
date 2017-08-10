@@ -99,7 +99,7 @@ def updateMarketPhase():
     self.limitedReporterMarkets.addSetItem(market)
     return 1
 
-def noteReport(market: address, reporter: address, payoutDistributionHash: int256):
+def noteReport(market: address, reporter: address, payoutDistributionHash: bytes32):
     assertNoValue()
     require(self.markets.contains(market))
     require(market.getReportingTokenOrZeroByPayoutDistributionHash(payoutDistributionHash) == msg.sender)

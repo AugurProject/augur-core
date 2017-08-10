@@ -5,12 +5,17 @@ import 'ROOT/libraries/token/VariableSupplyToken.sol';
 import 'ROOT/libraries/Typed.sol';
 import 'ROOT/reporting/Branch.sol';
 import 'ROOT/reporting/ReportingToken.sol';
+import 'ROOT/reporting/DisputeBondToken.sol';
+import 'ROOT/reporting/RegistrationToken.sol';
 
 
 contract IReportingWindow is Typed {
     function initialize(Branch, uint256) public returns (bool);
-    function noteReport(IMarket, address, int256) public returns (bool);
+    function noteReport(IMarket, address, bytes32) public returns (bool);
     function getStartTime() constant returns (uint256);
+    function getEndTime() constant returns (uint256);
+    function isDoneReporting(address) constant returns (bool);
+    function getReputationToken() constant returns (ReputationToken);
     function isContainerForRegistrationToken(Typed) constant returns (bool);
     function isContainerForMarket(Typed) constant returns (bool);
     function getBranch() constant returns (Branch);
@@ -18,43 +23,29 @@ contract IReportingWindow is Typed {
 }
 
 
-contract IRegistrationToken is Typed, VariableSupplyToken {
-    function register() public returns (bool);
-    function redeem() public returns (bool);
-    function getReportingWindow() constant returns (IReportingWindow);
-}
-
-
 contract IMarket is Typed {
     function getBranch() constant returns (Branch);
     function getReputationToken() constant returns (ReputationToken);
     function getReportingWindow() constant returns (IReportingWindow);
-    function getRegistrationToken() constant returns (IRegistrationToken);
+    function getRegistrationToken() constant returns (RegistrationToken);
     function getNumberOfOutcomes() constant returns (uint8);
-    function getAutomatedReporterDisputeBondToken() constant returns (IDisputeBondToken);
-    function getLimitedReportersDisputeBondToken() constant returns (IDisputeBondToken);
-    function getAllReportersDisputeBondToken() constant returns (IDisputeBondToken);
+    function getAutomatedReporterDisputeBondToken() constant returns (DisputeBondToken);
+    function getLimitedReportersDisputeBondToken() constant returns (DisputeBondToken);
+    function getAllReportersDisputeBondToken() constant returns (DisputeBondToken);
     function isContainerForReportingToken(Typed) constant returns (bool);
     function isContainerForDisputeBondToken(Typed) constant returns (bool);
     function isContainerForShareToken(Typed) constant returns (bool);
     function isFinalized() constant returns (bool);
     function canBeReportedOn() constant returns (bool);
     function getFinalWinningReportingToken() constant returns (ReportingToken);
-    function getFinalPayoutDistributionHash() constant returns (int256);
-    function derivePayoutDistributionHash(int256[]) constant returns (int256);
-    function updateTentativeWinningPayoutDistributionHash(int256) public returns (bool);
+    function getFinalPayoutDistributionHash() constant returns (bytes32);
+    function derivePayoutDistributionHash(int256[]) constant returns (bytes32);
+    function updateTentativeWinningPayoutDistributionHash(bytes32) public returns (bool);
 }
 
 
 contract IShareToken is Typed {
     function initialize(IMarket _market, uint8 _outcome) public returns (bool);
-    function getMarket() constant returns (IMarket);
-}
-
-
-contract IDisputeBondToken is Typed {
-    function getDisputedPayoutDistributionHash() constant returns (int256);
-    function getBondRemainingToBePaidOut() constant returns (uint256);
     function getMarket() constant returns (IMarket);
 }
 
