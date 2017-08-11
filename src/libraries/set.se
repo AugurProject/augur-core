@@ -16,7 +16,7 @@ def initialize(owner: address):
     self.owner = owner
     return(1)
 
-def addSetItem(item):
+def addSetItem(item : address):
     if (self.initialized):
         require(msg.sender == self.owner or msg.sender == self)
     if (self.contains(item)):
@@ -25,7 +25,7 @@ def addSetItem(item):
     self.count += 1
     return(1)
 
-def remove(item):
+def remove(item : address):
     if (self.initialized):
         require(msg.sender == self.owner or msg.sender == self)
     if (not self.contains(item)):
@@ -34,8 +34,11 @@ def remove(item):
     self.count -= 1
     return(1)
 
-def contains(item):
+def contains(item : address):
     return(self.collection[item] != 0)
 
 def count():
     return(self.count)
+
+def getTypeName():
+    return "Set"

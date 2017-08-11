@@ -22,7 +22,7 @@ def test_reporting(contractsFixture):
     reputationToken.transfer(tester.a2, 1 * 10**6 * 10**18)
 
     # buy registration tokens
-    reportingWindow = contractsFixture.applySignature('reportingWindow', market.getReportingWindow())
+    reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
     firstRegistrationToken = contractsFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
     firstRegistrationToken.register(sender=tester.k0)
     assert firstRegistrationToken.balanceOf(tester.a0) == 1
@@ -32,7 +32,7 @@ def test_reporting(contractsFixture):
     assert reputationToken.balanceOf(tester.a1) == 4 * 10**6 * 10**18 - 10**18
 
     # fast forward to one second after the next reporting window
-    reportingWindow = contractsFixture.applySignature('reportingWindow', branch.getNextReportingWindow())
+    reportingWindow = contractsFixture.applySignature('ReportingWindow', branch.getNextReportingWindow())
     contractsFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
 
     # both reporters report on the outcome
@@ -52,7 +52,7 @@ def test_reporting(contractsFixture):
     market.disputeLimitedReporters(sender=tester.k0)
     assert not reportingWindow.isContainerForMarket(market.address)
     assert branch.isContainerForMarket(market.address)
-    reportingWindow = contractsFixture.applySignature('reportingWindow', market.getReportingWindow())
+    reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
     assert reportingWindow.isContainerForMarket(market.address)
 
     # register new reporter for new reporting window
@@ -73,7 +73,7 @@ def test_reporting(contractsFixture):
     assert branch.getForkingMarket() == market.address
     assert not reportingWindow.isContainerForMarket(market.address)
     assert branch.isContainerForMarket(market.address)
-    reportingWindow = contractsFixture.applySignature('reportingWindow', market.getReportingWindow())
+    reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
     assert reportingWindow.isContainerForMarket(market.address)
 
     # participate in the fork by moving REP

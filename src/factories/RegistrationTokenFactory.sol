@@ -1,19 +1,9 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
+import 'ROOT/reporting/ReportingWindow.sol';
+import 'ROOT/reporting/RegistrationToken.sol';
 import 'ROOT/Controller.sol';
-
-
-// FIXME: remove once this can be imported as a solidty contract
-contract ReportingWindow {
-    function stub() {}
-}
-
-
-// FIXME: remove once this can be imported as a solidty contract
-contract RegistrationToken {
-    function initialize(ReportingWindow _reportingWindow);
-}
 
 
 contract RegistrationTokenFactory {
