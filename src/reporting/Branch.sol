@@ -11,6 +11,7 @@ import 'ROOT/reporting/ReputationToken.sol';
 import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/DisputeBondToken.sol';
 import 'ROOT/reporting/RegistrationToken.sol';
+import 'ROOT/reporting/ReportingWindow.sol';
 import 'ROOT/reporting/Interfaces.sol';
 
 
@@ -21,7 +22,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
     ITopics private topics;
     IMarket private forkingMarket;
     uint256 private forkEndTime;
-    mapping(uint256 => IReportingWindow) private reportingWindows;
+    mapping(uint256 => ReportingWindow) private reportingWindows;
     mapping(bytes32 => Branch) private childBranches;
 
     function initialize(Branch _parentBranch, bytes32 _parentPayoutDistributionHash) public beforeInitialized returns (bool) {
@@ -70,7 +71,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         return forkEndTime;
     }
 
-    function getReportingWindow(uint256 _reportingWindowId) constant returns (IReportingWindow) {
+    function getReportingWindow(uint256 _reportingWindowId) constant returns (ReportingWindow) {
         return reportingWindows[_reportingWindowId];
     }
 
@@ -86,7 +87,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         return 27 days + 3 days;
     }
 
-    function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow) {
+    function getReportingWindowByTimestamp(uint256 _timestamp) public returns (ReportingWindow) {
         uint256 _windowId = getReportingWindowId(_timestamp);
         if (reportingWindows[_windowId] == address(0)) {
             reportingWindows[_windowId] = ReportingWindowFactory(controller.lookup("ReportingWindowFactory")).createReportingWindow(controller, this, _windowId);
@@ -94,7 +95,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         return reportingWindows[_windowId];
     }
 
-    function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasAutomatedReporter) public returns (IReportingWindow) {
+    function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasAutomatedReporter) public returns (ReportingWindow) {
         if (_hasAutomatedReporter) {
             // TODO: turn these into shared constants
             return getReportingWindowByTimestamp(_endTime + 3 days + 3 days + 1 + getReportingPeriodDurationInSeconds());
@@ -103,15 +104,15 @@ contract Branch is DelegationTarget, Typed, Initializable {
         }
     }
 
-    function getPreviousReportingWindow() public returns (IReportingWindow) {
+    function getPreviousReportingWindow() public returns (ReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp - getReportingPeriodDurationInSeconds());
     }
 
-    function getCurrentReportingWindow() public returns (IReportingWindow) {
+    function getCurrentReportingWindow() public returns (ReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp);
     }
 
-    function getNextReportingWindow() public returns (IReportingWindow) {
+    function getNextReportingWindow() public returns (ReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
     }
 
@@ -126,13 +127,13 @@ contract Branch is DelegationTarget, Typed, Initializable {
         if (_shadyTarget.getTypeName() != "ReportingWindow") {
             return false;
         }
-        IReportingWindow _shadyReportingWindow = IReportingWindow(_shadyTarget);
+        ReportingWindow _shadyReportingWindow = ReportingWindow(_shadyTarget);
         uint256 _startTime = _shadyReportingWindow.getStartTime();
         if (_startTime == 0) {
             return false;
         }
         uint256 _reportingWindowId = getReportingWindowId(_startTime);
-        IReportingWindow _legitReportingWindow = reportingWindows[_reportingWindowId];
+        ReportingWindow _legitReportingWindow = reportingWindows[_reportingWindowId];
         return _shadyReportingWindow == _legitReportingWindow;
     }
 
@@ -157,14 +158,14 @@ contract Branch is DelegationTarget, Typed, Initializable {
             return false;
         }
         RegistrationToken _shadyRegistrationToken = RegistrationToken(_shadyTarget);
-        IReportingWindow _shadyReportingWindow = _shadyRegistrationToken.getReportingWindow();
+        ReportingWindow _shadyReportingWindow = _shadyRegistrationToken.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
         }
         if (!isContainerForReportingWindow(_shadyReportingWindow)) {
             return false;
         }
-        IReportingWindow _legitReportingWindow = _shadyReportingWindow;
+        ReportingWindow _legitReportingWindow = _shadyReportingWindow;
         return _legitReportingWindow.isContainerForRegistrationToken(_shadyRegistrationToken);
     }
 
@@ -173,14 +174,14 @@ contract Branch is DelegationTarget, Typed, Initializable {
             return false;
         }
         IMarket _shadyMarket = IMarket(_shadyTarget);
-        IReportingWindow _shadyReportingWindow = _shadyMarket.getReportingWindow();
+        ReportingWindow _shadyReportingWindow = _shadyMarket.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
         }
         if (!isContainerForReportingWindow(_shadyReportingWindow)) {
             return false;
         }
-        IReportingWindow _legitReportingWindow = _shadyReportingWindow;
+        ReportingWindow _legitReportingWindow = _shadyReportingWindow;
         return _legitReportingWindow.isContainerForMarket(_shadyMarket);
     }
 
