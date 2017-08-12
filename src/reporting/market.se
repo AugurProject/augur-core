@@ -54,7 +54,7 @@ data automatedReporterBondAttoeth
 
 # intentionally does not refund on `any()`, this contract will receive ETH when a market is created through it, should refund in all other calls though
 
-def initialize(reportingWindow: address, endTime: uint256, numOutcomes: int256, payoutDenominator: int256, feePerEthInAttoeth: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
+def initialize(reportingWindow: address, endTime: uint256, numOutcomes: uint256, payoutDenominator: uint256, feePerEthInAttoeth: int256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: int256):
     require(not self.initialized)
     self.initialized = 1
     require(reportingWindow)

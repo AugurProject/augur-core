@@ -27,6 +27,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
     uint256 private constant REPORTING_DURATION_SECONDS = 27 * 1 days;
     uint256 private constant REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
+    uint256 private constant MINIMUM_OUTCOMES = 2;
+    uint256 private constant MAXIMUM_OUTCOMES = 8;
+    uint256 private constant MINIMUM_PAYOUT_DENOMINATOR = 2;
 
     function initialize(Branch _branch, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -41,9 +44,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function createNewMarket(uint256 _endTime, int256 _numOutcomes, int256 _payoutDenominator, int256 _feePerEthInWei, address _denominationToken, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, int256 _topic) public payable returns (IMarket _newMarket) {
-        require(2 <= _numOutcomes && _numOutcomes <= 8);
-        require(2 <= _payoutDenominator && _payoutDenominator <= 2**254);
+    function createNewMarket(uint256 _endTime, uint256 _numOutcomes, uint256 _payoutDenominator, int256 _feePerEthInWei, address _denominationToken, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, int256 _topic) public payable returns (IMarket _newMarket) {
+        require(MINIMUM_OUTCOMES <= _numOutcomes && _numOutcomes <= MAXIMUM_OUTCOMES);
+        require(MINIMUM_PAYOUT_DENOMINATOR <= _payoutDenominator);
         require(block.timestamp < startTime);
         require(branch.getReportingWindowByMarketEndTime(_endTime, _automatedReporterAddress != 0).getTypeName() == "ReportingWindow");
         _newMarket = MarketFactory(controller.lookup("MarketFactory")).createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _payoutDenominator, _feePerEthInWei, _denominationToken, _creator, _minDisplayPrice, _maxDisplayPrice, _automatedReporterAddress, _topic);
