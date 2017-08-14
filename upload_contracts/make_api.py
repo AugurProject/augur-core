@@ -77,36 +77,27 @@ def get_old_api(api_path, isLocal=False):
 
 # Retrieve "send" and/or "returns" values from the old API
 def get_send_returns(contract_name, method_name, old_api):
-    send, returns, mutable, gas, parser, fixed, label, description = None, None, None, None, None, None, None, None
+    send, returns, gas, parser, fixed = None, None, None, None, None
     if old_api and contract_name in old_api and method_name in old_api[contract_name]:
         if "send" in old_api[contract_name][method_name]:
             send = old_api[contract_name][method_name]["send"]
         if "returns" in old_api[contract_name][method_name]:
             returns = old_api[contract_name][method_name]["returns"]
-        if "mutable" in old_api[contract_name][method_name]:
-            mutable = old_api[contract_name][method_name]["mutable"]
         if "gas" in old_api[contract_name][method_name]:
             gas = old_api[contract_name][method_name]["gas"]
         if "parser" in old_api[contract_name][method_name]:
             parser = old_api[contract_name][method_name]["parser"]
         if "fixed" in old_api[contract_name][method_name]:
             fixed = old_api[contract_name][method_name]["fixed"]
-        if "label" in old_api[contract_name][method_name]:
-            label = old_api[contract_name][method_name]["label"]
-        if "description" in old_api[contract_name][method_name]:
-            description = old_api[contract_name][method_name]["description"]
-    return send, returns, mutable, gas, parser, fixed, label, description
+    return send, returns, gas, parser, fixed
 
 def update_from_old_api(method, contract_name, method_name, old_api):
-    send, returns, mutable, gas, parser, fixed, label, description = get_send_returns(contract_name, method_name, old_api)
+    send, returns, gas, parser, fixed = get_send_returns(contract_name, method_name, old_api)
     if send is not None: method["send"] = send
     if returns is not None: method["returns"] = returns
-    if mutable is not None: method["mutable"] = mutable
     if gas is not None: method["gas"] = gas
     if parser is not None: method["parser"] = parser
     if fixed is not None: method["fixed"] = fixed
-    if label is not None: method["label"] = label
-    if description is not None: method["description"] = description
     return method
 
 def get_input_names(inputs):
@@ -122,14 +113,9 @@ def get_fixedpoint_inputs(input_list):
             fxp_inputs.append(i)
     return fxp_inputs
 
-def make_method_label(method):
-    label = re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', method)
-    return label[0].upper() + label.replace('_', ' ')[1:]
-
 def update_from_full_signature(name, inputs, outputs):
     split_name = name.split("(")
     method = {"method": split_name[0]}
-    method["label"] = make_method_label(method["method"])
     if len(inputs):
         method["signature"] = get_input_types(inputs)
         method["inputs"] = get_input_names(inputs)
@@ -187,19 +173,6 @@ def update_contract_api(contract_name, contract_path, old_api):
             functions_api[method_name]["returns"] = "unfix"
     return events_api, functions_api
 
-def extract_macros(contract_path):
-    macros = []
-    with open(contract_path) as srcfile:
-        startline = None
-        for linenum, line in enumerate(srcfile):
-            if line.startswith("inset("):
-                inset_filename = line.strip().split("inset(")[1].split(")")[0].strip("'").strip("\"")
-                inset_filename = os.path.join(os.path.dirname(os.path.abspath(contract_path)), inset_filename)
-                macros.extend(extract_macros(inset_filename))
-            if line.startswith("macro ") and "(" in line:
-                macros.append(line.strip().split("macro ")[1].split(":")[0].split("(")[0])
-    return list(set(macros))
-
 def get_events_in_method(contract_path, method_name, all_methods):
     events_in_method = []
     check_methods = deepcopy(all_methods)
@@ -244,32 +217,14 @@ def update_api(contract_paths, old_api):
         if bool(events_api): new_api["events"].update(events_api)
         contract_methods_list = []
         for contract_method in functions_api.keys():
-            if contract_name != "CompositeGetters" and not contract_method.startswith("get"):
-                contract_methods_list.append({
-                    "method": contract_method,
-                    "contract_path": contract_path,
-                    "finder":  "." + contract_method + "("
-                })
-        if "data_api" not in contract_path:
-            for macro in extract_macros(contract_path):
-                contract_methods_list.append({
-                    "method": macro,
-                    "contract_path": contract_path,
-                    "finder": macro + "("
-                })
+            contract_methods_list.append({
+                "method": contract_method,
+                "contract_path": contract_path
+            })
         all_methods.extend(contract_methods_list)
         new_api["functions"][contract_name] = functions_api
         bar.next()
     bar.finish()
-    for contract_name, contract_path in contract_paths.items():
-        functions_api = new_api["functions"][contract_name]
-        for method_name in functions_api.keys():
-            if contract_name != "CompositeGetters" and not method_name.startswith("get"):
-                print(contract_name + "." + method_name)
-                events_in_method = get_events_in_method(contract_path, method_name, all_methods)
-                if len(events_in_method):
-                    print("    events: " + str(events_in_method))
-                    new_api["functions"][contract_name][method_name]["events"] = events_in_method
     return new_api
 
 # Save the updated API info to a file (if path is set) or print to screen

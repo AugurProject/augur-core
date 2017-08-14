@@ -9,6 +9,7 @@ import 'ROOT/reporting/ReputationToken.sol';
 import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/DisputeBondToken.sol';
 import 'ROOT/reporting/RegistrationToken.sol';
+import 'ROOT/reporting/ReportingWindow.sol';
 import 'ROOT/reporting/Interfaces.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 
@@ -133,7 +134,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return market.getReputationToken();
     }
 
-    function getReportingWindow() constant returns (IReportingWindow) {
+    function getReportingWindow() constant returns (ReportingWindow) {
         return market.getReportingWindow();
     }
 

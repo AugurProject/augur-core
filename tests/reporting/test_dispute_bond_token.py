@@ -216,7 +216,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     reportingTokenA = contractsFixture.getReportingToken(market, OUTCOME_A)
     reportingTokenB = contractsFixture.getReportingToken(market, OUTCOME_B)
     reportingTokenC = contractsFixture.getReportingToken(market, OUTCOME_C)
-    reportingWindow = contractsFixture.applySignature('reportingWindow', market.getReportingWindow())
+    reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     automatedReporterDisputeBondToken = None
     limitedReportersDisputeBondToken = None
@@ -263,7 +263,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             # outcome like they are when disputing limited/all rerporters outcomes?
             # assert not reportingWindow.isContainerForMarket(market.address)
             # assert branch.isContainerForMarket(market.address)
-            # reportingWindow = contractsFixture.applySignature('reportingWindow', market.getReportingWindow())
+            # reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
             # assert reportingWindow.isContainerForMarket(market.address)
 
             # Buy registration tokens
@@ -297,7 +297,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
 
         assert not reportingWindow.isContainerForMarket(market.address)
         assert branch.isContainerForMarket(market.address)
-        reportingWindow = contractsFixture.applySignature('reportingWindow', market.getReportingWindow())
+        reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
         assert reportingWindow.isContainerForMarket(market.address)
 
         # Buy registration tokens
@@ -332,7 +332,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
 
         assert not reportingWindow.isContainerForMarket(market.address)
         assert branch.isContainerForMarket(market.address)
-        reportingWindow = contractsFixture.applySignature('reportingWindow', market.getReportingWindow())
+        reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
         assert reportingWindow.isContainerForMarket(market.address)
 
         aBranch = contractsFixture.getChildBranch(branch, market, OUTCOME_A)

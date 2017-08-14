@@ -1,12 +1,18 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
+import 'ROOT/libraries/Typed.sol';
+import 'ROOT/reporting/Interfaces.sol';
 import 'ROOT/Controller.sol';
 
 
 // FIXME: remove once this can be imported as a solidty contract
-contract Set {
+contract Set is Typed {
     function initialize(address owner);
+    function addSetItem(address) public returns (bool);
+    function remove(address) public returns (bool);
+    function contains(address) public constant returns (bool);
+    function count() public constant returns (uint256);
 }
 
 

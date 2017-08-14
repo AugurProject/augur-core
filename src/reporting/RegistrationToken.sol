@@ -9,15 +9,16 @@ import 'ROOT/libraries/token/StandardToken.sol';
 import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/Branch.sol';
 import 'ROOT/reporting/ReputationToken.sol';
+import 'ROOT/reporting/ReportingWindow.sol';
 import 'ROOT/reporting/Interfaces.sol';
 
 
 contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardToken {
-    IReportingWindow private reportingWindow;
+    ReportingWindow private reportingWindow;
     uint256 private peakSupply;
     uint256 private constant BOND_AMOUNT = 1 ether;
 
-    function initialize(IReportingWindow _reportingWindow) public beforeInitialized returns (bool) {
+    function initialize(ReportingWindow _reportingWindow) public beforeInitialized returns (bool) {
         endInitialization();
         reportingWindow = _reportingWindow;
         return true;
@@ -51,7 +52,7 @@ contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardTo
         return "RegistrationToken";
     }
 
-    function getReportingWindow() public constant returns (IReportingWindow) {
+    function getReportingWindow() public constant returns (ReportingWindow) {
         return reportingWindow;
     }
 
