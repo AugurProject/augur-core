@@ -222,7 +222,7 @@ class ContractsFixture:
                 if name == 'controller': continue
                 # remove this and Interfaces.sol when https://github.com/ethereum/solidity/issues/2665 is fixed
                 if name == 'Interfaces': continue
-                contractsToDelegate = ['orders','tradingEscapeHatch']
+                contractsToDelegate = ['tradingEscapeHatch']
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
                     self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
@@ -246,7 +246,7 @@ class ContractsFixture:
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Mutex', 'Cash','orders','completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','cancelOrder','trade','claimProceeds','tradingEscapeHatch','ordersFetcher']
+        contractsToInitialize = ['Mutex', 'Cash', 'Orders', 'completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','cancelOrder','trade','claimProceeds','tradingEscapeHatch', 'OrdersFetcher']
         for contractName in contractsToInitialize:
             self.contracts[contractName].initialize(self.controller.address)
 

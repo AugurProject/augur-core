@@ -5,6 +5,7 @@ from ethereum.tools.tester import TransactionFailed
 import numpy as np
 from pytest import fixture, mark, lazy_fixture, raises
 from utils import fix, bytesToLong, bytesToHexString
+import binascii
 
 NO = 0
 YES = 1
@@ -25,8 +26,8 @@ GAS_PRICE = 7
 
 def test_walkOrderList_bids(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     outcomeID = 1
     order = {
         "orderID": 5,
@@ -41,9 +42,9 @@ def test_walkOrderList_bids(contractsFixture):
         "worseOrderID": 0,
         "tradeGroupID": 0
     }
-    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
-    bestOrderID = int(orders.getBestOrderID(1, market.address, outcomeID), 16)
-    worstOrderID = int(orders.getWorstOrderID(1, market.address, outcomeID), 16)
+    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], 1) == 1), "Save order"
+    bestOrderID = orders.getBestOrderId(1, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(1, market.address, outcomeID)
     assert(bestOrderID == 5)
     assert(worstOrderID == 5)
     # walk down order list starting from bestOrderID
@@ -71,9 +72,9 @@ def test_walkOrderList_bids(contractsFixture):
         "worseOrderID": 0,
         "tradeGroupID": 0
     }
-    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
-    bestOrderID = int(orders.getBestOrderID(1, market.address, outcomeID), 16)
-    worstOrderID = int(orders.getWorstOrderID(1, market.address, outcomeID), 16)
+    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], 1) == 1), "Save order"
+    bestOrderID = orders.getBestOrderId(1, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(1, market.address, outcomeID)
     assert(bestOrderID == 5)
     assert(worstOrderID == 6)
     # walk down order list starting from bestOrderID
@@ -101,9 +102,9 @@ def test_walkOrderList_bids(contractsFixture):
         "worseOrderID": 0,
         "tradeGroupID": 0
     }
-    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
-    bestOrderID = int(orders.getBestOrderID(1, market.address, outcomeID), 16)
-    worstOrderID = int(orders.getWorstOrderID(1, market.address, outcomeID), 16)
+    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], 1) == 1), "Save order"
+    bestOrderID = orders.getBestOrderId(1, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(1, market.address, outcomeID)
     assert(bestOrderID == 5)
     assert(worstOrderID == 6)
     # walk down order list starting from bestOrderID
@@ -122,8 +123,8 @@ def test_walkOrderList_bids(contractsFixture):
 
 def test_walkOrderList_asks(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     outcomeID = 1
     order = {
         "orderID": 8,
@@ -138,9 +139,9 @@ def test_walkOrderList_asks(contractsFixture):
         "worseOrderID": 0,
         "tradeGroupID": 0
     }
-    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
-    bestOrderID = int(orders.getBestOrderID(2, market.address, outcomeID), 16)
-    worstOrderID = int(orders.getWorstOrderID(2, market.address, outcomeID), 16)
+    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], 1) == 1), "Save order"
+    bestOrderID = orders.getBestOrderId(2, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(2, market.address, outcomeID)
     assert(bestOrderID == 8)
     assert(worstOrderID == 8)
     # walk down order list starting from bestOrderID
@@ -166,9 +167,9 @@ def test_walkOrderList_asks(contractsFixture):
         "worseOrderID": 0,
         "tradeGroupID": 0
     }
-    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
-    bestOrderID = int(orders.getBestOrderID(2, market.address, outcomeID), 16)
-    worstOrderID = int(orders.getWorstOrderID(2, market.address, outcomeID), 16)
+    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], 1) == 1), "Save order"
+    bestOrderID = orders.getBestOrderId(2, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(2, market.address, outcomeID)
     assert(bestOrderID == 9)
     assert(worstOrderID == 8)
     # walk down order list starting from bestOrderID
@@ -196,9 +197,9 @@ def test_walkOrderList_asks(contractsFixture):
         "worseOrderID": 0,
         "tradeGroupID": 0
     }
-    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"], 1) == 1), "Save order"
-    bestOrderID = int(orders.getBestOrderID(2, market.address, outcomeID), 16)
-    worstOrderID = int(orders.getWorstOrderID(2, market.address, outcomeID), 16)
+    assert(orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], 1) == 1), "Save order"
+    bestOrderID = orders.getBestOrderId(2, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(2, market.address, outcomeID)
     assert(bestOrderID == 9)
     assert(worstOrderID == 8)
     # walk down order list starting from bestOrderID
@@ -218,8 +219,8 @@ def test_walkOrderList_asks(contractsFixture):
 def test_orderSorting(contractsFixture):
     def runtest(testCase):
         market = contractsFixture.binaryMarket
-        orders = contractsFixture.contracts['orders']
-        ordersFetcher = contractsFixture.contracts['ordersFetcher']
+        orders = contractsFixture.contracts['Orders']
+        ordersFetcher = contractsFixture.contracts['OrdersFetcher']
         ordersCollection = []
         for order in testCase["orders"]:
             output = orders.saveOrder(
@@ -233,18 +234,17 @@ def test_orderSorting(contractsFixture):
                 order["fxpMoneyEscrowed"],
                 order["fxpSharesEscrowed"],
                 order["betterOrderID"],
-                order["worseOrderID"],
-                order["tradeGroupID"], 1)
+                order["worseOrderID"], 1)
             assert(output == 1), "saveOrder wasn't executed successfully"
         for order in testCase["orders"]:
             ordersCollection.append(ordersFetcher.getOrder(order["orderID"], order["type"], market.address, order["outcome"]))
         assert(len(ordersCollection) == len(testCase["expected"]["orders"])), "Number of orders not as expected"
         for i, order in enumerate(ordersCollection):
             outcomeID = testCase["orders"][i]["outcome"]
-            assert(int(orders.getBestOrderID(1, market.address, outcomeID), 16) == testCase["expected"]["bestOrder"]["bid"]), "Best bid order ID incorrect"
-            assert(int(orders.getBestOrderID(2, market.address, outcomeID), 16) == testCase["expected"]["bestOrder"]["ask"]), "Best ask order ID incorrect"
-            assert(int(orders.getWorstOrderID(1,market.address, outcomeID), 16) == testCase["expected"]["worstOrder"]["bid"]), "Worst bid order ID incorrect"
-            assert(int(orders.getWorstOrderID(2, market.address, outcomeID), 16) == testCase["expected"]["worstOrder"]["ask"]), "Worst ask order ID incorrect"
+            assert(orders.getBestOrderId(1, market.address, outcomeID) == testCase["expected"]["bestOrder"]["bid"]), "Best bid order ID incorrect"
+            assert(orders.getBestOrderId(2, market.address, outcomeID) == testCase["expected"]["bestOrder"]["ask"]), "Best ask order ID incorrect"
+            assert(orders.getWorstOrderId(1,market.address, outcomeID) == testCase["expected"]["worstOrder"]["bid"]), "Worst bid order ID incorrect"
+            assert(orders.getWorstOrderId(2, market.address, outcomeID) == testCase["expected"]["worstOrder"]["ask"]), "Worst ask order ID incorrect"
             assert(order[BETTER_ORDER_ID] == testCase["expected"]["orders"][i]["betterOrderID"]), "Better order ID incorrect"
             assert(order[WORSE_ORDER_ID] == testCase["expected"]["orders"][i]["worseOrderID"]), "Worse order ID incorrect"
         for order in testCase["orders"]:
@@ -1058,16 +1058,16 @@ def test_orderSorting(contractsFixture):
 
 def test_saveOrder(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     order1 = 12345
     order2 = 98765
 
-    assert(orders.saveOrder(order1, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), 0, 0, 2, 1) == 1), "saveOrder wasn't executed successfully"
-    assert(orders.saveOrder(order2, ASK, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, 0, 0, 1, 1) == 1), "saveOrder wasn't executed successfully"
+    assert(orders.saveOrder(order1, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
+    assert(orders.saveOrder(order2, ASK, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
 
-    assert(ordersFetcher.getOrder(order1, BID, market.address, NO) == [fix('10'), fix('0.5'), bytesToLong(tester.a1), 0, fix('10'), 0, 0, 1]), "getOrder for order1 didn't return the expected array of data"
-    assert(ordersFetcher.getOrder(order2, ASK, market.address, NO) == [fix('10'), fix('0.5'), bytesToLong(tester.a2), fix('5'), 0, 0, 0, 1]), "getOrder for order2 didn't return the expected array of data"
+    assert(ordersFetcher.getOrder(order1, BID, market.address, NO) == [fix('10'), fix('0.5'), '0x'+binascii.hexlify(tester.a1), 0, fix('10'), 0, 0, 1]), "getOrder for order1 didn't return the expected array of data"
+    assert(ordersFetcher.getOrder(order2, ASK, market.address, NO) == [fix('10'), fix('0.5'), '0x'+binascii.hexlify(tester.a2), fix('5'), 0, 0, 0, 1]), "getOrder for order2 didn't return the expected array of data"
 
     assert(orders.getAmount(order1, BID, market.address, NO) == fix('10')), "amount for order1 should be set to 10 ETH"
     assert(orders.getAmount(order2, ASK, market.address, NO) == fix('10')), "amount for order2 should be set to 10 ETH"
@@ -1075,21 +1075,21 @@ def test_saveOrder(contractsFixture):
     assert(orders.getPrice(order1, BID, market.address, NO) == fix('0.5')), "price for order1 should be set to 0.5 ETH"
     assert(orders.getPrice(order2, ASK, market.address, NO) == fix('0.5')), "price for order2 should be set to 0.5 ETH"
 
-    assert(orders.getOrderOwner(order1, BID, market.address, NO) == bytesToLong(tester.a1)), "orderOwner for order1 should be tester.a1"
-    assert(orders.getOrderOwner(order2, ASK, market.address, NO) == bytesToLong(tester.a2)), "orderOwner for order2 should be tester.a2"
+    assert(orders.getOrderOwner(order1, BID, market.address, NO) == '0x'+binascii.hexlify(tester.a1)), "orderOwner for order1 should be tester.a1"
+    assert(orders.getOrderOwner(order2, ASK, market.address, NO) == '0x'+binascii.hexlify(tester.a2)), "orderOwner for order2 should be tester.a2"
 
     assert(orders.removeOrder(order1, BID, market.address, NO) == 1), "Remove order 1"
     assert(orders.removeOrder(order2, ASK, market.address, NO) == 1), "Remove order 2"
 
 def test_fillOrder(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     order1 = 12345
     order2 = 98765
 
-    assert(orders.saveOrder(order1, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), 0, 0, 2, 1) == 1), "saveOrder wasn't executed successfully"
-    assert(orders.saveOrder(order2, BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, 0, 0, 1, 1) == 1), "saveOrder wasn't executed successfully"
+    assert(orders.saveOrder(order1, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
+    assert(orders.saveOrder(order2, BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
 
     # orderID, fill, money, shares
     with raises(TransactionFailed):
@@ -1101,27 +1101,27 @@ def test_fillOrder(contractsFixture):
     # fully fill
     assert(orders.fillOrder(order1, BID, market.address, NO, fix('10'), 0) == 1), "fillOrder wasn't executed successfully"
     # prove all
-    assert(ordersFetcher.getOrder(order1, BID, market.address, NO) == [0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order1 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(order1, BID, market.address, NO) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, 0, 0, 0]), "getOrder for order1 didn't return the expected data array"
     # test partial fill
     assert(orders.fillOrder(order2, BID, market.address, NO, 0, fix('3')) == 1), "fillOrder wasn't executed successfully"
     # confirm partial fill
-    assert(ordersFetcher.getOrder(order2, BID, market.address, NO) == [fix('4'), fix('0.5'), bytesToLong(tester.a2), fix('2'), 0, 0, 0, 1]), "getOrder for order2 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(order2, BID, market.address, NO) == [fix('4'), fix('0.5'), '0x'+binascii.hexlify(tester.a2), fix('2'), 0, 0, 0, 1]), "getOrder for order2 didn't return the expected data array"
     # fill rest of order2
     assert(orders.fillOrder(order2, BID, market.address, NO, 0, fix('2')) == 1), "fillOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(order2, BID, market.address, NO) == [0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order2 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(order2, BID, market.address, NO) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, 0, 0, 0]), "getOrder for order2 didn't return the expected data array"
 
 def test_removeOrder(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     order1 = 12345
     order2 = 98765
     order3 = 321321321
-    assert(orders.saveOrder(order1, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), 0, 0, 2, 1) == 1), "saveOrder wasn't executed successfully"
-    assert(orders.saveOrder(order2, BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, 0, 0, 1, 1) == 1), "saveOrder wasn't executed successfully"
-    assert(orders.saveOrder(order3, BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), 0, 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(order3, BID, market.address, YES) == [fix('10'), fix('0.5'), bytesToLong(tester.a1), 0, fix('10'), 0, 0, 1]), "getOrder for order3 didn't return the expected data array"
+    assert(orders.saveOrder(order1, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
+    assert(orders.saveOrder(order2, BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
+    assert(orders.saveOrder(order3, BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
+    assert(ordersFetcher.getOrder(order3, BID, market.address, YES) == [fix('10'), fix('0.5'), '0x'+binascii.hexlify(tester.a1), 0, fix('10'), 0, 0, 1]), "getOrder for order3 didn't return the expected data array"
     assert(orders.removeOrder(order3, BID, market.address, YES) == 1), "removeOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(order3, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
+    assert(ordersFetcher.getOrder(order3, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, 0, 0, 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
     assert(orders.removeOrder(order1, BID, market.address, NO) == 1), "Remove order 1"
     assert(orders.removeOrder(order2, BID, market.address, NO) == 1), "Remove order 2"
