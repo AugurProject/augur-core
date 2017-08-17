@@ -92,8 +92,8 @@ def test_publicMakeOrder_ask(contractsFixture):
 def test_publicMakeOrder_bid2(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     logs = []
 
@@ -139,7 +139,7 @@ def test_makeOrder_failure(contractsFixture):
     branch = contractsFixture.branch
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
+    orders = contractsFixture.contracts['Orders']
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['completeSets']
@@ -193,8 +193,8 @@ def test_ask_withPartialShares(contractsFixture):
     branch = contractsFixture.branch
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['completeSets']
