@@ -4,13 +4,15 @@ import 'ROOT/factories/IterableMapFactory.sol';
 import 'ROOT/Controller.sol';
 
 contract Market {
-    uint256 private numOutcomes;
+    uint8 private numOutcomes;
     uint256 private maxDisplayPrice;
     uint256 private minDisplayPrice;
     ReportingWindow private reportingWindow;
     uint256 private topic;
+    address private shareToken;
+    address private denominationToken;
 
-    function getNumberOfOutcomes() public constant returns (uint256) {
+    function getNumberOfOutcomes() public constant returns (uint8) {
         return numOutcomes;
     }
 
@@ -30,8 +32,16 @@ contract Market {
         return reportingWindow.getBranch();
     }
 
-    function getTopic() public constant returns(uint256) {
+    function getTopic() public constant returns (uint256) {
         return topic;
+    }
+
+    function getShareToken(uint8) public constant returns (address) {
+        return shareToken;
+    }
+
+    function getDenominationToken() public constant returns (address) {
+        return ;
     }
 }
 

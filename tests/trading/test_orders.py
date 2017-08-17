@@ -6,6 +6,7 @@ import numpy as np
 from pytest import fixture, mark, lazy_fixture, raises
 from utils import fix, bytesToLong, bytesToHexString
 import binascii
+import hashlib
 
 NO = 0
 YES = 1
@@ -1117,7 +1118,10 @@ def test_removeOrder(contractsFixture):
     order1 = 12345
     order2 = 98765
     order3 = 321321321
-    assert(orders.saveOrder(order1, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
+    h = hashlib.new('ripemd160')
+    h.update('0')
+    print h.hexdigest()
+    assert(orders.saveOrder(order1, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), h.hexdigest(), h.hexdigest(), 1) == 1), "saveOrder wasn't executed successfully"
     assert(orders.saveOrder(order2, BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
     assert(orders.saveOrder(order3, BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), 0, 0, 1) == 1), "saveOrder wasn't executed successfully"
     assert(ordersFetcher.getOrder(order3, BID, market.address, YES) == [fix('10'), fix('0.5'), '0x'+binascii.hexlify(tester.a1), 0, fix('10'), 0, 0, 1]), "getOrder for order3 didn't return the expected data array"

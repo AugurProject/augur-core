@@ -17,10 +17,10 @@ import 'ROOT/trading/OrdersFetcher.sol';
 contract Orders is Controlled {
     using SafeMathUint256 for uint256;
 
-    event CancelOrder(address indexed market, address indexed sender, uint256 fxpPrice, uint256 fxpAmount, uint256 orderId, uint256 outcome, uint256 orderType, uint256 cashRefund, uint256 sharesRefund);
+    event CancelOrder(address indexed market, address indexed sender, uint256 fxpPrice, uint256 fxpAmount, bytes20 orderId, uint8 outcome, uint256 orderType, uint256 cashRefund, uint256 sharesRefund);
     event CompleteSets(address indexed sender, address indexed market, uint256 indexed orderType, uint256 fxpAmount, uint256 numOutcomes, uint256 marketCreatorFee, uint256 reportingFee);
-    event MakeOrder(address indexed market, address indexed sender, uint256 indexed orderType, uint256 fxpPrice, uint256 fxpAmount, uint256 outcome, uint256 orderId, uint256 fxpMoneyEscrowed, uint256 fxpSharesEscrowed, uint256 tradeGroupId);
-    event TakeOrder(address indexed market, uint256 indexed outcome, uint256 indexed orderType, uint256 orderId, uint256 price, address maker, address taker, uint256 makerShares, uint256 makerTokens, uint256 takerShares, uint256 takerTokens, uint256 tradeGroupId);
+    event MakeOrder(address indexed market, address indexed sender, uint256 indexed orderType, uint256 fxpPrice, uint256 fxpAmount, uint8 outcome, bytes20 orderId, uint256 fxpMoneyEscrowed, uint256 fxpSharesEscrowed, uint256 tradeGroupId);
+    event TakeOrder(address indexed market, uint256 indexed outcome, uint256 indexed orderType, bytes20 orderId, uint256 price, address maker, address taker, uint256 makerShares, uint256 makerTokens, uint256 takerShares, uint256 takerTokens, uint256 tradeGroupId);
 
     struct Order {
         uint256 fxpAmount;
@@ -28,8 +28,8 @@ contract Orders is Controlled {
         address owner;
         uint256 fxpSharesEscrowed;
         uint256 fxpMoneyEscrowed;
-        uint256 betterOrderId;
-        uint256 worseOrderId;
+        bytes20 betterOrderId;
+        bytes20 worseOrderId;
         uint256 gasPrice;
     }
 
@@ -43,13 +43,13 @@ contract Orders is Controlled {
     uint8 private constant BID = 1;
     uint8 private constant ASK = 2;
 
-    mapping(address => mapping(uint8 => mapping(uint256 => mapping(uint256 => Order)))) private orders;
+    mapping(address => mapping(uint8 => mapping(uint256 => mapping(bytes20 => Order)))) private orders;
     mapping(address => MarketOrders) private marketOrderData;
-    mapping(address => mapping(uint8 => mapping(uint256 => uint256))) private bestOrder;
-    mapping(address => mapping(uint8 => mapping(uint256 => uint256))) private worstOrder;
+    mapping(address => mapping(uint8 => mapping(uint256 => bytes20))) private bestOrder;
+    mapping(address => mapping(uint8 => mapping(uint256 => bytes20))) private worstOrder;
 
     // Getters
-    function getOrders(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256, uint256, address, uint256, uint256, uint256, uint256, uint256) {
+    function getOrders(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256, uint256, address, uint256, uint256, bytes20, bytes20, uint256) {
         Order _order = orders[_market][_outcome][_type][_orderId];
         return (_order.fxpAmount, _order.fxpPrice, _order.owner, _order.fxpSharesEscrowed, _order.fxpMoneyEscrowed, _order.betterOrderId, _order.worseOrderId, _order.gasPrice);
     }
@@ -58,31 +58,31 @@ contract Orders is Controlled {
         return (marketOrderData[_market].volume, marketOrderData[_market].prices);
     }
 
-    function getBestOrders(uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) {
+    function getBestOrders(uint256 _type, Market _market, uint8 _outcome) public constant returns (bytes20) {
         return bestOrder[_market][_outcome][_type];
     }
 
-    function getWorstOrders(uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) {
+    function getWorstOrders(uint256 _type, Market _market, uint8 _outcome) public constant returns (bytes20) {
         return worstOrder[_market][_outcome][_type];
     }
 
-    function getAmount(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
+    function getAmount(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
         return orders[_market][_outcome][_type][_orderId].fxpAmount;
     }
 
-    function getPrice(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) {
+    function getPrice(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) {
         return orders[_market][_outcome][_type][_orderId].fxpPrice;
     }
 
-    function getOrderOwner(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (address) { 
+    function getOrderOwner(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (address) { 
         return orders[_market][_outcome][_type][_orderId].owner;
     }
 
-    function getOrderSharesEscrowed(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
+    function getOrderSharesEscrowed(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
         return orders[_market][_outcome][_type][_orderId].fxpSharesEscrowed;
     }
 
-    function getOrderMoneyEscrowed(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
+    function getOrderMoneyEscrowed(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
         return orders[_market][_outcome][_type][_orderId].fxpMoneyEscrowed;
     }
 
@@ -94,27 +94,27 @@ contract Orders is Controlled {
         return marketOrderData[_market].prices[_outcome];
     }
 
-    function getBetterOrderId(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
+    function getBetterOrderId(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (bytes20) { 
         return orders[_market][_outcome][_type][_orderId].betterOrderId;
     }
 
-    function getWorseOrderId(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) {
+    function getWorseOrderId(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (bytes20) {
         return orders[_market][_outcome][_type][_orderId].worseOrderId;
     }
 
-    function getGasPrice(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
+    function getGasPrice(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
         return orders[_market][_outcome][_type][_orderId].gasPrice;
     }
 
-    function getBestOrderId(uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
+    function getBestOrderId(uint256 _type, Market _market, uint8 _outcome) public constant returns (bytes20) { 
         return bestOrder[_market][_outcome][_type];
     }
 
-    function getWorstOrderId(uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
+    function getWorstOrderId(uint256 _type, Market _market, uint8 _outcome) public constant returns (bytes20) { 
         return worstOrder[_market][_outcome][_type];
     }
 
-    function isBetterPrice(uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, uint256 _orderId) public constant returns (bool) { 
+    function isBetterPrice(uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _orderId) public constant returns (bool) { 
         if (_type == BID) { 
             return (_fxpPrice > orders[_market][_outcome][_type][_orderId].fxpPrice);
         } else {
@@ -122,7 +122,7 @@ contract Orders is Controlled {
         }
     }
 
-    function isWorsePrice(uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, uint256 _orderId) public constant returns (bool) { 
+    function isWorsePrice(uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _orderId) public constant returns (bool) { 
         if (_type == BID) { 
             return (_fxpPrice < orders[_market][_outcome][_type][_orderId].fxpPrice);
         } else {
@@ -130,19 +130,19 @@ contract Orders is Controlled {
         }
     }
 
-    function assertIsNotBetterPrice(uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, uint256 _betterOrderId) public constant returns (bool) { 
+    function assertIsNotBetterPrice(uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _betterOrderId) public constant returns (bool) { 
         require(!isBetterPrice(_type, _market, _outcome, _fxpPrice, _betterOrderId));
         return true;
     }
 
-    function assertIsNotWorsePrice(uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, uint256 _worseOrderId) public returns (bool) { 
+    function assertIsNotWorsePrice(uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _worseOrderId) public returns (bool) { 
         require(!isWorsePrice(_type, _market, _outcome, _fxpPrice, _worseOrderId));
         return true;
     }
 
-    function insertOrderIntoList(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, uint256 _betterOrderId, uint256 _worseOrderId) internal onlyWhitelistedCallers returns (bool) { 
-        uint256 _bestOrderId = bestOrder[_market][_outcome][_type];
-        uint256 _worstOrderId = worstOrder[_market][_outcome][_type];
+    function insertOrderIntoList(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _betterOrderId, bytes20 _worseOrderId) internal onlyWhitelistedCallers returns (bool) { 
+        bytes20 _bestOrderId = bestOrder[_market][_outcome][_type];
+        bytes20 _worstOrderId = worstOrder[_market][_outcome][_type];
         var ordersFetcher = OrdersFetcher(controller.lookup('OrdersFetcher'));
         (_betterOrderId, _worseOrderId) = ordersFetcher.findBoundingOrders(_type, _market, _outcome, _fxpPrice, _bestOrderId, _worstOrderId, _betterOrderId, _worseOrderId);
         if (_type == BID) { 
@@ -169,20 +169,20 @@ contract Orders is Controlled {
         return true;
     }
 
-    function saveOrder(uint256 _orderId, uint256 _type, Market _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, uint256 _betterOrderId, uint256 _worseOrderId, uint256 _gasPrice) public onlyWhitelistedCallers returns (bool) { 
-        require(_type == BID || _type == ASK);
-        require(0 <= _outcome || _outcome < _market.getNumberOfOutcomes());
-        insertOrderIntoList(_orderId, _type, _market, _outcome, _fxpPrice, _betterOrderId, _worseOrderId);
-        orders[_market][_outcome][_type][_orderId].fxpPrice = _fxpPrice;
-        orders[_market][_outcome][_type][_orderId].fxpAmount = _fxpAmount;
-        orders[_market][_outcome][_type][_orderId].owner = _sender;
-        orders[_market][_outcome][_type][_orderId].fxpMoneyEscrowed = _fxpMoneyEscrowed;
-        orders[_market][_outcome][_type][_orderId].fxpSharesEscrowed = _fxpSharesEscrowed;
-        orders[_market][_outcome][_type][_orderId].gasPrice = _gasPrice;
+    function saveOrder(uint256 _orderId, uint256 _type, Market _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _gasPrice) public onlyWhitelistedCallers returns (bool) { 
+        // require(_type == BID || _type == ASK);
+        // require(0 <= _outcome || _outcome < _market.getNumberOfOutcomes());
+        // insertOrderIntoList(_orderId, _type, _market, _outcome, _fxpPrice, _betterOrderId, _worseOrderId);
+        // orders[_market][_outcome][_type][_orderId].fxpPrice = _fxpPrice;
+        // orders[_market][_outcome][_type][_orderId].fxpAmount = _fxpAmount;
+        // orders[_market][_outcome][_type][_orderId].owner = _sender;
+        // orders[_market][_outcome][_type][_orderId].fxpMoneyEscrowed = _fxpMoneyEscrowed;
+        // orders[_market][_outcome][_type][_orderId].fxpSharesEscrowed = _fxpSharesEscrowed;
+        // orders[_market][_outcome][_type][_orderId].gasPrice = _gasPrice;
         return true;
     }
 
-    function removeOrder(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome) public onlyWhitelistedCallers returns (bool) { 
+    function removeOrder(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) public onlyWhitelistedCallers returns (bool) { 
         require(tx.gasprice <= orders[_market][_outcome][_type][_orderId].gasPrice);
         removeOrderFromList(_orderId, _type, _market, _outcome);
         orders[_market][_outcome][_type][_orderId].fxpPrice = 0;
@@ -194,7 +194,7 @@ contract Orders is Controlled {
         return true;
     }
 
-    function fillOrder(uint256 _orderId, uint256 _orderType, Market _market, uint8 _orderOutcome, uint256 _sharesFilled, uint256 _tokensFilled) public onlyWhitelistedCallers returns (bool) { 
+    function fillOrder(bytes20 _orderId, uint256 _orderType, Market _market, uint8 _orderOutcome, uint256 _sharesFilled, uint256 _tokensFilled) public onlyWhitelistedCallers returns (bool) { 
         // FIXME: Should eventually be changed to `require(_market.getTypeName() == "Market")`
         require(_market != address(0));
         require(0 <= _orderOutcome && _orderOutcome < _market.getNumberOfOutcomes());
@@ -232,21 +232,21 @@ contract Orders is Controlled {
         return true;
     }
 
-    function takeOrderLog(Market _market, uint8 _orderOutcome, uint256 _orderType, uint256 _orderId, address _taker, uint256 _makerSharesFilled, uint256 _makerTokensFilled, uint256 _takerSharesFilled, uint256 _takerTokensFilled, uint256 _tradeGroupId) internal constant returns (bool) { 
+    function takeOrderLog(Market _market, uint8 _orderOutcome, uint256 _orderType, bytes20 _orderId, address _taker, uint256 _makerSharesFilled, uint256 _makerTokensFilled, uint256 _takerSharesFilled, uint256 _takerTokensFilled, uint256 _tradeGroupId) public constant returns (bool) { 
         uint256 _price = orders[_market][_orderOutcome][_orderType][_orderId].fxpPrice;
         address _maker = orders[_market][_orderOutcome][_orderType][_orderId].owner;
         TakeOrder(_market, _orderOutcome, _orderType, _orderId, _price, _maker, _taker, _makerSharesFilled, _makerTokensFilled, _takerSharesFilled, _takerTokensFilled, _tradeGroupId);
         return true;
     }
 
-    function completeSetsLog(address _sender, Market _market, uint256 _type, uint256 _fxpAmount, uint256 _numOutcomes, uint256 _marketCreatorFee, uint256 _reportingFee) internal constant returns (bool) { 
+    function completeSetsLog(address _sender, Market _market, uint256 _type, uint256 _fxpAmount, uint256 _numOutcomes, uint256 _marketCreatorFee, uint256 _reportingFee) public constant returns (bool) { 
         CompleteSets(_sender, _market, _type, _fxpAmount, _numOutcomes, _marketCreatorFee, _reportingFee);
         return true;
     }
 
-    function cancelOrderLog(Market _market, address _sender, uint256 _fxpPrice, uint256 _fxpAmount, uint256 _orderId, uint8 _outcome, uint256 _type, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) internal constant returns (uint256) { 
+    function cancelOrderLog(Market _market, address _sender, uint256 _fxpPrice, uint256 _fxpAmount, bytes20 _orderId, uint8 _outcome, uint256 _type, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bool) { 
         CancelOrder(_market, _sender, _fxpPrice, _fxpAmount, _orderId, _outcome, _type, _fxpMoneyEscrowed, _fxpSharesEscrowed);
-        return 1;
+        return true;
     }
 
     function modifyMarketVolume(Market _market, uint256 _fxpAmount) internal returns (bool) { 
@@ -260,9 +260,9 @@ contract Orders is Controlled {
         return 1;
     }
 
-    function removeOrderFromList(uint256 _orderId, uint256 _type, Market _market, uint8 _outcome) private returns (bool) { 
-        uint256 _betterOrderId = orders[_market][_outcome][_type][_orderId].betterOrderId;
-        uint256 _worseOrderId = orders[_market][_outcome][_type][_orderId].worseOrderId;
+    function removeOrderFromList(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) private returns (bool) { 
+        bytes20 _betterOrderId = orders[_market][_outcome][_type][_orderId].betterOrderId;
+        bytes20 _worseOrderId = orders[_market][_outcome][_type][_orderId].worseOrderId;
         if (bestOrder[_market][_outcome][_type] == _orderId) { 
             bestOrder[_market][_outcome][_type] = _worseOrderId;
         }
@@ -283,8 +283,8 @@ contract Orders is Controlled {
     /**
      * @dev If best bid is not set or price higher than best bid price, this order is the new best bid.
      */
-    function updateBestBidOrder(uint256 _orderId, Market _market, uint256 _fxpPrice, uint8 _outcome) private returns (uint256) { 
-        uint256 _bestBidOrderId = bestOrder[_market][_outcome][BID];
+    function updateBestBidOrder(bytes20 _orderId, Market _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
+        bytes20 _bestBidOrderId = bestOrder[_market][_outcome][BID];
         if (_bestBidOrderId == 0 || _fxpPrice > orders[_market][_outcome][BID][_bestBidOrderId].fxpPrice) { 
             bestOrder[_market][_outcome][BID] = _orderId;
         }
@@ -294,8 +294,8 @@ contract Orders is Controlled {
     /**
      * @dev If worst bid is not set or price lower than worst bid price, this order is the new worst bid.
      */
-    function updateWorstBidOrder(uint256 _orderId, Market _market, uint256 _fxpPrice, uint8 _outcome) private returns (uint256) { 
-        uint256 _worstBidOrderId = worstOrder[_market][_outcome][BID];
+    function updateWorstBidOrder(bytes20 _orderId, Market _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
+        bytes20 _worstBidOrderId = worstOrder[_market][_outcome][BID];
         if (_worstBidOrderId == 0 || _fxpPrice < orders[_market][_outcome][BID][_worstBidOrderId].fxpPrice) { 
             worstOrder[_market][_outcome][BID] = _orderId;
         }
@@ -305,8 +305,8 @@ contract Orders is Controlled {
     /**
      * @dev If best ask is not set or price lower than best ask price, this order is the new best ask.
      */
-    function updateBestAskOrder(uint256 _orderId, Market _market, uint256 _fxpPrice, uint8 _outcome) private returns (uint256) { 
-        uint256 _bestAskOrderId = bestOrder[_market][_outcome][ASK];
+    function updateBestAskOrder(bytes20 _orderId, Market _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
+        bytes20 _bestAskOrderId = bestOrder[_market][_outcome][ASK];
         if (_bestAskOrderId == 0 || _fxpPrice < orders[_market][_outcome][ASK][_bestAskOrderId].fxpPrice) { 
             bestOrder[_market][_outcome][ASK] = _orderId;
         }
@@ -316,8 +316,8 @@ contract Orders is Controlled {
     /**
      * @dev If worst ask is not set or price higher than worst ask price, this order is the new worst ask.
      */
-    function updateWorstAskOrder(uint256 _orderId, Market _market, uint256 _fxpPrice, uint8 _outcome) private returns (uint256) {
-        uint256 _worstAskOrderId = worstOrder[_market][_outcome][ASK];
+    function updateWorstAskOrder(bytes20 _orderId, Market _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) {
+        bytes20 _worstAskOrderId = worstOrder[_market][_outcome][ASK];
         if (_worstAskOrderId == 0 || _fxpPrice > orders[_market][_outcome][ASK][_worstAskOrderId].fxpPrice) { 
             worstOrder[_market][_outcome][ASK] = _orderId;
         }
