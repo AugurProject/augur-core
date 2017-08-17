@@ -13,10 +13,13 @@ import 'ROOT/reporting/RegistrationToken.sol';
 contract IMarket is Typed {
     function initialize(ReportingWindow, uint256, uint256, uint256, int256, address, address, int256, int256, address, int256) payable public returns (bool);
     function getBranch() constant returns (Branch);
+    function getTopic() public constant returns (bytes32);
     function getReputationToken() constant returns (ReputationToken);
     function getReportingWindow() constant returns (ReportingWindow);
     function getRegistrationToken() constant returns (RegistrationToken);
     function getNumberOfOutcomes() constant returns (uint8);
+    function getMaxDisplayPrice() constant returns (uint256);
+    function getMinDisplayPrice() public constant returns (uint256);
     function getAutomatedReporterDisputeBondToken() constant returns (DisputeBondToken);
     function getLimitedReportersDisputeBondToken() constant returns (DisputeBondToken);
     function getAllReportersDisputeBondToken() constant returns (DisputeBondToken);

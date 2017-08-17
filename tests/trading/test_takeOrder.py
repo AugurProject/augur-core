@@ -16,8 +16,8 @@ def test_publicTakeOrder_bid(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
-    orders = contractsFixture.contracts['orders']
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
     tradeGroupID = 42
     logs = []
@@ -68,8 +68,8 @@ def test_publicTakeOrder_ask(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
-    orders = contractsFixture.contracts['orders']
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
     tradeGroupID = 42
     logs = []

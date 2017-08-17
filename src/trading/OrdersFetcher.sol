@@ -5,14 +5,15 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/Controller.sol';
-//import 'ROOT/libraries/arrays/Uint256Arrays.sol';
 import 'ROOT/libraries/arrays/Bytes20Arrays.sol';
-import 'ROOT/trading/Interfaces.sol';
+import 'ROOT/reporting/Interfaces.sol';
 import 'ROOT/trading/Orders.sol';
 
 
+/**
+ * @title OrdersFetcher
+ */
 contract OrdersFetcher is Controlled {
-    //using Uint256Arrays for uint256[];
     using Bytes20Arrays for bytes20[];
 
     event Log(uint256 fxpPrice);
@@ -24,7 +25,7 @@ contract OrdersFetcher is Controlled {
     /**
      * @dev Get orders for a particular market, type, and outcome (chunked)
      */
-    function getOrderIds(uint256 _type, Market _market, uint8 _outcome, bytes20 _startingOrderId, uint256 _numOrdersToLoad) public constant returns (bytes20[]) {
+    function getOrderIds(uint256 _type, IMarket _market, uint8 _outcome, bytes20 _startingOrderId, uint256 _numOrdersToLoad) public constant returns (bytes20[]) {
         require(_type == BID || _type == ASK);
         require(0 <= _outcome && _outcome < _market.getNumberOfOutcomes());
         var _orders = Orders(controller.lookup('Orders'));
@@ -44,7 +45,7 @@ contract OrdersFetcher is Controlled {
     /**
      * TODO: _type should be an enum with two options and _outcome should be a uint8.
      */
-    function getOrder(bytes20 _orderId, uint256 _type, Market _market, uint8 _outcome) public constant returns (uint256 _attoshares, uint256 _displayPrice, address _owner, uint256 _tokensEscrowed, uint256 _sharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _gasPrice) {
+    function getOrder(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome) public constant returns (uint256 _attoshares, uint256 _displayPrice, address _owner, uint256 _tokensEscrowed, uint256 _sharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _gasPrice) {
         var _orders = Orders(controller.lookup('Orders'));
         _attoshares = _orders.getAmount(_orderId, _type, _market, _outcome);
         _displayPrice = _orders.getPrice(_orderId, _type, _market, _outcome);
@@ -57,7 +58,7 @@ contract OrdersFetcher is Controlled {
         return (_attoshares, _displayPrice, _owner, _tokensEscrowed, _sharesEscrowed, _betterOrderId, _worseOrderId, _gasPrice);
     }
 
-    function ascendOrderList(uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _lowestOrderId) public constant returns (bytes20 _betterOrderId, bytes20 _worseOrderId) {
+    function ascendOrderList(uint256 _type, IMarket _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _lowestOrderId) public constant returns (bytes20 _betterOrderId, bytes20 _worseOrderId) {
         _worseOrderId = _lowestOrderId;
         bool _isWorstPrice;
         var _orders = Orders(controller.lookup('Orders'));
@@ -81,7 +82,7 @@ contract OrdersFetcher is Controlled {
         return (_betterOrderId, _worseOrderId);
     }
 
-    function descendOrderList(uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _highestOrderId) public constant returns (bytes20 _betterOrderId, bytes20 _worseOrderId) {
+    function descendOrderList(uint256 _type, IMarket _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _highestOrderId) public constant returns (bytes20 _betterOrderId, bytes20 _worseOrderId) {
         _betterOrderId = _highestOrderId;
         bool _isBestPrice;
         var _orders = Orders(controller.lookup('Orders'));
@@ -108,7 +109,7 @@ contract OrdersFetcher is Controlled {
         return (_betterOrderId, _worseOrderId);
     }
 
-    function findBoundingOrders(uint256 _type, Market _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _bestOrderId, bytes20 _worstOrderId, bytes20 _betterOrderId, bytes20 _worseOrderId) public constant returns (bytes20, bytes20) {
+    function findBoundingOrders(uint256 _type, IMarket _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _bestOrderId, bytes20 _worstOrderId, bytes20 _betterOrderId, bytes20 _worseOrderId) public constant returns (bytes20, bytes20) {
         var _orders = Orders(controller.lookup('Orders'));
         if (_bestOrderId == _worstOrderId) {
             if (_bestOrderId == 0) {
