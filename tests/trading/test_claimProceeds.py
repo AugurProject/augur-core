@@ -55,7 +55,7 @@ def acquireShortShareSet(contractsFixture, market, outcome, amount, approvalAddr
 def test_redeem_shares_in_binary_market(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    claimProceeds = contractsFixture.contracts['claimProceeds']
+    claimProceeds = contractsFixture.contracts['ClaimProceeds']
     yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
     expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
@@ -93,7 +93,7 @@ def test_redeem_shares_in_binary_market(contractsFixture):
 def test_redeem_shares_in_categorical_market(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.categoricalMarket
-    claimProceeds = contractsFixture.contracts['claimProceeds']
+    claimProceeds = contractsFixture.contracts['ClaimProceeds']
     shareToken2 = contractsFixture.applySignature('shareToken', market.getShareToken(2))
     shareToken1 = contractsFixture.applySignature('shareToken', market.getShareToken(1))
     shareToken0 = contractsFixture.applySignature('shareToken', market.getShareToken(0))
@@ -134,7 +134,7 @@ def test_redeem_shares_in_categorical_market(contractsFixture):
 def test_redeem_shares_in_scalar_market(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.scalarMarket
-    claimProceeds = contractsFixture.contracts['claimProceeds']
+    claimProceeds = contractsFixture.contracts['ClaimProceeds']
     yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
     expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
@@ -172,7 +172,7 @@ def test_redeem_shares_in_scalar_market(contractsFixture):
 def test_reedem_failure(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    claimProceeds = contractsFixture.contracts['claimProceeds']
+    claimProceeds = contractsFixture.contracts['ClaimProceeds']
 
     # get YES shares with a1
     acquireLongShares(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k1)
