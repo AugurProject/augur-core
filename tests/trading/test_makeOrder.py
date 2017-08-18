@@ -52,7 +52,7 @@ def test_publicMakeOrder_bid(contractsFixture):
     market = contractsFixture.binaryMarket
     ordersFetcher = contractsFixture.contracts['ordersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
-    cash.publicDepositEther(value = 10**17)
+    cash.depositEther(value = 10**17)
     cash.approve(makeOrder.address, 10**17)
 
     orderID = makeOrder.publicMakeOrder(BID, 10**18, 10**17, market.address, 1, 0, 0, 7)
@@ -73,7 +73,7 @@ def test_publicMakeOrder_ask(contractsFixture):
     market = contractsFixture.binaryMarket
     ordersFetcher = contractsFixture.contracts['ordersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
-    cash.publicDepositEther(value = 10**18)
+    cash.depositEther(value = 10**18)
     cash.approve(makeOrder.address, 10**18)
 
     orderID = makeOrder.publicMakeOrder(ASK, 10**18, 10**17, market.address, 0, 0, 0, 7)
@@ -92,8 +92,8 @@ def test_publicMakeOrder_ask(contractsFixture):
 def test_publicMakeOrder_bid2(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
+    orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     logs = []
 
@@ -103,7 +103,7 @@ def test_publicMakeOrder_bid2(contractsFixture):
     outcome = 0
     tradeGroupID = 42
 
-    assert cash.publicDepositEther(value = fix('10'), sender = tester.k1) == 1, "Deposit cash"
+    assert cash.depositEther(value = fix('10'), sender = tester.k1) == 1, "Deposit cash"
     assert cash.approve(makeOrder.address, fix('10'), sender = tester.k1) == 1, "Approve makeOrder contract to spend cash"
     makerInitialCash = cash.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
@@ -139,7 +139,7 @@ def test_makeOrder_failure(contractsFixture):
     branch = contractsFixture.branch
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['Orders']
+    orders = contractsFixture.contracts['orders']
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['completeSets']
@@ -168,7 +168,7 @@ def test_makeOrder_failure(contractsFixture):
         makeOrder.publicMakeOrder(ASK, fix('1'), 1, market.address, YES, 0, 0, 42, sender=tester.k1)
     with raises(TransactionFailed):
         makeOrder.publicMakeOrder(ASK, 1, fix('0.6'), market.address, YES, 0, 0, 42, sender=tester.k1)
-    assert cash.publicDepositEther(value=fix('2'), sender=tester.k1)
+    assert cash.depositEther(value=fix('2'), sender=tester.k1)
     assert cash.approve(completeSets.address, fix('2'), sender=tester.k1)
     assert completeSets.publicBuyCompleteSets(market.address, fix('2'), sender=tester.k1)
     with raises(TransactionFailed):
@@ -193,8 +193,8 @@ def test_ask_withPartialShares(contractsFixture):
     branch = contractsFixture.branch
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
+    orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['completeSets']
@@ -203,7 +203,7 @@ def test_ask_withPartialShares(contractsFixture):
     logs = []
 
     # buy 1.2 complete sets
-    assert cash.publicDepositEther(value=fix('1.2'), sender = tester.k1)
+    assert cash.depositEther(value=fix('1.2'), sender = tester.k1)
     assert cash.approve(completeSets.address, fix('1.2'), sender = tester.k1)
     assert completeSets.publicBuyCompleteSets(market.address, fix('1.2'), sender = tester.k1)
     assert cash.balanceOf(tester.a1) == fix('0')
@@ -211,7 +211,7 @@ def test_ask_withPartialShares(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('1.2')
 
     # get enough cash to cover shorting 0.8 more shares
-    assert cash.publicDepositEther(value=fix('0.8', '0.4'), sender = tester.k1)
+    assert cash.depositEther(value=fix('0.8', '0.4'), sender = tester.k1)
     assert cash.balanceOf(tester.a1) == fix('0.32')
 
     # create ASK order for 2 shares with a mix of shares and cash
