@@ -8,6 +8,7 @@ import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/ReportingWindow.sol';
 import 'ROOT/reporting/DisputeBondToken.sol';
 import 'ROOT/reporting/RegistrationToken.sol';
+import 'ROOT/trading/Cash.sol';
 
 
 contract IMarket is Typed {
@@ -20,6 +21,7 @@ contract IMarket is Typed {
     function getNumberOfOutcomes() constant returns (uint8);
     function getMaxDisplayPrice() constant returns (uint256);
     function getMinDisplayPrice() public constant returns (uint256);
+    function getCompleteSetCostInAttotokens() public constant returns (uint256);
     function getAutomatedReporterDisputeBondToken() constant returns (DisputeBondToken);
     function getLimitedReportersDisputeBondToken() constant returns (DisputeBondToken);
     function getAllReportersDisputeBondToken() constant returns (DisputeBondToken);
@@ -29,7 +31,9 @@ contract IMarket is Typed {
     function isFinalized() constant returns (bool);
     function canBeReportedOn() constant returns (bool);
     function getFinalWinningReportingToken() constant returns (ReportingToken);
+    function getShareToken(uint8) constant returns (IShareToken);
     function getFinalPayoutDistributionHash() constant returns (bytes32);
+    function getDenominationToken() constant returns (Cash);
     function derivePayoutDistributionHash(int256[]) constant returns (bytes32);
     function updateTentativeWinningPayoutDistributionHash(bytes32) public returns (bool);
     function isInAllReportingPhase() constant public returns (bool);
@@ -43,6 +47,9 @@ contract IMarket is Typed {
 contract IShareToken is Typed {
     function initialize(IMarket _market, uint8 _outcome) public returns (bool);
     function getMarket() constant returns (IMarket);
+    function balanceOf(address) constant returns (uint256);
+    function transfer(address, uint256) returns (bool);
+    function transferFrom(address, address, uint256) returns (bool);
 }
 
 
