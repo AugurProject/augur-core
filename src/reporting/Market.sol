@@ -228,27 +228,22 @@ contract Market is DelegationTarget, Typed, Initializable {
             return true;
         }
 
+        if (!automatedReportReceived && reportingWindow.isReportingActive()) {
+            reportingState = ReportingState.LIMITED;
+        }
+
         if (reportingState == ReportingState.AUTOMATED) {
-            if (!automatedReportReceived) {
-                if (reportingWindow.isReportingActive()) {
-                    reportingState = ReportingState.LIMITED;
-                } else {
-                    return false;
-                }
-            }
-            if (block.timestamp < getAutomatedReportDisputeDueTimestamp()) {
+            if (!canFinalizeAutomated()) {
                 return false;
             }
         }
         if (reportingState == ReportingState.LIMITED || reportingState == ReportingState.ALL) {
-            migrateThroughAllForks();
-
-            if (block.timestamp <= reportingWindow.getEndTime()) {
+            if (!canFinalizeReporting()) {
                 return false;
             }
         }
         if (reportingState == ReportingState.FORK) {
-            if (!tryFinalizeFork()) {
+            if (!canFinalizeFork()) {
                 return false;
             }
         }
@@ -269,7 +264,26 @@ contract Market is DelegationTarget, Typed, Initializable {
         // FIXME: if automated report is right, transfer automated report bond to market creator
         // FIXME: handle markets that get 0 reports during their scheduled reporting window
 
-    function tryFinalizeFork() private returns (bool) {
+    function canFinalizeAutomated() private returns (bool) {
+        if (!automatedReportReceived) {
+            return false;
+        }
+        if (block.timestamp < getAutomatedReportDisputeDueTimestamp()) {
+            return false;
+        }
+        return true;
+    }
+
+    function canFinalizeReporting() private returns (bool) {
+        migrateThroughAllForks();
+
+        if (block.timestamp <= reportingWindow.getEndTime()) {
+            return false;
+        }
+        return true;
+    }
+
+    function canFinalizeFork() private returns (bool) {
         bytes32 _winningPayoutDistributionHash = reportingWindow.getWinningPayoutDistributionHashFromFork(this);
         if (_winningPayoutDistributionHash == bytes32(0)) {
             return false;
@@ -445,6 +459,10 @@ contract Market is DelegationTarget, Typed, Initializable {
         if (!canBeReportedOn()) {
             return false;
         }
+        if (automatedReportReceived && reportingState != ReportingState.LIMITED) {
+            return false;
+        }
+        // If the market can be reported on and we're in AUTOMATED this has actually progressed to limited reporting
         if (reportingState > ReportingState.LIMITED) {
             return false;
         }
@@ -455,6 +473,10 @@ contract Market is DelegationTarget, Typed, Initializable {
         if (!reportingWindow.isDisputeActive()) {
             return false;
         }
+        if (automatedReportReceived && reportingState != ReportingState.LIMITED) {
+            return false;
+        }
+        // If the market can be disputed on and we're in AUTOMATED this has actually progressed to limited dispute
         if (reportingState > ReportingState.LIMITED) {
             return false;
         }
