@@ -108,12 +108,16 @@ contract Market is DelegationTarget, Typed, Initializable {
         denominationToken = _denominationToken;
         creator = _creator;
         for (uint8 _outcome = 0; _outcome < numOutcomes; _outcome++) {
-            shareTokens.push(ShareTokenFactory(controller.lookup("ShareTokenFactory")).createShareToken(controller, this, _outcome));
+            shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
         require(controller.lookup("Cash") == address(denominationToken) || getBranch().isContainerForShareToken(denominationToken));
         _success = true;
         return _success;
+    }
+
+    function createShareToken(uint8 _outcome) private returns (IShareToken) {
+        return ShareTokenFactory(controller.lookup("ShareTokenFactory")).createShareToken(controller, this, _outcome);
     }
 
         // TODO: we need to update this signature (and all of the places that call it) to allow the creator (UI) to pass in a number of other things which will all be logged here
@@ -191,7 +195,7 @@ contract Market is DelegationTarget, Typed, Initializable {
         reportingState = ReportingState.FORK;
         fundDisputeBondWithReputation(msg.sender, allReportersDisputeBondToken, ALL_REPORTERS_DISPUTE_BOND_AMOUNT);
         reportingWindow.getBranch().fork();
-        ReportingWindow _newReportingWindow = getBranch().getReportingWindowByTimestamp(getBranch().getForkEndTime());
+        ReportingWindow _newReportingWindow = getBranch().getReportingWindowForForkEndTime();
         return migrateReportingWindow(_newReportingWindow);
     }
 
@@ -291,7 +295,7 @@ contract Market is DelegationTarget, Typed, Initializable {
             return false;
         }
         // only proceed if the forking market is finalized
-        require(reportingWindow.getBranch().getForkingMarket().isFinalized());
+        require(reportingWindow.isForkingMarketFinalized());
         Branch _currentBranch = getBranch();
         // follow the forking market to its branch and then attach to the next reporting window on that branch
         bytes32 _winningForkPayoutDistributionHash = _currentBranch.getForkingMarket().finalPayoutDistributionHash();

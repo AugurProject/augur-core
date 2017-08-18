@@ -305,4 +305,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         }
         return _winningDestination.getBranch().getParentPayoutDistributionHash();
     }
+
+    function isForkingMarketFinalized() constant returns (bool) {
+        return getBranch().getForkingMarket().isFinalized();
+    }
 }
