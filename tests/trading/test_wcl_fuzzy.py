@@ -41,7 +41,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         takeOrder = contractsFixture.contracts['takeOrder']
 
         cashRequired = amount * market.getCompleteSetCostInAttotokens() / 10**18
-        assert cash.publicDepositEther(value=cashRequired, sender = sender)
+        assert cash.depositEther(value=cashRequired, sender = sender)
         assert cash.approve(completeSets.address, cashRequired, sender = sender)
         assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
         assert shareToken.approve(approvalAddress, amount, sender = sender)
@@ -60,7 +60,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         takeOrder = contractsFixture.contracts['takeOrder']
 
         cashRequired = amount * market.getCompleteSetCostInAttotokens() / 10**18
-        assert cash.publicDepositEther(value=cashRequired, sender = sender)
+        assert cash.depositEther(value=cashRequired, sender = sender)
         assert cash.approve(completeSets.address, cashRequired, sender = sender)
         assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
         assert shareToken.transfer(0, amount, sender = sender)
@@ -76,7 +76,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         makeOrder = contractsFixture.contracts['makeOrder']
         takeOrder = contractsFixture.contracts['takeOrder']
 
-        assert cash.publicDepositEther(value = amount, sender = sender)
+        assert cash.depositEther(value = amount, sender = sender)
         assert cash.approve(approvalAddress, amount, sender = sender)
 
     cash = contractsFixture.cash

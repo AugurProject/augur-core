@@ -23,12 +23,12 @@ def test_publicTakeOrder_bid(contractsFixture):
     logs = []
 
     # create order
-    assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k1)
+    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
     orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, tradeGroupID, sender = tester.k1)
 
     # take best order
-    assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k2)
+    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     fillOrderID = takeOrder.publicTakeOrder(orderID, BID, market.address, YES, fix('1.2'), tradeGroupID, sender = tester.k2)
@@ -75,12 +75,12 @@ def test_publicTakeOrder_ask(contractsFixture):
     logs = []
 
     # create order
-    assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k1)
+    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
     orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, tradeGroupID, sender = tester.k1)
 
     # take best order
-    assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k2)
+    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     fillOrderID = takeOrder.publicTakeOrder(orderID, ASK, market.address, YES, fix('1.2'), tradeGroupID, sender = tester.k2)

@@ -23,10 +23,10 @@ def test_topics(contractsFixture):
     assert topics.getPopularity('Politics'.ljust(32, '\x00')) == 10
 
     # execute a trade against one of the default markets (Sports)
-    assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k1)
+    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
     trade.publicBuy(market.address, YES, fix('1.2'), fix('0.6'), 42, sender = tester.k1)
-    assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k2)
+    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
     trade.publicSell(market.address, YES, fix('1.2'), fix('0.6'), 42, sender = tester.k2)
 
