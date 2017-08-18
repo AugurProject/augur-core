@@ -38,8 +38,8 @@ def claimSharesInUpdate(market: address):
     self.controller.onlyInEmergency()
     require(market)
 
-    numOutcomes = market.getNumberOfOutcomes()
-    marketCurrency = market.getDenominationToken()
+    numOutcomes = market.numOutcomes()
+    marketCurrency = market.denominationToken()
 
     outcome = 0
     while outcome < numOutcomes:
@@ -54,15 +54,15 @@ def claimSharesInUpdate(market: address):
     return(1)
 
 def getFrozenShareValue(market: address, outcome: int256):
-    numberOfOutcomes = market.getNumberOfOutcomes()
+    numberOfOutcomes = market.numOutcomes()
     require(0 <= outcome and outcome < numberOfOutcomes)
     require(market)
 
     if self.frozenShareValue[market][outcome]:
         return self.frozenShareValue[market][outcome]
 
-    minValue = market.getMinDisplayPrice()
-    maxValue = market.getMaxDisplayPrice()
+    minValue = market.minDisplayPrice()
+    maxValue = market.maxDisplayPrice()
     range = maxValue - minValue
     numberOfMissingBids = 0
     shiftedPrices = array(numberOfOutcomes)

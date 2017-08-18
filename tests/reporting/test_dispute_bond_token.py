@@ -216,7 +216,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     reportingTokenA = contractsFixture.getReportingToken(market, OUTCOME_A)
     reportingTokenB = contractsFixture.getReportingToken(market, OUTCOME_B)
     reportingTokenC = contractsFixture.getReportingToken(market, OUTCOME_C)
-    reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    reportingWindow = contractsFixture.applySignature('ReportingWindow', market.reportingWindow())
 
     automatedReporterDisputeBondToken = None
     limitedReportersDisputeBondToken = None
@@ -235,7 +235,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     initializeTestAccountBalances(reputationToken)
 
     # Fast forward to one second after the next reporting window
-    contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
+    contractsFixture.chain.head_state.timestamp = market.endTime() + 1
 
     # Perform automated report (if there is one)
     if (len(automatedReporterOutcome) > 0):
@@ -251,7 +251,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             # Dispute the automated reporter outcome
             disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(automatedReporterDisputerAccountNum)))
             market.disputeAutomatedReport(sender=getattr(tester, 'k' + str(automatedReporterDisputerAccountNum)))
-            automatedReporterDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getAutomatedReporterDisputeBondToken())
+            automatedReporterDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.automatedReporterDisputeBondToken())
             assert automatedReporterDisputeBondToken.getMarket() == market.address
 
             # Ensure correct bond amount was sent to dispute bond token
@@ -263,7 +263,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             # outcome like they are when disputing limited/all rerporters outcomes?
             # assert not reportingWindow.isContainerForMarket(market.address)
             # assert branch.isContainerForMarket(market.address)
-            # reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
+            # reportingWindow = contractsFixture.applySignature('ReportingWindow', market.reportingWindow())
             # assert reportingWindow.isContainerForMarket(market.address)
 
             # Buy registration tokens
@@ -288,7 +288,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         # Dispute the limited reporters result
         disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(limitedReportersDisputerAccountNum)))
         market.disputeLimitedReporters(sender=getattr(tester, 'k' + str(limitedReportersDisputerAccountNum)))
-        limitedReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getLimitedReportersDisputeBondToken())
+        limitedReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.limitedReportersDisputeBondToken())
         assert limitedReportersDisputeBondToken.getMarket() == market.address
 
         # Ensure correct bond amount was sent to dispute bond token
@@ -297,7 +297,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
 
         assert not reportingWindow.isContainerForMarket(market.address)
         assert branch.isContainerForMarket(market.address)
-        reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
+        reportingWindow = contractsFixture.applySignature('ReportingWindow', market.reportingWindow())
         assert reportingWindow.isContainerForMarket(market.address)
 
         # Buy registration tokens
@@ -323,7 +323,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         # Dispute the all reporters result
         disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(allReportersDisputerAccountNum)))
         market.disputeAllReporters(sender=getattr(tester, 'k' + str(allReportersDisputerAccountNum)))
-        allReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getAllReportersDisputeBondToken())
+        allReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.allReportersDisputeBondToken())
         assert allReportersDisputeBondToken.getMarket() == market.address
 
         # Ensure correct bond amount was sent to dispute bond token
@@ -332,7 +332,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
 
         assert not reportingWindow.isContainerForMarket(market.address)
         assert branch.isContainerForMarket(market.address)
-        reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
+        reportingWindow = contractsFixture.applySignature('ReportingWindow', market.reportingWindow())
         assert reportingWindow.isContainerForMarket(market.address)
 
         aBranch = contractsFixture.getChildBranch(branch, market, OUTCOME_A)
@@ -367,10 +367,10 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     if (automatedReporterDisputerAccountNum == None and limitedReportersDisputerAccountNum == None and allReportersDisputerAccountNum == None):
         contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
 
-    tentativeWinningReportingTokenAddress = market.getReportingTokenOrZeroByPayoutDistributionHash(market.getTentativeWinningPayoutDistributionHash())
+    tentativeWinningReportingTokenAddress = market.getReportingTokenOrZeroByPayoutDistributionHash(market.tentativeWinningPayoutDistributionHash())
     tentativeWinningReportingTokenBalance = reputationToken.balanceOf(tentativeWinningReportingTokenAddress)
 
-    totalLosingDisputeBondTokens = calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, market.getTentativeWinningPayoutDistributionHash())
+    totalLosingDisputeBondTokens = calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, market.tentativeWinningPayoutDistributionHash())
 
     # Finalize market (i.e., transfer losing dispute bond tokens to winning reporting token)
     print "\nFinalizing market\n"
@@ -396,9 +396,9 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         winningReportingToken = contractsFixture.applySignature('ReportingToken', market.getFinalWinningReportingToken())
         winningReportingTokenBalance = reputationToken.balanceOf(winningReportingToken.address)
 
-        if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == market.getTentativeWinningPayoutDistributionHash()):
+        if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == market.tentativeWinningPayoutDistributionHash()):
             assert reputationToken.balanceOf(automatedReporterDisputeBondToken.address) == 0
-        if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == market.getTentativeWinningPayoutDistributionHash()):
+        if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == market.tentativeWinningPayoutDistributionHash()):
             assert reputationToken.balanceOf(limitedReportersDisputeBondToken.address) == 0
         assert winningReportingTokenBalance == tentativeWinningReportingTokenBalance + totalLosingDisputeBondTokens
 
@@ -414,13 +414,13 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
 
             # Calculate total losing reporting tokens
             totalLosingReportingTokens = 0
-            if (market.getFinalPayoutDistributionHash() == reportingTokenA.getPayoutDistributionHash()):
+            if (market.finalPayoutDistributionHash() == reportingTokenA.getPayoutDistributionHash()):
                 totalLosingReportingTokens += reputationToken.balanceOf(reportingTokenB.address)
                 totalLosingReportingTokens += reputationToken.balanceOf(reportingTokenC.address)
-            elif (market.getFinalPayoutDistributionHash() == reportingTokenB.getPayoutDistributionHash()):
+            elif (market.finalPayoutDistributionHash() == reportingTokenB.getPayoutDistributionHash()):
                 totalLosingReportingTokens += reputationToken.balanceOf(reportingTokenA.address)
                 totalLosingReportingTokens += reputationToken.balanceOf(reportingTokenC.address)
-            elif (market.getFinalPayoutDistributionHash() == reportingTokenC.getPayoutDistributionHash()):
+            elif (market.finalPayoutDistributionHash() == reportingTokenC.getPayoutDistributionHash()):
                 totalLosingReportingTokens += reputationToken.balanceOf(reportingTokenA.address)
                 totalLosingReportingTokens += reputationToken.balanceOf(reportingTokenB.address)
 
@@ -428,15 +428,15 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             amountSentToLimitedReportersDisputeBondToken = 0
             amountSentToAllReportersDisputeBondToken = 0
             # Calculate how many losing tokens should be sent to each winning dispute bond token
-            if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+            if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != market.finalPayoutDistributionHash()):
                 automatedReporterDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(automatedReporterDisputeBondToken.address)
                 amountNeeded = automatedReporterDisputeBondToken.getBondRemainingToBePaidOut() - automatedReporterDisputeBondTokenBalanceBeforeMigration
                 amountSentToAutomatedReporterDisputeBondToken = min(amountNeeded, totalLosingReportingTokens)
-            if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+            if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.finalPayoutDistributionHash()):
                 limitedReportersDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(limitedReportersDisputeBondToken.address)
                 amountNeeded = limitedReportersDisputeBondToken.getBondRemainingToBePaidOut() - limitedReportersDisputeBondTokenBalanceBeforeMigration
                 amountSentToLimitedReportersDisputeBondToken = min(amountNeeded, totalLosingReportingTokens - amountSentToAutomatedReporterDisputeBondToken)
-            if (allReportersDisputeBondToken and allReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+            if (allReportersDisputeBondToken and allReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.finalPayoutDistributionHash()):
                 allReportersDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(allReportersDisputeBondToken.address)
                 amountNeeded = allReportersDisputeBondToken.getBondRemainingToBePaidOut() - allReportersDisputeBondTokenBalanceBeforeMigration
                 amountSentToAllReportersDisputeBondToken = min(amountNeeded, totalLosingReportingTokens - amountSentToLimitedReportersDisputeBondToken - amountSentToAutomatedReporterDisputeBondToken)
@@ -444,27 +444,27 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             amountSentToWinningReportingToken = totalLosingReportingTokens - amountSentToAllReportersDisputeBondToken - amountSentToLimitedReportersDisputeBondToken - amountSentToAutomatedReporterDisputeBondToken
 
             print "Migrating losing reporting tokens"
-            if (market.getFinalPayoutDistributionHash() == reportingTokenA.getPayoutDistributionHash()):
+            if (market.finalPayoutDistributionHash() == reportingTokenA.getPayoutDistributionHash()):
                 reportingTokenB.migrateLosingTokens()
                 assert reputationToken.balanceOf(reportingTokenB.address) == 0
                 reportingTokenC.migrateLosingTokens()
                 assert reputationToken.balanceOf(reportingTokenC.address) == 0
-            elif (market.getFinalPayoutDistributionHash() == reportingTokenB.getPayoutDistributionHash()):
+            elif (market.finalPayoutDistributionHash() == reportingTokenB.getPayoutDistributionHash()):
                 reportingTokenA.migrateLosingTokens()
                 assert reputationToken.balanceOf(reportingTokenA.address) == 0
                 reportingTokenC.migrateLosingTokens()
                 assert reputationToken.balanceOf(reportingTokenC.address) == 0
-            elif (market.getFinalPayoutDistributionHash() == reportingTokenC.getPayoutDistributionHash()):
+            elif (market.finalPayoutDistributionHash() == reportingTokenC.getPayoutDistributionHash()):
                 reportingTokenA.migrateLosingTokens()
                 assert reputationToken.balanceOf(reportingTokenA.address) == 0
                 reportingTokenB.migrateLosingTokens()
                 assert reputationToken.balanceOf(reportingTokenB.address) == 0
 
-            if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+            if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != market.finalPayoutDistributionHash()):
                 assert reputationToken.balanceOf(automatedReporterDisputeBondToken.address) == automatedReporterDisputeBondTokenBalanceBeforeMigration + amountSentToAutomatedReporterDisputeBondToken
-            if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+            if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.finalPayoutDistributionHash()):
                 assert reputationToken.balanceOf(limitedReportersDisputeBondToken.address) == limitedReportersDisputeBondTokenBalanceBeforeMigration + amountSentToLimitedReportersDisputeBondToken
-            if (allReportersDisputeBondToken and allReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+            if (allReportersDisputeBondToken and allReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.finalPayoutDistributionHash()):
                 assert reputationToken.balanceOf(allReportersDisputeBondToken.address) == allReportersDisputeBondTokenBalanceBeforeMigration + amountSentToAllReportersDisputeBondToken
             assert reputationToken.balanceOf(winningReportingToken.address) == winningReportingTokenBalanceBeforeMigration + amountSentToWinningReportingToken
 
@@ -583,14 +583,14 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         # Have correct dispute bond holders withdraw from dispute token
         # TODO: Break this section out into separate function
         if (allReportersDisputerAccountNum == None):
-            if (automatedReporterDisputeBondToken and market.getFinalPayoutDistributionHash() != automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash()):
+            if (automatedReporterDisputeBondToken and market.finalPayoutDistributionHash() != automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash()):
                 print "Withdrawing automated reporter dispute bond tokens"
                 accountBalanceBeforeWithdrawl = reputationToken.balanceOf(automatedReporterDisputeBondToken.getBondHolder())
                 disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(automatedReporterDisputeBondToken.address)
                 automatedReporterDisputeBondToken.withdraw(sender=getattr(tester, 'k' + str(automatedReporterDisputerAccountNum)))
                 assert reputationToken.balanceOf(automatedReporterDisputeBondToken.address) == 0
                 assert reputationToken.balanceOf(automatedReporterDisputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
-            if (limitedReportersDisputeBondToken and market.getFinalPayoutDistributionHash() != limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash()):
+            if (limitedReportersDisputeBondToken and market.finalPayoutDistributionHash() != limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash()):
                 print "Withdrawing limited reporters dispute bond tokens"
                 accountBalanceBeforeWithdrawl = reputationToken.balanceOf(limitedReportersDisputeBondToken.getBondHolder())
                 disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(limitedReportersDisputeBondToken.address)

@@ -31,7 +31,7 @@ def initialize(controller: address):
 # @public
 def getOrderIDs(type: int256, market: address, outcome: int256, startingOrderID: address, numOrdersToLoad: int256):
     require(type == BID or type == ASK)
-    require(0 <= outcome and outcome < market.getNumberOfOutcomes())
+    require(0 <= outcome and outcome < market.numOutcomes())
     if(startingOrderID == 0):
         startingOrderID = ORDERS.getBestOrderID(type, market, outcome)
     orderIDs = array(numOrdersToLoad)

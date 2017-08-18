@@ -1,19 +1,9 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
+import 'ROOT/reporting/DisputeBondToken.sol';
+import 'ROOT/reporting/Market.sol';
 import 'ROOT/Controller.sol';
-
-
-// FIXME: remove once this can be imported as a solidty contract
-contract Market {
-    function stub() {}
-}
-
-
-// FIXME: remove once this can be imported as a solidty contract
-contract DisputeBondToken {
-    function initialize(Market _market, address _bondHolder, uint256 _bondAmount, bytes32 _payoutDistributionHash);
-}
 
 
 contract DisputeBondTokenFactory {

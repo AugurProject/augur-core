@@ -10,7 +10,7 @@ def test_market_creation(contractsFixture):
     branch = contractsFixture.branch
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    reportingWindow = contractsFixture.applySignature('ReportingWindow', market.reportingWindow())
     shadyReportingToken = contractsFixture.upload('../src/reporting/ReportingToken.sol', 'shadyReportingToken')
     shadyReportingToken.initialize(market.address, [0,2])
 
@@ -21,10 +21,10 @@ def test_market_creation(contractsFixture):
         contractsFixture.createReasonableBinaryMarket(shadyBranch, shadyDenominationToken)
 
     assert market.getBranch() == branch.address
-    assert market.getNumberOfOutcomes() == 2
-    assert market.getPayoutDenominator() == 2
-    assert market.getReputationToken() == branch.getReputationToken()
-    assert market.getFinalPayoutDistributionHash() == stringToBytes("")
+    assert market.numOutcomes() == 2
+    assert market.payoutDenominator() == 2
+    assert reportingWindow.getReputationToken() == branch.getReputationToken()
+    assert market.finalPayoutDistributionHash() == stringToBytes("")
     assert market.isDoneWithAutomatedReporters() == 0
     assert market.isDoneWithAllReporters() == 0
     assert market.isDoneWithLimitedReporters() == 0
@@ -38,4 +38,4 @@ def test_market_creation(contractsFixture):
     assert market.isContainerForReportingToken(shadyReportingToken.address) == 0
     assert market.canBeReportedOn() == 0
     assert market.needsMigration() == 0
-    assert market.getAutomatedReportDueTimestamp() == market.getEndTime() + timedelta(days=3).total_seconds()
+    assert market.getAutomatedReportDueTimestamp() == market.endTime() + timedelta(days=3).total_seconds()

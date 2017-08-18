@@ -119,7 +119,7 @@ def test_publicSellCompleteSets(contractsFixture):
     assert cash.balanceOf(tester.a1) == fix('9998.9091')
     assert cash.balanceOf(market.address) == fix('1')
     assert cash.balanceOf(tester.a0) == fix('0.09')
-    assert cash.balanceOf(market.getReportingWindow()) == fix('0.0009')
+    assert cash.balanceOf(market.reportingWindow()) == fix('0.0009')
 
 def test_exceptions(contractsFixture):
     branch = contractsFixture.branch

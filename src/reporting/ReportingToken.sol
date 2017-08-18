@@ -1,5 +1,6 @@
 pragma solidity ^0.4.13;
 
+import 'ROOT/extensions/MarketHelper.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/Typed.sol';
 import 'ROOT/libraries/Initializable.sol';
@@ -10,6 +11,7 @@ import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/DisputeBondToken.sol';
 import 'ROOT/reporting/RegistrationToken.sol';
 import 'ROOT/reporting/ReportingWindow.sol';
+import 'ROOT/reporting/Market.sol';
 import 'ROOT/reporting/Interfaces.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 
@@ -17,12 +19,12 @@ import 'ROOT/libraries/math/SafeMathUint256.sol';
 contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken {
     using SafeMathUint256 for uint256;
 
-    IMarket public market;
+    Market public market;
     uint256[] public payoutNumerators;
 
-    function initialize(IMarket _market, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
+    function initialize(Market _market, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
         endInitialization();
-        require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
+        require(_market.numOutcomes() == _payoutNumerators.length);
         market = _market;
         payoutNumerators = _payoutNumerators;
         // TODO: call a function on `self.getBranch()` that logs the creation of this token with an index for the market, function needs to verify that caller is `branch.isContainerForReportingToken(thisToken)`
@@ -35,7 +37,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         require(market.isContainerForReportingToken(this));
         getReputationToken().trustedTransfer(msg.sender, this, _attotokens);
         mint(msg.sender, _attotokens);
-        var _payoutDistributionHash = getPayoutDistributionHash();
+        bytes32 _payoutDistributionHash = getPayoutDistributionHash();
         market.updateTentativeWinningPayoutDistributionHash(_payoutDistributionHash);
         getReportingWindow().noteReport(market, msg.sender, _payoutDistributionHash);
         return true;
@@ -89,8 +91,8 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         require(market.isContainerForReportingToken(this));
         require(getBranch().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() != this);
-        migrateLosingTokenRepToDisputeBond(market.getAutomatedReporterDisputeBondToken());
-        migrateLosingTokenRepToDisputeBond(market.getLimitedReportersDisputeBondToken());
+        migrateLosingTokenRepToDisputeBond(market.automatedReporterDisputeBondToken());
+        migrateLosingTokenRepToDisputeBond(market.limitedReportersDisputeBondToken());
         migrateLosingTokenRepToWinningToken();
         return true;
     }
@@ -99,7 +101,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         if (_disputeBondToken == address(0)) {
             return true;
         }
-        if (_disputeBondToken.getDisputedPayoutDistributionHash() == market.getFinalPayoutDistributionHash()) {
+        if (_disputeBondToken.getDisputedPayoutDistributionHash() == market.finalPayoutDistributionHash()) {
             return true;
         }
         var _reputationToken = getReputationToken();
@@ -131,18 +133,18 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function getReputationToken() constant returns (ReputationToken) {
-        return market.getReputationToken();
+        return market.reportingWindow().getReputationToken();
     }
 
     function getReportingWindow() constant returns (ReportingWindow) {
-        return market.getReportingWindow();
+        return market.reportingWindow();
     }
 
     function getRegistrationToken() constant returns (RegistrationToken) {
-        return market.getRegistrationToken();
+        return getReportingWindow().getRegistrationToken();
     }
 
-    function getMarket() constant returns (IMarket) {
+    function getMarket() constant returns (Market) {
         return market;
     }
 

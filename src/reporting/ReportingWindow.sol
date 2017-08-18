@@ -3,6 +3,8 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/factories/MarketFactory.sol';
+import 'ROOT/reporting/Market.sol';
+import 'ROOT/trading/Cash.sol';
 import 'ROOT/factories/SetFactory.sol';
 import 'ROOT/factories/RegistrationTokenFactory.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
@@ -44,9 +46,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function createNewMarket(uint256 _endTime, uint256 _numOutcomes, uint256 _payoutDenominator, int256 _feePerEthInWei, address _denominationToken, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, int256 _topic) public payable returns (IMarket _newMarket) {
-        require(MINIMUM_OUTCOMES <= _numOutcomes && _numOutcomes <= MAXIMUM_OUTCOMES);
-        require(MINIMUM_PAYOUT_DENOMINATOR <= _payoutDenominator);
+    function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInWei, Cash _denominationToken, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable returns (Market _newMarket) {
+        require(2 <= _numOutcomes && _numOutcomes <= 8);
+        require(2 <= _payoutDenominator && _payoutDenominator <= 2**254);
         require(block.timestamp < startTime);
         require(branch.getReportingWindowByMarketEndTime(_endTime, _automatedReporterAddress != 0).getTypeName() == "ReportingWindow");
         _newMarket = MarketFactory(controller.lookup("MarketFactory")).createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _payoutDenominator, _feePerEthInWei, _denominationToken, _creator, _minDisplayPrice, _maxDisplayPrice, _automatedReporterAddress, _topic);
@@ -56,8 +58,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
     }
 
     function migrateMarketInFromSibling() public returns (bool) {
-        IMarket _market = IMarket(msg.sender);
-        ReportingWindow _shadyReportingWindow = _market.getReportingWindow();
+        Market _market = Market(msg.sender);
+        ReportingWindow _shadyReportingWindow = _market.reportingWindow();
         require(branch.isContainerForReportingWindow(_shadyReportingWindow));
         ReportingWindow _originalReportingWindow = _shadyReportingWindow;
         require(_originalReportingWindow.isContainerForMarket(_market));
@@ -66,11 +68,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
     }
 
     function migrateMarketInFromNibling() public returns (bool) {
-        IMarket _market = IMarket(msg.sender);
+        Market _market = Market(msg.sender);
         Branch _shadyBranch = _market.getBranch();
         require(branch.isParentOf(_shadyBranch));
         Branch _originalBranch = _shadyBranch;
-        ReportingWindow _shadyReportingWindow = _market.getReportingWindow();
+        ReportingWindow _shadyReportingWindow = _market.reportingWindow();
         require(_originalBranch.isContainerForReportingWindow(_shadyReportingWindow));
         ReportingWindow _originalReportingWindow = _shadyReportingWindow;
         require(_originalReportingWindow.isContainerForMarket(_market));
@@ -79,7 +81,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
     }
 
     function removeMarket() public returns (bool) {
-        IMarket _market = IMarket(msg.sender);
+        Market _market = Market(msg.sender);
         require(markets.contains(_market));
         markets.remove(_market);
         limitedReporterMarkets.remove(_market);
@@ -88,7 +90,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
     }
 
     function updateMarketPhase() public returns (bool) {
-        IMarket _market = IMarket(msg.sender);
+        Market _market = Market(msg.sender);
         require(markets.contains(_market));
         if (_market.isDoneWithAllReporters()) {
             allReporterMarkets.remove(_market);
@@ -106,7 +108,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function noteReport(IMarket _market, address _reporter, bytes32 _payoutDistributionHash) public returns (bool) {
+    function noteReport(Market _market, address _reporter, bytes32 _payoutDistributionHash) public returns (bool) {
         require(markets.contains(_market));
         require(_market.getReportingTokenOrZeroByPayoutDistributionHash(_payoutDistributionHash) == msg.sender);
         require(_market.isInAllReportingPhase() || _market.isInLimitedReportingPhase());
@@ -206,7 +208,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return _minimumReportsPerMarket;
     }
 
-    function getNumberOfReportsByMarket(IMarket _market) public constant returns (uint256) {
+    function getNumberOfReportsByMarket(Market _market) public constant returns (uint256) {
         return numberOfReportsByMarket[_market];
     }
 
@@ -253,7 +255,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return registrationToken == _shadyRegistrationToken;
     }
 
-    function isContainerForMarket(IMarket _shadyMarket) public constant returns (bool) {
+    function isContainerForMarket(Market _shadyMarket) public constant returns (bool) {
         if (_shadyMarket.getTypeName() != "Market") {
             return false;
         }
@@ -264,7 +266,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return getReportsByReporter(_reporter).count() >= getTargetReportsPerReporter();
     }
 
-    function privateAddMarket(IMarket _market) private returns (bool) {
+    function privateAddMarket(Market _market) private returns (bool) {
         require(!markets.contains(_market));
         require(!limitedReporterMarkets.contains(_market));
         require(!allReporterMarkets.contains(_market));
@@ -280,7 +282,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function privateNoteReport(IMarket _market, address _reporter) private returns (bool) {
+    function privateNoteReport(Market _market, address _reporter) private returns (bool) {
         Set reports = getReportsByReporter(_reporter);
         if (reports.contains(_market)) {
             return true;

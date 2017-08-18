@@ -156,7 +156,7 @@ def insertOrderIntoList(orderID: address, type: int256, market: address, outcome
 def saveOrder(orderID: address, type: int256, market: address, fxpAmount: int256, fxpPrice: int256, sender: address, outcome: int256, fxpMoneyEscrowed: int256, fxpSharesEscrowed: int256, betterOrderID: address, worseOrderID: address, tradeGroupID: int256, gasPrice: int256):
     self.controller.assertIsWhitelisted(msg.sender)
     require(type == BID or type == ASK)
-    require(0 <= outcome and outcome < market.getNumberOfOutcomes())
+    require(0 <= outcome and outcome < market.numOutcomes())
     self.insertOrderIntoList(orderID, type, market, outcome, fxpPrice, betterOrderID, worseOrderID)
     self.orders[market][outcome][type][orderID].fxpPrice = fxpPrice
     self.orders[market][outcome][type][orderID].fxpAmount = fxpAmount
@@ -184,22 +184,22 @@ def removeOrder(orderID: address, type: int256, market: address, outcome: int256
 def fillOrder(orderID: address, orderType: int256, market: address, orderOutcome: int256, sharesFilled: int256, tokensFilled: int256):
     self.controller.assertIsWhitelisted(msg.sender)
     require(market)
-    require(0 <= orderOutcome and orderOutcome < market.getNumberOfOutcomes())
+    require(0 <= orderOutcome and orderOutcome < market.numOutcomes())
     require(orderType == BID or orderType == ASK)
     require(orderID)
     require(sharesFilled <= self.orders[market][orderOutcome][orderType][orderID].fxpSharesEscrowed)
     require(tokensFilled <= self.orders[market][orderOutcome][orderType][orderID].fxpMoneyEscrowed)
     require(tx.gasprice <= self.orders[market][orderOutcome][orderType][orderID].gasPrice)
-    require(self.orders[market][orderOutcome][orderType][orderID].fxpPrice <= market.getMaxDisplayPrice())
-    require(self.orders[market][orderOutcome][orderType][orderID].fxpPrice >= market.getMinDisplayPrice())
-    require(market.getMaxDisplayPrice() + market.getMinDisplayPrice() <= 2**254)
+    require(self.orders[market][orderOutcome][orderType][orderID].fxpPrice <= market.maxDisplayPrice())
+    require(self.orders[market][orderOutcome][orderType][orderID].fxpPrice >= market.minDisplayPrice())
+    require(market.maxDisplayPrice() + market.minDisplayPrice() <= 2**254)
     fill = 0
     if orderType == BID:
         # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
-        fill = sharesFilled + safeFxpDiv(tokensFilled, self.orders[market][orderOutcome][orderType][orderID].fxpPrice - market.getMinDisplayPrice())
+        fill = sharesFilled + safeFxpDiv(tokensFilled, self.orders[market][orderOutcome][orderType][orderID].fxpPrice - market.minDisplayPrice())
     if orderType == ASK:
         # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
-        fill = sharesFilled + safeFxpDiv(tokensFilled, market.getMaxDisplayPrice() - self.orders[market][orderOutcome][orderType][orderID].fxpPrice)
+        fill = sharesFilled + safeFxpDiv(tokensFilled, market.maxDisplayPrice() - self.orders[market][orderOutcome][orderType][orderID].fxpPrice)
     require(fill <= self.orders[market][orderOutcome][orderType][orderID].fxpAmount)
     self.orders[market][orderOutcome][orderType][orderID].fxpAmount -= fill
     self.orders[market][orderOutcome][orderType][orderID].fxpMoneyEscrowed -= tokensFilled
@@ -239,7 +239,7 @@ def cancelOrderLog(market, sender, fxpPrice, fxpAmount, orderID, outcome, type, 
 def modifyMarketVolume(market: address, fxpAmount: int256):
     self.controller.assertIsWhitelisted(msg.sender)
     self.marketOrderData[market].volume += fxpAmount
-    market.getBranch().getTopics().updatePopularity(market.getTopic(), fxpAmount)
+    market.getBranch().getTopics().updatePopularity(market.topic(), fxpAmount)
     return(1)
 
 # @internal

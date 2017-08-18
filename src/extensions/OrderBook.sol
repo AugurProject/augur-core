@@ -4,20 +4,21 @@ pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/arrays/Uint256Arrays.sol';
 import 'ROOT/Controller.sol';
+import 'ROOT/reporting/Market.sol';
 import 'ROOT/reporting/Interfaces.sol';
 
 
 // FIXME: Remove this stub once the contract is converted to Solidity
 contract OrdersFetcher {
-    function getOrderIDs(uint256 _type, IMarket _market, uint256 _outcome, uint256 _startingOrderId, uint256 _numOrdersToLoad) returns (uint256[100]);
-    function getOrder(uint256 _orderId, uint256 _type, IMarket _market, uint256 _outcome) returns (uint256[8]);
+    function getOrderIDs(uint256 _type, Market _market, uint256 _outcome, uint256 _startingOrderId, uint256 _numOrdersToLoad) returns (uint256[100]);
+    function getOrder(uint256 _orderId, uint256 _type, Market _market, uint256 _outcome) returns (uint256[8]);
 }
 
 
 contract OrderBook is Controlled {
     using Uint256Arrays for uint256[];
 
-    function getOrderBook(uint256 _type, IMarket _market, uint256 _outcome, uint256 _startingOrderId, uint256 _numOrdersToLoad) constant public returns (uint256[] _orderBook) {
+    function getOrderBook(uint256 _type, Market _market, uint256 _outcome, uint256 _startingOrderId, uint256 _numOrdersToLoad) constant public returns (uint256[] _orderBook) {
         OrdersFetcher _ordersFetcher = OrdersFetcher(controller.lookup("ordersFetcher"));
         uint256[100] memory _orders = _ordersFetcher.getOrderIDs(_type, _market, _outcome, _startingOrderId, _numOrdersToLoad);
         _orderBook = new uint256[](9 * _numOrdersToLoad);

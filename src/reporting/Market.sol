@@ -7,87 +7,113 @@ import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/ReputationToken.sol';
 import 'ROOT/reporting/DisputeBondToken.sol';
 import 'ROOT/reporting/Interfaces.sol';
+import 'ROOT/trading/Cash.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
+import 'ROOT/extensions/MarketFeeCalculator.sol';
+import 'ROOT/factories/MapFactory.sol';
+import 'ROOT/factories/ShareTokenFactory.sol';
+import 'ROOT/factories/ReportingTokenFactory.sol';
+import 'ROOT/factories/DisputeBondTokenFactory.sol';
 import 'ROOT/libraries/Typed.sol';
 import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/libraries/token/ERC20Basic.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
+import 'ROOT/libraries/math/SafeMathInt256.sol';
 
 
 contract Market is DelegationTarget, Typed, Initializable {
     using SafeMathUint256 for uint256;
+    using SafeMathInt256 for int256;
+
+    enum ReportingState {
+        AUTOMATED,
+        LIMITED,
+        ALL,
+        FORK,
+        FINALIZED
+    }
+
+    ReportingState private reportingState = ReportingState.AUTOMATED;
 
     // CONSIDER: change the payoutNumerator/payoutDenominator to use fixed point numbers instead of integers; PRO: some people find fixed point decimal values easier to grok; CON: rounding errors can occur and it is easier to screw up the math if you don't handle fixed point values correctly
-    int256 private payoutDenominator;
-    uint256 private feePerEthInAttoeth;
+    uint256 public payoutDenominator;
+    uint256 public feePerEthInAttoeth;
 
     // CONSIDER: we really don't need these
-    int256 private maxDisplayPrice;
-    int256 private minDisplayPrice;
+    int256 public maxDisplayPrice;
+    int256 public minDisplayPrice;
 
     // CONSIDER: figure out approprate values for these
-    private constant uint256 AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
-    private constant uint256 LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21;
-    private constant uint256 ALL_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22;
+    uint256 private constant AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
+    uint256 private constant LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21;
+    uint256 private constant ALL_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22;
 
-    ReportingWindow private reportingWindow;
-    uint256 private endTime;
-    uint256 private numOutcomes;
+    uint256 private constant MIN_NUM_OUTCOMES = 2;
+    uint256 private constant MIN_PAYOUT_DENOMINATOR = 2;
+    uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 5 * 10 ** 17;
+    int256 private constant DISPLAY_PRICE_MIN = -(2 ** 254);
+    int256 private constant DISPLAY_PRICE_MAX = 2 ** 254;
+    uint256 private constant SET_COST_MULTIPLIER_MAX = 2 ** 254;
+    uint256 private constant APPROVAL_AMOUNT = 2 ** 254;
+    uint256 private constant AUTOMATED_REPORTING_DURATION_SECONDS = 3 days;
+    uint256 private constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
+
+    ReportingWindow public reportingWindow;
+    uint256 public endTime;
+    uint8 public numOutcomes;
     uint256 private marketCreationBlock;
-    ITopic private topic;
+    bytes32 public topic;
     address private automatedReporterAddress;
-    ReportingToken[] private reportingTokens;
-    Cash private denominationToken;
-    address private creator;
+    mapping(bytes32 => ReportingToken) private reportingTokens;
+    Cash public denominationToken;
+    address public creator;
     IShareToken[] private shareTokens;
-    uint256 private finalizationTime;
+    uint256 public finalizationTime;
     bool private automatedReportReceived;
-    bytes32 private tentativeWinningPayoutDistributionHash;
-    bytes32 private finalPayoutDistributionHash;
-    DisputeBondToken private automatedReporterDisputeBondToken;
-    DisputeBondToken private limitedReportersDisputeBondToken;
-    DisputeBondToken private allReportersDisputeBondToken;
+    bytes32 public tentativeWinningPayoutDistributionHash;
+    bytes32 public finalPayoutDistributionHash;
+    DisputeBondToken public automatedReporterDisputeBondToken;
+    DisputeBondToken public limitedReportersDisputeBondToken;
+    DisputeBondToken public allReportersDisputeBondToken;
     uint256 private validityBondAttoeth;
     uint256 private automatedReporterBondAttoeth;
 
-    def initialize(reportingWindow: address, endTime: uint256, numOutcomes: uint256, payoutDenominator: int256, feePerEthInAttoeth: uint256, denominationToken: address, creator: address, minDisplayPrice: int256, maxDisplayPrice: int256, automatedReporterAddress: address, topic: ITopic):
-        require(not initialized)
-        initialized = 1
-        require(reportingWindow)
-        require(2 <= payoutDenominator and payoutDenominator <= 2**254)
-        require(2 <= numOutcomes and numOutcomes <= 8)
+    function initialize(ReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInAttoeth, Cash _denominationToken, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
+        endInitialization();
+        require(address(_reportingWindow) != address(0));
+        require(_payoutDenominator >= MIN_PAYOUT_DENOMINATOR);
+        require(_numOutcomes >= MIN_NUM_OUTCOMES);
         // payoutDenominator must be a multiple of numOutcomes so we can evenly split complete set share payout on indeterminate
-        require(not (payoutDenominator % numOutcomes))
-        require(0 <= feePerEthInAttoeth and feePerEthInAttoeth <= 5*10**17)
-        require(-2**254 <= maxDisplayPrice and maxDisplayPrice <= 2**254)
-        require(-2**254 <= minDisplayPrice and minDisplayPrice <= 2**254)
-        completeSetCostMultiplier = maxDisplayPrice - minDisplayPrice
-        require(1 <= completeSetCostMultiplier and completeSetCostMultiplier <= 2**254)
-        require(creator)
+        require((_payoutDenominator % _numOutcomes) == 0);
+        require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
+        require((DISPLAY_PRICE_MIN <= _maxDisplayPrice) && (_maxDisplayPrice <= DISPLAY_PRICE_MAX));
+        require((DISPLAY_PRICE_MIN <= _minDisplayPrice) && (_minDisplayPrice <= DISPLAY_PRICE_MAX));
+        require((1 <= uint256(_maxDisplayPrice.sub(_minDisplayPrice))) && (uint256(_maxDisplayPrice.sub(_minDisplayPrice)) <= SET_COST_MULTIPLIER_MAX));
+        require(_creator != address(0));
         // FIXME: require market to be on a non-forking branch; repeat this check up the stack as well if necessary (e.g., in reporting window)
         // CONSIDER: should we allow creator to send extra ETH, is there risk of variability in bond requirements?
-        require(msg.value == MarketFeeCalculator(controller.lookup('MarketFeeCalculator')).getValidityBond(reportingWindow) + MarketFeeCalculator(controller.lookup('MarketFeeCalculator')).getTargetReporterGasCosts())
-        reportingWindow = reportingWindow
-        endTime = endTime
-        numOutcomes = numOutcomes
-        payoutDenominator = payoutDenominator
+        require(msg.value == MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getValidityBond(_reportingWindow) + MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getTargetReporterGasCosts());
+        reportingWindow = _reportingWindow;
+        endTime = _endTime;
+        numOutcomes = _numOutcomes;
+        payoutDenominator = _payoutDenominator;
         // FIXME: markets may be denominated in tokens that aren't 10^18, deal with that
-        feePerEthInAttoeth = feePerEthInAttoeth
-        maxDisplayPrice = maxDisplayPrice
-        minDisplayPrice = minDisplayPrice
-        marketCreationBlock = block.number
-        topic = topic
-        automatedReporterAddress = automatedReporterAddress
-        denominationToken = denominationToken
-        creator = creator
-        reportingTokens = MapFactory(controller.lookup('MapFactory')).createMap(controller, this)
-        outcome = 0
-        while(outcome < numOutcomes):
-            shareTokens[outcome] = ShareTokenFactory(controller.lookup('ShareTokenFactory')).createShareToken(controller, this, outcome)
-            outcome += 1
-        approveSpenders()
-        require(controller.lookup('Cash') == denominationToken or getBranch().isContainerForShareToken(denominationToken))
-        return(1)
+        feePerEthInAttoeth = _feePerEthInAttoeth;
+        maxDisplayPrice = _maxDisplayPrice;
+        minDisplayPrice = _minDisplayPrice;
+        marketCreationBlock = block.number;
+        topic = _topic;
+        automatedReporterAddress = _automatedReporterAddress;
+        denominationToken = _denominationToken;
+        creator = _creator;
+        for (uint8 _outcome = 0; _outcome < numOutcomes; _outcome++) {
+            shareTokens.push(ShareTokenFactory(controller.lookup("ShareTokenFactory")).createShareToken(controller, this, _outcome));
+        }
+        approveSpenders();
+        require(controller.lookup("Cash") == address(denominationToken) || getBranch().isContainerForShareToken(denominationToken));
+        _success = true;
+        return _success;
+    }
 
         // TODO: we need to update this signature (and all of the places that call it) to allow the creator (UI) to pass in a number of other things which will all be logged here
         // TODO: log short description
@@ -100,108 +126,140 @@ contract Market is DelegationTarget, Typed, Initializable {
         // TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, payoutDenominator, denominationToken address, etc.)
 
     // this will need to be called manually for each open market if a spender contract is updated
-    def approveSpenders():
-        denominationToken.approve(controller.lookup('cancelOrder'), 2**254)
-        denominationToken.approve(controller.lookup('completeSets'), 2**254)
-        denominationToken.approve(controller.lookup('takeOrder'), 2**254)
-        denominationToken.approve(controller.lookup('tradingEscapeHatch'), 2**254)
-        denominationToken.approve(controller.lookup('claimProceeds'), 2**254)
-        denominationToken.approve(controller.lookup('tradingEscapeHatch'), 2**254)
-        i = 0
-        while i < numOutcomes:
-            shareTokens[i].approve(controller.lookup('takeOrder'), 2**254)
-            i += 1
-        return 1
+    function approveSpenders() public returns (bool) {
+        denominationToken.approve(controller.lookup("cancelOrder"), APPROVAL_AMOUNT);
+        denominationToken.approve(controller.lookup("completeSets"), APPROVAL_AMOUNT);
+        denominationToken.approve(controller.lookup("takeOrder"), APPROVAL_AMOUNT);
+        denominationToken.approve(controller.lookup("tradingEscapeHatch"), APPROVAL_AMOUNT);
+        denominationToken.approve(controller.lookup("claimProceeds"), APPROVAL_AMOUNT);
+        denominationToken.approve(controller.lookup("tradingEscapeHatch"), APPROVAL_AMOUNT);
+        for (uint8 i = 0; i < numOutcomes; i++) {
+            shareTokens[i].approve(controller.lookup("takeOrder"), APPROVAL_AMOUNT);
+        }
+        return true;
+    }
 
-    def changeCreator(newCreator: address):
-        require(msg.sender == creator)
-        creator = newCreator
-        return 1
+    function changeCreator(address _newCreator) public returns (bool) {
+        require(msg.sender == creator);
+        creator = _newCreator;
+        return true;
+    }
 
-    def decreaseMarketCreatorSettlementFeeInAttoethPerEth(newFeePerEthInWei: int256):
-        require(0 <= newFeePerEthInWei and newFeePerEthInWei < feePerEthInAttoeth)
-        require(msg.sender == creator)
-        feePerEthInAttoeth = newFeePerEthInWei
-        return 1
+    function decreaseMarketCreatorSettlementFeeInAttoethPerEth(uint256 _newFeePerEthInWei) public returns (bool) {
+        require(_newFeePerEthInWei < feePerEthInAttoeth);
+        require(msg.sender == creator);
+        feePerEthInAttoeth = _newFeePerEthInWei;
+        return true;
+    }
 
-    def automatedReport(payoutNumerators: arr):
-        assertNoValue()
+    function automatedReport(uint256[] _payoutNumerators) public returns (bool) {
         // intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
-        require(msg.sender == automatedReporterAddress)
-        require(isInAutomatedReportingPhase())
+        require(msg.sender == automatedReporterAddress);
+        require(isInAutomatedReportingPhase());
         // we have to create the reporting token so the rest of the system works (winning reporting token must exist)
-        getReportingToken(payoutNumerators)
-        automatedReportReceived = 1
-        tentativeWinningPayoutDistributionHash = derivePayoutDistributionHash(payoutNumerators)
-        reportingWindow.updateMarketPhase()
-        return 1
+        getReportingToken(_payoutNumerators);
+        automatedReportReceived = true;
+        tentativeWinningPayoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
+        reportingWindow.updateMarketPhase();
+        return true;
+    }
 
-    def disputeAutomatedReport():
-        assertNoValue()
+    function disputeAutomatedReport() public returns (bool) {
         // intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
-        require(not isFinalized())
-        require(isInAutomatedDisputePhase())
-        require(not automatedReporterDisputeBondToken)
-        automatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup('DisputeBondTokenFactory')).createDisputeBondToken(controller, this, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash)
-        fundDisputeBondWithReputation(msg.sender, automatedReporterDisputeBondToken, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT)
-        reportingWindow.updateMarketPhase()
-        return 1
+        require(!isFinalized());
+        require(isInAutomatedDisputePhase());
+        require(address(automatedReporterDisputeBondToken) == address(0));
+        automatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
+        reportingState = ReportingState.LIMITED;
+        fundDisputeBondWithReputation(msg.sender, automatedReporterDisputeBondToken, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT);
+        reportingWindow.updateMarketPhase();
+        return true;
+    }
 
-    def disputeLimitedReporters():
-        assertNoValue()
-        migrateThroughAllForks()
-        require(isInLimitedDisputePhase())
-        limitedReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup('DisputeBondTokenFactory')).createDisputeBondToken(controller, this, msg.sender, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash)
-        fundDisputeBondWithReputation(msg.sender, limitedReportersDisputeBondToken, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT)
-        newReportingWindow = getBranch().getNextReportingWindow()
-        newReportingWindow.migrateMarketInFromSibling()
-        reportingWindow.removeMarket()
-        reportingWindow = newReportingWindow
-        return 1
+    function disputeLimitedReporters() public returns (bool) {
+        migrateThroughAllForks();
+        require(isInLimitedDisputePhase());
+        limitedReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
+        reportingState = ReportingState.ALL;
+        fundDisputeBondWithReputation(msg.sender, limitedReportersDisputeBondToken, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT);
+        ReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
+        return migrateReportingWindow(_newReportingWindow);
+    }
 
-    def disputeAllReporters():
-        assertNoValue()
-        migrateThroughAllForks()
-        require(isInAllDisputePhase())
-        require(limitedReportersDisputeBondToken)
-        allReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup('DisputeBondTokenFactory')).createDisputeBondToken(controller, this, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash)
-        fundDisputeBondWithReputation(msg.sender, allReportersDisputeBondToken, ALL_REPORTERS_DISPUTE_BOND_AMOUNT)
-        reportingWindow.getBranch().fork()
-        newReportingWindow = getBranch().getReportingWindowByTimestamp(getBranch().getForkEndTime())
-        newReportingWindow.migrateMarketInFromSibling()
-        reportingWindow.removeMarket()
-        reportingWindow = newReportingWindow
-        return 1
+    function disputeAllReporters() public returns (bool) {
+        migrateThroughAllForks();
+        require(isInAllDisputePhase());
+        require(address(limitedReportersDisputeBondToken) != address(0));
+        allReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
+        reportingState = ReportingState.FORK;
+        fundDisputeBondWithReputation(msg.sender, allReportersDisputeBondToken, ALL_REPORTERS_DISPUTE_BOND_AMOUNT);
+        reportingWindow.getBranch().fork();
+        uint256 _forkEndTime = getBranch().getForkEndTime();
+        ReportingWindow _newReportingWindow = getBranch().getReportingWindowByTimestamp(_forkEndTime);
+        return migrateReportingWindow(_newReportingWindow);
+    }
 
-    def updateTentativeWinningPayoutDistributionHash(payoutDistributionHash: bytes32):
-        assertNoValue()
-        require(reportingTokens.contains(payoutDistributionHash))
-        if (not tentativeWinningPayoutDistributionHash):
-            tentativeWinningPayoutDistributionHash = payoutDistributionHash
-        // FIXME: I believe we can just keep the if block below and remove one above.
-        // Check to make sure, but I'm pretty confident that if you do
-        // reportingTokens.contains(0) you will get back 0.
-        if not reportingTokens.contains(tentativeWinningPayoutDistributionHash):
-            tentativeWinningPayoutDistributionHash = payoutDistributionHash
-        if (reportingTokens.getValue(payoutDistributionHash).totalSupply() > reportingTokens.getValue(tentativeWinningPayoutDistributionHash).totalSupply()):
-            tentativeWinningPayoutDistributionHash = payoutDistributionHash
-        return 1
+    function migrateReportingWindow(ReportingWindow _newReportingWindow) private returns (bool) {
+        _newReportingWindow.migrateMarketInFromSibling();
+        reportingWindow.removeMarket();
+        reportingWindow = _newReportingWindow;
+        return true;
+    }
 
-    def tryFinalize():
-        assertNoValue()
-        tryFinalizeAutomatedReport()
-        if (isFinalized()):
-            return(1)
-        tryFinalizeLimitedReporting()
-        if (isFinalized()):
-            return(1)
-        tryFinalizeAllReporting()
-        if (isFinalized()):
-            return(1)
-        tryFinalizeFork()
-        if (isFinalized()):
-            return(1)
-        return(0)
+    function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool) {
+        ReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
+        require(address(_reportingToken) != address(0));
+
+        ReportingToken _tentativeWinningReportingToken = reportingTokens[tentativeWinningPayoutDistributionHash];
+        if (address(_tentativeWinningReportingToken) == address(0)) {
+            tentativeWinningPayoutDistributionHash = _payoutDistributionHash;
+            _tentativeWinningReportingToken = _reportingToken;
+        }
+        if (_reportingToken.totalSupply() > _tentativeWinningReportingToken.totalSupply()) {
+            tentativeWinningPayoutDistributionHash = _payoutDistributionHash;
+        }
+        return true;
+    }
+
+    function tryFinalize() public returns (bool) {
+        require(tentativeWinningPayoutDistributionHash != bytes32(0));
+
+        if (isFinalized()) {
+            return true;
+        }
+
+        if (reportingState == ReportingState.AUTOMATED) {
+            if (!automatedReportReceived) {
+                if (reportingWindow.isReportingActive()) {
+                    reportingState = ReportingState.LIMITED;
+                } else {
+                    return false;
+                }
+            }
+            if (block.timestamp < getAutomatedReportDisputeDueTimestamp()) {
+                return false;
+            }
+        }
+        if (reportingState == ReportingState.LIMITED || reportingState == ReportingState.ALL) {
+            migrateThroughAllForks();
+
+            if (block.timestamp <= reportingWindow.getEndTime()) {
+                return false;
+            }
+        }
+        if (reportingState == ReportingState.FORK) {
+            if (!tryFinalizeFork()) {
+                return false;
+            }
+        }
+
+        finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
+        finalizationTime = block.timestamp;
+        transferIncorrectDisputeBondsToWinningReportingToken();
+        reportingWindow.updateMarketPhase();
+        reportingState = ReportingState.FINALIZED;
+        return true;
+    }
 
         // FIXME: when the market is finalized, we need to add `reportingTokens[finalPayoutDistributionHash].totalSupply()` to the reporting window.  This is necessary for fee collection which is a cross-market operation.
         // TODO: figure out how to make it so fee distribution is delayed until all markets have been finalized; we can enforce it contract side and let the UI deal with the actual work
@@ -211,423 +269,320 @@ contract Market is DelegationTarget, Typed, Initializable {
         // FIXME: if automated report is right, transfer automated report bond to market creator
         // FIXME: handle markets that get 0 reports during their scheduled reporting window
 
-    def tryFinalizeAutomatedReport():
-        assertNoValue()
-        if (isFinalized()):
-            return(1)
-        if (not automatedReportReceived):
-            return(0)
-        if (automatedReporterDisputeBondToken):
-            return(0)
-        if (block.timestamp < getAutomatedReportDisputeDueTimestamp()):
-            return(0)
-        require(tentativeWinningPayoutDistributionHash)
-        finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash
-        finalizationTime = block.timestamp
-        transferIncorrectDisputeBondsToWinningReportingToken()
-        reportingWindow.updateMarketPhase()
-        return(1)
+    function tryFinalizeFork() private returns (bool) {
+        if (reportingWindow.getBranch().getForkingMarket() != this) {
+            return false;
+        }
+        ReputationToken _winningDestination = reportingWindow.getReputationToken().getTopMigrationDestination();
+        if (address(_winningDestination) == address(0)) {
+            return false;
+        }
+        if (_winningDestination.totalSupply() < 11 * 10**6 * 10**18 / 2 && block.timestamp < getBranch().getForkEndTime()) {
+            return false;
+        }
+        tentativeWinningPayoutDistributionHash = _winningDestination.getBranch().getParentPayoutDistributionHash();
+        return true;
+    }
 
-    def tryFinalizeLimitedReporting():
-        assertNoValue()
-        migrateThroughAllForks()
-        if (isFinalized()):
-            return(1)
-        if (limitedReportersDisputeBondToken):
-            return(0)
-        if (block.timestamp <= reportingWindow.getEndTime()):
-            return(0)
-        finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash
-        finalizationTime = block.timestamp
-        transferIncorrectDisputeBondsToWinningReportingToken()
-        reportingWindow.updateMarketPhase()
-        return(1)
-
-    def tryFinalizeAllReporting():
-        assertNoValue()
-        migrateThroughAllForks()
-        if (isFinalized()):
-            return(1)
-        if (not limitedReportersDisputeBondToken):
-            return(0)
-        if (allReportersDisputeBondToken):
-            return(0)
-        if (block.timestamp <= reportingWindow.getEndTime()):
-            return(0)
-        finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash
-        finalizationTime = block.timestamp
-        transferIncorrectDisputeBondsToWinningReportingToken()
-        reportingWindow.updateMarketPhase()
-        return(1)
-
-    def tryFinalizeFork():
-        assertNoValue()
-        if (isFinalized()):
-            return(1)
-        if (not limitedReportersDisputeBondToken):
-            return(0)
-        if (not allReportersDisputeBondToken):
-            return(0)
-        if (reportingWindow.getBranch().getForkingMarket() != this):
-            return(0)
-        winningDestination = getReputationToken().getTopMigrationDestination()
-        if (not winningDestination):
-            return(0)
-        if (winningDestination.totalSupply() < 11 * 10**6 * 10**18 / 2 and block.timestamp < getBranch().getForkEndTime()):
-            return(0)
-        finalPayoutDistributionHash = winningDestination.getBranch().getParentPayoutDistributionHash()
-        finalizationTime = block.timestamp
-        transferIncorrectDisputeBondsToWinningReportingToken()
-        reportingWindow.updateMarketPhase()
-        return(1)
-
-    def migrateThroughAllForks():
-        assertNoValue()
+    function migrateThroughAllForks() public returns (bool) {
         // this will loop until we run out of gas, follow forks until there are no more, or have reached an active fork (which will throw)
-        while (migrateThroughOneFork()):
-            noop = 1
-        return 1
+        while (migrateThroughOneFork()) {
+            continue;
+        }
+        return true;
+    }
 
     // returns 0 if no move occurs, 1 if move occurred, throws if a fork not yet resolved
-    def migrateThroughOneFork():
-        assertNoValue()
-        if (isFinalized()):
-            return(1)
-        if (not needsMigration()):
-            return(0)
+    function migrateThroughOneFork() public returns (bool) {
+        if (isFinalized()) {
+            return true;
+        }
+        if (!needsMigration()) {
+            return false;
+        }
         // only proceed if the forking market is finalized
-        require(reportingWindow.getBranch().getForkingMarket().isFinalized())
-        if (limitedReportersDisputeBondToken):
-            limitedReportersDisputeBondToken = 0
-        if (allReportersDisputeBondToken):
-            allReportersDisputeBondToken = 0
-        currentBranch = getBranch()
+        require(reportingWindow.getBranch().getForkingMarket().isFinalized());
+        if (address(limitedReportersDisputeBondToken) != address(0)) {
+            limitedReportersDisputeBondToken = DisputeBondToken(0);
+        }
+        if (address(allReportersDisputeBondToken) != address(0)) {
+            allReportersDisputeBondToken = DisputeBondToken(0);
+        }
+        Branch _currentBranch = getBranch();
         // follow the forking market to its branch and then attach to the next reporting window on that branch
-        winningForkPayoutDistributionHash = currentBranch.getForkingMarket().getFinalPayoutDistributionHash()
-        destinationBranch = currentBranch.getChildBranch(winningForkPayoutDistributionHash)
-        newReportingWindow = destinationBranch.getNextReportingWindow()
-        newReportingWindow.migrateMarketInFromNibling()
-        reportingWindow.removeMarket()
-        reportingWindow = newReportingWindow
+        bytes32 _winningForkPayoutDistributionHash = _currentBranch.getForkingMarket().finalPayoutDistributionHash();
+        Branch _destinationBranch = _currentBranch.getChildBranch(_winningForkPayoutDistributionHash);
+        ReportingWindow _newReportingWindow = _destinationBranch.getNextReportingWindow();
+        _newReportingWindow.migrateMarketInFromNibling();
+        reportingWindow.removeMarket();
+        reportingWindow = _newReportingWindow;
         // reset to unreported state
-        limitedReportersDisputeBondToken = 0
-        allReportersDisputeBondToken = 0
-        tentativeWinningPayoutDistributionHash = 0
-        reportingTokens = MapFactory(controller.lookup('MapFactory')).createMap(controller, this)
-        return(1)
-
+        limitedReportersDisputeBondToken = DisputeBondToken(0);
+        allReportersDisputeBondToken = DisputeBondToken(0);
+        tentativeWinningPayoutDistributionHash = 0;
+        return true;
+    }
 
     ////////
     //////// Helpers
     ////////
 
-    def getReportingToken(payoutNumerators: arr):
-        assertNoValue()
-        payoutDistributionHash = derivePayoutDistributionHash(payoutNumerators)
-        if (not reportingTokens.contains(payoutDistributionHash)):
-            reportingTokens.addMapItem(payoutDistributionHash, ReportingTokenFactory(controller.lookup('ReportingTokenFactory')).createReportingToken(controller, this, payoutNumerators))
-        return(reportingTokens.getValue(payoutDistributionHash): address)
+    function getReportingToken(uint256[] _payoutNumerators) public returns (ReportingToken) {
+        bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
+        ReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
+        if (address(_reportingToken) == address(0)) {
+            _reportingToken = ReportingTokenFactory(controller.lookup("ReportingTokenFactory")).createReportingToken(controller, this, _payoutNumerators);
+            reportingTokens[_payoutDistributionHash] = _reportingToken;
+        }
+        return _reportingToken;
+    }
 
-    def getReportingTokenOrZeroByPayoutDistributionHash(payoutDistributionHash: bytes32):
-        assertNoValue()
-        return(reportingTokens.getValueOrZero(payoutDistributionHash))
+    function fundDisputeBondWithReputation(address _bondHolder, DisputeBondToken _disputeBondToken, uint256 _bondAmount) private returns (bool) {
+        require(_bondHolder == _disputeBondToken.getBondHolder());
+        reportingWindow.getReputationToken().trustedTransfer(_bondHolder, _disputeBondToken, _bondAmount);
+        return true;
+    }
 
-    def derivePayoutDistributionHash(payoutNumerators: arr):
-        assertNoValue()
-        validatePayoutNumerators(payoutNumerators)
-        return(sha3(payoutNumerators, items = len(payoutNumerators)): bytes32)
+    function transferIncorrectDisputeBondsToWinningReportingToken() private returns (bool) {
+        require(isFinalized());
+        ReputationToken _reputationToken = reportingWindow.getReputationToken();
+        if (getBranch().getForkingMarket() == this) {
+            return true;
+        }
+        if (address(automatedReporterDisputeBondToken) != address(0) && automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
+            _reputationToken.trustedTransfer(automatedReporterDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(automatedReporterDisputeBondToken));
+        }
+        if (address(limitedReportersDisputeBondToken) != address(0) && limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
+            _reputationToken.trustedTransfer(limitedReportersDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(limitedReportersDisputeBondToken));
+        }
+        return true;
+    }
 
-    def validatePayoutNumerators(payoutNumerators: arr):
-        assertNoValue()
-        i = 0
-        sum = 0
-        require(len(payoutNumerators) == numOutcomes)
-        while (i < numOutcomes):
-            require(0 <= payoutNumerators[i] and payoutNumerators[i] <= payoutDenominator)
-            sum += payoutNumerators[i]
-            i += 1
-        require(sum == payoutDenominator)
-        return 1
+    function derivePayoutDistributionHash(uint256[] _payoutNumerators) public constant returns (bytes32) {
+        validatePayoutNumerators(_payoutNumerators);
+        return sha3(_payoutNumerators);
+    }
 
-    def fundDisputeBondWithReputation(bondHolder: address, disputeBondToken: address, bondAmount: uint256):
-        assertPrivateCall()
-        require(bondHolder == disputeBondToken.getBondHolder())
-        reputationToken = getReputationToken()
-        reputationToken.trustedTransfer(bondHolder, disputeBondToken, bondAmount)
-        return 1
+    function validatePayoutNumerators(uint256[] _payoutNumerators) public constant returns (bool) {
+        uint256 _sum = 0;
+        require(_payoutNumerators.length == numOutcomes);
+        for (uint8 i = 0; i < numOutcomes; i++) {
+            require(_payoutNumerators[i] <= payoutDenominator);
+            _sum += _payoutNumerators[i];
+        }
+        require(_sum == payoutDenominator);
+        return true;
+    }
 
-    def transferIncorrectDisputeBondsToWinningReportingToken():
-        assertPrivateCall()
-        require(isFinalized())
-        reputationToken = getReputationToken()
-        if (getBranch().getForkingMarket() == this):
-            return 1
-        if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash):
-            reputationToken.trustedTransfer(automatedReporterDisputeBondToken, getFinalWinningReportingToken(), reputationToken.balanceOf(automatedReporterDisputeBondToken))
-        if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash):
-            reputationToken.trustedTransfer(limitedReportersDisputeBondToken, getFinalWinningReportingToken(), reputationToken.balanceOf(limitedReportersDisputeBondToken))
-        return 1
-
+    function getReportingTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public constant returns (ReportingToken) {
+        return reportingTokens[_payoutDistributionHash];
+    }
 
     ////////
     //////// Getters
     ////////
+    function getTypeName() public constant returns (bytes32) {
+        return "Market";
+    }
 
-    def getTypeName():
-        return "Market"
+    function getBranch() public constant returns (Branch) {
+        return reportingWindow.getBranch();
+    }
 
-    def getReportingWindow():
-        assertNoValue()
-        return(reportingWindow: address)
+    function getFinalWinningReportingToken() public constant returns (ReportingToken) {
+        return reportingTokens[finalPayoutDistributionHash];
+    }
 
-    def getBranch():
-        assertNoValue()
-        return(reportingWindow.getBranch(): address)
+    function getShareToken(uint8 outcome)  public constant returns (IShareToken) {
+        require(outcome < numOutcomes);
+        return shareTokens[outcome];
+    }
 
-    def getReputationToken():
-        assertNoValue()
-        return(reportingWindow.getReputationToken(): address)
+    function getCompleteSetCostInAttotokens() public constant returns (uint256) {
+        return uint256(maxDisplayPrice.sub(minDisplayPrice));
+    }
 
-    def getRegistrationToken():
-        assertNoValue()
-        return(reportingWindow.getRegistrationToken(): address)
+    function shouldCollectReportingFees() public constant returns (bool) {
+        return !getBranch().isContainerForShareToken(denominationToken);
+    }
 
-    def getAutomatedReporterDisputeBondToken():
-        assertNoValue()
-        return(automatedReporterDisputeBondToken: address)
+    function isDoneWithAutomatedReporters() public constant returns (bool) {
+        return automatedReportReceived || block.timestamp > getAutomatedReportDueTimestamp();
+    }
 
-    def getLimitedReportersDisputeBondToken():
-        assertNoValue()
-        return(limitedReportersDisputeBondToken: address)
+    function isDoneWithLimitedReporters() public constant returns (bool) {
+        return isDoneWithReporters(ReportingState.LIMITED);
+    }
 
-    def getAllReportersDisputeBondToken():
-        assertNoValue()
-        return(allReportersDisputeBondToken: address)
+    function isDoneWithAllReporters() public constant returns (bool) {
+        return isDoneWithReporters(ReportingState.ALL);
+    }
 
-    def getNumberOfOutcomes():
-        assertNoValue()
-        return(numOutcomes)
+    function isDoneWithReporters(ReportingState _state) private constant returns (bool) {
+        if (isFinalized()) {
+            return true;
+        }
+        if (reportingState > _state) {
+            return true;
+        }
+        if (block.timestamp > reportingWindow.getEndTime()) {
+            return true;
+        }
+        return false;
+    }
 
-    def getEndTime():
-        return endTime
+    function isFinalized() public constant returns (bool) {
+        return finalPayoutDistributionHash != bytes32(0);
+    }
 
-    def getTentativeWinningPayoutDistributionHash():
-        assertNoValue()
-        return(tentativeWinningPayoutDistributionHash : bytes32)
+    function isInAutomatedReportingPhase() public constant returns (bool) {
+        if (isFinalized()) {
+            return false;
+        }
+        if (block.timestamp < endTime) {
+            return false;
+        }
+        if (block.timestamp > getAutomatedReportDueTimestamp()) {
+            return false;
+        }
+        return true;
+    }
 
-    def getFinalWinningReportingToken():
-        assertNoValue()
-        return(reportingTokens.getValue(finalPayoutDistributionHash): address)
+    function isInAutomatedDisputePhase() public constant returns (bool) {
+        if (isFinalized()) {
+            return false;
+        }
+        if (block.timestamp < getAutomatedReportDueTimestamp()) {
+            return false;
+        }
+        if (block.timestamp > getAutomatedReportDisputeDueTimestamp()) {
+            return false;
+        }
+        return true;
+    }
 
-    def getShareToken(outcome: int256):
-        assertNoValue()
-        require(0 <= outcome and outcome < numOutcomes)
-        return(shareTokens[outcome]: address)
+    function isInLimitedReportingPhase() public constant returns (bool) {
+        if (!canBeReportedOn()) {
+            return false;
+        }
+        if (reportingState > ReportingState.LIMITED) {
+            return false;
+        }
+        return true;
+    }
 
-    def getFinalPayoutDistributionHash():
-        assertNoValue()
-        return(finalPayoutDistributionHash : bytes32)
+    function isInLimitedDisputePhase() public constant returns (bool) {
+        if (!reportingWindow.isDisputeActive()) {
+            return false;
+        }
+        if (reportingState > ReportingState.LIMITED) {
+            return false;
+        }
+        return true;
+    }
 
-    def getPayoutDenominator():
-        assertNoValue()
-        return(payoutDenominator)
+    function isInAllReportingPhase() public constant returns (bool) {
+        if (!canBeReportedOn()) {
+            return false;
+        }
+        if (reportingState != ReportingState.ALL) {
+            return false;
+        }
+        return true;
+    }
 
-    def getDenominationToken():
-        assertNoValue()
-        return(denominationToken: address)
+    function isInAllDisputePhase() public constant returns (bool) {
+        if (!reportingWindow.isDisputeActive()) {
+            return false;
+        }
+        if (reportingState != ReportingState.ALL) {
+            return false;
+        }
+        return true;
+    }
 
-    def getCreator():
-        return(creator: address)
+    function isContainerForReportingToken(ReportingToken _shadyToken) public constant returns (bool) {
+        if (address(_shadyToken) == address(0)) {
+            return false;
+        }
+        if (_shadyToken.getTypeName() != "ReportingToken") {
+            return false;
+        }
+        bytes32 _shadyId = _shadyToken.getPayoutDistributionHash();
+        ReportingToken _reportingToken = reportingTokens[_shadyId];
+        if (address(_reportingToken) == address(0)) {
+            return false;
+        }
+        if (_reportingToken != _shadyToken) {
+            return false;
+        }
+        return true;
+    }
 
-    def getMarketCreatorSettlementFeeInAttoethPerEth():
-        return(feePerEthInAttoeth)
+    function isContainerForShareToken(IShareToken _shadyShareToken) public constant returns (bool) {
+        if (_shadyShareToken.getTypeName() != "ShareToken") {
+            return false;
+        }
+        uint8 _outcome = _shadyShareToken.getOutcome();
+        return(getShareToken(_outcome) == _shadyShareToken);
+    }
 
-    def getMaxDisplayPrice():
-        assertNoValue()
-        return(maxDisplayPrice)
+    function isContainerForDisputeBondToken(DisputeBondToken _shadyBondToken) public constant returns (bool) {
+        if (_shadyBondToken.getTypeName() != "DisputeBondToken") {
+            return false;
+        }
+        if (automatedReporterDisputeBondToken == _shadyBondToken) {
+            return true;
+        } else if (limitedReportersDisputeBondToken == _shadyBondToken) {
+            return true;
+        } else if (allReportersDisputeBondToken == _shadyBondToken) {
+            return true;
+        }
+        return false;
+    }
 
-    def getMinDisplayPrice():
-        assertNoValue()
-        return(minDisplayPrice)
-
-    def getCompleteSetCostInAttotokens():
-        assertNoValue()
-        return(maxDisplayPrice - minDisplayPrice)
-
-    def getTopic():
-        assertNoValue()
-        return(topic)
-
-    def shouldCollectReportingFees():
-        return not getBranch().isContainerForShareToken(denominationToken)
-
-    def isDoneWithAutomatedReporters():
-        assertNoValue()
-        return(automatedReportReceived or block.timestamp > getAutomatedReportDueTimestamp())
-
-    def isDoneWithLimitedReporters():
-        assertNoValue()
-        if isFinalized():
-            return 1
-        if limitedReportersDisputeBondToken:
-            return 1
-        if block.timestamp > reportingWindow.getEndTime():
-            return 1
-        return 0
-
-    def isDoneWithAllReporters():
-        assertNoValue()
-        if isFinalized():
-            return 1
-        if allReportersDisputeBondToken:
-            return 1
-        if block.timestamp > reportingWindow.getEndTime():
-            return 1
-        return 0
-
-    def isFinalized():
-        assertNoValue()
-        return(finalPayoutDistributionHash != 0)
-
-    def getFinalizationTime():
-        return finalizationTime
-
-    def isInAutomatedReportingPhase():
-        assertNoValue()
-        if (isFinalized()):
-            return(0)
-        if (block.timestamp < endTime):
-            return(0)
-        if (block.timestamp > getAutomatedReportDueTimestamp()):
-            return(0)
-        return(1)
-
-    def isInAutomatedDisputePhase():
-        assertNoValue()
-        if (isFinalized()):
-            return(0)
-        if (block.timestamp < getAutomatedReportDueTimestamp()):
-            return(0)
-        if (block.timestamp > getAutomatedReportDisputeDueTimestamp()):
-            return(0)
-        return(1)
-
-    def isInLimitedReportingPhase():
-        assertNoValue()
-        if (isFinalized()):
-            return(0)
-        if (not reportingWindow.isReportingActive()):
-            return(0)
-        if (limitedReportersDisputeBondToken):
-            return(0)
-        if (automatedReportReceived and not automatedReporterDisputeBondToken):
-            return(0)
-        return(1)
-
-    def isInLimitedDisputePhase():
-        assertNoValue()
-        if (isFinalized()):
-            return(0)
-        if (not reportingWindow.isDisputeActive()):
-            return(0)
-        if (limitedReportersDisputeBondToken):
-            return(0)
-        if (automatedReportReceived and not automatedReporterDisputeBondToken):
-            return(0)
-        return(1)
-
-    def isInAllReportingPhase():
-        assertNoValue()
-        if (isFinalized()):
-            return(0)
-        if (not reportingWindow.isReportingActive()):
-            return(0)
-        if (not limitedReportersDisputeBondToken):
-            return(0)
-        if (allReportersDisputeBondToken):
-            return(0)
-        if (automatedReportReceived and not automatedReporterDisputeBondToken):
-            return(0)
-        return(1)
-
-    def isInAllDisputePhase():
-        assertNoValue()
-        if (isFinalized()):
-            return(0)
-        if (not reportingWindow.isDisputeActive()):
-            return(0)
-        if (not limitedReportersDisputeBondToken):
-            return(0)
-        if (allReportersDisputeBondToken):
-            return(0)
-        if (automatedReportReceived and not automatedReporterDisputeBondToken):
-            return(0)
-        return(1)
-
-    def isContainerForReportingToken(shadyToken: address):
-        assertNoValue()
-        if (not shadyToken):
-            return(0)
-        if (shadyToken.getTypeName() != "ReportingToken"):
-            return(0)
-        shadyId = shadyToken.getPayoutDistributionHash()
-        if (not reportingTokens.contains(shadyId)):
-            return(0)
-        if (reportingTokens.getValue(shadyId) != shadyToken):
-            return(0)
-        return(1)
-
-    def isContainerForShareToken(shadyShareToken: address):
-        if (shadyShareToken.getTypeName() != "ShareToken"):
-            return(0)
-        outcome = shadyShareToken.getOutcome()
-        return(getShareToken(outcome) == shadyShareToken)
-
-    def isContainerForDisputeBondToken(shadyBondToken: address):
-        if (shadyBondToken.getTypeName() != "DisputeBondToken"):
-            return(0)
-        if (automatedReporterDisputeBondToken == shadyBondToken):
-            return(1)
-        elif (limitedReportersDisputeBondToken == shadyBondToken):
-            return(1)
-        elif (allReportersDisputeBondToken == shadyBondToken):
-            return(1)
-        return(0)
-
-    def canBeReportedOn():
-        assertNoValue()
+    function canBeReportedOn() public constant returns (bool) {
         // CONSIDER: should we check if migration is necessary here?
-        if (isFinalized()):
-            return(0)
-        if (not reportingWindow.isReportingActive()):
-            return(0)
-        return(1)
+        if (isFinalized()) {
+            return false;
+        }
+        if (!reportingWindow.isReportingActive()) {
+            return false;
+        }
+        return true;
+    }
 
-    def needsMigration():
-        assertNoValue()
-        if (isFinalized()):
-            return(0)
-        forkingMarket = getBranch().getForkingMarket()
-        if (not forkingMarket):
-            return(0)
-        if (forkingMarket == this):
-            return(0)
-        if (block.timestamp < endTime):
-            return(0)
-        if (automatedReporterAddress and block.timestamp < getAutomatedReportDueTimestamp()):
-            return(0)
-        if (automatedReportReceived and block.timestamp < getAutomatedReportDisputeDueTimestamp()):
-            return 0
-        if (automatedReportReceived and not automatedReporterDisputeBondToken):
-            return 0
-        return(1)
+    function needsMigration() public constant returns (bool) {
+        if (isFinalized()) {
+            return false;
+        }
+        Market _forkingMarket = getBranch().getForkingMarket();
+        if (address(_forkingMarket) == address(0)) {
+            return false;
+        }
+        if (_forkingMarket == this) {
+            return false;
+        }
+        if (block.timestamp < endTime) {
+            return false;
+        }
+        if (automatedReporterAddress != address(0) && block.timestamp < getAutomatedReportDueTimestamp()) {
+            return false;
+        }
+        if (automatedReportReceived && block.timestamp < getAutomatedReportDisputeDueTimestamp()) {
+            return false;
+        }
+        if (automatedReportReceived && address(automatedReporterDisputeBondToken) == address(0)) {
+            return false;
+        }
+        return true;
+    }
 
-    def getAutomatedReportDueTimestamp():
-        assertNoValue()
-        return(endTime + AUTOMATED_REPORTING_DURATION_SECONDS)
+    function getAutomatedReportDueTimestamp() public constant returns (uint256) {
+        return endTime + AUTOMATED_REPORTING_DURATION_SECONDS;
+    }
 
-    def getAutomatedReportDisputeDueTimestamp():
-        assertNoValue()
-        return(getAutomatedReportDueTimestamp() + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS)
-
+    function getAutomatedReportDisputeDueTimestamp() public constant returns (uint256) {
+        return getAutomatedReportDueTimestamp() + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS;
+    }
 }
