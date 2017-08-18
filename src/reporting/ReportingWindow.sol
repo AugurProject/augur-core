@@ -291,4 +291,18 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         numberOfReportsByMarket[_market] += 1;
         return true;
     }
+
+    function getWinningPayoutDistributionHashFromFork(Market _market) constant returns (bytes32) {
+        if (getBranch().getForkingMarket() != _market) {
+            return 0;
+        }
+        ReputationToken _winningDestination = getReputationToken().getTopMigrationDestination();
+        if (address(_winningDestination) == address(0)) {
+            return 0;
+        }
+        if (_winningDestination.totalSupply() < 11 * 10**6 * 10**18 / 2 && block.timestamp < getBranch().getForkEndTime()) {
+            return 0;
+        }
+        return _winningDestination.getBranch().getParentPayoutDistributionHash();
+    }
 }

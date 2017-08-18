@@ -57,6 +57,7 @@ contract Market is DelegationTarget, Typed, Initializable {
     uint256 private constant APPROVAL_AMOUNT = 2 ** 254;
     uint256 private constant AUTOMATED_REPORTING_DURATION_SECONDS = 3 days;
     uint256 private constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
+    address private constant NULL_ADDRESS = address(0);
 
     ReportingWindow public reportingWindow;
     uint256 public endTime;
@@ -80,7 +81,7 @@ contract Market is DelegationTarget, Typed, Initializable {
 
     function initialize(ReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInAttoeth, Cash _denominationToken, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
         endInitialization();
-        require(address(_reportingWindow) != address(0));
+        require(address(_reportingWindow) != NULL_ADDRESS);
         require(_payoutDenominator >= MIN_PAYOUT_DENOMINATOR);
         require(_numOutcomes >= MIN_NUM_OUTCOMES);
         // payoutDenominator must be a multiple of numOutcomes so we can evenly split complete set share payout on indeterminate
@@ -89,10 +90,10 @@ contract Market is DelegationTarget, Typed, Initializable {
         require((DISPLAY_PRICE_MIN <= _maxDisplayPrice) && (_maxDisplayPrice <= DISPLAY_PRICE_MAX));
         require((DISPLAY_PRICE_MIN <= _minDisplayPrice) && (_minDisplayPrice <= DISPLAY_PRICE_MAX));
         require((1 <= uint256(_maxDisplayPrice.sub(_minDisplayPrice))) && (uint256(_maxDisplayPrice.sub(_minDisplayPrice)) <= SET_COST_MULTIPLIER_MAX));
-        require(_creator != address(0));
+        require(_creator != NULL_ADDRESS);
         // FIXME: require market to be on a non-forking branch; repeat this check up the stack as well if necessary (e.g., in reporting window)
         // CONSIDER: should we allow creator to send extra ETH, is there risk of variability in bond requirements?
-        require(msg.value == MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getValidityBond(_reportingWindow) + MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getTargetReporterGasCosts());
+        require(msg.value == MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getMarketCreationCost(_reportingWindow));
         reportingWindow = _reportingWindow;
         endTime = _endTime;
         numOutcomes = _numOutcomes;
@@ -165,9 +166,7 @@ contract Market is DelegationTarget, Typed, Initializable {
 
     function disputeAutomatedReport() public returns (bool) {
         // intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
-        require(!isFinalized());
         require(isInAutomatedDisputePhase());
-        require(address(automatedReporterDisputeBondToken) == address(0));
         automatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
         reportingState = ReportingState.LIMITED;
         fundDisputeBondWithReputation(msg.sender, automatedReporterDisputeBondToken, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT);
@@ -188,13 +187,11 @@ contract Market is DelegationTarget, Typed, Initializable {
     function disputeAllReporters() public returns (bool) {
         migrateThroughAllForks();
         require(isInAllDisputePhase());
-        require(address(limitedReportersDisputeBondToken) != address(0));
         allReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
         reportingState = ReportingState.FORK;
         fundDisputeBondWithReputation(msg.sender, allReportersDisputeBondToken, ALL_REPORTERS_DISPUTE_BOND_AMOUNT);
         reportingWindow.getBranch().fork();
-        uint256 _forkEndTime = getBranch().getForkEndTime();
-        ReportingWindow _newReportingWindow = getBranch().getReportingWindowByTimestamp(_forkEndTime);
+        ReportingWindow _newReportingWindow = getBranch().getReportingWindowByTimestamp(getBranch().getForkEndTime());
         return migrateReportingWindow(_newReportingWindow);
     }
 
@@ -207,10 +204,10 @@ contract Market is DelegationTarget, Typed, Initializable {
 
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool) {
         ReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
-        require(address(_reportingToken) != address(0));
+        require(address(_reportingToken) != NULL_ADDRESS);
 
         ReportingToken _tentativeWinningReportingToken = reportingTokens[tentativeWinningPayoutDistributionHash];
-        if (address(_tentativeWinningReportingToken) == address(0)) {
+        if (address(_tentativeWinningReportingToken) == NULL_ADDRESS) {
             tentativeWinningPayoutDistributionHash = _payoutDistributionHash;
             _tentativeWinningReportingToken = _reportingToken;
         }
@@ -269,17 +266,11 @@ contract Market is DelegationTarget, Typed, Initializable {
         // FIXME: handle markets that get 0 reports during their scheduled reporting window
 
     function tryFinalizeFork() private returns (bool) {
-        if (reportingWindow.getBranch().getForkingMarket() != this) {
+        bytes32 _winningPayoutDistributionHash = reportingWindow.getWinningPayoutDistributionHashFromFork(this);
+        if (_winningPayoutDistributionHash == bytes32(0)) {
             return false;
         }
-        ReputationToken _winningDestination = reportingWindow.getReputationToken().getTopMigrationDestination();
-        if (address(_winningDestination) == address(0)) {
-            return false;
-        }
-        if (_winningDestination.totalSupply() < 11 * 10**6 * 10**18 / 2 && block.timestamp < getBranch().getForkEndTime()) {
-            return false;
-        }
-        tentativeWinningPayoutDistributionHash = _winningDestination.getBranch().getParentPayoutDistributionHash();
+        tentativeWinningPayoutDistributionHash = _winningPayoutDistributionHash;
         return true;
     }
 
@@ -301,12 +292,6 @@ contract Market is DelegationTarget, Typed, Initializable {
         }
         // only proceed if the forking market is finalized
         require(reportingWindow.getBranch().getForkingMarket().isFinalized());
-        if (address(limitedReportersDisputeBondToken) != address(0)) {
-            limitedReportersDisputeBondToken = DisputeBondToken(0);
-        }
-        if (address(allReportersDisputeBondToken) != address(0)) {
-            allReportersDisputeBondToken = DisputeBondToken(0);
-        }
         Branch _currentBranch = getBranch();
         // follow the forking market to its branch and then attach to the next reporting window on that branch
         bytes32 _winningForkPayoutDistributionHash = _currentBranch.getForkingMarket().finalPayoutDistributionHash();
@@ -329,7 +314,7 @@ contract Market is DelegationTarget, Typed, Initializable {
     function getReportingToken(uint256[] _payoutNumerators) public returns (ReportingToken) {
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
         ReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
-        if (address(_reportingToken) == address(0)) {
+        if (address(_reportingToken) == NULL_ADDRESS) {
             _reportingToken = ReportingTokenFactory(controller.lookup("ReportingTokenFactory")).createReportingToken(controller, this, _payoutNumerators);
             reportingTokens[_payoutDistributionHash] = _reportingToken;
         }
@@ -348,21 +333,16 @@ contract Market is DelegationTarget, Typed, Initializable {
         if (getBranch().getForkingMarket() == this) {
             return true;
         }
-        if (address(automatedReporterDisputeBondToken) != address(0) && automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
+        if (address(automatedReporterDisputeBondToken) != NULL_ADDRESS && automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
             _reputationToken.trustedTransfer(automatedReporterDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(automatedReporterDisputeBondToken));
         }
-        if (address(limitedReportersDisputeBondToken) != address(0) && limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
+        if (address(limitedReportersDisputeBondToken) != NULL_ADDRESS && limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
             _reputationToken.trustedTransfer(limitedReportersDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(limitedReportersDisputeBondToken));
         }
         return true;
     }
 
     function derivePayoutDistributionHash(uint256[] _payoutNumerators) public constant returns (bytes32) {
-        validatePayoutNumerators(_payoutNumerators);
-        return sha3(_payoutNumerators);
-    }
-
-    function validatePayoutNumerators(uint256[] _payoutNumerators) public constant returns (bool) {
         uint256 _sum = 0;
         require(_payoutNumerators.length == numOutcomes);
         for (uint8 i = 0; i < numOutcomes; i++) {
@@ -370,7 +350,7 @@ contract Market is DelegationTarget, Typed, Initializable {
             _sum += _payoutNumerators[i];
         }
         require(_sum == payoutDenominator);
-        return true;
+        return sha3(_payoutNumerators);
     }
 
     function getReportingTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public constant returns (ReportingToken) {
@@ -418,9 +398,6 @@ contract Market is DelegationTarget, Typed, Initializable {
     }
 
     function isDoneWithReporters(ReportingState _state) private constant returns (bool) {
-        if (isFinalized()) {
-            return true;
-        }
         if (reportingState > _state) {
             return true;
         }
@@ -501,7 +478,7 @@ contract Market is DelegationTarget, Typed, Initializable {
     }
 
     function isContainerForReportingToken(ReportingToken _shadyToken) public constant returns (bool) {
-        if (address(_shadyToken) == address(0)) {
+        if (address(_shadyToken) == NULL_ADDRESS) {
             return false;
         }
         if (_shadyToken.getTypeName() != "ReportingToken") {
@@ -509,7 +486,7 @@ contract Market is DelegationTarget, Typed, Initializable {
         }
         bytes32 _shadyId = _shadyToken.getPayoutDistributionHash();
         ReportingToken _reportingToken = reportingTokens[_shadyId];
-        if (address(_reportingToken) == address(0)) {
+        if (address(_reportingToken) == NULL_ADDRESS) {
             return false;
         }
         if (_reportingToken != _shadyToken) {
@@ -522,8 +499,7 @@ contract Market is DelegationTarget, Typed, Initializable {
         if (_shadyShareToken.getTypeName() != "ShareToken") {
             return false;
         }
-        uint8 _outcome = _shadyShareToken.getOutcome();
-        return(getShareToken(_outcome) == _shadyShareToken);
+        return(getShareToken(_shadyShareToken.getOutcome()) == _shadyShareToken);
     }
 
     function isContainerForDisputeBondToken(DisputeBondToken _shadyBondToken) public constant returns (bool) {
@@ -556,7 +532,7 @@ contract Market is DelegationTarget, Typed, Initializable {
             return false;
         }
         Market _forkingMarket = getBranch().getForkingMarket();
-        if (address(_forkingMarket) == address(0)) {
+        if (address(_forkingMarket) == NULL_ADDRESS) {
             return false;
         }
         if (_forkingMarket == this) {
@@ -565,13 +541,13 @@ contract Market is DelegationTarget, Typed, Initializable {
         if (block.timestamp < endTime) {
             return false;
         }
-        if (automatedReporterAddress != address(0) && block.timestamp < getAutomatedReportDueTimestamp()) {
+        if (automatedReporterAddress != NULL_ADDRESS && block.timestamp < getAutomatedReportDueTimestamp()) {
             return false;
         }
         if (automatedReportReceived && block.timestamp < getAutomatedReportDisputeDueTimestamp()) {
             return false;
         }
-        if (automatedReportReceived && address(automatedReporterDisputeBondToken) == address(0)) {
+        if (automatedReportReceived && address(automatedReporterDisputeBondToken) == NULL_ADDRESS) {
             return false;
         }
         return true;
