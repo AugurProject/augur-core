@@ -24,7 +24,7 @@ def acquireLongShares(contractsFixture, market, outcome, amount, approvalAddress
     takeOrder = contractsFixture.contracts['takeOrder']
 
     cashRequired = amount * market.getCompleteSetCostInAttotokens() / 10**18
-    assert cash.publicDepositEther(value=cashRequired, sender = sender)
+    assert cash.depositEther(value=cashRequired, sender = sender)
     assert cash.approve(completeSets.address, cashRequired, sender = sender)
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
     assert shareToken.approve(approvalAddress, amount, sender = sender)
@@ -43,7 +43,7 @@ def acquireShortShareSet(contractsFixture, market, outcome, amount, approvalAddr
     takeOrder = contractsFixture.contracts['takeOrder']
 
     cashRequired = amount * market.getCompleteSetCostInAttotokens() / 10**18
-    assert cash.publicDepositEther(value=cashRequired, sender = sender)
+    assert cash.depositEther(value=cashRequired, sender = sender)
     assert cash.approve(completeSets.address, cashRequired, sender = sender)
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
     assert shareToken.transfer(0, amount, sender = sender)

@@ -14,55 +14,55 @@ def test_init(contractsFixture):
     assert cash.decimals() == 18
     assert cash.symbol() == 'CASH'
 
-def test_publicDepositEther(contractsFixture):
+def test_depositEther(contractsFixture):
     cash = contractsFixture.cash
     startingUserEthBalance = contractsFixture.chain.head_state.get_balance(tester.a0)
     startingUserCashBalance = cash.balanceOf(tester.a0)
     startingCashEthBalance = contractsFixture.chain.head_state.get_balance(cash.address)
     startingCashSupply = cash.totalSupply()
 
-    assert cash.publicDepositEther(value = 7, sender = tester.k0)
+    assert cash.depositEther(value = 7, sender = tester.k0)
 
     assert startingUserEthBalance - 7 == contractsFixture.chain.head_state.get_balance(tester.a0)
     assert startingUserCashBalance + 7 == cash.balanceOf(tester.a0)
     assert startingCashEthBalance + 7 == contractsFixture.chain.head_state.get_balance(cash.address)
     assert startingCashSupply + 7 == cash.totalSupply()
 
-def test_publicWithdrawEther(contractsFixture):
+def test_withdrawEther(contractsFixture):
     cash = contractsFixture.cash
-    cash.publicDepositEther(value = 7)
+    cash.depositEther(value = 7)
     startingUserEthBalance = contractsFixture.chain.head_state.get_balance(tester.a0)
     startingUserCashBalance = cash.balanceOf(tester.a0)
     startingCashEthBalance = contractsFixture.chain.head_state.get_balance(cash.address)
     startingCashSupply = cash.totalSupply()
 
-    assert cash.publicWithdrawEther(tester.a0, 5)
+    assert cash.withdrawEther(5)
     contractsFixture.chain.head_state.timestamp += long(timedelta(days=3).total_seconds())
-    assert cash.publicWithdrawEther(tester.a0, 5)
+    assert cash.withdrawEther(5)
 
     assert startingUserEthBalance + 5 == contractsFixture.chain.head_state.get_balance(tester.a0)
     assert startingUserCashBalance - 5 == cash.balanceOf(tester.a0)
     assert startingCashEthBalance - 5 == contractsFixture.chain.head_state.get_balance(cash.address)
     assert startingCashSupply - 5 == cash.totalSupply()
 
-def test_publicWithdrawEther_failures(contractsFixture):
+def test_withdrawEther_failures(contractsFixture):
     cash = contractsFixture.cash
-    cash.publicDepositEther(value = 7)
+    cash.depositEther(value = 7)
 
     with raises(TransactionFailed):
-        cash.publicWithdrawEther(tester.a0, 0)
+        cash.withdrawEther(0)
     with raises(TransactionFailed):
-        cash.publicWithdrawEther(tester.a0, 8)
+        cash.withdrawEther(8)
     with raises(TransactionFailed):
-        cash.publicWithdrawEther(tester.a0, 5, sender = tester.k1)
+        cash.withdrawEther(5, sender = tester.k1)
     # NOTE: this one must be last because it mutates chain
-    cash.publicWithdrawEther(tester.a0, 5)
+    cash.withdrawEther(5)
     with raises(TransactionFailed):
-        cash.publicWithdrawEther(tester.a0, 5)
+        cash.withdrawEther(5)
 
 def test_transfer(contractsFixture):
     cash = contractsFixture.cash
-    cash.publicDepositEther(value = 7, sender = tester.k0)
+    cash.depositEther(value = 7, sender = tester.k0)
     startingBalance0 = cash.balanceOf(tester.a0)
     startingBalance1 = cash.balanceOf(tester.a1)
     startingSupply = cash.totalSupply()
@@ -86,7 +86,7 @@ def test_transfer(contractsFixture):
 
 def test_transfer_failures(contractsFixture):
     cash = contractsFixture.cash
-    cash.publicDepositEther(value = 7, sender = tester.k0)
+    cash.depositEther(value = 7, sender = tester.k0)
 
     with raises(TransactionFailed):
         cash.transfer(tester.a1, 8, sender = tester.k0)
@@ -95,7 +95,7 @@ def test_transfer_failures(contractsFixture):
 
 def test_approve(contractsFixture):
     cash = contractsFixture.cash
-    cash.publicDepositEther(value = 7, sender = tester.k0)
+    cash.depositEther(value = 7, sender = tester.k0)
     logs = []
     contractsFixture.chain.head_state.log_listeners.append(lambda x: logs.append(cash.translator.listen(x)))
 
@@ -111,7 +111,7 @@ def test_approve(contractsFixture):
 
 def test_transferFrom(contractsFixture):
     cash = contractsFixture.cash
-    cash.publicDepositEther(value = 7, sender = tester.k0)
+    cash.depositEther(value = 7, sender = tester.k0)
     cash.approve(tester.a1, 10, sender = tester.k0)
     startingBalance0 = cash.balanceOf(tester.a0)
     startingBalance1 = cash.balanceOf(tester.a1)
@@ -128,7 +128,7 @@ def test_transferFrom(contractsFixture):
 
 def test_transferFrom_failures(contractsFixture):
     cash = contractsFixture.cash
-    cash.publicDepositEther(value = 7, sender = tester.k0)
+    cash.depositEther(value = 7, sender = tester.k0)
     cash.approve(tester.a1, 10, sender = tester.k0)
 
     with raises(TransactionFailed):

@@ -27,7 +27,7 @@ def test_publicBuyCompleteSets(contractsFixture):
     assert not yesShareToken.totalSupply()
     assert not noShareToken.totalSupply()
 
-    cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
+    cash.depositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender=tester.k1)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     assert completeSets.publicBuyCompleteSets(market.address, fix('10'), sender=tester.k1)
@@ -59,7 +59,7 @@ def test_publicBuyCompleteSets_failure(contractsFixture):
     orders = contractsFixture.contracts['orders']
 
     fxpAmount = fix('10')
-    cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
+    cash.depositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender=tester.k1)
 
     # Permissions exceptions
@@ -94,7 +94,7 @@ def test_publicSellCompleteSets(contractsFixture):
     assert not yesShareToken.totalSupply()
     assert not noShareToken.totalSupply()
 
-    cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
+    cash.depositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender = tester.k1)
     completeSets.publicBuyCompleteSets(market.address, fix('10'), sender = tester.k1)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -127,9 +127,9 @@ def test_exceptions(contractsFixture):
     market = contractsFixture.binaryMarket
     completeSets = contractsFixture.contracts['completeSets']
     orders = contractsFixture.contracts['orders']
-    cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
+    cash.depositEther(value = fix('10000'), sender = tester.k1)
 
-    cash.publicDepositEther(value = fix('10000'), sender = tester.k1)
+    cash.depositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender = tester.k1)
     completeSets.publicBuyCompleteSets(market.address, fix('10'), sender = tester.k1)
 
