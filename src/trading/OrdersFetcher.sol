@@ -42,9 +42,6 @@ contract OrdersFetcher is Controlled {
         return (_orderIds.slice(0, _i));
     }
 
-    /**
-     * TODO: _type should be an enum with two options and _outcome should be a uint8.
-     */
     function getOrder(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome) public constant returns (uint256 _attoshares, uint256 _displayPrice, address _owner, uint256 _tokensEscrowed, uint256 _sharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _gasPrice) {
         var _orders = Orders(controller.lookup('Orders'));
         _attoshares = _orders.getAmount(_orderId, _type, _market, _outcome);
