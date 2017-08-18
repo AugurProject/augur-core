@@ -1,6 +1,5 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/extensions/MarketHelper.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/Typed.sol';
 import 'ROOT/libraries/Initializable.sol';

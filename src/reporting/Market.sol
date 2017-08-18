@@ -126,14 +126,13 @@ contract Market is DelegationTarget, Typed, Initializable {
         // TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, payoutDenominator, denominationToken address, etc.)
 
     // this will need to be called manually for each open market if a spender contract is updated
-    function approveSpenders() public returns (bool) {
-        denominationToken.approve(controller.lookup("cancelOrder"), APPROVAL_AMOUNT);
-        denominationToken.approve(controller.lookup("completeSets"), APPROVAL_AMOUNT);
-        denominationToken.approve(controller.lookup("takeOrder"), APPROVAL_AMOUNT);
-        denominationToken.approve(controller.lookup("tradingEscapeHatch"), APPROVAL_AMOUNT);
-        denominationToken.approve(controller.lookup("claimProceeds"), APPROVAL_AMOUNT);
-        denominationToken.approve(controller.lookup("tradingEscapeHatch"), APPROVAL_AMOUNT);
-        for (uint8 i = 0; i < numOutcomes; i++) {
+    function approveSpenders() private returns (bool) {
+        bytes32[5] memory _names = [bytes32("cancelOrder"), bytes32("completeSets"), bytes32("takeOrder"), bytes32("tradingEscapeHatch"), bytes32("claimProceeds")];
+        uint8 i = 0;
+        for (i = 0; i < 5; i++) {
+            denominationToken.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT);
+        }
+        for (i = 0; i < numOutcomes; i++) {
             shareTokens[i].approve(controller.lookup("takeOrder"), APPROVAL_AMOUNT);
         }
         return true;
