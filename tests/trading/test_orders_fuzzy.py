@@ -65,8 +65,8 @@ def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbab
     print("Order sorting tests (orderType=" + str(orderType) + ", numOrders=" + str(numOrders) + ", withBoundingOrders=" + str(withBoundingOrders) + ", deadOrderProbability=" + str(deadOrderProbability) + ")")
     contractsFixture.resetSnapshot()
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
+    orders = contractsFixture.contracts['orders']
+    ordersFetcher = contractsFixture.contracts['ordersFetcher']
     outcomeID = 1
     orderIDs = np.arange(1, numOrders + 1)
     # Generate random prices on [0, 1) and rank them (smallest price @ rank 0)
