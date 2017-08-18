@@ -25,8 +25,8 @@ def test_make_ask_with_shares_take_with_shares(contractsFixture):
     completeSetFees = fix('1.2', '0.01') + fix('1.2', '0.0001')
 
     # 1. both accounts buy a complete set
-    assert cash.publicDepositEther(value=fix('1.2'), sender = tester.k1)
-    assert cash.publicDepositEther(value=fix('1.2'), sender = tester.k2)
+    assert cash.depositEther(value=fix('1.2'), sender = tester.k1)
+    assert cash.depositEther(value=fix('1.2'), sender = tester.k2)
     assert cash.approve(completeSets.address, fix('1.2'), sender = tester.k1)
     assert cash.approve(completeSets.address, fix('1.2'), sender = tester.k2)
     assert completeSets.publicBuyCompleteSets(market.address, fix('1.2'), sender = tester.k1)
@@ -68,7 +68,7 @@ def test_make_ask_with_shares_take_with_cash(contractsFixture):
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. buy a complete set with account 1
-    assert cash.publicDepositEther(value=fix('1.2'), sender = tester.k1)
+    assert cash.depositEther(value=fix('1.2'), sender = tester.k1)
     assert cash.approve(completeSets.address, fix('1.2'), sender = tester.k1)
     assert completeSets.publicBuyCompleteSets(market.address, fix('1.2'), sender = tester.k1)
     assert cash.balanceOf(tester.a1) == fix('0')
@@ -84,7 +84,7 @@ def test_make_ask_with_shares_take_with_cash(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('1.2')
 
     # 3. take ASK order for YES with cash
-    assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k2)
+    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
     fxpAmountRemaining = takeOrder.publicTakeOrder(askOrderID, ASK, market.address, YES, fix('1.2'), sender = tester.k2)
     assert fxpAmountRemaining == 0
@@ -106,7 +106,7 @@ def test_make_ask_with_cash_take_with_shares(contractsFixture):
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. buy complete sets with account 2
-    assert cash.publicDepositEther(value=fix('1.2'), sender = tester.k2)
+    assert cash.depositEther(value=fix('1.2'), sender = tester.k2)
     assert cash.approve(completeSets.address, fix('1.2'), sender = tester.k2)
     assert completeSets.publicBuyCompleteSets(market.address, fix('1.2'), sender = tester.k2)
     assert cash.balanceOf(tester.a2) == fix('0')
@@ -114,7 +114,7 @@ def test_make_ask_with_cash_take_with_shares(contractsFixture):
     assert noShareToken.balanceOf(tester.a2) == fix('1.2')
 
     # 2. make ASK order for YES with cash escrowed
-    assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k1)
+    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
     askOrderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, 42, sender = tester.k1)
     assert askOrderID
@@ -144,7 +144,7 @@ def test_make_ask_with_cash_take_with_cash(contractsFixture):
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. make ASK order for YES with cash escrowed
-    assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k1)
+    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
     askOrderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, 42, sender = tester.k1)
     assert askOrderID
@@ -153,7 +153,7 @@ def test_make_ask_with_cash_take_with_cash(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('0')
 
     # 2. take ASK order for YES with cash
-    assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k2)
+    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
     fxpAmountRemaining = takeOrder.publicTakeOrder(askOrderID, ASK, market.address, YES, fix('1.2'), sender = tester.k2)
     assert fxpAmountRemaining == 0
@@ -176,8 +176,8 @@ def test_make_bid_with_shares_take_with_shares(contractsFixture):
     completeSetFees = fix('1.2', '0.01') + fix('1.2', '0.0001')
 
     # 1. buy complete sets with both accounts
-    assert cash.publicDepositEther(value=fix('1.2'), sender = tester.k1) == 1
-    assert cash.publicDepositEther(value=fix('1.2'), sender = tester.k2) == 1
+    assert cash.depositEther(value=fix('1.2'), sender = tester.k1) == 1
+    assert cash.depositEther(value=fix('1.2'), sender = tester.k2) == 1
     assert cash.approve(completeSets.address, fix('1.2'), sender = tester.k1)
     assert cash.approve(completeSets.address, fix('1.2'), sender = tester.k2)
     assert completeSets.publicBuyCompleteSets(market.address, fix('1.2'), sender = tester.k1)
@@ -223,7 +223,7 @@ def test_make_bid_with_shares_take_with_cash(contractsFixture):
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. buy complete sets with account 1
-    assert cash.publicDepositEther(value=fix('1.2'), sender = tester.k1) == 1
+    assert cash.depositEther(value=fix('1.2'), sender = tester.k1) == 1
     assert cash.approve(completeSets.address, fix('1.2'), sender = tester.k1)
     assert completeSets.publicBuyCompleteSets(market.address, fix('1.2'), sender = tester.k1)
     assert cash.balanceOf(tester.a1) == fix('0')
@@ -239,7 +239,7 @@ def test_make_bid_with_shares_take_with_cash(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('0')
 
     # 3. take BID order for YES with cash
-    assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k2) == 1
+    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k2) == 1
     assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
     leftoverInOrder = takeOrder.publicTakeOrder(orderID, BID, market.address, YES, fix('1.2'), sender = tester.k2)
     assert leftoverInOrder == 0
@@ -261,7 +261,7 @@ def test_make_bid_with_cash_take_with_shares(contractsFixture):
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. buy complete sets with account 2
-    assert cash.publicDepositEther(value=fix('1.2'), sender = tester.k2)
+    assert cash.depositEther(value=fix('1.2'), sender = tester.k2)
     assert cash.approve(completeSets.address, fix('1.2'), sender = tester.k2)
     assert completeSets.publicBuyCompleteSets(market.address, fix('1.2'), sender = tester.k2)
     assert cash.balanceOf(tester.a2) == fix('0')
@@ -269,7 +269,7 @@ def test_make_bid_with_cash_take_with_shares(contractsFixture):
     assert noShareToken.balanceOf(tester.a2) == fix('1.2')
 
     # 2. make BID order for YES with cash escrowed
-    assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k1) == 1
+    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1) == 1
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1) == 1
     orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, 42, sender = tester.k1)
     assert orderID
@@ -299,7 +299,7 @@ def test_make_bid_with_cash_take_with_cash(contractsFixture):
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. make BID order for YES with cash escrowed
-    assert cash.publicDepositEther(value=fix('1.2', '0.6'), sender = tester.k1) == 1
+    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1) == 1
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1) == 1
     orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, 42, sender = tester.k1)
     assert orderID
@@ -308,7 +308,7 @@ def test_make_bid_with_cash_take_with_cash(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('0')
 
     # 2. take BID order for YES with cash
-    assert cash.publicDepositEther(value=fix('1.2', '0.4'), sender = tester.k2) == 1
+    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k2) == 1
     assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
     leftoverInOrder = takeOrder.publicTakeOrder(orderID, BID, market.address, YES, fix('1.2'), sender = tester.k2)
     assert leftoverInOrder == 0
@@ -395,7 +395,7 @@ def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, ma
 
     def acquireShares(outcome, amount, approvalAddress, sender):
         if amount == 0: return
-        assert cash.publicDepositEther(value=amount, sender = sender)
+        assert cash.depositEther(value=amount, sender = sender)
         assert cash.approve(completeSets.address, amount, sender = sender)
         assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
         if outcome == YES:
@@ -407,7 +407,7 @@ def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, ma
 
     def acquireTokens(amount, approvalAddress, sender):
         if amount == 0: return
-        assert cash.publicDepositEther(value = amount, sender = sender)
+        assert cash.depositEther(value = amount, sender = sender)
         assert cash.approve(approvalAddress, amount, sender = sender)
 
     # make order

@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Typed.sol';
-import 'ROOT/libraries/token/StandardToken.sol';
+import 'ROOT/libraries/token/VariableSupplyToken.sol';
 import 'ROOT/Controller.sol';
 
 
@@ -9,12 +9,10 @@ import 'ROOT/Controller.sol';
  * @title Cash
  * @dev ETH wrapper contract to make it look like an ERC20 token.
  */
-contract Cash is Controlled, Typed, StandardToken {
+contract Cash is Controlled, Typed, VariableSupplyToken {
     using SafeMathUint256 for uint256;
 
-    event DepositEther(address indexed sender, uint256 value, uint256 balance);
     event InitiateWithdrawEther(address indexed sender, uint256 value, uint256 balance);
-    event WithdrawEther(address indexed sender, uint256 value, uint256 balance);
     enum WithdrawState { Failed, Withdrawn, Initiated }
 
     string constant public name = "Cash";
@@ -22,14 +20,12 @@ contract Cash is Controlled, Typed, StandardToken {
     uint256 constant public decimals = 18;
     mapping(address => uint256) public initiated;
 
-    function publicDepositEther() external payable onlyInGoodTimes returns(bool) {
-        balances[msg.sender] = balances[msg.sender].add(msg.value);
-        totalSupply = totalSupply.add(msg.value);
-        DepositEther(msg.sender, msg.value, balances[msg.sender]);
+    function depositEther() external payable onlyInGoodTimes returns(bool) {
+        mint(msg.sender, msg.value);
         return true;
     }
 
-    function publicWithdrawEther(address _to, uint256 _amount) external onlyInGoodTimes returns(WithdrawState) {
+    function withdrawEther(uint256 _amount) external onlyInGoodTimes returns(WithdrawState) {
         require(1 <= _amount && _amount <= balances[msg.sender]);
         var _initiatedTimestamp = initiated[msg.sender];
 
@@ -42,11 +38,9 @@ contract Cash is Controlled, Typed, StandardToken {
 
         // FIXME: attacker can initiate a withdraw of 1 unit, wait 3 days, then launch an attack and then immediately withdraw everything
         require(_initiatedTimestamp + 3 days <= block.timestamp);
-        balances[msg.sender] = balances[msg.sender].sub(_amount);
-        totalSupply = totalSupply.sub(_amount);
+        burn(msg.sender, _amount);
         initiated[msg.sender] = 0;
         msg.sender.transfer(_amount);
-        WithdrawEther(msg.sender, _amount, balances[msg.sender]);
         return WithdrawState.Withdrawn;
     }
 
