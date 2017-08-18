@@ -7,18 +7,18 @@ from utils import fix, bytesToHexString
 
 def test_decrease_trading_fee_success(contractsFixture):
     market = contractsFixture.binaryMarket
-    originalFee = market.feePerEthInAttoeth()
-    assert market.creator() == bytesToHexString(tester.a0)
+    originalFee = market.getMarketCreatorSettlementFeeInAttoethPerEth()
+    assert market.getCreator() == bytesToHexString(tester.a0)
     newFee = originalFee -1
 
     assert market.decreaseMarketCreatorSettlementFeeInAttoethPerEth(newFee, sender = tester.k0)
-    newFee = market.feePerEthInAttoeth()
+    newFee = market.getMarketCreatorSettlementFeeInAttoethPerEth()
 
     assert newFee == newFee
 
 def test_decrease_trading_fee_failure(contractsFixture):
     market = contractsFixture.binaryMarket
-    originalFee = market.feePerEthInAttoeth()
+    originalFee = market.getMarketCreatorSettlementFeeInAttoethPerEth()
 
     with raises(TransactionFailed):
         market.decreaseMarketCreatorSettlementFeeInAttoethPerEth(0, sender = tester.k1)

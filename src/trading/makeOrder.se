@@ -56,10 +56,10 @@ def makeOrder(sender: address, type: int256, attoshares: int256, displayPrice: i
     require(type == BID or type == ASK)
     require(0 < attoshares)
     require(market)
-    require(0 <= outcome and outcome < market.numOutcomes())
-    require(market.minDisplayPrice() < displayPrice and displayPrice < market.maxDisplayPrice())
+    require(0 <= outcome and outcome < market.getNumberOfOutcomes())
+    require(market.getMinDisplayPrice() < displayPrice and displayPrice < market.getMaxDisplayPrice())
 
-    attotokensPerShare = displayPrice - market.minDisplayPrice()
+    attotokensPerShare = displayPrice - market.getMinDisplayPrice()
     if(type == ASK):
         escrow = self.placeAsk(sender, attoshares, attotokensPerShare, market, outcome, outitems=2)
     elif(type == BID):
@@ -88,7 +88,7 @@ def placeBid(sender: address, attoshares: int256, attotokensPerShare: int256, ma
     attosharesEscrowed = 0
     shareToken = market.getShareToken(outcome)
     attosharesToCover = attoshares
-    numberOfOutcomes = market.numOutcomes()
+    numberOfOutcomes = market.getNumberOfOutcomes()
 
     # figure out how many almost-complete-sets (just missing `outcome` share) the maker has
     attosharesHeld = 2**254
@@ -112,7 +112,7 @@ def placeBid(sender: address, attoshares: int256, attotokensPerShare: int256, ma
     if attosharesToCover:
         attotokensRequiredToLongOneShare = attotokensPerShare
         attotokensEscrowed = safeFxpMul(attosharesToCover, attotokensRequiredToLongOneShare)
-        require(market.denominationToken().transferFrom(sender, market, attotokensEscrowed))
+        require(market.getDenominationToken().transferFrom(sender, market, attotokensEscrowed))
 
     return([attotokensEscrowed, attosharesEscrowed]: arr)
 
@@ -141,7 +141,7 @@ def placeAsk(sender: address, attoshares: int256, attotokensPerShare: int256, ma
     if attosharesToCover:
         attotokensRequiredToShortOneShare = safeSub(market.getCompleteSetCostInAttotokens(), attotokensPerShare)
         attotokensEscrowed = safeFxpMul(attosharesToCover, attotokensRequiredToShortOneShare)
-        require(market.denominationToken().transferFrom(sender, market, attotokensEscrowed))
+        require(market.getDenominationToken().transferFrom(sender, market, attotokensEscrowed))
 
     return([attotokensEscrowed, attosharesEscrowed]: arr)
 

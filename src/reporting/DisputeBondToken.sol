@@ -34,7 +34,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
 
     function withdraw() public returns (bool) {
         require(msg.sender == bondHolder);
-        require(!market.isContainerForDisputeBondToken(this) || (market.isFinalized() && market.finalPayoutDistributionHash() != disputedPayoutDistributionHash));
+        require(!market.isContainerForDisputeBondToken(this) || (market.isFinalized() && market.getFinalPayoutDistributionHash() != disputedPayoutDistributionHash));
         require(getBranch().getForkingMarket() != market);
         ReputationToken _reputationToken = getReputationToken();
         uint256 _amountToTransfer = _reputationToken.balanceOf(this);
@@ -47,7 +47,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
     function withdrawToBranch(Branch _shadyBranch) public returns (bool) {
         require(msg.sender == bondHolder);
         require(!market.isContainerForDisputeBondToken(this) || getBranch().getForkingMarket() == market);
-        bool _isChildOfMarketBranch = market.reportingWindow().getBranch().isParentOf(_shadyBranch);
+        bool _isChildOfMarketBranch = market.getReportingWindow().getBranch().isParentOf(_shadyBranch);
         require(_isChildOfMarketBranch);
         Branch _legitBranch = _shadyBranch;
         require(_legitBranch.getParentPayoutDistributionHash() != disputedPayoutDistributionHash);
@@ -73,7 +73,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
     }
 
     function getReputationToken() constant public returns (ReputationToken) {
-        return market.reportingWindow().getReputationToken();
+        return market.getReportingWindow().getReputationToken();
     }
 
     function getBondHolder() constant public returns (address) {

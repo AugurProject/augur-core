@@ -46,11 +46,11 @@ def claimProceeds(sender: address, market: address):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(market.isFinalized())
-    require(block.timestamp > market.finalizationTime() + THREE_DAYS)
+    require(block.timestamp > market.getFinalizationTime() + THREE_DAYS)
 
-    denominationToken = market.denominationToken()
-    numberOfOutcomes = market.numOutcomes()
-    payoutDenominator = market.payoutDenominator()
+    denominationToken = market.getDenominationToken()
+    numberOfOutcomes = market.getNumberOfOutcomes()
+    payoutDenominator = market.getPayoutDenominator()
 
     outcome = 0
     while outcome < numberOfOutcomes:
@@ -63,10 +63,10 @@ def claimProceeds(sender: address, market: address):
         if balance:
             shareToken.destroyShares(sender, balance)
         if proceedAmount:
-            reportingWindow = market.reportingWindow()
-            marketCreatorFeeRate = market.feePerEthInAttoeth()
+            reportingWindow = market.getReportingWindow()
+            marketCreatorFeeRate = market.getMarketCreatorSettlementFeeInAttoethPerEth()
             marketCreatorFee = safeFxpMul(proceedAmount, marketCreatorFeeRate)
-            marketCreator = market.creator()
+            marketCreator = market.getCreator()
             if market.shouldCollectReportingFees():
                 reportingFeeRate = MARKET_FEE_CALCULATOR.getReportingFeeInAttoethPerEth(reportingWindow)
                 reportingFee = safeFxpMul(proceedAmount, reportingFeeRate)

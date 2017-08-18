@@ -36,12 +36,12 @@ contract Market is DelegationTarget, Typed, Initializable {
     ReportingState private reportingState = ReportingState.AUTOMATED;
 
     // CONSIDER: change the payoutNumerator/payoutDenominator to use fixed point numbers instead of integers; PRO: some people find fixed point decimal values easier to grok; CON: rounding errors can occur and it is easier to screw up the math if you don't handle fixed point values correctly
-    uint256 public payoutDenominator;
-    uint256 public feePerEthInAttoeth;
+    uint256 private payoutDenominator;
+    uint256 private feePerEthInAttoeth;
 
     // CONSIDER: we really don't need these
-    int256 public maxDisplayPrice;
-    int256 public minDisplayPrice;
+    int256 private maxDisplayPrice;
+    int256 private minDisplayPrice;
 
     // CONSIDER: figure out approprate values for these
     uint256 private constant AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
@@ -59,23 +59,23 @@ contract Market is DelegationTarget, Typed, Initializable {
     uint256 private constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     address private constant NULL_ADDRESS = address(0);
 
-    ReportingWindow public reportingWindow;
-    uint256 public endTime;
-    uint8 public numOutcomes;
+    ReportingWindow private reportingWindow;
+    uint256 private endTime;
+    uint8 private numOutcomes;
     uint256 private marketCreationBlock;
-    bytes32 public topic;
+    bytes32 private topic;
     address private automatedReporterAddress;
     mapping(bytes32 => ReportingToken) private reportingTokens;
-    Cash public denominationToken;
-    address public creator;
+    Cash private denominationToken;
+    address private creator;
     IShareToken[] private shareTokens;
-    uint256 public finalizationTime;
+    uint256 private finalizationTime;
     bool private automatedReportReceived;
-    bytes32 public tentativeWinningPayoutDistributionHash;
-    bytes32 public finalPayoutDistributionHash;
-    DisputeBondToken public automatedReporterDisputeBondToken;
-    DisputeBondToken public limitedReportersDisputeBondToken;
-    DisputeBondToken public allReportersDisputeBondToken;
+    bytes32 private tentativeWinningPayoutDistributionHash;
+    bytes32 private finalPayoutDistributionHash;
+    DisputeBondToken private automatedReporterDisputeBondToken;
+    DisputeBondToken private limitedReportersDisputeBondToken;
+    DisputeBondToken private allReportersDisputeBondToken;
     uint256 private validityBondAttoeth;
     uint256 private automatedReporterBondAttoeth;
 
@@ -312,7 +312,7 @@ contract Market is DelegationTarget, Typed, Initializable {
         require(reportingWindow.isForkingMarketFinalized());
         Branch _currentBranch = getBranch();
         // follow the forking market to its branch and then attach to the next reporting window on that branch
-        bytes32 _winningForkPayoutDistributionHash = _currentBranch.getForkingMarket().finalPayoutDistributionHash();
+        bytes32 _winningForkPayoutDistributionHash = _currentBranch.getForkingMarket().getFinalPayoutDistributionHash();
         Branch _destinationBranch = _currentBranch.getChildBranch(_winningForkPayoutDistributionHash);
         ReportingWindow _newReportingWindow = _destinationBranch.getNextReportingWindow();
         _newReportingWindow.migrateMarketInFromNibling();
@@ -382,8 +382,36 @@ contract Market is DelegationTarget, Typed, Initializable {
         return "Market";
     }
 
+    function getReportingWindow() public constant returns (ReportingWindow) {
+        return reportingWindow;
+    }
+
     function getBranch() public constant returns (Branch) {
         return reportingWindow.getBranch();
+    }
+
+    function getAutomatedReporterDisputeBondToken() public constant returns (DisputeBondToken) {
+        return automatedReporterDisputeBondToken;
+    }
+
+    function getLimitedReportersDisputeBondToken() public constant returns (DisputeBondToken) {
+        return limitedReportersDisputeBondToken;
+    }
+
+    function getAllReportersDisputeBondToken() public constant returns (DisputeBondToken) {
+        return allReportersDisputeBondToken;
+    }
+
+    function getNumberOfOutcomes() public constant returns (uint8) {
+        return numOutcomes;
+    }
+
+    function getEndTime() public constant returns (uint256) {
+        return endTime;
+    }
+
+    function getTentativeWinningPayoutDistributionHash() public constant returns (bytes32) {
+        return tentativeWinningPayoutDistributionHash;
     }
 
     function getFinalWinningReportingToken() public constant returns (ReportingToken) {
@@ -395,8 +423,40 @@ contract Market is DelegationTarget, Typed, Initializable {
         return shareTokens[outcome];
     }
 
+    function getFinalPayoutDistributionHash() public constant returns (bytes32) {
+        return finalPayoutDistributionHash;
+    }
+
+    function getPayoutDenominator() public constant returns (uint256) {
+        return payoutDenominator;
+    }
+
+    function getDenominationToken() public constant returns (Cash) {
+        return denominationToken;
+    }
+
+    function getCreator() public constant returns (address) {
+        return creator;
+    }
+
+    function getMarketCreatorSettlementFeeInAttoethPerEth() public constant returns (uint256) {
+        return feePerEthInAttoeth;
+    }
+
+    function getMaxDisplayPrice() public constant returns (int256) {
+        return maxDisplayPrice;
+    }
+
+    function getMinDisplayPrice() public constant returns (int256) {
+        return minDisplayPrice;
+    }
+
     function getCompleteSetCostInAttotokens() public constant returns (uint256) {
         return uint256(maxDisplayPrice.sub(minDisplayPrice));
+    }
+
+    function getTopic() public constant returns (bytes32) {
+        return topic;
     }
 
     function shouldCollectReportingFees() public constant returns (bool) {
@@ -427,6 +487,10 @@ contract Market is DelegationTarget, Typed, Initializable {
 
     function isFinalized() public constant returns (bool) {
         return finalPayoutDistributionHash != bytes32(0);
+    }
+
+    function getFinalizationTime() public constant returns (uint256) {
+        return finalizationTime;
     }
 
     function isInAutomatedReportingPhase() public constant returns (bool) {

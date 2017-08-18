@@ -53,10 +53,10 @@ def buyCompleteSets(sender: address, market: address, fxpAmount: int256):
     require(sender)
     require(market)
 
-    numOutcomes = market.numOutcomes()
+    numOutcomes = market.getNumberOfOutcomes()
     cumulativeScale = market.getCompleteSetCostInAttotokens()
     cost = safeFxpMul(fxpAmount, cumulativeScale)
-    denominationToken = market.denominationToken()
+    denominationToken = market.getDenominationToken()
 
     # Send money from the user's account to the market's address/account
     require(denominationToken.transferFrom(sender, market, cost))
@@ -79,15 +79,15 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: int256):
     require(market)
     require(1 <= fxpAmount and fxpAmount <= 2**254)
 
-    numOutcomes = market.numOutcomes()
+    numOutcomes = market.getNumberOfOutcomes()
     cumulativeScale = market.getCompleteSetCostInAttotokens()
     cost = safeFxpMul(fxpAmount, cumulativeScale)
-    denominationToken = market.denominationToken()
-    marketCreatorFeeRate = market.feePerEthInAttoeth()
+    denominationToken = market.getDenominationToken()
+    marketCreatorFeeRate = market.getMarketCreatorSettlementFeeInAttoethPerEth()
     marketCreatorFee = safeFxpMul(safeFxpMul(marketCreatorFeeRate, fxpAmount), cumulativeScale)
-    marketCreator = market.creator()
+    marketCreator = market.getCreator()
     if market.shouldCollectReportingFees():
-        reportingWindow = market.reportingWindow()
+        reportingWindow = market.getReportingWindow()
         reportingFeeRate = MARKET_FEE_CALCULATOR.getReportingFeeInAttoethPerEth(reportingWindow)
         reportingFee = safeFxpMul(safeFxpMul(reportingFeeRate, fxpAmount), cumulativeScale)
     else:

@@ -175,7 +175,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
             return false;
         }
         Market _shadyMarket = Market(_shadyTarget);
-        ReportingWindow _shadyReportingWindow = _shadyMarket.reportingWindow();
+        ReportingWindow _shadyReportingWindow = _shadyMarket.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
         }

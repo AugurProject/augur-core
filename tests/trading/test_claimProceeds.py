@@ -28,7 +28,7 @@ def acquireLongShares(contractsFixture, market, outcome, amount, approvalAddress
     assert cash.approve(completeSets.address, cashRequired, sender = sender)
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
     assert shareToken.approve(approvalAddress, amount, sender = sender)
-    for otherOutcome in range(0, market.numOutcomes()):
+    for otherOutcome in range(0, market.getNumberOfOutcomes()):
         if otherOutcome == outcome: continue
         otherShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(otherOutcome))
         assert otherShareToken.transfer(0, amount, sender = sender)
@@ -47,7 +47,7 @@ def acquireShortShareSet(contractsFixture, market, outcome, amount, approvalAddr
     assert cash.approve(completeSets.address, cashRequired, sender = sender)
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
     assert shareToken.transfer(0, amount, sender = sender)
-    for otherOutcome in range(0, market.numOutcomes()):
+    for otherOutcome in range(0, market.getNumberOfOutcomes()):
         if otherOutcome == outcome: continue
         otherShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(otherOutcome))
         assert otherShareToken.approve(approvalAddress, amount, sender = sender)
@@ -67,7 +67,7 @@ def test_redeem_shares_in_binary_market(contractsFixture):
     # get NO shares with a2
     acquireShortShareSet(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
-    contractsFixture.chain.head_state.timestamp = market.endTime() + 1
+    contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have tester.a0 submit automated report
     market.automatedReport([0, 2], sender = tester.k0)
     # set timestamp to after automated dispute end
@@ -106,7 +106,7 @@ def test_redeem_shares_in_categorical_market(contractsFixture):
     # get short shares with a2
     acquireShortShareSet(contractsFixture, market, 2, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
-    contractsFixture.chain.head_state.timestamp = market.endTime() + 1
+    contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have a0 submit automated report
     market.automatedReport([0, 0, 3], sender = tester.k0)
     # set timestamp to after automated dispute end
@@ -146,7 +146,7 @@ def test_redeem_shares_in_scalar_market(contractsFixture):
     # get NO shares with a2
     acquireShortShareSet(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
-    contractsFixture.chain.head_state.timestamp = market.endTime() + 1
+    contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have tester.a0 submit automated report (75% high, 25% low, range -10*10^18 to 30*10^18)
     market.automatedReport([10**19, 3*10**19], sender = tester.k0)
     # set timestamp to after automated dispute end
@@ -179,7 +179,7 @@ def test_reedem_failure(contractsFixture):
     # get NO shares with a2
     acquireShortShareSet(contractsFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
-    contractsFixture.chain.head_state.timestamp = market.endTime() + 1
+    contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have tester.a0 subimt automated report (75% high, 25% low, range -10*10^18 to 30*10^18)
     market.automatedReport([0, 2], sender = tester.k0)
     # set timestamp to after automated dispute end

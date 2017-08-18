@@ -84,7 +84,7 @@ def refundOrder(sender: address, type: int256, fxpSharesEscrowed: int256, fxpMon
         # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
         if(type == BID):
             i = 1
-            while(i <= market.numOutcomes()):
+            while(i <= market.getNumberOfOutcomes()):
                 if(i != outcome):
                     market.getShareToken(i).transfer(sender, fxpSharesEscrowed)
                 i += 1
@@ -94,7 +94,7 @@ def refundOrder(sender: address, type: int256, fxpSharesEscrowed: int256, fxpMon
 
     # Return to user moneyEscrowed that wasn't filled yet
     if(fxpMoneyEscrowed > 0):
-        require(market.denominationToken().transferFrom(market, sender, fxpMoneyEscrowed))
+        require(market.getDenominationToken().transferFrom(market, sender, fxpMoneyEscrowed))
 
     return(1)
 

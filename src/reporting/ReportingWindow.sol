@@ -59,7 +59,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
 
     function migrateMarketInFromSibling() public returns (bool) {
         Market _market = Market(msg.sender);
-        ReportingWindow _shadyReportingWindow = _market.reportingWindow();
+        ReportingWindow _shadyReportingWindow = _market.getReportingWindow();
         require(branch.isContainerForReportingWindow(_shadyReportingWindow));
         ReportingWindow _originalReportingWindow = _shadyReportingWindow;
         require(_originalReportingWindow.isContainerForMarket(_market));
@@ -72,7 +72,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         Branch _shadyBranch = _market.getBranch();
         require(branch.isParentOf(_shadyBranch));
         Branch _originalBranch = _shadyBranch;
-        ReportingWindow _shadyReportingWindow = _market.reportingWindow();
+        ReportingWindow _shadyReportingWindow = _market.getReportingWindow();
         require(_originalBranch.isContainerForReportingWindow(_shadyReportingWindow));
         ReportingWindow _originalReportingWindow = _shadyReportingWindow;
         require(_originalReportingWindow.isContainerForMarket(_market));

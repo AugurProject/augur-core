@@ -23,7 +23,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     function initialize(Market _market, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
         endInitialization();
-        require(_market.numOutcomes() == _payoutNumerators.length);
+        require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
         market = _market;
         payoutNumerators = _payoutNumerators;
         // TODO: call a function on `self.getBranch()` that logs the creation of this token with an index for the market, function needs to verify that caller is `branch.isContainerForReportingToken(thisToken)`
@@ -90,8 +90,8 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         require(market.isContainerForReportingToken(this));
         require(getBranch().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() != this);
-        migrateLosingTokenRepToDisputeBond(market.automatedReporterDisputeBondToken());
-        migrateLosingTokenRepToDisputeBond(market.limitedReportersDisputeBondToken());
+        migrateLosingTokenRepToDisputeBond(market.getAutomatedReporterDisputeBondToken());
+        migrateLosingTokenRepToDisputeBond(market.getLimitedReportersDisputeBondToken());
         migrateLosingTokenRepToWinningToken();
         return true;
     }
@@ -100,7 +100,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         if (_disputeBondToken == address(0)) {
             return true;
         }
-        if (_disputeBondToken.getDisputedPayoutDistributionHash() == market.finalPayoutDistributionHash()) {
+        if (_disputeBondToken.getDisputedPayoutDistributionHash() == market.getFinalPayoutDistributionHash()) {
             return true;
         }
         var _reputationToken = getReputationToken();
@@ -132,11 +132,11 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function getReputationToken() constant returns (ReputationToken) {
-        return market.reportingWindow().getReputationToken();
+        return market.getReportingWindow().getReputationToken();
     }
 
     function getReportingWindow() constant returns (ReportingWindow) {
-        return market.reportingWindow();
+        return market.getReportingWindow();
     }
 
     function getRegistrationToken() constant returns (RegistrationToken) {
