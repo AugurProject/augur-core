@@ -68,7 +68,7 @@ contract OrdersFetcher is Controlled {
             return (_worseOrderId, _orders.getWorseOrderId(_worseOrderId, _type, _market, _outcome));
         }
         bool _isBetterPrice = _orders.isBetterPrice(_type, _market, _outcome, _fxpPrice, _worseOrderId);
-        while(_isBetterPrice && _orders.getBetterOrderId(_worseOrderId, _type, _market, _outcome) != 0 && _fxpPrice != _orders.getPrice(_orders.getBetterOrderId(_worseOrderId, _type, _market, _outcome), _type, _market, _outcome)) {
+        while (_isBetterPrice && _orders.getBetterOrderId(_worseOrderId, _type, _market, _outcome) != 0 && _fxpPrice != _orders.getPrice(_orders.getBetterOrderId(_worseOrderId, _type, _market, _outcome), _type, _market, _outcome)) {
             _betterOrderId = _orders.getBetterOrderId(_worseOrderId, _type, _market, _outcome);
             _isBetterPrice = _orders.isBetterPrice(_type, _market, _outcome, _fxpPrice, _betterOrderId);
             if (_isBetterPrice) {
