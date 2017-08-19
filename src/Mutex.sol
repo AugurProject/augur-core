@@ -3,6 +3,7 @@ pragma solidity ^0.4.13;
 import 'ROOT/Controller.sol';
 
 
+// DEPRECATED: Use libraries/ReentrancyGuard.sol
 contract Mutex is Controlled {
     bool public mutex = false;
 
