@@ -28,7 +28,7 @@ contract OrdersFetcher is Controlled {
     function getOrderIds(uint256 _type, IMarket _market, uint8 _outcome, bytes20 _startingOrderId, uint256 _numOrdersToLoad) public constant returns (bytes20[]) {
         require(_type == BID || _type == ASK);
         require(0 <= _outcome && _outcome < _market.getNumberOfOutcomes());
-        var _orders = Orders(controller.lookup('Orders'));
+        var _orders = Orders(controller.lookup("Orders"));
         if (_startingOrderId == 0) {
             _startingOrderId = _orders.getBestOrderId(_type, _market, _outcome);
         }
@@ -43,7 +43,7 @@ contract OrdersFetcher is Controlled {
     }
 
     function getOrder(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome) public constant returns (uint256 _attoshares, uint256 _displayPrice, address _owner, uint256 _tokensEscrowed, uint256 _sharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _gasPrice) {
-        var _orders = Orders(controller.lookup('Orders'));
+        var _orders = Orders(controller.lookup("Orders"));
         _attoshares = _orders.getAmount(_orderId, _type, _market, _outcome);
         _displayPrice = _orders.getPrice(_orderId, _type, _market, _outcome);
         _owner = _orders.getOrderOwner(_orderId, _type, _market, _outcome);
@@ -58,7 +58,7 @@ contract OrdersFetcher is Controlled {
     function ascendOrderList(uint256 _type, IMarket _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _lowestOrderId) public constant returns (bytes20 _betterOrderId, bytes20 _worseOrderId) {
         _worseOrderId = _lowestOrderId;
         bool _isWorstPrice;
-        var _orders = Orders(controller.lookup('Orders'));
+        var _orders = Orders(controller.lookup("Orders"));
         if (_type == BID) {
             _isWorstPrice = _fxpPrice <= _orders.getPrice(_worseOrderId, _type, _market, _outcome);
         } else {
@@ -82,7 +82,7 @@ contract OrdersFetcher is Controlled {
     function descendOrderList(uint256 _type, IMarket _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _highestOrderId) public constant returns (bytes20 _betterOrderId, bytes20 _worseOrderId) {
         _betterOrderId = _highestOrderId;
         bool _isBestPrice;
-        var _orders = Orders(controller.lookup('Orders'));
+        var _orders = Orders(controller.lookup("Orders"));
         if (_type == BID) {
             _isBestPrice = _fxpPrice > _orders.getPrice(_betterOrderId, _type, _market, _outcome);
         } else {
@@ -107,7 +107,7 @@ contract OrdersFetcher is Controlled {
     }
 
     function findBoundingOrders(uint256 _type, IMarket _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _bestOrderId, bytes20 _worstOrderId, bytes20 _betterOrderId, bytes20 _worseOrderId) public constant returns (bytes20, bytes20) {
-        var _orders = Orders(controller.lookup('Orders'));
+        var _orders = Orders(controller.lookup("Orders"));
         if (_bestOrderId == _worstOrderId) {
             if (_bestOrderId == 0) {
                 return (0, 0);
