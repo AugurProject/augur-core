@@ -29,8 +29,8 @@ ZEROED_ORDER_ID = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\
 
 def test_walkOrderList_bids(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
+    orders = contractsFixture.contracts['NewOrders']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     outcomeID = 1
     hash = hashlib.new('ripemd160')
     hash.update('0')
@@ -135,8 +135,8 @@ def test_walkOrderList_bids(contractsFixture):
 
 def test_walkOrderList_asks(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
+    orders = contractsFixture.contracts['NewOrders']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     outcomeID = 1
     hash = hashlib.new('ripemd160')
     hash.update('0')
@@ -240,8 +240,8 @@ def test_walkOrderList_asks(contractsFixture):
 def test_orderSorting(contractsFixture):
     def runtest(testCase):
         market = contractsFixture.binaryMarket
-        orders = contractsFixture.contracts['Orders']
-        ordersFetcher = contractsFixture.contracts['OrdersFetcher']
+        orders = contractsFixture.contracts['NewOrders']
+        ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
         ordersCollection = []
         for order in testCase["orders"]:
             output = orders.saveOrder(
@@ -1123,8 +1123,8 @@ def test_orderSorting(contractsFixture):
 
 def test_saveOrder(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
+    orders = contractsFixture.contracts['NewOrders']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     hash = hashlib.new('ripemd160')
     hash.update('0')
     hashedOrderId0 = hash.digest()
@@ -1153,8 +1153,8 @@ def test_saveOrder(contractsFixture):
 
 def test_fillOrder(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
+    orders = contractsFixture.contracts['NewOrders']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     hash = hashlib.new('ripemd160')
     hash.update('0')
     hashedOrderId0 = hash.digest()
@@ -1187,8 +1187,8 @@ def test_fillOrder(contractsFixture):
 
 def test_removeOrder(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
+    orders = contractsFixture.contracts['NewOrders']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     hash = hashlib.new('ripemd160')
     hash.update('0')
     hashedOrderId0 = hash.digest()
