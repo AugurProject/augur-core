@@ -5,6 +5,11 @@ from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
 from utils import bytesToLong, fix, unfix
 
+import binascii
+
+ZEROED_ORDER_ID = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ZEROED_ADDRESS = '0x0000000000000000000000000000000000000000'
+
 tester.STARTGAS = long(6.7 * 10**6)
 
 BID = 1
@@ -25,7 +30,7 @@ GAS_PRICE = 7
 def test_cancelBid(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     cancelOrder = contractsFixture.contracts['cancelOrder']
 
@@ -45,11 +50,12 @@ def test_cancelBid(contractsFixture):
     marketInitialNoShares = noShareToken.totalSupply()
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, tradeGroupID, sender=tester.k1)
     assert orderID, "Order ID should be non-zero"
-    assert ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
+    bytesOrderID = convertToBytes(orderID)
+    assert ordersFetcher.getOrder(bytesOrderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
 
     assert(cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "publicCancelOrder should succeed"
 
-    assert(ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+    assert(ordersFetcher.getOrder(bytesOrderID, orderType, market.address, outcomeID) == [0, 0, ZEROED_ADDRESS, 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]), "Canceled order elements should all be zero"
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(makerInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
@@ -59,7 +65,7 @@ def test_cancelBid(contractsFixture):
 def test_cancelAsk(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     cancelOrder = contractsFixture.contracts['cancelOrder']
 
@@ -79,11 +85,12 @@ def test_cancelAsk(contractsFixture):
     marketInitialNoShares = noShareToken.totalSupply()
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, tradeGroupID, sender=tester.k1)
     assert(orderID != 0), "Order ID should be non-zero"
-    assert ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
+    bytesOrderID = convertToBytes(orderID)
+    assert ordersFetcher.getOrder(bytesOrderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
 
     assert(cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "publicCancelOrder should succeed"
 
-    assert(ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, 0, 0, 0, 0, 0, 0]), "Canceled order elements should all be zero"
+    assert(ordersFetcher.getOrder(bytesOrderID, orderType, market.address, outcomeID) == [0, 0, ZEROED_ADDRESS, 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]), "Canceled order elements should all be zero"
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(makerInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
@@ -124,3 +131,9 @@ def test_exceptions(contractsFixture):
     assert(cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "publicCancelOrder should succeed"
     with raises(TransactionFailed):
         cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1)
+
+def convertToBytes(orderID):
+    width = orderID.bit_length()
+    width += 8 - ((width % 8) or 8)
+    fmt = '%%0%dx' % (width // 4)
+    return binascii.unhexlify(fmt % orderID)
