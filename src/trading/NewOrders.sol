@@ -162,7 +162,7 @@ contract NewOrders is Controlled {
             orders[_market][_outcome][_type][_betterOrderId].worseOrderId = _orderId;
             orders[_market][_outcome][_type][_orderId].betterOrderId = _betterOrderId;
         }
-        if (_worseOrderId != 0) { 
+        if (_worseOrderId != 0) {
             orders[_market][_outcome][_type][_worseOrderId].betterOrderId = _orderId;
             orders[_market][_outcome][_type][_orderId].worseOrderId = _worseOrderId;
         }
