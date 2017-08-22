@@ -144,8 +144,8 @@ contract NewOrders is Controlled {
         bytes20 _bestOrderId = bestOrder[_market][_outcome][_type];
         bytes20 _worstOrderId = worstOrder[_market][_outcome][_type];
         NewOrdersFetcher _ordersFetcher = NewOrdersFetcher(controller.lookup("NewOrdersFetcher"));
-        //(_betterOrderId, _worseOrderId) = _ordersFetcher.findBoundingOrders(_type, _market, _outcome, _fxpPrice, _bestOrderId, _worstOrderId, _betterOrderId, _worseOrderId);
-        if (_type == BID) { 
+        (_betterOrderId, _worseOrderId) = _ordersFetcher.findBoundingOrders(_type, _market, _outcome, _fxpPrice, _bestOrderId, _worstOrderId, _betterOrderId, _worseOrderId);
+        if (_type == BID) {
             _bestOrderId = updateBestBidOrder(_orderId, _market, _fxpPrice, _outcome);
             _worstOrderId = updateWorstBidOrder(_orderId, _market, _fxpPrice, _outcome);
         } else {
