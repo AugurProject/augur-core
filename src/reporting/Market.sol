@@ -274,7 +274,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function canFinalizeFork() private returns (bool) {
-        bytes32 _winningPayoutDistributionHash = MarketExtensions(controller.lookup('MarketExtensions')).getWinningPayoutDistributionHashFromFork(this);
+        bytes32 _winningPayoutDistributionHash = MarketExtensions(controller.lookup("MarketExtensions")).getWinningPayoutDistributionHashFromFork(this);
         if (_winningPayoutDistributionHash == bytes32(0)) {
             return false;
         }
