@@ -85,7 +85,7 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: int256):
     denominationToken = market.getDenominationToken()
     marketCreatorFeeRate = market.getMarketCreatorSettlementFeeInAttoethPerEth()
     marketCreatorFee = safeFxpMul(safeFxpMul(marketCreatorFeeRate, fxpAmount), cumulativeScale)
-    marketCreator = market.getCreator()
+    marketCreator = market.owner()
     if market.shouldCollectReportingFees():
         reportingWindow = market.getReportingWindow()
         reportingFeeRate = MARKET_FEE_CALCULATOR.getReportingFeeInAttoethPerEth(reportingWindow)

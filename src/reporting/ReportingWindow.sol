@@ -46,7 +46,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInWei, Cash _denominationToken, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable returns (Market _newMarket) {
+    function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInWei, Cash _denominationToken, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public afterInitialized payable returns (Market _newMarket) {
         require(2 <= _numOutcomes && _numOutcomes <= 8);
         require(2 <= _payoutDenominator && _payoutDenominator <= 2**254);
         require(block.timestamp < startTime);
@@ -57,7 +57,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return _newMarket;
     }
 
-    function migrateMarketInFromSibling() public returns (bool) {
+    function migrateMarketInFromSibling() public afterInitialized returns (bool) {
         Market _market = Market(msg.sender);
         ReportingWindow _shadyReportingWindow = _market.getReportingWindow();
         require(branch.isContainerForReportingWindow(_shadyReportingWindow));
@@ -67,7 +67,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function migrateMarketInFromNibling() public returns (bool) {
+    function migrateMarketInFromNibling() public afterInitialized returns (bool) {
         Market _market = Market(msg.sender);
         Branch _shadyBranch = _market.getBranch();
         require(branch.isParentOf(_shadyBranch));
@@ -80,7 +80,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function removeMarket() public returns (bool) {
+    function removeMarket() public afterInitialized returns (bool) {
         Market _market = Market(msg.sender);
         require(markets.contains(_market));
         markets.remove(_market);
@@ -89,7 +89,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function updateMarketPhase() public returns (bool) {
+    function updateMarketPhase() public afterInitialized returns (bool) {
         Market _market = Market(msg.sender);
         require(markets.contains(_market));
         if (_market.isDoneWithAllReporters()) {
@@ -108,7 +108,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function noteReport(Market _market, address _reporter, bytes32 _payoutDistributionHash) public returns (bool) {
+    function noteReport(Market _market, address _reporter, bytes32 _payoutDistributionHash) public afterInitialized returns (bool) {
         require(markets.contains(_market));
         require(_market.getReportingTokenOrZeroByPayoutDistributionHash(_payoutDistributionHash) == msg.sender);
         require(_market.isInAllReportingPhase() || _market.isInLimitedReportingPhase());
@@ -124,47 +124,47 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function getTypeName() public constant returns (bytes32) {
+    function getTypeName() public afterInitialized constant returns (bytes32) {
         return "ReportingWindow";
     }
 
-    function getBranch() public constant returns (Branch) {
+    function getBranch() public afterInitialized constant returns (Branch) {
         return branch;
     }
 
-    function getRegistrationToken() public constant returns (RegistrationToken) {
+    function getRegistrationToken() public afterInitialized constant returns (RegistrationToken) {
         return registrationToken;
     }
 
-    function getReputationToken() public constant returns (ReputationToken) {
+    function getReputationToken() public afterInitialized constant returns (ReputationToken) {
         return branch.getReputationToken();
     }
 
-    function getStartTime() public constant returns (uint256) {
+    function getStartTime() public afterInitialized constant returns (uint256) {
         return startTime;
     }
 
-    function getEndTime() public constant returns (uint256) {
+    function getEndTime() public afterInitialized constant returns (uint256) {
         return getDisputeEndTime();
     }
 
-    function getReportingStartTime() public constant returns (uint256) {
+    function getReportingStartTime() public afterInitialized constant returns (uint256) {
         return getStartTime();
     }
 
-    function getReportingEndTime() public constant returns (uint256) {
+    function getReportingEndTime() public afterInitialized constant returns (uint256) {
         return getStartTime() + REPORTING_DURATION_SECONDS;
     }
 
-    function getDisputeStartTime() public constant returns (uint256) {
+    function getDisputeStartTime() public afterInitialized constant returns (uint256) {
         return getReportingEndTime();
     }
 
-    function getDisputeEndTime() public constant returns (uint256) {
+    function getDisputeEndTime() public afterInitialized constant returns (uint256) {
         return getDisputeStartTime() + REPORTING_DISPUTE_DURATION_SECONDS;
     }
 
-    function isActive() public constant returns (bool) {
+    function isActive() public afterInitialized constant returns (bool) {
         if (block.timestamp <= getStartTime()) {
             return false;
         }
@@ -174,7 +174,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function isReportingActive() public constant returns (bool) {
+    function isReportingActive() public afterInitialized constant returns (bool) {
         if (block.timestamp <= getStartTime()) {
             return false;
         }
@@ -184,7 +184,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function isDisputeActive() public constant returns (bool) {
+    function isDisputeActive() public afterInitialized constant returns (bool) {
         if (block.timestamp <= getDisputeStartTime()) {
             return false;
         }
@@ -194,7 +194,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function getTargetReportsPerLimitedReporterMarket() public constant returns (uint256) {
+    function getTargetReportsPerLimitedReporterMarket() public afterInitialized constant returns (uint256) {
         uint256 _limitedReporterMarketCount = limitedReporterMarkets.count();
         uint256 _registeredReporters = registrationToken.getPeakSupply();
         uint256 _minimumReportsPerMarket = BASE_MINIMUM_REPORTERS_PER_MARKET;
@@ -208,65 +208,65 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return _minimumReportsPerMarket;
     }
 
-    function getNumberOfReportsByMarket(Market _market) public constant returns (uint256) {
+    function getNumberOfReportsByMarket(Market _market) public afterInitialized constant returns (uint256) {
         return numberOfReportsByMarket[_market];
     }
 
-    function getMaxReportsPerLimitedReporterMarket() public constant returns (uint256) {
+    function getMaxReportsPerLimitedReporterMarket() public afterInitialized constant returns (uint256) {
         return getTargetReportsPerLimitedReporterMarket() + 2;
     }
 
-    function getRequiredReportsPerReporterForlimitedReporterMarkets() public constant returns (uint256) {
+    function getRequiredReportsPerReporterForlimitedReporterMarkets() public afterInitialized constant returns (uint256) {
         return getTargetReportsPerLimitedReporterMarket() * limitedReporterMarkets.count() / registrationToken.totalSupply();
     }
 
-    function getTargetReportsPerReporter() public constant returns (uint256) {
+    function getTargetReportsPerReporter() public afterInitialized constant returns (uint256) {
         uint256 _limitedMarketReportsPerReporter = getRequiredReportsPerReporterForlimitedReporterMarkets();
         return allReporterMarkets.count() + _limitedMarketReportsPerReporter;
     }
 
-    function getLimitedReporterMarkets() public constant returns (Set) {
+    function getLimitedReporterMarkets() public afterInitialized constant returns (Set) {
         return limitedReporterMarkets;
     }
 
-    function getMarketsCount() public constant returns (uint256) {
+    function getMarketsCount() public afterInitialized constant returns (uint256) {
         return markets.count();
     }
 
-    function getLimitedReporterMarketsCount() public constant returns (uint256) {
+    function getLimitedReporterMarketsCount() public afterInitialized constant returns (uint256) {
         return limitedReporterMarkets.count();
     }
 
-    function getAllReporterMarketsCount() public constant returns (uint256) {
+    function getAllReporterMarketsCount() public afterInitialized constant returns (uint256) {
         return allReporterMarkets.count();
     }
 
-    function getReportsByReporter(address _reporter) public constant returns (Set) {
+    function getReportsByReporter(address _reporter) public afterInitialized constant returns (Set) {
         if (reportsByReporter[_reporter] == address(0)) {
             reportsByReporter[_reporter] = SetFactory(controller.lookup("SetFactory")).createSet(controller, this);
         }
         return reportsByReporter[_reporter];
     }
 
-    function isContainerForRegistrationToken(RegistrationToken _shadyRegistrationToken) public constant returns (bool) {
+    function isContainerForRegistrationToken(RegistrationToken _shadyRegistrationToken) public afterInitialized constant returns (bool) {
         if (_shadyRegistrationToken.getTypeName() != "RegistrationToken") {
             return false;
         }
         return registrationToken == _shadyRegistrationToken;
     }
 
-    function isContainerForMarket(Market _shadyMarket) public constant returns (bool) {
+    function isContainerForMarket(Market _shadyMarket) public afterInitialized constant returns (bool) {
         if (_shadyMarket.getTypeName() != "Market") {
             return false;
         }
         return markets.contains(_shadyMarket);
     }
 
-    function isDoneReporting(address _reporter) public constant returns (bool) {
+    function isDoneReporting(address _reporter) public afterInitialized constant returns (bool) {
         return getReportsByReporter(_reporter).count() >= getTargetReportsPerReporter();
     }
 
-    function privateAddMarket(Market _market) private returns (bool) {
+    function privateAddMarket(Market _market) private afterInitialized returns (bool) {
         require(!markets.contains(_market));
         require(!limitedReporterMarkets.contains(_market));
         require(!allReporterMarkets.contains(_market));
@@ -282,7 +282,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function privateNoteReport(Market _market, address _reporter) private returns (bool) {
+    function privateNoteReport(Market _market, address _reporter) private afterInitialized returns (bool) {
         Set reports = getReportsByReporter(_reporter);
         if (reports.contains(_market)) {
             return true;
@@ -292,21 +292,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function getWinningPayoutDistributionHashFromFork(Market _market) constant returns (bytes32) {
-        if (getBranch().getForkingMarket() != _market) {
-            return 0;
-        }
-        ReputationToken _winningDestination = getReputationToken().getTopMigrationDestination();
-        if (address(_winningDestination) == address(0)) {
-            return 0;
-        }
-        if (_winningDestination.totalSupply() < 11 * 10**6 * 10**18 / 2 && block.timestamp < getBranch().getForkEndTime()) {
-            return 0;
-        }
-        return _winningDestination.getBranch().getParentPayoutDistributionHash();
-    }
-
-    function isForkingMarketFinalized() constant returns (bool) {
+    function isForkingMarketFinalized() public afterInitialized constant returns (bool) {
         return getBranch().getForkingMarket().isFinalized();
     }
 }

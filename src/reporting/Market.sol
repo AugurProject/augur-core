@@ -2,6 +2,8 @@
 
 pragma solidity ^0.4.13;
 
+import 'ROOT/legacy_reputation/Ownable.sol';
+import 'ROOT/extensions/MarketExtensions.sol';
 import 'ROOT/reporting/Branch.sol';
 import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/ReputationToken.sol';
@@ -21,7 +23,7 @@ import 'ROOT/libraries/math/SafeMathUint256.sol';
 import 'ROOT/libraries/math/SafeMathInt256.sol';
 
 
-contract Market is DelegationTarget, Typed, Initializable {
+contract Market is DelegationTarget, Typed, Initializable, Ownable {
     using SafeMathUint256 for uint256;
     using SafeMathInt256 for int256;
 
@@ -48,12 +50,7 @@ contract Market is DelegationTarget, Typed, Initializable {
     uint256 private constant LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21;
     uint256 private constant ALL_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22;
 
-    uint256 private constant MIN_NUM_OUTCOMES = 2;
-    uint256 private constant MIN_PAYOUT_DENOMINATOR = 2;
     uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 5 * 10 ** 17;
-    int256 private constant DISPLAY_PRICE_MIN = -(2 ** 254);
-    int256 private constant DISPLAY_PRICE_MAX = 2 ** 254;
-    uint256 private constant SET_COST_MULTIPLIER_MAX = 2 ** 254;
     uint256 private constant APPROVAL_AMOUNT = 2 ** 254;
     uint256 private constant AUTOMATED_REPORTING_DURATION_SECONDS = 3 days;
     uint256 private constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
@@ -67,7 +64,6 @@ contract Market is DelegationTarget, Typed, Initializable {
     address private automatedReporterAddress;
     mapping(bytes32 => ReportingToken) private reportingTokens;
     Cash private denominationToken;
-    address private creator;
     IShareToken[] private shareTokens;
     uint256 private finalizationTime;
     bool private automatedReportReceived;
@@ -79,17 +75,23 @@ contract Market is DelegationTarget, Typed, Initializable {
     uint256 private validityBondAttoeth;
     uint256 private automatedReporterBondAttoeth;
 
+    /**
+     * @dev Makes the function trigger a migration before execution
+     */
+    modifier triggersMigration() {
+        migrateThroughAllForks();
+        _;
+    }
+
     function initialize(ReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInAttoeth, Cash _denominationToken, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(address(_reportingWindow) != NULL_ADDRESS);
-        require(_payoutDenominator >= MIN_PAYOUT_DENOMINATOR);
-        require(_numOutcomes >= MIN_NUM_OUTCOMES);
+        require(_numOutcomes >= 2);
+        require(_numOutcomes <= 8);
         // payoutDenominator must be a multiple of numOutcomes so we can evenly split complete set share payout on indeterminate
         require((_payoutDenominator % _numOutcomes) == 0);
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
-        require((DISPLAY_PRICE_MIN <= _maxDisplayPrice) && (_maxDisplayPrice <= DISPLAY_PRICE_MAX));
-        require((DISPLAY_PRICE_MIN <= _minDisplayPrice) && (_minDisplayPrice <= DISPLAY_PRICE_MAX));
-        require((1 <= uint256(_maxDisplayPrice.sub(_minDisplayPrice))) && (uint256(_maxDisplayPrice.sub(_minDisplayPrice)) <= SET_COST_MULTIPLIER_MAX));
+        require(_minDisplayPrice < _maxDisplayPrice);
         require(_creator != NULL_ADDRESS);
         // FIXME: require market to be on a non-forking branch; repeat this check up the stack as well if necessary (e.g., in reporting window)
         // CONSIDER: should we allow creator to send extra ETH, is there risk of variability in bond requirements?
@@ -106,7 +108,7 @@ contract Market is DelegationTarget, Typed, Initializable {
         topic = _topic;
         automatedReporterAddress = _automatedReporterAddress;
         denominationToken = _denominationToken;
-        creator = _creator;
+        owner = _creator;
         for (uint8 _outcome = 0; _outcome < numOutcomes; _outcome++) {
             shareTokens.push(createShareToken(_outcome));
         }
@@ -114,11 +116,6 @@ contract Market is DelegationTarget, Typed, Initializable {
         require(controller.lookup("Cash") == address(denominationToken) || getBranch().isContainerForShareToken(denominationToken));
         _success = true;
         return _success;
-    }
-
-    function createShareToken(uint8 _outcome) private returns (IShareToken) {
-        return ShareTokenFactory(controller.lookup("ShareTokenFactory")).createShareToken(controller, this, _outcome);
-    }
 
         // TODO: we need to update this signature (and all of the places that call it) to allow the creator (UI) to pass in a number of other things which will all be logged here
         // TODO: log short description
@@ -129,29 +126,26 @@ contract Market is DelegationTarget, Typed, Initializable {
         // TODO: log outcome labels (same number as numOutcomes)
         // TODO: log type (scalar, binary, categorical)
         // TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, payoutDenominator, denominationToken address, etc.)
+    }
+
+    function createShareToken(uint8 _outcome) private returns (IShareToken) {
+        return ShareTokenFactory(controller.lookup("ShareTokenFactory")).createShareToken(controller, this, _outcome);
+    }
 
     // this will need to be called manually for each open market if a spender contract is updated
     function approveSpenders() private returns (bool) {
         bytes32[5] memory _names = [bytes32("cancelOrder"), bytes32("completeSets"), bytes32("takeOrder"), bytes32("tradingEscapeHatch"), bytes32("claimProceeds")];
-        uint8 i = 0;
-        for (i = 0; i < 5; i++) {
+        for (uint8 i = 0; i < _names.length; i++) {
             denominationToken.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT);
         }
-        for (i = 0; i < numOutcomes; i++) {
-            shareTokens[i].approve(controller.lookup("takeOrder"), APPROVAL_AMOUNT);
+        for (uint8 j = 0; j < numOutcomes; j++) {
+            shareTokens[j].approve(controller.lookup("takeOrder"), APPROVAL_AMOUNT);
         }
         return true;
     }
 
-    function changeCreator(address _newCreator) public returns (bool) {
-        require(msg.sender == creator);
-        creator = _newCreator;
-        return true;
-    }
-
-    function decreaseMarketCreatorSettlementFeeInAttoethPerEth(uint256 _newFeePerEthInWei) public returns (bool) {
+    function decreaseMarketCreatorSettlementFeeInAttoethPerEth(uint256 _newFeePerEthInWei) public onlyOwner returns (bool) {
         require(_newFeePerEthInWei < feePerEthInAttoeth);
-        require(msg.sender == creator);
         feePerEthInAttoeth = _newFeePerEthInWei;
         return true;
     }
@@ -178,8 +172,7 @@ contract Market is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function disputeLimitedReporters() public returns (bool) {
-        migrateThroughAllForks();
+    function disputeLimitedReporters() public triggersMigration returns (bool) {
         require(isInLimitedDisputePhase());
         limitedReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
         reportingState = ReportingState.ALL;
@@ -188,8 +181,7 @@ contract Market is DelegationTarget, Typed, Initializable {
         return migrateReportingWindow(_newReportingWindow);
     }
 
-    function disputeAllReporters() public returns (bool) {
-        migrateThroughAllForks();
+    function disputeAllReporters() public triggersMigration returns (bool) {
         require(isInAllDisputePhase());
         allReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
         reportingState = ReportingState.FORK;
@@ -199,7 +191,7 @@ contract Market is DelegationTarget, Typed, Initializable {
         return migrateReportingWindow(_newReportingWindow);
     }
 
-    function migrateReportingWindow(ReportingWindow _newReportingWindow) private returns (bool) {
+    function migrateReportingWindow(ReportingWindow _newReportingWindow) private afterInitialized returns (bool) {
         _newReportingWindow.migrateMarketInFromSibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
@@ -274,9 +266,7 @@ contract Market is DelegationTarget, Typed, Initializable {
         return true;
     }
 
-    function canFinalizeReporting() private returns (bool) {
-        migrateThroughAllForks();
-
+    function canFinalizeReporting() private triggersMigration returns (bool) {
         if (block.timestamp <= reportingWindow.getEndTime()) {
             return false;
         }
@@ -284,7 +274,7 @@ contract Market is DelegationTarget, Typed, Initializable {
     }
 
     function canFinalizeFork() private returns (bool) {
-        bytes32 _winningPayoutDistributionHash = reportingWindow.getWinningPayoutDistributionHashFromFork(this);
+        bytes32 _winningPayoutDistributionHash = MarketExtensions(controller.lookup('MarketExtensions')).getWinningPayoutDistributionHashFromFork(this);
         if (_winningPayoutDistributionHash == bytes32(0)) {
             return false;
         }
@@ -433,10 +423,6 @@ contract Market is DelegationTarget, Typed, Initializable {
 
     function getDenominationToken() public constant returns (Cash) {
         return denominationToken;
-    }
-
-    function getCreator() public constant returns (address) {
-        return creator;
     }
 
     function getMarketCreatorSettlementFeeInAttoethPerEth() public constant returns (uint256) {
