@@ -65,7 +65,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     bytes32 private topic;
     address private automatedReporterAddress;
     mapping(bytes32 => ReportingToken) private reportingTokens;
-    Cash private denominationToken;
+    Cash private cash;
     IShareToken[] private shareTokens;
     uint256 private finalizationTime;
     bool private automatedReportReceived;
@@ -85,7 +85,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         _;
     }
 
-    function initialize(ReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInAttoeth, Cash _denominationToken, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
+    function initialize(ReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInAttoeth, Cash _cash, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(address(_reportingWindow) != NULL_ADDRESS);
         require(_numOutcomes >= 2);
@@ -95,6 +95,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_minDisplayPrice < _maxDisplayPrice);
         require(_creator != NULL_ADDRESS);
+        require(_cash.getTypeName() == "Cash");
         // FIXME: require market to be on a non-forking branch; repeat this check up the stack as well if necessary (e.g., in reporting window)
         // CONSIDER: should we allow creator to send extra ETH, is there risk of variability in bond requirements?
         require(msg.value == MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getMarketCreationCost(_reportingWindow));
@@ -102,20 +103,18 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         endTime = _endTime;
         numOutcomes = _numOutcomes;
         payoutDenominator = _payoutDenominator;
-        // FIXME: markets may be denominated in tokens that aren't 10^18, deal with that
         feePerEthInAttoeth = _feePerEthInAttoeth;
         maxDisplayPrice = _maxDisplayPrice;
         minDisplayPrice = _minDisplayPrice;
         marketCreationBlock = block.number;
         topic = _topic;
         automatedReporterAddress = _automatedReporterAddress;
-        denominationToken = _denominationToken;
+        cash = _cash;
         owner = _creator;
         for (uint8 _outcome = 0; _outcome < numOutcomes; _outcome++) {
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
-        require(controller.lookup("Cash") == address(denominationToken) || getBranch().isContainerForShareToken(denominationToken));
         _success = true;
         return _success;
 
@@ -127,7 +126,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         // TODO: log tags (0-2)
         // TODO: log outcome labels (same number as numOutcomes)
         // TODO: log type (scalar, binary, categorical)
-        // TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, payoutDenominator, denominationToken address, etc.)
+        // TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, payoutDenominator, cash address, etc.)
     }
 
     function createShareToken(uint8 _outcome) private returns (IShareToken) {
@@ -138,7 +137,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     function approveSpenders() private returns (bool) {
         bytes32[5] memory _names = [bytes32("cancelOrder"), bytes32("completeSets"), bytes32("takeOrder"), bytes32("tradingEscapeHatch"), bytes32("claimProceeds")];
         for (uint8 i = 0; i < _names.length; i++) {
-            denominationToken.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT);
+            cash.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT);
         }
         for (uint8 j = 0; j < numOutcomes; j++) {
             shareTokens[j].approve(controller.lookup("takeOrder"), APPROVAL_AMOUNT);
@@ -413,7 +412,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function getDenominationToken() public constant returns (Cash) {
-        return denominationToken;
+        return cash;
     }
 
     function getMarketCreatorSettlementFeeInAttoethPerEth() public constant returns (uint256) {
@@ -437,7 +436,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function shouldCollectReportingFees() public constant returns (bool) {
-        return !getBranch().isContainerForShareToken(denominationToken);
+        return !getBranch().isContainerForShareToken(cash);
     }
 
     function isDoneWithAutomatedReporters() public constant returns (bool) {

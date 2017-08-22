@@ -14,11 +14,9 @@ def test_market_creation(contractsFixture):
     shadyReportingToken = contractsFixture.upload('../src/reporting/ReportingToken.sol', 'shadyReportingToken')
     shadyReportingToken.initialize(market.address, [0,2])
 
-    shadyBranch = contractsFixture.createBranch(0, "")
-    regularMarket = contractsFixture.createReasonableBinaryMarket(branch, cash)
-    shadyDenominationToken = contractsFixture.applySignature('shareToken', regularMarket.getShareToken(0))
-    with raises(TransactionFailed, message="Shady share token should be failing since it is in a separate branch"):
-        contractsFixture.createReasonableBinaryMarket(shadyBranch, shadyDenominationToken)
+    shareToken = contractsFixture.applySignature('shareToken', market.getShareToken(0))
+    with raises(TransactionFailed, message="Markets can only use Cash as their denomination token"):
+        contractsFixture.createReasonableBinaryMarket(branch, shareToken)
 
     assert market.getBranch() == branch.address
     assert market.getNumberOfOutcomes() == 2
