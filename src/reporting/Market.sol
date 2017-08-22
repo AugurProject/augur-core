@@ -28,14 +28,16 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     using SafeMathInt256 for int256;
 
     enum ReportingState {
-        AUTOMATED,
-        LIMITED,
-        ALL,
+        PRE_REPORTING,
+        AUTOMATED_REPORTING,
+        AUTOMATED_DISPUTE,
+        LIMITED_REPORTING,
+        LIMITED_DISPUTE,
+        ALL_REPORTING,
+        ALL_DISPUTE,
         FORK,
         FINALIZED
     }
-
-    ReportingState private reportingState = ReportingState.AUTOMATED;
 
     // CONSIDER: change the payoutNumerator/payoutDenominator to use fixed point numbers instead of integers; PRO: some people find fixed point decimal values easier to grok; CON: rounding errors can occur and it is easier to screw up the math if you don't handle fixed point values correctly
     uint256 private payoutDenominator;
@@ -166,7 +168,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         // intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
         require(isInAutomatedDisputePhase());
         automatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
-        reportingState = ReportingState.LIMITED;
         fundDisputeBondWithReputation(msg.sender, automatedReporterDisputeBondToken, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT);
         reportingWindow.updateMarketPhase();
         return true;
@@ -175,7 +176,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     function disputeLimitedReporters() public triggersMigration returns (bool) {
         require(isInLimitedDisputePhase());
         limitedReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
-        reportingState = ReportingState.ALL;
         fundDisputeBondWithReputation(msg.sender, limitedReportersDisputeBondToken, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT);
         ReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
         return migrateReportingWindow(_newReportingWindow);
@@ -184,7 +184,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     function disputeAllReporters() public triggersMigration returns (bool) {
         require(isInAllDisputePhase());
         allReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
-        reportingState = ReportingState.FORK;
         fundDisputeBondWithReputation(msg.sender, allReportersDisputeBondToken, ALL_REPORTERS_DISPUTE_BOND_AMOUNT);
         reportingWindow.getBranch().fork();
         ReportingWindow _newReportingWindow = getBranch().getReportingWindowForForkEndTime();
@@ -220,21 +219,17 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
             return true;
         }
 
-        if (!automatedReportReceived && reportingWindow.isReportingActive()) {
-            reportingState = ReportingState.LIMITED;
-        }
-
-        if (reportingState == ReportingState.AUTOMATED) {
+        if (getReportingState() == ReportingState.AUTOMATED_DISPUTE) {
             if (!canFinalizeAutomated()) {
                 return false;
             }
         }
-        if (reportingState == ReportingState.LIMITED || reportingState == ReportingState.ALL) {
+        if (getReportingState() == ReportingState.LIMITED_REPORTING || getReportingState() == ReportingState.ALL_REPORTING) {
             if (!canFinalizeReporting()) {
                 return false;
             }
         }
-        if (reportingState == ReportingState.FORK) {
+        if (getReportingState() == ReportingState.FORK) {
             if (!canFinalizeFork()) {
                 return false;
             }
@@ -244,7 +239,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         finalizationTime = block.timestamp;
         transferIncorrectDisputeBondsToWinningReportingToken();
         reportingWindow.updateMarketPhase();
-        reportingState = ReportingState.FINALIZED;
         return true;
     }
 
@@ -258,9 +252,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
 
     function canFinalizeAutomated() private returns (bool) {
         if (!automatedReportReceived) {
-            return false;
-        }
-        if (block.timestamp < getAutomatedReportDisputeDueTimestamp()) {
             return false;
         }
         return true;
@@ -454,21 +445,11 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function isDoneWithLimitedReporters() public constant returns (bool) {
-        return isDoneWithReporters(ReportingState.LIMITED);
+        return getReportingState() > ReportingState.LIMITED_REPORTING;
     }
 
     function isDoneWithAllReporters() public constant returns (bool) {
-        return isDoneWithReporters(ReportingState.ALL);
-    }
-
-    function isDoneWithReporters(ReportingState _state) private constant returns (bool) {
-        if (reportingState > _state) {
-            return true;
-        }
-        if (block.timestamp > reportingWindow.getEndTime()) {
-            return true;
-        }
-        return false;
+        return getReportingState() > ReportingState.ALL_REPORTING;
     }
 
     function isFinalized() public constant returns (bool) {
@@ -480,77 +461,27 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function isInAutomatedReportingPhase() public constant returns (bool) {
-        if (isFinalized()) {
-            return false;
-        }
-        if (block.timestamp < endTime) {
-            return false;
-        }
-        if (block.timestamp > getAutomatedReportDueTimestamp()) {
-            return false;
-        }
-        return true;
+        return getReportingState() == ReportingState.AUTOMATED_REPORTING;
     }
 
     function isInAutomatedDisputePhase() public constant returns (bool) {
-        if (isFinalized()) {
-            return false;
-        }
-        if (block.timestamp < getAutomatedReportDueTimestamp()) {
-            return false;
-        }
-        if (block.timestamp > getAutomatedReportDisputeDueTimestamp()) {
-            return false;
-        }
-        return true;
+        return getReportingState() == ReportingState.AUTOMATED_DISPUTE;
     }
 
     function isInLimitedReportingPhase() public constant returns (bool) {
-        if (!canBeReportedOn()) {
-            return false;
-        }
-        if (automatedReportReceived && reportingState != ReportingState.LIMITED) {
-            return false;
-        }
-        // If the market can be reported on and we're in AUTOMATED this has actually progressed to limited reporting
-        if (reportingState > ReportingState.LIMITED) {
-            return false;
-        }
-        return true;
+        return getReportingState() == ReportingState.LIMITED_REPORTING;
     }
 
     function isInLimitedDisputePhase() public constant returns (bool) {
-        if (!reportingWindow.isDisputeActive()) {
-            return false;
-        }
-        if (automatedReportReceived && reportingState != ReportingState.LIMITED) {
-            return false;
-        }
-        // If the market can be disputed on and we're in AUTOMATED this has actually progressed to limited dispute
-        if (reportingState > ReportingState.LIMITED) {
-            return false;
-        }
-        return true;
+        return getReportingState() == ReportingState.LIMITED_DISPUTE;
     }
 
     function isInAllReportingPhase() public constant returns (bool) {
-        if (!canBeReportedOn()) {
-            return false;
-        }
-        if (reportingState != ReportingState.ALL) {
-            return false;
-        }
-        return true;
+        return getReportingState() == ReportingState.ALL_REPORTING;
     }
 
     function isInAllDisputePhase() public constant returns (bool) {
-        if (!reportingWindow.isDisputeActive()) {
-            return false;
-        }
-        if (reportingState != ReportingState.ALL) {
-            return false;
-        }
-        return true;
+        return getReportingState() == ReportingState.ALL_DISPUTE;
     }
 
     function isContainerForReportingToken(ReportingToken _shadyToken) public constant returns (bool) {
@@ -635,5 +566,40 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
 
     function getAutomatedReportDisputeDueTimestamp() public constant returns (uint256) {
         return getAutomatedReportDueTimestamp() + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS;
+    }
+
+    function getReportingState() public constant returns (ReportingState) {
+        if (isFinalized()) {
+            return ReportingState.FINALIZED;
+        }
+
+        if (address(allReportersDisputeBondToken) != NULL_ADDRESS) {
+            return ReportingState.FORK;
+        }
+
+        if (address(limitedReportersDisputeBondToken) != NULL_ADDRESS) {
+            if (reportingWindow.isDisputeActive()) {
+                return ReportingState.ALL_DISPUTE;
+            }
+            return ReportingState.ALL_REPORTING;
+        }
+
+        if (reportingWindow.isDisputeActive()) {
+            return ReportingState.LIMITED_DISPUTE;
+        }
+
+        if (canBeReportedOn()) {
+            return ReportingState.LIMITED_REPORTING;
+        }
+
+        if (block.timestamp > getAutomatedReportDueTimestamp() && block.timestamp < getAutomatedReportDisputeDueTimestamp()) {
+            return ReportingState.AUTOMATED_DISPUTE;
+        }
+
+        if (block.timestamp > endTime && block.timestamp < getAutomatedReportDueTimestamp()) {
+            return ReportingState.AUTOMATED_REPORTING;
+        }
+
+        return ReportingState.PRE_REPORTING;
     }
 }
