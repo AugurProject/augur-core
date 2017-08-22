@@ -143,7 +143,7 @@ contract NewOrders is Controlled {
     function insertOrderIntoList(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _betterOrderId, bytes20 _worseOrderId) internal onlyWhitelistedCallers returns (bool) { 
         bytes20 _bestOrderId = bestOrder[_market][_outcome][_type];
         bytes20 _worstOrderId = worstOrder[_market][_outcome][_type];
-        //NewOrdersFetcher _ordersFetcher = NewOrdersFetcher(controller.lookup("NewOrdersFetcher"));
+        NewOrdersFetcher _ordersFetcher = NewOrdersFetcher(controller.lookup("NewOrdersFetcher"));
         //(_betterOrderId, _worseOrderId) = _ordersFetcher.findBoundingOrders(_type, _market, _outcome, _fxpPrice, _bestOrderId, _worstOrderId, _betterOrderId, _worseOrderId);
         if (_type == BID) { 
             _bestOrderId = updateBestBidOrder(_orderId, _market, _fxpPrice, _outcome);
