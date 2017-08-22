@@ -143,7 +143,7 @@ contract NewOrders is Controlled {
     function insertOrderIntoList(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _betterOrderId, bytes20 _worseOrderId) internal onlyWhitelistedCallers returns (bool) { 
         bytes20 _bestOrderId = bestOrder[_market][_outcome][_type];
         bytes20 _worstOrderId = worstOrder[_market][_outcome][_type];
-        var _ordersFetcher = NewOrdersFetcher(controller.lookup("NewOrdersFetcher"));
+        OrdersFetcher _ordersFetcher = NewOrdersFetcher(controller.lookup("NewOrdersFetcher"));
         (_betterOrderId, _worseOrderId) = _ordersFetcher.findBoundingOrders(_type, _market, _outcome, _fxpPrice, _bestOrderId, _worstOrderId, _betterOrderId, _worseOrderId);
         if (_type == BID) { 
             _bestOrderId = updateBestBidOrder(_orderId, _market, _fxpPrice, _outcome);
@@ -152,20 +152,20 @@ contract NewOrders is Controlled {
             _bestOrderId = updateBestAskOrder(_orderId, _market, _fxpPrice, _outcome);
             _worstOrderId = updateWorstAskOrder(_orderId, _market, _fxpPrice, _outcome);
         }
-        // if (_bestOrderId == _orderId) { 
-        //     _betterOrderId = 0;
-        // }
-        // if (_worstOrderId == _orderId) { 
-        //     _worseOrderId = 0;
-        // }
-        // if (_betterOrderId != 0) { 
-        //     orders[_market][_outcome][_type][_betterOrderId].worseOrderId = _orderId;
-        //     orders[_market][_outcome][_type][_orderId].betterOrderId = _betterOrderId;
-        // }
-        // if (_worseOrderId != 0) {
-        //     orders[_market][_outcome][_type][_worseOrderId].betterOrderId = _orderId;
-        //     orders[_market][_outcome][_type][_orderId].worseOrderId = _worseOrderId;
-        // }
+        if (_bestOrderId == _orderId) { 
+            _betterOrderId = 0;
+        }
+        if (_worstOrderId == _orderId) { 
+            _worseOrderId = 0;
+        }
+        if (_betterOrderId != 0) { 
+            orders[_market][_outcome][_type][_betterOrderId].worseOrderId = _orderId;
+            orders[_market][_outcome][_type][_orderId].betterOrderId = _betterOrderId;
+        }
+        if (_worseOrderId != 0) {
+            orders[_market][_outcome][_type][_worseOrderId].betterOrderId = _orderId;
+            orders[_market][_outcome][_type][_orderId].worseOrderId = _worseOrderId;
+        }
         return true;
     }
 
