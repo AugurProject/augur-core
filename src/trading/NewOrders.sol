@@ -169,31 +169,31 @@ contract NewOrders is Controlled {
     //     return true;
     // }
 
-    // // FIXME: Currently, the MakeOrder contract is passing in a ripemd160 hash value of type bytes20 as the orderID.  ThisWe should be changed this to pass in a sha3/sha256 hash value of type bytes32.
-    // function saveOrder(bytes20 _orderId, uint256 _type, IMarket _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _gasPrice) public onlyWhitelistedCallers returns (bool) { 
-    //     require(_type == BID || _type == ASK);
-    //     require(0 <= _outcome || _outcome < _market.getNumberOfOutcomes());
-    //     insertOrderIntoList(_orderId, _type, _market, _outcome, _fxpPrice, _betterOrderId, _worseOrderId);
-    //     orders[_market][_outcome][_type][_orderId].fxpPrice = _fxpPrice;
-    //     orders[_market][_outcome][_type][_orderId].fxpAmount = _fxpAmount;
-    //     orders[_market][_outcome][_type][_orderId].owner = _sender;
-    //     orders[_market][_outcome][_type][_orderId].fxpMoneyEscrowed = _fxpMoneyEscrowed;
-    //     orders[_market][_outcome][_type][_orderId].fxpSharesEscrowed = _fxpSharesEscrowed;
-    //     orders[_market][_outcome][_type][_orderId].gasPrice = _gasPrice;
-    //     return true;
-    // }
+    // FIXME: Currently, the MakeOrder contract is passing in a ripemd160 hash value of type bytes20 as the orderID.  ThisWe should be changed this to pass in a sha3/sha256 hash value of type bytes32.
+    function saveOrder(bytes20 _orderId, uint256 _type, IMarket _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _gasPrice) public onlyWhitelistedCallers returns (bool) { 
+        require(_type == BID || _type == ASK);
+        require(0 <= _outcome || _outcome < _market.getNumberOfOutcomes());
+        insertOrderIntoList(_orderId, _type, _market, _outcome, _fxpPrice, _betterOrderId, _worseOrderId);
+        orders[_market][_outcome][_type][_orderId].fxpPrice = _fxpPrice;
+        orders[_market][_outcome][_type][_orderId].fxpAmount = _fxpAmount;
+        orders[_market][_outcome][_type][_orderId].owner = _sender;
+        orders[_market][_outcome][_type][_orderId].fxpMoneyEscrowed = _fxpMoneyEscrowed;
+        orders[_market][_outcome][_type][_orderId].fxpSharesEscrowed = _fxpSharesEscrowed;
+        orders[_market][_outcome][_type][_orderId].gasPrice = _gasPrice;
+        return true;
+    }
 
-    // function removeOrder(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome) public onlyWhitelistedCallers returns (bool) { 
-    //     require(tx.gasprice <= orders[_market][_outcome][_type][_orderId].gasPrice);
-    //     removeOrderFromList(_orderId, _type, _market, _outcome);
-    //     orders[_market][_outcome][_type][_orderId].fxpPrice = 0;
-    //     orders[_market][_outcome][_type][_orderId].fxpAmount = 0;
-    //     orders[_market][_outcome][_type][_orderId].owner = 0;
-    //     orders[_market][_outcome][_type][_orderId].fxpMoneyEscrowed = 0;
-    //     orders[_market][_outcome][_type][_orderId].fxpSharesEscrowed = 0;
-    //     orders[_market][_outcome][_type][_orderId].gasPrice = 0;
-    //     return true;
-    // }
+    function removeOrder(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome) public onlyWhitelistedCallers returns (bool) { 
+        require(tx.gasprice <= orders[_market][_outcome][_type][_orderId].gasPrice);
+        removeOrderFromList(_orderId, _type, _market, _outcome);
+        orders[_market][_outcome][_type][_orderId].fxpPrice = 0;
+        orders[_market][_outcome][_type][_orderId].fxpAmount = 0;
+        orders[_market][_outcome][_type][_orderId].owner = 0;
+        orders[_market][_outcome][_type][_orderId].fxpMoneyEscrowed = 0;
+        orders[_market][_outcome][_type][_orderId].fxpSharesEscrowed = 0;
+        orders[_market][_outcome][_type][_orderId].gasPrice = 0;
+        return true;
+    }
 
     function fillOrder(bytes20 _orderId, uint256 _orderType, IMarket _market, uint8 _orderOutcome, uint256 _sharesFilled, uint256 _tokensFilled) public onlyWhitelistedCallers returns (bool) { 
         // FIXME: Should eventually be changed to `require(_market.getTypeName() == "Market")`
