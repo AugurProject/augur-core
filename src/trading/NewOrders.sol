@@ -146,11 +146,11 @@ contract NewOrders is Controlled {
         var _ordersFetcher = NewOrdersFetcher(controller.lookup("NewOrdersFetcher"));
         (_betterOrderId, _worseOrderId) = _ordersFetcher.findBoundingOrders(_type, _market, _outcome, _fxpPrice, _bestOrderId, _worstOrderId, _betterOrderId, _worseOrderId);
         if (_type == BID) { 
-            _bestOrderId = updateBestBidOrder(_orderId, _market, _fxpPrice, _outcome);
-            _worstOrderId = updateWorstBidOrder(_orderId, _market, _fxpPrice, _outcome);
+            //_bestOrderId = updateBestBidOrder(_orderId, _market, _fxpPrice, _outcome);
+            //_worstOrderId = updateWorstBidOrder(_orderId, _market, _fxpPrice, _outcome);
         } else {
-            _bestOrderId = updateBestAskOrder(_orderId, _market, _fxpPrice, _outcome);
-            _worstOrderId = updateWorstAskOrder(_orderId, _market, _fxpPrice, _outcome);
+            //_bestOrderId = updateBestAskOrder(_orderId, _market, _fxpPrice, _outcome);
+            //_worstOrderId = updateWorstAskOrder(_orderId, _market, _fxpPrice, _outcome);
         }
         if (_bestOrderId == _orderId) { 
             _betterOrderId = 0;
@@ -185,7 +185,7 @@ contract NewOrders is Controlled {
 
     function removeOrder(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome) public onlyWhitelistedCallers returns (bool) { 
         require(tx.gasprice <= orders[_market][_outcome][_type][_orderId].gasPrice);
-        removeOrderFromList(_orderId, _type, _market, _outcome);
+        //removeOrderFromList(_orderId, _type, _market, _outcome);
         orders[_market][_outcome][_type][_orderId].fxpPrice = 0;
         orders[_market][_outcome][_type][_orderId].fxpAmount = 0;
         orders[_market][_outcome][_type][_orderId].owner = 0;
@@ -261,67 +261,67 @@ contract NewOrders is Controlled {
     //     return 1;
     // }
 
-    function removeOrderFromList(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome) private returns (bool) { 
-        bytes20 _betterOrderId = orders[_market][_outcome][_type][_orderId].betterOrderId;
-        bytes20 _worseOrderId = orders[_market][_outcome][_type][_orderId].worseOrderId;
-        if (bestOrder[_market][_outcome][_type] == _orderId) { 
-            bestOrder[_market][_outcome][_type] = _worseOrderId;
-        }
-        if (worstOrder[_market][_outcome][_type] == _orderId) { 
-            worstOrder[_market][_outcome][_type] = _betterOrderId;
-        }
-        if (_betterOrderId != 0) { 
-            orders[_market][_outcome][_type][_betterOrderId].worseOrderId = _worseOrderId;
-        }
-        if (_worseOrderId != 0) { 
-            orders[_market][_outcome][_type][_worseOrderId].betterOrderId = _betterOrderId;
-        }
-        orders[_market][_outcome][_type][_orderId].betterOrderId = 0;
-        orders[_market][_outcome][_type][_orderId].worseOrderId = 0;
-        return true;
-    }
+    // function removeOrderFromList(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome) private returns (bool) { 
+    //     bytes20 _betterOrderId = orders[_market][_outcome][_type][_orderId].betterOrderId;
+    //     bytes20 _worseOrderId = orders[_market][_outcome][_type][_orderId].worseOrderId;
+    //     if (bestOrder[_market][_outcome][_type] == _orderId) { 
+    //         bestOrder[_market][_outcome][_type] = _worseOrderId;
+    //     }
+    //     if (worstOrder[_market][_outcome][_type] == _orderId) { 
+    //         worstOrder[_market][_outcome][_type] = _betterOrderId;
+    //     }
+    //     if (_betterOrderId != 0) { 
+    //         orders[_market][_outcome][_type][_betterOrderId].worseOrderId = _worseOrderId;
+    //     }
+    //     if (_worseOrderId != 0) { 
+    //         orders[_market][_outcome][_type][_worseOrderId].betterOrderId = _betterOrderId;
+    //     }
+    //     orders[_market][_outcome][_type][_orderId].betterOrderId = 0;
+    //     orders[_market][_outcome][_type][_orderId].worseOrderId = 0;
+    //     return true;
+    // }
 
-    /**
-     * @dev If best bid is not set or price higher than best bid price, this order is the new best bid.
-     */
-    function updateBestBidOrder(bytes20 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
-        bytes20 _bestBidOrderId = bestOrder[_market][_outcome][BID];
-        if (_bestBidOrderId == 0 || _fxpPrice > orders[_market][_outcome][BID][_bestBidOrderId].fxpPrice) { 
-            bestOrder[_market][_outcome][BID] = _orderId;
-        }
-        return bestOrder[_market][_outcome][BID];
-    }
+    // /**
+    //  * @dev If best bid is not set or price higher than best bid price, this order is the new best bid.
+    //  */
+    // function updateBestBidOrder(bytes20 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
+    //     bytes20 _bestBidOrderId = bestOrder[_market][_outcome][BID];
+    //     if (_bestBidOrderId == 0 || _fxpPrice > orders[_market][_outcome][BID][_bestBidOrderId].fxpPrice) { 
+    //         bestOrder[_market][_outcome][BID] = _orderId;
+    //     }
+    //     return bestOrder[_market][_outcome][BID];
+    // }
 
-    /**
-     * @dev If worst bid is not set or price lower than worst bid price, this order is the new worst bid.
-     */
-    function updateWorstBidOrder(bytes20 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
-        bytes20 _worstBidOrderId = worstOrder[_market][_outcome][BID];
-        if (_worstBidOrderId == 0 || _fxpPrice < orders[_market][_outcome][BID][_worstBidOrderId].fxpPrice) { 
-            worstOrder[_market][_outcome][BID] = _orderId;
-        }
-        return worstOrder[_market][_outcome][BID];
-    }
+    // /**
+    //  * @dev If worst bid is not set or price lower than worst bid price, this order is the new worst bid.
+    //  */
+    // function updateWorstBidOrder(bytes20 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
+    //     bytes20 _worstBidOrderId = worstOrder[_market][_outcome][BID];
+    //     if (_worstBidOrderId == 0 || _fxpPrice < orders[_market][_outcome][BID][_worstBidOrderId].fxpPrice) { 
+    //         worstOrder[_market][_outcome][BID] = _orderId;
+    //     }
+    //     return worstOrder[_market][_outcome][BID];
+    // }
 
-    /**
-     * @dev If best ask is not set or price lower than best ask price, this order is the new best ask.
-     */
-    function updateBestAskOrder(bytes20 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
-        bytes20 _bestAskOrderId = bestOrder[_market][_outcome][ASK];
-        if (_bestAskOrderId == 0 || _fxpPrice < orders[_market][_outcome][ASK][_bestAskOrderId].fxpPrice) { 
-            bestOrder[_market][_outcome][ASK] = _orderId;
-        }
-        return bestOrder[_market][_outcome][ASK];
-    }
+    // /**
+    //  * @dev If best ask is not set or price lower than best ask price, this order is the new best ask.
+    //  */
+    // function updateBestAskOrder(bytes20 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
+    //     bytes20 _bestAskOrderId = bestOrder[_market][_outcome][ASK];
+    //     if (_bestAskOrderId == 0 || _fxpPrice < orders[_market][_outcome][ASK][_bestAskOrderId].fxpPrice) { 
+    //         bestOrder[_market][_outcome][ASK] = _orderId;
+    //     }
+    //     return bestOrder[_market][_outcome][ASK];
+    // }
 
-    /**
-     * @dev If worst ask is not set or price higher than worst ask price, this order is the new worst ask.
-     */
-    function updateWorstAskOrder(bytes20 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) {
-        bytes20 _worstAskOrderId = worstOrder[_market][_outcome][ASK];
-        if (_worstAskOrderId == 0 || _fxpPrice > orders[_market][_outcome][ASK][_worstAskOrderId].fxpPrice) { 
-            worstOrder[_market][_outcome][ASK] = _orderId;
-        }
-        return worstOrder[_market][_outcome][ASK];
-    }
+    // /**
+    //  * @dev If worst ask is not set or price higher than worst ask price, this order is the new worst ask.
+    //  */
+    // function updateWorstAskOrder(bytes20 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes20) {
+    //     bytes20 _worstAskOrderId = worstOrder[_market][_outcome][ASK];
+    //     if (_worstAskOrderId == 0 || _fxpPrice > orders[_market][_outcome][ASK][_worstAskOrderId].fxpPrice) { 
+    //         worstOrder[_market][_outcome][ASK] = _orderId;
+    //     }
+    //     return worstOrder[_market][_outcome][ASK];
+    // }
 }
