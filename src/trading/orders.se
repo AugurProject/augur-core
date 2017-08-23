@@ -20,12 +20,12 @@ data owner
 data initialized
 
 # indices: marketID, outcomeID, type, orderID
-data orders[][][][](fxpAmount, fxpPrice, owner, fxpSharesEscrowed, fxpMoneyEscrowed, betterOrderID, worseOrderID, gasPrice)
+data orders[](fxpAmount, fxpPrice, owner, fxpSharesEscrowed, fxpMoneyEscrowed, betterOrderID, worseOrderID, gasPrice)
 # prices keeps track of the latest traded fxpPrice for a given outcome in a market [market is the key]
 data marketOrderData[](volume, prices[])
 # indices are marketID, outcomeID, and type
-data bestOrder[][][]
-data worstOrder[][][]
+data bestOrder[]
+data worstOrder[]
 
 event CancelOrder(market: address: indexed, sender: address: indexed, fxpPrice: int256, fxpAmount, orderID: address, outcome: int256, type: int256, cashRefund: int256, sharesRefund: int256)
 event CompleteSets(sender: address: indexed, market: address: indexed, type: indexed, fxpAmount: int256, numOutcomes: int256, marketCreatorFee: int256, reportingFee: int256)
@@ -51,26 +51,26 @@ def initialize(controller: address):
 # @public
 # @return fxp
 def getAmount(orderID: address, type: int256, market: address, outcome: int256):
-    return(self.orders[market][outcome][type][orderID].fxpAmount)
+    return(self.orders[orderID].fxpAmount)
 
 # @public
 # @return fxp
 def getPrice(orderID: address, type: int256, market: address, outcome: int256):
-    return(self.orders[market][outcome][type][orderID].fxpPrice)
+    return(self.orders[orderID].fxpPrice)
 
 # @public
 def getOrderOwner(orderID: address, type: int256, market: address, outcome: int256):
-    return(self.orders[market][outcome][type][orderID].owner)
+    return(self.orders[orderID].owner)
 
 # @public
 # @return fxp
 def getOrderSharesEscrowed(orderID: address, type: int256, market: address, outcome: int256):
-    return(self.orders[market][outcome][type][orderID].fxpSharesEscrowed)
+    return(self.orders[orderID].fxpSharesEscrowed)
 
 # @public
 # @return fxp
 def getOrderMoneyEscrowed(orderID: address, type: int256, market: address, outcome: int256):
-    return(self.orders[market][outcome][type][orderID].fxpMoneyEscrowed)
+    return(self.orders[orderID].fxpMoneyEscrowed)
 
 # @public
 # @return fxp
@@ -84,37 +84,43 @@ def getLastOutcomePrice(market: address, outcome: int256):
 
 # @public
 def getBetterOrderID(orderID: address, type: int256, market: address, outcome: int256):
-    return(self.orders[market][outcome][type][orderID].betterOrderID: address)
+    return(self.orders[orderID].betterOrderID: address)
 
 # @public
 def getWorseOrderID(orderID: address, type: int256, market: address, outcome: int256):
-    return(self.orders[market][outcome][type][orderID].worseOrderID: address)
+    return(self.orders[orderID].worseOrderID: address)
 
 # @public
 def getGasPrice(orderID: address, type: int256, market: address, outcome: int256):
-    return(self.orders[market][outcome][type][orderID].gasPrice)
+    return(self.orders[orderID].gasPrice)
 
 # @public
 def getBestOrderID(type: int256, market: address, outcome: int256):
-    return(self.bestOrder[market][outcome][type]: address)
+    return(self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, type)])
 
 # @public
 def getWorstOrderID(type: int256, market: address, outcome: int256):
-    return(self.worstOrder[market][outcome][type]: address)
+
+    return(self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, type)])
+
+# @public
+def getOrderIdHash(type: int256, market: address, fxpAmount: int256, fxpPrice: int256, sender: address, blockNumber: uint256, outcome: int256, fxpMoneyEscrowed: int256, fxpSharesEscrowed: int256):
+    order = [type, market, fxpAmount, fxpPrice, sender, blockNumber, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
+    return ripemd160(order, items=9)
 
 # @public
 def isBetterPrice(type: int256, market: address, outcome: int256, fxpPrice, orderID: address):
     if(type == BID):
-        return((fxpPrice > self.orders[market][outcome][type][orderID].fxpPrice))
+        return((fxpPrice > self.orders[orderID].fxpPrice))
     else:
-        return((fxpPrice < self.orders[market][outcome][type][orderID].fxpPrice))
+        return((fxpPrice < self.orders[orderID].fxpPrice))
 
 # @public
 def isWorsePrice(type: int256, market: address, outcome: int256, fxpPrice, orderID: address):
     if(type == BID):
-        return((fxpPrice < self.orders[market][outcome][type][orderID].fxpPrice))
+        return((fxpPrice < self.orders[orderID].fxpPrice))
     else:
-        return((fxpPrice > self.orders[market][outcome][type][orderID].fxpPrice))
+        return((fxpPrice > self.orders[orderID].fxpPrice))
 
 # @public
 def assertIsNotBetterPrice(type: int256, market: address, outcome: int256, fxpPrice, betterOrderID: address):
@@ -129,8 +135,8 @@ def assertIsNotWorsePrice(type: int256, market: address, outcome: int256, fxpPri
 # @internal
 def insertOrderIntoList(orderID: address, type: int256, market: address, outcome: int256, fxpPrice: int256, betterOrderID: address, worseOrderID: address):
     self.controller.assertIsWhitelisted(msg.sender)
-    bestOrderID = self.bestOrder[market][outcome][type]
-    worstOrderID = self.worstOrder[market][outcome][type]
+    bestOrderID = self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, type)]
+    worstOrderID = self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, type)]
     boundingOrders = ORDERS_FETCHER.findBoundingOrders(type, market, outcome, fxpPrice, bestOrderID, worstOrderID, betterOrderID, worseOrderID, outitems=2)
     betterOrderID = boundingOrders[0]
     worseOrderID = boundingOrders[1]
@@ -145,11 +151,11 @@ def insertOrderIntoList(orderID: address, type: int256, market: address, outcome
     if(worstOrderID == orderID):
         worseOrderID = 0
     if(betterOrderID != 0):
-        self.orders[market][outcome][type][betterOrderID].worseOrderID = orderID
-        self.orders[market][outcome][type][orderID].betterOrderID = betterOrderID
+        self.orders[betterOrderID].worseOrderID = orderID
+        self.orders[orderID].betterOrderID = betterOrderID
     if(worseOrderID != 0):
-        self.orders[market][outcome][type][worseOrderID].betterOrderID = orderID
-        self.orders[market][outcome][type][orderID].worseOrderID = worseOrderID
+        self.orders[worseOrderID].betterOrderID = orderID
+        self.orders[orderID].worseOrderID = worseOrderID
     return(1)
 
 # @internal
@@ -157,27 +163,28 @@ def saveOrder(orderID: address, type: int256, market: address, fxpAmount: int256
     self.controller.assertIsWhitelisted(msg.sender)
     require(type == BID or type == ASK)
     require(0 <= outcome and outcome < market.getNumberOfOutcomes())
+    orderID = self.getOrderIdHash(type, market, fxpAmount, fxpPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
     self.insertOrderIntoList(orderID, type, market, outcome, fxpPrice, betterOrderID, worseOrderID)
-    self.orders[market][outcome][type][orderID].fxpPrice = fxpPrice
-    self.orders[market][outcome][type][orderID].fxpAmount = fxpAmount
-    self.orders[market][outcome][type][orderID].owner = sender
-    self.orders[market][outcome][type][orderID].fxpMoneyEscrowed = fxpMoneyEscrowed
-    self.orders[market][outcome][type][orderID].fxpSharesEscrowed = fxpSharesEscrowed
-    self.orders[market][outcome][type][orderID].gasPrice = gasPrice
+    self.orders[orderID].fxpPrice = fxpPrice
+    self.orders[orderID].fxpAmount = fxpAmount
+    self.orders[orderID].owner = sender
+    self.orders[orderID].fxpMoneyEscrowed = fxpMoneyEscrowed
+    self.orders[orderID].fxpSharesEscrowed = fxpSharesEscrowed
+    self.orders[orderID].gasPrice = gasPrice
     log(type=MakeOrder, market, sender, type, fxpPrice, fxpAmount, outcome, orderID, fxpMoneyEscrowed, fxpSharesEscrowed, tradeGroupID)
-    return(1)
+    return(orderID)
 
 # @internal
 def removeOrder(orderID: address, type: int256, market: address, outcome: int256):
     self.controller.assertIsWhitelisted(msg.sender)
-    require(tx.gasprice <= self.orders[market][outcome][type][orderID].gasPrice)
+    require(tx.gasprice <= self.orders[orderID].gasPrice)
     self.removeOrderFromList(orderID, type, market, outcome)
-    self.orders[market][outcome][type][orderID].fxpPrice = 0
-    self.orders[market][outcome][type][orderID].fxpAmount = 0
-    self.orders[market][outcome][type][orderID].owner = 0
-    self.orders[market][outcome][type][orderID].fxpMoneyEscrowed = 0
-    self.orders[market][outcome][type][orderID].fxpSharesEscrowed = 0
-    self.orders[market][outcome][type][orderID].gasPrice = 0
+    self.orders[orderID].fxpPrice = 0
+    self.orders[orderID].fxpAmount = 0
+    self.orders[orderID].owner = 0
+    self.orders[orderID].fxpMoneyEscrowed = 0
+    self.orders[orderID].fxpSharesEscrowed = 0
+    self.orders[orderID].gasPrice = 0
     return(1)
 
 # @internal
@@ -187,39 +194,39 @@ def fillOrder(orderID: address, orderType: int256, market: address, orderOutcome
     require(0 <= orderOutcome and orderOutcome < market.getNumberOfOutcomes())
     require(orderType == BID or orderType == ASK)
     require(orderID)
-    require(sharesFilled <= self.orders[market][orderOutcome][orderType][orderID].fxpSharesEscrowed)
-    require(tokensFilled <= self.orders[market][orderOutcome][orderType][orderID].fxpMoneyEscrowed)
-    require(tx.gasprice <= self.orders[market][orderOutcome][orderType][orderID].gasPrice)
-    require(self.orders[market][orderOutcome][orderType][orderID].fxpPrice <= market.getMaxDisplayPrice())
-    require(self.orders[market][orderOutcome][orderType][orderID].fxpPrice >= market.getMinDisplayPrice())
+    require(sharesFilled <= self.orders[orderID].fxpSharesEscrowed)
+    require(tokensFilled <= self.orders[orderID].fxpMoneyEscrowed)
+    require(tx.gasprice <= self.orders[orderID].gasPrice)
+    require(self.orders[orderID].fxpPrice <= market.getMaxDisplayPrice())
+    require(self.orders[orderID].fxpPrice >= market.getMinDisplayPrice())
     require(market.getMaxDisplayPrice() + market.getMinDisplayPrice() <= 2**254)
     fill = 0
     if orderType == BID:
         # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
-        fill = sharesFilled + safeFxpDiv(tokensFilled, self.orders[market][orderOutcome][orderType][orderID].fxpPrice - market.getMinDisplayPrice())
+        fill = sharesFilled + safeFxpDiv(tokensFilled, self.orders[orderID].fxpPrice - market.getMinDisplayPrice())
     if orderType == ASK:
         # We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
-        fill = sharesFilled + safeFxpDiv(tokensFilled, market.getMaxDisplayPrice() - self.orders[market][orderOutcome][orderType][orderID].fxpPrice)
-    require(fill <= self.orders[market][orderOutcome][orderType][orderID].fxpAmount)
-    self.orders[market][orderOutcome][orderType][orderID].fxpAmount -= fill
-    self.orders[market][orderOutcome][orderType][orderID].fxpMoneyEscrowed -= tokensFilled
-    self.orders[market][orderOutcome][orderType][orderID].fxpSharesEscrowed -= sharesFilled
-    if self.orders[market][orderOutcome][orderType][orderID].fxpAmount == 0:
-        require(self.orders[market][orderOutcome][orderType][orderID].fxpMoneyEscrowed == 0)
-        require(self.orders[market][orderOutcome][orderType][orderID].fxpSharesEscrowed == 0)
+        fill = sharesFilled + safeFxpDiv(tokensFilled, market.getMaxDisplayPrice() - self.orders[orderID].fxpPrice)
+    require(fill <= self.orders[orderID].fxpAmount)
+    self.orders[orderID].fxpAmount -= fill
+    self.orders[orderID].fxpMoneyEscrowed -= tokensFilled
+    self.orders[orderID].fxpSharesEscrowed -= sharesFilled
+    if self.orders[orderID].fxpAmount == 0:
+        require(self.orders[orderID].fxpMoneyEscrowed == 0)
+        require(self.orders[orderID].fxpSharesEscrowed == 0)
         self.removeOrderFromList(orderID, orderType, market, orderOutcome)
-        self.orders[market][orderOutcome][orderType][orderID].fxpPrice = 0
-        self.orders[market][orderOutcome][orderType][orderID].owner = 0
-        self.orders[market][orderOutcome][orderType][orderID].gasPrice = 0
-        self.orders[market][orderOutcome][orderType][orderID].betterOrderID = 0
-        self.orders[market][orderOutcome][orderType][orderID].worseOrderID = 0
+        self.orders[orderID].fxpPrice = 0
+        self.orders[orderID].owner = 0
+        self.orders[orderID].gasPrice = 0
+        self.orders[orderID].betterOrderID = 0
+        self.orders[orderID].worseOrderID = 0
     return(1)
 
 # @internal
 def takeOrderLog(market: address, orderOutcome: int256, orderType: int256, orderID: address, taker: address, makerSharesFilled: int256, makerTokensFilled: int256, takerSharesFilled: int256, takerTokensFilled: int256, tradeGroupID: int256):
     self.controller.assertIsWhitelisted(msg.sender)
-    price = self.orders[market][orderOutcome][orderType][orderID].fxpPrice
-    maker = self.orders[market][orderOutcome][orderType][orderID].owner
+    price = self.orders[orderID].fxpPrice
+    maker = self.orders[orderID].owner
     log(type=TakeOrder, market, orderOutcome, orderType, orderID, price, maker, taker, makerSharesFilled, makerTokensFilled, takerSharesFilled, takerTokensFilled, tradeGroupID)
     return(1)
 
@@ -251,55 +258,60 @@ def setPrice(market: address, outcome: int256, fxpPrice: int256):
 # @private
 def removeOrderFromList(orderID: address, type: int256, market: address, outcome: int256):
     assertPrivateCall()
-    betterOrderID = self.orders[market][outcome][type][orderID].betterOrderID
-    worseOrderID = self.orders[market][outcome][type][orderID].worseOrderID
-    if(self.bestOrder[market][outcome][type] == orderID):
-        self.bestOrder[market][outcome][type] = worseOrderID
-    if(self.worstOrder[market][outcome][type] == orderID):
-        self.worstOrder[market][outcome][type] = betterOrderID
+    betterOrderID = self.orders[orderID].betterOrderID
+    worseOrderID = self.orders[orderID].worseOrderID
+    if(self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, type)] == orderID):
+        self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, type)] = worseOrderID
+    if(self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, type)] == orderID):
+        self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, type)] = betterOrderID
     if(betterOrderID != 0):
-        self.orders[market][outcome][type][betterOrderID].worseOrderID = worseOrderID
+        self.orders[betterOrderID].worseOrderID = worseOrderID
     if(worseOrderID != 0):
-        self.orders[market][outcome][type][worseOrderID].betterOrderID = betterOrderID
-    self.orders[market][outcome][type][orderID].betterOrderID = 0
-    self.orders[market][outcome][type][orderID].worseOrderID = 0
+        self.orders[worseOrderID].betterOrderID = betterOrderID
+    self.orders[orderID].betterOrderID = 0
+    self.orders[orderID].worseOrderID = 0
     return(1)
 
 # If best bid is not set or price higher than best bid price, this order is the new best bid.
 # @private
 def updateBestBidOrder(orderID: address, market: address, fxpPrice: int256, outcome: int256, betterOrderID: int256):
     assertPrivateCall()
-    bestBidOrderID = self.bestOrder[market][outcome][BID]
-    if(bestBidOrderID == 0 or fxpPrice > self.orders[market][outcome][BID][bestBidOrderID].fxpPrice):
-        self.bestOrder[market][outcome][BID] = orderID
-    return(self.bestOrder[market][outcome][BID]: address)
+    bestBidOrderID = self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, BID)]
+    if(bestBidOrderID == 0 or fxpPrice > self.orders[bestBidOrderID].fxpPrice):
+        self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, BID)] = orderID
+    return(self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, BID)]: address)
 
 # If worst bid is not set or price lower than worst bid price, this order is the new worst bid.
 # @private
 def updateWorstBidOrder(orderID: address, market: address, fxpPrice: int256, outcome: int256, worseOrderID: int256):
     assertPrivateCall()
-    worstBidOrderID = self.worstOrder[market][outcome][BID]
-    if(worstBidOrderID == 0 or fxpPrice < self.orders[market][outcome][BID][worstBidOrderID].fxpPrice):
-        self.worstOrder[market][outcome][BID] = orderID
-    return(self.worstOrder[market][outcome][BID]: address)
+    worstBidOrderID = self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, BID)]
+    if(worstBidOrderID == 0 or fxpPrice < self.orders[worstBidOrderID].fxpPrice):
+        self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, BID)] = orderID
+    return(self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, BID)]: address)
 
 # If best ask is not set or price lower than best ask price, this order is the new best ask.
 # @private
 def updateBestAskOrder(orderID: address, market: address, fxpPrice: int256, outcome: int256, betterOrderID: int256):
     assertPrivateCall()
-    bestAskOrderID = self.bestOrder[market][outcome][ASK]
-    if(bestAskOrderID == 0 or fxpPrice < self.orders[market][outcome][ASK][bestAskOrderID].fxpPrice):
-        self.bestOrder[market][outcome][ASK] = orderID
-    return(self.bestOrder[market][outcome][ASK]: address)
+    bestAskOrderID = self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, ASK)]
+    if(bestAskOrderID == 0 or fxpPrice < self.orders[bestAskOrderID].fxpPrice):
+        self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, ASK)] = orderID
+    return(self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, ASK)]: address)
 
 # If worst ask is not set or price higher than worst ask price, this order is the new worst ask.
 # @private
 def updateWorstAskOrder(orderID: address, market: address, fxpPrice: int256, outcome: int256, worseOrderID: int256):
     assertPrivateCall()
-    worstAskOrderID = self.worstOrder[market][outcome][ASK]
-    if(worstAskOrderID == 0 or fxpPrice > self.orders[market][outcome][ASK][worstAskOrderID].fxpPrice):
-        self.worstOrder[market][outcome][ASK] = orderID
-    return(self.worstOrder[market][outcome][ASK]: address)
+    worstAskOrderID = self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, ASK)]
+    if(worstAskOrderID == 0 or fxpPrice > self.orders[worstAskOrderID].fxpPrice):
+        self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, ASK)] = orderID
+    return(self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, ASK)]: address)
+
+def getBestOrderWorstOrderHash(market: address, outcome: int256, type: int256):
+    orderInfo = [market, outcome, type]
+    orderID = ripemd160(orderInfo, items=3)
+    return(orderID)
 
 # @controller
 def setController(newController: address):
