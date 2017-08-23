@@ -30,7 +30,7 @@ contract NewOrders is Controlled {
         uint256 fxpMoneyEscrowed;
         bytes20 betterOrderId;
         bytes20 worseOrderId;
-        uint256 gasPrice;
+        uint256 gasPrice; // FIXME: Remove deprecated gasPrice
     }
 
     struct MarketOrders {
@@ -43,9 +43,9 @@ contract NewOrders is Controlled {
     uint8 private constant BID = 1;
     uint8 private constant ASK = 2;
 
-    mapping(bytes20 => Order) private orders; //market, outcome, type, orderID
+    mapping(bytes20 => Order) private orders;
     mapping(address => MarketOrders) private marketOrderData;
-    mapping(bytes20 => bytes20) private bestOrder; //market, outcome, type
+    mapping(bytes20 => bytes20) private bestOrder;
     mapping(bytes20 => bytes20) private worstOrder;
 
     // Getters
@@ -114,6 +114,14 @@ contract NewOrders is Controlled {
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)];
     }
 
+    function getOrderIdHash(uint256 _type, IMarket _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint256 _blockNumber, uint256 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bytes20) {
+        return ripemd160(_type, _market, _fxpAmount, _fxpPrice, _sender, _blockNumber, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
+    }
+
+    function getBlockNumber() public constant returns (uint256) {
+        return block.number;
+    }
+
     function isBetterPrice(uint256 _type, IMarket _market, uint8 _outcome, uint256 _fxpPrice, bytes20 _orderId) public constant returns (bool) { 
         if (_type == BID) { 
             return (_fxpPrice > orders[_orderId].fxpPrice);
@@ -158,7 +166,7 @@ contract NewOrders is Controlled {
         if (_worstOrderId == _orderId) { 
             _worseOrderId = 0;
         }
-        if (_betterOrderId != 0) { 
+        if (_betterOrderId != 0) {
             orders[_betterOrderId].worseOrderId = _orderId;
             orders[_orderId].betterOrderId = _betterOrderId;
         }
@@ -170,17 +178,19 @@ contract NewOrders is Controlled {
     }
 
     // FIXME: Currently, the MakeOrder contract is passing in a ripemd160 hash value of type bytes20 as the orderID.  This should be changed this to pass in a sha3/sha256 hash value of type bytes32.
-    function saveOrder(bytes20 _orderId, uint256 _type, IMarket _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _gasPrice) public onlyWhitelistedCallers returns (bool) { 
+    // FIXME: Remove unused parameters orderID and gasPrice
+    function saveOrder(address orderId, uint256 _type, IMarket _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _tradeGroupId, uint256 gasPrice) public onlyWhitelistedCallers returns (bytes20 _orderId) { 
         require(_type == BID || _type == ASK);
         require(0 <= _outcome || _outcome < _market.getNumberOfOutcomes());
+        _orderId = getOrderIdHash(_type, _market, _fxpAmount, _fxpPrice, _sender, block.number, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
         insertOrderIntoList(_orderId, _type, _market, _outcome, _fxpPrice, _betterOrderId, _worseOrderId);
         orders[_orderId].fxpPrice = _fxpPrice;
         orders[_orderId].fxpAmount = _fxpAmount;
         orders[_orderId].owner = _sender;
         orders[_orderId].fxpMoneyEscrowed = _fxpMoneyEscrowed;
         orders[_orderId].fxpSharesEscrowed = _fxpSharesEscrowed;
-        orders[_orderId].gasPrice = _gasPrice;
-        return true;
+        MakeOrder(_market, _sender, _type, _fxpPrice, _fxpAmount, _outcome, _orderId, _fxpMoneyEscrowed, _fxpSharesEscrowed, _tradeGroupId);
+        return _orderId;
     }
 
     function removeOrder(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome) public onlyWhitelistedCallers returns (bool) { 
@@ -325,7 +335,7 @@ contract NewOrders is Controlled {
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, ASK)];
     }
 
-    function getBestOrderWorstOrderHash(IMarket _market, uint8 _outcome, uint256 _type) private returns (bytes20) {
+    function getBestOrderWorstOrderHash(IMarket _market, uint8 _outcome, uint256 _type) private constant returns (bytes20) {
         return ripemd160(_market, _outcome, _type);
     }
 }
