@@ -29,9 +29,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
     uint256 private constant REPORTING_DURATION_SECONDS = 27 * 1 days;
     uint256 private constant REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
-    uint256 private constant MINIMUM_OUTCOMES = 2;
-    uint256 private constant MAXIMUM_OUTCOMES = 8;
-    uint256 private constant MINIMUM_PAYOUT_DENOMINATOR = 2;
 
     function initialize(Branch _branch, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
