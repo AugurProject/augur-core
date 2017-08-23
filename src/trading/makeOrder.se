@@ -70,8 +70,8 @@ def makeOrder(sender: address, type: int256, attoshares: int256, displayPrice: i
     fxpMoneyEscrowed = escrow[0]
     fxpSharesEscrowed = escrow[1]
 
-    order = [type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, tx.gasprice]
-    orderID = ripemd160(order, items=10)
+    order = [type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
+    orderID = ripemd160(order, items=9)
     require(ORDERS.getAmount(orderID, type, market, outcome) == 0)
     ORDERS.saveOrder(orderID, type, market, attoshares, displayPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID, tx.gasprice)
 
