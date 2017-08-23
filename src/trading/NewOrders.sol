@@ -115,6 +115,7 @@ contract NewOrders is Controlled {
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)];
     }
 
+    // FIXME: Currently, getOrderIdHash(), getBestOrderWorstOrderHash(), and makeOrder.makeOrder() are creating ripemd160 hash values of type bytes20.  This should probably be changed to create sha3/sha256 hash values of type bytes32.
     function getOrderIdHash(uint256 _type, IMarket _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint256 _blockNumber, uint256 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bytes20) {
         return ripemd160(_type, _market, _fxpAmount, _fxpPrice, _sender, _blockNumber, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
     }
@@ -178,7 +179,6 @@ contract NewOrders is Controlled {
         return true;
     }
 
-    // FIXME: Currently, the MakeOrder contract is passing in a ripemd160 hash value of type bytes20 as the orderID.  This should be changed this to pass in a sha3/sha256 hash value of type bytes32.
     // FIXME: Remove unused parameters orderID and gasPrice
     function saveOrder(address orderId, uint256 _type, IMarket _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _tradeGroupId, uint256 gasPrice) public onlyWhitelistedCallers returns (bytes20 _orderId) { 
         require(_type == BID || _type == ASK);
