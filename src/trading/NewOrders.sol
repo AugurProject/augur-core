@@ -267,9 +267,9 @@ contract NewOrders is Controlled {
         return true;
     }
 
-    function setPrice(IMarket _market, uint8 _outcome, uint256 _fxpPrice) internal returns (uint256) { 
+    function setPrice(IMarket _market, uint8 _outcome, uint256 _fxpPrice) internal returns (bool) { 
         marketOrderData[_market].prices[_outcome] = _fxpPrice;
-        return 1;
+        return true;
     }
 
     function removeOrderFromList(bytes20 _orderId, uint256 _type, IMarket _market, uint8 _outcome) private returns (bool) { 
