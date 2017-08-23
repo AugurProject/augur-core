@@ -222,7 +222,7 @@ class ContractsFixture:
                 if name == 'controller': continue
                 # remove this and Interfaces.sol when https://github.com/ethereum/solidity/issues/2665 is fixed
                 if name == 'Interfaces': continue
-                contractsToDelegate = ['orders', 'tradingEscapeHatch']
+                contractsToDelegate = ['orders','tradingEscapeHatch']
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
                     self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
