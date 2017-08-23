@@ -31,11 +31,13 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         PRE_REPORTING,
         AUTOMATED_REPORTING,
         AUTOMATED_DISPUTE,
+        AWAITING_MIGRATION,
         LIMITED_REPORTING,
         LIMITED_DISPUTE,
         ALL_REPORTING,
         ALL_DISPUTE,
-        FORK,
+        FORKING,
+        AWAITING_FINALIZATION,
         FINALIZED
     }
 
@@ -167,7 +169,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         // intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
         require(isInAutomatedDisputePhase());
         automatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
-        fundDisputeBondWithReputation(msg.sender, automatedReporterDisputeBondToken, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT);
+        reportingWindow.getReputationToken().trustedTransfer(msg.sender, automatedReporterDisputeBondToken, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT);
         reportingWindow.updateMarketPhase();
         return true;
     }
@@ -175,7 +177,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     function disputeLimitedReporters() public triggersMigration returns (bool) {
         require(isInLimitedDisputePhase());
         limitedReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
-        fundDisputeBondWithReputation(msg.sender, limitedReportersDisputeBondToken, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT);
+        reportingWindow.getReputationToken().trustedTransfer(msg.sender, limitedReportersDisputeBondToken, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT);
         ReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
         return migrateReportingWindow(_newReportingWindow);
     }
@@ -183,7 +185,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     function disputeAllReporters() public triggersMigration returns (bool) {
         require(isInAllDisputePhase());
         allReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
-        fundDisputeBondWithReputation(msg.sender, allReportersDisputeBondToken, ALL_REPORTERS_DISPUTE_BOND_AMOUNT);
+        reportingWindow.getReputationToken().trustedTransfer(msg.sender, allReportersDisputeBondToken, ALL_REPORTERS_DISPUTE_BOND_AMOUNT);
         reportingWindow.getBranch().fork();
         ReportingWindow _newReportingWindow = getBranch().getReportingWindowForForkEndTime();
         return migrateReportingWindow(_newReportingWindow);
@@ -218,20 +220,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
             return true;
         }
 
-        if (getReportingState() == ReportingState.AUTOMATED_DISPUTE) {
-            if (!canFinalizeAutomated()) {
-                return false;
-            }
-        }
-        if (getReportingState() == ReportingState.LIMITED_REPORTING || getReportingState() == ReportingState.ALL_REPORTING) {
-            if (!canFinalizeReporting()) {
-                return false;
-            }
-        }
-        if (getReportingState() == ReportingState.FORK) {
-            if (!canFinalizeFork()) {
-                return false;
-            }
+        if (getReportingState() != ReportingState.AWAITING_FINALIZATION) {
+            return false;
         }
 
         finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
@@ -239,7 +229,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         transferIncorrectDisputeBondsToWinningReportingToken();
         reportingWindow.updateMarketPhase();
         return true;
-    }
 
         // FIXME: when the market is finalized, we need to add `reportingTokens[finalPayoutDistributionHash].totalSupply()` to the reporting window.  This is necessary for fee collection which is a cross-market operation.
         // TODO: figure out how to make it so fee distribution is delayed until all markets have been finalized; we can enforce it contract side and let the UI deal with the actual work
@@ -248,6 +237,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         // FIXME: if automated report is wrong, transfer automated report bond to reportingWindow
         // FIXME: if automated report is right, transfer automated report bond to market creator
         // FIXME: handle markets that get 0 reports during their scheduled reporting window
+    }
 
     function canFinalizeAutomated() private returns (bool) {
         if (!automatedReportReceived) {
@@ -256,7 +246,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return true;
     }
 
-    function canFinalizeReporting() private triggersMigration returns (bool) {
+    function canFinalizeReporting() private returns (bool) {
         if (block.timestamp <= reportingWindow.getEndTime()) {
             return false;
         }
@@ -305,9 +295,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return true;
     }
 
-    ////////
-    //////// Helpers
-    ////////
+    //
+    // Helpers
+    //
 
     function getReportingToken(uint256[] _payoutNumerators) public returns (ReportingToken) {
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
@@ -317,12 +307,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
             reportingTokens[_payoutDistributionHash] = _reportingToken;
         }
         return _reportingToken;
-    }
-
-    function fundDisputeBondWithReputation(address _bondHolder, DisputeBondToken _disputeBondToken, uint256 _bondAmount) private returns (bool) {
-        require(_bondHolder == _disputeBondToken.getBondHolder());
-        reportingWindow.getReputationToken().trustedTransfer(_bondHolder, _disputeBondToken, _bondAmount);
-        return true;
     }
 
     function transferIncorrectDisputeBondsToWinningReportingToken() private returns (bool) {
@@ -342,10 +326,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
 
     function derivePayoutDistributionHash(uint256[] _payoutNumerators) public constant returns (bytes32) {
         uint256 _sum = 0;
-        require(_payoutNumerators.length == numOutcomes);
-        for (uint8 i = 0; i < numOutcomes; i++) {
+        for (uint8 i = 0; i < _payoutNumerators.length; i++) {
             require(_payoutNumerators[i] <= payoutDenominator);
-            _sum += _payoutNumerators[i];
+            _sum = _sum.add(_payoutNumerators[i]);
         }
         require(_sum == payoutDenominator);
         return sha3(_payoutNumerators);
@@ -355,9 +338,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return reportingTokens[_payoutDistributionHash];
     }
 
-    ////////
-    //////// Getters
-    ////////
+    //
+    //Getters
+    //
+
     function getTypeName() public constant returns (bytes32) {
         return "Market";
     }
@@ -435,8 +419,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return topic;
     }
 
+    // FIXME: Remove this once claimProceeds is converted to Solidity. We no longer need this method as we removed combinatorial markets
     function shouldCollectReportingFees() public constant returns (bool) {
-        return !getBranch().isContainerForShareToken(cash);
+        return true;
     }
 
     function isDoneWithAutomatedReporters() public constant returns (bool) {
@@ -484,39 +469,29 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function isContainerForReportingToken(ReportingToken _shadyToken) public constant returns (bool) {
-        if (address(_shadyToken) == NULL_ADDRESS) {
-            return false;
-        }
         if (_shadyToken.getTypeName() != "ReportingToken") {
             return false;
         }
         bytes32 _shadyId = _shadyToken.getPayoutDistributionHash();
         ReportingToken _reportingToken = reportingTokens[_shadyId];
-        if (address(_reportingToken) == NULL_ADDRESS) {
-            return false;
-        }
-        if (_reportingToken != _shadyToken) {
-            return false;
-        }
-        return true;
+        return _reportingToken == _shadyToken;
     }
 
     function isContainerForShareToken(IShareToken _shadyShareToken) public constant returns (bool) {
         if (_shadyShareToken.getTypeName() != "ShareToken") {
             return false;
         }
-        return(getShareToken(_shadyShareToken.getOutcome()) == _shadyShareToken);
+        return getShareToken(_shadyShareToken.getOutcome()) == _shadyShareToken;
     }
 
     function isContainerForDisputeBondToken(DisputeBondToken _shadyBondToken) public constant returns (bool) {
-        if (_shadyBondToken.getTypeName() != "DisputeBondToken") {
-            return false;
-        }
         if (automatedReporterDisputeBondToken == _shadyBondToken) {
             return true;
-        } else if (limitedReportersDisputeBondToken == _shadyBondToken) {
+        }
+        if (limitedReportersDisputeBondToken == _shadyBondToken) {
             return true;
-        } else if (allReportersDisputeBondToken == _shadyBondToken) {
+        }
+        if (allReportersDisputeBondToken == _shadyBondToken) {
             return true;
         }
         return false;
@@ -572,11 +547,21 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
             return ReportingState.FINALIZED;
         }
 
+        if (needsMigration()) {
+            return ReportingState.AWAITING_MIGRATION;
+        }
+
         if (address(allReportersDisputeBondToken) != NULL_ADDRESS) {
-            return ReportingState.FORK;
+            if (canFinalizeFork()) {
+                return ReportingState.AWAITING_FINALIZATION;
+            }
+            return ReportingState.FORKING;
         }
 
         if (address(limitedReportersDisputeBondToken) != NULL_ADDRESS) {
+            if (canFinalizeReporting()) {
+                return ReportingState.AWAITING_FINALIZATION;
+            }
             if (reportingWindow.isDisputeActive()) {
                 return ReportingState.ALL_DISPUTE;
             }
@@ -589,6 +574,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
 
         if (canBeReportedOn()) {
             return ReportingState.LIMITED_REPORTING;
+        }
+
+        if (block.timestamp > getAutomatedReportDisputeDueTimestamp() && (canFinalizeReporting() || canFinalizeAutomated())) {
+            return ReportingState.AWAITING_FINALIZATION;
         }
 
         if (block.timestamp > getAutomatedReportDueTimestamp() && block.timestamp < getAutomatedReportDisputeDueTimestamp()) {
