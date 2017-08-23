@@ -13,6 +13,7 @@ import 'ROOT/trading/NewOrders.sol';
 /**
  * @title OrdersFetcher
  */
+// FIXME: This was named NewOrdersFetcher to prevent naming conflicts with ordersFetcher.se. Should be renamed to OrdersFetcher.
 contract NewOrdersFetcher is Controlled {
     using Bytes20Arrays for bytes20[];
 

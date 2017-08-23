@@ -14,6 +14,7 @@ import 'ROOT/trading/NewOrdersFetcher.sol';
  * @title Orders
  * @dev Storage of all data associated with orders
  */
+// FIXME: This was named NewOrders to prevent naming conflicts with orders.se. Should be renamed to Orders.
 contract NewOrders is Controlled {
     using SafeMathUint256 for uint256;
 
