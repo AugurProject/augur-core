@@ -4,6 +4,7 @@
 
 pragma solidity ^0.4.13;
 
+
 library Trading {
     enum TradeTypes {
         Bid, Ask
