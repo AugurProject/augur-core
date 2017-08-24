@@ -2,9 +2,10 @@ pragma solidity ^0.4.13;
 
 import 'ROOT/Controller.sol';
 import 'ROOT/Mutex.sol';
-import 'ROOT/reporting/Interfaces.sol';
 import 'ROOT/extensions/MarketFeeCalculator.sol';
 import 'ROOT/legacy_reputation/SafeMath.sol';
+import 'ROOT/libraries/ReentrancyGuard.sol';
+import 'ROOT/reporting/Interfaces.sol';
 
 
 // AUDIT: Ensure that a malicious market can't subversively cause share tokens to be paid out incorrectly.
@@ -12,13 +13,10 @@ import 'ROOT/legacy_reputation/SafeMath.sol';
  * @title ClaimProceeds
  * @dev This allows users to claim their money from a market by exchanging their shares
  */
-contract ClaimProceeds is Controlled {
+contract ClaimProceeds is Controlled, ReentrancyGuard {
     using SafeMath for uint256;
 
-    function publicClaimProceeds(IMarket _market) onlyInGoodTimes public returns(bool) {
-        Mutex _mutex = Mutex(controller.lookup("Mutex"));
-        _mutex.acquire();
-
+    function claimProceeds(IMarket _market) onlyInGoodTimes nonReentrant external returns(bool) {
         require(_market.isFinalized());
         require(block.timestamp > _market.getFinalizationTime() + 3 days);
 
@@ -34,7 +32,6 @@ contract ClaimProceeds is Controlled {
                 _shareToken.destroyShares(msg.sender, _numberOfShares);
             }
             ERC20 _denominationToken = _market.getDenominationToken();
-            // NOTE: rounding error here will result in _very_ tiny amounts of denominationToken left in the market
             if (_shareHolderShare > 0) {
                 require(_denominationToken.transferFrom(_market, msg.sender, _shareHolderShare));
             }
@@ -45,8 +42,6 @@ contract ClaimProceeds is Controlled {
                 require(_denominationToken.transferFrom(_market, _market.getReportingWindow(), _reporterShare));
             }
         }
-
-        _mutex.release();
 
         return true;
     }
@@ -63,6 +58,7 @@ contract ClaimProceeds is Controlled {
         uint256 _completeSetCostInAttotokens = _market.getCompleteSetCostInAttotokens();
         uint256 _payoutNumerator = _winningReportingToken.getPayoutNumerator(_outcome);
         uint256 _getPayoutDenominator = _market.getPayoutDenominator();
+        // NOTE: rounding error here will result in _very_ tiny amounts of denominationToken left in the market
         return _numberOfShares.mul(_completeSetCostInAttotokens).div(10**18).mul(_payoutNumerator).div(_getPayoutDenominator);
     }
 

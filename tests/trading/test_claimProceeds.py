@@ -78,9 +78,9 @@ def test_redeem_shares_in_binary_market(contractsFixture):
     contractsFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
 
     # redeem shares with a1
-    claimProceeds.publicClaimProceeds(market.address, sender = tester.k1)
+    claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # redeem shares with a2
-    claimProceeds.publicClaimProceeds(market.address, sender = tester.k2)
+    claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
     assert cash.balanceOf(tester.a1) == expectedPayout
@@ -117,9 +117,9 @@ def test_redeem_shares_in_categorical_market(contractsFixture):
     contractsFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
 
     # redeem shares with a1
-    claimProceeds.publicClaimProceeds(market.address, sender = tester.k1)
+    claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # redeem shares with a2
-    claimProceeds.publicClaimProceeds(market.address, sender = tester.k2)
+    claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
     assert cash.balanceOf(tester.a1) == expectedPayout
@@ -157,9 +157,9 @@ def test_redeem_shares_in_scalar_market(contractsFixture):
     contractsFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
 
     # redeem shares with a1
-    claimProceeds.publicClaimProceeds(market.address, sender = tester.k1)
+    claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # redeem shares with a2
-    claimProceeds.publicClaimProceeds(market.address, sender = tester.k2)
+    claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
     assert cash.balanceOf(tester.a1) == expectedPayout * 3 / 4
@@ -187,14 +187,14 @@ def test_reedem_failure(contractsFixture):
 
     # market not finalized
     with raises(TransactionFailed):
-        claimProceeds.publicClaimProceeds(market.address, sender = tester.k1)
+        claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # finalize the market
     assert market.tryFinalizeAutomatedReport()
     # waiting period not over
     with raises(TransactionFailed):
-        claimProceeds.publicClaimProceeds(market.address, sender = tester.k1)
+        claimProceeds.claimProceeds(market.address, sender = tester.k1)
 
     # set timestamp to 3 days later (waiting period)
     contractsFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
     # validate that everything else is OK
-    assert claimProceeds.publicClaimProceeds(market.address, sender = tester.k1)
+    assert claimProceeds.claimProceeds(market.address, sender = tester.k1)
