@@ -45,7 +45,7 @@ def publicClaimProceeds(market: address):
 def claimProceeds(sender: address, market: address):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
-    require(market.isFinalized())
+    require(market.getReportingState() == 10) # FIXME: Market.ReportingState.FINALIZED
     require(block.timestamp > market.getFinalizationTime() + THREE_DAYS)
 
     denominationToken = market.getDenominationToken()

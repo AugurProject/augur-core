@@ -34,7 +34,8 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
 
     function withdraw() public returns (bool) {
         require(msg.sender == bondHolder);
-        require(!market.isContainerForDisputeBondToken(this) || (market.isFinalized() && market.getFinalPayoutDistributionHash() != disputedPayoutDistributionHash));
+        bool _isFinalized = market.getReportingState() == Market.ReportingState.FINALIZED;
+        require(!market.isContainerForDisputeBondToken(this) || (_isFinalized && market.getFinalPayoutDistributionHash() != disputedPayoutDistributionHash));
         require(getBranch().getForkingMarket() != market);
         ReputationToken _reputationToken = getReputationToken();
         uint256 _amountToTransfer = _reputationToken.balanceOf(this);

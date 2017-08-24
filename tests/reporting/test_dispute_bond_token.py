@@ -375,7 +375,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     # Finalize market (i.e., transfer losing dispute bond tokens to winning reporting token)
     print "\nFinalizing market\n"
     market.tryFinalize()
-    assert market.isFinalized()
+    assert market.getReportingState() == contractsFixture.constants.FINALIZED()
     if (allReportersDisputerAccountNum):
         print "Original branch test accounts"
         printTestAccountBalances(reputationToken, False)

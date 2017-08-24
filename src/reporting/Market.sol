@@ -156,7 +156,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     function automatedReport(uint256[] _payoutNumerators) public returns (bool) {
         // intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
         require(msg.sender == automatedReporterAddress);
-        require(isInAutomatedReportingPhase());
+        require(getReportingState() == ReportingState.AUTOMATED_REPORTING);
         // we have to create the reporting token so the rest of the system works (winning reporting token must exist)
         getReportingToken(_payoutNumerators);
         automatedReportReceived = true;
@@ -167,7 +167,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
 
     function disputeAutomatedReport() public returns (bool) {
         // intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
-        require(isInAutomatedDisputePhase());
+        require(getReportingState() == ReportingState.AUTOMATED_DISPUTE);
         automatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, automatedReporterDisputeBondToken, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT);
         reportingWindow.updateMarketPhase();
@@ -175,7 +175,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function disputeLimitedReporters() public triggersMigration returns (bool) {
-        require(isInLimitedDisputePhase());
+        require(getReportingState() == ReportingState.LIMITED_DISPUTE);
         limitedReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, limitedReportersDisputeBondToken, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT);
         ReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
@@ -183,7 +183,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function disputeAllReporters() public triggersMigration returns (bool) {
-        require(isInAllDisputePhase());
+        require(getReportingState() == ReportingState.ALL_DISPUTE);
         allReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, allReportersDisputeBondToken, ALL_REPORTERS_DISPUTE_BOND_AMOUNT);
         reportingWindow.getBranch().fork();
@@ -397,57 +397,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return true;
     }
 
-    function isDoneWithAutomatedReporters() public constant returns (bool) {
-        return automatedReportReceived || block.timestamp > getAutomatedReportDueTimestamp();
-    }
-
-    function isDoneWithLimitedReporters() public constant returns (bool) {
-        return getReportingState() > ReportingState.LIMITED_REPORTING;
-    }
-
-    function isDoneWithAllReporters() public constant returns (bool) {
-        return getReportingState() > ReportingState.ALL_REPORTING;
-    }
-
     function getFinalizationTime() public constant returns (uint256) {
         return finalizationTime;
-    }
-
-    function isFinalized() public constant returns (bool) {
-        return getReportingState() == ReportingState.FINALIZED;
-    }
-
-    function canBeReportedOn() public constant returns (bool) {
-        ReportingState _state = getReportingState();
-        return _state == ReportingState.LIMITED_REPORTING || _state == ReportingState.ALL_REPORTING;
-    }
-
-    function needsMigration() public constant returns (bool) {
-        return getReportingState() == ReportingState.AWAITING_MIGRATION;
-    }
-
-    function isInAutomatedReportingPhase() public constant returns (bool) {
-        return getReportingState() == ReportingState.AUTOMATED_REPORTING;
-    }
-
-    function isInAutomatedDisputePhase() public constant returns (bool) {
-        return getReportingState() == ReportingState.AUTOMATED_DISPUTE;
-    }
-
-    function isInLimitedReportingPhase() public constant returns (bool) {
-        return getReportingState() == ReportingState.LIMITED_REPORTING;
-    }
-
-    function isInLimitedDisputePhase() public constant returns (bool) {
-        return getReportingState() == ReportingState.LIMITED_DISPUTE;
-    }
-
-    function isInAllReportingPhase() public constant returns (bool) {
-        return getReportingState() == ReportingState.ALL_REPORTING;
-    }
-
-    function isInAllDisputePhase() public constant returns (bool) {
-        return getReportingState() == ReportingState.ALL_DISPUTE;
     }
 
     function isContainerForReportingToken(ReportingToken _shadyToken) public constant returns (bool) {

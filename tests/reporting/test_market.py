@@ -23,17 +23,6 @@ def test_market_creation(contractsFixture):
     assert market.getPayoutDenominator() == 2
     assert reportingWindow.getReputationToken() == branch.getReputationToken()
     assert market.getFinalPayoutDistributionHash() == stringToBytes("")
-    assert market.isDoneWithAutomatedReporters() == 0
-    assert market.isDoneWithAllReporters() == 0
-    assert market.isDoneWithLimitedReporters() == 0
-    assert market.isFinalized() == 0
-    assert market.isInAutomatedReportingPhase() == 0
-    assert market.isInAutomatedDisputePhase() == 0
-    assert market.isInLimitedReportingPhase() == 0
-    assert market.isInLimitedDisputePhase() == 0
-    assert market.isInAllReportingPhase() == 0
-    assert market.isInAllDisputePhase() == 0
+    assert market.getReportingState() == contractsFixture.constants.PRE_REPORTING()
     assert market.isContainerForReportingToken(shadyReportingToken.address) == 0
-    assert market.canBeReportedOn() == 0
-    assert market.needsMigration() == 0
     assert market.getAutomatedReportDueTimestamp() == market.getEndTime() + timedelta(days=3).total_seconds()

@@ -98,7 +98,7 @@ def test_reporting(contractsFixture):
     # finalize
     contractsFixture.chain.head_state.timestamp = branch.getForkEndTime() + 1
     market.tryFinalize()
-    assert market.isFinalized()
+    assert market.getReportingState() == contractsFixture.constants.FINALIZED()
     assert market.getFinalWinningReportingToken() == reportingTokenNo.address
 
     # TODO: redeem REP and registration token

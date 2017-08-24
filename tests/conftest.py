@@ -158,6 +158,7 @@ class ContractsFixture:
         self.binaryMarket = self.createReasonableBinaryMarket(self.branch, self.cash)
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)
         self.scalarMarket = self.createReasonableScalarMarket(self.branch, -10 * 10**18, 30 * 10**18, self.cash)
+        self.constants = self.uploadAndAddToController("solidity_test_helpers/Constants.sol")
         self.chain.mine(1)
         self.originalHead = self.chain.head_state
         self.originalBlock = self.chain.block

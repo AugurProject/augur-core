@@ -31,7 +31,8 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function buy(uint256 _attotokens) public afterInitialized returns (bool) {
-        require(market.canBeReportedOn());
+        Market.ReportingState _state = market.getReportingState();
+        require(_state == Market.ReportingState.LIMITED_REPORTING || _state == Market.ReportingState.ALL_REPORTING);
         require(getRegistrationToken().balanceOf(msg.sender) > 0);
         require(market.isContainerForReportingToken(this));
         getReputationToken().trustedTransfer(msg.sender, this, _attotokens);
@@ -69,7 +70,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     function redeemWinningTokens() public afterInitialized returns (bool) {
-        require(market.isFinalized());
+        require(market.getReportingState() == Market.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
         require(getBranch().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() == this);
@@ -86,7 +87,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function migrateLosingTokens() public afterInitialized returns (bool) {
-        require(market.isFinalized());
+        require(market.getReportingState() == Market.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
         require(getBranch().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() != this);

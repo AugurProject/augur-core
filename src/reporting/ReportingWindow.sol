@@ -89,12 +89,13 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
     function updateMarketPhase() public afterInitialized returns (bool) {
         Market _market = Market(msg.sender);
         require(markets.contains(_market));
-        if (_market.isDoneWithAllReporters()) {
+        Market.ReportingState _state = _market.getReportingState();
+        if (_state > Market.ReportingState.ALL_REPORTING) {
             allReporterMarkets.remove(_market);
             limitedReporterMarkets.remove(_market);
             return false;
         }
-        if (_market.isDoneWithLimitedReporters()) {
+        if (_state > Market.ReportingState.LIMITED_REPORTING) {
             allReporterMarkets.addSetItem(_market);
             limitedReporterMarkets.remove(_market);
             return false;
@@ -108,9 +109,10 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
     function noteReport(Market _market, address _reporter, bytes32 _payoutDistributionHash) public afterInitialized returns (bool) {
         require(markets.contains(_market));
         require(_market.getReportingTokenOrZeroByPayoutDistributionHash(_payoutDistributionHash) == msg.sender);
-        require(_market.isInAllReportingPhase() || _market.isInLimitedReportingPhase());
+        Market.ReportingState _state = _market.getReportingState();
+        require(_state == Market.ReportingState.ALL_REPORTING || _state == Market.ReportingState.LIMITED_REPORTING);
 
-        if (_market.isInAllReportingPhase()) {
+        if (_state == Market.ReportingState.ALL_REPORTING) {
             // always give credit for events in all-reporters phase
             privateNoteReport(_market, _reporter);
         } else if (numberOfReportsByMarket[_market] < getMaxReportsPerLimitedReporterMarket()) {
@@ -268,10 +270,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
         require(!limitedReporterMarkets.contains(_market));
         require(!allReporterMarkets.contains(_market));
         markets.addSetItem(_market);
-        if (_market.isDoneWithAllReporters()) {
+        Market.ReportingState _state = _market.getReportingState();
+        if (_state > Market.ReportingState.ALL_REPORTING) {
             return false;
         }
-        if (_market.isDoneWithLimitedReporters()) {
+        if (_state > Market.ReportingState.LIMITED_REPORTING) {
             allReporterMarkets.addSetItem(_market);
             return true;
         }
@@ -290,6 +293,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
     }
 
     function isForkingMarketFinalized() public afterInitialized constant returns (bool) {
-        return getBranch().getForkingMarket().isFinalized();
+        return getBranch().getForkingMarket().getReportingState() == Market.ReportingState.FINALIZED;
     }
 }
