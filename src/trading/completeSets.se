@@ -85,13 +85,10 @@ def sellCompleteSets(sender: address, market: address, fxpAmount: int256):
     denominationToken = market.getDenominationToken()
     marketCreatorFeeRate = market.getMarketCreatorSettlementFeeInAttoethPerEth()
     marketCreatorFee = safeFxpMul(safeFxpMul(marketCreatorFeeRate, fxpAmount), cumulativeScale)
-    marketCreator = market.getCreator()
-    if market.shouldCollectReportingFees():
-        reportingWindow = market.getReportingWindow()
-        reportingFeeRate = MARKET_FEE_CALCULATOR.getReportingFeeInAttoethPerEth(reportingWindow)
-        reportingFee = safeFxpMul(safeFxpMul(reportingFeeRate, fxpAmount), cumulativeScale)
-    else:
-        reportingFee = 0
+    marketCreator = market.owner()
+    reportingWindow = market.getReportingWindow()
+    reportingFeeRate = MARKET_FEE_CALCULATOR.getReportingFeeInAttoethPerEth(reportingWindow)
+    reportingFee = safeFxpMul(safeFxpMul(reportingFeeRate, fxpAmount), cumulativeScale)
     sellerPayout = cost - marketCreatorFee - reportingFee
 
     # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets

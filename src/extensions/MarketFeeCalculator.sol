@@ -88,4 +88,8 @@ contract MarketFeeCalculator {
         uint256 _outstandingSharesInAttoeth = 100 * 10 ** 18;
         return _outstandingSharesInAttoeth;
     }
+
+    function getMarketCreationCost(ReportingWindow _reportingWindow) constant public returns (uint256) {
+        return getValidityBond(_reportingWindow) + getTargetReporterGasCosts();
+    }
 }

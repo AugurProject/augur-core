@@ -73,7 +73,7 @@ def test_redeem_shares_in_binary_market(contractsFixture):
     # set timestamp to after automated dispute end
     contractsFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
     # finalize the market
-    assert market.tryFinalizeAutomatedReport()
+    assert market.tryFinalize()
     # set timestamp to 3 days later (waiting period)
     contractsFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
 
@@ -112,7 +112,7 @@ def test_redeem_shares_in_categorical_market(contractsFixture):
     # set timestamp to after automated dispute end
     contractsFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
     # finalize the market
-    assert market.tryFinalizeAutomatedReport()
+    assert market.tryFinalize()
     # set timestamp to 3 days later (waiting period)
     contractsFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
 
@@ -152,7 +152,7 @@ def test_redeem_shares_in_scalar_market(contractsFixture):
     # set timestamp to after automated dispute end
     contractsFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
     # finalize the market
-    assert market.tryFinalizeAutomatedReport()
+    assert market.tryFinalize()
     # set timestamp to 3 days later (waiting period)
     contractsFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
 
@@ -189,7 +189,7 @@ def test_reedem_failure(contractsFixture):
     with raises(TransactionFailed):
         claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # finalize the market
-    assert market.tryFinalizeAutomatedReport()
+    assert market.tryFinalize()
     # waiting period not over
     with raises(TransactionFailed):
         claimProceeds.claimProceeds(market.address, sender = tester.k1)

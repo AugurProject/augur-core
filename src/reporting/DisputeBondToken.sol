@@ -4,6 +4,7 @@ pragma solidity ^0.4.13;
 
 import 'ROOT/reporting/Branch.sol';
 import 'ROOT/reporting/ReputationToken.sol';
+import 'ROOT/reporting/Market.sol';
 import 'ROOT/reporting/Interfaces.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/Typed.sol';
@@ -16,12 +17,12 @@ import 'ROOT/libraries/math/SafeMathUint256.sol';
 contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic {
     using SafeMathUint256 for uint256;
 
-    IMarket private market;
+    Market private market;
     address private bondHolder;
     bytes32 private disputedPayoutDistributionHash;
     uint256 private bondRemainingToBePaidOut;
 
-    function initialize(IMarket _market, address _bondHolder, uint256 _bondAmount, bytes32 _payoutDistributionHash) public beforeInitialized returns (bool) {
+    function initialize(Market _market, address _bondHolder, uint256 _bondAmount, bytes32 _payoutDistributionHash) public beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
         bondHolder = _bondHolder;
@@ -33,32 +34,30 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
 
     function withdraw() public returns (bool) {
         require(msg.sender == bondHolder);
-        require(!market.isContainerForDisputeBondToken(this) || (market.isFinalized() && market.getFinalPayoutDistributionHash() != disputedPayoutDistributionHash));
+        bool _isFinalized = market.getReportingState() == Market.ReportingState.FINALIZED;
+        require(!market.isContainerForDisputeBondToken(this) || (_isFinalized && market.getFinalPayoutDistributionHash() != disputedPayoutDistributionHash));
         require(getBranch().getForkingMarket() != market);
-        ReputationToken reputationToken = getReputationToken();
-        uint256 amountToTransfer = reputationToken.balanceOf(this);
-        bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(amountToTransfer);
-        reputationToken.transfer(bondHolder, amountToTransfer);
+        ReputationToken _reputationToken = getReputationToken();
+        uint256 _amountToTransfer = _reputationToken.balanceOf(this);
+        bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
+        _reputationToken.transfer(bondHolder, _amountToTransfer);
         return true;
     }
 
-    // FIXME: We should be minting coins in this scenario in order to achieve 2x
-    // target payout for bond holders during a fork.  Ideally, the amount minted is
-    // capped at the amount of tokens redeemed on other branches, so we may have to
-    // require the user to supply branches to deduct from with their call to this.
+    // FIXME: We should be minting coins in this scenario in order to achieve 2x target payout for bond holders during a fork.  Ideally, the amount minted is capped at the amount of tokens redeemed on other branches, so we may have to require the user to supply branches to deduct from with their call to this.
     function withdrawToBranch(Branch _shadyBranch) public returns (bool) {
         require(msg.sender == bondHolder);
         require(!market.isContainerForDisputeBondToken(this) || getBranch().getForkingMarket() == market);
-        bool _isChildOfMarketBranch = market.getBranch().isParentOf(_shadyBranch);
+        bool _isChildOfMarketBranch = market.getReportingWindow().getBranch().isParentOf(_shadyBranch);
         require(_isChildOfMarketBranch);
-        Branch legitBranch = _shadyBranch;
-        require(legitBranch.getParentPayoutDistributionHash() != disputedPayoutDistributionHash);
-        ReputationToken reputationToken = getReputationToken();
-        uint256 amountToTransfer = reputationToken.balanceOf(this);
-        ReputationToken destinationReputationToken = legitBranch.getReputationToken();
-        reputationToken.migrateOut(destinationReputationToken, this, amountToTransfer);
-        bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(amountToTransfer);
-        destinationReputationToken.transfer(bondHolder, amountToTransfer);
+        Branch _legitBranch = _shadyBranch;
+        require(_legitBranch.getParentPayoutDistributionHash() != disputedPayoutDistributionHash);
+        ReputationToken _reputationToken = getReputationToken();
+        uint256 _amountToTransfer = _reputationToken.balanceOf(this);
+        ReputationToken _destinationReputationToken = _legitBranch.getReputationToken();
+        _reputationToken.migrateOut(_destinationReputationToken, this, _amountToTransfer);
+        bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
+        _destinationReputationToken.transfer(bondHolder, _amountToTransfer);
         return true;
     }
 
@@ -66,7 +65,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
         return "DisputeBondToken";
     }
 
-    function getMarket() constant public returns (IMarket) {
+    function getMarket() constant public returns (Market) {
         return market;
     }
 
@@ -75,7 +74,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic 
     }
 
     function getReputationToken() constant public returns (ReputationToken) {
-        return market.getReputationToken();
+        return market.getReportingWindow().getReputationToken();
     }
 
     function getBondHolder() constant public returns (address) {
