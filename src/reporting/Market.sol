@@ -137,7 +137,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
 
     // this will need to be called manually for each open market if a spender contract is updated
     function approveSpenders() private returns (bool) {
-        bytes32[5] memory _names = [bytes32("cancelOrder"), bytes32("completeSets"), bytes32("takeOrder"), bytes32("tradingEscapeHatch"), bytes32("claimProceeds")];
+        bytes32[5] memory _names = [bytes32("cancelOrder"), bytes32("completeSets"), bytes32("takeOrder"), bytes32("tradingEscapeHatch"), bytes32("ClaimProceeds")];
         for (uint8 i = 0; i < _names.length; i++) {
             cash.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT);
         }
@@ -390,11 +390,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
 
     function getTopic() public constant returns (bytes32) {
         return topic;
-    }
-
-    // FIXME: Remove this once claimProceeds is converted to Solidity. We no longer need this method as we removed combinatorial markets
-    function shouldCollectReportingFees() public constant returns (bool) {
-        return true;
     }
 
     function getFinalizationTime() public constant returns (uint256) {
