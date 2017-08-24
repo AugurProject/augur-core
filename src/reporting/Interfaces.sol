@@ -9,6 +9,7 @@ import 'ROOT/reporting/ReportingWindow.sol';
 import 'ROOT/reporting/DisputeBondToken.sol';
 import 'ROOT/reporting/RegistrationToken.sol';
 
+
 contract IMarket is Typed {
     function initialize(ReportingWindow, uint256, uint256, uint256, int256, address, address, int256, int256, address, int256) payable public returns (bool);
     function getBranch() constant returns (Branch);
