@@ -182,7 +182,7 @@ contract NewOrders is Controlled {
     // FIXME: Remove unused parameters orderID and gasPrice
     function saveOrder(address orderId, uint256 _type, IMarket _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _tradeGroupId, uint256 gasPrice) public onlyWhitelistedCallers returns (bytes20 _orderId) { 
         require(_type == BID || _type == ASK);
-        require(0 <= _outcome || _outcome < _market.getNumberOfOutcomes());
+        require(_outcome < _market.getNumberOfOutcomes());
         _orderId = getOrderIdHash(_type, _market, _fxpAmount, _fxpPrice, _sender, block.number, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
         insertOrderIntoList(_orderId, _type, _market, _outcome, _fxpPrice, _betterOrderId, _worseOrderId);
         orders[_orderId].fxpPrice = _fxpPrice;
@@ -209,7 +209,7 @@ contract NewOrders is Controlled {
     function fillOrder(bytes20 _orderId, uint256 _orderType, IMarket _market, uint8 _orderOutcome, uint256 _sharesFilled, uint256 _tokensFilled) public onlyWhitelistedCallers returns (bool) { 
         // FIXME: Should eventually be changed to `require(_market.getTypeName() == "Market")`
         require(_market != address(0));
-        require(0 <= _orderOutcome && _orderOutcome < _market.getNumberOfOutcomes());
+        require(_orderOutcome < _market.getNumberOfOutcomes());
         require(_orderType == BID || _orderType == ASK);
         require(_orderId != 0);
         require(_sharesFilled <= orders[_orderId].fxpSharesEscrowed);
