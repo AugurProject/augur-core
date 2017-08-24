@@ -235,7 +235,7 @@ class ContractsFixture:
         for filename in listdir(resolveRelativePath('../src/trading')):
             name = path.splitext(filename)[0]
             extension = path.splitext(filename)[1]
-            if extension != '.se': continue
+            if extension != '.se' and extension != '.sol': continue
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def whitelistLibraryTestContracts(self):
@@ -246,7 +246,7 @@ class ContractsFixture:
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Mutex', 'Cash','orders','completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','cancelOrder','trade','claimProceeds','tradingEscapeHatch','ordersFetcher']
+        contractsToInitialize = ['Mutex', 'Cash','orders','completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','cancelOrder','trade','ClaimProceeds','tradingEscapeHatch','ordersFetcher']
         for contractName in contractsToInitialize:
             self.contracts[contractName].initialize(self.controller.address)
 

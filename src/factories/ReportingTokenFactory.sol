@@ -5,7 +5,7 @@ import 'ROOT/reporting/ReportingToken.sol';
 
 
 contract ReportingTokenFactory {
-    function createReportingToken(Controller _controller, IMarket _market, int256[] _payoutNumerators) returns (ReportingToken) {
+    function createReportingToken(Controller _controller, IMarket _market, uint256[] _payoutNumerators) returns (ReportingToken) {
         Delegator _delegator = new Delegator(_controller, "ReportingToken");
         ReportingToken _reportingToken = ReportingToken(_delegator);
         _reportingToken.initialize(_market, _payoutNumerators);

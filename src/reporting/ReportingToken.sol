@@ -18,9 +18,9 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     using SafeMathUint256 for uint256;
 
     IMarket public market;
-    int256[] public payoutNumerators;
+    uint256[] public payoutNumerators;
 
-    function initialize(IMarket _market, int256[] _payoutNumerators) public beforeInitialized returns (bool) {
+    function initialize(IMarket _market, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
         endInitialization();
         require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
         market = _market;
@@ -150,7 +150,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return market.derivePayoutDistributionHash(payoutNumerators);
     }
 
-    function getPayoutNumerator(uint8 index) constant returns (int256) {
+    function getPayoutNumerator(uint8 index) constant returns (uint256) {
         require(index < market.getNumberOfOutcomes());
         return payoutNumerators[index];
     }
