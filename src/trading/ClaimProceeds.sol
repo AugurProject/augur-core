@@ -51,7 +51,7 @@ contract ClaimProceeds is Controlled {
         return true;
     }
 
-    function divideUpWinnings(IMarket _market, ReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) constant returns (uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
+    function divideUpWinnings(IMarket _market, ReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) public constant returns (uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
         uint256 _proceeds = calculateProceeds(_market, _winningReportingToken, _outcome, _numberOfShares);
         _creatorShare = calculateMarketCreatorFee(_market, _proceeds);
         _reporterShare = calculateReportingFee(_market, _proceeds);
@@ -59,14 +59,14 @@ contract ClaimProceeds is Controlled {
         return (_shareHolderShare, _creatorShare, _reporterShare);
     }
 
-    function calculateProceeds(IMarket _market, ReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) constant returns (uint256) {
+    function calculateProceeds(IMarket _market, ReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) public constant returns (uint256) {
         uint256 _completeSetCostInAttotokens = _market.getCompleteSetCostInAttotokens();
         uint256 _payoutNumerator = _winningReportingToken.getPayoutNumerator(_outcome);
         uint256 _getPayoutDenominator = _market.getPayoutDenominator();
         return _numberOfShares.mul(_completeSetCostInAttotokens).div(10**18).mul(_payoutNumerator).div(_getPayoutDenominator);
     }
 
-    function calculateReportingFee(IMarket _market, uint256 _amount) constant returns (uint256) {
+    function calculateReportingFee(IMarket _market, uint256 _amount) public constant returns (uint256) {
         if (!_market.shouldCollectReportingFees()) {
             return 0;
         }
@@ -77,7 +77,7 @@ contract ClaimProceeds is Controlled {
         return _amount.mul(_reportingFeeAttoethPerEth).div(10**18);
     }
 
-    function calculateMarketCreatorFee(IMarket _market, uint256 _amount) constant returns (uint256) {
+    function calculateMarketCreatorFee(IMarket _market, uint256 _amount) public constant returns (uint256) {
         uint256 _marketCreatorFeeAttoEthPerEth = _market.getMarketCreatorSettlementFeeInAttoethPerEth();
         return _amount.mul(_marketCreatorFeeAttoEthPerEth).div(10**18);
     }
