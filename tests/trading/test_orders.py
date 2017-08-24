@@ -11,8 +11,8 @@ import hashlib
 NO = 0
 YES = 1
 
-BID = 1
-ASK = 2
+BID = 0
+ASK = 1
 
 WEI_TO_ETH = 10**18
 
@@ -37,7 +37,7 @@ def test_walkOrderList_bids(contractsFixture):
     hashedOrderId0 = hash.digest()
     order = {
         "orderID": 5,
-        "type": 1,
+        "type": BID,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.6'),
         "sender": tester.a0,
@@ -50,25 +50,25 @@ def test_walkOrderList_bids(contractsFixture):
     }
     hashedOrderId5 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(isinstance(hashedOrderId5, bytes)), "Save order"
-    bestOrderID = orders.getBestOrderId(1, market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(1, market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
     assert(bestOrderID == hashedOrderId5)
     assert(worstOrderID == hashedOrderId5)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.61'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.58'), bestOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.61'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.58'), worstOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId5, ZEROED_ORDER_ID])
     order = {
         "orderID": 6,
-        "type": 1,
+        "type": BID,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.59'),
         "sender": tester.a0,
@@ -81,25 +81,25 @@ def test_walkOrderList_bids(contractsFixture):
     }
     hashedOrderId6 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(isinstance(hashedOrderId6, bytes)), "Save order"
-    bestOrderID = orders.getBestOrderId(1, market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(1, market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
     assert(bestOrderID == hashedOrderId5)
     assert(worstOrderID == hashedOrderId6)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId5, hashedOrderId6])
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.61'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.58'), bestOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId5, hashedOrderId6])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId5, hashedOrderId6])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId5, hashedOrderId6])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId5, hashedOrderId6])
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.61'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.58'), worstOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId5, hashedOrderId6])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId5, hashedOrderId6])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId5, hashedOrderId6])
     order = {
         "orderID": 7,
-        "type": 1,
+        "type": BID,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.595'),
         "sender": tester.a0,
@@ -112,20 +112,20 @@ def test_walkOrderList_bids(contractsFixture):
     }
     hashedOrderId7 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(isinstance(hashedOrderId7, bytes)), "Save order"
-    bestOrderID = orders.getBestOrderId(1, market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(1, market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
     assert(bestOrderID == hashedOrderId5)
     assert(worstOrderID == hashedOrderId6)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId5, hashedOrderId7])
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.61'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
-    assert(ordersFetcher.descendOrderList(1, market.address, outcomeID, fix('0.58'), bestOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId5, hashedOrderId7])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId5, hashedOrderId7])
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.61'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
-    assert(ordersFetcher.ascendOrderList(1, market.address, outcomeID, fix('0.58'), worstOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId5, hashedOrderId7])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId5])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [hashedOrderId6, ZEROED_ORDER_ID])
     assert(orders.removeOrder(hashedOrderId5, BID, market.address, outcomeID) == 1), "Remove order 5"
     assert(orders.removeOrder(hashedOrderId6, BID, market.address, outcomeID) == 1), "Remove order 6"
     assert(orders.removeOrder(hashedOrderId7, BID, market.address, outcomeID) == 1), "Remove order 7"
@@ -140,7 +140,7 @@ def test_walkOrderList_asks(contractsFixture):
     hashedOrderId0 = hash.digest()
     order = {
         "orderID": 8,
-        "type": 2,
+        "type": ASK,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.6'),
         "sender": tester.a0,
@@ -153,23 +153,23 @@ def test_walkOrderList_asks(contractsFixture):
     }
     hashedOrderId8 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(isinstance(hashedOrderId8, bytes)), "Save order"
-    bestOrderID = orders.getBestOrderId(2, market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(2, market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
     assert(bestOrderID == hashedOrderId8)
     assert(worstOrderID == hashedOrderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.59'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId8])
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.61'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.58'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId8])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId8])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId8])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.59'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId8])
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.61'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.58'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId8])
     order = {
         "orderID": 9,
-        "type": 2,
+        "type": ASK,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.59'),
         "sender": tester.a0,
@@ -182,25 +182,25 @@ def test_walkOrderList_asks(contractsFixture):
     }
     hashedOrderId9 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(isinstance(hashedOrderId9, bytes)), "Save order"
-    bestOrderID = orders.getBestOrderId(2, market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(2, market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
     assert(bestOrderID == hashedOrderId9)
     assert(worstOrderID == hashedOrderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderId9, hashedOrderId8])
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.61'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.58'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId9])
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId9, hashedOrderId8])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderId9, hashedOrderId8])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId9])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId9, hashedOrderId8])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderId9, hashedOrderId8])
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.61'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.58'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId9])
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId9, hashedOrderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderId9, hashedOrderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId9])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderId9, hashedOrderId8])
     order = {
         "orderID": 10,
-        "type": 2,
+        "type": ASK,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.595'),
         "sender": tester.a0,
@@ -213,20 +213,20 @@ def test_walkOrderList_asks(contractsFixture):
     }
     hashedOrderId10 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(isinstance(hashedOrderId9, bytes)), "Save order"
-    bestOrderID = orders.getBestOrderId(2, market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(2, market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
     assert(bestOrderID == hashedOrderId9)
     assert(worstOrderID == hashedOrderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderId9, hashedOrderId10])
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.61'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(2, market.address, outcomeID, fix('0.58'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId9])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderId9, hashedOrderId10])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderId9])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderId9, hashedOrderId10])
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.61'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(2, market.address, outcomeID, fix('0.58'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId9])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderId9, hashedOrderId10])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [hashedOrderId8, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderId9])
     assert(orders.removeOrder(hashedOrderId8, ASK, market.address, outcomeID) == 1), "Remove order 8"
     assert(orders.removeOrder(hashedOrderId9, ASK, market.address, outcomeID) == 1), "Remove order 9"
     assert(orders.removeOrder(hashedOrderId10, ASK, market.address, outcomeID) == 1), "Remove order 10"
@@ -256,10 +256,10 @@ def test_orderSorting(contractsFixture):
         assert(len(ordersCollection) == len(testCase["expected"]["orders"])), "Number of orders not as expected"
         for i, order in enumerate(ordersCollection):
             outcomeID = testCase["orders"][i]["outcome"]
-            assert(orders.getBestOrderId(1, market.address, outcomeID) == testCase["expected"]["bestOrder"]["bid"]), "Best bid order ID incorrect"
-            assert(orders.getBestOrderId(2, market.address, outcomeID) == testCase["expected"]["bestOrder"]["ask"]), "Best ask order ID incorrect"
-            assert(orders.getWorstOrderId(1,market.address, outcomeID) == testCase["expected"]["worstOrder"]["bid"]), "Worst bid order ID incorrect"
-            assert(orders.getWorstOrderId(2, market.address, outcomeID) == testCase["expected"]["worstOrder"]["ask"]), "Worst ask order ID incorrect"
+            assert(orders.getBestOrderId(BID, market.address, outcomeID) == testCase["expected"]["bestOrder"]["bid"]), "Best bid order ID incorrect"
+            assert(orders.getBestOrderId(ASK, market.address, outcomeID) == testCase["expected"]["bestOrder"]["ask"]), "Best ask order ID incorrect"
+            assert(orders.getWorstOrderId(BID,market.address, outcomeID) == testCase["expected"]["worstOrder"]["bid"]), "Worst bid order ID incorrect"
+            assert(orders.getWorstOrderId(ASK, market.address, outcomeID) == testCase["expected"]["worstOrder"]["ask"]), "Worst ask order ID incorrect"
             assert(order[BETTER_ORDER_ID] == testCase["expected"]["orders"][i]["betterOrderID"]), "Better order ID incorrect"
             assert(order[WORSE_ORDER_ID] == testCase["expected"]["orders"][i]["worseOrderID"]), "Worse order ID incorrect"
         for order in testCase["orders"]:
@@ -272,33 +272,33 @@ def test_orderSorting(contractsFixture):
     hash.update('0')
     hashedOrderId0 = hash.digest()
     blockNumber = orders.getBlockNumber()
-    hashedOrderId1 = orders.getOrderIdHash(1, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderId2 = orders.getOrderIdHash(1, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderId3 = orders.getOrderIdHash(1, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderId4 = orders.getOrderIdHash(1, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
-    hashedOrderId5 = orders.getOrderIdHash(1, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderId6 = orders.getOrderIdHash(1, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
-    hashedOrderId7 = orders.getOrderIdHash(1, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderId8 = orders.getOrderIdHash(2, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderId9 = orders.getOrderIdHash(2, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
-    hashedOrderId10 = orders.getOrderIdHash(2, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderId11 = orders.getOrderIdHash(2, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderId12 = orders.getOrderIdHash(2, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderId13 = orders.getOrderIdHash(2, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderId14 = orders.getOrderIdHash(2, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
-    hashedOrderId15 = orders.getOrderIdHash(1, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderId16 = orders.getOrderIdHash(1, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
-    hashedOrderId17 = orders.getOrderIdHash(1, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderId18 = orders.getOrderIdHash(2, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderId19 = orders.getOrderIdHash(2, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderId20 = orders.getOrderIdHash(2, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+    hashedOrderId1 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    hashedOrderId2 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    hashedOrderId3 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    hashedOrderId4 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+    hashedOrderId5 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    hashedOrderId6 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+    hashedOrderId7 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    hashedOrderId8 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    hashedOrderId9 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+    hashedOrderId10 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    hashedOrderId11 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    hashedOrderId12 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    hashedOrderId13 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    hashedOrderId14 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+    hashedOrderId15 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    hashedOrderId16 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+    hashedOrderId17 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    hashedOrderId18 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    hashedOrderId19 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    hashedOrderId20 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
   
     # Bids
     runtest({
         "orders": [{
             "orderID": 1,
             "hashedOrderID": hashedOrderId1,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -311,7 +311,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 2,
             "hashedOrderID": hashedOrderId2,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -344,7 +344,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 3,
             "hashedOrderID": hashedOrderId3,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -357,7 +357,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 4,
             "hashedOrderID": hashedOrderId4,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
@@ -390,7 +390,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 5,
             "hashedOrderID": hashedOrderId5,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -403,7 +403,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 6,
             "hashedOrderID": hashedOrderId6,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
@@ -416,7 +416,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 7,
             "hashedOrderID": hashedOrderId7,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -453,7 +453,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 1,
             "hashedOrderID": hashedOrderId1,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -466,7 +466,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 2,
             "hashedOrderID": hashedOrderId2,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -499,7 +499,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 3,
            "hashedOrderID": hashedOrderId3,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -512,7 +512,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 4,
             "hashedOrderID": hashedOrderId4,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
@@ -545,7 +545,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 5,
             "hashedOrderID": hashedOrderId5,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -558,7 +558,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 6,
             "hashedOrderID": hashedOrderId6,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
@@ -571,7 +571,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 7,
             "hashedOrderID": hashedOrderId7,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -609,7 +609,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 8,
             "hashedOrderID": hashedOrderId8,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -622,7 +622,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 9,
             "hashedOrderID": hashedOrderId9,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
@@ -655,7 +655,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 10,
             "hashedOrderID": hashedOrderId10,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -668,7 +668,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 11,
             "hashedOrderID": hashedOrderId11,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -701,7 +701,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 12,
             "hashedOrderID": hashedOrderId12,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -714,7 +714,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 13,
             "hashedOrderID": hashedOrderId13,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -727,7 +727,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 14,
             "hashedOrderID": hashedOrderId14,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
@@ -764,7 +764,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 8,
             "hashedOrderID": hashedOrderId8,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -777,7 +777,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 9,
             "hashedOrderID": hashedOrderId9,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
@@ -810,7 +810,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 10,
             "hashedOrderID": hashedOrderId10,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -823,7 +823,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 11,
             "hashedOrderID": hashedOrderId11,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -856,7 +856,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 12,
             "hashedOrderID": hashedOrderId12,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -869,7 +869,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 13,
             "hashedOrderID": hashedOrderId13,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -882,7 +882,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 14,
             "hashedOrderID": hashedOrderId14,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
@@ -920,7 +920,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 15,
             "hashedOrderID": hashedOrderId15,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -933,7 +933,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 16,
             "hashedOrderID": hashedOrderId16,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
@@ -946,7 +946,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 17,
             "hashedOrderID": hashedOrderId17,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -959,7 +959,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 18,
             "hashedOrderID": hashedOrderId18,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -972,7 +972,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 19,
             "hashedOrderID": hashedOrderId19,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -985,7 +985,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 20,
             "hashedOrderID": hashedOrderId20,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
@@ -1031,7 +1031,7 @@ def test_orderSorting(contractsFixture):
         "orders": [{
             "orderID": 15,
             "hashedOrderID": hashedOrderId15,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -1044,7 +1044,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 16,
             "hashedOrderID": hashedOrderId16,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
@@ -1057,7 +1057,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 17,
             "hashedOrderID": hashedOrderId17,
-            "type": 1,
+            "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -1070,7 +1070,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 18,
             "hashedOrderID": hashedOrderId18,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
             "sender": tester.a0,
@@ -1083,7 +1083,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 19,
             "hashedOrderID": hashedOrderId19,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
             "sender": tester.a0,
@@ -1096,7 +1096,7 @@ def test_orderSorting(contractsFixture):
         }, {
             "orderID": 20,
             "hashedOrderID": hashedOrderId20,
-            "type": 2,
+            "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
             "sender": tester.a0,
