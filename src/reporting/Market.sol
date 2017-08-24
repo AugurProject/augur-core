@@ -216,14 +216,13 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     function tryFinalize() public returns (bool) {
         require(tentativeWinningPayoutDistributionHash != bytes32(0));
 
-        if (isFinalized()) {
-            return true;
-        }
-
         if (getReportingState() != ReportingState.AWAITING_FINALIZATION) {
             return false;
         }
 
+        if (getBranch().getForkingMarket() == this) {
+            tentativeWinningPayoutDistributionHash = getWinningPayoutDistributionHashFromFork();
+        }
         finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
         finalizationTime = block.timestamp;
         transferIncorrectDisputeBondsToWinningReportingToken();
@@ -239,29 +238,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         // FIXME: handle markets that get 0 reports during their scheduled reporting window
     }
 
-    function canFinalizeAutomated() private returns (bool) {
-        if (!automatedReportReceived) {
-            return false;
-        }
-        return true;
-    }
-
-    function canFinalizeReporting() private returns (bool) {
-        if (block.timestamp <= reportingWindow.getEndTime()) {
-            return false;
-        }
-        return true;
-    }
-
-    function canFinalizeFork() private returns (bool) {
-        bytes32 _winningPayoutDistributionHash = MarketExtensions(controller.lookup("MarketExtensions")).getWinningPayoutDistributionHashFromFork(this);
-        if (_winningPayoutDistributionHash == bytes32(0)) {
-            return false;
-        }
-        tentativeWinningPayoutDistributionHash = _winningPayoutDistributionHash;
-        return true;
-    }
-
     function migrateThroughAllForks() public returns (bool) {
         // this will loop until we run out of gas, follow forks until there are no more, or have reached an active fork (which will throw)
         while (migrateThroughOneFork()) {
@@ -272,10 +248,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
 
     // returns 0 if no move occurs, 1 if move occurred, throws if a fork not yet resolved
     function migrateThroughOneFork() public returns (bool) {
-        if (isFinalized()) {
-            return true;
-        }
-        if (!needsMigration()) {
+        if (getReportingState() != ReportingState.AWAITING_MIGRATION) {
             return false;
         }
         // only proceed if the forking market is finalized
@@ -310,7 +283,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function transferIncorrectDisputeBondsToWinningReportingToken() private returns (bool) {
-        require(isFinalized());
+        require(getReportingState() == ReportingState.FINALIZED);
         ReputationToken _reputationToken = reportingWindow.getReputationToken();
         if (getBranch().getForkingMarket() == this) {
             return true;
@@ -436,12 +409,21 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return getReportingState() > ReportingState.ALL_REPORTING;
     }
 
-    function isFinalized() public constant returns (bool) {
-        return finalPayoutDistributionHash != bytes32(0);
-    }
-
     function getFinalizationTime() public constant returns (uint256) {
         return finalizationTime;
+    }
+
+    function isFinalized() public constant returns (bool) {
+        return getReportingState() == ReportingState.FINALIZED;
+    }
+
+    function canBeReportedOn() public constant returns (bool) {
+        ReportingState _state = getReportingState();
+        return _state == ReportingState.LIMITED_REPORTING || _state == ReportingState.ALL_REPORTING;
+    }
+
+    function needsMigration() public constant returns (bool) {
+        return getReportingState() == ReportingState.AWAITING_MIGRATION;
     }
 
     function isInAutomatedReportingPhase() public constant returns (bool) {
@@ -497,43 +479,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return false;
     }
 
-    function canBeReportedOn() public constant returns (bool) {
-        // CONSIDER: should we check if migration is necessary here?
-        if (isFinalized()) {
-            return false;
-        }
-        if (!reportingWindow.isReportingActive()) {
-            return false;
-        }
-        return true;
-    }
-
-    function needsMigration() public constant returns (bool) {
-        if (isFinalized()) {
-            return false;
-        }
-        Market _forkingMarket = getBranch().getForkingMarket();
-        if (address(_forkingMarket) == NULL_ADDRESS) {
-            return false;
-        }
-        if (_forkingMarket == this) {
-            return false;
-        }
-        if (block.timestamp < endTime) {
-            return false;
-        }
-        if (automatedReporterAddress != NULL_ADDRESS && block.timestamp < getAutomatedReportDueTimestamp()) {
-            return false;
-        }
-        if (automatedReportReceived && block.timestamp < getAutomatedReportDisputeDueTimestamp()) {
-            return false;
-        }
-        if (automatedReportReceived && address(automatedReporterDisputeBondToken) == NULL_ADDRESS) {
-            return false;
-        }
-        return true;
-    }
-
     function getAutomatedReportDueTimestamp() public constant returns (uint256) {
         return endTime + AUTOMATED_REPORTING_DURATION_SECONDS;
     }
@@ -543,23 +488,47 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function getReportingState() public constant returns (ReportingState) {
-        if (isFinalized()) {
+        // Before trading in the market is finished
+        if (block.timestamp < endTime) {
+            return ReportingState.PRE_REPORTING;
+        }
+
+        // This market has been finalized
+        if (finalPayoutDistributionHash != bytes32(0)) {
             return ReportingState.FINALIZED;
         }
 
-        if (needsMigration()) {
+        // Automated reporting period has not passed yet
+        if (block.timestamp < getAutomatedReportDueTimestamp()) {
+            return ReportingState.AUTOMATED_REPORTING;
+        }
+
+        bool _automatedReportDisputed = address(automatedReporterDisputeBondToken) != NULL_ADDRESS;
+        bool _limitedReportDisputed = address(limitedReportersDisputeBondToken) != NULL_ADDRESS;
+
+        // If we have an automated report that hasn't been disputed it is either in the dispute window or we can finalize the market 
+        if (automatedReportReceived && !_automatedReportDisputed) {
+            bool _beforeAutomatedDisputeDue = block.timestamp < getAutomatedReportDisputeDueTimestamp();
+            return _beforeAutomatedDisputeDue ? ReportingState.AUTOMATED_DISPUTE : ReportingState.AWAITING_FINALIZATION;
+        }
+
+        // Since we've established that we're past automated reporting if there is an active fork we need to migrate
+        Market _forkingMarket = getBranch().getForkingMarket();
+        if (address(_forkingMarket) != NULL_ADDRESS && _forkingMarket != this) {
             return ReportingState.AWAITING_MIGRATION;
         }
 
-        if (address(allReportersDisputeBondToken) != NULL_ADDRESS) {
-            if (canFinalizeFork()) {
+        // If this market is the one forking we are in the process of migration or we're ready to finalize migration
+        if (_forkingMarket == this) {
+            if (getWinningPayoutDistributionHashFromFork() != bytes32(0)) {
                 return ReportingState.AWAITING_FINALIZATION;
             }
             return ReportingState.FORKING;
         }
 
-        if (address(limitedReportersDisputeBondToken) != NULL_ADDRESS) {
-            if (canFinalizeReporting()) {
+        // If a limited dispute bond has been posted we are in some phase of all reporting depending on time
+        if (_limitedReportDisputed) {
+            if (block.timestamp > reportingWindow.getEndTime()) {
                 return ReportingState.AWAITING_FINALIZATION;
             }
             if (reportingWindow.isDisputeActive()) {
@@ -568,26 +537,19 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
             return ReportingState.ALL_REPORTING;
         }
 
+        // Either no automated report was made or the automated report was disputed so we are in some phase of limited reporting
+        if (block.timestamp > reportingWindow.getEndTime()) {
+            return ReportingState.AWAITING_FINALIZATION;
+        }
+
         if (reportingWindow.isDisputeActive()) {
             return ReportingState.LIMITED_DISPUTE;
         }
 
-        if (canBeReportedOn()) {
-            return ReportingState.LIMITED_REPORTING;
-        }
+        return ReportingState.LIMITED_REPORTING;
+    }
 
-        if (block.timestamp > getAutomatedReportDisputeDueTimestamp() && (canFinalizeReporting() || canFinalizeAutomated())) {
-            return ReportingState.AWAITING_FINALIZATION;
-        }
-
-        if (block.timestamp > getAutomatedReportDueTimestamp() && block.timestamp < getAutomatedReportDisputeDueTimestamp()) {
-            return ReportingState.AUTOMATED_DISPUTE;
-        }
-
-        if (block.timestamp > endTime && block.timestamp < getAutomatedReportDueTimestamp()) {
-            return ReportingState.AUTOMATED_REPORTING;
-        }
-
-        return ReportingState.PRE_REPORTING;
+    function getWinningPayoutDistributionHashFromFork() private returns (bytes32) {
+        return MarketExtensions(controller.lookup("MarketExtensions")).getWinningPayoutDistributionHashFromFork(this);
     }
 }

@@ -223,7 +223,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         return childBranches[_parentPayoutDistributionHash] == _shadyChild;
     }
 
-    function getReportingWindowForForkEndTime() constant returns (ReportingWindow) {
+    function getReportingWindowForForkEndTime() public constant returns (ReportingWindow) {
         return getReportingWindowByTimestamp(getForkEndTime());
     }
 }

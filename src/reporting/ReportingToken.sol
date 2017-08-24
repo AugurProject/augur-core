@@ -123,35 +123,35 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return true;
     }
 
-    function getTypeName() constant returns (bytes32) {
+    function getTypeName() public constant returns (bytes32) {
         return "ReportingToken";
     }
 
-    function getBranch() constant returns (Branch) {
+    function getBranch() public constant returns (Branch) {
         return market.getBranch();
     }
 
-    function getReputationToken() constant returns (ReputationToken) {
+    function getReputationToken() public constant returns (ReputationToken) {
         return market.getReportingWindow().getReputationToken();
     }
 
-    function getReportingWindow() constant returns (ReportingWindow) {
+    function getReportingWindow() public constant returns (ReportingWindow) {
         return market.getReportingWindow();
     }
 
-    function getRegistrationToken() constant returns (RegistrationToken) {
+    function getRegistrationToken() public constant returns (RegistrationToken) {
         return getReportingWindow().getRegistrationToken();
     }
 
-    function getMarket() constant returns (Market) {
+    function getMarket() public constant returns (Market) {
         return market;
     }
 
-    function getPayoutDistributionHash() constant returns (bytes32) {
+    function getPayoutDistributionHash() public constant returns (bytes32) {
         return market.derivePayoutDistributionHash(payoutNumerators);
     }
 
-    function getPayoutNumerator(uint8 index) constant returns (uint256) {
+    function getPayoutNumerator(uint8 index) public constant returns (uint256) {
         require(index < market.getNumberOfOutcomes());
         return payoutNumerators[index];
     }
