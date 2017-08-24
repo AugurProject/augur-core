@@ -109,7 +109,7 @@ def approveSpenders():
     self.denominationToken.approve(self.controller.lookup('completeSets'), 2**254)
     self.denominationToken.approve(self.controller.lookup('takeOrder'), 2**254)
     self.denominationToken.approve(self.controller.lookup('tradingEscapeHatch'), 2**254)
-    self.denominationToken.approve(self.controller.lookup('claimProceeds'), 2**254)
+    self.denominationToken.approve(self.controller.lookup('ClaimProceeds'), 2**254)
     self.denominationToken.approve(self.controller.lookup('tradingEscapeHatch'), 2**254)
     i = 0
     while i < self.numOutcomes:
@@ -128,7 +128,7 @@ def decreaseMarketCreatorSettlementFeeInAttoethPerEth(newFeePerEthInWei: int256)
     self.feePerEthInAttoeth = newFeePerEthInWei
     return 1
 
-def automatedReport(payoutNumerators: arr):
+def automatedReport(payoutNumerators: uint256[]):
     assertNoValue()
     # intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
     require(msg.sender == self.automatedReporterAddress)
@@ -325,7 +325,7 @@ def migrateThroughOneFork():
 #### Helpers
 ####
 
-def getReportingToken(payoutNumerators: arr):
+def getReportingToken(payoutNumerators: uint256[]):
     assertNoValue()
     payoutDistributionHash = self.derivePayoutDistributionHash(payoutNumerators)
     if (not self.reportingTokens.contains(payoutDistributionHash)):
@@ -336,12 +336,12 @@ def getReportingTokenOrZeroByPayoutDistributionHash(payoutDistributionHash: byte
     assertNoValue()
     return(self.reportingTokens.getValueOrZero(payoutDistributionHash))
 
-def derivePayoutDistributionHash(payoutNumerators: arr):
+def derivePayoutDistributionHash(payoutNumerators: uint256[]):
     assertNoValue()
     self.validatePayoutNumerators(payoutNumerators)
     return(sha3(payoutNumerators, items = len(payoutNumerators)): bytes32)
 
-def validatePayoutNumerators(payoutNumerators: arr):
+def validatePayoutNumerators(payoutNumerators: uint256[]):
     assertNoValue()
     i = 0
     sum = 0
@@ -423,7 +423,7 @@ def getFinalWinningReportingToken():
     assertNoValue()
     return(self.reportingTokens.getValue(self.finalPayoutDistributionHash): address)
 
-def getShareToken(outcome: int256):
+def getShareToken(outcome: uint8):
     assertNoValue()
     require(0 <= outcome and outcome < self.numOutcomes)
     return(self.shareTokens[outcome]: address)
