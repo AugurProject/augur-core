@@ -33,23 +33,29 @@ contract IMarket is Typed {
     function getFinalWinningReportingToken() constant returns (ReportingToken);
     function getShareToken(uint8) constant returns (IShareToken);
     function getFinalPayoutDistributionHash() constant returns (bytes32);
-    function getDenominationToken() constant returns (Cash);
-    function derivePayoutDistributionHash(int256[]) constant returns (bytes32);
+    function derivePayoutDistributionHash(uint256[]) constant returns (bytes32);
     function updateTentativeWinningPayoutDistributionHash(bytes32) public returns (bool);
     function isInAllReportingPhase() constant public returns (bool);
     function isInLimitedReportingPhase() constant public returns (bool);
     function isDoneWithAllReporters() constant public returns (bool);
     function isDoneWithLimitedReporters() constant public returns (bool);
     function getReportingTokenOrZeroByPayoutDistributionHash(bytes32) constant public returns (ReportingToken);
+    function getFinalizationTime() constant public returns (uint256);
+    function getDenominationToken() constant public returns (ERC20);
+    function getPayoutDenominator() constant public returns (uint256);
+    function getMarketCreatorSettlementFeeInAttoethPerEth() constant public returns (uint256);
+    function getCreator() constant public returns (address);
+    function shouldCollectReportingFees() constant public returns (bool);
 }
 
 
-contract IShareToken is Typed {
+contract IShareToken is ERC20, Typed {
     function initialize(IMarket _market, uint8 _outcome) public returns (bool);
     function getMarket() constant returns (IMarket);
     function balanceOf(address) constant returns (uint256);
     function transfer(address, uint256) returns (bool);
     function transferFrom(address, address, uint256) returns (bool);
+    function destroyShares(address, uint256 balance) public;
 }
 
 
