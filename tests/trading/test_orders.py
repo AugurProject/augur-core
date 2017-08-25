@@ -11,8 +11,8 @@ import hashlib
 NO = 0
 YES = 1
 
-BID = 0
-ASK = 1
+BID = 1
+ASK = 2
 
 WEI_TO_ETH = 10**18
 

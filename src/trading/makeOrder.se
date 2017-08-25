@@ -40,7 +40,7 @@ def initialize(controller: address):
     return 1
 
 # @public
-def publicMakeOrder(type: int256, attoshares: int256, displayPrice: int256, market: address, outcome: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID: int256):
+def publicMakeOrder(type: int256, attoshares: int256, displayPrice: int256, market: address, outcome: int256, betterOrderID: address, worseOrderID: address, tradeGroupID: int256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -72,8 +72,9 @@ def makeOrder(sender: address, type: int256, attoshares: int256, displayPrice: i
 
     order = [type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
     orderID = ripemd160(order, items=9)
+    #orderID = ORDERS.getOrderIdHash(type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
     require(ORDERS.getAmount(orderID, type, market, outcome) == 0)
-    ORDERS.saveOrder(orderID, type, market, attoshares, displayPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID, tx.gasprice)
+    orderID = ORDERS.saveOrder(orderID, type, market, attoshares, displayPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID, tx.gasprice)
 
     return(orderID)
 
