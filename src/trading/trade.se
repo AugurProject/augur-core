@@ -37,7 +37,7 @@ def initialize(controller: address):
 
 # @public
 # @return fxp
-def publicBuy(market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
+def publicBuy(market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: uint256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -47,7 +47,7 @@ def publicBuy(market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int
 
 # @public
 # @return fxp
-def publicSell(market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
+def publicSell(market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: uint256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -57,7 +57,7 @@ def publicSell(market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: in
 
 # @public
 # @return fxp
-def publicTrade(direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
+def publicTrade(direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: uint256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -68,7 +68,7 @@ def publicTrade(direction: int256, market: address, outcome: uint8, fxpAmount: u
 # Match an order with the best bid or ask.
 # @public
 # @return fxp
-def publicTakeBestOrder(direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
+def publicTakeBestOrder(direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: uint256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -79,7 +79,7 @@ def publicTakeBestOrder(direction: int256, market: address, outcome: uint8, fxpA
 # Take orders from the head of the order list while prices are better than the limit price; then make.
 # @internal
 # @return fxp
-def trade(sender: address, direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
+def trade(sender: address, direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: uint256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     fxpAmount = self.takeBestOrder(sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
@@ -89,13 +89,13 @@ def trade(sender: address, direction: int256, market: address, outcome: uint8, f
 
 # @internal
 # @return fxp
-def takeBestOrder(sender: address, direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
+def takeBestOrder(sender: address, direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: uint256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(direction == BUYING or direction == SELLING)
     # we need to take a BID (1) if we want to SELL (2) and we need to take an ASK (2) if we want to BUY (1)
     type = (not (direction - 1)) + 1
-    orderID = ORDERS.getBestOrderID(type, market, outcome)
+    orderID = ORDERS.getBestOrderId(type, market, outcome)
     while(orderID != 0 and fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED):
         fxpOrderPrice = ORDERS.getPrice(orderID, type, market, outcome)
         if type == BID:
@@ -106,7 +106,7 @@ def takeBestOrder(sender: address, direction: int256, market: address, outcome: 
             ORDERS.setPrice(market, outcome, fxpOrderPrice)
             ORDERS.modifyMarketVolume(market, fxpAmount)
             orderOwner = ORDERS_FETCHER.getOrderOwner(orderID, type, market, outcome)
-            nextOrderID = ORDERS.getWorseOrderID(orderID, type, market, outcome)
+            nextOrderID = ORDERS.getWorseOrderId(orderID, type, market, outcome)
             if(orderOwner != sender):
                 fxpAmount = TAKEORDER.takeOrder(sender, orderID, type, market, outcome, fxpAmount, tradeGroupID)
             orderID = nextOrderID

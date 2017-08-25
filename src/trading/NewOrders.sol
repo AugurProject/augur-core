@@ -23,7 +23,7 @@ contract NewOrders is Controlled {
     uint8 private constant BID = 1;
     uint8 private constant ASK = 2;
 
-    event CancelOrder(address indexed market, address indexed sender, int256 fxpPrice, uint256 fxpAmount, bytes20 orderId, uint8 outcome, uint8 orderType, uint256 cashRefund, uint256 sharesRefund);
+    event CancelOrder(address indexed market, address indexed sender, int256 fxpPrice, uint256 fxpAmount, bytes20 orderId, uint8 outcome, uint8 orderType, int256 cashRefund, uint256 sharesRefund);
     event CompleteSets(address indexed sender, address indexed market, uint8 indexed orderType, uint256 fxpAmount, uint256 numOutcomes, uint256 marketCreatorFee, uint256 reportingFee);
     event MakeOrder(address indexed market, address indexed sender, uint8 indexed orderType, int256 fxpPrice, uint256 fxpAmount, uint8 outcome, bytes20 orderId, int256 fxpMoneyEscrowed, uint256 fxpSharesEscrowed, uint256 tradeGroupId);
     event TakeOrder(address indexed market, uint8 indexed outcome, uint8 indexed orderType, bytes20 orderId, int256 price, address maker, address taker, uint256 makerShares, uint256 makerTokens, uint256 takerShares, uint256 takerTokens, uint256 tradeGroupId);
@@ -115,10 +115,6 @@ contract NewOrders is Controlled {
         return ripemd160(_type, _market, _fxpAmount, _fxpPrice, _sender, _blockNumber, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
     }
 
-    function getBlockNumber() public constant returns (uint256) {
-        return block.number;
-    }
-
     function isBetterPrice(uint8 _type, Market _market, uint8 _outcome, int256 _fxpPrice, bytes20 _orderId) public constant returns (bool) { 
         if (_type == BID) {
             return (_fxpPrice > orders[_orderId].fxpPrice);
@@ -175,7 +171,7 @@ contract NewOrders is Controlled {
     }
 
     // FIXME: Remove unused parameters orderID and gasPrice
-    function saveOrder(address orderId, uint8 _type, Market _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint8 _outcome, int256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _tradeGroupId, uint256 gasPrice) public onlyWhitelistedCallers returns (bytes20 _orderId) { 
+    function saveOrder(bytes20 orderId, uint8 _type, Market _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint8 _outcome, int256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _tradeGroupId, uint256 gasPrice) public onlyWhitelistedCallers returns (bytes20 _orderId) {
         require(_type == BID || _type == ASK);
         require(_outcome < _market.getNumberOfOutcomes());
         _orderId = getOrderIdHash(_type, _market, _fxpAmount, _fxpPrice, _sender, block.number, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
@@ -190,6 +186,7 @@ contract NewOrders is Controlled {
     }
 
     function removeOrder(bytes20 _orderId, uint8 _type, Market _market, uint8 _outcome) public onlyWhitelistedCallers returns (bool) {
+        return true;
         removeOrderFromList(_orderId, _type, _market, _outcome);
         orders[_orderId].fxpPrice = 0;
         orders[_orderId].fxpAmount = 0;
@@ -247,7 +244,7 @@ contract NewOrders is Controlled {
         return true;
     }
 
-    function cancelOrderLog(Market _market, address _sender, int256 _fxpPrice, uint256 _fxpAmount, bytes20 _orderId, uint8 _outcome, uint8 _type, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bool) { 
+    function cancelOrderLog(Market _market, address _sender, int256 _fxpPrice, uint256 _fxpAmount, bytes20 _orderId, uint8 _outcome, uint8 _type, int256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bool) { 
         CancelOrder(_market, _sender, _fxpPrice, _fxpAmount, _orderId, _outcome, _type, _fxpMoneyEscrowed, _fxpSharesEscrowed);
         return true;
     }

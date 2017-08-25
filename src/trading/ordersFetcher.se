@@ -33,12 +33,12 @@ def getOrderIDs(type: uint8, market: address, outcome: uint8, startingOrderID: a
     require(type == BID or type == ASK)
     require(0 <= outcome and outcome < market.getNumberOfOutcomes())
     if(startingOrderID == 0):
-        startingOrderID = ORDERS.getBestOrderID(type, market, outcome)
+        startingOrderID = ORDERS.getBestOrderId(type, market, outcome)
     orderIDs = array(numOrdersToLoad)
     orderIDs[0] = startingOrderID
     i = 0
-    while(i < numOrdersToLoad and ORDERS.getWorseOrderID(orderIDs[i], type, market, outcome) != 0):
-        orderIDs[i + 1] = ORDERS.getWorseOrderID(orderIDs[i], type, market, outcome)
+    while(i < numOrdersToLoad and ORDERS.getWorseOrderId(orderIDs[i], type, market, outcome) != 0):
+        orderIDs[i + 1] = ORDERS.getWorseOrderId(orderIDs[i], type, market, outcome)
         i += 1
     return(slice(orderIDs, items=0, items=i): arr)
 
@@ -50,8 +50,8 @@ def getOrder(_orderId: uint256, _type: uint8, _market: address, _outcome: uint8)
     order[OWNER] = ORDERS.getOrderOwner(_orderId, _type, _market, _outcome)
     order[TOKENS_ESCROWED] = ORDERS.getOrderMoneyEscrowed(_orderId, _type, _market, _outcome)
     order[SHARES_ESCROWED] = ORDERS.getOrderSharesEscrowed(_orderId, _type, _market, _outcome)
-    order[BETTER_ORDER_ID] = ORDERS.getBetterOrderID(_orderId, _type, _market, _outcome)
-    order[WORSE_ORDER_ID] = ORDERS.getWorseOrderID(_orderId, _type, _market, _outcome)
+    order[BETTER_ORDER_ID] = ORDERS.getBetterOrderId(_orderId, _type, _market, _outcome)
+    order[WORSE_ORDER_ID] = ORDERS.getWorseOrderId(_orderId, _type, _market, _outcome)
     order[GAS_PRICE] = ORDERS.getGasPrice(_orderId, _type, _market, _outcome)
     return(order: arr)
 
@@ -63,13 +63,13 @@ def ascendOrderList(type: uint8, market: address, outcome: uint8, fxpPrice, lowe
     else:
         isWorstPrice = fxpPrice >= ORDERS.getPrice(worseOrderID, type, market, outcome)
     if(isWorstPrice):
-        return([worseOrderID, ORDERS.getWorseOrderID(worseOrderID, type, market, outcome)]: arr)
+        return([worseOrderID, ORDERS.getWorseOrderId(worseOrderID, type, market, outcome)]: arr)
     isBetterPrice = ORDERS.isBetterPrice(type, market, outcome, fxpPrice, worseOrderID)
-    while(isBetterPrice and ORDERS.getBetterOrderID(worseOrderID, type, market, outcome) != 0 and fxpPrice != ORDERS.getPrice(ORDERS.getBetterOrderID(worseOrderID, type, market, outcome), type, market, outcome)):
-        isBetterPrice = ORDERS.isBetterPrice(type, market, outcome, fxpPrice, ORDERS.getBetterOrderID(worseOrderID, type, market, outcome))
+    while(isBetterPrice and ORDERS.getBetterOrderId(worseOrderID, type, market, outcome) != 0 and fxpPrice != ORDERS.getPrice(ORDERS.getBetterOrderId(worseOrderID, type, market, outcome), type, market, outcome)):
+        isBetterPrice = ORDERS.isBetterPrice(type, market, outcome, fxpPrice, ORDERS.getBetterOrderId(worseOrderID, type, market, outcome))
         if(isBetterPrice):
-            worseOrderID = ORDERS.getBetterOrderID(worseOrderID, type, market, outcome)
-    betterOrderID = ORDERS.getBetterOrderID(worseOrderID, type, market, outcome)
+            worseOrderID = ORDERS.getBetterOrderId(worseOrderID, type, market, outcome)
+    betterOrderID = ORDERS.getBetterOrderId(worseOrderID, type, market, outcome)
     return([betterOrderID, worseOrderID]: arr)
 
 # @public
@@ -82,13 +82,13 @@ def descendOrderList(type: uint8, market: address, outcome: uint8, fxpPrice, hig
     if(isBestPrice):
         return([0, betterOrderID]: arr)
     if(fxpPrice == ORDERS.getPrice(betterOrderID, type, market, outcome)):
-        return([betterOrderID, ORDERS.getWorseOrderID(betterOrderID, type, market, outcome)]: arr)
+        return([betterOrderID, ORDERS.getWorseOrderId(betterOrderID, type, market, outcome)]: arr)
     isWorsePrice = ORDERS.isWorsePrice(type, market, outcome, fxpPrice, betterOrderID)
-    while(isWorsePrice and ORDERS.getWorseOrderID(betterOrderID, type, market, outcome) != 0):
-        isWorsePrice = ORDERS.isWorsePrice(type, market, outcome, fxpPrice, ORDERS.getWorseOrderID(betterOrderID, type, market, outcome))
-        if(isWorsePrice or fxpPrice == ORDERS.getPrice(ORDERS.getWorseOrderID(betterOrderID, type, market, outcome), type, market, outcome)):
-            betterOrderID = ORDERS.getWorseOrderID(betterOrderID, type, market, outcome)
-    worseOrderID = ORDERS.getWorseOrderID(betterOrderID, type, market, outcome)
+    while(isWorsePrice and ORDERS.getWorseOrderId(betterOrderID, type, market, outcome) != 0):
+        isWorsePrice = ORDERS.isWorsePrice(type, market, outcome, fxpPrice, ORDERS.getWorseOrderId(betterOrderID, type, market, outcome))
+        if(isWorsePrice or fxpPrice == ORDERS.getPrice(ORDERS.getWorseOrderId(betterOrderID, type, market, outcome), type, market, outcome)):
+            betterOrderID = ORDERS.getWorseOrderId(betterOrderID, type, market, outcome)
+    worseOrderID = ORDERS.getWorseOrderId(betterOrderID, type, market, outcome)
     return([betterOrderID, worseOrderID]: arr)
 
 # @public
@@ -116,8 +116,8 @@ def findBoundingOrders(type: uint8, market: address, outcome: uint8, fxpPrice: i
         return(self.ascendOrderList(type, market, outcome, fxpPrice, worseOrderID, outitems=2): arr)
     elif(worseOrderID == 0):
         return(self.descendOrderList(type, market, outcome, fxpPrice, betterOrderID, outitems=2): arr)
-    if(ORDERS.getWorseOrderID(betterOrderID, type, market, outcome) != worseOrderID):
+    if(ORDERS.getWorseOrderId(betterOrderID, type, market, outcome) != worseOrderID):
         return(self.descendOrderList(type, market, outcome, fxpPrice, betterOrderID, outitems=2): arr)
-    elif(ORDERS.getBetterOrderID(worseOrderID, type, market, outcome) != betterOrderID):
+    elif(ORDERS.getBetterOrderId(worseOrderID, type, market, outcome) != betterOrderID):
         return(self.ascendOrderList(type, market, outcome, fxpPrice, worseOrderID, outitems=2): arr)
     return([betterOrderID, worseOrderID]: arr)

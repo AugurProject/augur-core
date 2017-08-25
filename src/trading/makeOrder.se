@@ -40,7 +40,7 @@ def initialize(controller: address):
     return 1
 
 # @public
-def publicMakeOrder(type: uint8, attoshares: uint256, displayPrice: int256, market: address, outcome: uint8, betterOrderID: address, worseOrderID: address, tradeGroupID: int256):
+def publicMakeOrder(type: uint8, attoshares: uint256, displayPrice: int256, market: address, outcome: uint8, betterOrderID: address, worseOrderID: address, tradeGroupID: uint256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -49,7 +49,7 @@ def publicMakeOrder(type: uint8, attoshares: uint256, displayPrice: int256, mark
     return(orderID)
 
 # @internal
-def makeOrder(sender: address, type: uint8, attoshares: uint256, displayPrice: int256, market: address, outcome: uint8, betterOrderID: address, worseOrderID: address, tradeGroupID: int256):
+def makeOrder(sender: address, type: uint8, attoshares: uint256, displayPrice: int256, market: address, outcome: uint8, betterOrderID: address, worseOrderID: address, tradeGroupID: uint256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(sender)

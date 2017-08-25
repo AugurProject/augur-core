@@ -29,8 +29,8 @@ data worstOrder[]
 
 event CancelOrder(market: address: indexed, sender: address: indexed, fxpPrice: int256, fxpAmount: uint256, orderID: address, outcome: uint8, type: uint8, cashRefund: int256, sharesRefund: int256)
 event CompleteSets(sender: address: indexed, market: address: indexed, type: indexed, fxpAmount: uint256, numOutcomes: int256, marketCreatorFee: int256, reportingFee: int256)
-event MakeOrder(market: address: indexed, sender: address: indexed, type, fxpPrice: int256, fxpAmount: uint256, outcome: uint8, orderID: address, fxpMoneyEscrowed: int256, fxpSharesEscrowed: uint256, tradeGroupID: int256)
-event TakeOrder(market: address: indexed, outcome: uint8: indexed, type: uint8: indexed, orderID: address, price: int256, maker: address, taker:address, makerShares: int256, makerTokens: int256, takerShares: int256, takerTokens: int256, tradeGroupID: int256)
+event MakeOrder(market: address: indexed, sender: address: indexed, type, fxpPrice: int256, fxpAmount: uint256, outcome: uint8, orderID: address, fxpMoneyEscrowed: int256, fxpSharesEscrowed: uint256, tradeGroupID: uint256)
+event TakeOrder(market: address: indexed, outcome: uint8: indexed, type: uint8: indexed, orderID: address, price: int256, maker: address, taker:address, makerShares: int256, makerTokens: int256, takerShares: int256, takerTokens: int256, tradeGroupID: uint256)
 
 # Trade types
 macro BID: 1
@@ -83,11 +83,11 @@ def getLastOutcomePrice(market: address, outcome: uint8):
     return(self.marketOrderData[market].prices[outcome])
 
 # @public
-def getBetterOrderID(orderID: address, type: uint8, market: address, outcome: uint8):
+def getBetterOrderId(orderID: address, type: uint8, market: address, outcome: uint8):
     return(self.orders[orderID].betterOrderID: address)
 
 # @public
-def getWorseOrderID(orderID: address, type: uint8, market: address, outcome: uint8):
+def getWorseOrderId(orderID: address, type: uint8, market: address, outcome: uint8):
     return(self.orders[orderID].worseOrderID: address)
 
 # @public
@@ -95,11 +95,11 @@ def getGasPrice(orderID: address, type: uint8, market: address, outcome: uint8):
     return(self.orders[orderID].gasPrice)
 
 # @public
-def getBestOrderID(type: uint8, market: address, outcome: uint8):
+def getBestOrderId(type: uint8, market: address, outcome: uint8):
     return(self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, type)])
 
 # @public
-def getWorstOrderID(type: uint8, market: address, outcome: uint8):
+def getWorstOrderId(type: uint8, market: address, outcome: uint8):
     return(self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, type)])
 
 # @public
@@ -162,7 +162,7 @@ def insertOrderIntoList(orderID: address, type: uint8, market: address, outcome:
     return(1)
 
 # @internal
-def saveOrder(orderID: address, type: uint8, market: address, fxpAmount: uint256, fxpPrice: int256, sender: address, outcome: uint8, fxpMoneyEscrowed: int256, fxpSharesEscrowed: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID: int256, gasPrice: int256):
+def saveOrder(orderID: address, type: uint8, market: address, fxpAmount: uint256, fxpPrice: int256, sender: address, outcome: uint8, fxpMoneyEscrowed: int256, fxpSharesEscrowed: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID: uint256, gasPrice: uint256):
     self.controller.assertIsWhitelisted(msg.sender)
     require(type == BID or type == ASK)
     require(0 <= outcome and outcome < market.getNumberOfOutcomes())
@@ -226,7 +226,7 @@ def fillOrder(orderID: address, orderType: int256, market: address, orderOutcome
     return(1)
 
 # @internal
-def takeOrderLog(market: address, orderOutcome: int256, orderType: int256, orderID: address, taker: address, makerSharesFilled: int256, makerTokensFilled: int256, takerSharesFilled: int256, takerTokensFilled: int256, tradeGroupID: int256):
+def takeOrderLog(market: address, orderOutcome: int256, orderType: int256, orderID: address, taker: address, makerSharesFilled: int256, makerTokensFilled: int256, takerSharesFilled: int256, takerTokensFilled: int256, tradeGroupID: uint256):
     self.controller.assertIsWhitelisted(msg.sender)
     price = self.orders[orderID].fxpPrice
     maker = self.orders[orderID].owner

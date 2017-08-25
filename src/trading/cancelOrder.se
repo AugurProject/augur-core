@@ -36,7 +36,7 @@ def initialize(controller: address):
     return 1
 
 # @public
-def publicCancelOrder(orderID: address, type: uint8, market: address, outcome: uint8):
+def publicCancelOrder(orderID: bytes20, type: uint8, market: address, outcome: uint8):
     assertNoValue()
     MUTEX.acquire()
     self.cancelOrder(msg.sender, orderID, type, market, outcome)
@@ -46,7 +46,7 @@ def publicCancelOrder(orderID: address, type: uint8, market: address, outcome: u
 # Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
 # @internal
 # @returns 1 if success, throws on failure
-def cancelOrder(sender: address, orderID: address, type: uint8, market: address, outcome: uint8):
+def cancelOrder(sender: address, orderID: bytes20, type: uint8, market: address, outcome: uint8):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(sender)
