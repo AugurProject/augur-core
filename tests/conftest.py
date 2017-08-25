@@ -158,6 +158,7 @@ class ContractsFixture:
         self.binaryMarket = self.createReasonableBinaryMarket(self.branch, self.cash)
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)
         self.scalarMarket = self.createReasonableScalarMarket(self.branch, -10 * 10**18, 30 * 10**18, self.cash)
+        self.constants = self.uploadAndAddToController("solidity_test_helpers/Constants.sol")
         self.chain.mine(1)
         self.originalHead = self.chain.head_state
         self.originalBlock = self.chain.block
@@ -292,14 +293,14 @@ class ContractsFixture:
         marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
         marketAddress = self.contracts['MarketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, automatedReporterAddress, topic, value = marketCreationFee)
         assert marketAddress
-        market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['market']), marketAddress)
+        market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
     def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic):
         marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
         marketAddress = self.contracts['MarketCreation'].createScalarMarket(branch.address, endTime, feePerEthInWei, denominationToken.address, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = marketCreationFee)
         assert marketAddress
-        market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['market']), marketAddress)
+        market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
     def createReasonableBinaryMarket(self, branch, denominationToken):

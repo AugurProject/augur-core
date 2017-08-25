@@ -2,6 +2,7 @@ pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/Typed.sol';
+import 'ROOT/reporting/Market.sol';
 import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/factories/ReputationTokenFactory.sol';
 import 'ROOT/factories/TopicsFactory.sol';
@@ -20,7 +21,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
     bytes32 private parentPayoutDistributionHash;
     ReputationToken private reputationToken;
     ITopics private topics;
-    IMarket private forkingMarket;
+    Market private forkingMarket;
     uint256 private forkEndTime;
     mapping(uint256 => ReportingWindow) private reportingWindows;
     mapping(bytes32 => Branch) private childBranches;
@@ -38,7 +39,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
     function fork() public afterInitialized returns (bool) {
         require(forkingMarket == address(0));
         require(isContainerForMarket(Typed(msg.sender)));
-        forkingMarket = IMarket(msg.sender);
+        forkingMarket = Market(msg.sender);
         forkEndTime = block.timestamp + 60 days;
         return true;
     }
@@ -63,7 +64,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         return topics;
     }
 
-    function getForkingMarket() constant returns (IMarket) {
+    function getForkingMarket() constant returns (Market) {
         return forkingMarket;
     }
 
@@ -142,14 +143,14 @@ contract Branch is DelegationTarget, Typed, Initializable {
             return false;
         }
         DisputeBondToken _shadyDisputeBondToken = DisputeBondToken(_shadyTarget);
-        IMarket _shadyMarket = _shadyDisputeBondToken.getMarket();
+        Market _shadyMarket = _shadyDisputeBondToken.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
         }
         if (!isContainerForMarket(_shadyMarket)) {
             return false;
         }
-        IMarket _legitMarket = _shadyMarket;
+        Market _legitMarket = _shadyMarket;
         return _legitMarket.isContainerForDisputeBondToken(_shadyDisputeBondToken);
     }
 
@@ -173,7 +174,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         if (_shadyTarget.getTypeName() != "Market") {
             return false;
         }
-        IMarket _shadyMarket = IMarket(_shadyTarget);
+        Market _shadyMarket = Market(_shadyTarget);
         ReportingWindow _shadyReportingWindow = _shadyMarket.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
@@ -190,14 +191,14 @@ contract Branch is DelegationTarget, Typed, Initializable {
             return false;
         }
         ReportingToken _shadyReportingToken = ReportingToken(_shadyTarget);
-        IMarket _shadyMarket = _shadyReportingToken.getMarket();
+        Market _shadyMarket = _shadyReportingToken.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
         }
         if (!isContainerForMarket(_shadyMarket)) {
             return false;
         }
-        IMarket _legitMarket = _shadyMarket;
+        Market _legitMarket = _shadyMarket;
         return _legitMarket.isContainerForReportingToken(_shadyReportingToken);
     }
 
@@ -206,19 +207,23 @@ contract Branch is DelegationTarget, Typed, Initializable {
             return false;
         }
         IShareToken _shadyShareToken = IShareToken(_shadyTarget);
-        IMarket _shadyMarket = _shadyShareToken.getMarket();
+        Market _shadyMarket = _shadyShareToken.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
         }
         if (!isContainerForMarket(_shadyMarket)) {
             return false;
         }
-        IMarket _legitMarket = _shadyMarket;
+        Market _legitMarket = _shadyMarket;
         return _legitMarket.isContainerForShareToken(_shadyShareToken);
     }
 
     function isParentOf(Branch _shadyChild) constant returns (bool) {
         bytes32 _parentPayoutDistributionHash = _shadyChild.getParentPayoutDistributionHash();
         return childBranches[_parentPayoutDistributionHash] == _shadyChild;
+    }
+
+    function getReportingWindowForForkEndTime() public constant returns (ReportingWindow) {
+        return getReportingWindowByTimestamp(getForkEndTime());
     }
 }

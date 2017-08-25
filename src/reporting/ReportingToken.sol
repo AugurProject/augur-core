@@ -10,6 +10,7 @@ import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/DisputeBondToken.sol';
 import 'ROOT/reporting/RegistrationToken.sol';
 import 'ROOT/reporting/ReportingWindow.sol';
+import 'ROOT/reporting/Market.sol';
 import 'ROOT/reporting/Interfaces.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 
@@ -17,10 +18,10 @@ import 'ROOT/libraries/math/SafeMathUint256.sol';
 contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken {
     using SafeMathUint256 for uint256;
 
-    IMarket public market;
+    Market public market;
     uint256[] public payoutNumerators;
 
-    function initialize(IMarket _market, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
+    function initialize(Market _market, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
         endInitialization();
         require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
         market = _market;
@@ -30,12 +31,13 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function buy(uint256 _attotokens) public afterInitialized returns (bool) {
-        require(market.canBeReportedOn());
+        Market.ReportingState _state = market.getReportingState();
+        require(_state == Market.ReportingState.LIMITED_REPORTING || _state == Market.ReportingState.ALL_REPORTING);
         require(getRegistrationToken().balanceOf(msg.sender) > 0);
         require(market.isContainerForReportingToken(this));
         getReputationToken().trustedTransfer(msg.sender, this, _attotokens);
         mint(msg.sender, _attotokens);
-        var _payoutDistributionHash = getPayoutDistributionHash();
+        bytes32 _payoutDistributionHash = getPayoutDistributionHash();
         market.updateTentativeWinningPayoutDistributionHash(_payoutDistributionHash);
         getReportingWindow().noteReport(market, msg.sender, _payoutDistributionHash);
         return true;
@@ -68,7 +70,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     function redeemWinningTokens() public afterInitialized returns (bool) {
-        require(market.isFinalized());
+        require(market.getReportingState() == Market.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
         require(getBranch().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() == this);
@@ -85,7 +87,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function migrateLosingTokens() public afterInitialized returns (bool) {
-        require(market.isFinalized());
+        require(market.getReportingState() == Market.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
         require(getBranch().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() != this);
@@ -122,35 +124,35 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return true;
     }
 
-    function getTypeName() constant returns (bytes32) {
+    function getTypeName() public constant returns (bytes32) {
         return "ReportingToken";
     }
 
-    function getBranch() constant returns (Branch) {
+    function getBranch() public constant returns (Branch) {
         return market.getBranch();
     }
 
-    function getReputationToken() constant returns (ReputationToken) {
-        return market.getReputationToken();
+    function getReputationToken() public constant returns (ReputationToken) {
+        return market.getReportingWindow().getReputationToken();
     }
 
-    function getReportingWindow() constant returns (ReportingWindow) {
+    function getReportingWindow() public constant returns (ReportingWindow) {
         return market.getReportingWindow();
     }
 
-    function getRegistrationToken() constant returns (RegistrationToken) {
-        return market.getRegistrationToken();
+    function getRegistrationToken() public constant returns (RegistrationToken) {
+        return getReportingWindow().getRegistrationToken();
     }
 
-    function getMarket() constant returns (IMarket) {
+    function getMarket() public constant returns (Market) {
         return market;
     }
 
-    function getPayoutDistributionHash() constant returns (bytes32) {
+    function getPayoutDistributionHash() public constant returns (bytes32) {
         return market.derivePayoutDistributionHash(payoutNumerators);
     }
 
-    function getPayoutNumerator(uint8 index) constant returns (uint256) {
+    function getPayoutNumerator(uint8 index) public constant returns (uint256) {
         require(index < market.getNumberOfOutcomes());
         return payoutNumerators[index];
     }

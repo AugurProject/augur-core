@@ -6,6 +6,7 @@ import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/libraries/token/ERC20.sol';
 import 'ROOT/libraries/token/StandardToken.sol';
 import 'ROOT/reporting/Branch.sol';
+import 'ROOT/reporting/Market.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 
 
