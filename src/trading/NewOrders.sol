@@ -26,7 +26,7 @@ contract NewOrders is Controlled {
     event CancelOrder(address indexed market, address indexed sender, int256 fxpPrice, uint256 fxpAmount, bytes20 orderId, uint8 outcome, uint8 orderType, int256 cashRefund, uint256 sharesRefund);
     event CompleteSets(address indexed sender, address indexed market, uint8 indexed orderType, uint256 fxpAmount, uint256 numOutcomes, uint256 marketCreatorFee, uint256 reportingFee);
     event MakeOrder(address indexed market, address indexed sender, uint8 indexed orderType, int256 fxpPrice, uint256 fxpAmount, uint8 outcome, bytes20 orderId, int256 fxpMoneyEscrowed, uint256 fxpSharesEscrowed, uint256 tradeGroupId);
-    event TakeOrder(address indexed market, uint8 indexed outcome, uint8 indexed orderType, bytes20 orderId, int256 price, address maker, address taker, uint256 makerShares, uint256 makerTokens, uint256 takerShares, uint256 takerTokens, uint256 tradeGroupId);
+    event TakeOrder(address indexed market, uint8 indexed outcome, uint8 indexed orderType, bytes20 orderId, int256 price, address maker, address taker, uint256 makerShares, int256 makerTokens, uint256 takerShares, int256 takerTokens, uint256 tradeGroupId);
 
     struct Order {
         uint256 fxpAmount;
@@ -232,7 +232,7 @@ contract NewOrders is Controlled {
         return true;
     }
 
-    function takeOrderLog(Market _market, uint8 _orderOutcome, uint8 _orderType, bytes20 _orderId, address _taker, uint256 _makerSharesFilled, uint256 _makerTokensFilled, uint256 _takerSharesFilled, uint256 _takerTokensFilled, uint256 _tradeGroupId) public constant returns (bool) { 
+    function takeOrderLog(Market _market, uint8 _orderOutcome, uint8 _orderType, bytes20 _orderId, address _taker, uint256 _makerSharesFilled, int256 _makerTokensFilled, uint256 _takerSharesFilled, int256 _takerTokensFilled, uint256 _tradeGroupId) public constant returns (bool) { 
         int256 _price = orders[_orderId].fxpPrice;
         address _maker = orders[_orderId].owner;
         TakeOrder(_market, _orderOutcome, _orderType, _orderId, _price, _maker, _taker, _makerSharesFilled, _makerTokensFilled, _takerSharesFilled, _takerTokensFilled, _tradeGroupId);
