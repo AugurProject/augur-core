@@ -17,7 +17,7 @@ def test_publicBuyCompleteSets(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['orders']
+    orders = contractsFixture.contracts['NewOrders']
     yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
     logs = []
@@ -56,7 +56,7 @@ def test_publicBuyCompleteSets_failure(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['orders']
+    orders = contractsFixture.contracts['NewOrders']
 
     fxpAmount = fix('10')
     cash.depositEther(value = fix('10000'), sender = tester.k1)
@@ -80,7 +80,7 @@ def test_publicSellCompleteSets(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['orders']
+    orders = contractsFixture.contracts['NewOrders']
     yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
     cash.transfer(0, cash.balanceOf(tester.a9), sender = tester.k9)
@@ -124,7 +124,7 @@ def test_exceptions(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['orders']
+    orders = contractsFixture.contracts['NewOrders']
     cash.depositEther(value = fix('10000'), sender = tester.k1)
 
     cash.depositEther(value = fix('10000'), sender = tester.k1)

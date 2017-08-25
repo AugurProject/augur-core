@@ -2,9 +2,9 @@
 
 ### This allows you to cancel orders on the book
 
-macro ORDERS: self.controller.lookup('orders')
+macro ORDERS: self.controller.lookup('NewOrders')
 macro MUTEX: self.controller.lookup('Mutex')
-macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
+macro ORDERS_FETCHER: self.controller.lookup('NewOrdersFetcher')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')

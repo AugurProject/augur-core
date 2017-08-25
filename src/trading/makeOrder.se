@@ -2,7 +2,7 @@
 
 ### This allows you to place orders on the book
 
-macro ORDERS: self.controller.lookup('orders')
+macro ORDERS: self.controller.lookup('NewOrders')
 macro MUTEX: self.controller.lookup('Mutex')
 
 inset('../macros/externs.sem')
@@ -70,9 +70,9 @@ def makeOrder(sender: address, type: uint8, attoshares: uint256, displayPrice: i
     fxpMoneyEscrowed = escrow[0]
     fxpSharesEscrowed = escrow[1]
 
-    #order = [type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
-    #orderID = ripemd160(order, items=9)
-    orderID = ORDERS.getOrderIdHash(type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
+    order = [type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
+    orderID = ripemd160(order, items=9)
+    #orderID = ORDERS.getOrderIdHash(type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
     require(ORDERS.getAmount(orderID, type, market, outcome) == 0)
     orderID = ORDERS.saveOrder(orderID, type, market, attoshares, displayPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID, tx.gasprice)
 

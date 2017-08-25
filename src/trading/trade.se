@@ -1,8 +1,8 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
 macro MUTEX: self.controller.lookup('Mutex')
-macro ORDERS: self.controller.lookup('orders')
-macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
+macro ORDERS: self.controller.lookup('NewOrders')
+macro ORDERS_FETCHER: self.controller.lookup('NewOrdersFetcher')
 macro TAKEORDER: self.controller.lookup('takeOrder')
 macro MAKEORDER: self.controller.lookup('makeOrder')
 

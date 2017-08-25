@@ -1,7 +1,7 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
 macro MUTEX: self.controller.lookup('Mutex')
-macro ORDERS: self.controller.lookup('orders')
+macro ORDERS: self.controller.lookup('NewOrders')
 macro MARKET_FEE_CALCULATOR: self.controller.lookup('MarketFeeCalculator')
 
 inset('../macros/externs.sem')

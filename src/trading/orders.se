@@ -5,7 +5,7 @@ data controller
 data controllerLookupName
 ####
 
-macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
+macro ORDERS_FETCHER: self.controller.lookup('NewOrdersFetcher')
 
 inset('../macros/externs.sem')
 inset('../macros/require.sem')

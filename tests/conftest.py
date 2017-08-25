@@ -247,7 +247,7 @@ class ContractsFixture:
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Mutex','Cash','orders','NewOrders','completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','cancelOrder','trade','ClaimProceeds','tradingEscapeHatch','ordersFetcher','NewOrdersFetcher']
+        contractsToInitialize = ['Mutex','Cash','NewOrders','completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','cancelOrder','trade','ClaimProceeds','tradingEscapeHatch','NewOrdersFetcher']
         for contractName in contractsToInitialize:
             self.contracts[contractName].initialize(self.controller.address)
 

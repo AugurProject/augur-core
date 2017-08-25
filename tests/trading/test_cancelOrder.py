@@ -25,7 +25,7 @@ GAS_PRICE = 7
 def test_cancelBid(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     cancelOrder = contractsFixture.contracts['cancelOrder']
 
@@ -59,7 +59,7 @@ def test_cancelBid(contractsFixture):
 def test_cancelAsk(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     cancelOrder = contractsFixture.contracts['cancelOrder']
 

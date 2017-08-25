@@ -50,7 +50,7 @@ def test_setController_failure(contractsFixture):
 def test_publicMakeOrder_bid(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     cash.depositEther(value = 10**17)
     cash.approve(makeOrder.address, 10**17)
@@ -71,7 +71,7 @@ def test_publicMakeOrder_bid(contractsFixture):
 def test_publicMakeOrder_ask(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     cash.depositEther(value = 10**18)
     cash.approve(makeOrder.address, 10**18)
@@ -92,8 +92,8 @@ def test_publicMakeOrder_ask(contractsFixture):
 def test_publicMakeOrder_bid2(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    orders = contractsFixture.contracts['NewOrders']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     logs = []
 
@@ -139,7 +139,7 @@ def test_makeOrder_failure(contractsFixture):
     branch = contractsFixture.branch
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
+    orders = contractsFixture.contracts['NewOrders']
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['completeSets']
@@ -193,8 +193,8 @@ def test_ask_withPartialShares(contractsFixture):
     branch = contractsFixture.branch
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['orders']
-    ordersFetcher = contractsFixture.contracts['ordersFetcher']
+    orders = contractsFixture.contracts['NewOrders']
+    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['completeSets']

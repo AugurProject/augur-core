@@ -1,8 +1,8 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-macro ORDERS: self.controller.lookup('orders')
+macro ORDERS: self.controller.lookup('NewOrders')
 macro COMPLETE_SETS: self.controller.lookup('completeSets')
-macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
+macro ORDERS_FETCHER: self.controller.lookup('NewOrdersFetcher')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
