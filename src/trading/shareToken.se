@@ -31,7 +31,7 @@ data outcome
 event Transfer(from: address: indexed, to: address: indexed, value: int256)
 event Approval(owner: address: indexed, spender: address: indexed, value: int256)
 
-def initialize(market: address, outcome: int256):
+def initialize(market: address, outcome: uint8):
     require(not self.initialized)
     self.initialized = 1
     self.market = market

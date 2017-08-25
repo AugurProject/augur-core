@@ -53,7 +53,7 @@ def claimSharesInUpdate(market: address):
         outcome += 1
     return(1)
 
-def getFrozenShareValue(market: address, outcome: int256):
+def getFrozenShareValue(market: address, outcome: uint8):
     numberOfOutcomes = market.getNumberOfOutcomes()
     require(0 <= outcome and outcome < numberOfOutcomes)
     require(market)

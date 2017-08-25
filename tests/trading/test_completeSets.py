@@ -70,8 +70,6 @@ def test_publicBuyCompleteSets_failure(contractsFixture):
     with raises(TransactionFailed):
         completeSets.publicBuyCompleteSets(tester.a1, fxpAmount, sender=tester.k1)
     with raises(TransactionFailed):
-        completeSets.publicBuyCompleteSets(market.address, fix('-10'), sender=tester.k1)
-    with raises(TransactionFailed):
         completeSets.publicBuyCompleteSets(market.address, 0, sender=tester.k1)
     assert cash.approve(completeSets.address, fxpAmount - 1, sender=tester.k1) == 1, "Approve completeSets contract to spend slightly less cash than needed"
     with raises(TransactionFailed):
@@ -139,8 +137,6 @@ def test_exceptions(contractsFixture):
 
     # sellCompleteSets exceptions
     contractsFixture.chain.mine(1)
-    with raises(TransactionFailed):
-        completeSets.publicSellCompleteSets(market.address, fix('-10'), sender=tester.k1)
     with raises(TransactionFailed):
         completeSets.publicSellCompleteSets(market.address, 0, sender=tester.k1)
     with raises(TransactionFailed):

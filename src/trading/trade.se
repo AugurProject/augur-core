@@ -37,7 +37,7 @@ def initialize(controller: address):
 
 # @public
 # @return fxp
-def publicBuy(market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
+def publicBuy(market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -47,7 +47,7 @@ def publicBuy(market: address, outcome: int256, fxpAmount: int256, fxpPrice: int
 
 # @public
 # @return fxp
-def publicSell(market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
+def publicSell(market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -57,7 +57,7 @@ def publicSell(market: address, outcome: int256, fxpAmount: int256, fxpPrice: in
 
 # @public
 # @return fxp
-def publicTrade(direction: int256, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
+def publicTrade(direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -68,7 +68,7 @@ def publicTrade(direction: int256, market: address, outcome: int256, fxpAmount: 
 # Match an order with the best bid or ask.
 # @public
 # @return fxp
-def publicTakeBestOrder(direction: int256, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
+def publicTakeBestOrder(direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -79,7 +79,7 @@ def publicTakeBestOrder(direction: int256, market: address, outcome: int256, fxp
 # Take orders from the head of the order list while prices are better than the limit price; then make.
 # @internal
 # @return fxp
-def trade(sender: address, direction: int256, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
+def trade(sender: address, direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     fxpAmount = self.takeBestOrder(sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
@@ -89,7 +89,7 @@ def trade(sender: address, direction: int256, market: address, outcome: int256, 
 
 # @internal
 # @return fxp
-def takeBestOrder(sender: address, direction: int256, market: address, outcome: int256, fxpAmount: int256, fxpPrice: int256, tradeGroupID: int256):
+def takeBestOrder(sender: address, direction: int256, market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int256, tradeGroupID: int256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(direction == BUYING or direction == SELLING)

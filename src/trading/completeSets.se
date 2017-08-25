@@ -27,7 +27,7 @@ def initialize(controller: address):
 
 # Buys fxpAmount shares of every outcome in the specified market
 # @public
-def publicBuyCompleteSets(market: address, fxpAmount: int256):
+def publicBuyCompleteSets(market: address, fxpAmount: uint256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -37,7 +37,7 @@ def publicBuyCompleteSets(market: address, fxpAmount: int256):
 
 # Sells fxpAmount shares of every outcome in the specified market
 # @public
-def publicSellCompleteSets(market: address, fxpAmount: int256):
+def publicSellCompleteSets(market: address, fxpAmount: uint256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -46,7 +46,7 @@ def publicSellCompleteSets(market: address, fxpAmount: int256):
     return(1)
 
 # @internal
-def buyCompleteSets(sender: address, market: address, fxpAmount: int256):
+def buyCompleteSets(sender: address, market: address, fxpAmount: uint256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(1 <= fxpAmount and fxpAmount <= 2**254)
@@ -72,7 +72,7 @@ def buyCompleteSets(sender: address, market: address, fxpAmount: int256):
 
 # Sells fxpAmount of every outcome [if user owns it]
 # @internal
-def sellCompleteSets(sender: address, market: address, fxpAmount: int256):
+def sellCompleteSets(sender: address, market: address, fxpAmount: uint256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(sender)

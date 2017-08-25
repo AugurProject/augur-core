@@ -27,10 +27,10 @@ data marketOrderData[](volume, prices[])
 data bestOrder[]
 data worstOrder[]
 
-event CancelOrder(market: address: indexed, sender: address: indexed, fxpPrice: int256, fxpAmount, orderID: address, outcome: int256, type: int256, cashRefund: int256, sharesRefund: int256)
-event CompleteSets(sender: address: indexed, market: address: indexed, type: indexed, fxpAmount: int256, numOutcomes: int256, marketCreatorFee: int256, reportingFee: int256)
-event MakeOrder(market: address: indexed, sender: address: indexed, type, fxpPrice: int256, fxpAmount: int256, outcome: int256, orderID: address, fxpMoneyEscrowed: int256, fxpSharesEscrowed: int256, tradeGroupID: int256)
-event TakeOrder(market: address: indexed, outcome: int256: indexed, type: int256: indexed, orderID: address, price: int256, maker: address, taker:address, makerShares: int256, makerTokens: int256, takerShares: int256, takerTokens: int256, tradeGroupID: int256)
+event CancelOrder(market: address: indexed, sender: address: indexed, fxpPrice: int256, fxpAmount: uint256, orderID: address, outcome: uint8, type: uint8, cashRefund: int256, sharesRefund: int256)
+event CompleteSets(sender: address: indexed, market: address: indexed, type: indexed, fxpAmount: uint256, numOutcomes: int256, marketCreatorFee: int256, reportingFee: int256)
+event MakeOrder(market: address: indexed, sender: address: indexed, type, fxpPrice: int256, fxpAmount: uint256, outcome: uint8, orderID: address, fxpMoneyEscrowed: int256, fxpSharesEscrowed: uint256, tradeGroupID: int256)
+event TakeOrder(market: address: indexed, outcome: uint8: indexed, type: uint8: indexed, orderID: address, price: int256, maker: address, taker:address, makerShares: int256, makerTokens: int256, takerShares: int256, takerTokens: int256, tradeGroupID: int256)
 
 # Trade types
 macro BID: 1
@@ -50,26 +50,26 @@ def initialize(controller: address):
 
 # @public
 # @return fxp
-def getAmount(orderID: address, type: int256, market: address, outcome: int256):
+def getAmount(orderID: address, type: uint8, market: address, outcome: uint8):
     return(self.orders[orderID].fxpAmount)
 
 # @public
 # @return fxp
-def getPrice(orderID: address, type: int256, market: address, outcome: int256):
+def getPrice(orderID: address, type: uint8, market: address, outcome: uint8):
     return(self.orders[orderID].fxpPrice)
 
 # @public
-def getOrderOwner(orderID: address, type: int256, market: address, outcome: int256):
+def getOrderOwner(orderID: address, type: uint8, market: address, outcome: uint8):
     return(self.orders[orderID].owner)
 
 # @public
 # @return fxp
-def getOrderSharesEscrowed(orderID: address, type: int256, market: address, outcome: int256):
+def getOrderSharesEscrowed(orderID: address, type: uint8, market: address, outcome: uint8):
     return(self.orders[orderID].fxpSharesEscrowed)
 
 # @public
 # @return fxp
-def getOrderMoneyEscrowed(orderID: address, type: int256, market: address, outcome: int256):
+def getOrderMoneyEscrowed(orderID: address, type: uint8, market: address, outcome: uint8):
     return(self.orders[orderID].fxpMoneyEscrowed)
 
 # @public
@@ -79,61 +79,64 @@ def getVolume(market: address):
 
 # @public
 # @return fxp
-def getLastOutcomePrice(market: address, outcome: int256):
+def getLastOutcomePrice(market: address, outcome: uint8):
     return(self.marketOrderData[market].prices[outcome])
 
 # @public
-def getBetterOrderID(orderID: address, type: int256, market: address, outcome: int256):
+def getBetterOrderID(orderID: address, type: uint8, market: address, outcome: uint8):
     return(self.orders[orderID].betterOrderID: address)
 
 # @public
-def getWorseOrderID(orderID: address, type: int256, market: address, outcome: int256):
+def getWorseOrderID(orderID: address, type: uint8, market: address, outcome: uint8):
     return(self.orders[orderID].worseOrderID: address)
 
 # @public
-def getGasPrice(orderID: address, type: int256, market: address, outcome: int256):
+def getGasPrice(orderID: address, type: uint8, market: address, outcome: uint8):
     return(self.orders[orderID].gasPrice)
 
 # @public
-def getBestOrderID(type: int256, market: address, outcome: int256):
+def getBestOrderID(type: uint8, market: address, outcome: uint8):
     return(self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, type)])
 
 # @public
-def getWorstOrderID(type: int256, market: address, outcome: int256):
-
+def getWorstOrderID(type: uint8, market: address, outcome: uint8):
     return(self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, type)])
 
 # @public
-def getOrderIdHash(type: int256, market: address, fxpAmount: int256, fxpPrice: int256, sender: address, blockNumber: uint256, outcome: int256, fxpMoneyEscrowed: int256, fxpSharesEscrowed: int256):
+def getOrderIdHash(type: uint8, market: address, fxpAmount: uint256, fxpPrice: int256, sender: address, blockNumber: uint256, outcome: uint8, fxpMoneyEscrowed: int256, fxpSharesEscrowed: uint256):
     order = [type, market, fxpAmount, fxpPrice, sender, blockNumber, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
     return ripemd160(order, items=9)
 
 # @public
-def isBetterPrice(type: int256, market: address, outcome: int256, fxpPrice, orderID: address):
+def getOrderIdHash2():
+    return 0
+
+# @public
+def isBetterPrice(type: uint8, market: address, outcome: uint8, fxpPrice, orderID: address):
     if(type == BID):
         return((fxpPrice > self.orders[orderID].fxpPrice))
     else:
         return((fxpPrice < self.orders[orderID].fxpPrice))
 
 # @public
-def isWorsePrice(type: int256, market: address, outcome: int256, fxpPrice, orderID: address):
+def isWorsePrice(type: uint8, market: address, outcome: uint8, fxpPrice, orderID: address):
     if(type == BID):
         return((fxpPrice < self.orders[orderID].fxpPrice))
     else:
         return((fxpPrice > self.orders[orderID].fxpPrice))
 
 # @public
-def assertIsNotBetterPrice(type: int256, market: address, outcome: int256, fxpPrice, betterOrderID: address):
+def assertIsNotBetterPrice(type: uint8, market: address, outcome: uint8, fxpPrice, betterOrderID: address):
     require(not self.isBetterPrice(type, market, outcome, fxpPrice, betterOrderID))
     return(1)
 
 # @public
-def assertIsNotWorsePrice(type: int256, market: address, outcome: int256, fxpPrice, worseOrderID: address):
+def assertIsNotWorsePrice(type: uint8, market: address, outcome: uint8, fxpPrice, worseOrderID: address):
     require(not self.isWorsePrice(type, market, outcome, fxpPrice, worseOrderID))
     return(1)
 
 # @internal
-def insertOrderIntoList(orderID: address, type: int256, market: address, outcome: int256, fxpPrice: int256, betterOrderID: address, worseOrderID: address):
+def insertOrderIntoList(orderID: address, type: uint8, market: address, outcome: uint8, fxpPrice: int256, betterOrderID: address, worseOrderID: address):
     self.controller.assertIsWhitelisted(msg.sender)
     bestOrderID = self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, type)]
     worstOrderID = self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, type)]
@@ -159,7 +162,7 @@ def insertOrderIntoList(orderID: address, type: int256, market: address, outcome
     return(1)
 
 # @internal
-def saveOrder(orderID: address, type: int256, market: address, fxpAmount: int256, fxpPrice: int256, sender: address, outcome: int256, fxpMoneyEscrowed: int256, fxpSharesEscrowed: int256, betterOrderID: address, worseOrderID: address, tradeGroupID: int256, gasPrice: int256):
+def saveOrder(orderID: address, type: uint8, market: address, fxpAmount: uint256, fxpPrice: int256, sender: address, outcome: uint8, fxpMoneyEscrowed: int256, fxpSharesEscrowed: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID: int256, gasPrice: int256):
     self.controller.assertIsWhitelisted(msg.sender)
     require(type == BID or type == ASK)
     require(0 <= outcome and outcome < market.getNumberOfOutcomes())
@@ -175,7 +178,7 @@ def saveOrder(orderID: address, type: int256, market: address, fxpAmount: int256
     return(orderID)
 
 # @internal
-def removeOrder(orderID: address, type: int256, market: address, outcome: int256):
+def removeOrder(orderID: address, type: uint8, market: address, outcome: uint8):
     self.controller.assertIsWhitelisted(msg.sender)
     require(tx.gasprice <= self.orders[orderID].gasPrice)
     self.removeOrderFromList(orderID, type, market, outcome)
@@ -243,20 +246,20 @@ def cancelOrderLog(market, sender, fxpPrice, fxpAmount, orderID, outcome, type, 
     return(1: uint256)
 
 # @internal
-def modifyMarketVolume(market: address, fxpAmount: int256):
+def modifyMarketVolume(market: address, fxpAmount: uint256):
     self.controller.assertIsWhitelisted(msg.sender)
     self.marketOrderData[market].volume += fxpAmount
     market.getBranch().getTopics().updatePopularity(market.getTopic(), fxpAmount)
     return(1)
 
 # @internal
-def setPrice(market: address, outcome: int256, fxpPrice: int256):
+def setPrice(market: address, outcome: uint8, fxpPrice: int256):
     self.controller.assertIsWhitelisted(msg.sender)
     self.marketOrderData[market].prices[outcome] = fxpPrice
     return(1: uint256)
 
 # @private
-def removeOrderFromList(orderID: address, type: int256, market: address, outcome: int256):
+def removeOrderFromList(orderID: address, type: uint8, market: address, outcome: uint8):
     assertPrivateCall()
     betterOrderID = self.orders[orderID].betterOrderID
     worseOrderID = self.orders[orderID].worseOrderID
@@ -274,7 +277,7 @@ def removeOrderFromList(orderID: address, type: int256, market: address, outcome
 
 # If best bid is not set or price higher than best bid price, this order is the new best bid.
 # @private
-def updateBestBidOrder(orderID: address, market: address, fxpPrice: int256, outcome: int256, betterOrderID: int256):
+def updateBestBidOrder(orderID: address, market: address, fxpPrice: int256, outcome: uint8, betterOrderID: int256):
     assertPrivateCall()
     bestBidOrderID = self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, BID)]
     if(bestBidOrderID == 0 or fxpPrice > self.orders[bestBidOrderID].fxpPrice):
@@ -283,7 +286,7 @@ def updateBestBidOrder(orderID: address, market: address, fxpPrice: int256, outc
 
 # If worst bid is not set or price lower than worst bid price, this order is the new worst bid.
 # @private
-def updateWorstBidOrder(orderID: address, market: address, fxpPrice: int256, outcome: int256, worseOrderID: int256):
+def updateWorstBidOrder(orderID: address, market: address, fxpPrice: int256, outcome: uint8, worseOrderID: int256):
     assertPrivateCall()
     worstBidOrderID = self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, BID)]
     if(worstBidOrderID == 0 or fxpPrice < self.orders[worstBidOrderID].fxpPrice):
@@ -292,7 +295,7 @@ def updateWorstBidOrder(orderID: address, market: address, fxpPrice: int256, out
 
 # If best ask is not set or price lower than best ask price, this order is the new best ask.
 # @private
-def updateBestAskOrder(orderID: address, market: address, fxpPrice: int256, outcome: int256, betterOrderID: int256):
+def updateBestAskOrder(orderID: address, market: address, fxpPrice: int256, outcome: uint8, betterOrderID: int256):
     assertPrivateCall()
     bestAskOrderID = self.bestOrder[self.getBestOrderWorstOrderHash(market, outcome, ASK)]
     if(bestAskOrderID == 0 or fxpPrice < self.orders[bestAskOrderID].fxpPrice):
@@ -301,14 +304,14 @@ def updateBestAskOrder(orderID: address, market: address, fxpPrice: int256, outc
 
 # If worst ask is not set or price higher than worst ask price, this order is the new worst ask.
 # @private
-def updateWorstAskOrder(orderID: address, market: address, fxpPrice: int256, outcome: int256, worseOrderID: int256):
+def updateWorstAskOrder(orderID: address, market: address, fxpPrice: int256, outcome: uint8, worseOrderID: int256):
     assertPrivateCall()
     worstAskOrderID = self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, ASK)]
     if(worstAskOrderID == 0 or fxpPrice > self.orders[worstAskOrderID].fxpPrice):
         self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, ASK)] = orderID
     return(self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, ASK)]: address)
 
-def getBestOrderWorstOrderHash(market: address, outcome: int256, type: int256):
+def getBestOrderWorstOrderHash(market: address, outcome: uint8, type: uint8):
     orderInfo = [market, outcome, type]
     orderID = ripemd160(orderInfo, items=3)
     return(orderID)

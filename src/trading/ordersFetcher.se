@@ -29,7 +29,7 @@ def initialize(controller: address):
 
 # Get orders for a particular market, type, and outcome (chunked)
 # @public
-def getOrderIDs(type: int256, market: address, outcome: int256, startingOrderID: address, numOrdersToLoad: int256):
+def getOrderIDs(type: uint8, market: address, outcome: uint8, startingOrderID: address, numOrdersToLoad: int256):
     require(type == BID or type == ASK)
     require(0 <= outcome and outcome < market.getNumberOfOutcomes())
     if(startingOrderID == 0):
@@ -43,7 +43,7 @@ def getOrderIDs(type: int256, market: address, outcome: int256, startingOrderID:
     return(slice(orderIDs, items=0, items=i): arr)
 
 # @public
-def getOrder(_orderId: uint256, _type: uint256, _market: address, _outcome: uint256):
+def getOrder(_orderId: uint256, _type: uint8, _market: address, _outcome: uint8):
     order = array(8)
     order[ATTOSHARES] = ORDERS.getAmount(_orderId, _type, _market, _outcome)
     order[DISPLAY_PRICE] = ORDERS.getPrice(_orderId, _type, _market, _outcome)
@@ -56,7 +56,7 @@ def getOrder(_orderId: uint256, _type: uint256, _market: address, _outcome: uint
     return(order: arr)
 
 # @public
-def ascendOrderList(type: int256, market: address, outcome: int256, fxpPrice, lowestOrderID: address):
+def ascendOrderList(type: uint8, market: address, outcome: uint8, fxpPrice, lowestOrderID: address):
     worseOrderID = lowestOrderID
     if(type == BID):
         isWorstPrice = fxpPrice <= ORDERS.getPrice(worseOrderID, type, market, outcome)
@@ -73,7 +73,7 @@ def ascendOrderList(type: int256, market: address, outcome: int256, fxpPrice, lo
     return([betterOrderID, worseOrderID]: arr)
 
 # @public
-def descendOrderList(type: int256, market: address, outcome: int256, fxpPrice, highestOrderID: address):
+def descendOrderList(type: uint8, market: address, outcome: uint8, fxpPrice, highestOrderID: address):
     betterOrderID = highestOrderID
     if(type == BID):
         isBestPrice = fxpPrice > ORDERS.getPrice(betterOrderID, type, market, outcome)
@@ -92,7 +92,7 @@ def descendOrderList(type: int256, market: address, outcome: int256, fxpPrice, h
     return([betterOrderID, worseOrderID]: arr)
 
 # @public
-def findBoundingOrders(type: int256, market: address, outcome: int256, fxpPrice: int256, bestOrderID: address, worstOrderID: address, betterOrderID: address, worseOrderID: address):
+def findBoundingOrders(type: uint8, market: address, outcome: uint8, fxpPrice: int256, bestOrderID: address, worstOrderID: address, betterOrderID: address, worseOrderID: address):
     if(bestOrderID == worstOrderID):
         if(bestOrderID == 0):
             return([0, 0]: arr)

@@ -24,7 +24,7 @@ def initialize():
 def any():
     assertNoValue()
 
-def updatePopularity(topic: int256, fxpAmount: int256):
+def updatePopularity(topic: int256, fxpAmount: uint256):
     self.controller.assertIsWhitelisted(msg.sender)
     oldAmount = self.topics.getByKeyOrZero(topic)
     newAmount = safeAdd(oldAmount, fxpAmount)

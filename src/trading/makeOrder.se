@@ -40,7 +40,7 @@ def initialize(controller: address):
     return 1
 
 # @public
-def publicMakeOrder(type: int256, attoshares: int256, displayPrice: int256, market: address, outcome: int256, betterOrderID: address, worseOrderID: address, tradeGroupID: int256):
+def publicMakeOrder(type: uint8, attoshares: uint256, displayPrice: int256, market: address, outcome: uint8, betterOrderID: address, worseOrderID: address, tradeGroupID: int256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -49,7 +49,7 @@ def publicMakeOrder(type: int256, attoshares: int256, displayPrice: int256, mark
     return(orderID)
 
 # @internal
-def makeOrder(sender: address, type: int256, attoshares: int256, displayPrice: int256, market: address, outcome: int256, betterOrderID: address, worseOrderID: address, tradeGroupID: int256):
+def makeOrder(sender: address, type: uint8, attoshares: uint256, displayPrice: int256, market: address, outcome: uint8, betterOrderID: address, worseOrderID: address, tradeGroupID: int256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(sender)
@@ -70,16 +70,16 @@ def makeOrder(sender: address, type: int256, attoshares: int256, displayPrice: i
     fxpMoneyEscrowed = escrow[0]
     fxpSharesEscrowed = escrow[1]
 
-    order = [type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
-    orderID = ripemd160(order, items=9)
-    #orderID = ORDERS.getOrderIdHash(type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
+    #order = [type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
+    #orderID = ripemd160(order, items=9)
+    orderID = ORDERS.getOrderIdHash(type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
     require(ORDERS.getAmount(orderID, type, market, outcome) == 0)
     orderID = ORDERS.saveOrder(orderID, type, market, attoshares, displayPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID, tx.gasprice)
 
     return(orderID)
 
 # @private
-def placeBid(sender: address, attoshares: int256, attotokensPerShare: int256, market: address, outcome: int256):
+def placeBid(sender: address, attoshares: uint256, attotokensPerShare: int256, market: address, outcome: uint8):
     assertNoValue()
     assertPrivateCall()
     orderValueInAttotokens = safeFxpMul(attoshares, safeSub(market.getCompleteSetCostInAttotokens(), attotokensPerShare))
@@ -118,7 +118,7 @@ def placeBid(sender: address, attoshares: int256, attotokensPerShare: int256, ma
     return([attotokensEscrowed, attosharesEscrowed]: arr)
 
 # @private
-def placeAsk(sender: address, attoshares: int256, attotokensPerShare: int256, market: address, outcome: int256):
+def placeAsk(sender: address, attoshares: uint256, attotokensPerShare: int256, market: address, outcome: uint8):
     assertNoValue()
     assertPrivateCall()
     orderValueInAttotokens = safeFxpMul(attoshares, attotokensPerShare)
