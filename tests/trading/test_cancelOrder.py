@@ -22,6 +22,8 @@ BETTER_ORDER_ID = 5
 WORSE_ORDER_ID = 6
 GAS_PRICE = 7
 
+ZEROED_ORDER_ID = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
 def test_cancelBid(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
@@ -43,7 +45,7 @@ def test_cancelBid(contractsFixture):
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
     marketInitialNoShares = noShareToken.totalSupply()
-    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, tradeGroupID, sender=tester.k1)
+    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender=tester.k1)
     assert orderID, "Order ID should be non-zero"
     assert ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
 
@@ -77,7 +79,7 @@ def test_cancelAsk(contractsFixture):
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
     marketInitialNoShares = noShareToken.totalSupply()
-    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, tradeGroupID, sender=tester.k1)
+    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender=tester.k1)
     assert(orderID != 0), "Order ID should be non-zero"
     assert ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
 
@@ -105,7 +107,7 @@ def test_exceptions(contractsFixture):
     assert(cash.approve(makeOrder.address, fix('10000'), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
     makerInitialCash = cash.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
-    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, tradeGroupID, sender=tester.k1)
+    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender=tester.k1)
     assert(orderID != 0), "Order ID should be non-zero"
 
     # Permissions exceptions
