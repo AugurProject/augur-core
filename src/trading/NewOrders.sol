@@ -40,7 +40,7 @@ contract NewOrders is Controlled {
 
     struct MarketOrders {
         uint256 volume;
-        uint256[] prices;
+        int256[] prices;
     }
 
     mapping(bytes20 => Order) private orders;
@@ -54,7 +54,7 @@ contract NewOrders is Controlled {
         return (_order.fxpAmount, _order.fxpPrice, _order.owner, _order.fxpSharesEscrowed, _order.fxpMoneyEscrowed, _order.betterOrderId, _order.worseOrderId);
     }
 
-    function getMarketOrderData(Market _market) public constant returns (uint256, uint256[]) {
+    function getMarketOrderData(Market _market) public constant returns (uint256, int256[]) {
         return (marketOrderData[_market].volume, marketOrderData[_market].prices);
     }
 
@@ -90,7 +90,7 @@ contract NewOrders is Controlled {
         return marketOrderData[_market].volume;
     }
 
-    function getLastOutcomePrice(Market _market, uint8 _outcome) public constant returns (uint256) { 
+    function getLastOutcomePrice(Market _market, uint8 _outcome) public constant returns (int256) { 
         return marketOrderData[_market].prices[_outcome];
     }
 
@@ -254,7 +254,7 @@ contract NewOrders is Controlled {
         return true;
     }
 
-    function setPrice(Market _market, uint8 _outcome, uint256 _fxpPrice) internal returns (bool) { 
+    function setPrice(Market _market, uint8 _outcome, int256 _fxpPrice) internal returns (bool) { 
         marketOrderData[_market].prices[_outcome] = _fxpPrice;
         return true;
     }
