@@ -111,8 +111,8 @@ contract NewOrders is Controlled {
     }
 
     // FIXME: Currently, getOrderIdHash(), getBestOrderWorstOrderHash(), and makeOrder.makeOrder() are creating ripemd160 hash values of type bytes20.  This should probably be changed to create sha3/sha256 hash values of type bytes32.
-    function getOrderIdHash(uint8 _type, Market _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint256 _blockNumber, uint256 _outcome, int256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bytes20) {
-        return ripemd160(_type, _market, _fxpAmount, _fxpPrice, _sender, _blockNumber, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
+    function getOrderIdHash(uint8 _type, Market _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint256 _blockTimestamp, uint256 _outcome, int256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bytes20) {
+        return ripemd160(_type, _market, _fxpAmount, _fxpPrice, _sender, _blockTimestamp, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
     }
 
     function isBetterPrice(uint8 _type, Market _market, uint8 _outcome, int256 _fxpPrice, bytes20 _orderId) public constant returns (bool) { 
@@ -174,7 +174,7 @@ contract NewOrders is Controlled {
     function saveOrder(bytes20 orderId, uint8 _type, Market _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint8 _outcome, int256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _tradeGroupId, uint256 gasPrice) public onlyWhitelistedCallers returns (bytes20 _orderId) {
         require(_type == BID || _type == ASK);
         require(_outcome < _market.getNumberOfOutcomes());
-        _orderId = getOrderIdHash(_type, _market, _fxpAmount, _fxpPrice, _sender, block.number, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
+        _orderId = getOrderIdHash(_type, _market, _fxpAmount, _fxpPrice, _sender, block.timestamp, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
         insertOrderIntoList(_orderId, _type, _market, _outcome, _fxpPrice, _betterOrderId, _worseOrderId);
         orders[_orderId].fxpPrice = _fxpPrice;
         orders[_orderId].fxpAmount = _fxpAmount;
@@ -186,7 +186,6 @@ contract NewOrders is Controlled {
     }
 
     function removeOrder(bytes20 _orderId, uint8 _type, Market _market, uint8 _outcome) public onlyWhitelistedCallers returns (bool) {
-        return true;
         removeOrderFromList(_orderId, _type, _market, _outcome);
         orders[_orderId].fxpPrice = 0;
         orders[_orderId].fxpAmount = 0;

@@ -103,8 +103,8 @@ def getWorstOrderId(type: uint8, market: address, outcome: uint8):
     return(self.worstOrder[self.getBestOrderWorstOrderHash(market, outcome, type)])
 
 # @public
-def getOrderIdHash(type: uint8, market: address, fxpAmount: uint256, fxpPrice: int256, sender: address, blockNumber: uint256, outcome: uint8, fxpMoneyEscrowed: int256, fxpSharesEscrowed: uint256):
-    order = [type, market, fxpAmount, fxpPrice, sender, blockNumber, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
+def getOrderIdHash(type: uint8, market: address, fxpAmount: uint256, fxpPrice: int256, sender: address, blockTimestamp: uint256, outcome: uint8, fxpMoneyEscrowed: int256, fxpSharesEscrowed: uint256):
+    order = [type, market, fxpAmount, fxpPrice, sender, blockTimestamp, outcome, fxpMoneyEscrowed, fxpSharesEscrowed]
     return ripemd160(order, items=9)
 
 # @public
@@ -166,7 +166,7 @@ def saveOrder(orderID: address, type: uint8, market: address, fxpAmount: uint256
     self.controller.assertIsWhitelisted(msg.sender)
     require(type == BID or type == ASK)
     require(0 <= outcome and outcome < market.getNumberOfOutcomes())
-    orderID = self.getOrderIdHash(type, market, fxpAmount, fxpPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
+    orderID = self.getOrderIdHash(type, market, fxpAmount, fxpPrice, sender, block.timestamp, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
     self.insertOrderIntoList(orderID, type, market, outcome, fxpPrice, betterOrderID, worseOrderID)
     self.orders[orderID].fxpPrice = fxpPrice
     self.orders[orderID].fxpAmount = fxpAmount
