@@ -5,59 +5,13 @@ from datetime import timedelta
 
 tester.STARTGAS = long(6.7 * 10**6)
 
-@fixture(scope="session")
-def reportingSnapshot(sessionFixture):
-    # Seed legacy rep contract
-    legacyRepContract = sessionFixture.contracts['legacyRepContract']
-    legacyRepContract.setSaleDistribution([tester.a0], [long(11 * 10**6 * 10**18)])
-    sessionFixture.chain.head_state.timestamp += 15000
-    branch = sessionFixture.branch
-    market = sessionFixture.binaryMarket
-
-    # Get the reputation token for this branch and migrate legacy REP to it
-    reputationToken = sessionFixture.applySignature('ReputationToken', branch.getReputationToken())
-    legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
-    reputationToken.migrateFromLegacyRepContract()
-
-    # Give some REP to testers to make things interesting
-    for testAccount in [tester.a1, tester.a2, tester.a3]:
-        reputationToken.transfer(testAccount, 1 * 10**6 * 10**18)
-
-    reportingWindow = sessionFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    firstRegistrationToken = sessionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
-    reportingTokenNo = sessionFixture.getReportingToken(market, [2,0])
-    reportingTokenYes = sessionFixture.getReportingToken(market, [0,2])
-
-    # Tester 0, 1, 2, and 3 will buy registration tokens so they can report on the market
-    firstRegistrationToken.register(sender=tester.k0)
-    assert firstRegistrationToken.balanceOf(tester.a0) == 1
-    # Testers will have their previous REP balance less the registration token bond of 1 REP
-    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10**18 - 10**18
-
-    for (key, address) in [(tester.k1, tester.a1), (tester.k2, tester.a2), (tester.k3, tester.a3)]:
-        firstRegistrationToken.register(sender=key)
-        assert firstRegistrationToken.balanceOf(address) == 1
-        assert reputationToken.balanceOf(address) == 1 * 10**6 * 10**18 - 10**18
-
-    sessionFixture.reputationToken = reputationToken
-    sessionFixture.reportingWindow = reportingWindow
-    sessionFixture.firstRegistrationToken = firstRegistrationToken
-    sessionFixture.reportingTokenNo = reportingTokenNo
-    sessionFixture.reportingTokenYes = reportingTokenYes
-    return sessionFixture.chain.snapshot()
-
-@fixture
-def reportingFixture(sessionFixture, reportingSnapshot):
-    sessionFixture.chain.revert(reportingSnapshot)
-    return sessionFixture
-
 def test_reportingFullHappyPath(reportingFixture):
     cash = reportingFixture.cash
     market = reportingFixture.binaryMarket
-    reputationToken = reportingFixture.reputationToken
     branch = reportingFixture.branch
-    reportingTokenNo = reportingFixture.reportingTokenNo
-    reportingTokenYes = reportingFixture.reportingTokenYes
+    reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
+    reportingTokenNo = reportingFixture.getReportingToken(market, [2,0])
+    reportingTokenYes = reportingFixture.getReportingToken(market, [0,2])
 
     # We can't yet report on the market as it's in the pre reporting phase
     assert market.getReportingState() == reportingFixture.constants.PRE_REPORTING()
@@ -193,8 +147,9 @@ def test_automatedReportingHappyPath(reportingFixture):
 ])
 def test_limitedReportingHappyPath(makeReport, reportingFixture):
     market = reportingFixture.binaryMarket
-    reportingWindow = reportingFixture.reportingWindow
-    reputationToken = reportingFixture.reputationToken
+    branch = reportingFixture.branch
+    reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
 
     # Proceed to the LIMITED REPORTING phase
     proceedToLimitedReporting(reportingFixture, makeReport)
@@ -228,7 +183,8 @@ def test_limitedReportingHappyPath(makeReport, reportingFixture):
 ])
 def test_allReportingHappyPath(reportingFixture, makeReport):
     market = reportingFixture.binaryMarket
-    reputationToken = reportingFixture.reputationToken
+    branch = reportingFixture.branch
+    reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
 
     # Proceed to the ALL REPORTING phase
     proceedToAllReporting(reportingFixture, makeReport)
@@ -309,9 +265,9 @@ def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
 def proceedToAutomatedReporting(reportingFixture):
     cash = reportingFixture.cash
     market = reportingFixture.binaryMarket
-    reputationToken = reportingFixture.reputationToken
     branch = reportingFixture.branch
-    reportingWindow = reportingFixture.reportingWindow
+    reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
+    reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     # We can't yet do an automated report on the market as it's in the pre reporting phase
     assert market.getReportingState() == reportingFixture.constants.PRE_REPORTING()
@@ -344,9 +300,9 @@ def proceedToLimitedReporting(reportingFixture, makeReport):
 def proceedToAllReporting(reportingFixture, makeReport):
     cash = reportingFixture.cash
     market = reportingFixture.binaryMarket
-    reputationToken = reportingFixture.reputationToken
     branch = reportingFixture.branch
-    reportingWindow = reportingFixture.reportingWindow
+    reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
+    reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     proceedToLimitedReporting(reportingFixture, makeReport)
 
@@ -361,7 +317,7 @@ def proceedToAllReporting(reportingFixture, makeReport):
 def proceedToForking(reportingFixture, makeReport):
     market = reportingFixture.binaryMarket
     branch = reportingFixture.branch
-    reputationToken = reportingFixture.reputationToken
+    reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
 
     # Proceed to the ALL REPORTING phase
     proceedToAllReporting(reportingFixture, makeReport)
@@ -391,7 +347,7 @@ def proceedToForking(reportingFixture, makeReport):
 def finalizeForkingMarket(reportingFixture, finalizeByMigration):
     market = reportingFixture.binaryMarket
     branch = reportingFixture.branch
-    reputationToken = reportingFixture.reputationToken
+    reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
 
     # The universe forks and there is now a branch where NO and YES are the respective outcomes of each
     noBranch = reportingFixture.getChildBranch(branch, market, [2,0])
@@ -440,3 +396,44 @@ def finalizeForkingMarket(reportingFixture, finalizeByMigration):
     # The market is now finalized
     assert market.getReportingState() == reportingFixture.constants.FINALIZED()
     assert market.getFinalWinningReportingToken() == winningTokenAddress
+
+@fixture(scope="session")
+def reportingSnapshot(sessionFixture):
+    # Seed legacy rep contract
+    legacyRepContract = sessionFixture.contracts['legacyRepContract']
+    legacyRepContract.setSaleDistribution([tester.a0], [long(11 * 10**6 * 10**18)])
+    sessionFixture.chain.head_state.timestamp += 15000
+    branch = sessionFixture.branch
+    market = sessionFixture.binaryMarket
+
+    # Get the reputation token for this branch and migrate legacy REP to it
+    reputationToken = sessionFixture.applySignature('ReputationToken', branch.getReputationToken())
+    legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
+    reputationToken.migrateFromLegacyRepContract()
+
+    # Give some REP to testers to make things interesting
+    for testAccount in [tester.a1, tester.a2, tester.a3]:
+        reputationToken.transfer(testAccount, 1 * 10**6 * 10**18)
+
+    reportingWindow = sessionFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    firstRegistrationToken = sessionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
+    reportingTokenNo = sessionFixture.getReportingToken(market, [2,0])
+    reportingTokenYes = sessionFixture.getReportingToken(market, [0,2])
+
+    # Tester 0, 1, 2, and 3 will buy registration tokens so they can report on the market
+    firstRegistrationToken.register(sender=tester.k0)
+    assert firstRegistrationToken.balanceOf(tester.a0) == 1
+    # Testers will have their previous REP balance less the registration token bond of 1 REP
+    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10**18 - 10**18
+
+    for (key, address) in [(tester.k1, tester.a1), (tester.k2, tester.a2), (tester.k3, tester.a3)]:
+        firstRegistrationToken.register(sender=key)
+        assert firstRegistrationToken.balanceOf(address) == 1
+        assert reputationToken.balanceOf(address) == 1 * 10**6 * 10**18 - 10**18
+
+    return sessionFixture.chain.snapshot()
+
+@fixture
+def reportingFixture(sessionFixture, reportingSnapshot):
+    sessionFixture.chain.revert(reportingSnapshot)
+    return sessionFixture
