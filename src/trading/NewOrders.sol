@@ -17,15 +17,15 @@ import 'ROOT/trading/NewOrdersFetcher.sol';
  */
 // FIXME: This was named NewOrders to prevent naming conflicts with orders.se. Should be renamed to Orders.
 contract NewOrders is Controlled {
-    using SafeMathInt256 for int256;
+    using SafeMathUint256 for uint256;
 
     // FIXME: Replace these constants with Trading.TradeTypes enum once all contracts are migrated to Solidity.  (This was done because Serpent contracts could not pass in uint8 variables as rading.TradeTypes parameters.)
     uint8 private constant BID = 1;
     uint8 private constant ASK = 2;
 
-    event CancelOrder(address indexed market, address indexed sender, int256 fxpPrice, uint256 fxpAmount, bytes20 orderId, uint8 outcome, uint8 orderType, int256 cashRefund, uint256 sharesRefund);
+    event CancelOrder(address indexed market, address indexed sender, int256 fxpPrice, uint256 fxpAmount, bytes20 orderId, uint8 outcome, uint8 orderType, uint256 cashRefund, uint256 sharesRefund);
     event CompleteSets(address indexed sender, address indexed market, uint8 indexed orderType, uint256 fxpAmount, uint256 numOutcomes, uint256 marketCreatorFee, uint256 reportingFee);
-    event MakeOrder(address indexed market, address indexed sender, uint8 indexed orderType, int256 fxpPrice, uint256 fxpAmount, uint8 outcome, bytes20 orderId, int256 fxpMoneyEscrowed, uint256 fxpSharesEscrowed, uint256 tradeGroupId);
+    event MakeOrder(address indexed market, address indexed sender, uint8 indexed orderType, int256 fxpPrice, uint256 fxpAmount, uint8 outcome, bytes20 orderId, uint256 fxpMoneyEscrowed, uint256 fxpSharesEscrowed, uint256 tradeGroupId);
     event TakeOrder(address indexed market, uint8 indexed outcome, uint8 indexed orderType, bytes20 orderId, int256 price, address maker, address taker, uint256 makerShares, int256 makerTokens, uint256 takerShares, int256 takerTokens, uint256 tradeGroupId);
 
     struct Order {
@@ -33,7 +33,7 @@ contract NewOrders is Controlled {
         int256 fxpPrice;
         address owner;
         uint256 fxpSharesEscrowed;
-        int256 fxpMoneyEscrowed;
+        uint256 fxpMoneyEscrowed;
         bytes20 betterOrderId;
         bytes20 worseOrderId;
     }
@@ -49,7 +49,7 @@ contract NewOrders is Controlled {
     mapping(bytes20 => bytes20) private worstOrder;
 
     // Getters
-    function getOrders(bytes20 _orderId, uint8 _type, Market _market, uint8 _outcome) public constant returns (uint256, int256, address, uint256, int256, bytes20, bytes20) {
+    function getOrders(bytes20 _orderId, uint8 _type, Market _market, uint8 _outcome) public constant returns (uint256, int256, address, uint256, uint256, bytes20, bytes20) {
         Order _order = orders[_orderId];
         return (_order.fxpAmount, _order.fxpPrice, _order.owner, _order.fxpSharesEscrowed, _order.fxpMoneyEscrowed, _order.betterOrderId, _order.worseOrderId);
     }
@@ -82,7 +82,7 @@ contract NewOrders is Controlled {
         return orders[_orderId].fxpSharesEscrowed;
     }
 
-    function getOrderMoneyEscrowed(bytes20 _orderId, uint8 _type, Market _market, uint8 _outcome) public constant returns (int256) { 
+    function getOrderMoneyEscrowed(bytes20 _orderId, uint8 _type, Market _market, uint8 _outcome) public constant returns (uint256) { 
         return orders[_orderId].fxpMoneyEscrowed;
     }
 
@@ -111,8 +111,8 @@ contract NewOrders is Controlled {
     }
 
     // FIXME: Currently, getOrderIdHash(), getBestOrderWorstOrderHash(), and makeOrder.makeOrder() are creating ripemd160 hash values of type bytes20.  This should probably be changed to create sha3/sha256 hash values of type bytes32.
-    function getOrderIdHash(uint8 _type, Market _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint256 _blockTimestamp, uint256 _outcome, int256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bytes20) {
-        return ripemd160(_type, _market, _fxpAmount, _fxpPrice, _sender, _blockTimestamp, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
+    function getOrderIdHash(uint8 _type, Market _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint256 _blockNumber, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bytes20) {
+        return ripemd160(_type, _market, _fxpAmount, _fxpPrice, _sender, _blockNumber, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
     }
 
     function isBetterPrice(uint8 _type, Market _market, uint8 _outcome, int256 _fxpPrice, bytes20 _orderId) public constant returns (bool) { 
@@ -154,16 +154,16 @@ contract NewOrders is Controlled {
             _worstOrderId = updateWorstAskOrder(_orderId, _market, _fxpPrice, _outcome);
         }
         if (_bestOrderId == _orderId) { 
-            _betterOrderId = 0;
+            _betterOrderId = bytes20(0);
         }
         if (_worstOrderId == _orderId) { 
-            _worseOrderId = 0;
+            _worseOrderId = bytes20(0);
         }
-        if (_betterOrderId != 0) {
+        if (_betterOrderId != bytes20(0)) {
             orders[_betterOrderId].worseOrderId = _orderId;
             orders[_orderId].betterOrderId = _betterOrderId;
         }
-        if (_worseOrderId != 0) {
+        if (_worseOrderId != bytes20(0)) {
             orders[_worseOrderId].betterOrderId = _orderId;
             orders[_orderId].worseOrderId = _worseOrderId;
         }
@@ -171,10 +171,10 @@ contract NewOrders is Controlled {
     }
 
     // FIXME: Remove unused parameters orderID and gasPrice
-    function saveOrder(bytes20 orderId, uint8 _type, Market _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint8 _outcome, int256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _tradeGroupId, uint256 gasPrice) public onlyWhitelistedCallers returns (bytes20 _orderId) {
+    function saveOrder(bytes20 orderId, uint8 _type, Market _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _tradeGroupId, uint256 gasPrice) public onlyWhitelistedCallers returns (bytes20 _orderId) {
         require(_type == BID || _type == ASK);
         require(_outcome < _market.getNumberOfOutcomes());
-        _orderId = getOrderIdHash(_type, _market, _fxpAmount, _fxpPrice, _sender, block.timestamp, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
+        _orderId = getOrderIdHash(_type, _market, _fxpAmount, _fxpPrice, _sender, block.number, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
         insertOrderIntoList(_orderId, _type, _market, _outcome, _fxpPrice, _betterOrderId, _worseOrderId);
         orders[_orderId].fxpPrice = _fxpPrice;
         orders[_orderId].fxpAmount = _fxpAmount;
@@ -195,12 +195,12 @@ contract NewOrders is Controlled {
         return true;
     }
 
-    function fillOrder(bytes20 _orderId, uint8 _orderType, Market _market, uint8 _orderOutcome, uint256 _sharesFilled, int256 _tokensFilled) public onlyWhitelistedCallers returns (bool) { 
+    function fillOrder(bytes20 _orderId, uint8 _orderType, Market _market, uint8 _orderOutcome, uint256 _sharesFilled, uint256 _tokensFilled) public onlyWhitelistedCallers returns (bool) { 
         // FIXME: Should eventually be changed to `require(_market.getTypeName() == "Market")`
         require(_market != address(0));
         require(_orderOutcome < _market.getNumberOfOutcomes());
         require(_orderType == BID || _orderType == ASK);
-        require(_orderId != 0);
+        require(_orderId != bytes20(0));
         require(_sharesFilled <= orders[_orderId].fxpSharesEscrowed);
         require(_tokensFilled <= orders[_orderId].fxpMoneyEscrowed);
         require(orders[_orderId].fxpPrice <= _market.getMaxDisplayPrice());
@@ -209,11 +209,11 @@ contract NewOrders is Controlled {
         uint256 _fill = 0;
         if (_orderType == BID) {
             // We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
-            _fill = _sharesFilled + uint256(_tokensFilled.fxpDiv(orders[_orderId].fxpPrice - _market.getMinDisplayPrice()));
+            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(orders[_orderId].fxpPrice - _market.getMinDisplayPrice()));
         }
         if (_orderType == ASK) {
             // We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
-            _fill = _sharesFilled + uint256(_tokensFilled.fxpDiv(_market.getMaxDisplayPrice() - orders[_orderId].fxpPrice));
+            _fill = _sharesFilled + uint256(_tokensFilled.fxpDiv(uint(_market.getMaxDisplayPrice() - orders[_orderId].fxpPrice)));
         }
         require(_fill <= orders[_orderId].fxpAmount);
         orders[_orderId].fxpAmount -= _fill;
@@ -225,8 +225,8 @@ contract NewOrders is Controlled {
             removeOrderFromList(_orderId, _orderType, _market, _orderOutcome);
             orders[_orderId].fxpPrice = 0;
             orders[_orderId].owner = 0;
-            orders[_orderId].betterOrderId = 0;
-            orders[_orderId].worseOrderId = 0;
+            orders[_orderId].betterOrderId = bytes20(0);
+            orders[_orderId].worseOrderId = bytes20(0);
         }
         return true;
     }
@@ -243,7 +243,7 @@ contract NewOrders is Controlled {
         return true;
     }
 
-    function cancelOrderLog(Market _market, address _sender, int256 _fxpPrice, uint256 _fxpAmount, bytes20 _orderId, uint8 _outcome, uint8 _type, int256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bool) { 
+    function cancelOrderLog(Market _market, address _sender, int256 _fxpPrice, uint256 _fxpAmount, bytes20 _orderId, uint8 _outcome, uint8 _type, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bool) { 
         CancelOrder(_market, _sender, _fxpPrice, _fxpAmount, _orderId, _outcome, _type, _fxpMoneyEscrowed, _fxpSharesEscrowed);
         return true;
     }
@@ -268,14 +268,14 @@ contract NewOrders is Controlled {
         if (worstOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)] == _orderId) { 
             worstOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)] = _betterOrderId;
         }
-        if (_betterOrderId != 0) { 
+        if (_betterOrderId != bytes20(0)) { 
             orders[_betterOrderId].worseOrderId = _worseOrderId;
         }
-        if (_worseOrderId != 0) { 
+        if (_worseOrderId != bytes20(0)) { 
             orders[_worseOrderId].betterOrderId = _betterOrderId;
         }
-        orders[_orderId].betterOrderId = 0;
-        orders[_orderId].worseOrderId = 0;
+        orders[_orderId].betterOrderId = bytes20(0);
+        orders[_orderId].worseOrderId = bytes20(0);
         return true;
     }
 
@@ -284,7 +284,7 @@ contract NewOrders is Controlled {
      */
     function updateBestBidOrder(bytes20 _orderId, Market _market, int256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
         bytes20 _bestBidOrderId = bestOrder[getBestOrderWorstOrderHash(_market, _outcome, BID)];
-        if (_bestBidOrderId == 0 || _fxpPrice > orders[_bestBidOrderId].fxpPrice) { 
+        if (_bestBidOrderId == bytes20(0) || _fxpPrice > orders[_bestBidOrderId].fxpPrice) { 
             bestOrder[getBestOrderWorstOrderHash(_market, _outcome, BID)] = _orderId;
         }
         return bestOrder[getBestOrderWorstOrderHash(_market, _outcome, BID)];
@@ -295,7 +295,7 @@ contract NewOrders is Controlled {
      */
     function updateWorstBidOrder(bytes20 _orderId, Market _market, int256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
         bytes20 _worstBidOrderId = worstOrder[getBestOrderWorstOrderHash(_market, _outcome, BID)];
-        if (_worstBidOrderId == 0 || _fxpPrice < orders[_worstBidOrderId].fxpPrice) { 
+        if (_worstBidOrderId == bytes20(0) || _fxpPrice < orders[_worstBidOrderId].fxpPrice) { 
             worstOrder[getBestOrderWorstOrderHash(_market, _outcome, BID)] = _orderId;
         }
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, BID)];
@@ -306,7 +306,7 @@ contract NewOrders is Controlled {
      */
     function updateBestAskOrder(bytes20 _orderId, Market _market, int256 _fxpPrice, uint8 _outcome) private returns (bytes20) { 
         bytes20 _bestAskOrderId = bestOrder[getBestOrderWorstOrderHash(_market, _outcome, ASK)];
-        if (_bestAskOrderId == 0 || _fxpPrice < orders[_bestAskOrderId].fxpPrice) { 
+        if (_bestAskOrderId == bytes20(0) || _fxpPrice < orders[_bestAskOrderId].fxpPrice) { 
             bestOrder[getBestOrderWorstOrderHash(_market, _outcome, ASK)] = _orderId;
         }
         return bestOrder[getBestOrderWorstOrderHash(_market, _outcome, ASK)];
@@ -317,7 +317,7 @@ contract NewOrders is Controlled {
      */
     function updateWorstAskOrder(bytes20 _orderId, Market _market, int256 _fxpPrice, uint8 _outcome) private returns (bytes20) {
         bytes20 _worstAskOrderId = worstOrder[getBestOrderWorstOrderHash(_market, _outcome, ASK)];
-        if (_worstAskOrderId == 0 || _fxpPrice > orders[_worstAskOrderId].fxpPrice) { 
+        if (_worstAskOrderId == bytes20(0) || _fxpPrice > orders[_worstAskOrderId].fxpPrice) { 
             worstOrder[getBestOrderWorstOrderHash(_market, _outcome, ASK)] = _orderId;
         }
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, ASK)];

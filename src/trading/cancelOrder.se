@@ -76,7 +76,7 @@ def cancelOrder(sender: address, orderID: bytes20, type: uint8, market: address,
 
 # Issue refunds
 # @private
-def refundOrder(sender: address, type: uint8, fxpSharesEscrowed: uint256, fxpMoneyEscrowed: int256, market: address, outcome: uint8):
+def refundOrder(sender: address, type: uint8, fxpSharesEscrowed: uint256, fxpMoneyEscrowed: uint256, market: address, outcome: uint8):
     assertNoValue()
     assertPrivateCall()
 

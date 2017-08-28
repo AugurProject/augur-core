@@ -63,11 +63,11 @@ def test_publicMakeOrder_bid(contractsFixture):
     order = ordersFetcher.getOrder(orderID, BID, market.address, 1)
     assert order[ATTOSHARES] == 10**18
     assert order[DISPLAY_PRICE] == 10**17
-    assert order[OWNER] == bytesToLong(tester.a0)
+    assert order[OWNER] == bytesToHexString(tester.a0)
     assert order[TOKENS_ESCROWED] == 10**17
     assert order[SHARES_ESCROWED] == 0
-    assert order[BETTER_ORDER_ID] == 0
-    assert order[WORSE_ORDER_ID] == 0
+    assert order[BETTER_ORDER_ID] == ZEROED_ORDER_ID
+    assert order[WORSE_ORDER_ID] == ZEROED_ORDER_ID
     assert order[GAS_PRICE] == 0
 
 def test_publicMakeOrder_ask(contractsFixture):
@@ -83,11 +83,11 @@ def test_publicMakeOrder_ask(contractsFixture):
     order = ordersFetcher.getOrder(orderID, ASK, market.address, 0)
     assert order[ATTOSHARES] == 10**18
     assert order[DISPLAY_PRICE] == 10**17
-    assert order[OWNER] == bytesToLong(tester.a0)
+    assert order[OWNER] == bytesToHexString(tester.a0)
     assert order[TOKENS_ESCROWED] == 10**18 - 10**17
     assert order[SHARES_ESCROWED] == 0
-    assert order[BETTER_ORDER_ID] == 0
-    assert order[WORSE_ORDER_ID] == 0
+    assert order[BETTER_ORDER_ID] == ZEROED_ORDER_ID
+    assert order[WORSE_ORDER_ID] == ZEROED_ORDER_ID
     assert order[GAS_PRICE] == 0
     assert cash.balanceOf(market.address) == 10**18 - 10**17
 
@@ -111,12 +111,12 @@ def test_publicMakeOrder_bid2(contractsFixture):
     marketInitialCash = cash.balanceOf(market.address)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcome, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender=tester.k1)
-    assert orderID != 0, "Order ID should be non-zero"
+    assert orderID != ZEROED_ORDER_ID, "Order ID should be non-zero"
     order = ordersFetcher.getOrder(orderID, orderType, market.address, outcome)
     assert len(order) == 8, "Order array length should be 8"
     assert order[ATTOSHARES] == fxpAmount, "order[ATTOSHARES] should be the amount of the order"
     assert order[DISPLAY_PRICE] == fxpPrice, "order[DISPLAY_PRICE] should be the order's price"
-    assert order[OWNER] == bytesToLong(tester.a1), "order[OWNER] should be the sender's address"
+    assert order[OWNER] == bytesToHexString(tester.a1), "order[OWNER] should be the sender's address"
     assert order[TOKENS_ESCROWED] == 0.6 * 10**18, "order[TOKENS_ESCROWED] should be the amount of money escrowed"
     assert order[SHARES_ESCROWED] == 0, "order[SHARES_ESCROWED] should be the number of shares escrowed"
     assert makerInitialCash - cash.balanceOf(tester.a1) == order[TOKENS_ESCROWED], "Decrease in maker's cash balance should equal money escrowed"
@@ -124,16 +124,16 @@ def test_publicMakeOrder_bid2(contractsFixture):
     assert logs == [
         {
             "_event_type": "MakeOrder",
-            "tradeGroupID": tradeGroupID,
+            "tradeGroupId": tradeGroupID,
             "fxpAmount": order[ATTOSHARES],
             "fxpPrice": order[DISPLAY_PRICE],
             "fxpMoneyEscrowed": order[TOKENS_ESCROWED],
             "fxpSharesEscrowed": order[SHARES_ESCROWED],
-            "orderID": longToHexString(orderID),
+            "orderId": orderID,
             "outcome": outcome,
             "market": market.address,
             "sender": bytesToHexString(tester.a1),
-            "type": BID,
+            "orderType": BID,
         }
     ]
 
@@ -226,12 +226,12 @@ def test_ask_withPartialShares(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('1.2')
 
     # validate the order contains expected results
-    assert orderID != 0, "Order ID should be non-zero"
+    assert orderID != ZEROED_ORDER_ID, "Order ID should be non-zero"
     order = ordersFetcher.getOrder(orderID, ASK, market.address, YES)
     assert len(order) == 8, "Order array length should be 13"
     assert order[ATTOSHARES] == fix('2'), "order[ATTOSHARES] should be the amount of the order"
     assert order[DISPLAY_PRICE] == fix('0.6'), "order[DISPLAY_PRICE] should be the order's price"
-    assert order[OWNER] == bytesToLong(tester.a1), "order[OWNER] should be the sender's address"
+    assert order[OWNER] == bytesToHexString(tester.a1), "order[OWNER] should be the sender's address"
     assert order[TOKENS_ESCROWED] == fix('0.32'), "order[TOKENS_ESCROWED] should be the amount of money escrowed"
     assert order[SHARES_ESCROWED] == fix('1.2'), "order[SHARES_ESCROWED] should be the number of shares escrowed"
 
@@ -239,15 +239,16 @@ def test_ask_withPartialShares(contractsFixture):
     assert logs == [
         {
             "_event_type": "MakeOrder",
-            "tradeGroupID": 42,
+            "tradeGroupId": 42,
             "fxpAmount": order[ATTOSHARES],
             "fxpPrice": order[DISPLAY_PRICE],
             "fxpMoneyEscrowed": order[TOKENS_ESCROWED],
             "fxpSharesEscrowed": order[SHARES_ESCROWED],
-            "orderID": longToHexString(orderID),
+            "orderId": orderID,
+            "orderType": ASK,
             "outcome": YES,
             "market": market.address,
             "sender": bytesToHexString(tester.a1),
-            "type": ASK,
+            "orderType": ASK,
         }
     ]

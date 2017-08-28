@@ -12,6 +12,8 @@ YES = 1
 BUY = 1
 SELL = 2
 
+ZEROED_ORDER_ID = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
 def test_publicTakeOrder_bid(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['makeOrder']
@@ -25,7 +27,7 @@ def test_publicTakeOrder_bid(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k2)
@@ -77,7 +79,7 @@ def test_publicTakeOrder_ask(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, 0, 0, tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k2)

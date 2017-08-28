@@ -29,7 +29,7 @@ contract NewOrdersFetcher is Controlled {
         require(_type == BID || _type == ASK);
         require(0 <= _outcome && _outcome < _market.getNumberOfOutcomes());
         NewOrders _orders = NewOrders(controller.lookup("NewOrders"));
-        if (_startingOrderId == 0) {
+        if (_startingOrderId == bytes20(0)) {
             _startingOrderId = _orders.getBestOrderId(_type, _market, _outcome);
         }
         bytes20[] _orderIds;
@@ -42,7 +42,7 @@ contract NewOrdersFetcher is Controlled {
         return (_orderIds.slice(0, _i));
     }
 
-    function getOrder(bytes20 _orderId, uint8 _type, Market _market, uint8 _outcome) public constant returns (uint256 _attoshares, int256 _displayPrice, address _owner, int256 _tokensEscrowed, uint256 _sharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _gasPrice) {
+    function getOrder(bytes20 _orderId, uint8 _type, Market _market, uint8 _outcome) public constant returns (uint256 _attoshares, int256 _displayPrice, address _owner, uint256 _tokensEscrowed, uint256 _sharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _gasPrice) {
         NewOrders _orders = NewOrders(controller.lookup("NewOrders"));
         _attoshares = _orders.getAmount(_orderId, _type, _market, _outcome);
         _displayPrice = _orders.getPrice(_orderId, _type, _market, _outcome);
@@ -109,33 +109,33 @@ contract NewOrdersFetcher is Controlled {
     function findBoundingOrders(uint8 _type, Market _market, uint8 _outcome, int256 _fxpPrice, bytes20 _bestOrderId, bytes20 _worstOrderId, bytes20 _betterOrderId, bytes20 _worseOrderId) public constant returns (bytes20, bytes20) {
         NewOrders _orders = NewOrders(controller.lookup("NewOrders"));
         if (_bestOrderId == _worstOrderId) {
-            if (_bestOrderId == 0) {
-                return (0, 0);
+            if (_bestOrderId == bytes20(0)) {
+                return (bytes20(0), bytes20(0));
             } else if (_orders.isBetterPrice(_type, _market, _outcome, _fxpPrice, _bestOrderId)) {
-                return (0, _bestOrderId);
+                return (bytes20(0), _bestOrderId);
             } else {
-                return (_bestOrderId, 0);
+                return (_bestOrderId, bytes20(0));
             }
         }
-        if (_betterOrderId != 0) {
+        if (_betterOrderId != bytes20(0)) {
             if (_orders.getPrice(_betterOrderId, _type, _market, _outcome) == 0) {
-                _betterOrderId = 0;
+                _betterOrderId = bytes20(0);
             } else {
                 _orders.assertIsNotBetterPrice(_type, _market, _outcome, _fxpPrice, _betterOrderId);
             }
         }
-        if (_worseOrderId != 0) {
+        if (_worseOrderId != bytes20(0)) {
             if (_orders.getPrice(_worseOrderId, _type, _market, _outcome) == 0) {
-                _worseOrderId = 0;
+                _worseOrderId = bytes20(0);
             } else {
                 _orders.assertIsNotWorsePrice(_type, _market, _outcome, _fxpPrice, _worseOrderId);
             }
         }
-        if (_betterOrderId == 0 && _worseOrderId == 0) {
+        if (_betterOrderId == bytes20(0) && _worseOrderId == bytes20(0)) {
             return (descendOrderList(_type, _market, _outcome, _fxpPrice, _bestOrderId));
-        } else if (_betterOrderId == 0) {
+        } else if (_betterOrderId == bytes20(0)) {
             return (ascendOrderList(_type, _market, _outcome, _fxpPrice, _worseOrderId));
-        } else if (_worseOrderId == 0) {
+        } else if (_worseOrderId == bytes20(0)) {
             return (descendOrderList(_type, _market, _outcome, _fxpPrice, _betterOrderId));
         }
         if (_orders.getWorseOrderId(_betterOrderId, _type, _market, _outcome) != _worseOrderId) {
