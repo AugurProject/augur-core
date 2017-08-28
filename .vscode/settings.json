@@ -16,5 +16,6 @@
             "prefix": "ROOT",
             "target": "./src"
         }
-    ]
+    ],
+    "python.linting.pylintEnabled": false
 }
