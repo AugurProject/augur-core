@@ -15,4 +15,7 @@ contract Constants {
     Market.ReportingState public constant FORKING = Market.ReportingState.FORKING;
     Market.ReportingState public constant AWAITING_FINALIZATION = Market.ReportingState.AWAITING_FINALIZATION;
     Market.ReportingState public constant FINALIZED = Market.ReportingState.FINALIZED;
+
+    uint256 public constant AUTOMATED_REPORTING_DURATION_SECONDS = 3 days;
+    uint256 public constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
 }

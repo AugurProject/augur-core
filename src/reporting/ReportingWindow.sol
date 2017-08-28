@@ -67,7 +67,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable {
     function migrateMarketInFromNibling() public afterInitialized returns (bool) {
         Market _market = Market(msg.sender);
         Branch _shadyBranch = _market.getBranch();
-        require(branch.isParentOf(_shadyBranch));
+        require(_shadyBranch == branch.getParentBranch());
         Branch _originalBranch = _shadyBranch;
         ReportingWindow _shadyReportingWindow = _market.getReportingWindow();
         require(_originalBranch.isContainerForReportingWindow(_shadyReportingWindow));

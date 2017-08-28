@@ -235,7 +235,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         // FIXME: if finalPayoutDistributionHash == getIdentityDistributionId(), transfer validity bond to reportingWindow (reporter fee pot)
         // FIXME: if automated report is wrong, transfer automated report bond to reportingWindow
         // FIXME: if automated report is right, transfer automated report bond to market creator
-        // FIXME: handle markets that get 0 reports during their scheduled reporting window
+        // FIXME: handle markets that get 0 reports during their scheduled reporting window. We should move to the next reporting window in this case.
     }
 
     function migrateThroughAllForks() public returns (bool) {
@@ -445,7 +445,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         }
 
         // Automated reporting period has not passed yet
-        if (block.timestamp < getAutomatedReportDueTimestamp()) {
+        if (!automatedReportReceived && block.timestamp < getAutomatedReportDueTimestamp()) {
             return ReportingState.AUTOMATED_REPORTING;
         }
 
