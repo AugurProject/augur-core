@@ -8,14 +8,13 @@ import 'ROOT/Controller.sol';
 import 'ROOT/libraries/arrays/Bytes20Arrays.sol';
 import 'ROOT/libraries/Trading.sol';
 import 'ROOT/reporting/Interfaces.sol';
-import 'ROOT/trading/NewOrders.sol';
+import 'ROOT/trading/Orders.sol';
 
 
 /**
  * @title OrdersFetcher
  */
-// FIXME: This was named NewOrdersFetcher to prevent naming conflicts with ordersFetcher.se. Should be renamed to OrdersFetcher.
-contract NewOrdersFetcher is Controlled {
+contract OrdersFetcher is Controlled {
     using Bytes20Arrays for bytes20[];
 
     // FIXME: Replace these constants with Trading.TradeTypes enum once all contracts are migrated to Solidity.  (This was done because Serpent contracts could not pass in uint8 variables as rading.TradeTypes parameters.)
@@ -28,7 +27,7 @@ contract NewOrdersFetcher is Controlled {
     function getOrderIds(uint8 _type, Market _market, uint8 _outcome, bytes20 _startingOrderId, uint256 _numOrdersToLoad) public constant returns (bytes20[]) {
         require(_type == BID || _type == ASK);
         require(0 <= _outcome && _outcome < _market.getNumberOfOutcomes());
-        NewOrders _orders = NewOrders(controller.lookup("NewOrders"));
+        Orders _orders = Orders(controller.lookup("Orders"));
         if (_startingOrderId == bytes20(0)) {
             _startingOrderId = _orders.getBestOrderId(_type, _market, _outcome);
         }
@@ -43,7 +42,7 @@ contract NewOrdersFetcher is Controlled {
     }
 
     function getOrder(bytes20 _orderId, uint8 _type, Market _market, uint8 _outcome) public constant returns (uint256 _attoshares, int256 _displayPrice, address _owner, uint256 _tokensEscrowed, uint256 _sharesEscrowed, bytes20 _betterOrderId, bytes20 _worseOrderId, uint256 _gasPrice) {
-        NewOrders _orders = NewOrders(controller.lookup("NewOrders"));
+        Orders _orders = Orders(controller.lookup("Orders"));
         _attoshares = _orders.getAmount(_orderId, _type, _market, _outcome);
         _displayPrice = _orders.getPrice(_orderId, _type, _market, _outcome);
         _owner = _orders.getOrderOwner(_orderId, _type, _market, _outcome);
@@ -58,7 +57,7 @@ contract NewOrdersFetcher is Controlled {
     function ascendOrderList(uint8 _type, Market _market, uint8 _outcome, int256 _fxpPrice, bytes20 _lowestOrderId) public constant returns (bytes20 _betterOrderId, bytes20 _worseOrderId) {
         _worseOrderId = _lowestOrderId;
         bool _isWorstPrice;
-        NewOrders _orders = NewOrders(controller.lookup("NewOrders"));
+        Orders _orders = Orders(controller.lookup("Orders"));
         if (_type == BID) {
             _isWorstPrice = _fxpPrice <= _orders.getPrice(_worseOrderId, _type, _market, _outcome);
         } else {
@@ -82,7 +81,7 @@ contract NewOrdersFetcher is Controlled {
     function descendOrderList(uint8 _type, Market _market, uint8 _outcome, int256 _fxpPrice, bytes20 _highestOrderId) public constant returns (bytes20 _betterOrderId, bytes20 _worseOrderId) {
         _betterOrderId = _highestOrderId;
         bool _isBestPrice;
-        NewOrders _orders = NewOrders(controller.lookup("NewOrders"));
+        Orders _orders = Orders(controller.lookup("Orders"));
         if (_type == BID) {
             _isBestPrice = _fxpPrice > _orders.getPrice(_betterOrderId, _type, _market, _outcome);
         } else {
@@ -107,7 +106,7 @@ contract NewOrdersFetcher is Controlled {
     }
 
     function findBoundingOrders(uint8 _type, Market _market, uint8 _outcome, int256 _fxpPrice, bytes20 _bestOrderId, bytes20 _worstOrderId, bytes20 _betterOrderId, bytes20 _worseOrderId) public constant returns (bytes20, bytes20) {
-        NewOrders _orders = NewOrders(controller.lookup("NewOrders"));
+        Orders _orders = Orders(controller.lookup("Orders"));
         if (_bestOrderId == _worstOrderId) {
             if (_bestOrderId == bytes20(0)) {
                 return (bytes20(0), bytes20(0));

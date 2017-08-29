@@ -80,8 +80,8 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         assert cash.approve(approvalAddress, amount, sender = sender)
 
     cash = contractsFixture.cash
-    orders = contractsFixture.contracts['NewOrders']
-    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['completeSets']

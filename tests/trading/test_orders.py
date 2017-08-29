@@ -27,8 +27,8 @@ ZEROED_ORDER_ID = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\
 
 def test_walkOrderList_bids(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['NewOrders']
-    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     outcomeID = 1
     order = {
         "orderID": 5,
@@ -127,8 +127,8 @@ def test_walkOrderList_bids(contractsFixture):
 
 def test_walkOrderList_asks(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['NewOrders']
-    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     outcomeID = 1
     order = {
         "orderID": 8,
@@ -226,8 +226,8 @@ def test_walkOrderList_asks(contractsFixture):
 def test_orderSorting(contractsFixture):
     def runtest(testCase):
         market = contractsFixture.binaryMarket
-        orders = contractsFixture.contracts['NewOrders']
-        ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
+        orders = contractsFixture.contracts['Orders']
+        ordersFetcher = contractsFixture.contracts['OrdersFetcher']
         ordersCollection = []
         for order in testCase["orders"]:
             output = orders.saveOrder(
@@ -259,7 +259,7 @@ def test_orderSorting(contractsFixture):
             assert(removed == 1), "Removed not equal to 1"
 
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['NewOrders']
+    orders = contractsFixture.contracts['Orders']
     blockNumber = contractsFixture.chain.head_state.block_number
     hashedOrderID1 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
     hashedOrderID2 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
@@ -1129,8 +1129,8 @@ def test_orderSorting(contractsFixture):
 
 def test_saveOrder(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['NewOrders']
-    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     hashedOrderID1 = orders.saveOrder(ZEROED_ORDER_ID, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
     assert(isinstance(hashedOrderID1, bytes)), "saveOrder wasn't executed successfully"
     hashedOrderID2 = orders.saveOrder(ZEROED_ORDER_ID, ASK, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
@@ -1153,8 +1153,8 @@ def test_saveOrder(contractsFixture):
 
 def test_fillOrder(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['NewOrders']
-    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     hashedOrderID1 = orders.saveOrder(ZEROED_ORDER_ID, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
     assert(isinstance(hashedOrderID1, bytes)), "saveOrder wasn't executed successfully"
     hashedOrderID2 = orders.saveOrder(ZEROED_ORDER_ID, BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
@@ -1181,8 +1181,8 @@ def test_fillOrder(contractsFixture):
 
 def test_removeOrder(contractsFixture):
     market = contractsFixture.binaryMarket
-    orders = contractsFixture.contracts['NewOrders']
-    ordersFetcher = contractsFixture.contracts['NewOrdersFetcher']
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     hashedOrderID1 = orders.saveOrder(ZEROED_ORDER_ID, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
     assert(isinstance(hashedOrderID1, bytes)), "saveOrder wasn't executed successfully"
     hashedOrderID2 = orders.saveOrder(ZEROED_ORDER_ID, BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)

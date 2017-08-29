@@ -8,15 +8,14 @@ import 'ROOT/Controller.sol';
 import 'ROOT/libraries/math/SafeMathInt256.sol';
 import 'ROOT/libraries/Trading.sol';
 import 'ROOT/reporting/Interfaces.sol';
-import 'ROOT/trading/NewOrdersFetcher.sol';
+import 'ROOT/trading/OrdersFetcher.sol';
 
 
 /**
  * @title Orders
  * @dev Storage of all data associated with orders
  */
-// FIXME: This was named NewOrders to prevent naming conflicts with orders.se. Should be renamed to Orders.
-contract NewOrders is Controlled {
+contract Orders is Controlled {
     using SafeMathUint256 for uint256;
 
     // FIXME: Replace these constants with Trading.TradeTypes enum once all contracts are migrated to Solidity.  (This was done because Serpent contracts could not pass in uint8 variables as rading.TradeTypes parameters.)
@@ -144,7 +143,7 @@ contract NewOrders is Controlled {
     function insertOrderIntoList(bytes20 _orderId, uint8 _type, Market _market, uint8 _outcome, int256 _fxpPrice, bytes20 _betterOrderId, bytes20 _worseOrderId) internal onlyWhitelistedCallers returns (bool) { 
         bytes20 _bestOrderId = bestOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)];
         bytes20 _worstOrderId = worstOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)];
-        NewOrdersFetcher _ordersFetcher = NewOrdersFetcher(controller.lookup("NewOrdersFetcher"));
+        OrdersFetcher _ordersFetcher = OrdersFetcher(controller.lookup("OrdersFetcher"));
         (_betterOrderId, _worseOrderId) = _ordersFetcher.findBoundingOrders(_type, _market, _outcome, _fxpPrice, _bestOrderId, _worstOrderId, _betterOrderId, _worseOrderId);
         if (_type == BID) {
             _bestOrderId = updateBestBidOrder(_orderId, _market, _fxpPrice, _outcome);
