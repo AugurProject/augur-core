@@ -24,19 +24,21 @@ contract OrdersFetcher is Controlled {
     /**
      * @dev Get orders for a particular market, type, and outcome (chunked)
      */
-    function getOrderIds(uint8 _type, Market _market, uint8 _outcome, bytes20 _startingOrderId, uint256 _numOrdersToLoad) public constant returns (bytes20[]) {
+    function getOrderIds(uint8 _type, Market _market, uint8 _outcome, bytes20 _startingOrderId, uint256 _numOrdersToLoad) external constant returns (bytes20[]) {
         require(_type == BID || _type == ASK);
         require(0 <= _outcome && _outcome < _market.getNumberOfOutcomes());
         Orders _orders = Orders(controller.lookup("Orders"));
-        if (_startingOrderId == bytes20(0)) {
-            _startingOrderId = _orders.getBestOrderId(_type, _market, _outcome);
-        }
         bytes20[] _orderIds;
-        _orderIds[0] = _startingOrderId;
-        uint256 _i = 0;
-        while (_i < _numOrdersToLoad && _orders.getWorseOrderId(_orderIds[_i], _type, _market, _outcome) != 0) {
+        if (_startingOrderId == bytes20(0)) {
+            _orderIds[0] = _orders.getBestOrderId(_type, _market, _outcome);
+        } else {
+            _orderIds[0] = _startingOrderId;
+        }
+        for (uint256 _i = 0; _i < _numOrdersToLoad; _i++) {
+            if (_orders.getWorseOrderId(_orderIds[_i], _type, _market, _outcome) != 0) {
+                break;
+            }
             _orderIds[_i + 1] = _orders.getWorseOrderId(_orderIds[_i], _type, _market, _outcome);
-            _i += 1;
         }
         return (_orderIds.slice(0, _i));
     }
