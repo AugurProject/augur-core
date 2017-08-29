@@ -70,7 +70,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     Cash private cash;
     IShareToken[] private shareTokens;
     uint256 private finalizationTime;
-    bool private automatedReportReceived;
     uint256 private automatedReportReceivedTime;
     bytes32 private tentativeWinningPayoutDistributionHash;
     bytes32 private finalPayoutDistributionHash;
@@ -160,7 +159,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         require(getReportingState() == ReportingState.AUTOMATED_REPORTING);
         // we have to create the reporting token so the rest of the system works (winning reporting token must exist)
         getReportingToken(_payoutNumerators);
-        automatedReportReceived = true;
         automatedReportReceivedTime = block.timestamp;
         tentativeWinningPayoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
         reportingWindow.updateMarketPhase();
@@ -428,7 +426,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function getAutomatedReportDueTimestamp() public constant returns (uint256) {
-        if (automatedReportReceived) {
+        if (automatedReportReceivedTime != 0) {
             return automatedReportReceivedTime;
         }
         return endTime + AUTOMATED_REPORTING_DURATION_SECONDS;
@@ -458,7 +456,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         bool _limitedReportDisputed = address(limitedReportersDisputeBondToken) != NULL_ADDRESS;
 
         // If we have an automated report that hasn't been disputed it is either in the dispute window or we can finalize the market 
-        if (automatedReportReceived && !_automatedReportDisputed) {
+        if (automatedReportReceivedTime != 0 && !_automatedReportDisputed) {
             bool _beforeAutomatedDisputeDue = block.timestamp < getAutomatedReportDisputeDueTimestamp();
             return _beforeAutomatedDisputeDue ? ReportingState.AUTOMATED_DISPUTE : ReportingState.AWAITING_FINALIZATION;
         }
