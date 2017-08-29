@@ -39,7 +39,7 @@ contract Orders is Controlled {
 
     struct MarketOrders {
         uint256 volume;
-        int256[] prices;
+        mapping(uint8 => int256) prices;
     }
 
     mapping(bytes20 => Order) private orders;
@@ -51,10 +51,6 @@ contract Orders is Controlled {
     function getOrders(bytes20 _orderId, uint8 _type, Market _market, uint8 _outcome) public constant returns (uint256, int256, address, uint256, uint256, bytes20, bytes20) {
         Order _order = orders[_orderId];
         return (_order.fxpAmount, _order.fxpPrice, _order.owner, _order.fxpSharesEscrowed, _order.fxpMoneyEscrowed, _order.betterOrderId, _order.worseOrderId);
-    }
-
-    function getMarketOrderData(Market _market) public constant returns (uint256, int256[]) {
-        return (marketOrderData[_market].volume, marketOrderData[_market].prices);
     }
 
     function getBestOrders(uint8 _type, Market _market, uint8 _outcome) public constant returns (bytes20) {
@@ -209,11 +205,11 @@ contract Orders is Controlled {
         uint256 _fill = 0;
         if (_orderType == BID) {
             // We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
-            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(orders[_orderId].fxpPrice - _market.getMinDisplayPrice()));
+            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(orders[_orderId].fxpPrice - _market.getMinDisplayPrice()), 10**18);
         }
         if (_orderType == ASK) {
             // We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
-            _fill = _sharesFilled + uint256(_tokensFilled.fxpDiv(uint(_market.getMaxDisplayPrice() - orders[_orderId].fxpPrice)));
+            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(_market.getMaxDisplayPrice() - orders[_orderId].fxpPrice), 10**18);
         }
         require(_fill <= orders[_orderId].fxpAmount);
         orders[_orderId].fxpAmount -= _fill;
@@ -248,13 +244,13 @@ contract Orders is Controlled {
         return true;
     }
 
-    function modifyMarketVolume(Market _market, uint256 _fxpAmount) internal returns (bool) {
+    function modifyMarketVolume(Market _market, uint256 _fxpAmount) external returns (bool) {
         marketOrderData[_market].volume += _fxpAmount;
         _market.getBranch().getTopics().updatePopularity(_market.getTopic(), _fxpAmount);
         return true;
     }
 
-    function setPrice(Market _market, uint8 _outcome, int256 _fxpPrice) internal returns (bool) {
+    function setPrice(Market _market, uint8 _outcome, int256 _fxpPrice) external returns (bool) {
         marketOrderData[_market].prices[_outcome] = _fxpPrice;
         return true;
     }

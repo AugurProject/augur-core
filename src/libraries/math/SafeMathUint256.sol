@@ -7,8 +7,9 @@ pragma solidity ^0.4.13;
  */
 library SafeMathUint256 {
     function mul(uint256 a, uint256 b) internal constant returns (uint256) {
-        require(safeToMultiply(a, b));
-        return a * b;
+        uint256 c = a * b;
+        require(a == 0 || c / a == b);
+        return c;
     }
 
     function div(uint256 a, uint256 b) internal constant returns (uint256) {
@@ -45,21 +46,12 @@ library SafeMathUint256 {
         }
     }
 
-    function safeToMultiply(uint256 a, uint256 b) internal constant returns (bool) {
-        uint256 c = a * b;
-        if (a == 0 || c / a == b) {
-            return true;
-        }
-        return false;
-    }
-
     // Float [fixed point] Operations
-    function fxpMul(uint256 a, uint256 b) internal constant returns (uint256) {
-        require(safeToMultiply(a, b));
-        return a * b / 10 ** 18;
+    function fxpMul(uint256 a, uint256 b, uint256 base) internal constant returns (uint256) {
+        return div(mul(a, b), base);
     }
 
-    function fxpDiv(uint256 a, uint256 b) internal constant returns (uint256) {
-        return a * 10 ** 18 / b;
+    function fxpDiv(uint256 a, uint256 b, uint256 base) internal constant returns (uint256) {
+        return div(mul(a, base), b);
     }
 }

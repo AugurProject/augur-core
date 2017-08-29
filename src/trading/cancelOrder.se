@@ -55,11 +55,11 @@ def cancelOrder(sender: address, orderID: bytes20, type: uint8, market: address,
 
     # Look up the order the sender wants to cancel
     order = ORDERS_FETCHER.getOrder(orderID, type, market, outcome, outitems = ORDER_FIELDS)
-    fxpAmount = order[ATTOSHARES]
-    fxpPrice = order[DISPLAY_PRICE]
-    owner = order[OWNER]
-    fxpMoneyEscrowed = order[TOKENS_ESCROWED]
-    fxpSharesEscrowed = order[SHARES_ESCROWED]
+    fxpAmount = order[_attoshares]
+    fxpPrice = order[_displayPrice]
+    owner = order[_owner]
+    fxpMoneyEscrowed = order[_tokensEscrowed]
+    fxpSharesEscrowed = order[_sharesEscrowed]
 
     # Check that the order ID is correct, the type is bid (1) or ask (2), and that the sender owns the order
     require(type == BID or type == ASK)
