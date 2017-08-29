@@ -21,6 +21,7 @@
     "function-whitespace": true,
     "conditionals-whitespace": true,
     "semicolon-whitespace": true,
-    "overflow-indentation": false
+    "overflow-indentation": false,
+    "mixedcase": false
   }
 }
