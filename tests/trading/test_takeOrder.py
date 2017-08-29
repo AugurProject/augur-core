@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from ethereum.tools import tester
-from utils import fix, longToHexString, bytesToHexString, captureFilteredLogs
+from utils import fix, bytesToHexString, captureFilteredLogs
 
 BID = 1
 ASK = 2
@@ -41,7 +41,7 @@ def test_publicTakeOrder_bid(contractsFixture):
             "_event_type": "CompleteSets",
             "sender": takeOrder.address,
             "reportingFee": 0,
-            "type": BUY,
+            "orderType": BUY,
             "fxpAmount": int(fix('1.2')),
             "marketCreatorFee": 0,
             "numOutcomes": 2,
@@ -51,8 +51,8 @@ def test_publicTakeOrder_bid(contractsFixture):
             "_event_type": "TakeOrder",
             "market": market.address,
             "outcome": YES,
-            "type": BID,
-            "orderID": longToHexString(orderID),
+            "orderType": BID,
+            "orderId": orderID,
             "price": int(fix('0.6')),
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
@@ -60,10 +60,10 @@ def test_publicTakeOrder_bid(contractsFixture):
             "makerTokens": int(fix('1.2', '0.6')),
             "takerShares": 0,
             "takerTokens": int(fix('1.2', '0.4')),
-            "tradeGroupID": 42,
+            "tradeGroupId": 42,
         },
     ]
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
     assert fillOrderID == 0
 
 def test_publicTakeOrder_ask(contractsFixture):
@@ -93,7 +93,7 @@ def test_publicTakeOrder_ask(contractsFixture):
             "_event_type": "CompleteSets",
             "sender": takeOrder.address,
             "reportingFee": 0,
-            "type": BUY,
+            "orderType": BUY,
             "fxpAmount": fix('1.2'),
             "marketCreatorFee": 0,
             "numOutcomes": 2,
@@ -103,8 +103,8 @@ def test_publicTakeOrder_ask(contractsFixture):
             "_event_type": "TakeOrder",
             "market": market.address,
             "outcome": YES,
-            "type": ASK,
-            "orderID": longToHexString(orderID),
+            "orderType": ASK,
+            "orderId": orderID,
             "price": fix('0.6'),
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
@@ -112,8 +112,8 @@ def test_publicTakeOrder_ask(contractsFixture):
             "makerTokens": fix('1.2', '0.4'),
             "takerShares": 0,
             "takerTokens": fix('1.2', '0.6'),
-            "tradeGroupID": tradeGroupID
+            "tradeGroupId": tradeGroupID
         },
     ]
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, 0, 0, 0, 0, 0, 0]
+    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
     assert fillOrderID == 0

@@ -2,7 +2,6 @@
 
 macro ORDERS: self.controller.lookup('Orders')
 macro COMPLETE_SETS: self.controller.lookup('completeSets')
-macro ORDERS_FETCHER: self.controller.lookup('OrdersFetcher')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
@@ -48,12 +47,10 @@ def takeBidOrder(taker: address, orderID: bytes20, market: address, outcome: uin
     self.controller.assertIsWhitelisted(msg.sender)
 
     # Get order
-    order = array(ORDER_FIELDS)
-    order = ORDERS_FETCHER.getOrder(orderID, BID, market, outcome, outitems=ORDER_FIELDS)
-    takerDesiredSharesForThisOrder = min(fxpAmountTakerWants, order[ATTOSHARES])
-    orderDisplayPrice = order[DISPLAY_PRICE]
-    maker = order[OWNER]
-    makerSharesEscrowed = min(order[SHARES_ESCROWED], fxpAmountTakerWants)
+    takerDesiredSharesForThisOrder = min(fxpAmountTakerWants, ORDERS.getAmount(orderID, type, market, outcome))
+    orderDisplayPrice = ORDERS.getPrice(orderID, type, market, outcome)
+    maker = ORDERS.getOrderOwner(orderID, type, market, outcome)
+    makerSharesEscrowed = min(ORDERS.getOrderSharesEscrowed(orderID, type, market, outcome), fxpAmountTakerWants)
     require(maker != taker)
 
     require(orderDisplayPrice <= market.getMaxDisplayPrice())

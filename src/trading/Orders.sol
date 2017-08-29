@@ -192,8 +192,7 @@ contract Orders is Controlled {
     }
 
     function fillOrder(bytes20 _orderId, uint8 _orderType, Market _market, uint8 _orderOutcome, uint256 _sharesFilled, uint256 _tokensFilled) public onlyWhitelistedCallers returns (bool) {
-        // FIXME: Should eventually be changed to `require(_market.getTypeName() == "Market")`
-        require(_market != address(0));
+        require(_market.getTypeName() == "Market");
         require(_orderOutcome < _market.getNumberOfOutcomes());
         require(_orderType == BID || _orderType == ASK);
         require(_orderId != bytes20(0));
