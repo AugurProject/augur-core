@@ -71,6 +71,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     IShareToken[] private shareTokens;
     uint256 private finalizationTime;
     bool private automatedReportReceived;
+    uint256 private automatedReportReceivedTime;
     bytes32 private tentativeWinningPayoutDistributionHash;
     bytes32 private finalPayoutDistributionHash;
     DisputeBondToken private automatedReporterDisputeBondToken;
@@ -160,6 +161,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         // we have to create the reporting token so the rest of the system works (winning reporting token must exist)
         getReportingToken(_payoutNumerators);
         automatedReportReceived = true;
+        automatedReportReceivedTime = block.timestamp;
         tentativeWinningPayoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
         reportingWindow.updateMarketPhase();
         return true;
@@ -426,11 +428,15 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function getAutomatedReportDueTimestamp() public constant returns (uint256) {
+        if (automatedReportReceived) {
+            return block.timestamp;
+        }
         return endTime + AUTOMATED_REPORTING_DURATION_SECONDS;
     }
 
     function getAutomatedReportDisputeDueTimestamp() public constant returns (uint256) {
-        return getAutomatedReportDueTimestamp() + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS;
+        uint256 automatedDisputeStartTime = automatedReportReceived ? automatedReportReceivedTime : getAutomatedReportDueTimestamp();
+        return automatedDisputeStartTime + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS;
     }
 
     function getReportingState() public constant returns (ReportingState) {
@@ -445,7 +451,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         }
 
         // Automated reporting period has not passed yet
-        if (!automatedReportReceived && block.timestamp < getAutomatedReportDueTimestamp()) {
+        if (block.timestamp < getAutomatedReportDueTimestamp()) {
             return ReportingState.AUTOMATED_REPORTING;
         }
 
