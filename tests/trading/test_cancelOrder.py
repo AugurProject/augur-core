@@ -95,6 +95,7 @@ def test_cancelAsk(contractsFixture):
 def test_exceptions(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     cancelOrder = contractsFixture.contracts['cancelOrder']
 
@@ -107,7 +108,13 @@ def test_exceptions(contractsFixture):
     assert(cash.approve(makeOrder.address, fix('10000'), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
     makerInitialCash = cash.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
+
+    # yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
+    # print yesShareToken.balanceOf(tester.a1)
+    # print "Making order"
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender=tester.k1)
+    # print yesShareToken.balanceOf(tester.a1)
+    order = ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)
     assert(orderID != ZEROED_ORDER_ID), "Order ID should be non-zero"
 
     # Permissions exceptions
