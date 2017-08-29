@@ -429,14 +429,13 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
 
     function getAutomatedReportDueTimestamp() public constant returns (uint256) {
         if (automatedReportReceived) {
-            return block.timestamp;
+            return automatedReportReceivedTime;
         }
         return endTime + AUTOMATED_REPORTING_DURATION_SECONDS;
     }
 
     function getAutomatedReportDisputeDueTimestamp() public constant returns (uint256) {
-        uint256 automatedDisputeStartTime = automatedReportReceived ? automatedReportReceivedTime : getAutomatedReportDueTimestamp();
-        return automatedDisputeStartTime + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS;
+        return getAutomatedReportDueTimestamp() + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS;
     }
 
     function getReportingState() public constant returns (ReportingState) {
