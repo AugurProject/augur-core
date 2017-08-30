@@ -79,6 +79,16 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         assert cash.depositEther(value = amount, sender = sender)
         assert cash.approve(approvalAddress, amount, sender = sender)
 
+    legacyRepContract = contractsFixture.contracts['legacyRepContract']
+    legacyRepContract.setSaleDistribution([tester.a0], [long(11 * 10**6 * 10**18)])
+    contractsFixture.chain.head_state.timestamp += 15000
+    branch = contractsFixture.branch
+
+    # Get the reputation token for this branch and migrate legacy REP to it
+    reputationToken = contractsFixture.applySignature('ReputationToken', branch.getReputationToken())
+    legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
+    reputationToken.migrateFromLegacyRepContract()
+
     cash = contractsFixture.cash
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']

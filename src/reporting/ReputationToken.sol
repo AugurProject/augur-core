@@ -24,10 +24,6 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         endInitialization();
         require(_branch != address(0));
         branch = _branch;
-        // FIXME: DELETE THIS BEFORE LAUNCH
-        var _reputationFaucet = controller.lookup("ReputationFaucet");
-        balances[_reputationFaucet] = balances[_reputationFaucet].add(1000000 ether);
-        totalSupply = totalSupply.add(1000000 ether);
         return true;
     }
 

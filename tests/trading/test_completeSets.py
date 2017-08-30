@@ -12,14 +12,14 @@ NO = 0
 BUY = 1
 SELL = 2
 
-def test_publicBuyCompleteSets(contractsFixture):
-    branch = contractsFixture.branch
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
-    completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['Orders']
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+def test_publicBuyCompleteSets(fundedRepFixture):
+    branch = fundedRepFixture.branch
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
+    completeSets = fundedRepFixture.contracts['completeSets']
+    orders = fundedRepFixture.contracts['Orders']
+    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
     logs = []
 
     assert not cash.balanceOf(tester.a1)
@@ -29,7 +29,7 @@ def test_publicBuyCompleteSets(contractsFixture):
 
     cash.depositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender=tester.k1)
-    captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
+    captureFilteredLogs(fundedRepFixture.chain.head_state, orders, logs)
     assert completeSets.publicBuyCompleteSets(market.address, fix('10'), sender=tester.k1)
 
     assert logs == [
@@ -51,12 +51,12 @@ def test_publicBuyCompleteSets(contractsFixture):
     assert yesShareToken.totalSupply() == fix('10'), "Increase in yes shares purchased for this market should be 18"
     assert noShareToken.totalSupply() == fix('10'), "Increase in yes shares purchased for this market should be 18"
 
-def test_publicBuyCompleteSets_failure(contractsFixture):
-    branch = contractsFixture.branch
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
-    completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['Orders']
+def test_publicBuyCompleteSets_failure(fundedRepFixture):
+    branch = fundedRepFixture.branch
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
+    completeSets = fundedRepFixture.contracts['completeSets']
+    orders = fundedRepFixture.contracts['Orders']
 
     fxpAmount = fix('10')
     cash.depositEther(value = fix('10000'), sender = tester.k1)
@@ -75,14 +75,14 @@ def test_publicBuyCompleteSets_failure(contractsFixture):
     with raises(TransactionFailed):
         completeSets.publicBuyCompleteSets(market.address, fxpAmount, sender=tester.k1)
 
-def test_publicSellCompleteSets(contractsFixture):
-    branch = contractsFixture.branch
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
-    completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['Orders']
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+def test_publicSellCompleteSets(fundedRepFixture):
+    branch = fundedRepFixture.branch
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
+    completeSets = fundedRepFixture.contracts['completeSets']
+    orders = fundedRepFixture.contracts['Orders']
+    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
     cash.transfer(0, cash.balanceOf(tester.a9), sender = tester.k9)
     logs = []
 
@@ -95,7 +95,7 @@ def test_publicSellCompleteSets(contractsFixture):
     cash.depositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender = tester.k1)
     completeSets.publicBuyCompleteSets(market.address, fix('10'), sender = tester.k1)
-    captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
+    captureFilteredLogs(fundedRepFixture.chain.head_state, orders, logs)
     result = completeSets.publicSellCompleteSets(market.address, fix('9'), sender=tester.k1)
 
     assert logs == [
@@ -119,12 +119,12 @@ def test_publicSellCompleteSets(contractsFixture):
     assert cash.balanceOf(tester.a0) == fix('0.09')
     assert cash.balanceOf(market.getReportingWindow()) == fix('0.0009')
 
-def test_exceptions(contractsFixture):
-    branch = contractsFixture.branch
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
-    completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['Orders']
+def test_exceptions(fundedRepFixture):
+    branch = fundedRepFixture.branch
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
+    completeSets = fundedRepFixture.contracts['completeSets']
+    orders = fundedRepFixture.contracts['Orders']
     cash.depositEther(value = fix('10000'), sender = tester.k1)
 
     cash.depositEther(value = fix('10000'), sender = tester.k1)
@@ -136,7 +136,6 @@ def test_exceptions(contractsFixture):
         completeSets.sellCompleteSets(tester.a1, market.address, fix('10'), sender=tester.k1)
 
     # sellCompleteSets exceptions
-    contractsFixture.chain.mine(1)
     with raises(TransactionFailed):
         completeSets.publicSellCompleteSets(market.address, 0, sender=tester.k1)
     with raises(TransactionFailed):

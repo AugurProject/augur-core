@@ -6,16 +6,16 @@ from utils import fix, longToHexString, bytesToLong
 NO = 0
 YES = 1
 
-def test_topics(contractsFixture):
-    branch = contractsFixture.branch
-    topics = contractsFixture.applySignature('topics', branch.getTopics())
-    market = contractsFixture.binaryMarket
-    cash = contractsFixture.cash
-    trade = contractsFixture.contracts['trade']
-    makeOrder = contractsFixture.contracts['makeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+def test_topics(fundedRepFixture):
+    branch = fundedRepFixture.branch
+    topics = fundedRepFixture.applySignature('topics', branch.getTopics())
+    market = fundedRepFixture.binaryMarket
+    cash = fundedRepFixture.cash
+    trade = fundedRepFixture.contracts['trade']
+    makeOrder = fundedRepFixture.contracts['makeOrder']
+    takeOrder = fundedRepFixture.contracts['takeOrder']
+    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
 
     assert topics.count() == 0
     assert topics.updatePopularity('Politics'.ljust(32, '\x00'), 10)
