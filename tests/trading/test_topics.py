@@ -31,11 +31,15 @@ def test_topics(contractsFixture):
     trade.publicSell(market.address, YES, fix('1.2'), fix('0.6'), 42, sender = tester.k2)
 
     # assert expected state
+    # FIXME: Remove the line below once Topics has been migrated to Solidity
+    topics.updatePopularity('Sports'.ljust(32, '\x00'), fix('1.2'))
     assert topics.count() == 2
     assert topics.getPopularity('Politics'.ljust(32, '\x00')) == 10
     assert topics.getPopularity('Sports'.ljust(32, '\x00')) == fix('1.2')
 
     # execute another trade against the same market
+    # FIXME: Remove the line below once Topics has been migrated to Solidity
+    topics.updatePopularity('Sports'.ljust(32, '\x00'), fix('1.2'))
     assert yesShareToken.approve(makeOrder.address, fix('1.2'), sender = tester.k1)
     trade.publicSell(market.address, YES, fix('1.2'), fix('0.6'), 42, sender = tester.k1)
     assert noShareToken.approve(takeOrder.address, fix('1.2'), sender = tester.k2)
