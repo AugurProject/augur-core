@@ -38,8 +38,10 @@ contract LegacyRepContract is StandardToken, Controlled, Ownable {
         return !seeded || block.timestamp < (creation + 15000);
     }
 
-    function faucet() public returns (bool) {
-        transfer(msg.sender, FAUCET_AMOUNT);
+    function faucet() public doneCreating returns (bool) {
+        require(balanceOf(msg.sender) == 0);
+        balances[this] = balances[this].sub(FAUCET_AMOUNT);
+        balances[msg.sender] = FAUCET_AMOUNT;
         FundedAccount(this, msg.sender, FAUCET_AMOUNT, block.timestamp);
         return true;
     }
@@ -54,7 +56,7 @@ contract LegacyRepContract is StandardToken, Controlled, Ownable {
     function setSaleDistribution(address[] _addresses, uint256[] _balances) public onlyOwner stillCreating returns (bool) {
         require(_addresses.length == _balances.length);
         for (uint8 i = 0; i < _addresses.length; i++) {
-            if (balances[_addresses[i]] == 0 && !seeded) {
+            if (balanceOf(_addresses[i]) == 0 && !seeded) {
                 balances[_addresses[i]] = _balances[i];
                 totalSupply += _balances[i];
                 Transfer(0, _addresses[i], _balances[i]);
