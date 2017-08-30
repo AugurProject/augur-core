@@ -22,7 +22,7 @@ contract OrdersFetcher is Controlled {
      */
     function getOrderIds(Trading.TradeTypes _type, Market _market, uint8 _outcome, bytes20 _startingOrderId, uint256 _numOrdersToLoad) external constant returns (bytes20[]) {
         require(_type == Trading.TradeTypes.Bid || _type == Trading.TradeTypes.Ask);
-        require(0 <= _outcome && _outcome < _market.getNumberOfOutcomes());
+        require(_outcome < _market.getNumberOfOutcomes());
         Orders _orders = Orders(controller.lookup("Orders"));
         bytes20[] _orderIds;
         if (_startingOrderId == bytes20(0)) {
