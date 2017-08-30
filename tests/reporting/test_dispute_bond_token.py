@@ -223,7 +223,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     allReportersDisputeBondToken = None
 
     # Seed legacy REP contract with 11 million reputation tokens
-    legacyRepContract = contractsFixture.uploadAndAddToController('../src/legacyRepContract.se')
+    legacyRepContract = contractsFixture.contracts['LegacyRepContract']
     legacyRepContract.setSaleDistribution([tester.a0], [long(REP_TOTAL * REP_DIVISOR)])
     contractsFixture.chain.head_state.timestamp += 15000
 

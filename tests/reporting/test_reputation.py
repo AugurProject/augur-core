@@ -12,7 +12,7 @@ def test_decimals(contractsFixture):
 def test_redeem_legacy_rep(contractsFixture):
     branch = contractsFixture.branch
     reputationToken = contractsFixture.applySignature('ReputationToken', branch.getReputationToken())
-    legacyRepContract = contractsFixture.contracts['legacyRepContract']
+    legacyRepContract = contractsFixture.contracts['LegacyRepContract']
     legacyRepContract.setSaleDistribution([tester.a0], [long(11 * 10**6 * 10**18)])
     contractsFixture.chain.head_state.timestamp += 15000
     legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)

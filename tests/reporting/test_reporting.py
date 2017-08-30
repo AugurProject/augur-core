@@ -400,7 +400,7 @@ def finalizeForkingMarket(reportingFixture, finalizeByMigration):
 @fixture(scope="session")
 def reportingSnapshot(sessionFixture):
     # Seed legacy rep contract
-    legacyRepContract = sessionFixture.contracts['legacyRepContract']
+    legacyRepContract = sessionFixture.contracts['LegacyRepContract']
     legacyRepContract.setSaleDistribution([tester.a0], [long(11 * 10**6 * 10**18)])
     sessionFixture.chain.head_state.timestamp += 15000
     branch = sessionFixture.branch
