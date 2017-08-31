@@ -1,7 +1,6 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/token/VariableSupplyToken.sol';
-import 'ROOT/libraries/token/ERC20.sol';
 
 
 contract LegacyRepContract is VariableSupplyToken {
