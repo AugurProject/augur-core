@@ -55,21 +55,12 @@ library SafeMathInt256 {
         return INT256_MAX;
     }
 
-    function safeToMultiply(int256 a, int256 b) internal constant returns (bool) {
-        int256 c = a * b;
-        if (a == 0 || c / a == b) {
-            return true;
-        }
-        return false;
-    }
-
     // Float [fixed point] Operations
-    function fxpMul(int256 a, int256 b) internal constant returns (int256) {
-        require(safeToMultiply(a, b));
-        return a * b / 10 ** 18;
+    function fxpMul(int256 a, int256 b, int256 base) internal constant returns (int256) {
+        return div(mul(a, b), base);
     }
 
-    function fxpDiv(int256 a, int256 b) internal constant returns (int256) {
-        return a * 10 ** 18 / b;
+    function fxpDiv(int256 a, int256 b, int256 base) internal constant returns (int256) {
+        return div(mul(a, base), b);
     }
 }
