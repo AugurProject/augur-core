@@ -10,20 +10,11 @@ inset('../macros/safeMath.sem')
 inset('../macros/require.sem')
 
 data controller
-data owner
-data initialized
 
 ### Allows users to buy/sell sets of every outcome, so 500 complete sets in a 3 outcome market is 500 of outcome 1, 2, and 3 each respectively
 
 def init():
-    self.owner = msg.sender
-
-def initialize(controller: address):
-    require(msg.sender == self.owner)
-    require(not self.initialized)
-    self.initialized = 1
-    self.controller = controller
-    return 1
+    self.controller = msg.sender
 
 # Buys fxpAmount shares of every outcome in the specified market
 # @public

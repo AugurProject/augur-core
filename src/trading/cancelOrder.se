@@ -14,8 +14,6 @@ inset('../macros/require.sem')
 inset('../macros/orderFields.sem')
 
 data controller
-data owner
-data initialized
 
 # Order types
 macro BID: 1
@@ -25,14 +23,7 @@ macro ASK: 2
 macro ORDER_FIELDS: 8
 
 def init():
-    self.owner = msg.sender
-
-def initialize(controller: address):
-    require(msg.sender == self.owner)
-    require(not self.initialized)
-    self.initialized = 1
-    self.controller = controller
-    return 1
+    self.controller = msg.sender
 
 # @public
 def publicCancelOrder(orderID: bytes32, type: uint8, market: address, outcome: uint8):

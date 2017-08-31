@@ -12,7 +12,6 @@ inset('../macros/require.sem')
 inset('../macros/assertPrivateCall.sem')
 
 data controller
-data owner
 
 # Trade types
 macro BID: 1
@@ -25,13 +24,7 @@ def any():
     assertNoValue()
 
 def init():
-    self.owner = msg.sender
-
-def initialize(controller: address):
-    require(not self.controller)
-    require(msg.sender == self.owner)
-    self.controller = controller
-    return 1
+    self.controller = msg.sender
 
 # Filling a bid [aka selling shares]
 # Users need to have approved markets to spend their money, simulate fill client side to check in case an order is invalid due to someone not having approved

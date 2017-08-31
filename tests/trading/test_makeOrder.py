@@ -23,30 +23,6 @@ BETTER_ORDER_ID = 5
 WORSE_ORDER_ID = 6
 GAS_PRICE = 7
 
-def test_initialize(contractsFixture):
-    makeOrder = contractsFixture.uploadAndAddToController('../src/trading/makeOrder.se', uuid4().hex)
-
-    makeOrder.initialize(tester.a0)
-
-    assert makeOrder.setController(tester.a1)
-
-def test_initialize_failure(contractsFixture):
-    makeOrder = contractsFixture.uploadAndAddToController('../src/trading/makeOrder.se', uuid4().hex)
-
-    with raises(TransactionFailed):
-        makeOrder.initialize(tester.a0, sender = tester.k1)
-    with raises(TransactionFailed):
-        # NOTE: must be last since it changes contract chain
-        makeOrder.initialize(tester.a0)
-        makeOrder.initialize(tester.a1)
-
-def test_setController_failure(contractsFixture):
-    makeOrder = contractsFixture.uploadAndAddToController('../src/trading/makeOrder.se', uuid4().hex)
-    makeOrder.initialize(tester.a0)
-
-    with raises(TransactionFailed):
-        makeOrder.setController(tester.a1, sender = tester.k1)
-
 def test_publicMakeOrder_bid(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket

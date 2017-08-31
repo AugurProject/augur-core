@@ -9,7 +9,6 @@ inset('../macros/assertNoValue.sem')
 inset('../macros/require.sem')
 
 data controller
-data owner
 
 # Order types
 macro BID: 1
@@ -37,13 +36,7 @@ def any():
     assertNoValue()
 
 def init():
-    self.owner = msg.sender
-
-def initialize(controller: address):
-    require(not self.controller)
-    require(msg.sender == self.owner)
-    self.controller = controller
-    return 1
+    self.controller = msg.sender
 
 # "Snipe" an order on the orderbook using its ID.
 # @public

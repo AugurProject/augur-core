@@ -9,9 +9,7 @@ inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
 inset('../macros/require.sem')
 
-data owner
 data controller
-data initialized
 
 # Trade types
 macro BID: 1
@@ -25,14 +23,7 @@ macro SELLING: 2
 macro MINIMUM_GAS_NEEDED: 300000
 
 def init():
-    self.owner = msg.sender
-
-def initialize(controller: address):
-    require(msg.sender == self.owner)
-    require(not self.initialized)
-    initialized = 1
-    self.controller = controller
-    return 1
+    self.controller = msg.sender
 
 # @public
 # @return fxp

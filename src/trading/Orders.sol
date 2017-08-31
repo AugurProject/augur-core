@@ -16,7 +16,7 @@ import 'ROOT/trading/OrdersFetcher.sol';
  * @title Orders
  * @dev Storage of all data associated with orders
  */
-contract Orders is DelegationTarget, Controlled {
+contract Orders is DelegationTarget {
     using SafeMathUint256 for uint256;
 
     event CancelOrder(address indexed market, address indexed sender, int256 fxpPrice, uint256 fxpAmount, bytes32 orderId, uint8 outcome, Trading.TradeTypes orderType, uint256 cashRefund, uint256 sharesRefund);

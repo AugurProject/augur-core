@@ -19,7 +19,7 @@ contract OrderBook is Controlled {
     using Uint256Arrays for uint256[];
 
     function getOrderBook(uint256 _type, Market _market, uint256 _outcome, uint256 _startingOrderId, uint256 _numOrdersToLoad) constant public returns (uint256[] _orderBook) {
-        OrdersFetcher _ordersFetcher = OrdersFetcher(controller.lookup("ordersFetcher"));
+        OrdersFetcher _ordersFetcher = OrdersFetcher(controller.lookup("OrdersFetcher"));
         uint256[100] memory _orders = _ordersFetcher.getOrderIDs(_type, _market, _outcome, _startingOrderId, _numOrdersToLoad);
         _orderBook = new uint256[](9 * _numOrdersToLoad);
         uint8 _numAvailableOrders = 0;

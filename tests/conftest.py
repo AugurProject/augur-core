@@ -156,7 +156,9 @@ class ContractsFixture:
         self.branch = self.createBranch(0, "")
         self.cash = self.getSeededCash()
         self.binaryMarket = self.createReasonableBinaryMarket(self.branch, self.cash)
+        startingGas = self.chain.head_state.gas_used
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)
+        print 'Gas Used: %s' % (self.chain.head_state.gas_used - startingGas)
         self.scalarMarket = self.createReasonableScalarMarket(self.branch, -10 * 10**18, 30 * 10**18, self.cash)
         self.constants = self.uploadAndAddToController("solidity_test_helpers/Constants.sol")
         self.chain.mine(1)
@@ -223,7 +225,7 @@ class ContractsFixture:
                 if name == 'controller': continue
                 # remove this and Interfaces.sol when https://github.com/ethereum/solidity/issues/2665 is fixed
                 if name == 'Interfaces': continue
-                contractsToDelegate = ['tradingEscapeHatch']
+                contractsToDelegate = ['Orders', 'tradingEscapeHatch']
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
                     self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
@@ -247,9 +249,14 @@ class ContractsFixture:
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Mutex','Cash','Orders','completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','cancelOrder','trade','ClaimProceeds','OrdersFetcher']
+        contractsToInitialize = ['Mutex','Cash','completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','cancelOrder','trade','ClaimProceeds','OrdersFetcher']
         for contractName in contractsToInitialize:
-            self.contracts[contractName].initialize(self.controller.address)
+            if getattr(self.contracts[contractName], "setController", None):
+                self.contracts[contractName].setController(self.controller.address)
+            elif getattr(self.contracts[contractName], "initialize", None):
+                self.contracts[contractName].initialize(self.controller.address)
+            else:
+                raise "contract has neither 'initialize' nor 'setController' method on it."
 
     ####
     #### Helpers
@@ -291,7 +298,7 @@ class ContractsFixture:
 
     def createCategoricalMarket(self, branch, numOutcomes, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic):
         marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, automatedReporterAddress, topic, value = marketCreationFee)
+        marketAddress = self.contracts['MarketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, automatedReporterAddress, topic, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
