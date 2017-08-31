@@ -224,8 +224,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
 
     # Seed legacy REP contract with 11 million reputation tokens
     legacyRepContract = contractsFixture.contracts['LegacyRepContract']
-    legacyRepContract.setSaleDistribution([tester.a0], [long(REP_TOTAL * REP_DIVISOR)])
-    contractsFixture.chain.head_state.timestamp += 15000
+    legacyRepContract.testFund(long(REP_TOTAL * REP_DIVISOR))
 
     # Get the reputation token for this branch and migrate legacy REP to it
     reputationToken = contractsFixture.applySignature('ReputationToken', branch.getReputationToken())

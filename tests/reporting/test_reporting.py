@@ -401,8 +401,7 @@ def finalizeForkingMarket(reportingFixture, finalizeByMigration):
 def reportingSnapshot(sessionFixture):
     # Seed legacy rep contract
     legacyRepContract = sessionFixture.contracts['LegacyRepContract']
-    legacyRepContract.setSaleDistribution([tester.a0], [long(11 * 10**6 * 10**18)])
-    sessionFixture.chain.head_state.timestamp += 15000
+    legacyRepContract.testFund(long(11 * 10**6 * 10**18))
     branch = sessionFixture.branch
     market = sessionFixture.binaryMarket
 

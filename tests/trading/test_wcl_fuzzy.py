@@ -80,7 +80,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         assert cash.approve(approvalAddress, amount, sender = sender)
 
     legacyRepContract = contractsFixture.contracts['LegacyRepContract']
-    legacyRepContract.setSaleDistribution([tester.a0], [long(11 * 10**6 * 10**18)])
+    legacyRepContract.testFund(long(11 * 10**6 * 10**18))
     contractsFixture.chain.head_state.timestamp += 15000
     branch = contractsFixture.branch
 

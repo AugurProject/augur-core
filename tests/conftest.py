@@ -351,12 +351,9 @@ def contractsFixture(sessionFixture):
 
 @fixture(scope="session")
 def fundedRepSnapshot(sessionFixture):
-    # Seed legacy rep contract
     legacyRepContract = sessionFixture.contracts['LegacyRepContract']
-    legacyRepContract.setSaleDistribution([tester.a0], [long(11 * 10**6 * 10**18)])
-    sessionFixture.chain.head_state.timestamp += 15000
+    legacyRepContract.testFund(11 * 10**6 * 10**18)
     branch = sessionFixture.branch
-    market = sessionFixture.binaryMarket
 
     # Get the reputation token for this branch and migrate legacy REP to it
     reputationToken = sessionFixture.applySignature('ReputationToken', branch.getReputationToken())
