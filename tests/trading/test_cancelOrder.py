@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
-from utils import bytesToLong, longTo20Bytes, fix, unfix
+from utils import bytesToLong, longTo32Bytes, fix, unfix
 
 tester.STARTGAS = long(6.7 * 10**6)
 
@@ -43,13 +43,13 @@ def test_cancelBid(contractsFixture):
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
     marketInitialNoShares = noShareToken.totalSupply()
-    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, str(bytearray(20)), str(bytearray(20)), tradeGroupID, sender=tester.k1)
+    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, str(bytearray(32)), str(bytearray(32)), tradeGroupID, sender=tester.k1)
     assert orderID, "Order ID should be non-zero"
     assert ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
 
     assert(cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "publicCancelOrder should succeed"
 
-    assert(ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]), "Canceled order elements should all be zero"
+    assert(ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(32)), str(bytearray(32)), 0]), "Canceled order elements should all be zero"
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(makerInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
@@ -77,13 +77,13 @@ def test_cancelAsk(contractsFixture):
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
     marketInitialNoShares = noShareToken.totalSupply()
-    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, str(bytearray(20)), str(bytearray(20)), tradeGroupID, sender=tester.k1)
-    assert(orderID != bytearray(20)), "Order ID should be non-zero"
+    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, str(bytearray(32)), str(bytearray(32)), tradeGroupID, sender=tester.k1)
+    assert(orderID != bytearray(32)), "Order ID should be non-zero"
     assert ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
 
     assert(cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "publicCancelOrder should succeed"
 
-    assert(ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]), "Canceled order elements should all be zero"
+    assert(ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(32)), str(bytearray(32)), 0]), "Canceled order elements should all be zero"
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(makerInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
@@ -106,8 +106,8 @@ def test_exceptions(contractsFixture):
     assert(cash.approve(makeOrder.address, fix('10000'), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
     makerInitialCash = cash.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
-    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, str(bytearray(20)), str(bytearray(20)), tradeGroupID, sender=tester.k1)
-    assert(orderID != bytearray(20)), "Order ID should be non-zero"
+    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, str(bytearray(32)), str(bytearray(32)), tradeGroupID, sender=tester.k1)
+    assert(orderID != bytearray(32)), "Order ID should be non-zero"
 
     # Permissions exceptions
     with raises(TransactionFailed):
@@ -117,9 +117,9 @@ def test_exceptions(contractsFixture):
 
     # cancelOrder exceptions
     with raises(TransactionFailed):
-        cancelOrder.publicCancelOrder(longTo20Bytes(0), orderType, market.address, outcomeID, sender=tester.k1)
+        cancelOrder.publicCancelOrder(longTo32Bytes(0), orderType, market.address, outcomeID, sender=tester.k1)
     with raises(TransactionFailed):
-        cancelOrder.publicCancelOrder(longTo20Bytes(1), orderType, market.address, outcomeID, sender=tester.k1)
+        cancelOrder.publicCancelOrder(longTo32Bytes(1), orderType, market.address, outcomeID, sender=tester.k1)
     with raises(TransactionFailed):
         cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k2)
     assert(cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "publicCancelOrder should succeed"

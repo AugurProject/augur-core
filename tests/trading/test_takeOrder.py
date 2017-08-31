@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from ethereum.tools import tester
-from utils import fix, bytesToHexString, captureFilteredLogs, longTo20Bytes
+from utils import fix, bytesToHexString, captureFilteredLogs, longTo32Bytes
 
 BID = 1
 ASK = 2
@@ -25,7 +25,7 @@ def test_publicTakeOrder_bid(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k2)
@@ -61,7 +61,7 @@ def test_publicTakeOrder_bid(contractsFixture):
             "tradeGroupId": 42,
         },
     ]
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(32)), str(bytearray(32)), 0]
     assert fillOrderID == 0
 
 def test_publicTakeOrder_ask(contractsFixture):
@@ -77,7 +77,7 @@ def test_publicTakeOrder_ask(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k2)
@@ -113,5 +113,5 @@ def test_publicTakeOrder_ask(contractsFixture):
             "tradeGroupId": tradeGroupID
         },
     ]
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(32)), str(bytearray(32)), 0]
     assert fillOrderID == 0

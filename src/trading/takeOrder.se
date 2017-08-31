@@ -48,7 +48,7 @@ def initialize(controller: address):
 # "Snipe" an order on the orderbook using its ID.
 # @public
 # @return fxp
-def publicTakeOrder(orderID: bytes20, type: uint8, market: address, outcome: uint8, fxpAmountTakerWants: uint256, tradeGroupID: uint256):
+def publicTakeOrder(orderID: bytes32, type: uint8, market: address, outcome: uint8, fxpAmountTakerWants: uint256, tradeGroupID: uint256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -58,7 +58,7 @@ def publicTakeOrder(orderID: bytes20, type: uint8, market: address, outcome: uin
 
 # @internal
 # @return fxp
-def takeOrder(sender: address, orderID: bytes20, type: uint8, market: address, outcome: uint8, fxpAmountTakerWants: uint256, tradeGroupID: uint256):
+def takeOrder(sender: address, orderID: bytes32, type: uint8, market: address, outcome: uint8, fxpAmountTakerWants: uint256, tradeGroupID: uint256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(fxpAmountTakerWants)

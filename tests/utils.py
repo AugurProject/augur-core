@@ -2,6 +2,7 @@
 
 from json import loads
 from decimal import Decimal
+import struct
 
 def fix(n, m = 1):
     return long(Decimal(n) * Decimal(m) * 10**18)
@@ -12,8 +13,8 @@ def unfix(n):
 def stringToBytes(value):
     return value.ljust(32, '\x00')
 
-def longTo20Bytes(value):
-    return str(hex(value)[2:].rjust(20, '\x00'))
+def longTo32Bytes(value):
+    return struct.pack(">l", value).rjust(32, '\x00')
 
 def longToHexString(value, leftPad=40):
     # convert the value to a hex string, strip off the `0x`, strip off any trailing `L`, pad with zeros, prefix with `0x`

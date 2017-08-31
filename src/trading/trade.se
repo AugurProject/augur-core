@@ -42,7 +42,7 @@ def publicBuy(market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: int
     self.controller.stopInEmergency()
     output = self.trade(msg.sender, BUYING, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
     MUTEX.release()
-    return(output:bytes20)
+    return(output : bytes32)
 
 # @public
 # @return fxp
@@ -52,7 +52,7 @@ def publicSell(market: address, outcome: uint8, fxpAmount: uint256, fxpPrice: in
     self.controller.stopInEmergency()
     output = self.trade(msg.sender, SELLING, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
     MUTEX.release()
-    return(output:bytes20)
+    return(output : bytes32)
 
 # @public
 # @return fxp
@@ -62,7 +62,7 @@ def publicTrade(direction: uint8, market: address, outcome: uint8, fxpAmount: ui
     self.controller.stopInEmergency()
     output = self.trade(msg.sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
     MUTEX.release()
-    return(output:bytes20)
+    return(output : bytes32)
 
 # Match an order with the best bid or ask.
 # @public
@@ -83,8 +83,8 @@ def trade(sender: address, direction: uint8, market: address, outcome: uint8, fx
     self.controller.assertIsWhitelisted(msg.sender)
     fxpAmount = self.takeBestOrder(sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
     if(fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED):
-        return (MAKEORDER.makeOrder(sender, direction, fxpAmount, fxpPrice, market, outcome, 0, 0, tradeGroupID) : bytes20)
-    return (1 : bytes20)
+        return (MAKEORDER.makeOrder(sender, direction, fxpAmount, fxpPrice, market, outcome, 0, 0, tradeGroupID) : bytes32)
+    return (1 : bytes32)
 
 # @internal
 # @return fxp

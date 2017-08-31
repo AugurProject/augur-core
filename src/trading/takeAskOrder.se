@@ -39,7 +39,7 @@ def initialize(controller: address):
 #  - Bidder (taker/sender) pays price - minValue for their shares
 # @internal
 # @return fxp
-def takeAskOrder(taker: address, orderID: bytes20, market: address, outcome: uint8, fxpAmountTakerWants: uint256, tradeGroupID: uint256):
+def takeAskOrder(taker: address, orderID: bytes32, market: address, outcome: uint8, fxpAmountTakerWants: uint256, tradeGroupID: uint256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
