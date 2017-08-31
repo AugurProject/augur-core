@@ -26,7 +26,6 @@ contract LegacyRepContract is VariableSupplyToken {
     }
 
     function faucet() public returns (bool) {
-        require(balanceOf(msg.sender) == 0);
         mint(msg.sender, FAUCET_AMOUNT);
         FundedAccount(this, msg.sender, FAUCET_AMOUNT, block.timestamp);
         return true;

@@ -12,9 +12,5 @@ def test_legacyRepFaucet(contractsFixture):
     assert legacyRep.faucet(sender=tester.k0)
     assert legacyRep.balanceOf(tester.a0) == 47 * 10 ** 18
 
-    # We cannot double fund a test account
-    with raises(TransactionFailed, message="Double tapping a faucet"):
-        legacyRep.faucet(sender=tester.k0)
-
     # Total supply increases by the amount funded
     assert legacyRep.totalSupply() == 47 * 10 ** 18
