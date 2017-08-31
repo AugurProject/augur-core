@@ -2,7 +2,7 @@ pragma solidity ^0.4.13;
 
 
 contract Controlled {
-    Controller internal controller;
+    Controller public controller;
 
     modifier onlyWhitelistedCallers {
         require(controller.assertIsWhitelisted(msg.sender));
@@ -26,11 +26,6 @@ contract Controlled {
 
     function Controlled() {
         controller = Controller(msg.sender);
-    }
-
-    // TODO: existst for backward compatibility during migration, switch to providing controller via constructor parameter (ideal) or call `setController` directly
-    function initialize(Controller _controller) external onlyControllerCaller returns(bool) {
-        return setController(_controller);
     }
 
     function setController(Controller _controller) public onlyControllerCaller returns(bool) {

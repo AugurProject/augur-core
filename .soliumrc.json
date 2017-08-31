@@ -4,7 +4,7 @@
     "imports-on-top": true,
     "variable-declarations": true,
     "array-declarations": true,
-    "operator-whitespace": true,
+    "operator-whitespace": false,
     "lbrace": true,
     "camelcase": true,
     "uppercase": false,

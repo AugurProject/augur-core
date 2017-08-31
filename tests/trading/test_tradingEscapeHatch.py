@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
-from utils import fix
+from utils import fix, longTo32Bytes
 
 BID = 1
 ASK = 2
@@ -28,7 +28,7 @@ def test_escapeHatch(contractsFixture):
     # make order with cash
     assert cash.depositEther(value=fix('100'), sender=tester.k1) == 1, "depositEther to account 1 should succeed"
     assert cash.approve(makeOrder.address, fix('10'), sender=tester.k1) == 1, "Approve makeOrder contract to spend cash from account 1"
-    orderID = makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address, YES, 42, sender=tester.k1)
+    orderID = makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
     assert orderID
 
     # take order with cash using on-chain matcher

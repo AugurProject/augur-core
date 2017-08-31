@@ -11,10 +11,12 @@ import 'ROOT/reporting/DisputeBondToken.sol';
 import 'ROOT/reporting/RegistrationToken.sol';
 
 
-
 contract IShareToken is ERC20, Typed {
     function initialize(Market _market, uint8 _outcome) public returns (bool);
     function getMarket() constant returns (Market);
+    function balanceOf(address) constant returns (uint256);
+    function transfer(address, uint256) returns (bool);
+    function transferFrom(address, address, uint256) returns (bool);
     function destroyShares(address, uint256 balance) public;
     function getOutcome() public constant returns (uint8);
 }

@@ -1,8 +1,7 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-macro ORDERS: self.controller.lookup('orders')
+macro ORDERS: self.controller.lookup('Orders')
 macro COMPLETE_SETS: self.controller.lookup('completeSets')
-macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
@@ -13,7 +12,6 @@ inset('../macros/require.sem')
 inset('../macros/assertPrivateCall.sem')
 
 data controller
-data owner
 
 # Trade types
 macro BID: 1
@@ -26,13 +24,7 @@ def any():
     assertNoValue()
 
 def init():
-    self.owner = msg.sender
-
-def initialize(controller: address):
-    require(not self.controller)
-    require(msg.sender == self.owner)
-    self.controller = controller
-    return 1
+    self.controller = msg.sender
 
 # Filling a bid [aka selling shares]
 # Users need to have approved markets to spend their money, simulate fill client side to check in case an order is invalid due to someone not having approved
@@ -43,17 +35,15 @@ def initialize(controller: address):
 #  - Bidder (maker) has escrowed price - minValue for their shares
 # @internal
 # @return fxp
-def takeBidOrder(taker: address, orderID: address, market: address, outcome: int256, fxpAmountTakerWants: int256, tradeGroupID: int256):
+def takeBidOrder(taker: address, orderID: bytes32, market: address, outcome: uint8, fxpAmountTakerWants: uint256, tradeGroupID: uint256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
 
     # Get order
-    order = array(ORDER_FIELDS)
-    order = ORDERS_FETCHER.getOrder(orderID, BID, market, outcome, outitems=ORDER_FIELDS)
-    takerDesiredSharesForThisOrder = min(fxpAmountTakerWants, order[ATTOSHARES])
-    orderDisplayPrice = order[DISPLAY_PRICE]
-    maker = order[OWNER]
-    makerSharesEscrowed = min(order[SHARES_ESCROWED], fxpAmountTakerWants)
+    takerDesiredSharesForThisOrder = min(fxpAmountTakerWants, ORDERS.getAmount(orderID, type, market, outcome))
+    orderDisplayPrice = ORDERS.getPrice(orderID, type, market, outcome)
+    maker = ORDERS.getOrderOwner(orderID, type, market, outcome)
+    makerSharesEscrowed = min(ORDERS.getOrderSharesEscrowed(orderID, type, market, outcome), fxpAmountTakerWants)
     require(maker != taker)
 
     require(orderDisplayPrice <= market.getMaxDisplayPrice())

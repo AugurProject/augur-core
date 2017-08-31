@@ -49,6 +49,6 @@ def test_topics(contractsFixture):
         topics.getTopicByOffset(0): topics.getPopularityByOffset(0),
         topics.getTopicByOffset(1): topics.getPopularityByOffset(1),
     } == {
-        bytesToLong('Sports'.ljust(32, '\x00')): fix('2.4'),
         bytesToLong('Politics'.ljust(32, '\x00')): 10,
+        bytesToLong('Sports'.ljust(32, '\x00')): fix('2.4'),
     }

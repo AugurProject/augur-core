@@ -2,7 +2,7 @@
 
 ### This allows you to place orders on the book
 
-macro ORDERS: self.controller.lookup('orders')
+macro ORDERS: self.controller.lookup('Orders')
 macro MUTEX: self.controller.lookup('Mutex')
 
 inset('../macros/externs.sem')
@@ -12,7 +12,6 @@ inset('../macros/require.sem')
 inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
-data owner
 data controller
 
 # Order types
@@ -31,32 +30,26 @@ def any():
     assertNoValue()
 
 def init():
-    self.owner = msg.sender
-
-def initialize(controller: address):
-    require(not self.controller)
-    require(msg.sender == self.owner)
-    self.controller = controller
-    return 1
+    self.controller = msg.sender
 
 # @public
-def publicMakeOrder(type: int256, attoshares: int256, displayPrice: int256, market: address, outcome: uint256, betterOrderID: address, worseOrderID: address, tradeGroupID: int256):
+def publicMakeOrder(type: uint8, attoshares: uint256, displayPrice: int256, market: address, outcome: uint8, betterOrderID: bytes32, worseOrderID: bytes32, tradeGroupID: uint256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
     orderID = self.makeOrder(msg.sender, type, attoshares, displayPrice, market, outcome, betterOrderID, worseOrderID, tradeGroupID)
     MUTEX.release()
-    return(orderID)
+    return(orderID : bytes32)
 
 # @internal
-def makeOrder(sender: address, type: int256, attoshares: int256, displayPrice: int256, market: address, outcome: int256, betterOrderID: address, worseOrderID: address, tradeGroupID: int256):
+def makeOrder(sender: address, type: uint8, attoshares: uint256, displayPrice: int256, market: address, outcome: uint8, betterOrderID: bytes32, worseOrderID: bytes32, tradeGroupID: uint256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(sender)
     require(type == BID or type == ASK)
     require(0 < attoshares)
     require(market)
-    require(0 <= outcome and outcome < market.getNumberOfOutcomes())
+    require(outcome < market.getNumberOfOutcomes())
     require(market.getMinDisplayPrice() < displayPrice and displayPrice < market.getMaxDisplayPrice())
 
     attotokensPerShare = displayPrice - market.getMinDisplayPrice()
@@ -70,15 +63,14 @@ def makeOrder(sender: address, type: int256, attoshares: int256, displayPrice: i
     fxpMoneyEscrowed = escrow[0]
     fxpSharesEscrowed = escrow[1]
 
-    order = [type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, tx.gasprice]
-    orderID = ripemd160(order, items=10)
+    orderID = ORDERS.getOrderId(type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
     require(ORDERS.getAmount(orderID, type, market, outcome) == 0)
-    ORDERS.saveOrder(orderID, type, market, attoshares, displayPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID, tx.gasprice)
+    orderID = ORDERS.saveOrder(orderID, type, market, attoshares, displayPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID, tx.gasprice)
 
-    return(orderID)
+    return(orderID : bytes32)
 
 # @private
-def placeBid(sender: address, attoshares: int256, attotokensPerShare: int256, market: address, outcome: int256):
+def placeBid(sender: address, attoshares: uint256, attotokensPerShare: int256, market: address, outcome: uint8):
     assertNoValue()
     assertPrivateCall()
     orderValueInAttotokens = safeFxpMul(attoshares, safeSub(market.getCompleteSetCostInAttotokens(), attotokensPerShare))
@@ -117,7 +109,7 @@ def placeBid(sender: address, attoshares: int256, attotokensPerShare: int256, ma
     return([attotokensEscrowed, attosharesEscrowed]: arr)
 
 # @private
-def placeAsk(sender: address, attoshares: int256, attotokensPerShare: int256, market: address, outcome: int256):
+def placeAsk(sender: address, attoshares: uint256, attotokensPerShare: int256, market: address, outcome: uint8):
     assertNoValue()
     assertPrivateCall()
     orderValueInAttotokens = safeFxpMul(attoshares, attotokensPerShare)

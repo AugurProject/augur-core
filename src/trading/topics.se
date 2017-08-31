@@ -24,20 +24,20 @@ def initialize():
 def any():
     assertNoValue()
 
-def updatePopularity(topic: int256, fxpAmount: int256):
+def updatePopularity(topic: bytes32, fxpAmount: uint256):
     self.controller.assertIsWhitelisted(msg.sender)
     oldAmount = self.topics.getByKeyOrZero(topic)
     newAmount = safeAdd(oldAmount, fxpAmount)
     self.topics.addOrUpdate(topic, newAmount)
     return(1)
 
-def getPopularity(topic: int256):
+def getPopularity(topic: bytes32):
     return self.topics.getByKey(topic)
 
-def getTopicByOffset(offset: int256):
+def getTopicByOffset(offset: uint256):
     return self.topics.getByOffset(offset)
 
-def getPopularityByOffset(offset: int256):
+def getPopularityByOffset(offset: uint256):
     topic = self.getTopicByOffset(offset)
     return self.topics.getByKey(topic)
 

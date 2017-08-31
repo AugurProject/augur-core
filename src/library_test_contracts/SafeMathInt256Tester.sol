@@ -37,4 +37,12 @@ contract SafeMathInt256Tester {
     function getInt256Max() public constant returns (int256) {
         return SafeMathInt256.getInt256Max();
     }
+
+    function fxpMul(int256 _a, int256 _b, int256 _base) public constant returns (int256) {
+        return SafeMathInt256.fxpMul(_a, _b, _base);
+    }
+
+    function fxpDiv(int256 _a, int256 _b, int256 _base) public constant returns (int256) {
+        return SafeMathInt256.fxpDiv(_a, _b, _base);
+    }
 }

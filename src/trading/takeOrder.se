@@ -9,7 +9,6 @@ inset('../macros/assertNoValue.sem')
 inset('../macros/require.sem')
 
 data controller
-data owner
 
 # Order types
 macro BID: 1
@@ -37,18 +36,12 @@ def any():
     assertNoValue()
 
 def init():
-    self.owner = msg.sender
-
-def initialize(controller: address):
-    require(not self.controller)
-    require(msg.sender == self.owner)
-    self.controller = controller
-    return 1
+    self.controller = msg.sender
 
 # "Snipe" an order on the orderbook using its ID.
 # @public
 # @return fxp
-def publicTakeOrder(orderID: address, type: int256, market: address, outcome: int256, fxpAmountTakerWants: int256, tradeGroupID: int256):
+def publicTakeOrder(orderID: bytes32, type: uint8, market: address, outcome: uint8, fxpAmountTakerWants: uint256, tradeGroupID: uint256):
     assertNoValue()
     MUTEX.acquire()
     self.controller.stopInEmergency()
@@ -58,7 +51,7 @@ def publicTakeOrder(orderID: address, type: int256, market: address, outcome: in
 
 # @internal
 # @return fxp
-def takeOrder(sender: address, orderID: address, type: int256, market: address, outcome: int256, fxpAmountTakerWants: int256, tradeGroupID: int256):
+def takeOrder(sender: address, orderID: bytes32, type: uint8, market: address, outcome: uint8, fxpAmountTakerWants: uint256, tradeGroupID: uint256):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(fxpAmountTakerWants)

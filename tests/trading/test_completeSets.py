@@ -17,7 +17,7 @@ def test_publicBuyCompleteSets(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['orders']
+    orders = contractsFixture.contracts['Orders']
     yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
     logs = []
@@ -37,7 +37,7 @@ def test_publicBuyCompleteSets(contractsFixture):
             "_event_type": "CompleteSets",
             "sender": bytesToHexString(tester.a1),
             "reportingFee": 0L,
-            "type": BUY,
+            "orderType": BUY,
             "fxpAmount": fix('10'),
             "marketCreatorFee": 0L,
             "numOutcomes": 2L,
@@ -56,7 +56,7 @@ def test_publicBuyCompleteSets_failure(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['orders']
+    orders = contractsFixture.contracts['Orders']
 
     fxpAmount = fix('10')
     cash.depositEther(value = fix('10000'), sender = tester.k1)
@@ -70,8 +70,6 @@ def test_publicBuyCompleteSets_failure(contractsFixture):
     with raises(TransactionFailed):
         completeSets.publicBuyCompleteSets(tester.a1, fxpAmount, sender=tester.k1)
     with raises(TransactionFailed):
-        completeSets.publicBuyCompleteSets(market.address, fix('-10'), sender=tester.k1)
-    with raises(TransactionFailed):
         completeSets.publicBuyCompleteSets(market.address, 0, sender=tester.k1)
     assert cash.approve(completeSets.address, fxpAmount - 1, sender=tester.k1) == 1, "Approve completeSets contract to spend slightly less cash than needed"
     with raises(TransactionFailed):
@@ -82,7 +80,7 @@ def test_publicSellCompleteSets(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['orders']
+    orders = contractsFixture.contracts['Orders']
     yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
     cash.transfer(0, cash.balanceOf(tester.a9), sender = tester.k9)
@@ -105,7 +103,7 @@ def test_publicSellCompleteSets(contractsFixture):
             "_event_type": "CompleteSets",
             "sender": bytesToHexString(tester.a1),
             "reportingFee": fix('0.0009'),
-            "type": SELL,
+            "orderType": SELL,
             "fxpAmount": fix('9'),
             "marketCreatorFee": fix('0.09'),
             "numOutcomes": 2,
@@ -126,7 +124,7 @@ def test_exceptions(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     completeSets = contractsFixture.contracts['completeSets']
-    orders = contractsFixture.contracts['orders']
+    orders = contractsFixture.contracts['Orders']
     cash.depositEther(value = fix('10000'), sender = tester.k1)
 
     cash.depositEther(value = fix('10000'), sender = tester.k1)
@@ -139,8 +137,6 @@ def test_exceptions(contractsFixture):
 
     # sellCompleteSets exceptions
     contractsFixture.chain.mine(1)
-    with raises(TransactionFailed):
-        completeSets.publicSellCompleteSets(market.address, fix('-10'), sender=tester.k1)
     with raises(TransactionFailed):
         completeSets.publicSellCompleteSets(market.address, 0, sender=tester.k1)
     with raises(TransactionFailed):

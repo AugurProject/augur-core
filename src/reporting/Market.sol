@@ -117,8 +117,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
-        _success = true;
-        return _success;
+        return true;
 
         // TODO: we need to update this signature (and all of the places that call it) to allow the creator (UI) to pass in a number of other things which will all be logged here
         // TODO: log short description
@@ -455,7 +454,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         bool _automatedReportDisputed = address(automatedReporterDisputeBondToken) != NULL_ADDRESS;
         bool _limitedReportDisputed = address(limitedReportersDisputeBondToken) != NULL_ADDRESS;
 
-        // If we have an automated report that hasn't been disputed it is either in the dispute window or we can finalize the market 
+        // If we have an automated report that hasn't been disputed it is either in the dispute window or we can finalize the market
         if (automatedReportReceivedTime != 0 && !_automatedReportDisputed) {
             bool _beforeAutomatedDisputeDue = block.timestamp < getAutomatedReportDisputeDueTimestamp();
             return _beforeAutomatedDisputeDue ? ReportingState.AUTOMATED_DISPUTE : ReportingState.AWAITING_FINALIZATION;

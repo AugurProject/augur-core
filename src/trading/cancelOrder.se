@@ -2,9 +2,8 @@
 
 ### This allows you to cancel orders on the book
 
-macro ORDERS: self.controller.lookup('orders')
+macro ORDERS: self.controller.lookup('Orders')
 macro MUTEX: self.controller.lookup('Mutex')
-macro ORDERS_FETCHER: self.controller.lookup('ordersFetcher')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
@@ -15,8 +14,6 @@ inset('../macros/require.sem')
 inset('../macros/orderFields.sem')
 
 data controller
-data owner
-data initialized
 
 # Order types
 macro BID: 1
@@ -26,17 +23,10 @@ macro ASK: 2
 macro ORDER_FIELDS: 8
 
 def init():
-    self.owner = msg.sender
-
-def initialize(controller: address):
-    require(msg.sender == self.owner)
-    require(not self.initialized)
-    self.initialized = 1
-    self.controller = controller
-    return 1
+    self.controller = msg.sender
 
 # @public
-def publicCancelOrder(orderID: address, type: int256, market: address, outcome: int256):
+def publicCancelOrder(orderID: bytes32, type: uint8, market: address, outcome: uint8):
     assertNoValue()
     MUTEX.acquire()
     self.cancelOrder(msg.sender, orderID, type, market, outcome)
@@ -46,7 +36,7 @@ def publicCancelOrder(orderID: address, type: int256, market: address, outcome: 
 # Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
 # @internal
 # @returns 1 if success, throws on failure
-def cancelOrder(sender: address, orderID: address, type: int256, market: address, outcome: int256):
+def cancelOrder(sender: address, orderID: bytes32, type: uint8, market: address, outcome: uint8):
     assertNoValue()
     self.controller.assertIsWhitelisted(msg.sender)
     require(sender)
@@ -54,12 +44,11 @@ def cancelOrder(sender: address, orderID: address, type: int256, market: address
     require(market)
 
     # Look up the order the sender wants to cancel
-    order = ORDERS_FETCHER.getOrder(orderID, type, market, outcome, outitems = ORDER_FIELDS)
-    fxpAmount = order[ATTOSHARES]
-    fxpPrice = order[DISPLAY_PRICE]
-    owner = order[OWNER]
-    fxpMoneyEscrowed = order[TOKENS_ESCROWED]
-    fxpSharesEscrowed = order[SHARES_ESCROWED]
+    fxpAmount = ORDERS.getAmount(orderID, type, market, outcome)
+    fxpPrice = ORDERS.getPrice(orderID, type, market, outcome)
+    owner = ORDERS.getOrderOwner(orderID, type, market, outcome)
+    fxpMoneyEscrowed = ORDERS.getOrderMoneyEscrowed(orderID, type, market, outcome)
+    fxpSharesEscrowed = ORDERS.getOrderSharesEscrowed(orderID, type, market, outcome)
 
     # Check that the order ID is correct, the type is bid (1) or ask (2), and that the sender owns the order
     require(type == BID or type == ASK)
@@ -76,15 +65,15 @@ def cancelOrder(sender: address, orderID: address, type: int256, market: address
 
 # Issue refunds
 # @private
-def refundOrder(sender: address, type: int256, fxpSharesEscrowed: int256, fxpMoneyEscrowed: int256, market: address, outcome: int256):
+def refundOrder(sender: address, type: uint8, fxpSharesEscrowed: uint256, fxpMoneyEscrowed: uint256, market: address, outcome: uint8):
     assertNoValue()
     assertPrivateCall()
 
     if(fxpSharesEscrowed > 0):
         # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
         if(type == BID):
-            i = 1
-            while(i <= market.getNumberOfOutcomes()):
+            i = 0
+            while(i < market.getNumberOfOutcomes()):
                 if(i != outcome):
                     market.getShareToken(i).transfer(sender, fxpSharesEscrowed)
                 i += 1

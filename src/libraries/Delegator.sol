@@ -5,8 +5,8 @@ import 'ROOT/libraries/DelegationTarget.sol';
 
 
 contract Delegator is DelegationTarget {
-    function Delegator(address _controller, bytes32 _controllerLookupName) {
-        controller = Controller(_controller);
+    function Delegator(Controller _controller, bytes32 _controllerLookupName) {
+        controller = _controller;
         controllerLookupName = _controllerLookupName;
     }
 
