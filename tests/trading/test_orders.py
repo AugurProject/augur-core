@@ -4,7 +4,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 import numpy as np
 from pytest import fixture, mark, lazy_fixture, raises
-from utils import fix, bytesToLong, bytesToHexString, longTo32Bytes, stringToBytes
+from utils import fix, bytesToLong, bytesToHexString, longTo32Bytes, longToHexString, stringToBytes
 
 NO = 0
 YES = 1
@@ -48,17 +48,17 @@ def test_walkOrderList_bids(contractsFixture):
     assert(bestOrderID == orderId5)
     assert(worstOrderID == orderId5)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId5, str(bytearray(32))])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId5, str(bytearray(32))])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [str(bytearray(32)), orderId5])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [orderId5, str(bytearray(32))])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId5, str(bytearray(32))])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId5, longTo32Bytes(0)])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId5, str(bytearray(32))])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId5, str(bytearray(32))])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [str(bytearray(32)), orderId5])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [orderId5, str(bytearray(32))])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId5, str(bytearray(32))])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId5, longTo32Bytes(0)])
     order = {
         "orderID": longTo32Bytes(6),
         "type": BID,
@@ -80,15 +80,15 @@ def test_walkOrderList_bids(contractsFixture):
     assert(worstOrderID == orderId6)
     # walk down order list starting from bestOrderID
     assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId5, orderId6])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId6, str(bytearray(32))])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [str(bytearray(32)), orderId5])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [orderId6, str(bytearray(32))])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [orderId6, longTo32Bytes(0)])
     assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId5, orderId6])
     # walk up order list starting from worstOrderID
     assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId5, orderId6])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId6, str(bytearray(32))])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [str(bytearray(32)), orderId5])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [orderId6, str(bytearray(32))])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [orderId6, longTo32Bytes(0)])
     assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId5, orderId6])
     order = {
         "orderID": longTo32Bytes(7),
@@ -111,14 +111,14 @@ def test_walkOrderList_bids(contractsFixture):
     assert(worstOrderID == orderId6)
     # walk down order list starting from bestOrderID
     assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId5, orderId7])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId6, str(bytearray(32))])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [str(bytearray(32)), orderId5])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [orderId6, str(bytearray(32))])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [orderId6, longTo32Bytes(0)])
     # walk up order list starting from worstOrderID
     assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId5, orderId7])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId6, str(bytearray(32))])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [str(bytearray(32)), orderId5])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [orderId6, str(bytearray(32))])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [orderId6, longTo32Bytes(0)])
     assert(orders.removeOrder(orderId5, BID, market.address, outcomeID) == 1), "Remove order 5"
     assert(orders.removeOrder(orderId6, BID, market.address, outcomeID) == 1), "Remove order 6"
     assert(orders.removeOrder(orderId7, BID, market.address, outcomeID) == 1), "Remove order 7"
@@ -148,15 +148,15 @@ def test_walkOrderList_asks(contractsFixture):
     assert(bestOrderID == orderId8)
     assert(worstOrderID == orderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId8, str(bytearray(32))])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [str(bytearray(32)), orderId8])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [orderId8, str(bytearray(32))])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [str(bytearray(32)), orderId8])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [longTo32Bytes(0), orderId8])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [longTo32Bytes(0), orderId8])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId8, str(bytearray(32))])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [str(bytearray(32)), orderId8])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [orderId8, str(bytearray(32))])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [str(bytearray(32)), orderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [longTo32Bytes(0), orderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [longTo32Bytes(0), orderId8])
     order = {
         "orderID": longTo32Bytes(9),
         "type": ASK,
@@ -177,16 +177,16 @@ def test_walkOrderList_asks(contractsFixture):
     assert(bestOrderID == orderId9)
     assert(worstOrderID == orderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId8, str(bytearray(32))])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId8, longTo32Bytes(0)])
     assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId9, orderId8])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [orderId8, str(bytearray(32))])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [str(bytearray(32)), orderId9])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [longTo32Bytes(0), orderId9])
     assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId9, orderId8])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId8, str(bytearray(32))])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId8, longTo32Bytes(0)])
     assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId9, orderId8])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [orderId8, str(bytearray(32))])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [str(bytearray(32)), orderId9])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [longTo32Bytes(0), orderId9])
     assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId9, orderId8])
     order = {
         "orderID": longTo32Bytes(10),
@@ -208,15 +208,15 @@ def test_walkOrderList_asks(contractsFixture):
     assert(bestOrderID == orderId9)
     assert(worstOrderID == orderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId8, str(bytearray(32))])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId8, longTo32Bytes(0)])
     assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId9, orderId10])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [orderId8, str(bytearray(32))])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [str(bytearray(32)), orderId9])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [longTo32Bytes(0), orderId9])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId8, str(bytearray(32))])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId8, longTo32Bytes(0)])
     assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId9, orderId10])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [orderId8, str(bytearray(32))])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [str(bytearray(32)), orderId9])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [longTo32Bytes(0), orderId9])
     assert(orders.removeOrder(orderId8, ASK, market.address, outcomeID) == 1), "Remove order 8"
     assert(orders.removeOrder(orderId9, ASK, market.address, outcomeID) == 1), "Remove order 9"
     assert(orders.removeOrder(orderId10, ASK, market.address, outcomeID) == 1), "Remove order 10"
@@ -291,8 +291,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId2,
@@ -303,24 +303,24 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
             "worseOrderID": orderId1,
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
                 "bid": orderId2,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "worstOrder": {
                 "bid": orderId1,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "orders": [{
                 "betterOrderID": orderId2,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId1
             }]
         }
@@ -335,8 +335,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId4,
@@ -348,24 +348,24 @@ def test_orderSorting(contractsFixture):
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
             "betterOrderID": orderId3,
-            "worseOrderID": str(bytearray(32)),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
                 "bid": orderId3,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "worstOrder": {
                 "bid": orderId4,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "orders": [{
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId4
             }, {
                 "betterOrderID": orderId3,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }]
         }
     })
@@ -379,8 +379,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId6,
@@ -392,7 +392,7 @@ def test_orderSorting(contractsFixture):
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
             "betterOrderID": orderId5,
-            "worseOrderID": str(bytearray(32)),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId7,
@@ -403,27 +403,27 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
             "worseOrderID": orderId5,
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
                 "bid": orderId7,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "worstOrder": {
                 "bid": orderId6,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "orders": [{
                 "betterOrderID": orderId7,
                 "worseOrderID": orderId6
             }, {
                 "betterOrderID": orderId5,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId5
             }]
         }
@@ -439,8 +439,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId2,
@@ -451,24 +451,24 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
                 "bid": orderId2,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "worstOrder": {
                 "bid": orderId1,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "orders": [{
                 "betterOrderID": orderId2,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId1
             }]
         }
@@ -483,8 +483,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId4,
@@ -495,25 +495,25 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
                 "bid": orderId3,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "worstOrder": {
                 "bid": orderId4,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "orders": [{
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId4
             }, {
                 "betterOrderID": orderId3,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }]
         }
     })
@@ -527,8 +527,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId6,
@@ -539,8 +539,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId7,
@@ -551,27 +551,27 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
                 "bid": orderId7,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "worstOrder": {
                 "bid": orderId6,
-                "ask": str(bytearray(32))
+                "ask": longTo32Bytes(0)
             },
             "orders": [{
                 "betterOrderID": orderId7,
                 "worseOrderID": orderId6
             }, {
                 "betterOrderID": orderId5,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId5
             }]
         }
@@ -588,8 +588,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId9,
@@ -600,24 +600,24 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
             "worseOrderID": orderId8,
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId9
             },
             "worstOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId8
             },
             "orders": [{
                 "betterOrderID": orderId9,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId8
             }]
         }
@@ -632,8 +632,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId11,
@@ -645,24 +645,24 @@ def test_orderSorting(contractsFixture):
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
             "betterOrderID": orderId10,
-            "worseOrderID": str(bytearray(32)),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId10
             },
             "worstOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId11
             },
             "orders": [{
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId11
             }, {
                 "betterOrderID": orderId10,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }]
         }
     })
@@ -676,8 +676,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId13,
@@ -689,7 +689,7 @@ def test_orderSorting(contractsFixture):
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
             "betterOrderID": orderId12,
-            "worseOrderID": str(bytearray(32)),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId14,
@@ -700,17 +700,17 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
             "worseOrderID": orderId12,
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId14
             },
             "worstOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId13
             },
             "orders": [{
@@ -718,9 +718,9 @@ def test_orderSorting(contractsFixture):
                 "worseOrderID": orderId13
             }, {
                 "betterOrderID": orderId12,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId12
             }]
         }
@@ -736,8 +736,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId9,
@@ -748,24 +748,24 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId9
             },
             "worstOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId8
             },
             "orders": [{
                 "betterOrderID": orderId9,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId8
             }]
         }
@@ -780,8 +780,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId11,
@@ -792,25 +792,25 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId10
             },
             "worstOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId11
             },
             "orders": [{
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId11
             }, {
                 "betterOrderID": orderId10,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }]
         }
     })
@@ -824,8 +824,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId13,
@@ -837,7 +837,7 @@ def test_orderSorting(contractsFixture):
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
             "betterOrderID": orderId12,
-            "worseOrderID": str(bytearray(32)),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId14,
@@ -848,17 +848,17 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId14
             },
             "worstOrder": {
-                "bid": str(bytearray(32)),
+                "bid": longTo32Bytes(0),
                 "ask": orderId13
             },
             "orders": [{
@@ -866,9 +866,9 @@ def test_orderSorting(contractsFixture):
                 "worseOrderID": orderId13
             }, {
                 "betterOrderID": orderId12,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId12
             }]
         }
@@ -885,8 +885,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId16,
@@ -898,7 +898,7 @@ def test_orderSorting(contractsFixture):
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
             "betterOrderID": orderId15,
-            "worseOrderID": str(bytearray(32)),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId17,
@@ -909,7 +909,7 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
             "worseOrderID": orderId15,
             "tradeGroupID": 0
         }, {
@@ -921,8 +921,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId19,
@@ -934,7 +934,7 @@ def test_orderSorting(contractsFixture):
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
             "betterOrderID": orderId18,
-            "worseOrderID": str(bytearray(32)),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId20,
@@ -945,7 +945,7 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
             "worseOrderID": orderId18,
             "tradeGroupID": 0
         }],
@@ -963,18 +963,18 @@ def test_orderSorting(contractsFixture):
                 "worseOrderID": orderId16
             }, {
                 "betterOrderID": orderId15,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId15
             }, {
                 "betterOrderID": orderId20,
                 "worseOrderID": orderId19
             }, {
                 "betterOrderID": orderId18,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId18
             }]
         }
@@ -990,8 +990,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId16,
@@ -1002,8 +1002,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId17,
@@ -1014,8 +1014,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId18,
@@ -1026,8 +1026,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId19,
@@ -1038,8 +1038,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }, {
             "orderID": orderId20,
@@ -1050,8 +1050,8 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": str(bytearray(32)),
-            "worseOrderID": str(bytearray(32)),
+            "betterOrderID": longTo32Bytes(0),
+            "worseOrderID": longTo32Bytes(0),
             "tradeGroupID": 0
         }],
         "expected": {
@@ -1068,18 +1068,18 @@ def test_orderSorting(contractsFixture):
                 "worseOrderID": orderId16
             }, {
                 "betterOrderID": orderId15,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId15
             }, {
                 "betterOrderID": orderId20,
                 "worseOrderID": orderId19
             }, {
                 "betterOrderID": orderId18,
-                "worseOrderID": str(bytearray(32))
+                "worseOrderID": longTo32Bytes(0)
             }, {
-                "betterOrderID": str(bytearray(32)),
+                "betterOrderID": longTo32Bytes(0),
                 "worseOrderID": orderId18
             }]
         }
@@ -1095,8 +1095,8 @@ def test_saveOrder(contractsFixture):
     orderId2 = orders.saveOrder(longTo32Bytes(0), ASK, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
 
-    assert(ordersFetcher.getOrder(orderId1, BID, market.address, NO) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), str(bytearray(32)), str(bytearray(32)), 0]), "getOrder for order1 didn't return the expected array of data"
-    assert(ordersFetcher.getOrder(orderId2, ASK, market.address, NO) == [fix('10'), fix('0.5'), bytesToHexString(tester.a2), fix('5'), 0, str(bytearray(32)), str(bytearray(32)), 0]), "getOrder for order2 didn't return the expected array of data"
+    assert(ordersFetcher.getOrder(orderId1, BID, market.address, NO) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order1 didn't return the expected array of data"
+    assert(ordersFetcher.getOrder(orderId2, ASK, market.address, NO) == [fix('10'), fix('0.5'), bytesToHexString(tester.a2), fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected array of data"
 
     assert(orders.getAmount(orderId1, BID, market.address, NO) == fix('10')), "amount for order1 should be set to 10 ETH"
     assert(orders.getAmount(orderId2, ASK, market.address, NO) == fix('10')), "amount for order2 should be set to 10 ETH"
@@ -1130,14 +1130,14 @@ def test_fillOrder(contractsFixture):
     # fully fill
     assert(orders.fillOrder(orderId1, BID, market.address, NO, fix('10'), 0) == 1), "fillOrder wasn't executed successfully"
     # prove all
-    assert(ordersFetcher.getOrder(orderId1, BID, market.address, NO) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(32)), str(bytearray(32)), 0]), "getOrder for order1 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(orderId1, BID, market.address, NO) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order1 didn't return the expected data array"
     # test partial fill
     assert(orders.fillOrder(orderId2, BID, market.address, NO, 0, fix('3')) == 1), "fillOrder wasn't executed successfully"
     # confirm partial fill
-    assert(ordersFetcher.getOrder(orderId2, BID, market.address, NO) == [fix('4'), fix('0.5'), bytesToHexString(tester.a2), fix('2'), 0, str(bytearray(32)), str(bytearray(32)), 0]), "getOrder for order2 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(orderId2, BID, market.address, NO) == [fix('4'), fix('0.5'), bytesToHexString(tester.a2), fix('2'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected data array"
     # fill rest of order2
     assert(orders.fillOrder(orderId2, BID, market.address, NO, 0, fix('2')) == 1), "fillOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(orderId2, BID, market.address, NO) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(32)), str(bytearray(32)), 0]), "getOrder for order2 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(orderId2, BID, market.address, NO) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected data array"
 
 def test_removeOrder(contractsFixture):
     market = contractsFixture.binaryMarket
@@ -1150,8 +1150,8 @@ def test_removeOrder(contractsFixture):
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
     orderId3 = orders.saveOrder(longTo32Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId3 != bytearray(32)), "saveOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(orderId3, BID, market.address, YES) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), str(bytearray(32)), str(bytearray(32)), 0]), "getOrder for order3 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(orderId3, BID, market.address, YES) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order3 didn't return the expected data array"
     assert(orders.removeOrder(orderId3, BID, market.address, YES) == 1), "removeOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(orderId3, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(32)), str(bytearray(32)), 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
+    assert(ordersFetcher.getOrder(orderId3, BID, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
     assert(orders.removeOrder(orderId1, BID, market.address, NO) == 1), "Remove order 1"
     assert(orders.removeOrder(orderId2, BID, market.address, NO) == 1), "Remove order 2"

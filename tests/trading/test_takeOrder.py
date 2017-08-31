@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from ethereum.tools import tester
-from utils import fix, bytesToHexString, captureFilteredLogs, longTo32Bytes
+from utils import fix, bytesToHexString, captureFilteredLogs, longTo32Bytes, longToHexString
 
 BID = 1
 ASK = 2
@@ -61,7 +61,7 @@ def test_publicTakeOrder_bid(contractsFixture):
             "tradeGroupId": 42,
         },
     ]
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(32)), str(bytearray(32)), 0]
+    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0
 
 def test_publicTakeOrder_ask(contractsFixture):
@@ -113,5 +113,5 @@ def test_publicTakeOrder_ask(contractsFixture):
             "tradeGroupId": tradeGroupID
         },
     ]
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(32)), str(bytearray(32)), 0]
+    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0
