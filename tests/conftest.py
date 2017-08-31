@@ -352,7 +352,7 @@ def contractsFixture(sessionFixture):
 @fixture(scope="session")
 def fundedRepSnapshot(sessionFixture):
     legacyRepContract = sessionFixture.contracts['LegacyRepContract']
-    legacyRepContract.testFund(11 * 10**6 * 10**18)
+    legacyRepContract.faucet(11 * 10**6 * 10**18)
     branch = sessionFixture.branch
 
     # Get the reputation token for this branch and migrate legacy REP to it

@@ -13,7 +13,7 @@ def test_redeem_legacy_rep(contractsFixture):
     branch = contractsFixture.branch
     reputationToken = contractsFixture.applySignature('ReputationToken', branch.getReputationToken())
     legacyRepContract = contractsFixture.contracts['LegacyRepContract']
-    legacyRepContract.testFund(long(11 * 10**6 * 10**18))
+    legacyRepContract.faucet(long(11 * 10**6 * 10**18))
     legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
     reputationToken.migrateFromLegacyRepContract()
     balance = reputationToken.balanceOf(tester.a0)

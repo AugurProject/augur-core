@@ -14,3 +14,7 @@ def test_legacyRepFaucet(contractsFixture):
 
     # Total supply increases by the amount funded
     assert legacyRep.totalSupply() == 47 * 10 ** 18
+
+    # We can request a specific amount from the faucet too
+    assert legacyRep.faucet(10)
+    assert legacyRep.balanceOf(tester.a0) == 47 * 10 ** 18 + 10
