@@ -4,7 +4,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 import numpy as np
 from pytest import fixture, mark, lazy_fixture, raises
-from utils import fix, bytesToLong, bytesToHexString, stringToBytes
+from utils import fix, bytesToLong, bytesToHexString, longTo20Bytes, stringToBytes
 
 NO = 0
 YES = 1
@@ -23,15 +23,13 @@ BETTER_ORDER_ID = 5
 WORSE_ORDER_ID = 6
 GAS_PRICE = 7
 
-ZEROED_ORDER_ID = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-
 def test_walkOrderList_bids(contractsFixture):
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     outcomeID = 1
     order = {
-        "orderID": 5,
+        "orderID": longTo20Bytes(5),
         "type": BID,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.6'),
@@ -39,30 +37,30 @@ def test_walkOrderList_bids(contractsFixture):
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.6'),
         "fxpSharesEscrowed": 0,
-        "betterOrderID": ZEROED_ORDER_ID,
-        "worseOrderID": ZEROED_ORDER_ID,
+        "betterOrderID": longTo20Bytes(0),
+        "worseOrderID": longTo20Bytes(0),
         "tradeGroupID": 0
     }
-    hashedOrderID5 = orders.saveOrder(ZEROED_ORDER_ID, order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
-    assert(isinstance(hashedOrderID5, bytes)), "Save order"
+    orderId5 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    assert(orderId5 != bytearray(20)), "Save order"
     bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
-    assert(bestOrderID == hashedOrderID5)
-    assert(worstOrderID == hashedOrderID5)
+    assert(bestOrderID == orderId5)
+    assert(worstOrderID == orderId5)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderID5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderID5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderID5])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [hashedOrderID5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderID5, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId5, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId5, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [str(bytearray(20)), orderId5])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [orderId5, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId5, str(bytearray(20))])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderID5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderID5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderID5])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [hashedOrderID5, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderID5, ZEROED_ORDER_ID])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId5, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId5, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [str(bytearray(20)), orderId5])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [orderId5, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId5, str(bytearray(20))])
     order = {
-        "orderID": 6,
+        "orderID": longTo20Bytes(6),
         "type": BID,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.59'),
@@ -70,30 +68,30 @@ def test_walkOrderList_bids(contractsFixture):
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.59'),
         "fxpSharesEscrowed": 0,
-        "betterOrderID": ZEROED_ORDER_ID,
-        "worseOrderID": ZEROED_ORDER_ID,
+        "betterOrderID": longTo20Bytes(0),
+        "worseOrderID": longTo20Bytes(0),
         "tradeGroupID": 0
     }
-    hashedOrderID6 = orders.saveOrder(ZEROED_ORDER_ID, order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
-    assert(isinstance(hashedOrderID6, bytes)), "Save order"
+    orderId6 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    assert(orderId6 != bytearray(20)), "Save order"
     bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
-    assert(bestOrderID == hashedOrderID5)
-    assert(worstOrderID == hashedOrderID6)
+    assert(bestOrderID == orderId5)
+    assert(worstOrderID == orderId6)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderID5, hashedOrderID6])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderID6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderID5])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [hashedOrderID6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderID5, hashedOrderID6])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId5, orderId6])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId6, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [str(bytearray(20)), orderId5])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [orderId6, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId5, orderId6])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderID5, hashedOrderID6])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderID6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderID5])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [hashedOrderID6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderID5, hashedOrderID6])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId5, orderId6])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId6, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [str(bytearray(20)), orderId5])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [orderId6, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId5, orderId6])
     order = {
-        "orderID": 7,
+        "orderID": longTo20Bytes(7),
         "type": BID,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.595'),
@@ -101,29 +99,29 @@ def test_walkOrderList_bids(contractsFixture):
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.595'),
         "fxpSharesEscrowed": 0,
-        "betterOrderID": ZEROED_ORDER_ID,
-        "worseOrderID": ZEROED_ORDER_ID,
+        "betterOrderID": longTo20Bytes(0),
+        "worseOrderID": longTo20Bytes(0),
         "tradeGroupID": 0
     }
-    hashedOrderID7 = orders.saveOrder(ZEROED_ORDER_ID, order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
-    assert(isinstance(hashedOrderID7, bytes)), "Save order"
+    orderId7 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    assert(orderId7 != bytearray(20)), "Save order"
     bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
-    assert(bestOrderID == hashedOrderID5)
-    assert(worstOrderID == hashedOrderID6)
+    assert(bestOrderID == orderId5)
+    assert(worstOrderID == orderId6)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderID5, hashedOrderID7])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderID6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderID5])
-    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [hashedOrderID6, ZEROED_ORDER_ID])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId5, orderId7])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId6, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.61'), bestOrderID) == [str(bytearray(20)), orderId5])
+    assert(ordersFetcher.descendOrderList(BID, market.address, outcomeID, fix('0.58'), bestOrderID) == [orderId6, str(bytearray(20))])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderID5, hashedOrderID7])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderID6, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderID5])
-    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [hashedOrderID6, ZEROED_ORDER_ID])
-    assert(orders.removeOrder(hashedOrderID5, BID, market.address, outcomeID) == 1), "Remove order 5"
-    assert(orders.removeOrder(hashedOrderID6, BID, market.address, outcomeID) == 1), "Remove order 6"
-    assert(orders.removeOrder(hashedOrderID7, BID, market.address, outcomeID) == 1), "Remove order 7"
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId5, orderId7])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId6, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.61'), worstOrderID) == [str(bytearray(20)), orderId5])
+    assert(ordersFetcher.ascendOrderList(BID, market.address, outcomeID, fix('0.58'), worstOrderID) == [orderId6, str(bytearray(20))])
+    assert(orders.removeOrder(orderId5, BID, market.address, outcomeID) == 1), "Remove order 5"
+    assert(orders.removeOrder(orderId6, BID, market.address, outcomeID) == 1), "Remove order 6"
+    assert(orders.removeOrder(orderId7, BID, market.address, outcomeID) == 1), "Remove order 7"
 
 def test_walkOrderList_asks(contractsFixture):
     market = contractsFixture.binaryMarket
@@ -131,7 +129,7 @@ def test_walkOrderList_asks(contractsFixture):
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     outcomeID = 1
     order = {
-        "orderID": 8,
+        "orderID": longTo20Bytes(8),
         "type": ASK,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.6'),
@@ -139,28 +137,28 @@ def test_walkOrderList_asks(contractsFixture):
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.6'),
         "fxpSharesEscrowed": 0,
-        "betterOrderID": ZEROED_ORDER_ID,
-        "worseOrderID": ZEROED_ORDER_ID,
+        "betterOrderID": longTo20Bytes(0),
+        "worseOrderID": longTo20Bytes(0),
         "tradeGroupID": 0
     }
-    hashedOrderID8 = orders.saveOrder(ZEROED_ORDER_ID, order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
-    assert(isinstance(hashedOrderID8, bytes)), "Save order"
+    orderId8 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    assert(orderId8 != bytearray(20)), "Save order"
     bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
-    assert(bestOrderID == hashedOrderID8)
-    assert(worstOrderID == hashedOrderID8)
+    assert(bestOrderID == orderId8)
+    assert(worstOrderID == orderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderID8])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderID8])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [str(bytearray(20)), orderId8])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [str(bytearray(20)), orderId8])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderID8])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderID8])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [str(bytearray(20)), orderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [str(bytearray(20)), orderId8])
     order = {
-        "orderID": 9,
+        "orderID": longTo20Bytes(9),
         "type": ASK,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.59'),
@@ -168,30 +166,30 @@ def test_walkOrderList_asks(contractsFixture):
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.59'),
         "fxpSharesEscrowed": 0,
-        "betterOrderID": ZEROED_ORDER_ID,
-        "worseOrderID": ZEROED_ORDER_ID,
+        "betterOrderID": longTo20Bytes(0),
+        "worseOrderID": longTo20Bytes(0),
         "tradeGroupID": 0
     }
-    hashedOrderID9 = orders.saveOrder(ZEROED_ORDER_ID, order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
-    assert(isinstance(hashedOrderID9, bytes)), "Save order"
+    orderId9 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    assert(orderId9 != bytearray(20)), "Save order"
     bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
-    assert(bestOrderID == hashedOrderID9)
-    assert(worstOrderID == hashedOrderID8)
+    assert(bestOrderID == orderId9)
+    assert(worstOrderID == orderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderID9, hashedOrderID8])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderID9])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderID9, hashedOrderID8])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId9, orderId8])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [str(bytearray(20)), orderId9])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId9, orderId8])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderID9, hashedOrderID8])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderID9])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.595'), bestOrderID) == [hashedOrderID9, hashedOrderID8])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId9, orderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [str(bytearray(20)), orderId9])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.595'), bestOrderID) == [orderId9, orderId8])
     order = {
-        "orderID": 10,
+        "orderID": longTo20Bytes(10),
         "type": ASK,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.595'),
@@ -199,29 +197,29 @@ def test_walkOrderList_asks(contractsFixture):
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.595'),
         "fxpSharesEscrowed": 0,
-        "betterOrderID": ZEROED_ORDER_ID,
-        "worseOrderID": ZEROED_ORDER_ID,
+        "betterOrderID": longTo20Bytes(0),
+        "worseOrderID": longTo20Bytes(0),
         "tradeGroupID": 0
     }
-    hashedOrderID10 = orders.saveOrder(ZEROED_ORDER_ID, order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
-    assert(isinstance(hashedOrderID9, bytes)), "Save order"
+    orderId10 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    assert(orderId10 != bytearray(20)), "Save order"
     bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
-    assert(bestOrderID == hashedOrderID9)
-    assert(worstOrderID == hashedOrderID8)
+    assert(bestOrderID == orderId9)
+    assert(worstOrderID == orderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [hashedOrderID9, hashedOrderID10])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [ZEROED_ORDER_ID, hashedOrderID9])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.6'), bestOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.59'), bestOrderID) == [orderId9, orderId10])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.61'), bestOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.descendOrderList(ASK, market.address, outcomeID, fix('0.58'), bestOrderID) == [str(bytearray(20)), orderId9])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [hashedOrderID9, hashedOrderID10])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [hashedOrderID8, ZEROED_ORDER_ID])
-    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [ZEROED_ORDER_ID, hashedOrderID9])
-    assert(orders.removeOrder(hashedOrderID8, ASK, market.address, outcomeID) == 1), "Remove order 8"
-    assert(orders.removeOrder(hashedOrderID9, ASK, market.address, outcomeID) == 1), "Remove order 9"
-    assert(orders.removeOrder(hashedOrderID10, ASK, market.address, outcomeID) == 1), "Remove order 10"
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.6'), worstOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.59'), worstOrderID) == [orderId9, orderId10])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.61'), worstOrderID) == [orderId8, str(bytearray(20))])
+    assert(ordersFetcher.ascendOrderList(ASK, market.address, outcomeID, fix('0.58'), worstOrderID) == [str(bytearray(20)), orderId9])
+    assert(orders.removeOrder(orderId8, ASK, market.address, outcomeID) == 1), "Remove order 8"
+    assert(orders.removeOrder(orderId9, ASK, market.address, outcomeID) == 1), "Remove order 9"
+    assert(orders.removeOrder(orderId10, ASK, market.address, outcomeID) == 1), "Remove order 10"
 
 def test_orderSorting(contractsFixture):
     def runtest(testCase):
@@ -231,7 +229,7 @@ def test_orderSorting(contractsFixture):
         ordersCollection = []
         for order in testCase["orders"]:
             output = orders.saveOrder(
-                order["hashedOrderID"],
+                order["orderID"],
                 order["type"],
                 market.address,
                 order["fxpAmount"],
@@ -242,9 +240,9 @@ def test_orderSorting(contractsFixture):
                 order["fxpSharesEscrowed"],
                 order["betterOrderID"],
                 order["worseOrderID"], 1)
-            assert(isinstance(output, bytes)), "saveOrder wasn't executed successfully"
+            assert(output != bytearray(20)), "saveOrder wasn't executed successfully"
         for order in testCase["orders"]:
-            ordersCollection.append(ordersFetcher.getOrder(order["hashedOrderID"], order["type"], market.address, order["outcome"]))
+            ordersCollection.append(ordersFetcher.getOrder(order["orderID"], order["type"], market.address, order["outcome"]))
         assert(len(ordersCollection) == len(testCase["expected"]["orders"])), "Number of orders not as expected"
         for i, order in enumerate(ordersCollection):
             outcomeID = testCase["orders"][i]["outcome"]
@@ -255,38 +253,37 @@ def test_orderSorting(contractsFixture):
             assert(order[BETTER_ORDER_ID] == testCase["expected"]["orders"][i]["betterOrderID"]), "Better order ID incorrect"
             assert(order[WORSE_ORDER_ID] == testCase["expected"]["orders"][i]["worseOrderID"]), "Worse order ID incorrect"
         for order in testCase["orders"]:
-            removed = orders.removeOrder(order["hashedOrderID"], order["type"], market.address, order["outcome"])
+            removed = orders.removeOrder(order["orderID"], order["type"], market.address, order["outcome"])
             assert(removed == 1), "Removed not equal to 1"
 
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['Orders']
     blockNumber = contractsFixture.chain.head_state.block_number
-    hashedOrderID1 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderID2 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderID3 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderID4 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
-    hashedOrderID5 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderID6 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
-    hashedOrderID7 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderID8 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderID9 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
-    hashedOrderID10 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderID11 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderID12 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderID13 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderID14 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
-    hashedOrderID15 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderID16 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
-    hashedOrderID17 = orders.getOrderIdHash(BID, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderID18 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
-    hashedOrderID19 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
-    hashedOrderID20 = orders.getOrderIdHash(ASK, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
-  
+    orderId1 = orders.getOrderId(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    orderId2 = orders.getOrderId(BID, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    orderId3 = orders.getOrderId(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    orderId4 = orders.getOrderId(BID, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+    orderId5 = orders.getOrderId(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    orderId6 = orders.getOrderId(BID, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+    orderId7 = orders.getOrderId(BID, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    orderId8 = orders.getOrderId(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    orderId9 = orders.getOrderId(ASK, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+    orderId10 = orders.getOrderId(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    orderId11 = orders.getOrderId(ASK, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    orderId12 = orders.getOrderId(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    orderId13 = orders.getOrderId(ASK, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    orderId14 = orders.getOrderId(ASK, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+    orderId15 = orders.getOrderId(BID, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    orderId16 = orders.getOrderId(BID, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+    orderId17 = orders.getOrderId(BID, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    orderId18 = orders.getOrderId(ASK, market.address, fix('1'), fix('0.6'), tester.a0, blockNumber, 1, fix('0.6'), 0)
+    orderId19 = orders.getOrderId(ASK, market.address, fix('1'), fix('0.61'), tester.a0, blockNumber, 1, fix('0.61'), 0)
+    orderId20 = orders.getOrderId(ASK, market.address, fix('1'), fix('0.59'), tester.a0, blockNumber, 1, fix('0.59'), 0)
+
     # Bids
     runtest({
         "orders": [{
-            "orderID": 1,
-            "hashedOrderID": hashedOrderID1,
+            "orderID": orderId1,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -294,12 +291,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 2,
-            "hashedOrderID": hashedOrderID2,
+            "orderID": orderId2,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -307,32 +303,31 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": hashedOrderID1,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": orderId1,
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": hashedOrderID2,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId2,
+                "ask": str(bytearray(20))
             },
             "worstOrder": {
-                "bid": hashedOrderID1,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId1,
+                "ask": str(bytearray(20))
             },
             "orders": [{
-                "betterOrderID": hashedOrderID2,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId2,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID1
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId1
             }]
         }
     })
     runtest({
         "orders": [{
-            "orderID": 3,
-            "hashedOrderID": hashedOrderID3,
+            "orderID": orderId3,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -340,12 +335,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 4,
-            "hashedOrderID": hashedOrderID4,
+            "orderID": orderId4,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -353,32 +347,31 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": hashedOrderID3,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": orderId3,
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": hashedOrderID3,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId3,
+                "ask": str(bytearray(20))
             },
             "worstOrder": {
-                "bid": hashedOrderID4,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId4,
+                "ask": str(bytearray(20))
             },
             "orders": [{
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID4
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId4
             }, {
-                "betterOrderID": hashedOrderID3,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId3,
+                "worseOrderID": str(bytearray(20))
             }]
         }
     })
     runtest({
         "orders": [{
-            "orderID": 5,
-            "hashedOrderID": hashedOrderID5,
+            "orderID": orderId5,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -386,12 +379,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 6,
-            "hashedOrderID": hashedOrderID6,
+            "orderID": orderId6,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -399,12 +391,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": hashedOrderID5,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": orderId5,
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 7,
-            "hashedOrderID": hashedOrderID7,
+            "orderID": orderId7,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -412,36 +403,35 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": hashedOrderID5,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": orderId5,
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": hashedOrderID7,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId7,
+                "ask": str(bytearray(20))
             },
             "worstOrder": {
-                "bid": hashedOrderID6,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId6,
+                "ask": str(bytearray(20))
             },
             "orders": [{
-                "betterOrderID": hashedOrderID7,
-                "worseOrderID": hashedOrderID6
+                "betterOrderID": orderId7,
+                "worseOrderID": orderId6
             }, {
-                "betterOrderID": hashedOrderID5,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId5,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID5
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId5
             }]
         }
     })
     # Without betterOrderID and/or worseOrderID parameters
     runtest({
         "orders": [{
-            "orderID": 1,
-            "hashedOrderID": hashedOrderID1,
+            "orderID": orderId1,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -449,12 +439,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 2,
-            "hashedOrderID": hashedOrderID2,
+            "orderID": orderId2,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -462,32 +451,31 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": hashedOrderID2,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId2,
+                "ask": str(bytearray(20))
             },
             "worstOrder": {
-                "bid": hashedOrderID1,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId1,
+                "ask": str(bytearray(20))
             },
             "orders": [{
-                "betterOrderID": hashedOrderID2,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId2,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID1
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId1
             }]
         }
     })
     runtest({
         "orders": [{
-            "orderID": 3,
-           "hashedOrderID": hashedOrderID3,
+           "orderID": orderId3,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -495,12 +483,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 4,
-            "hashedOrderID": hashedOrderID4,
+            "orderID": orderId4,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -508,32 +495,31 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": hashedOrderID3,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId3,
+                "ask": str(bytearray(20))
             },
             "worstOrder": {
-                "bid": hashedOrderID4,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId4,
+                "ask": str(bytearray(20))
             },
             "orders": [{
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID4
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId4
             }, {
-                "betterOrderID": hashedOrderID3,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId3,
+                "worseOrderID": str(bytearray(20))
             }]
         }
     })
     runtest({
         "orders": [{
-            "orderID": 5,
-            "hashedOrderID": hashedOrderID5,
+            "orderID": orderId5,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -541,12 +527,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 6,
-            "hashedOrderID": hashedOrderID6,
+            "orderID": orderId6,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -554,12 +539,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 7,
-            "hashedOrderID": hashedOrderID7,
+            "orderID": orderId7,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -567,28 +551,28 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": hashedOrderID7,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId7,
+                "ask": str(bytearray(20))
             },
             "worstOrder": {
-                "bid": hashedOrderID6,
-                "ask": ZEROED_ORDER_ID
+                "bid": orderId6,
+                "ask": str(bytearray(20))
             },
             "orders": [{
-                "betterOrderID": hashedOrderID7,
-                "worseOrderID": hashedOrderID6
+                "betterOrderID": orderId7,
+                "worseOrderID": orderId6
             }, {
-                "betterOrderID": hashedOrderID5,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId5,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID5
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId5
             }]
         }
     })
@@ -596,8 +580,7 @@ def test_orderSorting(contractsFixture):
     # Asks
     runtest({
         "orders": [{
-            "orderID": 8,
-            "hashedOrderID": hashedOrderID8,
+            "orderID": orderId8,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -605,12 +588,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 9,
-            "hashedOrderID": hashedOrderID9,
+            "orderID": orderId9,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -618,32 +600,31 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": hashedOrderID8,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": orderId8,
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID9
+                "bid": str(bytearray(20)),
+                "ask": orderId9
             },
             "worstOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID8
+                "bid": str(bytearray(20)),
+                "ask": orderId8
             },
             "orders": [{
-                "betterOrderID": hashedOrderID9,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId9,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID8
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId8
             }]
         }
     })
     runtest({
         "orders": [{
-            "orderID": 10,
-            "hashedOrderID": hashedOrderID10,
+            "orderID": orderId10,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -651,12 +632,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 11,
-            "hashedOrderID": hashedOrderID11,
+            "orderID": orderId11,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -664,32 +644,31 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": hashedOrderID10,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": orderId10,
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID10
+                "bid": str(bytearray(20)),
+                "ask": orderId10
             },
             "worstOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID11
+                "bid": str(bytearray(20)),
+                "ask": orderId11
             },
             "orders": [{
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID11
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId11
             }, {
-                "betterOrderID": hashedOrderID10,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId10,
+                "worseOrderID": str(bytearray(20))
             }]
         }
     })
     runtest({
         "orders": [{
-            "orderID": 12,
-            "hashedOrderID": hashedOrderID12,
+            "orderID": orderId12,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -697,12 +676,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 13,
-            "hashedOrderID": hashedOrderID13,
+            "orderID": orderId13,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -710,12 +688,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": hashedOrderID12,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": orderId12,
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 14,
-            "hashedOrderID": hashedOrderID14,
+            "orderID": orderId14,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -723,36 +700,35 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": hashedOrderID12,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": orderId12,
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID14
+                "bid": str(bytearray(20)),
+                "ask": orderId14
             },
             "worstOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID13
+                "bid": str(bytearray(20)),
+                "ask": orderId13
             },
             "orders": [{
-                "betterOrderID": hashedOrderID14,
-                "worseOrderID": hashedOrderID13
+                "betterOrderID": orderId14,
+                "worseOrderID": orderId13
             }, {
-                "betterOrderID": hashedOrderID12,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId12,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID12
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId12
             }]
         }
     })
     # Without betterOrderID and/or worseOrderID
     runtest({
         "orders": [{
-            "orderID": 8,
-            "hashedOrderID": hashedOrderID8,
+            "orderID": orderId8,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -760,12 +736,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 9,
-            "hashedOrderID": hashedOrderID9,
+            "orderID": orderId9,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -773,32 +748,31 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID9
+                "bid": str(bytearray(20)),
+                "ask": orderId9
             },
             "worstOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID8
+                "bid": str(bytearray(20)),
+                "ask": orderId8
             },
             "orders": [{
-                "betterOrderID": hashedOrderID9,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId9,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID8
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId8
             }]
         }
     })
     runtest({
         "orders": [{
-            "orderID": 10,
-            "hashedOrderID": hashedOrderID10,
+            "orderID": orderId10,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -806,12 +780,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 11,
-            "hashedOrderID": hashedOrderID11,
+            "orderID": orderId11,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -819,32 +792,31 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID10
+                "bid": str(bytearray(20)),
+                "ask": orderId10
             },
             "worstOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID11
+                "bid": str(bytearray(20)),
+                "ask": orderId11
             },
             "orders": [{
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID11
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId11
             }, {
-                "betterOrderID": hashedOrderID10,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId10,
+                "worseOrderID": str(bytearray(20))
             }]
         }
     })
     runtest({
         "orders": [{
-            "orderID": 12,
-            "hashedOrderID": hashedOrderID12,
+            "orderID": orderId12,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -852,12 +824,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 13,
-            "hashedOrderID": hashedOrderID13,
+            "orderID": orderId13,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -865,12 +836,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": hashedOrderID12,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": orderId12,
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 14,
-            "hashedOrderID": hashedOrderID14,
+            "orderID": orderId14,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -878,37 +848,36 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID14
+                "bid": str(bytearray(20)),
+                "ask": orderId14
             },
             "worstOrder": {
-                "bid": ZEROED_ORDER_ID,
-                "ask": hashedOrderID13
+                "bid": str(bytearray(20)),
+                "ask": orderId13
             },
             "orders": [{
-                "betterOrderID": hashedOrderID14,
-                "worseOrderID": hashedOrderID13
+                "betterOrderID": orderId14,
+                "worseOrderID": orderId13
             }, {
-                "betterOrderID": hashedOrderID12,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId12,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID12
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId12
             }]
         }
-    }) 
+    })
 
     # Bids and asks
     runtest({
         "orders": [{
-            "orderID": 15,
-            "hashedOrderID": hashedOrderID15,
+            "orderID": orderId15,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -916,12 +885,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 16,
-            "hashedOrderID": hashedOrderID16,
+            "orderID": orderId16,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -929,12 +897,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": hashedOrderID15,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": orderId15,
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 17,
-            "hashedOrderID": hashedOrderID17,
+            "orderID": orderId17,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -942,12 +909,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": hashedOrderID15,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": orderId15,
             "tradeGroupID": 0
         }, {
-            "orderID": 18,
-            "hashedOrderID": hashedOrderID18,
+            "orderID": orderId18,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -955,12 +921,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 19,
-            "hashedOrderID": hashedOrderID19,
+            "orderID": orderId19,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -968,12 +933,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": hashedOrderID18,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": orderId18,
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 20,
-            "hashedOrderID": hashedOrderID20,
+            "orderID": orderId20,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -981,45 +945,44 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": hashedOrderID18,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": orderId18,
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": hashedOrderID17,
-                "ask": hashedOrderID20
+                "bid": orderId17,
+                "ask": orderId20
             },
             "worstOrder": {
-                "bid": hashedOrderID16,
-                "ask": hashedOrderID19
+                "bid": orderId16,
+                "ask": orderId19
             },
             "orders": [{
-                "betterOrderID": hashedOrderID17,
-                "worseOrderID": hashedOrderID16
+                "betterOrderID": orderId17,
+                "worseOrderID": orderId16
             }, {
-                "betterOrderID": hashedOrderID15,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId15,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID15
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId15
             }, {
-                "betterOrderID": hashedOrderID20,
-                "worseOrderID": hashedOrderID19
+                "betterOrderID": orderId20,
+                "worseOrderID": orderId19
             }, {
-                "betterOrderID": hashedOrderID18,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId18,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID18
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId18
             }]
         }
     })
     # Without betterOrderID and/or worseOrderID
     runtest({
         "orders": [{
-            "orderID": 15,
-            "hashedOrderID": hashedOrderID15,
+            "orderID": orderId15,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -1027,12 +990,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 16,
-            "hashedOrderID": hashedOrderID16,
+            "orderID": orderId16,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -1040,12 +1002,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 17,
-            "hashedOrderID": hashedOrderID17,
+            "orderID": orderId17,
             "type": BID,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -1053,12 +1014,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 18,
-            "hashedOrderID": hashedOrderID18,
+            "orderID": orderId18,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.6'),
@@ -1066,12 +1026,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.6'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 19,
-            "hashedOrderID": hashedOrderID19,
+            "orderID": orderId19,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.61'),
@@ -1079,12 +1038,11 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.61'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }, {
-            "orderID": 20,
-            "hashedOrderID": hashedOrderID20,
+            "orderID": orderId20,
             "type": ASK,
             "fxpAmount": fix('1'),
             "fxpPrice": fix('0.59'),
@@ -1092,37 +1050,37 @@ def test_orderSorting(contractsFixture):
             "outcome": 1,
             "fxpMoneyEscrowed": fix('0.59'),
             "fxpSharesEscrowed": 0,
-            "betterOrderID": ZEROED_ORDER_ID,
-            "worseOrderID": ZEROED_ORDER_ID,
+            "betterOrderID": str(bytearray(20)),
+            "worseOrderID": str(bytearray(20)),
             "tradeGroupID": 0
         }],
         "expected": {
             "bestOrder": {
-                "bid": hashedOrderID17,
-                "ask": hashedOrderID20
+                "bid": orderId17,
+                "ask": orderId20
             },
             "worstOrder": {
-                "bid": hashedOrderID16,
-                "ask": hashedOrderID19
+                "bid": orderId16,
+                "ask": orderId19
             },
             "orders": [{
-                "betterOrderID": hashedOrderID17,
-                "worseOrderID": hashedOrderID16
+                "betterOrderID": orderId17,
+                "worseOrderID": orderId16
             }, {
-                "betterOrderID": hashedOrderID15,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId15,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID15
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId15
             }, {
-                "betterOrderID": hashedOrderID20,
-                "worseOrderID": hashedOrderID19
+                "betterOrderID": orderId20,
+                "worseOrderID": orderId19
             }, {
-                "betterOrderID": hashedOrderID18,
-                "worseOrderID": ZEROED_ORDER_ID
+                "betterOrderID": orderId18,
+                "worseOrderID": str(bytearray(20))
             }, {
-                "betterOrderID": ZEROED_ORDER_ID,
-                "worseOrderID": hashedOrderID18
+                "betterOrderID": str(bytearray(20)),
+                "worseOrderID": orderId18
             }]
         }
     })
@@ -1131,66 +1089,69 @@ def test_saveOrder(contractsFixture):
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    hashedOrderID1 = orders.saveOrder(ZEROED_ORDER_ID, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
-    assert(isinstance(hashedOrderID1, bytes)), "saveOrder wasn't executed successfully"
-    hashedOrderID2 = orders.saveOrder(ZEROED_ORDER_ID, ASK, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
-    assert(isinstance(hashedOrderID2, bytes)), "saveOrder wasn't executed successfully"
 
-    assert(ordersFetcher.getOrder(hashedOrderID1, BID, market.address, NO) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]), "getOrder for order1 didn't return the expected array of data"
-    assert(ordersFetcher.getOrder(hashedOrderID2, ASK, market.address, NO) == [fix('10'), fix('0.5'), bytesToHexString(tester.a2), fix('5'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]), "getOrder for order2 didn't return the expected array of data"
+    orderId1 = orders.saveOrder(longTo20Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo20Bytes(0), longTo20Bytes(0), 1)
+    assert(orderId1 != bytearray(20)), "saveOrder wasn't executed successfully"
+    orderId2 = orders.saveOrder(longTo20Bytes(0), ASK, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo20Bytes(0), longTo20Bytes(0), 1)
+    assert(orderId2 != bytearray(20)), "saveOrder wasn't executed successfully"
 
-    assert(orders.getAmount(hashedOrderID1, BID, market.address, NO) == fix('10')), "amount for order1 should be set to 10 ETH"
-    assert(orders.getAmount(hashedOrderID2, ASK, market.address, NO) == fix('10')), "amount for order2 should be set to 10 ETH"
+    assert(ordersFetcher.getOrder(orderId1, BID, market.address, NO) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), str(bytearray(20)), str(bytearray(20)), 0]), "getOrder for order1 didn't return the expected array of data"
+    assert(ordersFetcher.getOrder(orderId2, ASK, market.address, NO) == [fix('10'), fix('0.5'), bytesToHexString(tester.a2), fix('5'), 0, str(bytearray(20)), str(bytearray(20)), 0]), "getOrder for order2 didn't return the expected array of data"
 
-    assert(orders.getPrice(hashedOrderID1, BID, market.address, NO) == fix('0.5')), "price for order1 should be set to 0.5 ETH"
-    assert(orders.getPrice(hashedOrderID2, ASK, market.address, NO) == fix('0.5')), "price for order2 should be set to 0.5 ETH"
+    assert(orders.getAmount(orderId1, BID, market.address, NO) == fix('10')), "amount for order1 should be set to 10 ETH"
+    assert(orders.getAmount(orderId2, ASK, market.address, NO) == fix('10')), "amount for order2 should be set to 10 ETH"
 
-    assert(orders.getOrderOwner(hashedOrderID1, BID, market.address, NO) == bytesToHexString(tester.a1)), "orderOwner for order1 should be tester.a1"
-    assert(orders.getOrderOwner(hashedOrderID2, ASK, market.address, NO) == bytesToHexString(tester.a2)), "orderOwner for order2 should be tester.a2"
+    assert(orders.getPrice(orderId1, BID, market.address, NO) == fix('0.5')), "price for order1 should be set to 0.5 ETH"
+    assert(orders.getPrice(orderId2, ASK, market.address, NO) == fix('0.5')), "price for order2 should be set to 0.5 ETH"
 
-    assert(orders.removeOrder(hashedOrderID1, BID, market.address, NO) == 1), "Remove order 1"
-    assert(orders.removeOrder(hashedOrderID2, ASK, market.address, NO) == 1), "Remove order 2"
+    assert(orders.getOrderOwner(orderId1, BID, market.address, NO) == bytesToHexString(tester.a1)), "orderOwner for order1 should be tester.a1"
+    assert(orders.getOrderOwner(orderId2, ASK, market.address, NO) == bytesToHexString(tester.a2)), "orderOwner for order2 should be tester.a2"
+
+    assert(orders.removeOrder(orderId1, BID, market.address, NO) == 1), "Remove order 1"
+    assert(orders.removeOrder(orderId2, ASK, market.address, NO) == 1), "Remove order 2"
 
 def test_fillOrder(contractsFixture):
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    hashedOrderID1 = orders.saveOrder(ZEROED_ORDER_ID, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
-    assert(isinstance(hashedOrderID1, bytes)), "saveOrder wasn't executed successfully"
-    hashedOrderID2 = orders.saveOrder(ZEROED_ORDER_ID, BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
-    assert(isinstance(hashedOrderID2, bytes)), "saveOrder wasn't executed successfully"
+
+    orderId1 = orders.saveOrder(longTo20Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo20Bytes(0), longTo20Bytes(0), 1)
+    assert(orderId1 != bytearray(20)), "saveOrder wasn't executed successfully"
+    orderId2 = orders.saveOrder(longTo20Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo20Bytes(0), longTo20Bytes(0), 1)
+    assert(orderId2 != bytearray(20)), "saveOrder wasn't executed successfully"
 
     # orderID, fill, money, shares
     with raises(TransactionFailed):
-        orders.fillOrder(hashedOrderID1, BID, market.address, NO, fix('11'), 0)
+        orders.fillOrder(orderId1, BID, market.address, NO, fix('11'), 0)
     with raises(TransactionFailed):
-        orders.fillOrder(hashedOrderID1, BID, market.address, NO, 0, fix('1'))
+        orders.fillOrder(orderId1, BID, market.address, NO, 0, fix('1'))
     with raises(TransactionFailed):
-        orders.fillOrder(hashedOrderID1, BID, market.address, NO, fix('10'), fix('1'))
+        orders.fillOrder(orderId1, BID, market.address, NO, fix('10'), fix('1'))
     # fully fill
-    assert(orders.fillOrder(hashedOrderID1, BID, market.address, NO, fix('10'), 0) == 1), "fillOrder wasn't executed successfully"
+    assert(orders.fillOrder(orderId1, BID, market.address, NO, fix('10'), 0) == 1), "fillOrder wasn't executed successfully"
     # prove all
-    assert(ordersFetcher.getOrder(hashedOrderID1, BID, market.address, NO) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]), "getOrder for order1 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(orderId1, BID, market.address, NO) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]), "getOrder for order1 didn't return the expected data array"
     # test partial fill
-    assert(orders.fillOrder(hashedOrderID2, BID, market.address, NO, 0, fix('3')) == 1), "fillOrder wasn't executed successfully"
+    assert(orders.fillOrder(orderId2, BID, market.address, NO, 0, fix('3')) == 1), "fillOrder wasn't executed successfully"
     # confirm partial fill
-    assert(ordersFetcher.getOrder(hashedOrderID2, BID, market.address, NO) == [fix('4'), fix('0.5'), bytesToHexString(tester.a2), fix('2'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]), "getOrder for order2 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(orderId2, BID, market.address, NO) == [fix('4'), fix('0.5'), bytesToHexString(tester.a2), fix('2'), 0, str(bytearray(20)), str(bytearray(20)), 0]), "getOrder for order2 didn't return the expected data array"
     # fill rest of order2
-    assert(orders.fillOrder(hashedOrderID2, BID, market.address, NO, 0, fix('2')) == 1), "fillOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(hashedOrderID2, BID, market.address, NO) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]), "getOrder for order2 didn't return the expected data array"
+    assert(orders.fillOrder(orderId2, BID, market.address, NO, 0, fix('2')) == 1), "fillOrder wasn't executed successfully"
+    assert(ordersFetcher.getOrder(orderId2, BID, market.address, NO) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]), "getOrder for order2 didn't return the expected data array"
 
 def test_removeOrder(contractsFixture):
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    hashedOrderID1 = orders.saveOrder(ZEROED_ORDER_ID, BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
-    assert(isinstance(hashedOrderID1, bytes)), "saveOrder wasn't executed successfully"
-    hashedOrderID2 = orders.saveOrder(ZEROED_ORDER_ID, BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
-    assert(isinstance(hashedOrderID2, bytes)), "saveOrder wasn't executed successfully"
-    hashedOrderID3 = orders.saveOrder(ZEROED_ORDER_ID, BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), ZEROED_ORDER_ID, ZEROED_ORDER_ID, 1)
-    assert(isinstance(hashedOrderID3, bytes)), "saveOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(hashedOrderID3, BID, market.address, YES) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]), "getOrder for order3 didn't return the expected data array"
-    assert(orders.removeOrder(hashedOrderID3, BID, market.address, YES) == 1), "removeOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(hashedOrderID3, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
-    assert(orders.removeOrder(hashedOrderID1, BID, market.address, NO) == 1), "Remove order 1"
-    assert(orders.removeOrder(hashedOrderID2, BID, market.address, NO) == 1), "Remove order 2"
+
+    orderId1 = orders.saveOrder(longTo20Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo20Bytes(0), longTo20Bytes(0), 1)
+    assert(orderId1 != bytearray(20)), "saveOrder wasn't executed successfully"
+    orderId2 = orders.saveOrder(longTo20Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo20Bytes(0), longTo20Bytes(0), 1)
+    assert(orderId2 != bytearray(20)), "saveOrder wasn't executed successfully"
+    orderId3 = orders.saveOrder(longTo20Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), longTo20Bytes(0), longTo20Bytes(0), 1)
+    assert(orderId3 != bytearray(20)), "saveOrder wasn't executed successfully"
+    assert(ordersFetcher.getOrder(orderId3, BID, market.address, YES) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), str(bytearray(20)), str(bytearray(20)), 0]), "getOrder for order3 didn't return the expected data array"
+    assert(orders.removeOrder(orderId3, BID, market.address, YES) == 1), "removeOrder wasn't executed successfully"
+    assert(ordersFetcher.getOrder(orderId3, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
+    assert(orders.removeOrder(orderId1, BID, market.address, NO) == 1), "Remove order 1"
+    assert(orders.removeOrder(orderId2, BID, market.address, NO) == 1), "Remove order 2"

@@ -83,9 +83,8 @@ def trade(sender: address, direction: uint8, market: address, outcome: uint8, fx
     self.controller.assertIsWhitelisted(msg.sender)
     fxpAmount = self.takeBestOrder(sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
     if(fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED):
-        orderID = MAKEORDER.makeOrder(sender, direction, fxpAmount, fxpPrice, market, outcome, 0, 0, tradeGroupID)
-        return (orderID:bytes20)
-    return (1:bytes20)
+        return (MAKEORDER.makeOrder(sender, direction, fxpAmount, fxpPrice, market, outcome, 0, 0, tradeGroupID) : bytes20)
+    return (1 : bytes20)
 
 # @internal
 # @return fxp

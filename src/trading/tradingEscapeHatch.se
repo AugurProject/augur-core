@@ -14,7 +14,6 @@ inset('../macros/safeMath.sem')
 inset('../macros/unitConversions.sem')
 
 data owner
-data initialized
 
 data frozenShareValue[][]
 
@@ -26,12 +25,6 @@ def any():
 
 def init():
     self.owner = msg.sender
-
-def initialize(controller: address):
-    require(not self.initialized)
-    self.initialized = 1
-    self.controller = controller
-    return 1
 
 # this is necessary because once we are in decentralized mode, contract "upgrades" will be in the form of the UI pointing at new contracts and the old ones slowly dying off.  We will _not_ be using the delegated cotnract updater long term, which means we need an emergency exit that allows one to halt everything and liquidate the system as _fairly_ as possible
 def claimSharesInUpdate(market: address):

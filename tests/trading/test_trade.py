@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from ethereum.tools import tester
-from utils import longToHexString, bytesToHexString, fix, captureFilteredLogs
+from utils import longTo20Bytes, longToHexString, bytesToHexString, fix, captureFilteredLogs
 
 NO = 0
 YES = 1
@@ -12,8 +12,6 @@ ASK = 2
 # complete set log type
 BUY = 1
 SELL = 2
-
-ZEROED_ORDER_ID = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
 
 def test_one_bid_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
@@ -29,7 +27,7 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k2)
@@ -66,8 +64,8 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
         },
     ]
 
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0L, 0L, '0x0000000000000000000000000000000000000000', 0L, 0L, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0L]
-    assert fillOrderID == ZEROED_ORDER_ID
+    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0L, 0L, '0x0000000000000000000000000000000000000000', 0L, 0L, str(bytearray(20)), str(bytearray(20)), 0L]
+    assert fillOrderID == bytearray(20)
 
 
 def test_one_bid_on_books_buy_partial_order(contractsFixture):
@@ -84,7 +82,7 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('0.7', '0.4'), sender = tester.k2)
@@ -120,8 +118,8 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [fix('0.5'), fix('0.6'), bytesToHexString(tester.a1), fix('0.5', '0.6'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0L]
-    assert fillOrderID == ZEROED_ORDER_ID
+    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [fix('0.5'), fix('0.6'), bytesToHexString(tester.a1), fix('0.5', '0.6'), 0, str(bytearray(20)), str(bytearray(20)), 0L]
+    assert fillOrderID == bytearray(20)
 
 
 def test_one_bid_on_books_buy_excess_order(contractsFixture):
@@ -138,7 +136,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('1.5', '0.4'), sender = tester.k2)
@@ -188,8 +186,8 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert ordersFetcher.getOrder(fillOrderID, ASK, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.4'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
+    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(fillOrderID, ASK, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.4'), 0, str(bytearray(20)), str(bytearray(20)), 0]
 
 def test_two_bids_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
@@ -205,11 +203,11 @@ def test_two_bids_on_books_buy_both(contractsFixture):
     # create order 1
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
     assert cash.depositEther(value=fix('0.3', '0.6'), sender = tester.k3)
     assert cash.approve(makeOrder.address, fix('0.3', '0.6'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(BID, fix('0.3'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(BID, fix('0.3'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take best order
     assert cash.depositEther(value=fix('1.5', '0.4'), sender = tester.k2)
@@ -270,9 +268,9 @@ def test_two_bids_on_books_buy_both(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID1, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert ordersFetcher.getOrder(orderID2, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert fillOrderID == ZEROED_ORDER_ID
+    assert ordersFetcher.getOrder(orderID1, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(orderID2, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert fillOrderID == bytearray(20)
 
 def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     cash = contractsFixture.cash
@@ -288,11 +286,11 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     # create order 1
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
     assert cash.depositEther(value=fix('0.7', '0.6'), sender = tester.k3)
     assert cash.approve(makeOrder.address, fix('0.7', '0.6'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(BID, fix('0.7'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(BID, fix('0.7'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take best order
     assert cash.depositEther(value=fix('1.5', '0.4'), sender = tester.k2)
@@ -354,9 +352,9 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
         },
     ]
 
-    assert ordersFetcher.getOrder(orderID1, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert ordersFetcher.getOrder(orderID2, BID, market.address, YES) == [fix('0.4'), fix('0.6'), bytesToHexString(tester.a3), fix('0.4', '0.6'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert fillOrderID == ZEROED_ORDER_ID
+    assert ordersFetcher.getOrder(orderID1, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(orderID2, BID, market.address, YES) == [fix('0.4'), fix('0.6'), bytesToHexString(tester.a3), fix('0.4', '0.6'), 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert fillOrderID == bytearray(20)
 
 def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     cash = contractsFixture.cash
@@ -372,11 +370,11 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     # create order 1
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
     assert cash.depositEther(value=fix('0.7', '0.6'), sender = tester.k3)
     assert cash.approve(makeOrder.address, fix('0.7', '0.6'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(BID, fix('0.7'), fix('0.5'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(BID, fix('0.7'), fix('0.5'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take/make
     assert cash.depositEther(value=fix('1.5', '0.4'), sender = tester.k2)
@@ -426,9 +424,9 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID1, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert ordersFetcher.getOrder(orderID2, BID, market.address, YES) == [fix('0.7'), fix('0.5'), bytesToHexString(tester.a3), fix('0.7', '0.5'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert ordersFetcher.getOrder(fillOrderID, ASK, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.4'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
+    assert ordersFetcher.getOrder(orderID1, BID, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(orderID2, BID, market.address, YES) == [fix('0.7'), fix('0.5'), bytesToHexString(tester.a3), fix('0.7', '0.5'), 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(fillOrderID, ASK, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.4'), 0, str(bytearray(20)), str(bytearray(20)), 0]
 
 def test_one_ask_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
@@ -445,7 +443,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k2)
@@ -482,8 +480,8 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
         },
     ]
 
-    assert ordersFetcher.getOrder(orderID, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert fillOrderID == ZEROED_ORDER_ID
+    assert ordersFetcher.getOrder(orderID, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert fillOrderID == bytearray(20)
 
 def test_one_ask_on_books_buy_partial_order(contractsFixture):
     cash = contractsFixture.cash
@@ -499,7 +497,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('0.7', '0.6'), sender = tester.k2)
@@ -537,8 +535,8 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     ]
 
 
-    assert ordersFetcher.getOrder(orderID, ASK, market.address, YES) == [fix('0.5'), fix('0.6'), bytesToHexString(tester.a1), fix('0.5', '0.4'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert fillOrderID == ZEROED_ORDER_ID
+    assert ordersFetcher.getOrder(orderID, ASK, market.address, YES) == [fix('0.5'), fix('0.6'), bytesToHexString(tester.a1), fix('0.5', '0.4'), 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert fillOrderID == bytearray(20)
 
 def test_one_ask_on_books_buy_excess_order(contractsFixture):
     cash = contractsFixture.cash
@@ -554,7 +552,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('1.5', '0.6'), sender = tester.k2)
@@ -604,8 +602,8 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert ordersFetcher.getOrder(fillOrderID, BID, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.6'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
+    assert ordersFetcher.getOrder(orderID, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(fillOrderID, BID, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.6'), 0, str(bytearray(20)), str(bytearray(20)), 0]
 
 def test_two_asks_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
@@ -621,11 +619,11 @@ def test_two_asks_on_books_buy_both(contractsFixture):
     # create order 1
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
     assert cash.depositEther(value=fix('0.3', '0.4'), sender = tester.k3)
     assert cash.approve(makeOrder.address, fix('0.3', '0.4'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(ASK, fix('0.3'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(ASK, fix('0.3'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take best order
     assert cash.depositEther(value=fix('1.5', '0.6'), sender = tester.k2)
@@ -687,9 +685,9 @@ def test_two_asks_on_books_buy_both(contractsFixture):
         },
     ]
 
-    assert ordersFetcher.getOrder(orderID1, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert ordersFetcher.getOrder(orderID2, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert fillOrderID == ZEROED_ORDER_ID
+    assert ordersFetcher.getOrder(orderID1, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(orderID2, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert fillOrderID == bytearray(20)
 
 def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     cash = contractsFixture.cash
@@ -705,11 +703,11 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     # create order 1
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
     assert cash.depositEther(value=fix('0.7', '0.4'), sender = tester.k3)
     assert cash.approve(makeOrder.address, fix('0.7', '0.4'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(ASK, fix('0.7'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(ASK, fix('0.7'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take best order
     assert cash.depositEther(value=fix('1.5', '0.6'), sender = tester.k2)
@@ -771,9 +769,9 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
         },
     ]
 
-    assert ordersFetcher.getOrder(orderID1, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert ordersFetcher.getOrder(orderID2, ASK, market.address, YES) == [fix('0.4'), fix('0.6'), bytesToHexString(tester.a3), fix('0.4', '0.4'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert fillOrderID == ZEROED_ORDER_ID
+    assert ordersFetcher.getOrder(orderID1, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(orderID2, ASK, market.address, YES) == [fix('0.4'), fix('0.6'), bytesToHexString(tester.a3), fix('0.4', '0.4'), 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert fillOrderID == bytearray(20)
 
 def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     cash = contractsFixture.cash
@@ -789,11 +787,11 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     # create order 1
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
     assert cash.depositEther(value=fix('0.7', '0.4'), sender = tester.k3)
     assert cash.approve(makeOrder.address, fix('0.7', '0.4'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(ASK, fix('0.7'), fix('0.7'), market.address, YES, ZEROED_ORDER_ID, ZEROED_ORDER_ID, tradeGroupID, sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(ASK, fix('0.7'), fix('0.7'), market.address, YES, longTo20Bytes(0), longTo20Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take/make
     assert cash.depositEther(value=fix('1.5', '0.6'), sender = tester.k2)
@@ -843,6 +841,6 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID1, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert ordersFetcher.getOrder(orderID2, ASK, market.address, YES) == [fix('0.7'), fix('0.7'), bytesToHexString(tester.a3), fix('0.7', '0.3'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
-    assert ordersFetcher.getOrder(fillOrderID, BID, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.6'), 0, ZEROED_ORDER_ID, ZEROED_ORDER_ID, 0]
+    assert ordersFetcher.getOrder(orderID1, ASK, market.address, YES) == [0, 0, '0x0000000000000000000000000000000000000000', 0, 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(orderID2, ASK, market.address, YES) == [fix('0.7'), fix('0.7'), bytesToHexString(tester.a3), fix('0.7', '0.3'), 0, str(bytearray(20)), str(bytearray(20)), 0]
+    assert ordersFetcher.getOrder(fillOrderID, BID, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.6'), 0, str(bytearray(20)), str(bytearray(20)), 0]

@@ -9,7 +9,6 @@ import 'ROOT/reporting/ReportingToken.sol';
 import 'ROOT/reporting/ReportingWindow.sol';
 import 'ROOT/reporting/DisputeBondToken.sol';
 import 'ROOT/reporting/RegistrationToken.sol';
-import 'ROOT/trading/Cash.sol';
 
 
 contract IShareToken is ERC20, Typed {

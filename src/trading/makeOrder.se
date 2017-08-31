@@ -46,7 +46,7 @@ def publicMakeOrder(type: uint8, attoshares: uint256, displayPrice: int256, mark
     self.controller.stopInEmergency()
     orderID = self.makeOrder(msg.sender, type, attoshares, displayPrice, market, outcome, betterOrderID, worseOrderID, tradeGroupID)
     MUTEX.release()
-    return(orderID:bytes20)
+    return(orderID : bytes20)
 
 # @internal
 def makeOrder(sender: address, type: uint8, attoshares: uint256, displayPrice: int256, market: address, outcome: uint8, betterOrderID: bytes20, worseOrderID: bytes20, tradeGroupID: uint256):
@@ -70,11 +70,11 @@ def makeOrder(sender: address, type: uint8, attoshares: uint256, displayPrice: i
     fxpMoneyEscrowed = escrow[0]
     fxpSharesEscrowed = escrow[1]
 
-    orderID = ORDERS.getOrderIdHash(type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
+    orderID = ORDERS.getOrderId(type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
     require(ORDERS.getAmount(orderID, type, market, outcome) == 0)
     orderID = ORDERS.saveOrder(orderID, type, market, attoshares, displayPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID, tx.gasprice)
 
-    return(orderID:bytes20)
+    return(orderID : bytes20)
 
 # @private
 def placeBid(sender: address, attoshares: uint256, attotokensPerShare: int256, market: address, outcome: uint8):
