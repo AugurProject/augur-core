@@ -348,3 +348,21 @@ def sessionFixture():
 def contractsFixture(sessionFixture):
     sessionFixture.resetSnapshot()
     return sessionFixture
+
+@fixture(scope="session")
+def fundedRepSnapshot(sessionFixture):
+    legacyRepContract = sessionFixture.contracts['LegacyRepContract']
+    legacyRepContract.faucet(11 * 10**6 * 10**18)
+    branch = sessionFixture.branch
+
+    # Get the reputation token for this branch and migrate legacy REP to it
+    reputationToken = sessionFixture.applySignature('ReputationToken', branch.getReputationToken())
+    legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
+    reputationToken.migrateFromLegacyRepContract()
+
+    return sessionFixture.chain.snapshot()
+
+@fixture
+def fundedRepFixture(sessionFixture, fundedRepSnapshot):
+    sessionFixture.chain.revert(fundedRepSnapshot)
+    return sessionFixture

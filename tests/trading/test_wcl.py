@@ -13,15 +13,15 @@ NO = 0
 BID = 1
 ASK = 2
 
-def test_make_ask_with_shares_take_with_shares(contractsFixture):
-    completeSets = contractsFixture.contracts['completeSets']
-    makeOrder = contractsFixture.contracts['makeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_make_ask_with_shares_take_with_shares(fundedRepFixture):
+    completeSets = fundedRepFixture.contracts['completeSets']
+    makeOrder = fundedRepFixture.contracts['makeOrder']
+    takeOrder = fundedRepFixture.contracts['takeOrder']
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
 
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
     completeSetFees = fix('1.2', '0.01') + fix('1.2', '0.0001')
 
     # 1. both accounts buy a complete set
@@ -57,15 +57,15 @@ def test_make_ask_with_shares_take_with_shares(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('1.2')
     assert noShareToken.balanceOf(tester.a2) == fix('0')
 
-def test_make_ask_with_shares_take_with_cash(contractsFixture):
-    completeSets = contractsFixture.contracts['completeSets']
-    makeOrder = contractsFixture.contracts['makeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_make_ask_with_shares_take_with_cash(fundedRepFixture):
+    completeSets = fundedRepFixture.contracts['completeSets']
+    makeOrder = fundedRepFixture.contracts['makeOrder']
+    takeOrder = fundedRepFixture.contracts['takeOrder']
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
 
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. buy a complete set with account 1
     assert cash.depositEther(value=fix('1.2'), sender = tester.k1)
@@ -95,15 +95,15 @@ def test_make_ask_with_shares_take_with_cash(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('1.2')
     assert noShareToken.balanceOf(tester.a2) == fix('0')
 
-def test_make_ask_with_cash_take_with_shares(contractsFixture):
-    completeSets = contractsFixture.contracts['completeSets']
-    makeOrder = contractsFixture.contracts['makeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_make_ask_with_cash_take_with_shares(fundedRepFixture):
+    completeSets = fundedRepFixture.contracts['completeSets']
+    makeOrder = fundedRepFixture.contracts['makeOrder']
+    takeOrder = fundedRepFixture.contracts['takeOrder']
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
 
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. buy complete sets with account 2
     assert cash.depositEther(value=fix('1.2'), sender = tester.k2)
@@ -133,15 +133,15 @@ def test_make_ask_with_cash_take_with_shares(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('1.2')
     assert noShareToken.balanceOf(tester.a2) == fix('0')
 
-def test_make_ask_with_cash_take_with_cash(contractsFixture):
-    completeSets = contractsFixture.contracts['completeSets']
-    makeOrder = contractsFixture.contracts['makeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_make_ask_with_cash_take_with_cash(fundedRepFixture):
+    completeSets = fundedRepFixture.contracts['completeSets']
+    makeOrder = fundedRepFixture.contracts['makeOrder']
+    takeOrder = fundedRepFixture.contracts['takeOrder']
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
 
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. make ASK order for YES with cash escrowed
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
@@ -164,15 +164,15 @@ def test_make_ask_with_cash_take_with_cash(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('1.2')
     assert noShareToken.balanceOf(tester.a2) == fix('0')
 
-def test_make_bid_with_shares_take_with_shares(contractsFixture):
-    completeSets = contractsFixture.contracts['completeSets']
-    makeOrder = contractsFixture.contracts['makeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_make_bid_with_shares_take_with_shares(fundedRepFixture):
+    completeSets = fundedRepFixture.contracts['completeSets']
+    makeOrder = fundedRepFixture.contracts['makeOrder']
+    takeOrder = fundedRepFixture.contracts['takeOrder']
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
 
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
     completeSetFees = fix('1.2', '0.01') + fix('1.2', '0.0001')
 
     # 1. buy complete sets with both accounts
@@ -212,15 +212,15 @@ def test_make_bid_with_shares_take_with_shares(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('0')
     assert noShareToken.balanceOf(tester.a2) == fix('1.2')
 
-def test_make_bid_with_shares_take_with_cash(contractsFixture):
-    completeSets = contractsFixture.contracts['completeSets']
-    makeOrder = contractsFixture.contracts['makeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_make_bid_with_shares_take_with_cash(fundedRepFixture):
+    completeSets = fundedRepFixture.contracts['completeSets']
+    makeOrder = fundedRepFixture.contracts['makeOrder']
+    takeOrder = fundedRepFixture.contracts['takeOrder']
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
 
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. buy complete sets with account 1
     assert cash.depositEther(value=fix('1.2'), sender = tester.k1) == 1
@@ -250,15 +250,15 @@ def test_make_bid_with_shares_take_with_cash(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('0')
     assert noShareToken.balanceOf(tester.a2) == fix('1.2')
 
-def test_make_bid_with_cash_take_with_shares(contractsFixture):
-    completeSets = contractsFixture.contracts['completeSets']
-    makeOrder = contractsFixture.contracts['makeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_make_bid_with_cash_take_with_shares(fundedRepFixture):
+    completeSets = fundedRepFixture.contracts['completeSets']
+    makeOrder = fundedRepFixture.contracts['makeOrder']
+    takeOrder = fundedRepFixture.contracts['takeOrder']
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
 
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. buy complete sets with account 2
     assert cash.depositEther(value=fix('1.2'), sender = tester.k2)
@@ -288,15 +288,15 @@ def test_make_bid_with_cash_take_with_shares(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('0')
     assert noShareToken.balanceOf(tester.a2) == fix('1.2')
 
-def test_make_bid_with_cash_take_with_cash(contractsFixture):
-    completeSets = contractsFixture.contracts['completeSets']
-    makeOrder = contractsFixture.contracts['makeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_make_bid_with_cash_take_with_cash(fundedRepFixture):
+    completeSets = fundedRepFixture.contracts['completeSets']
+    makeOrder = fundedRepFixture.contracts['makeOrder']
+    takeOrder = fundedRepFixture.contracts['takeOrder']
+    cash = fundedRepFixture.cash
+    market = fundedRepFixture.binaryMarket
 
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
 
     # 1. make BID order for YES with cash escrowed
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1) == 1
@@ -327,34 +327,34 @@ def placeholder_context():
 @mark.parametrize('type,outcome,displayPrice,orderSize,makerYesShares,makerNoShares,makerTokens,takeSize,takerYesShares,takerNoShares,takerTokens,expectMakeRaise,expectedMakerYesShares,expectedMakerNoShares,expectedMakerTokens,expectTakeRaise,expectedTakerYesShares,expectedTakerNoShares,expectedTakerTokens,fixture', [
     # | ------ ORDER ------ |   | ------ MAKER START ------ |   | ------ TAKER START ------ |  | ------- MAKER FINISH -------  |    | ------- TAKER FINISH -------  |
     #   type,outcome,  price,   size,    yes,     no,   tkns,   size,    yes,     no,   tkns,  raise,    yes,     no,      tkns,    raise,    yes,     no,      tkns,
-    (    BID,    YES,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',  '1.2',    '0',    '0',  False,  '1.2',    '0',       '0',    False,    '0',    '0',    '0.72', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '1.2',    '0',  '1.2',    '0',  '1.2',  '1.2',    '0',    '0',  False,    '0',    '0','0.475152',    False,    '0',    '0','0.712728', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',    '0', '0.48',  False,  '1.2',    '0',       '0',    False,    '0',  '1.2',       '0', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '1.2',    '0',  '1.2',    '0',  '1.2',    '0',    '0', '0.48',  False,    '0',    '0',    '0.48',    False,    '0',  '1.2',       '0', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',  '1.2',    '0',    '0',  False,  '1.2',    '0',       '0',    False,    '0',    '0',    '0.72', lazy_fixture('fundedRepFixture')),
+    (    BID,    YES,  '0.6',  '1.2',    '0',  '1.2',    '0',  '1.2',  '1.2',    '0',    '0',  False,    '0',    '0','0.475152',    False,    '0',    '0','0.712728', lazy_fixture('fundedRepFixture')),
+    (    BID,    YES,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',    '0', '0.48',  False,  '1.2',    '0',       '0',    False,    '0',  '1.2',       '0', lazy_fixture('fundedRepFixture')),
+    (    BID,    YES,  '0.6',  '1.2',    '0',  '1.2',    '0',  '1.2',    '0',    '0', '0.48',  False,    '0',    '0',    '0.48',    False,    '0',  '1.2',       '0', lazy_fixture('fundedRepFixture')),
 
-    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',  '2.4',    '0',    '0',  False,  '1.2',    '0','0.475152',    False,    '0',    '0','1.432728', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',    '0',    '0', '0.96',  False,  '1.2',    '0',    '0.48',    False,    '0',  '2.4',       '0', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '2.4',    '0',    '0', '1.44',  '2.4',  '1.2',    '0', '0.48',  False,  '2.4',    '0',       '0',    False,    '0',  '1.2',    '0.72', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '2.4',    '0',  '2.4',    '0',  '2.4',  '1.2',    '0', '0.48',  False,    '0',    '0','0.955152',    False,    '0',  '1.2','0.712728', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',  '2.4',    '0',    '0',  False,  '1.2',    '0','0.475152',    False,    '0',    '0','1.432728', lazy_fixture('fundedRepFixture')),
+    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',    '0',    '0', '0.96',  False,  '1.2',    '0',    '0.48',    False,    '0',  '2.4',       '0', lazy_fixture('fundedRepFixture')),
+    (    BID,    YES,  '0.6',  '2.4',    '0',    '0', '1.44',  '2.4',  '1.2',    '0', '0.48',  False,  '2.4',    '0',       '0',    False,    '0',  '1.2',    '0.72', lazy_fixture('fundedRepFixture')),
+    (    BID,    YES,  '0.6',  '2.4',    '0',  '2.4',    '0',  '2.4',  '1.2',    '0', '0.48',  False,    '0',    '0','0.955152',    False,    '0',  '1.2','0.712728', lazy_fixture('fundedRepFixture')),
 
-    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',  '1.2',    '0', '0.48',  False,  '1.2',    '0','0.475152',    False,    '0',  '1.2','0.712728', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '2.4',    '0',  '1.2', '0.72',  '2.4',  '1.2',    '0', '0.48',  False,  '1.2',    '0','0.475152',    False,    '0',  '1.2','0.712728', lazy_fixture('fundedRepFixture')),
 
-    (    BID,     NO,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',  '1.2',    '0',  False,    '0',  '1.2',       '0',    False,    '0',    '0',    '0.72', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',  '1.2',    '0',  False,    '0',    '0','0.475152',    False,    '0',    '0','0.712728', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',    '0', '0.48',  False,    '0',  '1.2',       '0',    False,  '1.2',    '0',       '0', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',    '0', '0.48',  False,    '0',    '0',    '0.48',    False,  '1.2',    '0',       '0', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',  '1.2',    '0',  False,    '0',  '1.2',       '0',    False,    '0',    '0',    '0.72', lazy_fixture('fundedRepFixture')),
+    (    BID,     NO,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',  '1.2',    '0',  False,    '0',    '0','0.475152',    False,    '0',    '0','0.712728', lazy_fixture('fundedRepFixture')),
+    (    BID,     NO,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',    '0',    '0', '0.48',  False,    '0',  '1.2',       '0',    False,  '1.2',    '0',       '0', lazy_fixture('fundedRepFixture')),
+    (    BID,     NO,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',    '0', '0.48',  False,    '0',    '0',    '0.48',    False,  '1.2',    '0',       '0', lazy_fixture('fundedRepFixture')),
 
-    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',  '2.4',    '0',  False,    '0',  '1.2','0.475152',    False,    '0',    '0','1.432728', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',    '0', '0.96',  False,    '0',  '1.2',    '0.48',    False,  '2.4',    '0',       '0', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '2.4',    '0',    '0', '1.44',  '2.4',    '0',  '1.2', '0.48',  False,    '0',  '2.4',       '0',    False,  '1.2',    '0',    '0.72', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '2.4',  '2.4',    '0',    '0',  '2.4',    '0',  '1.2', '0.48',  False,    '0',    '0','0.955152',    False,  '1.2',    '0','0.712728', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',  '2.4',    '0',  False,    '0',  '1.2','0.475152',    False,    '0',    '0','1.432728', lazy_fixture('fundedRepFixture')),
+    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',    '0', '0.96',  False,    '0',  '1.2',    '0.48',    False,  '2.4',    '0',       '0', lazy_fixture('fundedRepFixture')),
+    (    BID,     NO,  '0.6',  '2.4',    '0',    '0', '1.44',  '2.4',    '0',  '1.2', '0.48',  False,    '0',  '2.4',       '0',    False,  '1.2',    '0',    '0.72', lazy_fixture('fundedRepFixture')),
+    (    BID,     NO,  '0.6',  '2.4',  '2.4',    '0',    '0',  '2.4',    '0',  '1.2', '0.48',  False,    '0',    '0','0.955152',    False,  '1.2',    '0','0.712728', lazy_fixture('fundedRepFixture')),
 
-    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',  '1.2', '0.48',  False,    '0',  '1.2','0.475152',    False,  '1.2',    '0','0.712728', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '2.4',  '1.2',    '0', '0.72',  '2.4',    '0',  '1.2', '0.48',  False,    '0',  '1.2','0.475152',    False,  '1.2',    '0','0.712728', lazy_fixture('fundedRepFixture')),
 
-    (    ASK,    YES,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',    '0', '0.72',  False,    '0',    '0',    '0.72',    False,  '1.2',    '0',       '0', lazy_fixture('contractsFixture')),
-    (    ASK,    YES,  '0.6',  '1.2',    '0',    '0', '0.48',  '1.2',    '0',    '0', '0.72',  False,    '0',  '1.2',       '0',    False,  '1.2',    '0',       '0', lazy_fixture('contractsFixture')),
-    (    ASK,    YES,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',  '1.2',    '0',  False,    '0',    '0','0.712728',    False,    '0',    '0','0.475152', lazy_fixture('contractsFixture')),
-    (    ASK,    YES,  '0.6',  '1.2',    '0',    '0', '0.48',  '1.2',    '0',  '1.2',    '0',  False,    '0',  '1.2',       '0',    False,    '0',    '0',    '0.48', lazy_fixture('contractsFixture')),
+    (    ASK,    YES,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',    '0', '0.72',  False,    '0',    '0',    '0.72',    False,  '1.2',    '0',       '0', lazy_fixture('fundedRepFixture')),
+    (    ASK,    YES,  '0.6',  '1.2',    '0',    '0', '0.48',  '1.2',    '0',    '0', '0.72',  False,    '0',  '1.2',       '0',    False,  '1.2',    '0',       '0', lazy_fixture('fundedRepFixture')),
+    (    ASK,    YES,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',  '1.2',    '0',  False,    '0',    '0','0.712728',    False,    '0',    '0','0.475152', lazy_fixture('fundedRepFixture')),
+    (    ASK,    YES,  '0.6',  '1.2',    '0',    '0', '0.48',  '1.2',    '0',  '1.2',    '0',  False,    '0',  '1.2',       '0',    False,    '0',    '0',    '0.48', lazy_fixture('fundedRepFixture')),
 ])
 def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, makerNoShares, makerTokens, takeSize, takerYesShares, takerNoShares, takerTokens, expectMakeRaise, expectedMakerYesShares, expectedMakerNoShares, expectedMakerTokens, expectTakeRaise, expectedTakerYesShares, expectedTakerNoShares, expectedTakerTokens, fixture):
     # TODO: add support for wider range markets
