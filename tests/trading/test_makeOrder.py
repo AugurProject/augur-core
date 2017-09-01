@@ -119,8 +119,8 @@ def test_makeOrder_failure(contractsFixture):
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['completeSets']
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
 
     with raises(TransactionFailed):
         makeOrder.makeOrder(tester.a1, ASK, fix('1'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
@@ -174,8 +174,8 @@ def test_ask_withPartialShares(contractsFixture):
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['completeSets']
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
     logs = []
 
     # buy 1.2 complete sets

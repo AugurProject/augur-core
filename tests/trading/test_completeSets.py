@@ -18,8 +18,8 @@ def test_publicBuyCompleteSets(fundedRepFixture):
     market = fundedRepFixture.binaryMarket
     completeSets = fundedRepFixture.contracts['completeSets']
     orders = fundedRepFixture.contracts['Orders']
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
     logs = []
 
     assert not cash.balanceOf(tester.a1)
@@ -81,8 +81,8 @@ def test_publicSellCompleteSets(fundedRepFixture):
     market = fundedRepFixture.binaryMarket
     completeSets = fundedRepFixture.contracts['completeSets']
     orders = fundedRepFixture.contracts['Orders']
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
     cash.transfer(0, cash.balanceOf(tester.a9), sender = tester.k9)
     logs = []
 

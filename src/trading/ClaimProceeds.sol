@@ -1,7 +1,6 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/Controller.sol';
-import 'ROOT/Mutex.sol';
 import 'ROOT/extensions/MarketFeeCalculator.sol';
 import 'ROOT/legacy_reputation/SafeMath.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';

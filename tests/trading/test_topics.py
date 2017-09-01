@@ -14,8 +14,8 @@ def test_topics(fundedRepFixture):
     trade = fundedRepFixture.contracts['trade']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
 
     assert topics.count() == 0
     assert topics.updatePopularity('Politics'.ljust(32, '\x00'), 10)

@@ -9,7 +9,7 @@ import 'ROOT/Controller.sol';
 
 contract ShareTokenFactory {
     function createShareToken(Controller _controller, Market _market, uint8 _outcome) public returns (IShareToken) {
-        Delegator _delegator = new Delegator(_controller, "shareToken");
+        Delegator _delegator = new Delegator(_controller, "ShareToken");
         IShareToken _shareToken = IShareToken(_delegator);
         _shareToken.initialize(_market, _outcome);
         return _shareToken;
