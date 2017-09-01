@@ -22,11 +22,15 @@ contract IShareToken is ERC20, Typed {
 }
 
 
-contract ITopics {
-    function initialize() public returns (bool);
-    function updatePopularity(bytes32 topic, uint256 amount) public returns (bool);
-    function getPopularity(bytes32 topic) constant returns (uint256);
-    function getTopicByOffset(uint256 offset) constant returns (bytes32);
-    function getPopularityByOffset(uint256 offset) constant returns (uint256);
-    function count() constant returns (uint256);
+contract IIterableMap {
+    function initialize(address _owner) public returns (bool);
+    function add(bytes32, uint256) public returns (bool);
+    function update(bytes32, uint256) public returns (bool);
+    function addOrUpdate(bytes32, uint256) public returns (bool);
+    function remove(bytes32) public returns (bool);
+    function getByKeyOrZero(bytes32) public constant returns (uint256);
+    function getByKey(bytes32) public constant returns (uint256);
+    function getByOffset(uint256) public constant returns (bytes32);
+    function contains(bytes32) public constant returns (bool);
+    function count() public constant returns (uint256);
 }

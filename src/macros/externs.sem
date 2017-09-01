@@ -14,7 +14,7 @@ extern sortedLinkedListFactoryExtern: [createSortedLinkedList:[address,address]:
 extern stackFactoryExtern: [createStack:[address,address]:int256, getlastStack:[]:int256]
 extern topicsFactoryExtern: [createTopics:[address]:int256, getLastTopics:[]:int256]
 extern delegatorExtern: [setup:[int256,int256]:int256]
-extern iterableMapExtern: [add:[int256,int256]:int256, addOrUpdate:[int256,int256]:int256, contains:[int256]:int256, count:[]:int256, getByKey:[int256]:int256, getByKeyOrZero:[int256]:int256, getByOffset:[int256]:int256, initialize:[address]:int256, remove:[int256]:int256, update:[int256,int256]:int256]
+extern iterableMapExtern: [add:[bytes32,uint256]:int256, addOrUpdate:[bytes32,uint256]:int256, contains:[bytes32]:int256, count:[]:uint256, getByKey:[bytes32]:uint256, getByKeyOrZero:[bytes32]:uint256, getByOffset:[uint256]:bytes32, initialize:[address]:int256, remove:[bytes32]:int256, update:[bytes32,uint256]:int256]
 extern mapExtern: [addMapItem:[int256,int256]:int256, contains:[int256]:int256, count:[]:int256, getValue:[int256]:int256, getValueOrZero:[int256]:int256, initialize:[address]:int256, remove:[int256]:int256]
 extern orderedSetExtern: [assertContains:[int256]:_, assertEmpty:[]:_, assertInvariants:[]:_, assertNotEmpty:[]:_, contains:[int256]:int256, getHead:[]:int256, getNext:[int256]:int256, getPrev:[int256]:int256, initialize:[address]:int256, insertAfter:[int256,int256]:int256, insertBefore:[int256,int256]:int256, pop:[]:int256, push:[int256]:int256]
 extern setExtern: [getTypeName:[]:bytes32, addSetItem:[address]:int256, contains:[address]:int256, count:[]:uint256, initialize:[address]:int256, remove:[address]:int256]
