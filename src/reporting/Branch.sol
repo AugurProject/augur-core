@@ -14,6 +14,7 @@ import 'ROOT/reporting/IReportingToken.sol';
 import 'ROOT/reporting/IDisputeBond.sol';
 import 'ROOT/reporting/IRegistrationToken.sol';
 import 'ROOT/reporting/IReportingWindow.sol';
+import 'ROOT/trading/Topics.sol';
 
 
 contract Branch is DelegationTarget, Typed, Initializable, IBranch {
@@ -60,7 +61,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return reputationToken;
     }
 
-    function getTopics() constant returns (ITopics) {
+    function getTopics() constant returns (Topics) {
         return topics;
     }
 

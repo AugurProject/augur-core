@@ -8,7 +8,7 @@ YES = 1
 
 def test_topics(fundedRepFixture):
     branch = fundedRepFixture.branch
-    topics = fundedRepFixture.applySignature('topics', branch.getTopics())
+    topics = fundedRepFixture.applySignature('Topics', branch.getTopics())
     market = fundedRepFixture.binaryMarket
     cash = fundedRepFixture.cash
     trade = fundedRepFixture.contracts['trade']
@@ -49,6 +49,6 @@ def test_topics(fundedRepFixture):
         topics.getTopicByOffset(0): topics.getPopularityByOffset(0),
         topics.getTopicByOffset(1): topics.getPopularityByOffset(1),
     } == {
-        bytesToLong('Politics'.ljust(32, '\x00')): 10,
-        bytesToLong('Sports'.ljust(32, '\x00')): fix('2.4'),
+        'Politics'.ljust(32, '\x00'): 10,
+        'Sports'.ljust(32, '\x00'): fix('2.4'),
     }

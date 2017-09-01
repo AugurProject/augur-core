@@ -21,7 +21,7 @@ def initialize(owner: address):
     self.owner = owner
     return(1)
 
-def add(key, value):
+def add(key: bytes32, value: uint256):
     require(not self.contains(key))
     self.itemsArray[self.numberOfItems] = key
     self.itemsMap[key].hasValue = 1
@@ -30,19 +30,19 @@ def add(key, value):
     self.numberOfItems += 1
     return 1
 
-def update(key, value):
+def update(key: bytes32, value: uint256):
     require(self.contains(key))
     self.itemsMap[key].value = value
     return 1
 
-def addOrUpdate(key, value):
+def addOrUpdate(key: bytes32, value: uint256):
     if not self.contains(key):
         self.add(key, value)
     else:
         self.update(key, value)
     return 1
 
-def remove(key):
+def remove(key: bytes32):
     require(self.contains(key))
     keyRemovedOffset = self.itemsMap[key].offset
     self.itemsArray[keyRemovedOffset] = 0
@@ -58,18 +58,18 @@ def remove(key):
     self.numberOfItems -= 1
     return 1
 
-def getByKeyOrZero(key):
+def getByKeyOrZero(key: bytes32):
     return self.itemsMap[key].value
 
-def getByKey(key):
+def getByKey(key: bytes32):
     require(self.itemsMap[key].hasValue)
     return self.itemsMap[key].value
 
-def getByOffset(offset):
+def getByOffset(offset: uint256):
     require(0 <= offset and offset < self.numberOfItems)
     return self.itemsArray[offset]
 
-def contains(key):
+def contains(key: bytes32):
     if self.itemsMap[key].hasValue:
         return 1
     else:
