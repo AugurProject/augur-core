@@ -27,7 +27,7 @@ def test_cancelBid(contractsFixture):
     market = contractsFixture.binaryMarket
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
-    cancelOrder = contractsFixture.contracts['cancelOrder']
+    cancelOrder = contractsFixture.contracts['CancelOrder']
 
     orderType = BID
     fxpAmount = fix('1')
@@ -47,7 +47,7 @@ def test_cancelBid(contractsFixture):
     assert orderID, "Order ID should be non-zero"
     assert ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
 
-    assert(cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "publicCancelOrder should succeed"
+    assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
     assert(ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "Canceled order elements should all be zero"
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
@@ -61,7 +61,7 @@ def test_cancelAsk(contractsFixture):
     market = contractsFixture.binaryMarket
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
-    cancelOrder = contractsFixture.contracts['cancelOrder']
+    cancelOrder = contractsFixture.contracts['CancelOrder']
 
     orderType = ASK
     fxpAmount = fix('1')
@@ -81,7 +81,7 @@ def test_cancelAsk(contractsFixture):
     assert(orderID != bytearray(32)), "Order ID should be non-zero"
     assert ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
 
-    assert(cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "publicCancelOrder should succeed"
+    assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
     assert(ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "Canceled order elements should all be zero"
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
@@ -95,7 +95,7 @@ def test_exceptions(contractsFixture):
     market = contractsFixture.binaryMarket
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
-    cancelOrder = contractsFixture.contracts['cancelOrder']
+    cancelOrder = contractsFixture.contracts['CancelOrder']
 
     orderType = BID
     fxpAmount = fix('1')
@@ -109,19 +109,13 @@ def test_exceptions(contractsFixture):
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1)
     assert(orderID != bytearray(32)), "Order ID should be non-zero"
 
-    # Permissions exceptions
-    with raises(TransactionFailed):
-        cancelOrder.cancelOrder(tester.a1, orderID, orderType, market.address, outcomeID, sender=tester.k1)
-    with raises(TransactionFailed):
-        cancelOrder.refundOrder(tester.a1, orderType, 0, fxpAmount, market.address, outcomeID, sender=tester.k1)
-
     # cancelOrder exceptions
     with raises(TransactionFailed):
-        cancelOrder.publicCancelOrder(longTo32Bytes(0), orderType, market.address, outcomeID, sender=tester.k1)
+        cancelOrder.cancelOrder(longTo32Bytes(0), orderType, market.address, outcomeID, sender=tester.k1)
     with raises(TransactionFailed):
-        cancelOrder.publicCancelOrder(longTo32Bytes(1), orderType, market.address, outcomeID, sender=tester.k1)
+        cancelOrder.cancelOrder(longTo32Bytes(1), orderType, market.address, outcomeID, sender=tester.k1)
     with raises(TransactionFailed):
-        cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k2)
-    assert(cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "publicCancelOrder should succeed"
+        cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k2)
+    assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
     with raises(TransactionFailed):
-        cancelOrder.publicCancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1)
+        cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1)

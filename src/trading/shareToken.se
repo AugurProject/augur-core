@@ -5,7 +5,7 @@ data controller
 data controllerLookupName
 #####
 
-macro CANCEL_ORDER: self.controller.lookup('cancelOrder')
+macro CANCEL_ORDER: self.controller.lookup('CancelOrder')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
