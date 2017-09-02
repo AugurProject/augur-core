@@ -19,13 +19,12 @@ def acquireLongShares(fundedRepFixture, market, outcome, amount, approvalAddress
 
     cash = fundedRepFixture.cash
     shareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(outcome))
-    completeSets = fundedRepFixture.contracts['completeSets']
+    completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
 
-    cashRequired = amount * market.getCompleteSetCostInAttotokens() / 10**18
-    assert cash.depositEther(value=cashRequired, sender = sender)
-    assert cash.approve(completeSets.address, cashRequired, sender = sender)
+    assert cash.depositEther(value=amount, sender = sender)
+    assert cash.approve(completeSets.address, amount, sender = sender)
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
     assert shareToken.approve(approvalAddress, amount, sender = sender)
     for otherOutcome in range(0, market.getNumberOfOutcomes()):
@@ -38,19 +37,44 @@ def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddr
 
     cash = fundedRepFixture.cash
     shareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(outcome))
-    completeSets = fundedRepFixture.contracts['completeSets']
+    completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
 
-    cashRequired = amount * market.getCompleteSetCostInAttotokens() / 10**18
-    assert cash.depositEther(value=cashRequired, sender = sender)
-    assert cash.approve(completeSets.address, cashRequired, sender = sender)
+    assert cash.depositEther(value=amount, sender = sender)
+    assert cash.approve(completeSets.address, amount, sender = sender)
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
     assert shareToken.transfer(0, amount, sender = sender)
     for otherOutcome in range(0, market.getNumberOfOutcomes()):
         if otherOutcome == outcome: continue
         otherShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(otherOutcome))
         assert otherShareToken.approve(approvalAddress, amount, sender = sender)
+
+def finalizeMarket(headState, market, payoutNumerators):
+    # set timestamp to after market end
+    headState.timestamp = market.getEndTime() + 1
+    # have tester.a0 submit automated report
+    market.automatedReport(payoutNumerators, sender = tester.k0)
+    # set timestamp to after automated dispute end
+    headState.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
+    # finalize the market
+    assert market.tryFinalize()
+    # set timestamp to 3 days later (waiting period)
+    headState.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
+
+def test_helpers(fundedRepFixture):
+    market = fundedRepFixture.scalarMarket
+    claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
+    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,40*10**18])
+
+    assert claimProceeds.calculateMarketCreatorFee(market.address, fix('3')) == fix('0.03')
+    assert claimProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
+    assert claimProceeds.calculateProceeds(market.address, market.getFinalWinningReportingToken(), YES, fix('7')) == fix('7')
+    assert claimProceeds.calculateProceeds(market.address, market.getFinalWinningReportingToken(), NO, fix('11')) == fix('0')
+    (shareholderShare, creatorShare, reporterShare) = claimProceeds.divideUpWinnings(market.address, market.getFinalWinningReportingToken(), YES, fix('13'))
+    assert reporterShare == fix('13', '0.0001')
+    assert creatorShare == fix('13', '0.01')
+    assert shareholderShare == fix('13', '0.9899')
 
 def test_redeem_shares_in_binary_market(fundedRepFixture):
     cash = fundedRepFixture.cash
@@ -66,16 +90,7 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     acquireLongShares(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k1)
     # get NO shares with a2
     acquireShortShareSet(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
-    # set timestamp to after market end
-    fundedRepFixture.chain.head_state.timestamp = market.getEndTime() + 1
-    # have tester.a0 submit automated report
-    market.automatedReport([0, 2], sender = tester.k0)
-    # set timestamp to after automated dispute end
-    fundedRepFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
-    # finalize the market
-    assert market.tryFinalize()
-    # set timestamp to 3 days later (waiting period)
-    fundedRepFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
+    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,2])
 
     # redeem shares with a1
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
@@ -105,16 +120,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     acquireLongShares(fundedRepFixture, market, 2, fix('1.2'), claimProceeds.address, sender = tester.k1)
     # get short shares with a2
     acquireShortShareSet(fundedRepFixture, market, 2, fix('1.2'), claimProceeds.address, sender = tester.k2)
-    # set timestamp to after market end
-    fundedRepFixture.chain.head_state.timestamp = market.getEndTime() + 1
-    # have a0 submit automated report
-    market.automatedReport([0, 0, 3], sender = tester.k0)
-    # set timestamp to after automated dispute end
-    fundedRepFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
-    # finalize the market
-    assert market.tryFinalize()
-    # set timestamp to 3 days later (waiting period)
-    fundedRepFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
+    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,0,3])
 
     # redeem shares with a1
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
@@ -137,7 +143,7 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
     yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
-    expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
+    expectedValue = fix('1.2')
     expectedFees = expectedValue * 0.0101
     expectedPayout = expectedValue - expectedFees
 
@@ -145,16 +151,7 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     acquireLongShares(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k1)
     # get NO shares with a2
     acquireShortShareSet(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
-    # set timestamp to after market end
-    fundedRepFixture.chain.head_state.timestamp = market.getEndTime() + 1
-    # have tester.a0 submit automated report (75% high, 25% low, range -10*10^18 to 30*10^18)
-    market.automatedReport([10**19, 3*10**19], sender = tester.k0)
-    # set timestamp to after automated dispute end
-    fundedRepFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
-    # finalize the market
-    assert market.tryFinalize()
-    # set timestamp to 3 days later (waiting period)
-    fundedRepFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
+    finalizeMarket(fundedRepFixture.chain.head_state, market, [10**19, 3*10**19])
 
     # redeem shares with a1
     claimProceeds.claimProceeds(market.address, sender = tester.k1)

@@ -248,7 +248,7 @@ class ContractsFixture:
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Mutex','Cash','completeSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','CancelOrder','trade','ClaimProceeds','OrdersFetcher']
+        contractsToInitialize = ['Mutex','Cash','CompleteSets','makeOrder','takeBidOrder','takeAskOrder','takeOrder','CancelOrder','trade','ClaimProceeds','OrdersFetcher']
         for contractName in contractsToInitialize:
             if getattr(self.contracts[contractName], "setController", None):
                 self.contracts[contractName].setController(self.controller.address)
@@ -350,6 +350,7 @@ def contractsFixture(sessionFixture):
 
 @fixture(scope="session")
 def fundedRepSnapshot(sessionFixture):
+    sessionFixture.resetSnapshot()
     legacyRepContract = sessionFixture.contracts['LegacyRepContract']
     legacyRepContract.faucet(11 * 10**6 * 10**18)
     branch = sessionFixture.branch

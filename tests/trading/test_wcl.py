@@ -14,7 +14,7 @@ BID = 1
 ASK = 2
 
 def test_make_ask_with_shares_take_with_shares(fundedRepFixture):
-    completeSets = fundedRepFixture.contracts['completeSets']
+    completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
     cash = fundedRepFixture.cash
@@ -58,7 +58,7 @@ def test_make_ask_with_shares_take_with_shares(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a2) == fix('0')
 
 def test_make_ask_with_shares_take_with_cash(fundedRepFixture):
-    completeSets = fundedRepFixture.contracts['completeSets']
+    completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
     cash = fundedRepFixture.cash
@@ -96,7 +96,7 @@ def test_make_ask_with_shares_take_with_cash(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a2) == fix('0')
 
 def test_make_ask_with_cash_take_with_shares(fundedRepFixture):
-    completeSets = fundedRepFixture.contracts['completeSets']
+    completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
     cash = fundedRepFixture.cash
@@ -134,7 +134,7 @@ def test_make_ask_with_cash_take_with_shares(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a2) == fix('0')
 
 def test_make_ask_with_cash_take_with_cash(fundedRepFixture):
-    completeSets = fundedRepFixture.contracts['completeSets']
+    completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
     cash = fundedRepFixture.cash
@@ -165,7 +165,7 @@ def test_make_ask_with_cash_take_with_cash(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a2) == fix('0')
 
 def test_make_bid_with_shares_take_with_shares(fundedRepFixture):
-    completeSets = fundedRepFixture.contracts['completeSets']
+    completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
     cash = fundedRepFixture.cash
@@ -213,7 +213,7 @@ def test_make_bid_with_shares_take_with_shares(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a2) == fix('1.2')
 
 def test_make_bid_with_shares_take_with_cash(fundedRepFixture):
-    completeSets = fundedRepFixture.contracts['completeSets']
+    completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
     cash = fundedRepFixture.cash
@@ -251,7 +251,7 @@ def test_make_bid_with_shares_take_with_cash(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a2) == fix('1.2')
 
 def test_make_bid_with_cash_take_with_shares(fundedRepFixture):
-    completeSets = fundedRepFixture.contracts['completeSets']
+    completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
     cash = fundedRepFixture.cash
@@ -289,7 +289,7 @@ def test_make_bid_with_cash_take_with_shares(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a2) == fix('1.2')
 
 def test_make_bid_with_cash_take_with_cash(fundedRepFixture):
-    completeSets = fundedRepFixture.contracts['completeSets']
+    completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
     cash = fundedRepFixture.cash
@@ -387,7 +387,7 @@ def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, ma
 
     cash = fixture.cash
     market = fixture.binaryMarket
-    completeSets = fixture.contracts['completeSets']
+    completeSets = fixture.contracts['CompleteSets']
     makeOrder = fixture.contracts['makeOrder']
     takeOrder = fixture.contracts['takeOrder']
     yesShareToken = fixture.applySignature('ShareToken', market.getShareToken(YES))

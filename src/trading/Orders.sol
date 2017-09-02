@@ -16,7 +16,8 @@ contract Orders is DelegationTarget, IOrders {
     using SafeMathUint256 for uint256;
 
     event CancelOrder(address indexed market, address indexed sender, int256 fxpPrice, uint256 fxpAmount, bytes32 orderId, uint8 outcome, Trading.TradeTypes orderType, uint256 cashRefund, uint256 sharesRefund);
-    event CompleteSets(address indexed sender, address indexed market, Trading.TradeTypes indexed orderType, uint256 fxpAmount, uint256 numOutcomes, uint256 marketCreatorFee, uint256 reportingFee);
+    event BuyCompleteSets(address indexed sender, address indexed market, uint256 fxpAmount, uint256 numOutcomes);
+    event SellCompleteSets(address indexed sender, address indexed market, uint256 fxpAmount, uint256 numOutcomes, uint256 marketCreatorFee, uint256 reportingFee);
     event MakeOrder(address indexed market, address indexed sender, Trading.TradeTypes indexed orderType, int256 fxpPrice, uint256 fxpAmount, uint8 outcome, bytes32 orderId, uint256 fxpMoneyEscrowed, uint256 fxpSharesEscrowed, uint256 tradeGroupId);
     event TakeOrder(address indexed market, uint8 indexed outcome, Trading.TradeTypes indexed orderType, bytes32 orderId, int256 price, address maker, address taker, uint256 makerShares, int256 makerTokens, uint256 takerShares, int256 takerTokens, uint256 tradeGroupId);
 
@@ -226,8 +227,13 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    function completeSetsLog(address _sender, IMarket _market, Trading.TradeTypes _type, uint256 _fxpAmount, uint256 _numOutcomes, uint256 _marketCreatorFee, uint256 _reportingFee) public constant returns (bool) {
-        CompleteSets(_sender, _market, _type, _fxpAmount, _numOutcomes, _marketCreatorFee, _reportingFee);
+    function buyCompleteSetsLog(address _sender, IMarket _market, uint256 _fxpAmount, uint256 _numOutcomes) public constant returns (bool) {
+        BuyCompleteSets(_sender, _market, _fxpAmount, _numOutcomes);
+        return true;
+    }
+
+    function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _fxpAmount, uint256 _numOutcomes, uint256 _marketCreatorFee, uint256 _reportingFee) public constant returns (bool) {
+        SellCompleteSets(_sender, _market, _fxpAmount, _numOutcomes, _marketCreatorFee, _reportingFee);
         return true;
     }
 

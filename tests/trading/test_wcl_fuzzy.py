@@ -36,7 +36,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
 
         cash = contractsFixture.cash
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
-        completeSets = contractsFixture.contracts['completeSets']
+        completeSets = contractsFixture.contracts['CompleteSets']
         makeOrder = contractsFixture.contracts['makeOrder']
         takeOrder = contractsFixture.contracts['takeOrder']
 
@@ -55,7 +55,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
 
         cash = contractsFixture.cash
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
-        completeSets = contractsFixture.contracts['completeSets']
+        completeSets = contractsFixture.contracts['CompleteSets']
         makeOrder = contractsFixture.contracts['makeOrder']
         takeOrder = contractsFixture.contracts['takeOrder']
 
@@ -94,7 +94,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['makeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
-    completeSets = contractsFixture.contracts['completeSets']
+    completeSets = contractsFixture.contracts['CompleteSets']
 
     makerAddress = tester.a1
     takerAddress = tester.a2
