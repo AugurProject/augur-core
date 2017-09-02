@@ -35,7 +35,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         if amount == 0: return
 
         cash = contractsFixture.cash
-        shareToken = contractsFixture.applySignature('shareToken', market.getShareToken(outcome))
+        shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['completeSets']
         makeOrder = contractsFixture.contracts['makeOrder']
         takeOrder = contractsFixture.contracts['takeOrder']
@@ -47,14 +47,14 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         assert shareToken.approve(approvalAddress, amount, sender = sender)
         for otherOutcome in range(0, market.getNumberOfOutcomes()):
             if otherOutcome == outcome: continue
-            otherShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(otherOutcome))
+            otherShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(otherOutcome))
             assert otherShareToken.transfer(0, amount, sender = sender)
 
     def acquireShortShareSet(outcome, amount, approvalAddress, sender):
         if amount == 0: return
 
         cash = contractsFixture.cash
-        shareToken = contractsFixture.applySignature('shareToken', market.getShareToken(outcome))
+        shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['completeSets']
         makeOrder = contractsFixture.contracts['makeOrder']
         takeOrder = contractsFixture.contracts['takeOrder']
@@ -66,7 +66,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         assert shareToken.transfer(0, amount, sender = sender)
         for otherOutcome in range(0, market.getNumberOfOutcomes()):
             if otherOutcome == outcome: continue
-            otherShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(otherOutcome))
+            otherShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(otherOutcome))
             assert otherShareToken.approve(approvalAddress, amount, sender = sender)
 
     def acquireTokens(amount, approvalAddress, sender):
@@ -126,7 +126,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     assert cash.balanceOf(makerAddress) == expectedMakerTokens
     assert cash.balanceOf(takerAddress) == expectedTakerTokens
     for outcome in range(0, market.getNumberOfOutcomes()):
-        shareToken = contractsFixture.applySignature('shareToken', market.getShareToken(outcome))
+        shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         if outcome == orderOutcome:
             assert shareToken.balanceOf(makerAddress) == expectedMakerLongShares
             assert shareToken.balanceOf(takerAddress) == expectedTakerLongShares

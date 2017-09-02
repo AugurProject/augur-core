@@ -20,8 +20,8 @@ def test_make_ask_with_shares_take_with_shares(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
 
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
     completeSetFees = fix('1.2', '0.01') + fix('1.2', '0.0001')
 
     # 1. both accounts buy a complete set
@@ -64,8 +64,8 @@ def test_make_ask_with_shares_take_with_cash(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
 
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
 
     # 1. buy a complete set with account 1
     assert cash.depositEther(value=fix('1.2'), sender = tester.k1)
@@ -102,8 +102,8 @@ def test_make_ask_with_cash_take_with_shares(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
 
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
 
     # 1. buy complete sets with account 2
     assert cash.depositEther(value=fix('1.2'), sender = tester.k2)
@@ -140,8 +140,8 @@ def test_make_ask_with_cash_take_with_cash(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
 
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
 
     # 1. make ASK order for YES with cash escrowed
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
@@ -171,8 +171,8 @@ def test_make_bid_with_shares_take_with_shares(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
 
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
     completeSetFees = fix('1.2', '0.01') + fix('1.2', '0.0001')
 
     # 1. buy complete sets with both accounts
@@ -219,8 +219,8 @@ def test_make_bid_with_shares_take_with_cash(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
 
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
 
     # 1. buy complete sets with account 1
     assert cash.depositEther(value=fix('1.2'), sender = tester.k1) == 1
@@ -257,8 +257,8 @@ def test_make_bid_with_cash_take_with_shares(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
 
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
 
     # 1. buy complete sets with account 2
     assert cash.depositEther(value=fix('1.2'), sender = tester.k2)
@@ -295,8 +295,8 @@ def test_make_bid_with_cash_take_with_cash(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
 
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
 
     # 1. make BID order for YES with cash escrowed
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1) == 1
@@ -390,8 +390,8 @@ def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, ma
     completeSets = fixture.contracts['completeSets']
     makeOrder = fixture.contracts['makeOrder']
     takeOrder = fixture.contracts['takeOrder']
-    yesShareToken = fixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fixture.applySignature('ShareToken', market.getShareToken(NO))
 
     def acquireShares(outcome, amount, approvalAddress, sender):
         if amount == 0: return

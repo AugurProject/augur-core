@@ -22,8 +22,8 @@ def test_escapeHatch(contractsFixture):
     takeOrder = contractsFixture.contracts['takeOrder']
     trade = contractsFixture.contracts['trade']
     tradingEscapeHatch = contractsFixture.contracts['tradingEscapeHatch']
-    yesShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = contractsFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
 
     # make order with cash
     assert cash.depositEther(value=fix('100'), sender=tester.k1) == 1, "depositEther to account 1 should succeed"

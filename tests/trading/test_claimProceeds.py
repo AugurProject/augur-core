@@ -18,7 +18,7 @@ def acquireLongShares(fundedRepFixture, market, outcome, amount, approvalAddress
     if amount == 0: return
 
     cash = fundedRepFixture.cash
-    shareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(outcome))
+    shareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(outcome))
     completeSets = fundedRepFixture.contracts['completeSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
@@ -30,14 +30,14 @@ def acquireLongShares(fundedRepFixture, market, outcome, amount, approvalAddress
     assert shareToken.approve(approvalAddress, amount, sender = sender)
     for otherOutcome in range(0, market.getNumberOfOutcomes()):
         if otherOutcome == outcome: continue
-        otherShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(otherOutcome))
+        otherShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(otherOutcome))
         assert otherShareToken.transfer(0, amount, sender = sender)
 
 def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddress, sender):
     if amount == 0: return
 
     cash = fundedRepFixture.cash
-    shareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(outcome))
+    shareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(outcome))
     completeSets = fundedRepFixture.contracts['completeSets']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
@@ -49,15 +49,15 @@ def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddr
     assert shareToken.transfer(0, amount, sender = sender)
     for otherOutcome in range(0, market.getNumberOfOutcomes()):
         if otherOutcome == outcome: continue
-        otherShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(otherOutcome))
+        otherShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(otherOutcome))
         assert otherShareToken.approve(approvalAddress, amount, sender = sender)
 
 def test_redeem_shares_in_binary_market(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
     expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
     expectedFees = expectedValue * 0.0101
     expectedPayout = expectedValue - expectedFees
@@ -94,9 +94,9 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.categoricalMarket
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
-    shareToken2 = fundedRepFixture.applySignature('shareToken', market.getShareToken(2))
-    shareToken1 = fundedRepFixture.applySignature('shareToken', market.getShareToken(1))
-    shareToken0 = fundedRepFixture.applySignature('shareToken', market.getShareToken(0))
+    shareToken2 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(2))
+    shareToken1 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(1))
+    shareToken0 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(0))
     expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
     expectedFees = expectedValue * 0.0101
     expectedPayout = expectedValue - expectedFees
@@ -135,8 +135,8 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.scalarMarket
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
-    yesShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(YES))
-    noShareToken = fundedRepFixture.applySignature('shareToken', market.getShareToken(NO))
+    yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
     expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
     expectedFees = expectedValue * 0.0101
     expectedPayout = expectedValue - expectedFees

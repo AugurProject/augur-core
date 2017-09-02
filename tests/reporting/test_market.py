@@ -14,7 +14,7 @@ def test_market_creation(contractsFixture):
     shadyReportingToken = contractsFixture.upload('../src/reporting/ReportingToken.sol', 'shadyReportingToken')
     shadyReportingToken.initialize(market.address, [0,2])
 
-    shareToken = contractsFixture.applySignature('shareToken', market.getShareToken(0))
+    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
     with raises(TransactionFailed, message="Markets can only use Cash as their denomination token"):
         contractsFixture.createReasonableBinaryMarket(branch, shareToken)
 
