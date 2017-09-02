@@ -1,46 +1,10 @@
 pragma solidity ^0.4.13;
 
-
-contract Controlled {
-    Controller public controller;
-
-    modifier onlyWhitelistedCallers {
-        require(controller.assertIsWhitelisted(msg.sender));
-        _;
-    }
-
-    modifier onlyControllerCaller {
-        require(Controller(msg.sender) == controller);
-        _;
-    }
-
-    modifier onlyInGoodTimes {
-        require(controller.stopInEmergency());
-        _;
-    }
-
-    modifier onlyInBadTimes {
-        require(controller.onlyInEmergency());
-        _;
-    }
-
-    function Controlled() {
-        controller = Controller(msg.sender);
-    }
-
-    function setController(Controller _controller) public onlyControllerCaller returns(bool) {
-        controller = _controller;
-        return true;
-    }
-
-    function suicideFunds(address _target) public onlyControllerCaller returns(bool) {
-        selfdestruct(_target);
-        return true;
-    }
-}
+import 'ROOT/IController.sol';
+import 'ROOT/IControlled.sol';
 
 
-contract Controller {
+contract Controller is IController {
     address public owner;
     mapping(address => bool) public whitelist;
     mapping(bytes32 => address) public registry;
@@ -123,12 +87,12 @@ contract Controller {
      * Contract Administration [dev mode can use it]
      */
 
-    function suicide(Controlled _target, address _destination) public devModeOwnerOnly returns(bool) {
+    function suicide(IControlled _target, address _destination) public devModeOwnerOnly returns(bool) {
         _target.suicideFunds(_destination);
         return true;
     }
 
-    function updateController(Controlled _target, Controller _newController) public devModeOwnerOnly returns(bool) {
+    function updateController(IControlled _target, Controller _newController) public devModeOwnerOnly returns(bool) {
         _target.setController(_newController);
         return true;
     }

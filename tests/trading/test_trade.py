@@ -64,7 +64,7 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
         },
     ]
 
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0L, 0L, longToHexString(0), 0L, 0L, longTo32Bytes(0), longTo32Bytes(0), 0L]
+    assert ordersFetcher.getOrder(orderID) == [0L, 0L, longToHexString(0), 0L, 0L, longTo32Bytes(0), longTo32Bytes(0), 0L]
     assert fillOrderID == longTo32Bytes(1)
 
 
@@ -118,7 +118,7 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [fix('0.5'), fix('0.6'), bytesToHexString(tester.a1), fix('0.5', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0L]
+    assert ordersFetcher.getOrder(orderID) == [fix('0.5'), fix('0.6'), bytesToHexString(tester.a1), fix('0.5', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0L]
     assert fillOrderID == longTo32Bytes(1)
 
 
@@ -186,8 +186,8 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID, BID, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(fillOrderID, ASK, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(fillOrderID) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
 
 def test_two_bids_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
@@ -268,8 +268,8 @@ def test_two_bids_on_books_buy_both(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID1, BID, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(orderID2, BID, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID2) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
 def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
@@ -352,8 +352,8 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
         },
     ]
 
-    assert ordersFetcher.getOrder(orderID1, BID, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(orderID2, BID, market.address, YES) == [fix('0.4'), fix('0.6'), bytesToHexString(tester.a3), fix('0.4', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID2) == [fix('0.4'), fix('0.6'), bytesToHexString(tester.a3), fix('0.4', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
 def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
@@ -424,9 +424,9 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID1, BID, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(orderID2, BID, market.address, YES) == [fix('0.7'), fix('0.5'), bytesToHexString(tester.a3), fix('0.7', '0.5'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(fillOrderID, ASK, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID2) == [fix('0.7'), fix('0.5'), bytesToHexString(tester.a3), fix('0.7', '0.5'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(fillOrderID) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
 
 def test_one_ask_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
@@ -480,7 +480,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
         },
     ]
 
-    assert ordersFetcher.getOrder(orderID, ASK, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
 def test_one_ask_on_books_buy_partial_order(contractsFixture):
@@ -535,7 +535,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     ]
 
 
-    assert ordersFetcher.getOrder(orderID, ASK, market.address, YES) == [fix('0.5'), fix('0.6'), bytesToHexString(tester.a1), fix('0.5', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID) == [fix('0.5'), fix('0.6'), bytesToHexString(tester.a1), fix('0.5', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
 def test_one_ask_on_books_buy_excess_order(contractsFixture):
@@ -602,8 +602,8 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID, ASK, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(fillOrderID, BID, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(fillOrderID) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
 
 def test_two_asks_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
@@ -685,8 +685,8 @@ def test_two_asks_on_books_buy_both(contractsFixture):
         },
     ]
 
-    assert ordersFetcher.getOrder(orderID1, ASK, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(orderID2, ASK, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID2) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
 def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
@@ -769,8 +769,8 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
         },
     ]
 
-    assert ordersFetcher.getOrder(orderID1, ASK, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(orderID2, ASK, market.address, YES) == [fix('0.4'), fix('0.6'), bytesToHexString(tester.a3), fix('0.4', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID2) == [fix('0.4'), fix('0.6'), bytesToHexString(tester.a3), fix('0.4', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
 def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
@@ -841,6 +841,6 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID1, ASK, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(orderID2, ASK, market.address, YES) == [fix('0.7'), fix('0.7'), bytesToHexString(tester.a3), fix('0.7', '0.3'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(fillOrderID, BID, market.address, YES) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID2) == [fix('0.7'), fix('0.7'), bytesToHexString(tester.a3), fix('0.7', '0.3'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(fillOrderID) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]

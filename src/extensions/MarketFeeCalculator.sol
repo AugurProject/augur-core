@@ -1,16 +1,15 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/ReputationToken.sol';
-import 'ROOT/reporting/Branch.sol';
-import 'ROOT/reporting/ReportingWindow.sol';
-import 'ROOT/reporting/Interfaces.sol';
+import 'ROOT/reporting/IReputationToken.sol';
+import 'ROOT/reporting/IBranch.sol';
+import 'ROOT/reporting/IReportingWindow.sol';
 
 
 contract MarketFeeCalculator {
     mapping (address => uint256) private shareSettlementPerEthFee;
     mapping (address => uint256) private validityBondInAttoeth;
 
-    function getValidityBond(ReportingWindow _reportingWindow) public returns (uint256) {
+    function getValidityBond(IReportingWindow _reportingWindow) public returns (uint256) {
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
         if (_currentValidityBondInAttoeth != 0) {
             return _currentValidityBondInAttoeth;
@@ -20,8 +19,8 @@ contract MarketFeeCalculator {
         // TODO: get the real data for this
         uint256 _totalMarketsInPreviousWindow = 1000;
         uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
-        Branch _branch = _reportingWindow.getBranch();
-        ReportingWindow _previousReportingWindow = _branch.getReportingWindowByTimestamp(_previousTimestamp);
+        IBranch _branch = _reportingWindow.getBranch();
+        IReportingWindow _previousReportingWindow = _branch.getReportingWindowByTimestamp(_previousTimestamp);
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
         if (_previousValidityBondInAttoeth == 0) {
             _previousValidityBondInAttoeth = 1 * 10 ** 16;
@@ -45,17 +44,17 @@ contract MarketFeeCalculator {
         return _estimatedReportingGas;
     }
 
-    function getReportingFeeInAttoethPerEth(ReportingWindow _reportingWindow) public returns (uint256) {
+    function getReportingFeeInAttoethPerEth(IReportingWindow _reportingWindow) public returns (uint256) {
         // CONSIDER: store this on the reporting window rather than here
         uint256 _currentPerEthFee = shareSettlementPerEthFee[_reportingWindow];
         if (_currentPerEthFee != 0) {
             return _currentPerEthFee;
         }
-        Branch _branch = _reportingWindow.getBranch();
+        IBranch _branch = _reportingWindow.getBranch();
         uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth(_branch);
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth(_reportingWindow);
         uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
-        ReportingWindow _previousReportingWindow = _branch.getReportingWindowByTimestamp(_previousTimestamp);
+        IReportingWindow _previousReportingWindow = _branch.getReportingWindowByTimestamp(_previousTimestamp);
         uint256 _previousPerEthFee = shareSettlementPerEthFee[_previousReportingWindow];
         if (_previousPerEthFee == 0) {
             _previousPerEthFee = 1 * 10 ** 16;
@@ -68,20 +67,20 @@ contract MarketFeeCalculator {
         return _currentPerEthFee;
     }
 
-    function getRepMarketCapInAttoeth(Branch _branch) constant public returns (uint256) {
+    function getRepMarketCapInAttoeth(IBranch _branch) constant public returns (uint256) {
         // TODO: get these from an auto-generated market
         uint256 _attorepPerEth = 11 * 10 ** 18;
         uint256 _repMarketCapInAttoeth = _branch.getReputationToken().totalSupply() * _attorepPerEth;
         return _repMarketCapInAttoeth;
     }
 
-    function getTargetRepMarketCapInAttoeth(ReportingWindow _reportingWindow) constant public returns (uint256) {
+    function getTargetRepMarketCapInAttoeth(IReportingWindow _reportingWindow) constant public returns (uint256) {
         uint256 _outstandingSharesInAttoeth = getOutstandingSharesInAttoeth(_reportingWindow);
         uint256 _targetRepMarketCapInAttoeth = _outstandingSharesInAttoeth * 5;
         return _targetRepMarketCapInAttoeth;
     }
 
-    function getOutstandingSharesInAttoeth(ReportingWindow _reportingWindow) constant public returns (uint256) {
+    function getOutstandingSharesInAttoeth(IReportingWindow) constant public returns (uint256) {
         // TODO: start tracking the real number and store it somewhere
         // NOTE: make sure we are getting the share value in attoeth, since complete set fees are not normalized across markets
         // NOTE: eventually we will need to support shares in multiple denominations
@@ -89,7 +88,7 @@ contract MarketFeeCalculator {
         return _outstandingSharesInAttoeth;
     }
 
-    function getMarketCreationCost(ReportingWindow _reportingWindow) constant public returns (uint256) {
+    function getMarketCreationCost(IReportingWindow _reportingWindow) constant public returns (uint256) {
         return getValidityBond(_reportingWindow) + getTargetReporterGasCosts();
     }
 }

@@ -8,7 +8,7 @@ from utils import fix, bytesToHexString
 def test_decrease_trading_fee_success(contractsFixture):
     market = contractsFixture.binaryMarket
     originalFee = market.getMarketCreatorSettlementFeeInAttoethPerEth()
-    assert market.owner() == bytesToHexString(tester.a0)
+    assert market.getOwner() == bytesToHexString(tester.a0)
     newFee = originalFee -1
 
     assert market.decreaseMarketCreatorSettlementFeeInAttoethPerEth(newFee, sender = tester.k0)

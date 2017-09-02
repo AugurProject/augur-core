@@ -223,8 +223,6 @@ class ContractsFixture:
                 extension = path.splitext(filename)[1]
                 if extension != '.se' and extension != '.sol': continue
                 if name == 'controller': continue
-                # remove this and Interfaces.sol when https://github.com/ethereum/solidity/issues/2665 is fixed
-                if name == 'Interfaces': continue
                 contractsToDelegate = ['Orders', 'tradingEscapeHatch']
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
@@ -239,6 +237,7 @@ class ContractsFixture:
             name = path.splitext(filename)[0]
             extension = path.splitext(filename)[1]
             if extension != '.se' and extension != '.sol': continue
+            if not name in self.contracts: continue
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def whitelistLibraryTestContracts(self):

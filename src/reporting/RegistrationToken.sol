@@ -2,23 +2,23 @@
 
 pragma solidity ^0.4.13;
 
+import 'ROOT/reporting/IRegistrationToken.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/Typed.sol';
 import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/libraries/token/StandardToken.sol';
-import 'ROOT/reporting/ReportingToken.sol';
-import 'ROOT/reporting/Branch.sol';
-import 'ROOT/reporting/ReputationToken.sol';
-import 'ROOT/reporting/ReportingWindow.sol';
-import 'ROOT/reporting/Interfaces.sol';
+import 'ROOT/reporting/IReportingToken.sol';
+import 'ROOT/reporting/IBranch.sol';
+import 'ROOT/reporting/IReputationToken.sol';
+import 'ROOT/reporting/IReportingWindow.sol';
 
 
-contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardToken {
-    ReportingWindow private reportingWindow;
+contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardToken, IRegistrationToken {
+    IReportingWindow private reportingWindow;
     uint256 private peakSupply;
     uint256 private constant BOND_AMOUNT = 1 ether;
 
-    function initialize(ReportingWindow _reportingWindow) public beforeInitialized returns (bool) {
+    function initialize(IReportingWindow _reportingWindow) public beforeInitialized returns (bool) {
         endInitialization();
         reportingWindow = _reportingWindow;
         return true;
@@ -48,19 +48,19 @@ contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardTo
         return true;
     }
 
-    function getTypeName() public constant returns (bytes32) { 
+    function getTypeName() public constant returns (bytes32) {
         return "RegistrationToken";
     }
 
-    function getReportingWindow() public constant returns (ReportingWindow) {
+    function getReportingWindow() public constant returns (IReportingWindow) {
         return reportingWindow;
     }
 
-    function getBranch() public constant returns (Branch) {
+    function getBranch() public constant returns (IBranch) {
         return reportingWindow.getBranch();
     }
 
-    function getReputationToken() public constant returns (ReputationToken) {
+    function getReputationToken() public constant returns (IReputationToken) {
         return reportingWindow.getReputationToken();
     }
 

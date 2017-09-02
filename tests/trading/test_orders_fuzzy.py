@@ -111,7 +111,7 @@ def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbab
     assert(bestOrderID == int(orders.getBestOrderID(orderType, market.address, outcomeID), 16)), "Verify best order ID"
     assert(worstOrderID == int(orders.getWorstOrderId(orderType, market.address, outcomeID), 16)), "Verify worst order ID"
     for orderID in orderIDs:
-        order = ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)
+        order = ordersFetcher.getOrder(orderID)
         orderPrice = order[DISPLAY_PRICE]
         betterOrderID = order[BETTER_ORDER_ID]
         worseOrderID = order[WORSE_ORDER_ID]
@@ -124,11 +124,11 @@ def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbab
             if betterOrderPrice: assert(orderPrice >= betterOrderPrice), "Order price >= better order price"
             if worseOrderPrice: assert(orderPrice <= worseOrderPrice), "Order price <= worse order price"
         if betterOrderID:
-            assert(ordersFetcher.getOrder(betterOrderID, orderType, market.address, outcomeID)[WORSE_ORDER_ID] == orderID), "Better order's worseOrderID should equal orderID"
+            assert(ordersFetcher.getOrder(betterOrderID)[WORSE_ORDER_ID] == orderID), "Better order's worseOrderID should equal orderID"
         else:
             assert(orderID == bestOrderID), "Should be the best order ID"
         if worseOrderID:
-            assert(ordersFetcher.getOrder(worseOrderID, orderType, market.address, outcomeID)[BETTER_ORDER_ID] == orderID), "Worse order's betterOrderID should equal orderID"
+            assert(ordersFetcher.getOrder(worseOrderID)[BETTER_ORDER_ID] == orderID), "Worse order's betterOrderID should equal orderID"
         else:
             assert(orderID == worstOrderID), "Should be the worst order ID"
     for orderID in orderIDs:

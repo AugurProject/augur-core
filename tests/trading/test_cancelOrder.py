@@ -13,15 +13,6 @@ ASK = 2
 YES = 1
 NO = 0
 
-ATTOSHARES = 0
-DISPLAY_PRICE = 1
-OWNER = 2
-TOKENS_ESCROWED = 3
-SHARES_ESCROWED = 4
-BETTER_ORDER_ID = 5
-WORSE_ORDER_ID = 6
-GAS_PRICE = 7
-
 def test_cancelBid(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
@@ -45,11 +36,12 @@ def test_cancelBid(contractsFixture):
     marketInitialNoShares = noShareToken.totalSupply()
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1)
     assert orderID, "Order ID should be non-zero"
-    assert ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
+    _,_,owner,_,_,_,_,_ = ordersFetcher.getOrder(orderID)
+    assert owner, "Order should have an owner"
 
     assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
-    assert(ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "Canceled order elements should all be zero"
+    assert(ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "Canceled order elements should all be zero"
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(makerInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
@@ -79,11 +71,12 @@ def test_cancelAsk(contractsFixture):
     marketInitialNoShares = noShareToken.totalSupply()
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1)
     assert(orderID != bytearray(32)), "Order ID should be non-zero"
-    assert ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID)[OWNER], "Order should have non-zero elements"
+    _,_,owner,_,_,_,_,_ = ordersFetcher.getOrder(orderID)
+    assert owner, "Order should have an owner"
 
     assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
-    assert(ordersFetcher.getOrder(orderID, orderType, market.address, outcomeID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "Canceled order elements should all be zero"
+    assert(ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "Canceled order elements should all be zero"
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(makerInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"

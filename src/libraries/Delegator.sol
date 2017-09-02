@@ -1,11 +1,11 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/Controller.sol';
+import 'ROOT/IController.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
 
 
 contract Delegator is DelegationTarget {
-    function Delegator(Controller _controller, bytes32 _controllerLookupName) {
+    function Delegator(IController _controller, bytes32 _controllerLookupName) {
         controller = _controller;
         controllerLookupName = _controllerLookupName;
     }

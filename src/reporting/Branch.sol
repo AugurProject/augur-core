@@ -1,32 +1,32 @@
 pragma solidity ^0.4.13;
 
+import 'ROOT/reporting/IBranch.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/Typed.sol';
-import 'ROOT/reporting/Market.sol';
 import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/factories/ReputationTokenFactory.sol';
 import 'ROOT/factories/TopicsFactory.sol';
 import 'ROOT/factories/ReportingWindowFactory.sol';
 import 'ROOT/factories/BranchFactory.sol';
-import 'ROOT/reporting/ReputationToken.sol';
-import 'ROOT/reporting/ReportingToken.sol';
-import 'ROOT/reporting/DisputeBondToken.sol';
-import 'ROOT/reporting/RegistrationToken.sol';
-import 'ROOT/reporting/ReportingWindow.sol';
-import 'ROOT/reporting/Interfaces.sol';
+import 'ROOT/reporting/IMarket.sol';
+import 'ROOT/reporting/IReputationToken.sol';
+import 'ROOT/reporting/IReportingToken.sol';
+import 'ROOT/reporting/IDisputeBond.sol';
+import 'ROOT/reporting/IRegistrationToken.sol';
+import 'ROOT/reporting/IReportingWindow.sol';
 
 
-contract Branch is DelegationTarget, Typed, Initializable {
-    Branch private parentBranch;
+contract Branch is DelegationTarget, Typed, Initializable, IBranch {
+    IBranch private parentBranch;
     bytes32 private parentPayoutDistributionHash;
-    ReputationToken private reputationToken;
+    IReputationToken private reputationToken;
     ITopics private topics;
-    Market private forkingMarket;
+    IMarket private forkingMarket;
     uint256 private forkEndTime;
-    mapping(uint256 => ReportingWindow) private reportingWindows;
-    mapping(bytes32 => Branch) private childBranches;
+    mapping(uint256 => IReportingWindow) private reportingWindows;
+    mapping(bytes32 => IBranch) private childBranches;
 
-    function initialize(Branch _parentBranch, bytes32 _parentPayoutDistributionHash) public beforeInitialized returns (bool) {
+    function initialize(IBranch _parentBranch, bytes32 _parentPayoutDistributionHash) external beforeInitialized returns (bool) {
         endInitialization();
         parentBranch = _parentBranch;
         parentPayoutDistributionHash = _parentPayoutDistributionHash;
@@ -39,7 +39,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
     function fork() public afterInitialized returns (bool) {
         require(forkingMarket == address(0));
         require(isContainerForMarket(Typed(msg.sender)));
-        forkingMarket = Market(msg.sender);
+        forkingMarket = IMarket(msg.sender);
         forkEndTime = block.timestamp + 60 days;
         return true;
     }
@@ -48,7 +48,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         return "Branch";
     }
 
-    function getParentBranch() constant returns (Branch) {
+    function getParentBranch() constant returns (IBranch) {
         return parentBranch;
     }
 
@@ -56,7 +56,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         return parentPayoutDistributionHash;
     }
 
-    function getReputationToken() constant returns (ReputationToken) {
+    function getReputationToken() constant returns (IReputationToken) {
         return reputationToken;
     }
 
@@ -64,7 +64,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         return topics;
     }
 
-    function getForkingMarket() constant returns (Market) {
+    function getForkingMarket() constant returns (IMarket) {
         return forkingMarket;
     }
 
@@ -72,7 +72,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         return forkEndTime;
     }
 
-    function getReportingWindow(uint256 _reportingWindowId) constant returns (ReportingWindow) {
+    function getReportingWindow(uint256 _reportingWindowId) constant returns (IReportingWindow) {
         return reportingWindows[_reportingWindowId];
     }
 
@@ -88,7 +88,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         return 27 days + 3 days;
     }
 
-    function getReportingWindowByTimestamp(uint256 _timestamp) public returns (ReportingWindow) {
+    function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow) {
         uint256 _windowId = getReportingWindowId(_timestamp);
         if (reportingWindows[_windowId] == address(0)) {
             reportingWindows[_windowId] = ReportingWindowFactory(controller.lookup("ReportingWindowFactory")).createReportingWindow(controller, this, _windowId);
@@ -96,7 +96,7 @@ contract Branch is DelegationTarget, Typed, Initializable {
         return reportingWindows[_windowId];
     }
 
-    function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasAutomatedReporter) public returns (ReportingWindow) {
+    function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasAutomatedReporter) public returns (IReportingWindow) {
         if (_hasAutomatedReporter) {
             // TODO: turn these into shared constants
             return getReportingWindowByTimestamp(_endTime + 3 days + 3 days + 1 + getReportingPeriodDurationInSeconds());
@@ -105,19 +105,19 @@ contract Branch is DelegationTarget, Typed, Initializable {
         }
     }
 
-    function getPreviousReportingWindow() public returns (ReportingWindow) {
+    function getPreviousReportingWindow() public returns (IReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp - getReportingPeriodDurationInSeconds());
     }
 
-    function getCurrentReportingWindow() public returns (ReportingWindow) {
+    function getCurrentReportingWindow() public returns (IReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp);
     }
 
-    function getNextReportingWindow() public returns (ReportingWindow) {
+    function getNextReportingWindow() public returns (IReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
     }
 
-    function getChildBranch(bytes32 _parentPayoutDistributionHash) public returns (Branch) {
+    function getChildBranch(bytes32 _parentPayoutDistributionHash) public returns (IBranch) {
         if (childBranches[_parentPayoutDistributionHash] == address(0)) {
             childBranches[_parentPayoutDistributionHash] = BranchFactory(controller.lookup("BranchFactory")).createBranch(controller, this, _parentPayoutDistributionHash);
         }
@@ -128,13 +128,13 @@ contract Branch is DelegationTarget, Typed, Initializable {
         if (_shadyTarget.getTypeName() != "ReportingWindow") {
             return false;
         }
-        ReportingWindow _shadyReportingWindow = ReportingWindow(_shadyTarget);
+        IReportingWindow _shadyReportingWindow = IReportingWindow(_shadyTarget);
         uint256 _startTime = _shadyReportingWindow.getStartTime();
         if (_startTime == 0) {
             return false;
         }
         uint256 _reportingWindowId = getReportingWindowId(_startTime);
-        ReportingWindow _legitReportingWindow = reportingWindows[_reportingWindowId];
+        IReportingWindow _legitReportingWindow = reportingWindows[_reportingWindowId];
         return _shadyReportingWindow == _legitReportingWindow;
     }
 
@@ -142,31 +142,31 @@ contract Branch is DelegationTarget, Typed, Initializable {
         if (_shadyTarget.getTypeName() != "DisputeBondToken") {
             return false;
         }
-        DisputeBondToken _shadyDisputeBondToken = DisputeBondToken(_shadyTarget);
-        Market _shadyMarket = _shadyDisputeBondToken.getMarket();
+        IDisputeBond _shadyDisputeBond = IDisputeBond(_shadyTarget);
+        IMarket _shadyMarket = _shadyDisputeBond.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
         }
         if (!isContainerForMarket(_shadyMarket)) {
             return false;
         }
-        Market _legitMarket = _shadyMarket;
-        return _legitMarket.isContainerForDisputeBondToken(_shadyDisputeBondToken);
+        IMarket _legitMarket = _shadyMarket;
+        return _legitMarket.isContainerForDisputeBondToken(_shadyDisputeBond);
     }
 
     function isContainerForRegistrationToken(Typed _shadyTarget) constant returns (bool) {
         if (_shadyTarget.getTypeName() != "RegistrationToken") {
             return false;
         }
-        RegistrationToken _shadyRegistrationToken = RegistrationToken(_shadyTarget);
-        ReportingWindow _shadyReportingWindow = _shadyRegistrationToken.getReportingWindow();
+        IRegistrationToken _shadyRegistrationToken = IRegistrationToken(_shadyTarget);
+        IReportingWindow _shadyReportingWindow = _shadyRegistrationToken.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
         }
         if (!isContainerForReportingWindow(_shadyReportingWindow)) {
             return false;
         }
-        ReportingWindow _legitReportingWindow = _shadyReportingWindow;
+        IReportingWindow _legitReportingWindow = _shadyReportingWindow;
         return _legitReportingWindow.isContainerForRegistrationToken(_shadyRegistrationToken);
     }
 
@@ -174,15 +174,15 @@ contract Branch is DelegationTarget, Typed, Initializable {
         if (_shadyTarget.getTypeName() != "Market") {
             return false;
         }
-        Market _shadyMarket = Market(_shadyTarget);
-        ReportingWindow _shadyReportingWindow = _shadyMarket.getReportingWindow();
+        IMarket _shadyMarket = IMarket(_shadyTarget);
+        IReportingWindow _shadyReportingWindow = _shadyMarket.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
         }
         if (!isContainerForReportingWindow(_shadyReportingWindow)) {
             return false;
         }
-        ReportingWindow _legitReportingWindow = _shadyReportingWindow;
+        IReportingWindow _legitReportingWindow = _shadyReportingWindow;
         return _legitReportingWindow.isContainerForMarket(_shadyMarket);
     }
 
@@ -190,15 +190,15 @@ contract Branch is DelegationTarget, Typed, Initializable {
         if (_shadyTarget.getTypeName() != "ReportingToken") {
             return false;
         }
-        ReportingToken _shadyReportingToken = ReportingToken(_shadyTarget);
-        Market _shadyMarket = _shadyReportingToken.getMarket();
+        IReportingToken _shadyReportingToken = IReportingToken(_shadyTarget);
+        IMarket _shadyMarket = _shadyReportingToken.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
         }
         if (!isContainerForMarket(_shadyMarket)) {
             return false;
         }
-        Market _legitMarket = _shadyMarket;
+        IMarket _legitMarket = _shadyMarket;
         return _legitMarket.isContainerForReportingToken(_shadyReportingToken);
     }
 
@@ -207,23 +207,23 @@ contract Branch is DelegationTarget, Typed, Initializable {
             return false;
         }
         IShareToken _shadyShareToken = IShareToken(_shadyTarget);
-        Market _shadyMarket = _shadyShareToken.getMarket();
+        IMarket _shadyMarket = _shadyShareToken.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
         }
         if (!isContainerForMarket(_shadyMarket)) {
             return false;
         }
-        Market _legitMarket = _shadyMarket;
+        IMarket _legitMarket = _shadyMarket;
         return _legitMarket.isContainerForShareToken(_shadyShareToken);
     }
 
-    function isParentOf(Branch _shadyChild) constant returns (bool) {
+    function isParentOf(IBranch _shadyChild) constant returns (bool) {
         bytes32 _parentPayoutDistributionHash = _shadyChild.getParentPayoutDistributionHash();
         return childBranches[_parentPayoutDistributionHash] == _shadyChild;
     }
 
-    function getReportingWindowForForkEndTime() public constant returns (ReportingWindow) {
+    function getReportingWindowForForkEndTime() public constant returns (IReportingWindow) {
         return getReportingWindowByTimestamp(getForkEndTime());
     }
 }

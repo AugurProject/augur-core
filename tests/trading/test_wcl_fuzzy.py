@@ -108,7 +108,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     orderID = makeOrder.publicMakeOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, 0, 0, 42, sender = makerKey)
 
     # validate the order
-    order = ordersFetcher.getOrder(orderID, orderType, market.address, orderOutcome)
+    order = ordersFetcher.getOrder(orderID)
     assert order[ATTOSHARES] == orderSize
     assert order[DISPLAY_PRICE] == orderPrice
     assert order[OWNER] == bytesToLong(makerAddress)

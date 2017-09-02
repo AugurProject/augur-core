@@ -242,7 +242,7 @@ def test_orderSorting(contractsFixture):
                 order["worseOrderID"], 1)
             assert(output != bytearray(32)), "saveOrder wasn't executed successfully"
         for order in testCase["orders"]:
-            ordersCollection.append(ordersFetcher.getOrder(order["orderID"], order["type"], market.address, order["outcome"]))
+            ordersCollection.append(ordersFetcher.getOrder(order["orderID"]))
         assert(len(ordersCollection) == len(testCase["expected"]["orders"])), "Number of orders not as expected"
         for i, order in enumerate(ordersCollection):
             outcomeID = testCase["orders"][i]["outcome"]
@@ -1095,8 +1095,8 @@ def test_saveOrder(contractsFixture):
     orderId2 = orders.saveOrder(longTo32Bytes(0), ASK, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
 
-    assert(ordersFetcher.getOrder(orderId1, BID, market.address, NO) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order1 didn't return the expected array of data"
-    assert(ordersFetcher.getOrder(orderId2, ASK, market.address, NO) == [fix('10'), fix('0.5'), bytesToHexString(tester.a2), fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected array of data"
+    assert(ordersFetcher.getOrder(orderId1) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order1 didn't return the expected array of data"
+    assert(ordersFetcher.getOrder(orderId2) == [fix('10'), fix('0.5'), bytesToHexString(tester.a2), fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected array of data"
 
     assert(orders.getAmount(orderId1, BID, market.address, NO) == fix('10')), "amount for order1 should be set to 10 ETH"
     assert(orders.getAmount(orderId2, ASK, market.address, NO) == fix('10')), "amount for order2 should be set to 10 ETH"
@@ -1130,14 +1130,14 @@ def test_fillOrder(contractsFixture):
     # fully fill
     assert(orders.fillOrder(orderId1, BID, market.address, NO, fix('10'), 0) == 1), "fillOrder wasn't executed successfully"
     # prove all
-    assert(ordersFetcher.getOrder(orderId1, BID, market.address, NO) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order1 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(orderId1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order1 didn't return the expected data array"
     # test partial fill
     assert(orders.fillOrder(orderId2, BID, market.address, NO, 0, fix('3')) == 1), "fillOrder wasn't executed successfully"
     # confirm partial fill
-    assert(ordersFetcher.getOrder(orderId2, BID, market.address, NO) == [fix('4'), fix('0.5'), bytesToHexString(tester.a2), fix('2'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(orderId2) == [fix('4'), fix('0.5'), bytesToHexString(tester.a2), fix('2'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected data array"
     # fill rest of order2
     assert(orders.fillOrder(orderId2, BID, market.address, NO, 0, fix('2')) == 1), "fillOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(orderId2, BID, market.address, NO) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(orderId2) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected data array"
 
 def test_removeOrder(contractsFixture):
     market = contractsFixture.binaryMarket
@@ -1150,8 +1150,8 @@ def test_removeOrder(contractsFixture):
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
     orderId3 = orders.saveOrder(longTo32Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId3 != bytearray(32)), "saveOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(orderId3, BID, market.address, YES) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order3 didn't return the expected data array"
+    assert(ordersFetcher.getOrder(orderId3) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order3 didn't return the expected data array"
     assert(orders.removeOrder(orderId3, BID, market.address, YES) == 1), "removeOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(orderId3, BID, market.address, YES) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
+    assert(ordersFetcher.getOrder(orderId3) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
     assert(orders.removeOrder(orderId1, BID, market.address, NO) == 1), "Remove order 1"
     assert(orders.removeOrder(orderId2, BID, market.address, NO) == 1), "Remove order 2"
