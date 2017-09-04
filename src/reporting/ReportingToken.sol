@@ -1,27 +1,27 @@
 pragma solidity ^0.4.13;
 
+import 'ROOT/reporting/IReportingToken.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/Typed.sol';
 import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/libraries/token/VariableSupplyToken.sol';
-import 'ROOT/reporting/Branch.sol';
-import 'ROOT/reporting/ReputationToken.sol';
-import 'ROOT/reporting/ReportingToken.sol';
-import 'ROOT/reporting/DisputeBondToken.sol';
-import 'ROOT/reporting/RegistrationToken.sol';
-import 'ROOT/reporting/ReportingWindow.sol';
-import 'ROOT/reporting/Market.sol';
-import 'ROOT/reporting/Interfaces.sol';
+import 'ROOT/reporting/IBranch.sol';
+import 'ROOT/reporting/IReputationToken.sol';
+import 'ROOT/reporting/IReportingToken.sol';
+import 'ROOT/reporting/IDisputeBond.sol';
+import 'ROOT/reporting/IRegistrationToken.sol';
+import 'ROOT/reporting/IReportingWindow.sol';
+import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 
 
-contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken {
+contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IReportingToken {
     using SafeMathUint256 for uint256;
 
-    Market public market;
+    IMarket public market;
     uint256[] public payoutNumerators;
 
-    function initialize(Market _market, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
+    function initialize(IMarket _market, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
         endInitialization();
         require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
         market = _market;
@@ -31,8 +31,8 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function buy(uint256 _attotokens) public afterInitialized returns (bool) {
-        Market.ReportingState _state = market.getReportingState();
-        require(_state == Market.ReportingState.LIMITED_REPORTING || _state == Market.ReportingState.ALL_REPORTING);
+        IMarket.ReportingState _state = market.getReportingState();
+        require(_state == IMarket.ReportingState.LIMITED_REPORTING || _state == IMarket.ReportingState.ALL_REPORTING);
         require(getRegistrationToken().balanceOf(msg.sender) > 0);
         require(market.isContainerForReportingToken(this));
         getReputationToken().trustedTransfer(msg.sender, this, _attotokens);
@@ -70,7 +70,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     function redeemWinningTokens() public afterInitialized returns (bool) {
-        require(market.getReportingState() == Market.ReportingState.FINALIZED);
+        require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
         require(getBranch().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() == this);
@@ -87,7 +87,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function migrateLosingTokens() public afterInitialized returns (bool) {
-        require(market.getReportingState() == Market.ReportingState.FINALIZED);
+        require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
         require(getBranch().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() != this);
@@ -97,7 +97,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return true;
     }
 
-    function migrateLosingTokenRepToDisputeBond(DisputeBondToken _disputeBondToken) private returns (bool) {
+    function migrateLosingTokenRepToDisputeBond(IDisputeBond _disputeBondToken) private returns (bool) {
         if (_disputeBondToken == address(0)) {
             return true;
         }
@@ -128,23 +128,23 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return "ReportingToken";
     }
 
-    function getBranch() public constant returns (Branch) {
+    function getBranch() public constant returns (IBranch) {
         return market.getBranch();
     }
 
-    function getReputationToken() public constant returns (ReputationToken) {
+    function getReputationToken() public constant returns (IReputationToken) {
         return market.getReportingWindow().getReputationToken();
     }
 
-    function getReportingWindow() public constant returns (ReportingWindow) {
+    function getReportingWindow() public constant returns (IReportingWindow) {
         return market.getReportingWindow();
     }
 
-    function getRegistrationToken() public constant returns (RegistrationToken) {
+    function getRegistrationToken() public constant returns (IRegistrationToken) {
         return getReportingWindow().getRegistrationToken();
     }
 
-    function getMarket() public constant returns (Market) {
+    function getMarket() public constant returns (IMarket) {
         return market;
     }
 

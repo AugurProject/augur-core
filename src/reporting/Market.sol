@@ -1,45 +1,30 @@
-// Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
-
 pragma solidity ^0.4.13;
 
-import 'ROOT/legacy_reputation/Ownable.sol';
-import 'ROOT/extensions/MarketExtensions.sol';
-import 'ROOT/reporting/Branch.sol';
-import 'ROOT/reporting/ReportingToken.sol';
-import 'ROOT/reporting/ReputationToken.sol';
-import 'ROOT/reporting/DisputeBondToken.sol';
-import 'ROOT/reporting/Interfaces.sol';
-import 'ROOT/trading/Cash.sol';
+import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
+import 'ROOT/libraries/Typed.sol';
+import 'ROOT/libraries/Initializable.sol';
+import 'ROOT/libraries/Ownable.sol';
+import 'ROOT/reporting/IBranch.sol';
+import 'ROOT/reporting/IReportingToken.sol';
+import 'ROOT/reporting/IReputationToken.sol';
+import 'ROOT/reporting/IDisputeBond.sol';
+import 'ROOT/trading/ICash.sol';
+import 'ROOT/trading/IShareToken.sol';
+import 'ROOT/extensions/MarketExtensions.sol';
 import 'ROOT/extensions/MarketFeeCalculator.sol';
 import 'ROOT/factories/MapFactory.sol';
 import 'ROOT/factories/ShareTokenFactory.sol';
 import 'ROOT/factories/ReportingTokenFactory.sol';
 import 'ROOT/factories/DisputeBondTokenFactory.sol';
-import 'ROOT/libraries/Typed.sol';
-import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/libraries/token/ERC20Basic.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 import 'ROOT/libraries/math/SafeMathInt256.sol';
 
 
-contract Market is DelegationTarget, Typed, Initializable, Ownable {
+contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     using SafeMathUint256 for uint256;
     using SafeMathInt256 for int256;
-
-    enum ReportingState {
-        PRE_REPORTING,
-        AUTOMATED_REPORTING,
-        AUTOMATED_DISPUTE,
-        AWAITING_MIGRATION,
-        LIMITED_REPORTING,
-        LIMITED_DISPUTE,
-        ALL_REPORTING,
-        ALL_DISPUTE,
-        FORKING,
-        AWAITING_FINALIZATION,
-        FINALIZED
-    }
 
     // CONSIDER: change the payoutNumerator/payoutDenominator to use fixed point numbers instead of integers; PRO: some people find fixed point decimal values easier to grok; CON: rounding errors can occur and it is easier to screw up the math if you don't handle fixed point values correctly
     uint256 private payoutDenominator;
@@ -60,22 +45,22 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     uint256 private constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     address private constant NULL_ADDRESS = address(0);
 
-    ReportingWindow private reportingWindow;
+    IReportingWindow private reportingWindow;
     uint256 private endTime;
     uint8 private numOutcomes;
     uint256 private marketCreationBlock;
     bytes32 private topic;
     address private automatedReporterAddress;
-    mapping(bytes32 => ReportingToken) private reportingTokens;
-    Cash private cash;
+    mapping(bytes32 => IReportingToken) private reportingTokens;
+    ICash private cash;
     IShareToken[] private shareTokens;
     uint256 private finalizationTime;
     uint256 private automatedReportReceivedTime;
     bytes32 private tentativeWinningPayoutDistributionHash;
     bytes32 private finalPayoutDistributionHash;
-    DisputeBondToken private automatedReporterDisputeBondToken;
-    DisputeBondToken private limitedReportersDisputeBondToken;
-    DisputeBondToken private allReportersDisputeBondToken;
+    IDisputeBond private automatedReporterDisputeBondToken;
+    IDisputeBond private limitedReportersDisputeBondToken;
+    IDisputeBond private allReportersDisputeBondToken;
     uint256 private validityBondAttoeth;
     uint256 private automatedReporterBondAttoeth;
 
@@ -87,7 +72,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         _;
     }
 
-    function initialize(ReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInAttoeth, Cash _cash, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
+    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(address(_reportingWindow) != NULL_ADDRESS);
         require(_numOutcomes >= 2);
@@ -177,7 +162,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         require(getReportingState() == ReportingState.LIMITED_DISPUTE);
         limitedReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, limitedReportersDisputeBondToken, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT);
-        ReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
+        IReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
         return migrateReportingWindow(_newReportingWindow);
     }
 
@@ -186,11 +171,11 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         allReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, allReportersDisputeBondToken, ALL_REPORTERS_DISPUTE_BOND_AMOUNT);
         reportingWindow.getBranch().fork();
-        ReportingWindow _newReportingWindow = getBranch().getReportingWindowForForkEndTime();
+        IReportingWindow _newReportingWindow = getBranch().getReportingWindowForForkEndTime();
         return migrateReportingWindow(_newReportingWindow);
     }
 
-    function migrateReportingWindow(ReportingWindow _newReportingWindow) private afterInitialized returns (bool) {
+    function migrateReportingWindow(IReportingWindow _newReportingWindow) private afterInitialized returns (bool) {
         _newReportingWindow.migrateMarketInFromSibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
@@ -198,10 +183,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     }
 
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool) {
-        ReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
+        IReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
         require(address(_reportingToken) != NULL_ADDRESS);
 
-        ReportingToken _tentativeWinningReportingToken = reportingTokens[tentativeWinningPayoutDistributionHash];
+        IReportingToken _tentativeWinningReportingToken = reportingTokens[tentativeWinningPayoutDistributionHash];
         if (address(_tentativeWinningReportingToken) == NULL_ADDRESS) {
             tentativeWinningPayoutDistributionHash = _payoutDistributionHash;
             _tentativeWinningReportingToken = _reportingToken;
@@ -252,18 +237,18 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         }
         // only proceed if the forking market is finalized
         require(reportingWindow.isForkingMarketFinalized());
-        Branch _currentBranch = getBranch();
+        IBranch _currentBranch = getBranch();
         // follow the forking market to its branch and then attach to the next reporting window on that branch
         bytes32 _winningForkPayoutDistributionHash = _currentBranch.getForkingMarket().getFinalPayoutDistributionHash();
-        Branch _destinationBranch = _currentBranch.getChildBranch(_winningForkPayoutDistributionHash);
-        ReportingWindow _newReportingWindow = _destinationBranch.getNextReportingWindow();
+        IBranch _destinationBranch = _currentBranch.getChildBranch(_winningForkPayoutDistributionHash);
+        IReportingWindow _newReportingWindow = _destinationBranch.getNextReportingWindow();
         _newReportingWindow.migrateMarketInFromNibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
         // reset to unreported state
-        limitedReportersDisputeBondToken = DisputeBondToken(0);
-        allReportersDisputeBondToken = DisputeBondToken(0);
-        tentativeWinningPayoutDistributionHash = 0;
+        limitedReportersDisputeBondToken = IDisputeBond(0);
+        allReportersDisputeBondToken = IDisputeBond(0);
+        tentativeWinningPayoutDistributionHash = bytes32(0);
         return true;
     }
 
@@ -271,9 +256,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
     // Helpers
     //
 
-    function getReportingToken(uint256[] _payoutNumerators) public returns (ReportingToken) {
+    function getReportingToken(uint256[] _payoutNumerators) public returns (IReportingToken) {
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
-        ReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
+        IReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
         if (address(_reportingToken) == NULL_ADDRESS) {
             _reportingToken = ReportingTokenFactory(controller.lookup("ReportingTokenFactory")).createReportingToken(controller, this, _payoutNumerators);
             reportingTokens[_payoutDistributionHash] = _reportingToken;
@@ -283,7 +268,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
 
     function transferIncorrectDisputeBondsToWinningReportingToken() private returns (bool) {
         require(getReportingState() == ReportingState.FINALIZED);
-        ReputationToken _reputationToken = reportingWindow.getReputationToken();
+        IReputationToken _reputationToken = reportingWindow.getReputationToken();
         if (getBranch().getForkingMarket() == this) {
             return true;
         }
@@ -306,7 +291,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return sha3(_payoutNumerators);
     }
 
-    function getReportingTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public constant returns (ReportingToken) {
+    function getReportingTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public constant returns (IReportingToken) {
         return reportingTokens[_payoutDistributionHash];
     }
 
@@ -318,23 +303,23 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return "Market";
     }
 
-    function getReportingWindow() public constant returns (ReportingWindow) {
+    function getReportingWindow() public constant returns (IReportingWindow) {
         return reportingWindow;
     }
 
-    function getBranch() public constant returns (Branch) {
+    function getBranch() public constant returns (IBranch) {
         return reportingWindow.getBranch();
     }
 
-    function getAutomatedReporterDisputeBondToken() public constant returns (DisputeBondToken) {
+    function getAutomatedReporterDisputeBondToken() public constant returns (IDisputeBond) {
         return automatedReporterDisputeBondToken;
     }
 
-    function getLimitedReportersDisputeBondToken() public constant returns (DisputeBondToken) {
+    function getLimitedReportersDisputeBondToken() public constant returns (IDisputeBond) {
         return limitedReportersDisputeBondToken;
     }
 
-    function getAllReportersDisputeBondToken() public constant returns (DisputeBondToken) {
+    function getAllReportersDisputeBondToken() public constant returns (IDisputeBond) {
         return allReportersDisputeBondToken;
     }
 
@@ -350,13 +335,13 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return tentativeWinningPayoutDistributionHash;
     }
 
-    function getFinalWinningReportingToken() public constant returns (ReportingToken) {
+    function getFinalWinningReportingToken() public constant returns (IReportingToken) {
         return reportingTokens[finalPayoutDistributionHash];
     }
 
-    function getShareToken(uint8 outcome)  public constant returns (IShareToken) {
-        require(outcome < numOutcomes);
-        return shareTokens[outcome];
+    function getShareToken(uint8 _outcome)  public constant returns (IShareToken) {
+        require(_outcome < numOutcomes);
+        return shareTokens[_outcome];
     }
 
     function getFinalPayoutDistributionHash() public constant returns (bytes32) {
@@ -367,7 +352,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return payoutDenominator;
     }
 
-    function getDenominationToken() public constant returns (Cash) {
+    function getDenominationToken() public constant returns (ICash) {
         return cash;
     }
 
@@ -395,30 +380,36 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         return finalizationTime;
     }
 
-    function isContainerForReportingToken(ReportingToken _shadyToken) public constant returns (bool) {
-        if (_shadyToken.getTypeName() != "ReportingToken") {
+    function isContainerForReportingToken(Typed _shadyTarget) public constant returns (bool) {
+        if (_shadyTarget.getTypeName() != "ReportingToken") {
             return false;
         }
-        bytes32 _shadyId = _shadyToken.getPayoutDistributionHash();
-        ReportingToken _reportingToken = reportingTokens[_shadyId];
-        return _reportingToken == _shadyToken;
+        IReportingToken _shadyReportingToken = IReportingToken(_shadyTarget);
+        bytes32 _shadyId = _shadyReportingToken.getPayoutDistributionHash();
+        IReportingToken _reportingToken = reportingTokens[_shadyId];
+        return _reportingToken == _shadyReportingToken;
     }
 
-    function isContainerForShareToken(IShareToken _shadyShareToken) public constant returns (bool) {
-        if (_shadyShareToken.getTypeName() != "ShareToken") {
+    function isContainerForShareToken(Typed _shadyTarget) public constant returns (bool) {
+        if (_shadyTarget.getTypeName() != "ShareToken") {
             return false;
         }
+        IShareToken _shadyShareToken = IShareToken(_shadyTarget);
         return getShareToken(_shadyShareToken.getOutcome()) == _shadyShareToken;
     }
 
-    function isContainerForDisputeBondToken(DisputeBondToken _shadyBondToken) public constant returns (bool) {
-        if (automatedReporterDisputeBondToken == _shadyBondToken) {
+    function isContainerForDisputeBondToken(Typed _shadyTarget) public constant returns (bool) {
+        if (_shadyTarget.getTypeName() != "DisputeBondToken") {
+            return false;
+        }
+        IDisputeBond _shadyDisputeBond = IDisputeBond(_shadyTarget);
+        if (automatedReporterDisputeBondToken == _shadyDisputeBond) {
             return true;
         }
-        if (limitedReportersDisputeBondToken == _shadyBondToken) {
+        if (limitedReportersDisputeBondToken == _shadyDisputeBond) {
             return true;
         }
-        if (allReportersDisputeBondToken == _shadyBondToken) {
+        if (allReportersDisputeBondToken == _shadyDisputeBond) {
             return true;
         }
         return false;
@@ -461,7 +452,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable {
         }
 
         // Since we've established that we're past automated reporting if there is an active fork we need to migrate
-        Market _forkingMarket = getBranch().getForkingMarket();
+        IMarket _forkingMarket = getBranch().getForkingMarket();
         if (address(_forkingMarket) != NULL_ADDRESS && _forkingMarket != this) {
             return ReportingState.AWAITING_MIGRATION;
         }

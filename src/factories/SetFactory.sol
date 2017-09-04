@@ -2,8 +2,7 @@ pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
 import 'ROOT/libraries/Typed.sol';
-import 'ROOT/reporting/Interfaces.sol';
-import 'ROOT/Controller.sol';
+import 'ROOT/IController.sol';
 
 
 // FIXME: remove once this can be imported as a solidty contract
@@ -17,7 +16,7 @@ contract Set is Typed {
 
 
 contract SetFactory {
-    function createSet(Controller _controller, address owner) returns (Set) {
+    function createSet(IController _controller, address owner) returns (Set) {
         Delegator _delegator = new Delegator(_controller, "set");
         Set _set = Set(_delegator);
         _set.initialize(owner);

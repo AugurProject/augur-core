@@ -1,19 +1,19 @@
 pragma solidity ^0.4.13;
 
+import 'ROOT/trading/ICash.sol';
+import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/Typed.sol';
 import 'ROOT/libraries/token/VariableSupplyToken.sol';
-import 'ROOT/Controller.sol';
 
 
 /**
  * @title Cash
  * @dev ETH wrapper contract to make it look like an ERC20 token.
  */
-contract Cash is Controlled, Typed, VariableSupplyToken {
+contract Cash is Controlled, Typed, VariableSupplyToken, ICash {
     using SafeMathUint256 for uint256;
 
     event InitiateWithdrawEther(address indexed sender, uint256 value, uint256 balance);
-    enum WithdrawState { Failed, Withdrawn, Initiated }
 
     string constant public name = "Cash";
     string constant public symbol = "CASH";

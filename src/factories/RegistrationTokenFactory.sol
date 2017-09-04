@@ -1,15 +1,15 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/libraries/Delegator.sol';
-import 'ROOT/reporting/ReportingWindow.sol';
-import 'ROOT/reporting/RegistrationToken.sol';
-import 'ROOT/Controller.sol';
+import 'ROOT/reporting/IReportingWindow.sol';
+import 'ROOT/reporting/IRegistrationToken.sol';
+import 'ROOT/IController.sol';
 
 
 contract RegistrationTokenFactory {
-    function createRegistrationToken(Controller _controller, ReportingWindow _reportingWindow) returns (RegistrationToken) {
+    function createRegistrationToken(IController _controller, IReportingWindow _reportingWindow) returns (IRegistrationToken) {
         Delegator _delegator = new Delegator(_controller, "RegistrationToken");
-        RegistrationToken _registrationToken = RegistrationToken(_delegator);
+        IRegistrationToken _registrationToken = IRegistrationToken(_delegator);
         _registrationToken.initialize(_reportingWindow);
         return _registrationToken;
     }
