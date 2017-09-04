@@ -6,7 +6,7 @@ import 'ROOT/libraries/Typed.sol';
 import 'ROOT/factories/IterableMapFactory.sol';
 import 'ROOT/libraries/token/VariableSupplyToken.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
-import 'ROOT/reporting/Interfaces.sol';
+import 'ROOT/IController.sol';
 import 'ROOT/libraries/Initializable.sol';
 
 
@@ -17,7 +17,7 @@ contract Topics is DelegationTarget, Typed, Initializable {
     IIterableMap private topics;
 
     // FIXME: topics needs to be sorted on-chain, which means we need a sorted linked list collection with hinted sorting at insertion/update time instead of a simple iterableMap
-    function initialize(Controller _controller) public beforeInitialized returns (bool) {
+    function initialize(IController _controller) public beforeInitialized returns (bool) {
         endInitialization();
         controller = _controller;
         topics = IterableMapFactory(controller.lookup("IterableMapFactory")).createIterableMap(controller, this);

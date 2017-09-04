@@ -21,7 +21,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
     IBranch private parentBranch;
     bytes32 private parentPayoutDistributionHash;
     IReputationToken private reputationToken;
-    ITopics private topics;
+    Topics private topics;
     IMarket private forkingMarket;
     uint256 private forkEndTime;
     mapping(uint256 => IReportingWindow) private reportingWindows;
