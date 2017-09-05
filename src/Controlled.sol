@@ -5,7 +5,7 @@ import 'ROOT/IController.sol';
 
 
 contract Controlled is IControlled {
-    IController public controller;
+    IController internal controller;
 
     modifier onlyWhitelistedCallers {
         require(controller.assertIsWhitelisted(msg.sender));
