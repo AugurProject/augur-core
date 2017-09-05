@@ -14,14 +14,14 @@ import 'ROOT/reporting/IReportingToken.sol';
 import 'ROOT/reporting/IDisputeBond.sol';
 import 'ROOT/reporting/IRegistrationToken.sol';
 import 'ROOT/reporting/IReportingWindow.sol';
-import 'ROOT/trading/Topics.sol';
+import 'ROOT/trading/ITopics.sol';
 
 
 contract Branch is DelegationTarget, Typed, Initializable, IBranch {
     IBranch private parentBranch;
     bytes32 private parentPayoutDistributionHash;
     IReputationToken private reputationToken;
-    Topics private topics;
+    ITopics private topics;
     IMarket private forkingMarket;
     uint256 private forkEndTime;
     mapping(uint256 => IReportingWindow) private reportingWindows;
@@ -61,7 +61,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return reputationToken;
     }
 
-    function getTopics() constant returns (Topics) {
+    function getTopics() constant returns (ITopics) {
         return topics;
     }
 

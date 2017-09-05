@@ -8,9 +8,10 @@ import 'ROOT/libraries/token/VariableSupplyToken.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 import 'ROOT/IController.sol';
 import 'ROOT/libraries/Initializable.sol';
+import 'ROOT/trading/ITopics.sol';
 
 
-contract Topics is DelegationTarget, Typed, Initializable {
+contract Topics is DelegationTarget, Typed, Initializable, ITopics {
     using SafeMathUint256 for uint256;
 
     // Mapping of topic to popularity
