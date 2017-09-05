@@ -7,7 +7,7 @@ import 'ROOT/trading/ITopics.sol';
 
 contract TopicsFactory {
     function createTopics(IController _controller) returns (ITopics) {
-        Delegator _delegator = new Delegator(_controller, "topics");
+        Delegator _delegator = new Delegator(_controller, "Topics");
         ITopics _topics = ITopics(_delegator);
         _topics.initialize();
         return _topics;

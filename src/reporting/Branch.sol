@@ -14,6 +14,7 @@ import 'ROOT/reporting/IReportingToken.sol';
 import 'ROOT/reporting/IDisputeBond.sol';
 import 'ROOT/reporting/IRegistrationToken.sol';
 import 'ROOT/reporting/IReportingWindow.sol';
+import 'ROOT/trading/ITopics.sol';
 
 
 contract Branch is DelegationTarget, Typed, Initializable, IBranch {
