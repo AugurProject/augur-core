@@ -1,7 +1,7 @@
 # Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
 macro ORDERS: self.controller.lookup('Orders')
-macro COMPLETE_SETS: self.controller.lookup('completeSets')
+macro COMPLETE_SETS: self.controller.lookup('CompleteSets')
 
 inset('../macros/externs.sem')
 inset('../macros/assertNoValue.sem')
@@ -90,14 +90,11 @@ def takeBidOrder(taker: address, orderID: bytes32, market: address, outcome: uin
             i += 1
         # sell the complete sets (this will pay fees)
         COMPLETE_SETS.sellCompleteSets(self, market, completeSets)
-        # figure out the expected payout before fees
-        cost = COMPLETE_SETS.getCompleteSetsValue(market, completeSets)
         # get the completeSetFee
         payout = denominationToken.balanceOf(self)
-        completeSetFee = safeSub(cost, payout)
+        completeSetFee = safeSub(completeSets, payout)
         # maker gets their share minus proportional fee
-        cumulativeScale = market.getCompleteSetCostInAttotokens()
-        shortFee = safeDiv(safeMul(completeSetFee, sharePriceShort), cumulativeScale)
+        shortFee = safeDiv(safeMul(completeSetFee, sharePriceShort), market.getMaxDisplayPrice() - market.getMinDisplayPrice())
         makerShare = safeFxpMul(completeSets, sharePriceShort) - shortFee
         denominationToken.transfer(maker, makerShare)
         # taker gets remainder
@@ -149,9 +146,9 @@ def takeBidOrder(taker: address, orderID: bytes32, market: address, outcome: uin
     # maker is opening a long, taker is opening a short
     if takerDesiredSharesForThisOrder:
         # transfer cash from both parties into this contract for complete set purchase
-        takerPortionOfCompleteSetCost = safeFxpMul(takerDesiredSharesForThisOrder, sharePriceShort)
+        takerPortionOfCompleteSetCost = safeDiv(safeMul(takerDesiredSharesForThisOrder, sharePriceShort), market.getMaxDisplayPrice() - market.getMinDisplayPrice())
         denominationToken.transferFrom(taker, self, takerPortionOfCompleteSetCost)
-        makerPortionOfCompleteSetCost = safeFxpMul(takerDesiredSharesForThisOrder, sharePriceLong)
+        makerPortionOfCompleteSetCost = safeSub(takerDesiredSharesForThisOrder, takerPortionOfCompleteSetCost)
         denominationToken.transferFrom(market, self, makerPortionOfCompleteSetCost)
         # buy a complete set
         if denominationToken.allowance(self, COMPLETE_SETS) < takerPortionOfCompleteSetCost + makerPortionOfCompleteSetCost:

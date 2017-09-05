@@ -38,12 +38,9 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -93,12 +90,9 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('0.7'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -148,12 +142,9 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -218,12 +209,9 @@ def test_two_bids_on_books_buy_both(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -243,12 +231,9 @@ def test_two_bids_on_books_buy_both(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('0.3'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -301,12 +286,9 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -326,12 +308,9 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('0.3'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -386,12 +365,9 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -454,12 +430,9 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -508,12 +481,9 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('0.7'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -564,12 +534,9 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -634,12 +601,9 @@ def test_two_asks_on_books_buy_both(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -659,12 +623,9 @@ def test_two_asks_on_books_buy_both(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('0.3'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -718,12 +679,9 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -743,12 +701,9 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0L,
-            "orderType": BUY,
             "fxpAmount": fix('0.3'),
-            "marketCreatorFee": 0L,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -803,14 +758,11 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
             "market": market.address,
-            "orderType": BUY,
             "fxpAmount": fix('1.2'),
             "numOutcomes": 2L,
-            "marketCreatorFee": 0L,
-            "reportingFee": 0L,
         },
         {
             "_event_type": "TakeOrder",

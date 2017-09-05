@@ -36,12 +36,9 @@ def test_publicTakeOrder_bid(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0,
-            "orderType": BUY,
             "fxpAmount": int(fix('1.2')),
-            "marketCreatorFee": 0,
             "numOutcomes": 2,
             "market": market.address,
         },
@@ -88,12 +85,9 @@ def test_publicTakeOrder_ask(contractsFixture):
     # assert
     assert logs == [
         {
-            "_event_type": "CompleteSets",
+            "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "reportingFee": 0,
-            "orderType": BUY,
             "fxpAmount": fix('1.2'),
-            "marketCreatorFee": 0,
             "numOutcomes": 2,
             "market": market.address
         },
