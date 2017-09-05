@@ -17,6 +17,8 @@ def test_topics(fundedRepFixture):
     yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
 
+    print topics.address
+
     assert topics.count() == 0
     assert topics.updatePopularity('Politics'.ljust(32, '\x00'), 10)
     assert topics.count() == 1

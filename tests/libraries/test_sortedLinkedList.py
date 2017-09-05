@@ -9,8 +9,8 @@ from ethereum.config import config_metropolis
  
 @fixture(scope="session")
 def sortedLinkedListSnapshot(sessionFixture):
-    int256Comparor = sessionFixture.upload('serpent_test_helpers/int256Comparor.se')
-    sortedLinkedList = sessionFixture.upload('../src/libraries/sortedLinkedList.se')
+    int256Comparor = sessionFixture.upload('../src/libraries/ComparorUint256.sol')
+    sortedLinkedList = sessionFixture.upload('../src/libraries/SortedLinkedListUint256.sol')
     sortedLinkedList.initialize(int256Comparor.address)
     return sessionFixture.chain.snapshot()
 
@@ -19,21 +19,21 @@ def sortedLinkedListContractsFixture(sessionFixture, sortedLinkedListSnapshot):
     sessionFixture.chain.revert(sortedLinkedListSnapshot)
     return sessionFixture
 
-def test_helperComparor(sortedLinkedListContractsFixture):
-
-    int256Comparor = sortedLinkedListContractsFixture.contracts['int256Comparor']
-
-    assert int256Comparor.compare(1, 1) == 0
-    assert int256Comparor.compare(0, 1) == -1
-    assert int256Comparor.compare(1, 0) == 1
+#def test_helperComparor(sortedLinkedListContractsFixture):
+#
+#    int256Comparor = sortedLinkedListContractsFixture.contracts['int256Comparor']
+#
+#    assert int256Comparor.compare(1, 1) == 0
+#    assert int256Comparor.compare(0, 1) == -1
+#    assert int256Comparor.compare(1, 0) == 1
 
 def test_sortedLinkedListInitialState(sortedLinkedListContractsFixture):
 
-    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['SortedLinkedListUint256']
 
     # The list is empty initially
     assert sortedLinkedList.isEmpty()
-    assert sortedLinkedList.count() == 0
+    assert sortedLinkedList.getCount() == 0
 
     # The list is empty. Attempts to get items fail
     with raises(TransactionFailed):
@@ -43,7 +43,7 @@ def test_sortedLinkedListInitialState(sortedLinkedListContractsFixture):
 
 def test_sortedLinkedListRequireNotZero(sortedLinkedListContractsFixture):
 
-    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['SortedLinkedListUint256']
 
     # we don't allow adding 0
     with raises(TransactionFailed):
@@ -51,11 +51,11 @@ def test_sortedLinkedListRequireNotZero(sortedLinkedListContractsFixture):
 
 def test_sortedLinkedListAddOneItem(sortedLinkedListContractsFixture):
 
-    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['SortedLinkedListUint256']
 
     # We can add an item
     assert sortedLinkedList.add(42)
-    assert sortedLinkedList.count() == 1
+    assert sortedLinkedList.getCount() == 1
 
     # Adding the same item just removes the item and places it again.
     assert sortedLinkedList.add(42)
@@ -66,16 +66,16 @@ def test_sortedLinkedListAddOneItem(sortedLinkedListContractsFixture):
 
 def test_sortedLinkedListMakeEmpty(sortedLinkedListContractsFixture):
 
-    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['SortedLinkedListUint256']
 
     # We can add an item then remove it
     assert sortedLinkedList.add(42)
     assert sortedLinkedList.remove(42)
 
     # If we try to remove again we get back a failure value
-    assert sortedLinkedList.remove(42) == 0
+    assert not sortedLinkedList.remove(42)
 
-    assert sortedLinkedList.count() == 0
+    assert sortedLinkedList.getCount() == 0
 
     # The list is empty. Attempts to get items fail
     with raises(TransactionFailed):
@@ -85,13 +85,13 @@ def test_sortedLinkedListMakeEmpty(sortedLinkedListContractsFixture):
 
 def test_sortedLinkedListAddTwoItems(sortedLinkedListContractsFixture):
 
-    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['SortedLinkedListUint256']
 
     # We can add multiple items
     assert sortedLinkedList.add(42)
     assert sortedLinkedList.add(43)
 
-    assert sortedLinkedList.count() == 2
+    assert sortedLinkedList.getCount() == 2
 
     # Head and tail point to two different nodes
     assert sortedLinkedList.getHead() == 43
@@ -108,7 +108,7 @@ def test_sortedLinkedListAddTwoItems(sortedLinkedListContractsFixture):
 
     # We can remove a specific item by value and the other remains
     assert sortedLinkedList.remove(42)
-    assert sortedLinkedList.count() == 1
+    assert sortedLinkedList.getCount() == 1
 
     assert sortedLinkedList.getTail() == 43
     assert sortedLinkedList.getHead() == 43
@@ -118,14 +118,14 @@ def test_sortedLinkedListAddTwoItems(sortedLinkedListContractsFixture):
 
 def test_sortedLinkedListAddMultipleItems(sortedLinkedListContractsFixture):
 
-    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['SortedLinkedListUint256']
 
     # Let's add many items and confirm the behavior is as expected
     assert sortedLinkedList.add(42)
     assert sortedLinkedList.add(41)
     assert sortedLinkedList.add(43)
 
-    assert sortedLinkedList.count() == 3
+    assert sortedLinkedList.getCount() == 3
 
     assert sortedLinkedList.getHead() == 43
     assert sortedLinkedList.getTail() == 41
@@ -155,7 +155,7 @@ def test_sortedLinkedListAddMultipleItems(sortedLinkedListContractsFixture):
     assert sortedLinkedList.getTail() == 35
     assert sortedLinkedList.getHead() == 45
 
-    assert sortedLinkedList.count() == 6
+    assert sortedLinkedList.getCount() == 6
 
     # Validate order
     doOrderValidation(sortedLinkedList)
@@ -185,7 +185,7 @@ def test_sortedLinkedListAddMultipleItems(sortedLinkedListContractsFixture):
 
 def test_sortedLinkedListHints(sortedLinkedListContractsFixture):
 
-    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['SortedLinkedListUint256']
 
     # Add two to start
     assert sortedLinkedList.add(35)
@@ -196,19 +196,19 @@ def test_sortedLinkedListHints(sortedLinkedListContractsFixture):
     # doing code coverage
     assert sortedLinkedList.add(36, [40])
 
-    assert sortedLinkedList.count() == 3
+    assert sortedLinkedList.getCount() == 3
     assert sortedLinkedList.getNext(35) == 36
 
     # nothing bad happens if we provide invalid hints
     assert sortedLinkedList.contains(38) == 0
     assert sortedLinkedList.add(37, [38])
 
-    assert sortedLinkedList.count() == 4
+    assert sortedLinkedList.getCount() == 4
     assert sortedLinkedList.getNext(36) == 37
 
 def test_sortedLinkedListMultipleHints(sortedLinkedListContractsFixture):
 
-    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['SortedLinkedListUint256']
 
     # Add some elements to start
     assert sortedLinkedList.add(3)
@@ -218,9 +218,9 @@ def test_sortedLinkedListMultipleHints(sortedLinkedListContractsFixture):
     # We can provide multiple hints
     assert sortedLinkedList.add(2, [11,5,1])
 
-def test_test_sortedLinkedListTryFunctions(sortedLinkedListContractsFixture):
+def test_sortedLinkedListTryFunctions(sortedLinkedListContractsFixture):
 
-    sortedLinkedList = sortedLinkedListContractsFixture.contracts['sortedLinkedList']
+    sortedLinkedList = sortedLinkedListContractsFixture.contracts['SortedLinkedListUint256']
 
     # Add some elements to start
     assert sortedLinkedList.add(3)
