@@ -160,8 +160,7 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    // FIXME: Remove first and last parameters, as they are no longer used
-    function saveOrder(bytes32, Trading.TradeTypes _type, IMarket _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId, uint256) public onlyWhitelistedCallers returns (bytes32 _orderId) {
+    function saveOrder(Trading.TradeTypes _type, IMarket _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bytes32 _orderId) {
         require(_type == Trading.TradeTypes.Bid || _type == Trading.TradeTypes.Ask);
         require(_outcome < _market.getNumberOfOutcomes());
         _orderId = getOrderId(_type, _market, _fxpAmount, _fxpPrice, _sender, block.number, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);

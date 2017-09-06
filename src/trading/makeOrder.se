@@ -65,7 +65,7 @@ def makeOrder(sender: address, type: uint8, attoshares: uint256, displayPrice: i
 
     orderID = ORDERS.getOrderId(type, market, attoshares, displayPrice, sender, block.number, outcome, fxpMoneyEscrowed, fxpSharesEscrowed)
     require(ORDERS.getAmount(orderID, type, market, outcome) == 0)
-    orderID = ORDERS.saveOrder(orderID, type, market, attoshares, displayPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID, tx.gasprice)
+    orderID = ORDERS.saveOrder(type, market, attoshares, displayPrice, sender, outcome, fxpMoneyEscrowed, fxpSharesEscrowed, betterOrderID, worseOrderID, tradeGroupID)
 
     return(orderID : bytes32)
 

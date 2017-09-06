@@ -41,7 +41,7 @@ def test_walkOrderList_bids(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId5 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId5 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId5 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
@@ -72,7 +72,7 @@ def test_walkOrderList_bids(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId6 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId6 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId6 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
@@ -103,7 +103,7 @@ def test_walkOrderList_bids(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId7 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId7 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId7 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
@@ -141,7 +141,7 @@ def test_walkOrderList_asks(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId8 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId8 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId8 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
@@ -170,7 +170,7 @@ def test_walkOrderList_asks(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId9 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId9 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId9 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
@@ -201,7 +201,7 @@ def test_walkOrderList_asks(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId10 = orders.saveOrder(order["orderID"], order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId10 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId10 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
@@ -229,7 +229,6 @@ def test_orderSorting(contractsFixture):
         ordersCollection = []
         for order in testCase["orders"]:
             output = orders.saveOrder(
-                order["orderID"],
                 order["type"],
                 market.address,
                 order["fxpAmount"],
@@ -1090,9 +1089,9 @@ def test_saveOrder(contractsFixture):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
-    orderId1 = orders.saveOrder(longTo32Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId1 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId2 = orders.saveOrder(longTo32Bytes(0), ASK, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId2 = orders.saveOrder(ASK, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
 
     assert(ordersFetcher.getOrder(orderId1) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order1 didn't return the expected array of data"
@@ -1115,9 +1114,9 @@ def test_fillOrder(contractsFixture):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
-    orderId1 = orders.saveOrder(longTo32Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId1 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId2 = orders.saveOrder(longTo32Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId2 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
 
     # orderID, fill, money, shares
@@ -1144,11 +1143,11 @@ def test_removeOrder(contractsFixture):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
-    orderId1 = orders.saveOrder(longTo32Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId1 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId2 = orders.saveOrder(longTo32Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId2 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId3 = orders.saveOrder(longTo32Bytes(0), BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId3 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId3 != bytearray(32)), "saveOrder wasn't executed successfully"
     assert(ordersFetcher.getOrder(orderId3) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order3 didn't return the expected data array"
     assert(orders.removeOrder(orderId3, BID, market.address, YES) == 1), "removeOrder wasn't executed successfully"
