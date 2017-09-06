@@ -1,77 +1,78 @@
 // Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-import 'ROOT/trading/ICompleteSets.sol';
+pragma solidity ^0.4.13;
+
 import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';
-import 'ROOT/libraries/math/SafeMathUint256.sol';
-import 'ROOT/libraries/token/ERC20.sol';
-import 'ROOT/extensions/MarketFeeCalculator.sol';
 import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/reporting/IReportingWindow.sol';
 import 'ROOT/trading/IOrders.sol';
+import 'ROOT/trading/Trading.sol';
 
-macro ORDERS: controller.lookup('Orders')
-macro TAKEORDER: controller.lookup('takeOrder')
-macro MAKEORDER: controller.lookup('makeOrder')
 
-contract Trade is Controlled, Typed {
+// FIXME: Remove this once MakeOrder is implemented in Solidity
+contract IMakeOrder {
+    function makeOrder(address, Trading.TradeDirections, uint256, int256, IMarket, uint8, bytes32, bytes32, uint256) returns (bytes32);
+}
 
-    uint8 private constant BID = 1;
-    uint8 private constant ASK = 2;
-    uint8 private constant BUYING = 1;
-    uint8 private constant SELLING = 2;
-    uint256 private constant MINIMUM_GAS_NEEDED = 300000
 
-    function publicBuy(address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external onlyInGoodTimes nonReentrant returns (bytes32) {
-        output = trade(msg.sender, BUYING, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
-        return(output : bytes32)
+// FIXME: Remove this once TakeOrder is implemented in Solidity
+contract ITakeOrder {
+    function takeOrder(address, bytes32, Trading.TradeTypes, IMarket, uint8, uint256, uint256) returns (uint256);
+}
+
+
+contract Trade is Controlled, ReentrancyGuard {
+    uint256 private constant MINIMUM_GAS_NEEDED = 300000;
+
+    function publicBuy(IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external onlyInGoodTimes nonReentrant returns (bytes32) {
+        bytes32 _output = this.trade(msg.sender, Trading.TradeDirections.Buying, _market, _outcome, _fxpAmount, _fxpPrice, _tradeGroupID);
+        return _output;
     }
 
-    function publicSell(address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external onlyInGoodTimes nonReentrant returns (bytes32) {
-        output = trade(msg.sender, SELLING, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
-        return(output : bytes32)
+    function publicSell(IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external onlyInGoodTimes nonReentrant returns (bytes32) {
+        bytes32 _output = this.trade(msg.sender, Trading.TradeDirections.Selling, _market, _outcome, _fxpAmount, _fxpPrice, _tradeGroupID);
+        return _output;
     }
 
-    function publicTrade(uint8 _direction, address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external onlyInGoodTimes nonReentrant returns (bytes32) {
-        output = trade(msg.sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
-        return(output : bytes32)
+    function publicTrade(Trading.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external onlyInGoodTimes nonReentrant returns (bytes32) {
+        bytes32 _output = this.trade(msg.sender, _direction, _market, _outcome, _fxpAmount, _fxpPrice, _tradeGroupID);
+        return _output;
     }
 
-    function publicTakeBestOrder(uint8 _direction, address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external onlyInGoodTimes nonReentrant returns (uint256) {
-        fxpAmountRemaining = takeBestOrder(msg.sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
-        return(fxpAmountRemaining)
+    function publicTakeBestOrder(Trading.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external onlyInGoodTimes nonReentrant returns (uint256) {
+        uint256 _fxpAmountRemaining = this.takeBestOrder(msg.sender, _direction, _market, _outcome, _fxpAmount, _fxpPrice, _tradeGroupID);
+        return _fxpAmountRemaining;
     }
 
-    function trade(address _sender, uint8 _direction, address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) internal returns (bytes32) {
-        controller.assertIsWhitelisted(msg.sender)
-        fxpAmount = takeBestOrder(sender, direction, market, outcome, fxpAmount, fxpPrice, tradeGroupID)
-        if(fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED):
-            return (MAKEORDER.makeOrder(sender, direction, fxpAmount, fxpPrice, market, outcome, 0, 0, tradeGroupID) : bytes32)
-        return (1 : bytes32)
+    function trade(address _sender, Trading.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external onlyWhitelistedCallers returns (bytes32) {
+        uint256 _bestFxpAmount = this.takeBestOrder(_sender, _direction, _market, _outcome, _fxpAmount, _fxpPrice, _tradeGroupID);
+        if (_bestFxpAmount > 0 && msg.gas >= MINIMUM_GAS_NEEDED) {
+            return IMakeOrder(controller.lookup("makeOrder")).makeOrder(_sender, _direction, _bestFxpAmount, _fxpPrice, _market, _outcome, 0, 0, _tradeGroupID);
+        }
+        return 1;
     }
 
-    function takeBestOrder(address _sender, uint8 _direction, address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) internal returns (uint256) {
-        controller.assertIsWhitelisted(msg.sender)
-        require(direction == BUYING or direction == SELLING)
-        # we need to take a BID (1) if we want to SELL (2) and we need to take an ASK (2) if we want to BUY (1)
-        type = (not (direction - 1)) + 1
-        orderID = ORDERS.getBestOrderId(type, market, outcome)
-        while(orderID != 0 and fxpAmount > 0 and msg.gas >= MINIMUM_GAS_NEEDED):
-            fxpOrderPrice = ORDERS.getPrice(orderID, type, market, outcome)
-            if type == BID:
-                isAcceptablePrice = fxpOrderPrice >= fxpPrice
-            if type == ASK:
-                isAcceptablePrice = fxpOrderPrice <= fxpPrice
-            if isAcceptablePrice:
-                ORDERS.setPrice(market, outcome, fxpOrderPrice)
-                ORDERS.modifyMarketVolume(market, fxpAmount)
-                orderOwner = ORDERS.getOrderOwner(orderID, type, market, outcome)
-                nextOrderID = ORDERS.getWorseOrderId(orderID, type, market, outcome)
-                if(orderOwner != sender):
-                    fxpAmount = TAKEORDER.takeOrder(sender, orderID, type, market, outcome, fxpAmount, tradeGroupID)
-                orderID = nextOrderID
-            else:
-                orderID = 0
-        return(fxpAmount)
+    function takeBestOrder(address _sender, Trading.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external onlyWhitelistedCallers returns (uint256 _bestFxpAmount) {
+        // we need to take a BID if we want to SELL and we need to take an ASK if we want to BUY
+        Trading.TradeTypes _type = (_direction == Trading.TradeDirections.Selling) ? Trading.TradeTypes.Bid : Trading.TradeTypes.Ask;
+        IOrders _orders = IOrders(controller.lookup("Orders"));
+        bytes32 _orderID = _orders.getBestOrderId(_type, _market, _outcome);
+        _bestFxpAmount = _fxpAmount;
+        while (_orderID != 0 && _bestFxpAmount > 0 && msg.gas >= MINIMUM_GAS_NEEDED) {
+            int256 _fxpOrderPrice = _orders.getPrice(_orderID, _type, _market, _outcome);
+            // If the price is acceptable relative to the trade type
+            if (_type == Trading.TradeTypes.Bid ? _fxpOrderPrice >= _fxpPrice : _fxpOrderPrice <= _fxpPrice) {
+                _orders.setPrice(_market, _outcome, _fxpOrderPrice);
+                _orders.modifyMarketVolume(_market, _bestFxpAmount);
+                bytes32 _nextOrderID = _orders.getWorseOrderId(_orderID, _type, _market, _outcome);
+                if (_orders.getOrderOwner(_orderID, _type, _market, _outcome) != _sender) {
+                    _bestFxpAmount = ITakeOrder(controller.lookup("takeOrder")).takeOrder(_sender, _orderID, _type, _market, _outcome, _bestFxpAmount, _tradeGroupID);
+                }
+                _orderID = _nextOrderID;
+            } else {
+                _orderID = 0;
+            }
+        }
+        return _bestFxpAmount;
     }
 }

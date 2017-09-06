@@ -1,13 +1,14 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/reporting/IMarket.sol';
+import 'ROOT/trading/Trading.sol';
 
 
-contract ICompleteSets {
-    function publicBuy(address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external returns (bytes32);
-    function publicSell(address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external returns (bytes32);
-    function publicTrade(uint8 _direction, address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external returns (bytes32);
-    function publicTakeBestOrder(uint8 _direction, address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external returns (uint256);
-    function trade(address _sender, uint8 _direction, address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) internal returns (bytes32);
-    function takeBestOrder(address _sender, uint8 _direction, address _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) internal returns (uint256);
+contract ITrade {
+    function publicBuy(IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external returns (bytes32);
+    function publicSell(IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external returns (bytes32);
+    function publicTrade(Trading.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external returns (bytes32);
+    function publicTakeBestOrder(Trading.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) external returns (uint256);
+    function trade(address _sender, Trading.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) internal returns (bytes32);
+    function takeBestOrder(address _sender, Trading.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupID) internal returns (uint256);
 }
