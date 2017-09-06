@@ -53,7 +53,7 @@ contract Trade is Controlled, ReentrancyGuard {
     }
 
     function takeBestOrder(address _sender, Trading.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, int256 _fxpPrice, uint256 _tradeGroupId) internal returns (uint256 _bestFxpAmount) {
-        // we need to take a BId if we want to SELL and we need to take an ASK if we want to BUY
+        // we need to take a BID if we want to SELL and we need to take an ASK if we want to BUY
         Trading.TradeTypes _type = (_direction == Trading.TradeDirections.Selling) ? Trading.TradeTypes.Bid : Trading.TradeTypes.Ask;
         IOrders _orders = IOrders(controller.lookup("Orders"));
         bytes32 _orderId = _orders.getBestOrderId(_type, _market, _outcome);
