@@ -11,7 +11,7 @@ def test_topics(fundedRepFixture):
     topics = fundedRepFixture.applySignature('Topics', branch.getTopics())
     market = fundedRepFixture.binaryMarket
     cash = fundedRepFixture.cash
-    trade = fundedRepFixture.contracts['trade']
+    trade = fundedRepFixture.contracts['Trade']
     makeOrder = fundedRepFixture.contracts['makeOrder']
     takeOrder = fundedRepFixture.contracts['takeOrder']
     yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
