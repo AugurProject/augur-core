@@ -20,6 +20,7 @@ import 'ROOT/factories/DisputeBondTokenFactory.sol';
 import 'ROOT/libraries/token/ERC20Basic.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 import 'ROOT/libraries/math/SafeMathInt256.sol';
+import 'ROOT/reporting/Reporting.sol';
 
 
 contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
@@ -41,8 +42,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 5 * 10 ** 17;
     uint256 private constant APPROVAL_AMOUNT = 2 ** 254;
-    uint256 private constant AUTOMATED_REPORTING_DURATION_SECONDS = 3 days;
-    uint256 private constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     address private constant NULL_ADDRESS = address(0);
 
     IReportingWindow private reportingWindow;
@@ -419,11 +418,11 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         if (automatedReportReceivedTime != 0) {
             return automatedReportReceivedTime;
         }
-        return endTime + AUTOMATED_REPORTING_DURATION_SECONDS;
+        return endTime + Reporting.automatedReportingDurationSeconds();
     }
 
     function getAutomatedReportDisputeDueTimestamp() public constant returns (uint256) {
-        return getAutomatedReportDueTimestamp() + AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS;
+        return getAutomatedReportDueTimestamp() + Reporting.automatedReportingDisputeDurationSeconds();
     }
 
     function getReportingState() public constant returns (ReportingState) {

@@ -15,6 +15,7 @@ import 'ROOT/trading/ICash.sol';
 import 'ROOT/factories/MarketFactory.sol';
 import 'ROOT/factories/SetFactory.sol';
 import 'ROOT/factories/RegistrationTokenFactory.sol';
+import 'ROOT/reporting/Reporting.sol';
 
 
 contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWindow {
@@ -26,8 +27,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set private allReporterMarkets;
     mapping(address => Set) private reportsByReporter;
     mapping(address => uint256) private numberOfReportsByMarket;
-    uint256 private constant REPORTING_DURATION_SECONDS = 27 * 1 days;
-    uint256 private constant REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
 
     function initialize(IBranch _branch, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
@@ -152,7 +151,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function getReportingEndTime() public afterInitialized constant returns (uint256) {
-        return getStartTime() + REPORTING_DURATION_SECONDS;
+        return getStartTime() + Reporting.reportingDurationSeconds();
     }
 
     function getDisputeStartTime() public afterInitialized constant returns (uint256) {
@@ -160,7 +159,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function getDisputeEndTime() public afterInitialized constant returns (uint256) {
-        return getDisputeStartTime() + REPORTING_DISPUTE_DURATION_SECONDS;
+        return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
     }
 
     function isActive() public afterInitialized constant returns (bool) {

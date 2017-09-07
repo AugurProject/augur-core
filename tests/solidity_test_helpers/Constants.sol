@@ -1,6 +1,7 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/reporting/IMarket.sol';
+import 'ROOT/reporting/Reporting.sol';
 
 
 contract Constants {
@@ -16,6 +17,6 @@ contract Constants {
     IMarket.ReportingState public constant AWAITING_FINALIZATION = IMarket.ReportingState.AWAITING_FINALIZATION;
     IMarket.ReportingState public constant FINALIZED = IMarket.ReportingState.FINALIZED;
 
-    uint256 public constant AUTOMATED_REPORTING_DURATION_SECONDS = 3 days;
-    uint256 public constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
+    uint256 public constant AUTOMATED_REPORTING_DURATION_SECONDS = Reporting.automatedReportingDurationSeconds();
+    uint256 public constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = Reporting.automatedReportingDisputeDurationSeconds();
 }

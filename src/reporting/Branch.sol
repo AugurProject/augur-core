@@ -15,6 +15,7 @@ import 'ROOT/reporting/IDisputeBond.sol';
 import 'ROOT/reporting/IRegistrationToken.sol';
 import 'ROOT/reporting/IReportingWindow.sol';
 import 'ROOT/trading/ITopics.sol';
+import 'ROOT/reporting/Reporting.sol';
 
 
 contract Branch is DelegationTarget, Typed, Initializable, IBranch {
@@ -85,8 +86,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
     }
 
     function getReportingPeriodDurationInSeconds() constant returns (uint256) {
-        // TODO: turn these into shared constants
-        return 27 days + 3 days;
+        return Reporting.reportingDurationSeconds() + Reporting.reportingDisputeDurationSeconds();
     }
 
     function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow) {
@@ -99,8 +99,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
 
     function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasAutomatedReporter) public returns (IReportingWindow) {
         if (_hasAutomatedReporter) {
-            // TODO: turn these into shared constants
-            return getReportingWindowByTimestamp(_endTime + 3 days + 3 days + 1 + getReportingPeriodDurationInSeconds());
+            return getReportingWindowByTimestamp(_endTime + Reporting.automatedReportingDurationSeconds() + Reporting.automatedReportingDisputeDurationSeconds() + 1 + getReportingPeriodDurationInSeconds());
         } else {
             return getReportingWindowByTimestamp(_endTime + 1 + getReportingPeriodDurationInSeconds());
         }
