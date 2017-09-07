@@ -19,4 +19,6 @@ contract Constants {
 
     uint256 public constant AUTOMATED_REPORTING_DURATION_SECONDS = Reporting.automatedReportingDurationSeconds();
     uint256 public constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = Reporting.automatedReportingDisputeDurationSeconds();
+
+    uint256 public constant REGISTRATION_TOKEN_BOND_AMOUNT = Reporting.getRegistrationTokenBondAmount();
 }

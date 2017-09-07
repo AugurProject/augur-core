@@ -259,7 +259,7 @@ def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
     assert newMarket.getReportingState() == reportingFixture.constants.LIMITED_REPORTING()
 
 
-# TODO Test the case were no reports are recieved within a window and it passes into awaiting finalization. It should move the market to the next reporting window.
+# FIXME Test the case where no reports are recieved within a window and it passes into awaiting finalization. It should move the market to the next reporting window.
 
 
 def proceedToAutomatedReporting(reportingFixture):
@@ -399,6 +399,7 @@ def finalizeForkingMarket(reportingFixture, finalizeByMigration):
 
 @fixture(scope="session")
 def reportingSnapshot(sessionFixture):
+    sessionFixture.resetSnapshot()
     # Seed legacy rep contract
     legacyRepContract = sessionFixture.contracts['LegacyRepContract']
     legacyRepContract.faucet(long(11 * 10**6 * 10**18))
