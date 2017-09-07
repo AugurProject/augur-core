@@ -8,10 +8,7 @@ import 'ROOT/libraries/ReentrancyGuard.sol';
 import 'ROOT/trading/IMakeOrder.sol';
 import 'ROOT/trading/Trading.sol';
 
-/**
- * @title MakeOrder
- * @dev This allows you to place orders on the book.
- */
+
 contract MakeOrder is Controlled, ReentrancyGuard {
     using PlaceOrder for PlaceOrder.Data;
 
