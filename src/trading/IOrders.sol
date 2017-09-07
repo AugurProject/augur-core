@@ -5,6 +5,7 @@ import 'ROOT/trading/Trading.sol';
 
 
 contract IOrders {
+    function saveOrder(bytes32, Trading.TradeTypes _type, IMarket _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId, uint256) public returns (bytes32 _orderId);
     function removeOrder(bytes32 _orderId, Trading.TradeTypes _type, IMarket _market, uint8 _outcome) public returns (bool);
     function getOrders(bytes32 _orderId) public constant returns (uint256 _amount, int256 _price, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId);
     function getAmount(bytes32 _orderId, Trading.TradeTypes, IMarket, uint8) public constant returns (uint256);
@@ -16,6 +17,7 @@ contract IOrders {
     function getWorseOrderId(bytes32 _orderId, Trading.TradeTypes, IMarket, uint8) public constant returns (bytes32);
     function getBestOrderId(Trading.TradeTypes _type, IMarket _market, uint8 _outcome) public constant returns (bytes32);
     function getWorstOrderId(Trading.TradeTypes _type, IMarket _market, uint8 _outcome) public constant returns (bytes32);
+    function getOrderId(Trading.TradeTypes _type, IMarket _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint256 _blockNumber, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bytes32);
     function isBetterPrice(Trading.TradeTypes _type, IMarket, uint8, int256 _fxpPrice, bytes32 _orderId) public constant returns (bool);
     function isWorsePrice(Trading.TradeTypes _type, IMarket, uint8, int256 _fxpPrice, bytes32 _orderId) public constant returns (bool);
     function assertIsNotBetterPrice(Trading.TradeTypes _type, IMarket _market, uint8 _outcome, int256 _fxpPrice, bytes32 _betterOrderId) public constant returns (bool);
