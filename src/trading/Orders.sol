@@ -101,7 +101,7 @@ contract Orders is DelegationTarget, IOrders {
     }
 
     function getOrderId(Trading.TradeTypes _type, IMarket _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint256 _blockNumber, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bytes32) {
-        return ripemd160(_type, _market, _fxpAmount, _fxpPrice, _sender, _blockNumber, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
+        return sha256(_type, _market, _fxpAmount, _fxpPrice, _sender, _blockNumber, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
     }
 
     function isBetterPrice(Trading.TradeTypes _type, IMarket, uint8, int256 _fxpPrice, bytes32 _orderId) public constant returns (bool) {
@@ -198,11 +198,11 @@ contract Orders is DelegationTarget, IOrders {
         uint256 _fill = 0;
         if (_orderType == Trading.TradeTypes.Bid) {
             // We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
-            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(orders[_orderId].fxpPrice - _market.getMinDisplayPrice()), 10**18);
+            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(orders[_orderId].fxpPrice - _market.getMinDisplayPrice()), 1 ether);
         }
         if (_orderType == Trading.TradeTypes.Ask) {
             // We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
-            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(_market.getMaxDisplayPrice() - orders[_orderId].fxpPrice), 10**18);
+            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(_market.getMaxDisplayPrice() - orders[_orderId].fxpPrice), 1 ether);
         }
         require(_fill <= orders[_orderId].fxpAmount);
         orders[_orderId].fxpAmount -= _fill;
@@ -318,6 +318,6 @@ contract Orders is DelegationTarget, IOrders {
     }
 
     function getBestOrderWorstOrderHash(IMarket _market, uint8 _outcome, Trading.TradeTypes _type) private constant returns (bytes32) {
-        return ripemd160(_market, _outcome, _type);
+        return sha256(_market, _outcome, _type);
     }
 }

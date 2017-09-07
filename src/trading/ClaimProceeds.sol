@@ -67,11 +67,11 @@ contract ClaimProceeds is Controlled, ReentrancyGuard, IClaimProceeds {
         MarketFeeCalculator _marketFeeCalculator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
         IReportingWindow _reportingWindow = _market.getReportingWindow();
         uint256 _reportingFeeAttoethPerEth = _marketFeeCalculator.getReportingFeeInAttoethPerEth(_reportingWindow);
-        return _amount.mul(_reportingFeeAttoethPerEth).div(10**18);
+        return _amount.mul(_reportingFeeAttoethPerEth).div(1 ether);
     }
 
     function calculateMarketCreatorFee(IMarket _market, uint256 _amount) public constant returns (uint256) {
         uint256 _marketCreatorFeeAttoEthPerEth = _market.getMarketCreatorSettlementFeeInAttoethPerEth();
-        return _amount.mul(_marketCreatorFeeAttoEthPerEth).div(10**18);
+        return _amount.mul(_marketCreatorFeeAttoEthPerEth).div(1 ether);
     }
 }
