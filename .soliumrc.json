@@ -4,7 +4,7 @@
     "imports-on-top": true,
     "variable-declarations": true,
     "array-declarations": true,
-    "operator-whitespace": false, // Temporarily set to false until https://github.com/duaraghav8/Solium/issues/106 is resolved
+    "operator-whitespace": false,
     "lbrace": true,
     "camelcase": true,
     "uppercase": false,
@@ -18,7 +18,7 @@
     "deprecated-suicide": true,
     "pragma-on-top": true,
     "comma-whitespace": true,
-    "function-whitespace": false, // Temporarily set to false until https://github.com/duaraghav8/Solium/issues/104 is resolved
+    "function-whitespace": false,
     "conditionals-whitespace": true,
     "semicolon-whitespace": true,
     "overflow-indentation": false,
