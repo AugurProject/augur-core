@@ -1,20 +1,23 @@
 pragma solidity ^0.4.13;
 
 import "ROOT/libraries/DelegationTarget.sol";
-import "ROOT/legacy_reputation/Ownable.sol";
-import "ROOT/libraries/Delegator.sol";
-import "ROOT/Controller.sol";
+import "ROOT/libraries/Initializable.sol";
 
 
-contract SetUint256 is DelegationTarget, Ownable {
+contract SetUint256 is DelegationTarget, Initializable {
 
     mapping(uint256 => bool) private collection;
     uint private count;
     address private owner;
     bool private initialized;
 
-    function initialize(address _owner) public onlyOwner returns (bool) {
-        require(!initialized);
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
+    function initialize(address _owner) external beforeInitialized returns (bool) {
+        endInitialization();
         initialized = true;
         owner = _owner;
         return (true);
@@ -42,13 +45,4 @@ contract SetUint256 is DelegationTarget, Ownable {
         return (count);
     }
 }
-
-
-contract SetUint256Factory {
-    function createSetUint256(Controller _controller, address _owner) returns (SetUint256) {
-        Delegator _delegator = new Delegator(_controller, "SetUint256");
-        SetUint256 _setUint256 = SetUint256(_delegator);
-        _setUint256.initialize(_owner);
-        return (_setUint256);
-    }
-}   
+  

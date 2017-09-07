@@ -1,13 +1,10 @@
 pragma solidity ^0.4.13;
 
 import "ROOT/libraries/DelegationTarget.sol";
-import "ROOT/legacy_reputation/Ownable.sol";
-import "ROOT/libraries/ComparorUint256.sol";
-import "ROOT/libraries/Delegator.sol";
-import "ROOT/Controller.sol";
+import "ROOT/libraries/Initializable.sol";
 
 
-contract SortedLinkedListUint256 is DelegationTarget, Ownable, ComparorUint256 {
+contract SortedLinkedListUint256 is DelegationTarget, Initializable {
 
     struct Node {
         bool exists;
@@ -22,13 +19,27 @@ contract SortedLinkedListUint256 is DelegationTarget, Ownable, ComparorUint256 {
     address private owner;
     bool private initialized;
 
-    function initialize(address _owner) public onlyOwner returns (bool) {
-        require(!initialized);
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
+    function initialize(address _owner) external beforeInitialized returns (bool) {
+        endInitialization();
         initialized = true;
         owner = _owner;
         return (true);
     }
 
+    function compare(uint256 _firstItem, uint256 _secondItem) public constant returns (int256) {
+        if (_firstItem < _secondItem) {
+            return (-1);
+        } else if (_firstItem > _secondItem) {
+            return (1);
+        }
+        return (0);
+    }
+    
     function add(uint256 _item, uint256[] _hints) public onlyOwner returns (bool) {
         require(_item != 0);
         if (contains(_item)) {
@@ -269,12 +280,3 @@ contract SortedLinkedListUint256 is DelegationTarget, Ownable, ComparorUint256 {
     }
 }
 
-
-contract SortedLinkedListUint256Factory {
-    function createSortedLinkedListUint256(Controller _controller, address _owner) returns (SortedLinkedListUint256) {
-        Delegator _delegator = new Delegator(_controller, "SortedLinkedListUint256");
-        SortedLinkedListUint256 _sortedLinkedListUint256 = SortedLinkedListUint256(_delegator);
-        _sortedLinkedListUint256.initialize(_owner);
-        return (_sortedLinkedListUint256);
-    }
-}

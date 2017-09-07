@@ -1,12 +1,10 @@
 pragma solidity ^0.4.13;
 
 import "ROOT/libraries/DelegationTarget.sol";
-import "ROOT/legacy_reputation/Ownable.sol";
-import "ROOT/libraries/Delegator.sol";
-import "ROOT/Controller.sol";
+import "ROOT/libraries/Initializable.sol";
 
 
-contract OrderedSetUint256 is DelegationTarget, Ownable {
+contract OrderedSetUint256 is DelegationTarget, Initializable {
 
     struct OrderedSetItem {
         uint256 prev;
@@ -23,8 +21,13 @@ contract OrderedSetUint256 is DelegationTarget, Ownable {
     address private owner;
     bool private initialized;
 
-    function initialize(address _owner) public onlyOwner returns (bool) {
-        require(!initialized);
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
+    function initialize(address _owner) external beforeInitialized returns (bool) {
+        endInitialization();
         initialized = true;
         owner = _owner;
         return (true);
@@ -155,14 +158,4 @@ contract OrderedSetUint256 is DelegationTarget, Ownable {
         }
         return (_result);
     } 
-}
-
-
-contract OrderedSetUint256Factory {
-    function createOrderedSetUint256(Controller _controller, address _owner) returns (OrderedSetUint256) {
-        Delegator _delegator = new Delegator(_controller, "OrderedSetUint256");
-        OrderedSetUint256 _orderedSetUint256 = OrderedSetUint256(_delegator);
-        _orderedSetUint256.initialize(_owner);
-        return (_orderedSetUint256);
-    }
 }
