@@ -43,9 +43,9 @@ def proceedToAutomatedReporting(testFixture, market):
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     # We can't yet do an automated report on the market as it's in the pre reporting phase
-    assert market.getReportingState() == testFixture.constants.PRE_REPORTING()
-    with raises(TransactionFailed, message="Reporting cannot be done in the PRE REPORTING state"):
-        market.automatedReport([0,2], sender=tester.k0)
+    if (market.getReportingState() == testFixture.constants.PRE_REPORTING()):
+        with raises(TransactionFailed, message="Reporting cannot be done in the PRE REPORTING state"):
+            market.automatedReport([0,2], sender=tester.k0)
 
     # Fast forward to the reporting phase time
     reportingWindow = testFixture.applySignature('ReportingWindow', branch.getNextReportingWindow())
