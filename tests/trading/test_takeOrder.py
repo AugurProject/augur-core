@@ -14,7 +14,7 @@ SELL = 2
 
 def test_publicTakeOrder_bid(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -63,7 +63,7 @@ def test_publicTakeOrder_bid(contractsFixture):
 
 def test_publicTakeOrder_ask(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']

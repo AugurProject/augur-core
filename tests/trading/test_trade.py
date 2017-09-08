@@ -15,7 +15,7 @@ SELL = 2
 
 def test_one_bid_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
@@ -67,7 +67,7 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
 
 def test_one_bid_on_books_buy_partial_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
@@ -118,7 +118,7 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
 
 def test_one_bid_on_books_buy_excess_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
@@ -182,7 +182,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
 
 def test_two_bids_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
@@ -259,7 +259,7 @@ def test_two_bids_on_books_buy_both(contractsFixture):
 
 def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
@@ -337,7 +337,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
 
 def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
@@ -406,7 +406,7 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
 
 def test_one_ask_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
@@ -458,7 +458,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
 
 def test_one_ask_on_books_buy_partial_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
@@ -510,7 +510,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
 
 def test_one_ask_on_books_buy_excess_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
@@ -574,7 +574,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
 
 def test_two_asks_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
@@ -652,7 +652,7 @@ def test_two_asks_on_books_buy_both(contractsFixture):
 
 def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']
@@ -730,7 +730,7 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
 
 def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
     takeOrder = contractsFixture.contracts['takeOrder']
     orders = contractsFixture.contracts['Orders']

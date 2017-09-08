@@ -17,7 +17,7 @@ def test_cancelBid(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
     orderType = BID
@@ -52,7 +52,7 @@ def test_cancelAsk(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
     orderType = ASK
@@ -87,7 +87,7 @@ def test_exceptions(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
     orderType = BID

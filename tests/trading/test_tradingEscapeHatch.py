@@ -18,7 +18,7 @@ def test_escapeHatch(contractsFixture):
     controller = contractsFixture.controller
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     trade = contractsFixture.contracts['Trade']
     tradingEscapeHatch = contractsFixture.contracts['tradingEscapeHatch']
