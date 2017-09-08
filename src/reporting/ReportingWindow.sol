@@ -15,19 +15,26 @@ import 'ROOT/trading/ICash.sol';
 import 'ROOT/factories/MarketFactory.sol';
 import 'ROOT/factories/SetFactory.sol';
 import 'ROOT/factories/RegistrationTokenFactory.sol';
+import 'ROOT/reporting/Reporting.sol';
+import 'ROOT/libraries/math/SafeMathUint256.sol';
 
 
 contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWindow {
+    using SafeMathUint256 for uint256;
+
+    struct ReportingStatus {
+        Set marketsReportedOn;
+        bool finishedReporting;
+    }
+
     IBranch private branch;
     uint256 private startTime;
     IRegistrationToken private registrationToken;
     Set private markets;
     Set private limitedReporterMarkets;
     Set private allReporterMarkets;
-    mapping(address => Set) private reportsByReporter;
+    mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
-    uint256 private constant REPORTING_DURATION_SECONDS = 27 * 1 days;
-    uint256 private constant REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
 
     function initialize(IBranch _branch, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
@@ -90,19 +97,19 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         IMarket _market = IMarket(msg.sender);
         require(markets.contains(_market));
         IMarket.ReportingState _state = _market.getReportingState();
-        if (_state > IMarket.ReportingState.ALL_REPORTING) {
-            allReporterMarkets.remove(_market);
-            limitedReporterMarkets.remove(_market);
-            return false;
-        }
-        if (_state > IMarket.ReportingState.LIMITED_REPORTING) {
+
+        if (_state == IMarket.ReportingState.ALL_REPORTING) {
             allReporterMarkets.addSetItem(_market);
-            limitedReporterMarkets.remove(_market);
-            return false;
+        } else {
+            allReporterMarkets.remove(_market);
         }
-        // defaults to in limited reporter markets
-        allReporterMarkets.remove(_market);
-        limitedReporterMarkets.addSetItem(_market);
+
+        if (_state == IMarket.ReportingState.LIMITED_REPORTING) {
+            limitedReporterMarkets.addSetItem(_market);
+        } else {
+            limitedReporterMarkets.remove(_market);
+        }
+
         return true;
     }
 
@@ -111,7 +118,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         require(_market.getReportingTokenOrZeroByPayoutDistributionHash(_payoutDistributionHash) == msg.sender);
         IMarket.ReportingState _state = _market.getReportingState();
         require(_state == IMarket.ReportingState.ALL_REPORTING || _state == IMarket.ReportingState.LIMITED_REPORTING);
-
         if (_state == IMarket.ReportingState.ALL_REPORTING) {
             // always give credit for events in all-reporters phase
             privateNoteReport(_market, _reporter);
@@ -152,7 +158,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function getReportingEndTime() public afterInitialized constant returns (uint256) {
-        return getStartTime() + REPORTING_DURATION_SECONDS;
+        return getStartTime() + Reporting.reportingDurationSeconds();
     }
 
     function getDisputeStartTime() public afterInitialized constant returns (uint256) {
@@ -160,7 +166,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function getDisputeEndTime() public afterInitialized constant returns (uint256) {
-        return getDisputeStartTime() + REPORTING_DISPUTE_DURATION_SECONDS;
+        return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
     }
 
     function isActive() public afterInitialized constant returns (bool) {
@@ -195,6 +201,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function getTargetReportsPerLimitedReporterMarket() public afterInitialized constant returns (uint256) {
         uint256 _limitedReporterMarketCount = limitedReporterMarkets.count();
+        if (_limitedReporterMarketCount == 0) {
+            return 0;
+        }
         uint256 _registeredReporters = registrationToken.getPeakSupply();
         uint256 _minimumReportsPerMarket = BASE_MINIMUM_REPORTERS_PER_MARKET;
         uint256 _totalReportsForAllLimitedReporterMarkets = _minimumReportsPerMarket * _limitedReporterMarketCount;
@@ -216,7 +225,10 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function getRequiredReportsPerReporterForlimitedReporterMarkets() public afterInitialized constant returns (uint256) {
-        return getTargetReportsPerLimitedReporterMarket() * limitedReporterMarkets.count() / registrationToken.totalSupply();
+        uint256 _numLimitedReporterMarkets = limitedReporterMarkets.count();
+        uint256 _requiredReports = getTargetReportsPerLimitedReporterMarket() * _numLimitedReporterMarkets / registrationToken.totalSupply();
+        // We shouldn't require more reporting than is possible.
+        return _requiredReports.min(_numLimitedReporterMarkets);
     }
 
     function getTargetReportsPerReporter() public afterInitialized constant returns (uint256) {
@@ -241,10 +253,10 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function getReportsByReporter(address _reporter) public afterInitialized constant returns (Set) {
-        if (reportsByReporter[_reporter] == address(0)) {
-            reportsByReporter[_reporter] = SetFactory(controller.lookup("SetFactory")).createSet(controller, this);
+        if (reporterStatus[_reporter].marketsReportedOn == address(0)) {
+            reporterStatus[_reporter].marketsReportedOn = SetFactory(controller.lookup("SetFactory")).createSet(controller, this);
         }
-        return reportsByReporter[_reporter];
+        return reporterStatus[_reporter].marketsReportedOn;
     }
 
     function isContainerForRegistrationToken(IRegistrationToken _shadyRegistrationToken) public afterInitialized constant returns (bool) {
@@ -262,7 +274,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function isDoneReporting(address _reporter) public afterInitialized constant returns (bool) {
-        return getReportsByReporter(_reporter).count() >= getTargetReportsPerReporter();
+        return reporterStatus[_reporter].finishedReporting;
     }
 
     function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {
@@ -271,14 +283,12 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         require(!allReporterMarkets.contains(_market));
         markets.addSetItem(_market);
         IMarket.ReportingState _state = _market.getReportingState();
-        if (_state > IMarket.ReportingState.ALL_REPORTING) {
-            return false;
-        }
-        if (_state > IMarket.ReportingState.LIMITED_REPORTING) {
+        if (_state == IMarket.ReportingState.ALL_REPORTING) {
             allReporterMarkets.addSetItem(_market);
-            return true;
         }
-        limitedReporterMarkets.addSetItem(_market);
+        if (_state == IMarket.ReportingState.LIMITED_REPORTING) {
+            limitedReporterMarkets.addSetItem(_market);
+        }
         return true;
     }
 
@@ -288,6 +298,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
             return true;
         }
         reports.addSetItem(_market);
+        if (reports.count() >= getTargetReportsPerReporter()) {
+            reporterStatus[_reporter].finishedReporting = true;
+        }
         numberOfReportsByMarket[_market] += 1;
         return true;
     }

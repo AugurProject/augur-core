@@ -93,7 +93,7 @@ def getFrozenShareValue(market: address, outcome: uint8):
     tempOutcome = 0
     while tempOutcome < numberOfOutcomes:
         # FIXME: think about this math, can shiftedPrice * range be greater than 2*254?  Can shiftedPrice / denominator lead to rounding errors?  Should we * then / or / then *?
-            # Yes it can be greater, shifted / denominator will lead to rounding errors
+        # Yes it can be greater, shifted / denominator will lead to rounding errors
         self.frozenShareValue[market][tempOutcome] = safeFxpDiv(safeFxpMul(shiftedPrices[tempOutcome], range), denominator)
         tempOutcome += 1
 

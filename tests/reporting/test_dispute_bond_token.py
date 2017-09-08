@@ -104,18 +104,6 @@ def buyReportingTokens(marketType, disputeStakes, reputationToken, reportingToke
         assert reputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalance - row[2]
     print ""
 
-# CONSIDER: This function is unused.  Ideally, we should create test cases that
-# redeem registration tokens.  (Users must report a certain number of times
-# before they can redeem registration tokens)
-def redeemRegistrationTokens(disputeStakes, registrationToken, reputationToken):
-    print "Redeeming registration tokens"
-    for row in disputeStakes:
-        accountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
-        registrationToken.redeem(sender=getattr(tester, 'k' + str(row[0])))
-        assert registrationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == 0
-        assert reputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalance + (1 * REP_DIVISOR)
-    print ""
-
 def calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, tentativeWinningPayoutDistributionHash):
     totalLosingDisputeBondTokens = 0
     if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == tentativeWinningPayoutDistributionHash):
