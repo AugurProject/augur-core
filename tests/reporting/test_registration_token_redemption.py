@@ -2,6 +2,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, lazy_fixture, raises
 from datetime import timedelta
+from reporting_utils import proceedToAutomatedReporting, proceedToLimitedReporting, proceedToAllReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 def test_automatedReportingRedemption(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
@@ -30,14 +31,18 @@ def test_automatedReportingRedemption(registrationTokenRedemptionFixture):
     # The reporter now has their bond back
     assert reputationToken.balanceOf(tester.a1) == previousBalance + registrationTokenRedemptionFixture.constants.REGISTRATION_TOKEN_BOND_AMOUNT()
 
-def test_limitedReportingRedemptionSingleMarketHappyPath(registrationTokenRedemptionFixture):
+@mark.parametrize('makeReport', [
+    True,
+    False
+])
+def test_limitedReportingRedemptionSingleMarketHappyPath(registrationTokenRedemptionFixture, makeReport):
     market = registrationTokenRedemptionFixture.market1
     reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = registrationTokenRedemptionFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market)
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1)
 
     # We only need to report on 1 market to satisfy reporting requirements
     assert reportingWindow.getRequiredReportsPerReporterForlimitedReporterMarkets() == 1
@@ -58,14 +63,18 @@ def test_limitedReportingRedemptionSingleMarketHappyPath(registrationTokenRedemp
     # The reporter now has their bond back
     assert reputationToken.balanceOf(tester.a1) == previousBalance + registrationTokenRedemptionFixture.constants.REGISTRATION_TOKEN_BOND_AMOUNT()
 
-def test_limitedReportingRedemptionSingleMarketSadPath(registrationTokenRedemptionFixture):
+@mark.parametrize('makeReport', [
+    True,
+    False
+])
+def test_limitedReportingRedemptionSingleMarketSadPath(registrationTokenRedemptionFixture, makeReport):
     market = registrationTokenRedemptionFixture.market1
     reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = registrationTokenRedemptionFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market)
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1)
 
     # Time passes until the end of the reporting window
     registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
@@ -78,103 +87,14 @@ def test_limitedReportingRedemptionSingleMarketSadPath(registrationTokenRedempti
         registrationToken.redeem(sender=tester.k1)
 
 
-def proceedToAutomatedReporting(registrationTokenRedemptionFixture, market):
-    branch = registrationTokenRedemptionFixture.branch
-    reputationToken = registrationTokenRedemptionFixture.applySignature('ReputationToken', branch.getReputationToken())
-    reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
-
-    registrationTokenRedemptionFixture.chain.head_state.timestamp = market.getEndTime() + 1
-
-    # This will cause us to be in the AUTOMATED REPORTING phase
-    assert market.getReportingState() == registrationTokenRedemptionFixture.constants.AUTOMATED_REPORTING()
-
-def proceedToLimitedReporting(registrationTokenRedemptionFixture, market):
-    # Proceed to automated reporting first if needed
-    if (market.getReportingState() < registrationTokenRedemptionFixture.constants.AUTOMATED_REPORTING()):
-        proceedToAutomatedReporting(registrationTokenRedemptionFixture, market)
-
-    registrationTokenRedemptionFixture.chain.head_state.timestamp = market.getEndTime() + registrationTokenRedemptionFixture.constants.AUTOMATED_REPORTING_DURATION_SECONDS() + 1
-
-    # We're in the LIMITED REPORTING phase now
-    assert market.getReportingState() == registrationTokenRedemptionFixture.constants.LIMITED_REPORTING()
-
-def proceedToAllReporting(registrationTokenRedemptionFixture, market, disptuter):
-    reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
-
-    # Proceed to limited reporting first if needed
-    if (market.getReportingState() < registrationTokenRedemptionFixture.constants.LIMITED_REPORTING()):
-        proceedToLimitedReporting(registrationTokenRedemptionFixture, market)
-
-    registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
-    assert market.getReportingState() == registrationTokenRedemptionFixture.constants.LIMITED_DISPUTE()
-
-    assert market.disputeLimitedReporters(sender=disptuter)
-
-    # We're in the ALL REPORTING phase now
-    assert market.getReportingState() == registrationTokenRedemptionFixture.constants.ALL_REPORTING()
-
-def proceedToForking(registrationTokenRedemptionFixture, market, reporterAddress, reporterKey, disputer):
-    branch = reportingFixture.branch
-    reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
-    reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    reportingTokenNo = reportingFixture.getReportingToken(market, [2,0])
-    reportingTokenYes = reportingFixture.getReportingToken(market, [0,2])
-
-    # proceed to all reporting first if needed
-    if (market.getReportingState() < registrationTokenRedemptionFixture.constants.ALL_REPORTING()):
-        proceedToAllReporting(registrationTokenRedemptionFixture, market)
-
-    # We make one report by the reporter
-    registrationToken = reportingFixture.applySignature('RegistrationToken', reportingTokenNo.getRegistrationToken())
-    registrationToken.register(sender=reporterKey)
-    reportingTokenNo.buy(1, sender=reporterKey)
-
-    # To progress into the ALL DISPUTE phase we move time forward
-    reportingFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
-    assert market.getReportingState() == reportingFixture.constants.ALL_DISPUTE()
-
-    # Making a dispute at this phase will progress the market into FORKING
-    assert market.disputeAllReporters(sender=disputer)
-    assert market.getReportingState() == reportingFixture.constants.FORKING()
-
-
 @fixture(scope="session")
 def registrationTokenRedemptionSnapshot(sessionFixture):
     sessionFixture.resetSnapshot()
     # Move to the next reporting window for these tests as we want to control market creation and reporting in isolation
     originalReportingWindow = sessionFixture.applySignature('ReportingWindow', sessionFixture.binaryMarket.getReportingWindow())
     sessionFixture.chain.head_state.timestamp = originalReportingWindow.getEndTime() + 1
-    # Seed legacy rep contract
-    legacyRepContract = sessionFixture.contracts['LegacyRepContract']
-    legacyRepContract.faucet(long(11 * 10**6 * 10**18))
-    
     market = sessionFixture.market1 = sessionFixture.createReasonableBinaryMarket(sessionFixture.branch, sessionFixture.cash)
-    branch = sessionFixture.branch
-
-    # Get the reputation token for this branch and migrate legacy REP to it
-    reputationToken = sessionFixture.applySignature('ReputationToken', branch.getReputationToken())
-    legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
-    reputationToken.migrateFromLegacyRepContract()
-
-    # Give some REP to testers to make things interesting
-    for testAccount in [tester.a1, tester.a2, tester.a3]:
-        reputationToken.transfer(testAccount, 1 * 10**6 * 10**18)
-
-    reportingWindow = sessionFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    firstRegistrationToken = sessionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
-
-    # Tester 0, 1, 2, and 3 will buy registration tokens so they can report on the market
-    firstRegistrationToken.register(sender=tester.k0)
-    assert firstRegistrationToken.balanceOf(tester.a0) == 1
-    # Testers will have their previous REP balance less the registration token bond of 1 REP
-    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10**18 - 10**18
-
-    for (key, address) in [(tester.k1, tester.a1), (tester.k2, tester.a2), (tester.k3, tester.a3)]:
-        firstRegistrationToken.register(sender=key)
-        assert firstRegistrationToken.balanceOf(address) == 1
-        assert reputationToken.balanceOf(address) == 1 * 10**6 * 10**18 - 10**18
-
-    return sessionFixture.chain.snapshot()
+    return initializeReportingFixture(sessionFixture, market)
 
 @fixture
 def registrationTokenRedemptionFixture(sessionFixture, registrationTokenRedemptionSnapshot):
