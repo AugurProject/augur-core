@@ -4,6 +4,7 @@ from pytest import fixture, mark, lazy_fixture, raises
 from datetime import timedelta
 from reporting_utils import proceedToAutomatedReporting, proceedToLimitedReporting, proceedToAllReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
+''' TODO: it should actually be impossible to have a reporting window with 0 markets to report on. The current thinking is to have reporting windows create a special IMarket on creation that will be reported on IFF no markets in the window enter limited reporting
 def test_automatedReportingRedemption(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
     reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
@@ -30,6 +31,7 @@ def test_automatedReportingRedemption(registrationTokenRedemptionFixture):
 
     # The reporter now has their bond back
     assert reputationToken.balanceOf(tester.a1) == previousBalance + registrationTokenRedemptionFixture.constants.REGISTRATION_TOKEN_BOND_AMOUNT()
+'''
 
 @mark.parametrize('makeReport', [
     True,
@@ -42,7 +44,7 @@ def test_limitedReportingRedemptionSingleMarketHappyPath(registrationTokenRedemp
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1)
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,2])
 
     # We only need to report on 1 market to satisfy reporting requirements
     assert reportingWindow.getRequiredReportsPerReporterForlimitedReporterMarkets() == 1
@@ -74,7 +76,7 @@ def test_limitedReportingRedemptionSingleMarketNoReports(registrationTokenRedemp
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1)
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,2])
 
     # Time passes until the end of the reporting window
     registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
@@ -94,7 +96,7 @@ def test_limitedReportingRedemptionSingleMarketRedeemerDidntReport(registrationT
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1)
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,2])
 
     # We only need to report on 1 market to satisfy reporting requirements
     assert reportingWindow.getRequiredReportsPerReporterForlimitedReporterMarkets() == 1
@@ -122,8 +124,8 @@ def test_limitedReportingRedemptionMultipleMarketHappyPath(registrationTokenRede
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase for both markets
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1)
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market2, makeReport, tester.k1)
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,2])
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market2, makeReport, tester.k1, [0,2])
 
     # We need to report on 2 markets to satisfy reporting requirements
     assert reportingWindow.getRequiredReportsPerReporterForlimitedReporterMarkets() == 2
@@ -158,8 +160,8 @@ def test_limitedReportingRedemptionMultipleMarketInsufficientReport(registration
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1)
-
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,2])
+    
     # We need to report on 2 markets to satisfy reporting requirements
     assert reportingWindow.getRequiredReportsPerReporterForlimitedReporterMarkets() == 2
 
