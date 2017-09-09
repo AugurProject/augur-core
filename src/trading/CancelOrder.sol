@@ -7,7 +7,7 @@ pragma solidity ^0.4.13;
 import 'ROOT/trading/ICancelOrder.sol';
 import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';
-import 'ROOT/libraries/trading/Order.sol';
+import 'ROOT/trading/Order.sol';
 import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/trading/ICash.sol';
 import 'ROOT/trading/IOrders.sol';
@@ -28,18 +28,18 @@ contract CancelOrder is Controlled, ReentrancyGuard, ICancelOrder {
 
         // Look up the order the sender wants to cancel
         IOrders _orders = IOrders(controller.lookup("Orders"));
-        uint256 _fxpMoneyEscrowed = _orders.getOrderMoneyEscrowed(_orderId, _type, _market, _outcome);
-        uint256 _fxpSharesEscrowed = _orders.getOrderSharesEscrowed(_orderId, _type, _market, _outcome);
+        uint256 _fxpMoneyEscrowed = _orders.getOrderMoneyEscrowed(_orderId);
+        uint256 _fxpSharesEscrowed = _orders.getOrderSharesEscrowed(_orderId);
 
         // Check that the order ID is correct and that the sender owns the order
-        require(msg.sender == _orders.getOrderMaker(_orderId, _type, _market, _outcome));
+        require(msg.sender == _orders.getOrderMaker(_orderId));
 
         // Clear the order first
-        _orders.removeOrder(_orderId, _type, _market, _outcome);
+        _orders.removeOrder(_orderId);
 
         refundOrder(msg.sender, _type, _fxpSharesEscrowed, _fxpMoneyEscrowed, _market, _outcome);
 
-        _orders.cancelOrderLog(_market, msg.sender, _orders.getPrice(_orderId, _type, _market, _outcome), _orders.getAmount(_orderId, _type, _market, _outcome), _orderId, _outcome, _type, _fxpMoneyEscrowed, _fxpSharesEscrowed);
+        _orders.cancelOrderLog(_orderId);
 
         return true;
     }

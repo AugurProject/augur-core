@@ -15,7 +15,7 @@ SELL = 2
 def test_publicTakeOrder_bid(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
@@ -31,7 +31,7 @@ def test_publicTakeOrder_bid(contractsFixture):
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = takeOrder.publicTakeOrder(orderID, BID, market.address, YES, fix('1.2'), tradeGroupID, sender = tester.k2)
+    fillOrderID = takeOrder.publicTakeOrder(orderID, fix('1.2'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
@@ -64,7 +64,7 @@ def test_publicTakeOrder_bid(contractsFixture):
 def test_publicTakeOrder_ask(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
@@ -80,7 +80,7 @@ def test_publicTakeOrder_ask(contractsFixture):
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k2)
     assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = takeOrder.publicTakeOrder(orderID, ASK, market.address, YES, fix('1.2'), tradeGroupID, sender = tester.k2)
+    fillOrderID = takeOrder.publicTakeOrder(orderID, fix('1.2'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [

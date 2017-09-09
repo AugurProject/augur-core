@@ -17,7 +17,7 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
@@ -39,25 +39,25 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
-            "fxpAmount": fix('1.2'),
-            "numOutcomes": 2L,
-            "market": market.address
+            u"sender": takeOrder.address,
+            u"fxpAmount": fix('1.2'),
+            u"numOutcomes": 2L,
+            u"market": market.address
         },
         {
             "_event_type": "TakeOrder",
-            "market": market.address,
-            "outcome": YES,
-            "orderType": BID,
-            "orderId": orderID,
-            "price": fix('0.6'),
-            "maker": bytesToHexString(tester.a1),
-            "taker": bytesToHexString(tester.a2),
-            "makerShares": 0L,
-            "makerTokens": fix('1.2', '0.6'),
-            "takerShares": 0L,
-            "takerTokens": fix('1.2', '0.4'),
-            "tradeGroupId": tradeGroupID,
+            u"market": market.address,
+            u"outcome": YES,
+            u"orderType": BID,
+            u"orderId": orderID,
+            u"price": fix('0.6'),
+            u"maker": bytesToHexString(tester.a1),
+            u"taker": bytesToHexString(tester.a2),
+            u"makerShares": 0L,
+            u"makerTokens": fix('1.2', '0.6'),
+            u"takerShares": 0L,
+            u"takerTokens": fix('1.2', '0.4'),
+            u"tradeGroupId": tradeGroupID,
         },
     ]
 
@@ -69,7 +69,7 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
@@ -120,7 +120,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
@@ -184,7 +184,7 @@ def test_two_bids_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -261,7 +261,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -339,7 +339,7 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -408,7 +408,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     tradeGroupID = 42L
@@ -460,7 +460,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -512,7 +512,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -576,7 +576,7 @@ def test_two_asks_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -654,7 +654,7 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -732,7 +732,7 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     cash = contractsFixture.cash
     makeOrder = contractsFixture.contracts['MakeOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']

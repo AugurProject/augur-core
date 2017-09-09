@@ -38,7 +38,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['CompleteSets']
         makeOrder = contractsFixture.contracts['MakeOrder']
-        takeOrder = contractsFixture.contracts['takeOrder']
+        takeOrder = contractsFixture.contracts['TakeOrder']
 
         cashRequired = amount * market.getCompleteSetCostInAttotokens() / 10**18
         assert cash.depositEther(value=cashRequired, sender = sender)
@@ -57,7 +57,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['CompleteSets']
         makeOrder = contractsFixture.contracts['MakeOrder']
-        takeOrder = contractsFixture.contracts['takeOrder']
+        takeOrder = contractsFixture.contracts['TakeOrder']
 
         cashRequired = amount * market.getCompleteSetCostInAttotokens() / 10**18
         assert cash.depositEther(value=cashRequired, sender = sender)
@@ -74,7 +74,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
 
         cash = contractsFixture.cash
         makeOrder = contractsFixture.contracts['MakeOrder']
-        takeOrder = contractsFixture.contracts['takeOrder']
+        takeOrder = contractsFixture.contracts['TakeOrder']
 
         assert cash.depositEther(value = amount, sender = sender)
         assert cash.approve(approvalAddress, amount, sender = sender)
@@ -93,7 +93,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     completeSets = contractsFixture.contracts['CompleteSets']
 
     makerAddress = tester.a1

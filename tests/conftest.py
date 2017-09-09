@@ -107,10 +107,10 @@ class ContractsFixture:
                 }
             },
             'settings': {
-                'remappings': [ 'ROOT=%s' % resolveRelativePath("../src") ]
-            },
-            'outputSelection': {
-                '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
+                'remappings': [ 'ROOT=%s' % resolveRelativePath("../src") ],
+                'outputSelection': {
+                    '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
+                }
             }
         }
         return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../"))['contracts'][absoluteFilePath][contractName]
@@ -240,7 +240,7 @@ class ContractsFixture:
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Mutex','Cash','CompleteSets','MakeOrder','takeBidOrder','takeAskOrder','takeOrder','CancelOrder','Trade','ClaimProceeds','OrdersFetcher']
+        contractsToInitialize = ['Mutex','Cash','CompleteSets','MakeOrder','TakeOrder','CancelOrder','Trade','ClaimProceeds','OrdersFetcher']
         for contractName in contractsToInitialize:
             if getattr(self.contracts[contractName], "setController", None):
                 self.contracts[contractName].setController(self.controller.address)

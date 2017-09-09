@@ -120,12 +120,12 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     // this will need to be called manually for each open market if a spender contract is updated
     function approveSpenders() private returns (bool) {
-        bytes32[5] memory _names = [bytes32("CancelOrder"), bytes32("CompleteSets"), bytes32("takeOrder"), bytes32("tradingEscapeHatch"), bytes32("ClaimProceeds")];
+        bytes32[5] memory _names = [bytes32("CancelOrder"), bytes32("CompleteSets"), bytes32("TakeOrder"), bytes32("tradingEscapeHatch"), bytes32("ClaimProceeds")];
         for (uint8 i = 0; i < _names.length; i++) {
             cash.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT);
         }
         for (uint8 j = 0; j < numOutcomes; j++) {
-            shareTokens[j].approve(controller.lookup("takeOrder"), APPROVAL_AMOUNT);
+            shareTokens[j].approve(controller.lookup("TakeOrder"), APPROVAL_AMOUNT);
         }
         return true;
     }
