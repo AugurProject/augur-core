@@ -42,7 +42,7 @@ def takeBidOrder(taker: address, orderID: bytes32, market: address, outcome: uin
     # Get order
     takerDesiredSharesForThisOrder = min(fxpAmountTakerWants, ORDERS.getAmount(orderID, type, market, outcome))
     orderDisplayPrice = ORDERS.getPrice(orderID, type, market, outcome)
-    maker = ORDERS.getOrderOwner(orderID, type, market, outcome)
+    maker = ORDERS.getOrderMaker(orderID, type, market, outcome)
     makerSharesEscrowed = min(ORDERS.getOrderSharesEscrowed(orderID, type, market, outcome), fxpAmountTakerWants)
     require(maker != taker)
 

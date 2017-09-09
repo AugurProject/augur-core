@@ -37,7 +37,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         cash = contractsFixture.cash
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['CompleteSets']
-        makeOrder = contractsFixture.contracts['makeOrder']
+        makeOrder = contractsFixture.contracts['MakeOrder']
         takeOrder = contractsFixture.contracts['takeOrder']
 
         cashRequired = amount * market.getCompleteSetCostInAttotokens() / 10**18
@@ -56,7 +56,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         cash = contractsFixture.cash
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['CompleteSets']
-        makeOrder = contractsFixture.contracts['makeOrder']
+        makeOrder = contractsFixture.contracts['MakeOrder']
         takeOrder = contractsFixture.contracts['takeOrder']
 
         cashRequired = amount * market.getCompleteSetCostInAttotokens() / 10**18
@@ -73,7 +73,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         if amount == 0: return
 
         cash = contractsFixture.cash
-        makeOrder = contractsFixture.contracts['makeOrder']
+        makeOrder = contractsFixture.contracts['MakeOrder']
         takeOrder = contractsFixture.contracts['takeOrder']
 
         assert cash.depositEther(value = amount, sender = sender)
@@ -92,7 +92,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     cash = contractsFixture.cash
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    makeOrder = contractsFixture.contracts['makeOrder']
+    makeOrder = contractsFixture.contracts['MakeOrder']
     takeOrder = contractsFixture.contracts['takeOrder']
     completeSets = contractsFixture.contracts['CompleteSets']
 

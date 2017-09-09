@@ -11,7 +11,7 @@ import 'ROOT/trading/IOrders.sol';
 contract OrderBook is Controlled {
     using Uint256Arrays for uint256[];
 
-    function getOrderBook(Trading.TradeTypes _type, IMarket _market, uint8 _outcome, bytes32 _startingOrderId, uint256 _numOrdersToLoad) constant public returns (uint256[] _orderBook) {
+    function getOrderBook(Order.TradeTypes _type, IMarket _market, uint8 _outcome, bytes32 _startingOrderId, uint256 _numOrdersToLoad) constant public returns (uint256[] _orderBook) {
         IOrders _orders = IOrders(controller.lookup("Orders"));
         bytes32 _orderId = _startingOrderId;
         if (_orderId == bytes32(0)) {
