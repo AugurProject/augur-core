@@ -7,8 +7,8 @@ pragma solidity ^0.4.13;
 import 'ROOT/trading/IOrdersFetcher.sol';
 import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/arrays/Bytes32Arrays.sol';
+import 'ROOT/libraries/trading/Order.sol';
 import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/trading/Trading.sol';
 import 'ROOT/trading/IOrders.sol';
 
 
@@ -21,8 +21,8 @@ contract OrdersFetcher is Controlled, IOrdersFetcher {
     /**
      * @dev Get orders for a particular market, type, and outcome (chunked)
      */
-    function getOrderIds(Trading.TradeTypes _type, IMarket _market, uint8 _outcome, bytes32 _startingOrderId, uint256 _numOrdersToLoad) external constant returns (bytes32[] _orderIds) {
-        require(_type == Trading.TradeTypes.Bid || _type == Trading.TradeTypes.Ask);
+    function getOrderIds(Order.TradeTypes _type, IMarket _market, uint8 _outcome, bytes32 _startingOrderId, uint256 _numOrdersToLoad) external constant returns (bytes32[] _orderIds) {
+        require(_type == Order.TradeTypes.Bid || _type == Order.TradeTypes.Ask);
         require(_outcome < _market.getNumberOfOutcomes());
         require(_numOrdersToLoad <= 100);
         IOrders _orders = IOrders(controller.lookup("Orders"));
@@ -42,23 +42,23 @@ contract OrdersFetcher is Controlled, IOrdersFetcher {
 
     function getOrder(bytes32 _orderId) public constant returns (uint256 _attoshares, int256 _displayPrice, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _gasPrice) {
         IOrders _orders = IOrders(controller.lookup("Orders"));
-        _attoshares = _orders.getAmount(_orderId, Trading.TradeTypes(0), IMarket(0), 0);
-        _displayPrice = _orders.getPrice(_orderId, Trading.TradeTypes(0), IMarket(0), 0);
-        _owner = _orders.getOrderOwner(_orderId, Trading.TradeTypes(0), IMarket(0), 0);
-        _tokensEscrowed = _orders.getOrderMoneyEscrowed(_orderId, Trading.TradeTypes(0), IMarket(0), 0);
-        _sharesEscrowed = _orders.getOrderSharesEscrowed(_orderId, Trading.TradeTypes(0), IMarket(0), 0);
-        _betterOrderId = _orders.getBetterOrderId(_orderId, Trading.TradeTypes(0), IMarket(0), 0);
-        _worseOrderId = _orders.getWorseOrderId(_orderId, Trading.TradeTypes(0), IMarket(0), 0);
+        _attoshares = _orders.getAmount(_orderId, Order.TradeTypes(0), IMarket(0), 0);
+        _displayPrice = _orders.getPrice(_orderId, Order.TradeTypes(0), IMarket(0), 0);
+        _owner = _orders.getOrderMaker(_orderId, Order.TradeTypes(0), IMarket(0), 0);
+        _tokensEscrowed = _orders.getOrderMoneyEscrowed(_orderId, Order.TradeTypes(0), IMarket(0), 0);
+        _sharesEscrowed = _orders.getOrderSharesEscrowed(_orderId, Order.TradeTypes(0), IMarket(0), 0);
+        _betterOrderId = _orders.getBetterOrderId(_orderId, Order.TradeTypes(0), IMarket(0), 0);
+        _worseOrderId = _orders.getWorseOrderId(_orderId, Order.TradeTypes(0), IMarket(0), 0);
         return (_attoshares, _displayPrice, _owner, _tokensEscrowed, _sharesEscrowed, _betterOrderId, _worseOrderId, 0);
     }
 
-    function ascendOrderList(Trading.TradeTypes _type, IMarket _market, uint8 _outcome, int256 _fxpPrice, bytes32 _lowestOrderId) public constant returns (bytes32 _betterOrderId, bytes32 _worseOrderId) {
+    function ascendOrderList(Order.TradeTypes _type, IMarket _market, uint8 _outcome, int256 _fxpPrice, bytes32 _lowestOrderId) public constant returns (bytes32 _betterOrderId, bytes32 _worseOrderId) {
         _worseOrderId = _lowestOrderId;
         bool _isWorstPrice;
         IOrders _orders = IOrders(controller.lookup("Orders"));
-        if (_type == Trading.TradeTypes.Bid) {
+        if (_type == Order.TradeTypes.Bid) {
             _isWorstPrice = _fxpPrice <= _orders.getPrice(_worseOrderId, _type, _market, _outcome);
-        } else {
+        } else if (_type == Order.TradeTypes.Ask) {
             _isWorstPrice = _fxpPrice >= _orders.getPrice(_worseOrderId, _type, _market, _outcome);
         }
         if (_isWorstPrice) {
@@ -76,13 +76,13 @@ contract OrdersFetcher is Controlled, IOrdersFetcher {
         return (_betterOrderId, _worseOrderId);
     }
 
-    function descendOrderList(Trading.TradeTypes _type, IMarket _market, uint8 _outcome, int256 _fxpPrice, bytes32 _highestOrderId) public constant returns (bytes32 _betterOrderId, bytes32 _worseOrderId) {
+    function descendOrderList(Order.TradeTypes _type, IMarket _market, uint8 _outcome, int256 _fxpPrice, bytes32 _highestOrderId) public constant returns (bytes32 _betterOrderId, bytes32 _worseOrderId) {
         _betterOrderId = _highestOrderId;
         bool _isBestPrice;
         IOrders _orders = IOrders(controller.lookup("Orders"));
-        if (_type == Trading.TradeTypes.Bid) {
+        if (_type == Order.TradeTypes.Bid) {
             _isBestPrice = _fxpPrice > _orders.getPrice(_betterOrderId, _type, _market, _outcome);
-        } else {
+        } else if (_type == Order.TradeTypes.Ask) {
             _isBestPrice = _fxpPrice < _orders.getPrice(_betterOrderId, _type, _market, _outcome);
         }
         if (_isBestPrice) {
@@ -103,7 +103,7 @@ contract OrdersFetcher is Controlled, IOrdersFetcher {
         return (_betterOrderId, _worseOrderId);
     }
 
-    function findBoundingOrders(Trading.TradeTypes _type, IMarket _market, uint8 _outcome, int256 _fxpPrice, bytes32 _bestOrderId, bytes32 _worstOrderId, bytes32 _betterOrderId, bytes32 _worseOrderId) public constant returns (bytes32, bytes32) {
+    function findBoundingOrders(Order.TradeTypes _type, IMarket _market, uint8 _outcome, int256 _fxpPrice, bytes32 _bestOrderId, bytes32 _worstOrderId, bytes32 _betterOrderId, bytes32 _worseOrderId) public constant returns (bytes32, bytes32) {
         IOrders _orders = IOrders(controller.lookup("Orders"));
         if (_bestOrderId == _worstOrderId) {
             if (_bestOrderId == bytes32(0)) {

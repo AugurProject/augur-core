@@ -95,13 +95,13 @@ library Order {
 
     function escrowFunds(Order.Data _orderData) internal returns (bool) {
         if (_orderData.tradeType == Order.TradeTypes.Ask) {
-            escrowFundsForAsk(_orderData);
+            return escrowFundsForAsk(_orderData);
         } else if (_orderData.tradeType == Order.TradeTypes.Bid) {
-            escrowFundsForBid(_orderData);
+            return escrowFundsForBid(_orderData);
         }
     }
 
-    function saveOrder(IController _controller, Order.Data _orderData, uint256 _tradeGroupId) internal returns (bytes32) {
+    function saveOrder(Order.Data _orderData, uint256 _tradeGroupId) internal returns (bytes32) {
         return _orderData.orders.saveOrder(getOrderId(_orderData), _orderData.tradeType, _orderData.market, _orderData.fxpAmount, _orderData.fxpPrice, _orderData.maker, _orderData.outcome, _orderData.fxpMoneyEscrowed, _orderData.fxpSharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId, tx.gasprice);
     }
 

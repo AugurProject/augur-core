@@ -1104,8 +1104,8 @@ def test_saveOrder(contractsFixture):
     assert(orders.getPrice(orderId1, BID, market.address, NO) == fix('0.5')), "price for order1 should be set to 0.5 ETH"
     assert(orders.getPrice(orderId2, ASK, market.address, NO) == fix('0.5')), "price for order2 should be set to 0.5 ETH"
 
-    assert(orders.getOrderOwner(orderId1, BID, market.address, NO) == bytesToHexString(tester.a1)), "orderOwner for order1 should be tester.a1"
-    assert(orders.getOrderOwner(orderId2, ASK, market.address, NO) == bytesToHexString(tester.a2)), "orderOwner for order2 should be tester.a2"
+    assert(orders.getOrderMaker(orderId1, BID, market.address, NO) == bytesToHexString(tester.a1)), "orderOwner for order1 should be tester.a1"
+    assert(orders.getOrderMaker(orderId2, ASK, market.address, NO) == bytesToHexString(tester.a2)), "orderOwner for order2 should be tester.a2"
 
     assert(orders.removeOrder(orderId1, BID, market.address, NO) == 1), "Remove order 1"
     assert(orders.removeOrder(orderId2, ASK, market.address, NO) == 1), "Remove order 2"

@@ -124,17 +124,17 @@ def test_makeOrder_failure(contractsFixture):
     with raises(TransactionFailed):
         makeOrder.makeOrder(tester.a1, ASK, fix('1'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
 
-    # makeOrder exceptions (pre-placeBid/placeAsk)
+    # makeOrder exceptions (pre-escrowFunds)
     with raises(TransactionFailed):
         makeOrder.publicMakeOrder(3, fix('1'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
 
-    # placeBid exceptions
+    # escrowFundsForBid exceptions
     with raises(TransactionFailed):
         makeOrder.publicMakeOrder(BID, fix('1'), fix('3'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
     with raises(TransactionFailed):
         makeOrder.publicMakeOrder(BID, 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
 
-    # placeAsk exceptions
+    # escrowFundsForAsk exceptions
     with raises(TransactionFailed):
         makeOrder.publicMakeOrder(ASK, fix('1'), 1, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
     with raises(TransactionFailed):
@@ -156,7 +156,7 @@ def test_makeOrder_failure(contractsFixture):
 
     assert makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1) != 0, "Order ID should be non-zero"
 
-    # makeOrder exceptions (post-placeBid/Ask)
+    # makeOrder exceptions (post-escrowFunds)
     with raises(TransactionFailed):
         makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
 
