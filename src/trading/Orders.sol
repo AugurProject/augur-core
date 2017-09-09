@@ -156,6 +156,11 @@ contract Orders is DelegationTarget, IOrders {
         require(_outcome < _market.getNumberOfOutcomes());
         _orderId = getOrderId(_type, _market, _fxpAmount, _fxpPrice, _sender, block.number, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
         insertOrderIntoList(_orderId, _type, _market, _outcome, _fxpPrice, _betterOrderId, _worseOrderId);
+        orders[_orderId].orders = this;
+        orders[_orderId].market = _market;
+        orders[_orderId].id = _orderId;
+        orders[_orderId].betterOrderId = _betterOrderId;
+        orders[_orderId].worseOrderId = _worseOrderId;
         orders[_orderId].fxpPrice = _fxpPrice;
         orders[_orderId].fxpAmount = _fxpAmount;
         orders[_orderId].maker = _sender;
@@ -167,6 +172,10 @@ contract Orders is DelegationTarget, IOrders {
 
     function removeOrder(bytes32 _orderId, Order.TradeTypes _type, IMarket _market, uint8 _outcome) public onlyWhitelistedCallers returns (bool) {
         removeOrderFromList(_orderId, _type, _market, _outcome);
+        // TODO: Test replacing the lines below with `delete orders[_orderId]` to see if we can get a full gas refund.
+        orders[_orderId].id = 0;
+        orders[_orderId].betterOrderId = 0;
+        orders[_orderId].worseOrderId = 0;
         orders[_orderId].fxpPrice = 0;
         orders[_orderId].fxpAmount = 0;
         orders[_orderId].maker = 0;
@@ -186,6 +195,7 @@ contract Orders is DelegationTarget, IOrders {
         require(orders[_orderId].fxpPrice >= _market.getMinDisplayPrice());
         require(_market.getMaxDisplayPrice() + _market.getMinDisplayPrice() <= 2**254);
         uint256 _fill = 0;
+        // FIXME: We need to investigate why the fxpDiv() lines below are passing in our test scripts.  We shouldn't need to do fxpDiv(x, 10^18) since fxpDiv() is already dividing by 10^18.
         if (_orderType == Order.TradeTypes.Bid) {
             // We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
             _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(orders[_orderId].fxpPrice - _market.getMinDisplayPrice()), 1 ether);

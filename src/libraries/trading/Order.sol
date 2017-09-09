@@ -80,7 +80,9 @@ library Order {
 
     function getOrderId(Order.Data _orderData) internal constant returns (bytes32) {
         if (_orderData.id == bytes32(0)) {
-            _orderData.id = _orderData.orders.getOrderId(_orderData.tradeType, _orderData.market, _orderData.fxpAmount, _orderData.fxpPrice, _orderData.maker, block.number, _orderData.outcome, _orderData.fxpMoneyEscrowed, _orderData.fxpSharesEscrowed);
+            bytes32 _orderId = _orderData.orders.getOrderId(_orderData.tradeType, _orderData.market, _orderData.fxpAmount, _orderData.fxpPrice, _orderData.maker, block.number, _orderData.outcome, _orderData.fxpMoneyEscrowed, _orderData.fxpSharesEscrowed);
+            require(_orderData.orders.getAmount(_orderId, _orderData.tradeType, _orderData.market, _orderData.outcome) == 0);
+            _orderData.id = _orderId;
         }
         return _orderData.id;
      }
