@@ -104,7 +104,7 @@ library Order {
     }
 
     function saveOrder(Order.Data _orderData, uint256 _tradeGroupId) internal returns (bytes32) {
-        return _orderData.orders.saveOrder(getOrderId(_orderData), _orderData.tradeType, _orderData.market, _orderData.fxpAmount, _orderData.fxpPrice, _orderData.maker, _orderData.outcome, _orderData.fxpMoneyEscrowed, _orderData.fxpSharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId, tx.gasprice);
+        return _orderData.orders.saveOrder(_orderData.tradeType, _orderData.market, _orderData.fxpAmount, _orderData.fxpPrice, _orderData.maker, _orderData.outcome, _orderData.fxpMoneyEscrowed, _orderData.fxpSharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId);
     }
 
     //

@@ -151,16 +151,13 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    // FIXME: Remove first and last parameters, as they are no longer used
-    function saveOrder(bytes32, Order.TradeTypes _type, IMarket _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId, uint256) public onlyWhitelistedCallers returns (bytes32 _orderId) {
+    function saveOrder(Order.TradeTypes _type, IMarket _market, uint256 _fxpAmount, int256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bytes32 _orderId) {
         require(_outcome < _market.getNumberOfOutcomes());
         _orderId = getOrderId(_type, _market, _fxpAmount, _fxpPrice, _sender, block.number, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
         insertOrderIntoList(_orderId, _type, _market, _outcome, _fxpPrice, _betterOrderId, _worseOrderId);
         orders[_orderId].orders = this;
         orders[_orderId].market = _market;
         orders[_orderId].id = _orderId;
-        orders[_orderId].betterOrderId = _betterOrderId;
-        orders[_orderId].worseOrderId = _worseOrderId;
         orders[_orderId].fxpPrice = _fxpPrice;
         orders[_orderId].fxpAmount = _fxpAmount;
         orders[_orderId].maker = _sender;
@@ -174,8 +171,6 @@ contract Orders is DelegationTarget, IOrders {
         removeOrderFromList(_orderId, _type, _market, _outcome);
         // TODO: Test replacing the lines below with `delete orders[_orderId]` to see if we can get a full gas refund.
         orders[_orderId].id = 0;
-        orders[_orderId].betterOrderId = 0;
-        orders[_orderId].worseOrderId = 0;
         orders[_orderId].fxpPrice = 0;
         orders[_orderId].fxpAmount = 0;
         orders[_orderId].maker = 0;

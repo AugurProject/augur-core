@@ -16,7 +16,6 @@ contract Topics is DelegationTarget, Typed, Initializable, ITopics {
     // Mapping of topic to popularity
     IIterableMap private topics;
 
-    // FIXME: topics needs to be sorted on-chain, which means we need a sorted linked list collection with hinted sorting at insertion/update time instead of a simple iterableMap
     function initialize() public beforeInitialized returns (bool) {
         endInitialization();
         topics = IterableMapFactory(controller.lookup("IterableMapFactory")).createIterableMap(controller, this);

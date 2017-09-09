@@ -7,6 +7,7 @@ import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/trading/ICash.sol';
 import 'ROOT/extensions/MarketFeeCalculator.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
+import 'ROOT/reporting/Reporting.sol';
 
 
 // AUDIT: Ensure that a malicious market can't subversively cause share tokens to be paid out incorrectly.
@@ -19,8 +20,7 @@ contract ClaimProceeds is Controlled, ReentrancyGuard, IClaimProceeds {
 
     function claimProceeds(IMarket _market) onlyInGoodTimes nonReentrant external returns(bool) {
         require(_market.getReportingState() == IMarket.ReportingState.FINALIZED);
-        // FIXME: use a shared constant for 3 days
-        require(block.timestamp > _market.getFinalizationTime() + 3 days);
+        require(block.timestamp > _market.getFinalizationTime() + Reporting.claimProceedsWaitTime());
 
         IReportingToken _winningReportingToken = _market.getFinalWinningReportingToken();
 

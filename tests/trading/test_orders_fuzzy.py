@@ -106,7 +106,7 @@ def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbab
                 assert((orderID == worstOrderID and worseOrderID == 0) or fxpPrices[i] < fxpPrices[worseOrderID - 1]), "Input price is < worse order price, or this is the worst order so worse order ID is zero"
             if deadOrders[i, 0]: betterOrderID = numOrders + 1
             if deadOrders[i, 1]: worseOrderID = numOrders + 1
-        output = orders.saveOrder(orderID, orderType, market.address, 1, fxpPrices[i], tester.a1, outcomeID, 0, 0, betterOrderID, worseOrderID, 0, 20000000)
+        output = orders.saveOrder(orderType, market.address, 1, fxpPrices[i], tester.a1, outcomeID, 0, 0, betterOrderID, worseOrderID, 0)
         assert(output == 1), "Insert order into list"
     assert(bestOrderID == int(orders.getBestOrderID(orderType, market.address, outcomeID), 16)), "Verify best order ID"
     assert(worstOrderID == int(orders.getWorstOrderId(orderType, market.address, outcomeID), 16)), "Verify worst order ID"

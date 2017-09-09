@@ -44,11 +44,6 @@ contract Cash is Controlled, Typed, VariableSupplyToken, ICash {
         return WithdrawState.Withdrawn;
     }
 
-    // FIXME: this is necessary until we figure out a better way to check to see if a market's denomination token is a shareToken or not.  right now this is the only other valid denomination token so this hack works, but it won't when we support arbitrary denomination tokens.
-    function getMarket() constant returns (bool) {
-        return false;
-    }
-
     function getTypeName() constant returns (bytes32) {
         return "Cash";
     }
