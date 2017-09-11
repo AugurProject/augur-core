@@ -192,7 +192,7 @@ contract Orders is DelegationTarget, IOrders {
         require(_order.fxpPrice >= _order.market.getMinDisplayPrice());
         require(_order.market.getMaxDisplayPrice() + _order.market.getMinDisplayPrice() <= 2**254);
         uint256 _fill = 0;
-        // FIXME: We need to investigate why the fxpDiv() lines below are passing in our test scripts.  We shouldn't need to do fxpDiv(x, 10^18) since fxpDiv() is already dividing by 10^18.
+        // The fxpDiv below is needed to make tokensFilled be in the appropriate base for division against the fpxPrice value. fxpDiv will multiply the initial value by the final provided value before doing division.
         if (_order.tradeType == Order.TradeTypes.Bid) {
             // We can't use safeSub here because it disallows subtracting negative numbers. Worst case here is an operation of 2**254 - 1 as required above, which won't overflow
             _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(_order.fxpPrice - _order.market.getMinDisplayPrice()), 1 ether);
