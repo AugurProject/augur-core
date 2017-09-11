@@ -7,8 +7,14 @@ pragma solidity ^0.4.13;
  * @dev see https://github.com/ethereum/EIPs/issues/179
  */
 contract ERC20Basic {
-    uint256 public totalSupply;
-    function balanceOf(address who) constant returns (uint256);
-    function transfer(address to, uint256 value) returns (bool);
+    uint256 internal totalSupply;
+
     event Transfer(address indexed from, address indexed to, uint256 value);
+
+    function getTotalSupply() public constant returns (uint256) {
+        return totalSupply;
+    }
+
+    function balanceOf(address _who) public constant returns (uint256);
+    function transfer(address _to, uint256 _value) public returns (bool);
 }

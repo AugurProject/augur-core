@@ -49,4 +49,8 @@ contract ShareToken is DelegationTarget, Typed, Initializable, VariableSupplyTok
     function isShareToken() constant public returns(bool) {
         return true;
     }
+
+    function getTotalSupply() public constant returns (uint256) {
+        return totalSupply;
+    }
 }

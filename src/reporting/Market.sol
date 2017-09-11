@@ -190,7 +190,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             tentativeWinningPayoutDistributionHash = _payoutDistributionHash;
             _tentativeWinningReportingToken = _reportingToken;
         }
-        if (_reportingToken.totalSupply() > _tentativeWinningReportingToken.totalSupply()) {
+        if (_reportingToken.getTotalSupply() > _tentativeWinningReportingToken.getTotalSupply()) {
             tentativeWinningPayoutDistributionHash = _payoutDistributionHash;
         }
         return true;
@@ -212,7 +212,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         reportingWindow.updateMarketPhase();
         return true;
 
-        // FIXME: when the market is finalized, we need to add `reportingTokens[finalPayoutDistributionHash].totalSupply()` to the reporting window.  This is necessary for fee collection which is a cross-market operation.
+        // FIXME: when the market is finalized, we need to add `reportingTokens[finalPayoutDistributionHash].getTotalSupply()` to the reporting window.  This is necessary for fee collection which is a cross-market operation.
         // TODO: figure out how to make it so fee distribution is delayed until all markets have been finalized; we can enforce it contract side and let the UI deal with the actual work
         // FIXME: if finalPayoutDistributionHash != getIdentityDistributionId(), pay back validity bond holder
         // FIXME: if finalPayoutDistributionHash == getIdentityDistributionId(), transfer validity bond to reportingWindow (reporter fee pot)

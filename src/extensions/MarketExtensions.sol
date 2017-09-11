@@ -19,7 +19,7 @@ contract MarketExtensions {
             return 0;
         }
         uint256 _halfTotalSupply = 11 * 10**6 * 10**18 / 2;
-        if (_winningDestination.totalSupply() < _halfTotalSupply && block.timestamp < _reportingWindow.getBranch().getForkEndTime()) {
+        if (_winningDestination.getTotalSupply() < _halfTotalSupply && block.timestamp < _reportingWindow.getBranch().getForkEndTime()) {
             return 0;
         }
         return _winningDestination.getBranch().getParentPayoutDistributionHash();

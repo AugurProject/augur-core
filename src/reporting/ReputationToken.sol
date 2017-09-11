@@ -37,7 +37,7 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         balances[_reporter] = balances[_reporter].sub(_attotokens);
         totalSupply = totalSupply.sub(_attotokens);
         _destination.migrateIn(_reporter, _attotokens);
-        if (topMigrationDestination == address(0) || _destination.totalSupply() > topMigrationDestination.totalSupply()) {
+        if (topMigrationDestination == address(0) || _destination.getTotalSupply() > topMigrationDestination.getTotalSupply()) {
             topMigrationDestination = _destination;
         }
         return true;
@@ -88,5 +88,9 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
 
     function getTopMigrationDestination() constant returns (IReputationToken) {
         return topMigrationDestination;
+    }
+
+    function getTotalSupply() public constant returns (uint256) {
+        return totalSupply;
     }
 }

@@ -156,4 +156,8 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         require(index < market.getNumberOfOutcomes());
         return payoutNumerators[index];
     }
+
+    function getTotalSupply() public constant returns (uint256) {
+        return totalSupply;
+    }
 }
