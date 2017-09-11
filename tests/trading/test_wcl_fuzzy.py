@@ -12,10 +12,6 @@ pytestmark = mark.skipif(not getenv('INCLUDE_FUZZY_TESTS'), reason="take forever
 YES = 1
 NO = 0
 
-# order types
-BID = 1
-ASK = 2
-
 # order fields
 ATTOSHARES = 0
 DISPLAY_PRICE = 1
@@ -145,7 +141,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     execute(
         contractsFixture = contractsFixture,
         market = market,
-        orderType = BID,
+        orderType = contractsFixture.constants.BID(),
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
@@ -166,7 +162,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     execute(
         contractsFixture = contractsFixture,
         market = market,
-        orderType = BID,
+        orderType = contractsFixture.constants.BID(),
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
@@ -187,7 +183,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     execute(
         contractsFixture = contractsFixture,
         market = market,
-        orderType = BID,
+        orderType = contractsFixture.constants.BID(),
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
@@ -208,7 +204,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     execute(
         contractsFixture = contractsFixture,
         market = market,
-        orderType = BID,
+        orderType = contractsFixture.constants.BID(),
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
@@ -236,7 +232,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     execute(
         contractsFixture = contractsFixture,
         market = market,
-        orderType = ASK,
+        orderType = contractsFixture.constants.ASK(),
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
@@ -257,7 +253,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     execute(
         contractsFixture = contractsFixture,
         market = market,
-        orderType = ASK,
+        orderType = contractsFixture.constants.ASK(),
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
@@ -278,7 +274,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     execute(
         contractsFixture = contractsFixture,
         market = market,
-        orderType = ASK,
+        orderType = contractsFixture.constants.ASK(),
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
@@ -299,7 +295,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     execute(
         contractsFixture = contractsFixture,
         market = market,
-        orderType = ASK,
+        orderType = contractsFixture.constants.ASK(),
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,

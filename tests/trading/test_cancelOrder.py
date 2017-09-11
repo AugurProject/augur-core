@@ -7,9 +7,6 @@ from utils import bytesToLong, longTo32Bytes, longToHexString, fix, unfix
 
 tester.STARTGAS = long(6.7 * 10**6)
 
-BID = 1
-ASK = 2
-
 YES = 1
 NO = 0
 
@@ -20,7 +17,7 @@ def test_cancelBid(contractsFixture):
     makeOrder = contractsFixture.contracts['MakeOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
-    orderType = BID
+    orderType = contractsFixture.constants.BID()
     fxpAmount = fix('1')
     fxpPrice = fix('0.6')
     outcomeID = YES
@@ -55,7 +52,7 @@ def test_cancelAsk(contractsFixture):
     makeOrder = contractsFixture.contracts['MakeOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
-    orderType = ASK
+    orderType = contractsFixture.constants.ASK()
     fxpAmount = fix('1')
     fxpPrice = fix('0.6')
     outcomeID = 1
@@ -90,7 +87,7 @@ def test_exceptions(contractsFixture):
     makeOrder = contractsFixture.contracts['MakeOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
-    orderType = BID
+    orderType = contractsFixture.constants.BID()
     fxpAmount = fix('1')
     fxpPrice = fix('0.6')
     outcomeID = YES

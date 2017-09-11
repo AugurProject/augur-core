@@ -2,6 +2,7 @@ pragma solidity ^0.4.13;
 
 import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/reporting/Reporting.sol';
+import 'ROOT/trading/Order.sol';
 
 
 contract Constants {
@@ -21,4 +22,9 @@ contract Constants {
     uint256 public constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = Reporting.automatedReportingDisputeDurationSeconds();
 
     uint256 public constant REGISTRATION_TOKEN_BOND_AMOUNT = Reporting.getRegistrationTokenBondAmount();
+
+    uint8 public constant BID = uint8(Order.TradeTypes.Bid);
+    uint8 public constant ASK = uint8(Order.TradeTypes.Ask);
+    uint8 public constant LONG = uint8(Order.TradeDirections.Long);
+    uint8 public constant SHORT = uint8(Order.TradeDirections.Short);
 }

@@ -3,14 +3,10 @@
 from ethereum.tools import tester
 from utils import fix, bytesToHexString, captureFilteredLogs, longTo32Bytes, longToHexString
 
-BID = 1
-ASK = 2
 
 NO = 0
 YES = 1
 
-BUY = 1
-SELL = 2
 
 def test_publicTakeOrder_bid(contractsFixture):
     cash = contractsFixture.cash
@@ -25,7 +21,7 @@ def test_publicTakeOrder_bid(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(contractsFixture.constants.BID(), fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k2)
@@ -46,7 +42,7 @@ def test_publicTakeOrder_bid(contractsFixture):
             "_event_type": "TakeOrder",
             "market": market.address,
             "outcome": YES,
-            "orderType": BID,
+            "orderType": contractsFixture.constants.BID(),
             "orderId": orderID,
             "price": int(fix('0.6')),
             "maker": bytesToHexString(tester.a1),
@@ -74,7 +70,7 @@ def test_publicTakeOrder_ask(contractsFixture):
     # create order
     assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
     assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(contractsFixture.constants.ASK(), fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
     assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k2)
@@ -95,7 +91,7 @@ def test_publicTakeOrder_ask(contractsFixture):
             "_event_type": "TakeOrder",
             "market": market.address,
             "outcome": YES,
-            "orderType": ASK,
+            "orderType": contractsFixture.constants.ASK(),
             "orderId": orderID,
             "price": fix('0.6'),
             "maker": bytesToHexString(tester.a1),

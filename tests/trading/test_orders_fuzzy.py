@@ -6,8 +6,8 @@ from utils import fix
 
 pytestmark = mark.skipif(not getenv('INCLUDE_FUZZY_TESTS'), reason="take forever to run")
 
-BID = 1
-ASK = 2
+BID = 0
+ASK = 1
 
 ATTOSHARES = 0
 DISPLAY_PRICE = 1
@@ -73,11 +73,11 @@ def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbab
     fxpPrices = np.vectorize(fix)(np.random.rand(numOrders))
     priceRanks = np.argsort(np.argsort(fxpPrices))
     logs = []
-    assert orderType == BID or orderType == ASK
-    if orderType == BID:
+    assert orderType == contractsFixture.constants.BID() or orderType == contractsFixture.constants.ASK()
+    if orderType == contractsFixture.constants.BID():
         bestOrderID = orderIDs[np.argmax(priceRanks)]
         worstOrderID = orderIDs[np.argmin(priceRanks)]
-    if orderType == ASK:
+    if orderType == contractsFixture.constants.ASK():
         bestOrderID = orderIDs[np.argmin(priceRanks)]
         worstOrderID = orderIDs[np.argmax(priceRanks)]
     betterOrderIDs = np.zeros(numOrders, dtype=np.int)
@@ -85,7 +85,7 @@ def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbab
     deadOrders = np.random.rand(numOrders, 2) < deadOrderProbability
     for i, priceRank in enumerate(priceRanks):
         if withBoundingOrders:
-            if orderType == BID:
+            if orderType == contractsFixture.constants.BID():
                 betterOrders = np.flatnonzero(priceRank < priceRanks)
                 worseOrders = np.flatnonzero(priceRank > priceRanks)
             else:
@@ -98,7 +98,7 @@ def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbab
         betterOrderID = betterOrderIDs[i]
         worseOrderID = worseOrderIDs[i]
         if withBoundingOrders:
-            if orderType == BID:
+            if orderType == contractsFixture.constants.BID():
                 assert((orderID == bestOrderID and betterOrderID == 0) or fxpPrices[i] < fxpPrices[betterOrderID - 1]), "Input price is < better order price, or this is the best order so better order ID is zero"
                 assert((orderID == worstOrderID and worseOrderID == 0) or fxpPrices[i] > fxpPrices[worseOrderID - 1]), "Input price is > worse order price, or this is the worst order so worse order ID is zero"
             else:
@@ -117,7 +117,7 @@ def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbab
         worseOrderID = order[WORSE_ORDER_ID]
         betterOrderPrice = orders.getPrice(betterOrderID, orderType, market.address, outcomeID)
         worseOrderPrice = orders.getPrice(worseOrderID, orderType, market.address, outcomeID)
-        if orderType == BID:
+        if orderType == contractsFixture.constants.BID():
             if betterOrderPrice: assert(orderPrice <= betterOrderPrice), "Order price <= better order price"
             if worseOrderPrice: assert(orderPrice >= worseOrderPrice), "Order price >= worse order price"
         else:

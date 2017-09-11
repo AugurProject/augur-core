@@ -5,11 +5,6 @@ from ethereum.tools.tester import TransactionFailed
 from pytest import raises
 from utils import fix, longTo32Bytes
 
-BID = 1
-ASK = 2
-
-LONG = 1
-SHORT = 2
 
 NO = 0
 YES = 1
@@ -28,13 +23,13 @@ def test_escapeHatch(contractsFixture):
     # make order with cash
     assert cash.depositEther(value=fix('100'), sender=tester.k1) == 1, "depositEther to account 1 should succeed"
     assert cash.approve(makeOrder.address, fix('10'), sender=tester.k1) == 1, "Approve makeOrder contract to spend cash from account 1"
-    orderID = makeOrder.publicMakeOrder(ASK, fix('1'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
+    orderID = makeOrder.publicMakeOrder(contractsFixture.constants.ASK(), fix('1'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
     assert orderID
 
     # take order with cash using on-chain matcher
     assert cash.depositEther(value=fix('100'), sender=tester.k2) == 1, "depositEther to account 1 should succeed"
     assert cash.approve(takeOrder.address, fix('10'), sender=tester.k2) == 1, "Approve takeOrder contract to spend cash from account 2"
-    assert trade.publicTakeBestOrder(LONG, market.address, YES, fix('1'), fix('0.6'), sender=tester.k2) == 0
+    assert trade.publicTakeBestOrder(contractsFixture.constants.LONG(), market.address, YES, fix('1'), fix('0.6'), sender=tester.k2) == 0
 
     # assert starting values
     assert cash.balanceOf(tester.a1) == fix('100') - fix('1', '0.4')

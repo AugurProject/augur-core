@@ -17,16 +17,14 @@ import 'ROOT/trading/IOrders.sol';
 library Order {
     using SafeMathUint256 for uint256;
 
-    uint256 constant minOrderValue = 10**14;
+    uint256 constant MIN_ORDER_VALUE = 10**14;
 
     enum TradeTypes {
-        // FIXME: None is a placeholder to force Bid to equal 1 and Ask to equal 2, since these are their values in the Serpent files and test scripts.  After the Solidity migration is done, we should remove "None" and change Bid to 0 and Ask to 1 everywhere.
-        None, Bid, Ask
+        Bid, Ask
     }
 
     enum TradeDirections {
-        // FIXME: Same as above
-        None, Long, Short
+        Long, Short
     }
 
     struct Data {
@@ -113,7 +111,7 @@ library Order {
 
     function escrowFundsForBid(Order.Data _orderData) private returns (bool) {
         uint256 _orderValueInAttotokens = SafeMathUint256.fxpMul(_orderData.fxpAmount, SafeMathUint256.sub(_orderData.market.getCompleteSetCostInAttotokens(), uint256(_orderData.fxpPrice)), 1 ether);
-        require(_orderValueInAttotokens >= minOrderValue);
+        require(_orderValueInAttotokens >= MIN_ORDER_VALUE);
 
         require(_orderData.fxpMoneyEscrowed == 0);
         require(_orderData.fxpSharesEscrowed == 0);
@@ -150,7 +148,7 @@ library Order {
 
     function escrowFundsForAsk(Order.Data _orderData) private returns (bool) {
         uint256 _orderValueInAttotokens = SafeMathUint256.fxpMul(_orderData.fxpAmount, uint256(_orderData.fxpPrice), 1 ether);
-        require(_orderValueInAttotokens >= minOrderValue);
+        require(_orderValueInAttotokens >= MIN_ORDER_VALUE);
 
         require(_orderData.fxpMoneyEscrowed == 0);
         require(_orderData.fxpSharesEscrowed == 0);
