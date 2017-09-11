@@ -13,8 +13,8 @@ contract LegacyRepContract is VariableSupplyToken {
     uint256 public constant decimals = 18;
 
     function LegacyRepContract() {
-        // This is to confirm we are on test net
-        address _foundationRepAddress = address(0xe94327d07fc17907b4db788e5adf2ed424addff6);
+        // This is to confirm we are not on foundation network
+        address _foundationRepAddress = address(0xE94327D07Fc17907b4DB788E5aDf2ed424adDff6);
         uint256 size;
         assembly { size := extcodesize(_foundationRepAddress) }
         require(size == 0);

@@ -31,7 +31,7 @@ contract OrderBook is Controlled {
             _orderBook[_i * 8 + 5] = _order[5];
             _orderBook[_i * 8 + 6] = _order[6];
             _orderBook[_i * 8 + 7] = _order[7];
-            _orderId = _orders.getWorseOrderId(_orderId, _type, _market, _outcome);
+            _orderId = _orders.getWorseOrderId(_orderId);
         }
         return _orderBook;
     }

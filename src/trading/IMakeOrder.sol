@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/trading/Order.sol';
+import 'ROOT/trading/Order.sol';
 import 'ROOT/reporting/IMarket.sol';
 
 

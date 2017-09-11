@@ -21,7 +21,7 @@ def acquireLongShares(fundedRepFixture, market, outcome, amount, approvalAddress
     shareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(outcome))
     completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['MakeOrder']
-    takeOrder = fundedRepFixture.contracts['takeOrder']
+    takeOrder = fundedRepFixture.contracts['TakeOrder']
 
     assert cash.depositEther(value=amount, sender = sender)
     assert cash.approve(completeSets.address, amount, sender = sender)
@@ -39,7 +39,7 @@ def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddr
     shareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(outcome))
     completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['MakeOrder']
-    takeOrder = fundedRepFixture.contracts['takeOrder']
+    takeOrder = fundedRepFixture.contracts['TakeOrder']
 
     assert cash.depositEther(value=amount, sender = sender)
     assert cash.approve(completeSets.address, amount, sender = sender)

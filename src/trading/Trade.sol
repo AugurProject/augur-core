@@ -4,16 +4,11 @@ pragma solidity ^0.4.13;
 
 import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';
-import 'ROOT/libraries/trading/Order.sol';
+import 'ROOT/trading/Order.sol';
 import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/trading/IMakeOrder.sol';
 import 'ROOT/trading/IOrders.sol';
-
-
-// FIXME: Remove this once TakeOrder is implemented in Solidity
-contract ITakeOrder {
-    function takeOrder(address, bytes32, Order.TradeTypes, IMarket, uint8, uint256, uint256) returns (uint256);
-}
+import 'ROOT/trading/ITakeOrder.sol';
 
 
 contract Trade is Controlled, ReentrancyGuard {
@@ -55,22 +50,20 @@ contract Trade is Controlled, ReentrancyGuard {
         bytes32 _orderId = _orders.getBestOrderId(_type, _market, _outcome);
         _bestFxpAmount = _fxpAmount;
         while (_orderId != 0 && _bestFxpAmount > 0 && msg.gas >= MINIMUM_GAS_NEEDED) {
-            int256 _fxpOrderPrice = _orders.getPrice(_orderId, _type, _market, _outcome);
+            int256 _fxpOrderPrice = _orders.getPrice(_orderId);
             // If the price is acceptable relative to the trade type
             if (_type == Order.TradeTypes.Bid ? _fxpOrderPrice >= _fxpPrice : _fxpOrderPrice <= _fxpPrice) {
                 _orders.setPrice(_market, _outcome, _fxpOrderPrice);
                 _orders.modifyMarketVolume(_market, _bestFxpAmount);
-                bytes32 _nextOrderId = _orders.getWorseOrderId(_orderId, _type, _market, _outcome);
-                if (_orders.getOrderMaker(_orderId, _type, _market, _outcome) != _sender) {
-                    _bestFxpAmount = ITakeOrder(controller.lookup("takeOrder")).takeOrder(_sender, _orderId, _type, _market, _outcome, _bestFxpAmount, _tradeGroupId);
+                bytes32 _nextOrderId = _orders.getWorseOrderId(_orderId);
+                if (_orders.getOrderMaker(_orderId) != _sender) {
+                    _bestFxpAmount = ITakeOrder(controller.lookup("TakeOrder")).takeOrder(_sender, _orderId, _bestFxpAmount, _tradeGroupId);
                 }
                 _orderId = _nextOrderId;
             } else {
-                _orderId = 0;
+                _orderId = bytes32(0);
             }
         }
         return _bestFxpAmount;
     }
-
-
 }

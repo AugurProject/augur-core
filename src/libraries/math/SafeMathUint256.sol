@@ -46,6 +46,14 @@ library SafeMathUint256 {
         }
     }
 
+    function maxUint256() internal constant returns (uint256) {
+        return 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    }
+
+    function minUint256() internal constant returns (uint256) {
+        return 0;
+    }
+
     // Float [fixed point] Operations
     function fxpMul(uint256 a, uint256 b, uint256 base) internal constant returns (uint256) {
         return div(mul(a, b), base);

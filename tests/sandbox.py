@@ -10,94 +10,140 @@ from solc import compile_standard
 
 config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
 
-library = """
-def bar():
-    return(1: uint256)
+uint256 = """
+library int256Math {
+    // Signed ints with n bits can range from -2**(n-1) to (2**(n-1) - 1)
+    int256 private constant INT256_MIN = -2**(255);
+    int256 private constant INT256_MAX = (2**(255) - 1);
+
+    function mul(int256 a, int256 b) internal constant returns (int256) {
+        int256 c = a * b;
+        require(a == 0 || c / a == b);
+        return c;
+    }
+
+    function div(int256 a, int256 b) internal constant returns (int256) {
+        int256 c = a / b;
+        return c;
+    }
+
+    function sub(int256 a, int256 b) internal constant returns (int256) {
+        require(((a >= 0) && (b >= a - INT256_MAX)) || ((a < 0) && (b <= a - INT256_MIN)));
+        return a - b;
+    }
+
+    function add(int256 a, int256 b) internal constant returns (int256) {
+        require(((a >= 0) && (b <= INT256_MAX - a)) || ((a < 0) && (b >= INT256_MIN - a)));
+        return a + b;
+    }
+
+    function min(int256 a, int256 b) internal constant returns (int256) {
+        if (a <= b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    function max(int256 a, int256 b) internal constant returns (int256) {
+        if (a >= b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    function getInt256Min() internal constant returns (int256) {
+        return INT256_MIN;
+    }
+
+    function getInt256Max() internal constant returns (int256) {
+        return INT256_MAX;
+    }
+
+    // Float [fixed point] Operations
+    function fxpMul(int256 a, int256 b, int256 base) internal constant returns (int256) {
+        return div(mul(a, b), base);
+    }
+
+    function fxpDiv(int256 a, int256 b, int256 base) internal constant returns (int256) {
+        return div(mul(a, base), b);
+    }
+}
 """
 
-serCode = """
-extern solExterns: [apple:[uint8]:_]
-def banana(sol):
-    return sol.apple(0x123456)
+int256 = """
+library uint256Math {
+    function mul(uint256 a, uint256 b) internal constant returns (uint256) {
+        uint256 c = a * b;
+        require(a == 0 || c / a == b);
+        return c;
+    }
+
+    function div(uint256 a, uint256 b) internal constant returns (uint256) {
+        // assert(b > 0); // Solidity automatically throws when dividing by 0
+        uint256 c = a / b;
+        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+        return c;
+    }
+
+    function sub(uint256 a, uint256 b) internal constant returns (uint256) {
+        require(b <= a);
+        return a - b;
+    }
+
+    function add(uint256 a, uint256 b) internal constant returns (uint256) {
+        uint256 c = a + b;
+        require(c >= a);
+        return c;
+    }
+
+    function min(uint256 a, uint256 b) internal constant returns (uint256) {
+        if (a <= b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    function max(uint256 a, uint256 b) internal constant returns (uint256) {
+        if (a >= b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    // Float [fixed point] Operations
+    function fxpMul(uint256 a, uint256 b, uint256 base) internal constant returns (uint256) {
+        return div(mul(a, b), base);
+    }
+
+    function fxpDiv(uint256 a, uint256 b, uint256 base) internal constant returns (uint256) {
+        return div(mul(a, base), b);
+    }
+}
 """
 
 solCode = """
-contract Cash {
-    mapping(address => uint256) public balances;
-    mapping(address => mapping(address => bool)) public approvals;
-    function transfer(address _destination, uint256 _amount) external {
-        require(balances[msg.sender] <= _amount);
-        balances[msg.sender] -= _amount;
-        balances[_destination] += _amount;
-    }
-    function transferFrom(address _source, address _destination, uint256 _amount) external {
-        require(balances[_source] <= _amount);
-        require(approvals[_source][msg.sender]);
-        balances[_source] -= _amount;
-        balances[_destination] += _amount;
-    }
-    function approve(address _spender, uint256 _amount) external {
-        approvals[msg.sender][_spender] = true;
-    }
-    function deposit() external payable {
-        balances[msg.sender] += msg.value;
-    }
-    function withdraw(address _target, uint256 _amount) external {
-        require(_amount <= balances[_target]);
-        require(approvals[_target][msg.sender]);
-        balances[_target] -= _amount;
-        _target.transfer(_amount);
-    }
-}
+import 'int256.sol';
+import 'uint256.sol';
+contract Foo {
+    using int256Math for int256;
+    using uint256Math for uint256;
 
-contract ApprovalTarget {
-    Cash public cash;
-    Market public market;
-    function transfer(address _source, address _destination, uint256 _amount) external {
-        require(Market(msg.sender) == market);
-        cash.transferFrom(_source, _destination, _amount);
+    function apple() returns (int256) {
+        return int256(5).min(int256(-5));
     }
-    function withdraw(address _target, uint256 _amount) external {
-        require(Market(msg.sender) == market);
-        cash.withdraw(_target, _amount);
-    }
-    function initialize(Cash _cash, Market _market) external {
-        cash = _cash;
-        market = _market;
-    }
-}
 
-contract Market {
-    Cash public cash;
-    ApprovalTarget public approvalTarget;
-    modifier wrapEth() {
-        if (msg.value > 0) {
-            cash.deposit.value(msg.value)();
-            cash.transfer(msg.sender, msg.value);
-        }
-        _;
-    }
-    modifier unwrapEth(address _target) {
-        _;
-        uint256 _balance = cash.balances(_target);
-        if (_balance > 0) {
-            approvalTarget.withdraw(_target, _balance);
-        }
-    }
-    function apple() external wrapEth payable {
-        approvalTarget.transfer(msg.sender, this, 1 ether);
-    }
-    function banana() external unwrapEth(msg.sender) {
-        cash.transfer(msg.sender, 1 ether);
-    }
-    function initialize(Cash _cash, ApprovalTarget _approvalTarget) {
-        cash = _cash;
-        approvalTarget = _approvalTarget;
+    function banana() returns (uint256) {
+        return uint256(2**256-1).min(uint256(0));
     }
 }
 """
 
 def uploadSolidityContract(chain, compileResult, name, contractName):
+    print compileResult['contracts'][name][contractName]['evm']['bytecode']['object']
     bytecode = bytearray.fromhex(compileResult['contracts'][name][contractName]['evm']['bytecode']['object'])
     signature = compileResult['contracts'][name][contractName]['abi']
     address = long(hexlify(chain.contract(bytecode)), 16)
@@ -105,38 +151,29 @@ def uploadSolidityContract(chain, compileResult, name, contractName):
     return contract
 
 def compileSolidity(chain, name, code):
-    result = compile_standard({ 'language': 'Solidity', 'sources': { name: { 'content': code } } })
+    result = compile_standard({
+        'language': 'Solidity',
+        'sources': {
+            'uint256.sol': { 'content': uint256 },
+            'int256.sol': { 'content': int256 },
+            name: { 'content': code },
+        },
+        'settings': {
+            'outputSelection': { '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ] }
+        }
+    })
     return result
 
 def compileAndUpload(chain, name, code, contracts):
     compileResult = compileSolidity(chain, name, code)
     return (uploadSolidityContract(chain, compileResult, name, contractName) for contractName in contracts)
 
-with open("garbage.se", "w") as file:
-    file.write(library)
-
-try:
-    chain = tester.Chain(env=Env(config=config_metropolis))
-    logs = []
-    cash, approvalTarget, market = compileAndUpload(chain, 'Sol', solCode, ['Cash', 'ApprovalTarget', 'Market'])
-    # ser = chain.contract(serCode, language="serpent")
-    chain.head_state.log_listeners.append(lambda log: logs.append(cash.translator.listen(log)))
-    chain.head_state.log_listeners.append(lambda log: logs.append(approvalTarget.translator.listen(log)))
-    chain.head_state.log_listeners.append(lambda log: logs.append(market.translator.listen(log)))
-    market.initialize(cash.address, approvalTarget.address)
-    approvalTarget.initialize(cash.address, market.address)
-    cash.approve(approvalTarget.address, 10**18)
-    market.apple(value = 10**18)
-    print 'alice eth: %s' % chain.head_state.get_balance(tester.a0)
-    print 'cash eth: %s' % chain.head_state.get_balance(cash.address)
-    print 'alice cash: %s' % cash.balances(tester.a0)
-    print 'market cash: %s' % cash.balances(market.address)
-    print '----'
-    market.banana()
-    print 'alice eth: %s' % chain.head_state.get_balance(tester.a0)
-    print 'cash eth: %s' % chain.head_state.get_balance(cash.address)
-    print 'alice cash: %s' % cash.balances(tester.a0)
-    print 'market cash: %s' % cash.balances(market.address)
-    print logs
-finally:
-    os_remove("garbage.se")
+chain = tester.Chain(env=Env(config=config_metropolis))
+logs = []
+compileAndUpload(chain, 'uint256.sol', uint256, ['uint256Math'])
+compileAndUpload(chain, 'int256.sol', int256, ['int256Math'])
+foo, = compileAndUpload(chain, 'Sol', solCode, ['Foo'])
+chain.head_state.log_listeners.append(lambda log: logs.append(foo.translator.listen(log)))
+print foo.apple()
+print foo.banana()
+print logs

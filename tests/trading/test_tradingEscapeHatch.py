@@ -19,7 +19,7 @@ def test_escapeHatch(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     trade = contractsFixture.contracts['Trade']
     tradingEscapeHatch = contractsFixture.contracts['tradingEscapeHatch']
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))

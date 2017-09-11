@@ -116,7 +116,7 @@ def test_makeOrder_failure(contractsFixture):
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['Orders']
     makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     completeSets = contractsFixture.contracts['CompleteSets']
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
@@ -167,7 +167,7 @@ def test_ask_withPartialShares(contractsFixture):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['takeOrder']
+    takeOrder = contractsFixture.contracts['TakeOrder']
     completeSets = contractsFixture.contracts['CompleteSets']
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
