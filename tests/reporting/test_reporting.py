@@ -81,10 +81,10 @@ def test_reportingFullHappyPath(reportingFixture):
     assert market.getReportingState() == reportingFixture.constants.FORKING()
 
     # The universe forks and there is now a branch where NO and YES are the respective outcomes of each
-    noBranch = reportingFixture.getChildBranch(branch, market, [2,0])
+    noBranch = reportingFixture.publicGetChildBranch(branch, market, [2,0])
     noBranchReputationToken = reportingFixture.applySignature('ReputationToken', noBranch.getReputationToken())
     assert noBranch.address != branch.address
-    yesBranch = reportingFixture.getChildBranch(branch, market, [0,2])
+    yesBranch = reportingFixture.publicGetChildBranch(branch, market, [0,2])
     yesBranchReputationToken = reportingFixture.applySignature('ReputationToken', yesBranch.getReputationToken())
     assert yesBranch.address != branch.address
     assert yesBranch.address != noBranch.address

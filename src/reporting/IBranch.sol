@@ -11,7 +11,8 @@ contract IBranch is Typed {
     function initialize(IBranch _parentBranch, bytes32 _parentPayoutDistributionHash) external returns (bool);
     function fork() public returns (bool);
     function getParentBranch() constant returns (IBranch);
-    function getChildBranch(bytes32 _parentPayoutDistributionHash) public returns (IBranch);
+    function publicGetChildBranch(bytes32 _parentPayoutDistributionHash) public returns (IBranch);
+    function getChildBranch(bytes32 _parentPayoutDistributionHash) constant returns (IBranch);
     function getReputationToken() constant returns (IReputationToken);
     function getTopics() constant returns (ITopics);
     function getForkingMarket() constant returns (IMarket);

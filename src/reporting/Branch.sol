@@ -78,8 +78,9 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return reportingWindows[_reportingWindowId];
     }
 
-    // TODO: this has a signature conflict with the public version below.  for consistency, we should have this be the signature for the `constant` version and rename the `public` one
-    //function getChildBranch(bytes32 _parentPayoutDistributionHash) constant returns (Branch);
+    function getChildBranch(bytes32 _parentPayoutDistributionHash) constant returns (IBranch) {
+        return childBranches[_parentPayoutDistributionHash];
+    }
 
     function getReportingWindowId(uint256 _timestamp) constant returns (uint256) {
         return _timestamp / getReportingPeriodDurationInSeconds();
@@ -117,7 +118,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return getReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
     }
 
-    function getChildBranch(bytes32 _parentPayoutDistributionHash) public returns (IBranch) {
+    function publicGetChildBranch(bytes32 _parentPayoutDistributionHash) public returns (IBranch) {
         if (childBranches[_parentPayoutDistributionHash] == address(0)) {
             childBranches[_parentPayoutDistributionHash] = BranchFactory(controller.lookup("BranchFactory")).createBranch(controller, this, _parentPayoutDistributionHash);
         }

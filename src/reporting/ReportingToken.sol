@@ -62,7 +62,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         var _attotokens = balances[msg.sender];
         var _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(msg.sender, _attotokens);
-        var _destinationReputationToken = getBranch().getChildBranch(getPayoutDistributionHash()).getReputationToken();
+        var _destinationReputationToken = getBranch().publicGetChildBranch(getPayoutDistributionHash()).getReputationToken();
         _sourceReputationToken.migrateOut(_destinationReputationToken, this, _attotokens);
         _destinationReputationToken.transfer(msg.sender, _reporterReputationShare);
         return true;
