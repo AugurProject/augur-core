@@ -226,7 +226,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function getRequiredReportsPerReporterForlimitedReporterMarkets() public afterInitialized constant returns (uint256) {
         uint256 _numLimitedReporterMarkets = limitedReporterMarkets.count();
-        uint256 _requiredReports = getTargetReportsPerLimitedReporterMarket() * _numLimitedReporterMarkets / registrationToken.getTotalSupply();
+        uint256 _requiredReports = getTargetReportsPerLimitedReporterMarket() * _numLimitedReporterMarkets / registrationToken.totalSupply();
         // We shouldn't require more reporting than is possible.
         return _requiredReports.min(_numLimitedReporterMarkets);
     }

@@ -30,9 +30,9 @@ contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardTo
         require(balances[msg.sender] == 0);
         getReputationToken().trustedTransfer(msg.sender, this, Reporting.getRegistrationTokenBondAmount());
         balances[msg.sender] += 1;
-        totalSupply += 1;
-        if (totalSupply > peakSupply) {
-            peakSupply = totalSupply;
+        supply += 1;
+        if (supply > peakSupply) {
+            peakSupply = supply;
         }
         return true;
     }
@@ -42,7 +42,7 @@ contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardTo
         require(balances[msg.sender] > 0);
         require(reportingWindow.isDoneReporting(msg.sender));
         balances[msg.sender] -= 1;
-        totalSupply -= 1;
+        supply -= 1;
         getReputationToken().transfer(msg.sender, Reporting.getRegistrationTokenBondAmount());
         return true;
     }

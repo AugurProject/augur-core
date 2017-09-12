@@ -70,7 +70,7 @@ contract MarketFeeCalculator {
     function getRepMarketCapInAttoeth(IBranch _branch) constant public returns (uint256) {
         // TODO: get these from an auto-generated market
         uint256 _attorepPerEth = 11 * 10 ** 18;
-        uint256 _repMarketCapInAttoeth = _branch.getReputationToken().getTotalSupply() * _attorepPerEth;
+        uint256 _repMarketCapInAttoeth = _branch.getReputationToken().totalSupply() * _attorepPerEth;
         return _repMarketCapInAttoeth;
     }
 

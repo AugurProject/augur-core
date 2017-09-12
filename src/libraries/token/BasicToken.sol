@@ -11,6 +11,7 @@ import 'ROOT/libraries/math/SafeMathUint256.sol';
 contract BasicToken is ERC20Basic {
     using SafeMathUint256 for uint256;
 
+    uint256 internal supply;
     mapping(address => uint256) internal balances;
 
     /**
@@ -36,5 +37,9 @@ contract BasicToken is ERC20Basic {
 
     function getBalance(address _address) public constant returns (uint256) {
         return balances[_address];
+    }
+
+    function totalSupply() public constant returns (uint256) {
+        return supply;
     }
 }

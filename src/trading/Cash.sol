@@ -44,10 +44,6 @@ contract Cash is Controlled, Typed, VariableSupplyToken, ICash {
         return WithdrawState.Withdrawn;
     }
 
-    function getTotalSupply() public constant returns (uint256) {
-        return totalSupply;
-    }
-
     function getTypeName() public constant returns (bytes32) {
         return "Cash";
     }

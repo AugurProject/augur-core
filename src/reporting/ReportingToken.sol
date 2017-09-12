@@ -47,7 +47,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         require(!market.isContainerForReportingToken(this));
         var _reputationSupply = getReputationToken().balanceOf(this);
         var _attotokens = balances[_reporter];
-        var _reporterReputationShare = _reputationSupply * _attotokens / totalSupply;
+        var _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(_reporter, _attotokens);
         getReputationToken().transfer(_reporter, _reporterReputationShare);
         return true;
@@ -60,7 +60,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         var _sourceReputationToken = getReputationToken();
         var _reputationSupply = _sourceReputationToken.balanceOf(this);
         var _attotokens = balances[msg.sender];
-        var _reporterReputationShare = _reputationSupply * _attotokens / totalSupply;
+        var _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(msg.sender, _attotokens);
         var _destinationReputationToken = getBranch().getChildBranch(getPayoutDistributionHash()).getReputationToken();
         _sourceReputationToken.migrateOut(_destinationReputationToken, this, _attotokens);
@@ -77,7 +77,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         var _reputationToken = getReputationToken();
         var _reputationSupply = _reputationToken.balanceOf(this);
         var _attotokens = balances[msg.sender];
-        var _reporterReputationShare = _reputationSupply * _attotokens / totalSupply;
+        var _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(msg.sender, _attotokens);
         if (_reporterReputationShare == 0) {
             return true;
@@ -155,9 +155,5 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     function getPayoutNumerator(uint8 index) public constant returns (uint256) {
         require(index < market.getNumberOfOutcomes());
         return payoutNumerators[index];
-    }
-
-    function getTotalSupply() public constant returns (uint256) {
-        return totalSupply;
     }
 }

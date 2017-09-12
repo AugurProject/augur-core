@@ -15,7 +15,7 @@ def test_init(contractsFixture):
 
 def test_createShares(contractsFixture):
     shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
-    initialTotalSupply = shareToken.getTotalSupply()
+    initialTotalSupply = shareToken.totalSupply()
     initialBalance = shareToken.balanceOf(tester.a1)
 
     with raises(TransactionFailed):
@@ -23,13 +23,13 @@ def test_createShares(contractsFixture):
 
     # NOTE: only works because controller is in dev mode and k0 is whitelisted
     assert shareToken.createShares(tester.a1, 7, sender=tester.k0) == 1, "Create share tokens for address 1"
-    assert shareToken.getTotalSupply() - initialTotalSupply == 7, "Total supply increase should equal the number of tokens created"
+    assert shareToken.totalSupply() - initialTotalSupply == 7, "Total supply increase should equal the number of tokens created"
     assert shareToken.balanceOf(tester.a1) - initialBalance == 7, "Address 1 token balance increase should equal the number of tokens created"
 
 def test_destroyShares(contractsFixture):
     shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
     shareToken.createShares(tester.a1, 7, sender=tester.k0)
-    initialTotalSupply = shareToken.getTotalSupply()
+    initialTotalSupply = shareToken.totalSupply()
     initialBalance = shareToken.balanceOf(tester.a1)
 
     with raises(TransactionFailed):
@@ -37,13 +37,13 @@ def test_destroyShares(contractsFixture):
 
     # NOTE: only works because controller is in dev mode and k0 is whitelisted
     assert shareToken.destroyShares(tester.a1, 7, sender=tester.k0) == 1, "Destroy share tokens owned by address 1"
-    assert initialTotalSupply - shareToken.getTotalSupply() == 7, "Total supply decrease should equal the number of tokens destroyed"
+    assert initialTotalSupply - shareToken.totalSupply() == 7, "Total supply decrease should equal the number of tokens destroyed"
     assert initialBalance - shareToken.balanceOf(tester.a1) == 7, "Address 1 token balance decrease should equal the number of tokens destroyed"
 
 def test_transfer(contractsFixture):
     shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
     shareToken.createShares(tester.a0, 7, sender=tester.k0)
-    initialTotalSupply = shareToken.getTotalSupply()
+    initialTotalSupply = shareToken.totalSupply()
     initialBalance0 = shareToken.balanceOf(tester.a0)
     initialBalance1 = shareToken.balanceOf(tester.a1)
     logs = []
@@ -69,7 +69,7 @@ def test_transfer(contractsFixture):
     ]
     assert(initialBalance0 - 5 == afterTransferBalance0), "Decrease in address 1's balance should equal amount transferred"
     assert(initialBalance1 + 5 == afterTransferBalance1), "Increase in address 2's balance should equal amount transferred"
-    assert(shareToken.getTotalSupply() == initialTotalSupply), "Total supply should be unchanged"
+    assert(shareToken.totalSupply() == initialTotalSupply), "Total supply should be unchanged"
     assert(retval == 1), "transfer with 0 value should succeed"
 
 def test_approve(contractsFixture):

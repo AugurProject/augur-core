@@ -494,7 +494,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
                     destinationReputationToken = cBranchReputationToken
                 if (destinationReputationToken):
                     accountBalanceBeforeRedemption = destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
-                    expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.getTotalSupply()
+                    expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.totalSupply()
                     print "accountBalanceBeforeRedemption: " + str(accountBalanceBeforeRedemption)
                     print "expectedWinnings: " + str(expectedWinnings)
                     reportingToken.redeemForkedTokens(sender=getattr(tester, 'k' + str(row[0])))
@@ -518,7 +518,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
                     destinationReputationToken = cBranchReputationToken
                 if (destinationReputationToken):
                     accountBalanceBeforeRedemption = destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
-                    expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.getTotalSupply()
+                    expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.totalSupply()
                     print "accountBalanceBeforeRedemption: " + str(accountBalanceBeforeRedemption)
                     print "expectedWinnings: " + str(expectedWinnings)
                     reportingToken.redeemForkedTokens(sender=getattr(tester, 'k' + str(row[0])))
@@ -559,7 +559,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             print "Redeeming winning reporting tokens"
             for key in winningOutcomeStakes:
                 accountBalanceBeforeRedemption = reputationToken.balanceOf(getattr(tester, 'a' + str(key)))
-                expectedWinnings = reputationToken.balanceOf(winningReportingToken.address) * winningOutcomeStakes[key] / winningReportingToken.getTotalSupply()
+                expectedWinnings = reputationToken.balanceOf(winningReportingToken.address) * winningOutcomeStakes[key] / winningReportingToken.totalSupply()
                 winningReportingToken.redeemWinningTokens(sender=getattr(tester, 'k' + str(key)))
                 assert reputationToken.balanceOf(getattr(tester, 'a' + str(key))) == accountBalanceBeforeRedemption + expectedWinnings
                 print "Transferred " + str(expectedWinnings) + " to account a" + str(key)

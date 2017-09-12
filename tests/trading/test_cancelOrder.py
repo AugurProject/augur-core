@@ -32,8 +32,8 @@ def test_cancelBid(contractsFixture):
     makerInitialCash = cash.balanceOf(tester.a1)
     makerInitialShares = yesShareToken.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
-    marketInitialYesShares = yesShareToken.getTotalSupply()
-    marketInitialNoShares = noShareToken.getTotalSupply()
+    marketInitialYesShares = yesShareToken.totalSupply()
+    marketInitialNoShares = noShareToken.totalSupply()
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1)
     assert orderID, "Order ID should be non-zero"
     _,_,owner,_,_,_,_,_ = ordersFetcher.getOrder(orderID)
@@ -45,8 +45,8 @@ def test_cancelBid(contractsFixture):
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(makerInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
-    assert(marketInitialYesShares == yesShareToken.getTotalSupply()), "Market's yes shares should be unchanged"
-    assert marketInitialNoShares == noShareToken.getTotalSupply(), "Market's no shares should be unchanged"
+    assert(marketInitialYesShares == yesShareToken.totalSupply()), "Market's yes shares should be unchanged"
+    assert marketInitialNoShares == noShareToken.totalSupply(), "Market's no shares should be unchanged"
 
 def test_cancelAsk(contractsFixture):
     cash = contractsFixture.cash
@@ -67,8 +67,8 @@ def test_cancelAsk(contractsFixture):
     makerInitialCash = cash.balanceOf(tester.a1)
     makerInitialShares = yesShareToken.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
-    marketInitialYesShares = yesShareToken.getTotalSupply()
-    marketInitialNoShares = noShareToken.getTotalSupply()
+    marketInitialYesShares = yesShareToken.totalSupply()
+    marketInitialNoShares = noShareToken.totalSupply()
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1)
     assert(orderID != bytearray(32)), "Order ID should be non-zero"
     _,_,owner,_,_,_,_,_ = ordersFetcher.getOrder(orderID)
@@ -80,8 +80,8 @@ def test_cancelAsk(contractsFixture):
     assert(makerInitialCash == cash.balanceOf(tester.a1)), "Maker's cash should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(makerInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
-    assert(marketInitialYesShares == yesShareToken.getTotalSupply()), "Market's yes shares should be unchanged"
-    assert marketInitialNoShares == noShareToken.getTotalSupply(), "Market's no shares should be unchanged"
+    assert(marketInitialYesShares == yesShareToken.totalSupply()), "Market's yes shares should be unchanged"
+    assert marketInitialNoShares == noShareToken.totalSupply(), "Market's no shares should be unchanged"
 
 def test_exceptions(contractsFixture):
     cash = contractsFixture.cash

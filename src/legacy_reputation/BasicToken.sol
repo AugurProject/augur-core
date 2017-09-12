@@ -6,7 +6,7 @@ import 'ROOT/legacy_reputation/SafeMath.sol';
 
 /**
  * @title Basic token
- * @dev Basic version of StandardToken, with no allowances. 
+ * @dev Basic version of StandardToken, with no allowances.
  */
 contract BasicToken is ERC20Basic {
     using SafeMath for uint256;
@@ -27,7 +27,7 @@ contract BasicToken is ERC20Basic {
 
     /**
      * @dev Gets the balance of the specified address.
-     * @param _owner The address to query the the balance of. 
+     * @param _owner The address to query the the balance of.
      * @return An uint256 representing the amount owned by the passed address.
      */
     function balanceOf(address _owner) constant returns (uint256 balance) {

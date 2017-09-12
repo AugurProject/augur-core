@@ -21,8 +21,8 @@ def test_publicBuyCompleteSets(fundedRepFixture):
 
     assert not cash.balanceOf(tester.a1)
     assert not cash.balanceOf(market.address)
-    assert not yesShareToken.getTotalSupply()
-    assert not noShareToken.getTotalSupply()
+    assert not yesShareToken.totalSupply()
+    assert not noShareToken.totalSupply()
 
     cash.depositEther(value = fix('30'), sender = tester.k1)
     cash.approve(completeSets.address, fix('20'), sender=tester.k1)
@@ -42,8 +42,8 @@ def test_publicBuyCompleteSets(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a1) == fix('10'), "Should have 10 shares of outcome 2"
     assert cash.balanceOf(tester.a1) == fix('20'), "Decrease in sender's cash should equal 10"
     assert cash.balanceOf(market.address) == fix('10'), "Increase in market's cash should equal 10"
-    assert yesShareToken.getTotalSupply() == fix('10'), "Increase in yes shares purchased for this market should be 18"
-    assert noShareToken.getTotalSupply() == fix('10'), "Increase in yes shares purchased for this market should be 18"
+    assert yesShareToken.totalSupply() == fix('10'), "Increase in yes shares purchased for this market should be 18"
+    assert noShareToken.totalSupply() == fix('10'), "Increase in yes shares purchased for this market should be 18"
 
 def test_publicBuyCompleteSets_failure(fundedRepFixture):
     branch = fundedRepFixture.branch
@@ -81,8 +81,8 @@ def test_publicSellCompleteSets(fundedRepFixture):
     assert not cash.balanceOf(tester.a0)
     assert not cash.balanceOf(tester.a1)
     assert not cash.balanceOf(market.address)
-    assert not yesShareToken.getTotalSupply()
-    assert not noShareToken.getTotalSupply()
+    assert not yesShareToken.totalSupply()
+    assert not noShareToken.totalSupply()
 
     cash.depositEther(value = fix('10'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10'), sender = tester.k1)
@@ -103,8 +103,8 @@ def test_publicSellCompleteSets(fundedRepFixture):
     ]
     assert yesShareToken.balanceOf(tester.a1) == fix('1'), "Should have 1 share of outcome yes"
     assert noShareToken.balanceOf(tester.a1) == fix('1'), "Should have 1 share of outcome no"
-    assert yesShareToken.getTotalSupply() == fix('1')
-    assert noShareToken.getTotalSupply() == fix('1')
+    assert yesShareToken.totalSupply() == fix('1')
+    assert noShareToken.totalSupply() == fix('1')
     assert cash.balanceOf(tester.a1) == fix('8.9091')
     assert cash.balanceOf(market.address) == fix('1')
     assert cash.balanceOf(tester.a0) == fix('0.09')
