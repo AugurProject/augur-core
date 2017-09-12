@@ -19,7 +19,6 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
     address private bondHolder;
     bytes32 private disputedPayoutDistributionHash;
     uint256 private bondRemainingToBePaidOut;
-    uint256 internal supply;
 
     function initialize(IMarket _market, address _bondHolder, uint256 _bondAmount, bytes32 _payoutDistributionHash) public beforeInitialized returns (bool) {
         endInitialization();
@@ -103,6 +102,6 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
     }
 
     function totalSupply() public constant returns (uint256) {
-        return supply;
+        return 1;
     }
 }
