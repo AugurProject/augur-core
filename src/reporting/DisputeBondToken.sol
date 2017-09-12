@@ -26,7 +26,6 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
         bondHolder = _bondHolder;
         disputedPayoutDistributionHash = _payoutDistributionHash;
         bondRemainingToBePaidOut = _bondAmount * 2;
-        totalSupply = 1;
         return true;
     }
 
@@ -100,5 +99,9 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
         require(msg.sender == bondHolder);
         bondHolder = _destinationAddress;
         return true;
+    }
+
+    function totalSupply() public constant returns (uint256) {
+        return 1;
     }
 }

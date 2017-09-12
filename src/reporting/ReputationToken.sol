@@ -35,7 +35,7 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
             allowed[_reporter][msg.sender] = allowed[_reporter][msg.sender].sub(_attotokens);
         }
         balances[_reporter] = balances[_reporter].sub(_attotokens);
-        totalSupply = totalSupply.sub(_attotokens);
+        supply = supply.sub(_attotokens);
         _destination.migrateIn(_reporter, _attotokens);
         if (topMigrationDestination == address(0) || _destination.totalSupply() > topMigrationDestination.totalSupply()) {
             topMigrationDestination = _destination;
@@ -46,7 +46,7 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
     function migrateIn(address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
         require(ReputationToken(msg.sender) == branch.getParentBranch().getReputationToken());
         balances[_reporter] = balances[_reporter].add(_attotokens);
-        totalSupply = totalSupply.add(_attotokens);
+        supply = supply.add(_attotokens);
         return true;
     }
 
@@ -55,7 +55,7 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         var _legacyBalance = _legacyRepToken.balanceOf(msg.sender);
         _legacyRepToken.transferFrom(msg.sender, address(0), _legacyBalance);
         balances[msg.sender] = balances[msg.sender].add(_legacyBalance);
-        totalSupply = totalSupply.add(_legacyBalance);
+        supply = supply.add(_legacyBalance);
         return true;
     }
 
@@ -65,7 +65,7 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         require(branch.isContainerForReportingWindow(_caller) || branch.isContainerForRegistrationToken(_caller) || branch.isContainerForMarket(_caller) || branch.isContainerForReportingToken(_caller));
         balances[_source] = balances[_source].sub(_attotokens);
         balances[_destination] = balances[_destination].add(_attotokens);
-        totalSupply = totalSupply.add(_attotokens);
+        supply = supply.add(_attotokens);
         Transfer(_source, _destination, _attotokens);
         return true;
     }
