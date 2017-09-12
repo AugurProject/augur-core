@@ -46,47 +46,47 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return true;
     }
 
-    function getTypeName() constant returns (bytes32) {
+    function getTypeName() public constant returns (bytes32) {
         return "Branch";
     }
 
-    function getParentBranch() constant returns (IBranch) {
+    function getParentBranch() public constant returns (IBranch) {
         return parentBranch;
     }
 
-    function getParentPayoutDistributionHash() constant returns (bytes32) {
+    function getParentPayoutDistributionHash() public constant returns (bytes32) {
         return parentPayoutDistributionHash;
     }
 
-    function getReputationToken() constant returns (IReputationToken) {
+    function getReputationToken() public constant returns (IReputationToken) {
         return reputationToken;
     }
 
-    function getTopics() constant returns (ITopics) {
+    function getTopics() public constant returns (ITopics) {
         return topics;
     }
 
-    function getForkingMarket() constant returns (IMarket) {
+    function getForkingMarket() public constant returns (IMarket) {
         return forkingMarket;
     }
 
-    function getForkEndTime() constant returns (uint256) {
+    function getForkEndTime() public constant returns (uint256) {
         return forkEndTime;
     }
 
-    function getReportingWindow(uint256 _reportingWindowId) constant returns (IReportingWindow) {
+    function getReportingWindow(uint256 _reportingWindowId) public constant returns (IReportingWindow) {
         return reportingWindows[_reportingWindowId];
     }
 
-    function getChildBranch(bytes32 _parentPayoutDistributionHash) constant returns (IBranch) {
+    function getChildBranch(bytes32 _parentPayoutDistributionHash) public constant returns (IBranch) {
         return childBranches[_parentPayoutDistributionHash];
     }
 
-    function getReportingWindowId(uint256 _timestamp) constant returns (uint256) {
+    function getReportingWindowId(uint256 _timestamp) public constant returns (uint256) {
         return _timestamp / getReportingPeriodDurationInSeconds();
     }
 
-    function getReportingPeriodDurationInSeconds() constant returns (uint256) {
+    function getReportingPeriodDurationInSeconds() public constant returns (uint256) {
         return Reporting.reportingDurationSeconds() + Reporting.reportingDisputeDurationSeconds();
     }
 
@@ -118,14 +118,14 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return getReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
     }
 
-    function publicGetChildBranch(bytes32 _parentPayoutDistributionHash) public returns (IBranch) {
+    function getOrCreateChildBranch(bytes32 _parentPayoutDistributionHash) public returns (IBranch) {
         if (childBranches[_parentPayoutDistributionHash] == address(0)) {
             childBranches[_parentPayoutDistributionHash] = BranchFactory(controller.lookup("BranchFactory")).createBranch(controller, this, _parentPayoutDistributionHash);
         }
         return childBranches[_parentPayoutDistributionHash];
     }
 
-    function isContainerForReportingWindow(Typed _shadyTarget) constant returns (bool) {
+    function isContainerForReportingWindow(Typed _shadyTarget) public constant returns (bool) {
         if (_shadyTarget.getTypeName() != "ReportingWindow") {
             return false;
         }
@@ -139,7 +139,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return _shadyReportingWindow == _legitReportingWindow;
     }
 
-    function isContainerForDisputeBondToken(Typed _shadyTarget) constant returns (bool) {
+    function isContainerForDisputeBondToken(Typed _shadyTarget) public constant returns (bool) {
         if (_shadyTarget.getTypeName() != "DisputeBondToken") {
             return false;
         }
@@ -155,7 +155,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return _legitMarket.isContainerForDisputeBondToken(_shadyDisputeBond);
     }
 
-    function isContainerForRegistrationToken(Typed _shadyTarget) constant returns (bool) {
+    function isContainerForRegistrationToken(Typed _shadyTarget) public constant returns (bool) {
         if (_shadyTarget.getTypeName() != "RegistrationToken") {
             return false;
         }
@@ -171,7 +171,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return _legitReportingWindow.isContainerForRegistrationToken(_shadyRegistrationToken);
     }
 
-    function isContainerForMarket(Typed _shadyTarget) constant returns (bool) {
+    function isContainerForMarket(Typed _shadyTarget) public constant returns (bool) {
         if (_shadyTarget.getTypeName() != "Market" && _shadyTarget.getTypeName() != "FallbackMarket") {
             return false;
         }
@@ -187,7 +187,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return _legitReportingWindow.isContainerForMarket(_shadyMarket);
     }
 
-    function isContainerForReportingToken(Typed _shadyTarget) constant returns (bool) {
+    function isContainerForReportingToken(Typed _shadyTarget) public constant returns (bool) {
         if (_shadyTarget.getTypeName() != "ReportingToken") {
             return false;
         }
@@ -203,7 +203,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return _legitMarket.isContainerForReportingToken(_shadyReportingToken);
     }
 
-    function isContainerForShareToken(Typed _shadyTarget) constant returns (bool) {
+    function isContainerForShareToken(Typed _shadyTarget) public constant returns (bool) {
         if (_shadyTarget.getTypeName() != "ShareToken") {
             return false;
         }
@@ -219,7 +219,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return _legitMarket.isContainerForShareToken(_shadyShareToken);
     }
 
-    function isParentOf(IBranch _shadyChild) constant returns (bool) {
+    function isParentOf(IBranch _shadyChild) public constant returns (bool) {
         bytes32 _parentPayoutDistributionHash = _shadyChild.getParentPayoutDistributionHash();
         return childBranches[_parentPayoutDistributionHash] == _shadyChild;
     }

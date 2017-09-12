@@ -119,10 +119,10 @@ def finalizeForkingMarket(reportingFixture, market, finalizeByMigration, yesMigr
     reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
 
     # The universe forks and there is now a branch where NO and YES are the respective outcomes of each
-    noBranch = reportingFixture.publicGetChildBranch(branch, market, secondReportOutcomes)
+    noBranch = reportingFixture.getOrCreateChildBranch(branch, market, secondReportOutcomes)
     noBranchReputationToken = reportingFixture.applySignature('ReputationToken', noBranch.getReputationToken())
     assert noBranch.address != branch.address
-    yesBranch = reportingFixture.publicGetChildBranch(branch, market, firstReportOutcomes)
+    yesBranch = reportingFixture.getOrCreateChildBranch(branch, market, firstReportOutcomes)
     yesBranchReputationToken = reportingFixture.applySignature('ReputationToken', yesBranch.getReputationToken())
     assert yesBranch.address != branch.address
     assert yesBranch.address != noBranch.address

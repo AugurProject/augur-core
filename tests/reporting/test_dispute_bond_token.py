@@ -322,13 +322,13 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
         assert reportingWindow.isContainerForMarket(market.address)
 
-        aBranch = contractsFixture.publicGetChildBranch(branch, market, OUTCOME_A)
+        aBranch = contractsFixture.getOrCreateChildBranch(branch, market, OUTCOME_A)
         aBranchReputationToken = contractsFixture.applySignature('ReputationToken', aBranch.getReputationToken())
         assert aBranch.address != branch.address
-        bBranch = contractsFixture.publicGetChildBranch(branch, market, OUTCOME_B)
+        bBranch = contractsFixture.getOrCreateChildBranch(branch, market, OUTCOME_B)
         bBranchReputationToken = contractsFixture.applySignature('ReputationToken', bBranch.getReputationToken())
         assert bBranch.address != branch.address
-        cBranch = contractsFixture.publicGetChildBranch(branch, market, OUTCOME_C)
+        cBranch = contractsFixture.getOrCreateChildBranch(branch, market, OUTCOME_C)
         cBranchReputationToken = contractsFixture.applySignature('ReputationToken', cBranch.getReputationToken())
         assert bBranch.address != branch.address
         assert aBranch.address != bBranch.address
