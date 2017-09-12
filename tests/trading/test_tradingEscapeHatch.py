@@ -4,7 +4,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
 from utils import fix, longTo32Bytes
-
+from constants import LONG
 
 NO = 0
 YES = 1
@@ -29,7 +29,7 @@ def test_escapeHatch(contractsFixture):
     # take order with cash using on-chain matcher
     assert cash.depositEther(value=fix('100'), sender=tester.k2) == 1, "depositEther to account 1 should succeed"
     assert cash.approve(takeOrder.address, fix('10'), sender=tester.k2) == 1, "Approve takeOrder contract to spend cash from account 2"
-    assert trade.publicTakeBestOrder(contractsFixture.constants.LONG(), market.address, YES, fix('1'), fix('0.6'), sender=tester.k2) == 0
+    assert trade.publicTakeBestOrder(LONG, market.address, YES, fix('1'), fix('0.6'), sender=tester.k2) == 0
 
     # assert starting values
     assert cash.balanceOf(tester.a1) == fix('100') - fix('1', '0.4')

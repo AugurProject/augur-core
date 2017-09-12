@@ -1,0 +1,4 @@
+BID = 0
+ASK = 1
+LONG = 0
+SHORT = 1

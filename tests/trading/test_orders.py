@@ -5,12 +5,10 @@ from ethereum.tools.tester import TransactionFailed
 import numpy as np
 from pytest import fixture, mark, lazy_fixture, raises
 from utils import fix, bytesToLong, bytesToHexString, longTo32Bytes, longToHexString, stringToBytes
+from constants import BID, ASK
 
 NO = 0
 YES = 1
-
-BID = 0
-ASK = 1
 
 WEI_TO_ETH = 10**18
 
@@ -30,7 +28,7 @@ def test_walkOrderList_bids(contractsFixture):
     outcomeID = 1
     order = {
         "orderID": longTo32Bytes(5),
-        "type": contractsFixture.constants.BID(),
+        "type": BID,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.6'),
         "sender": tester.a0,
@@ -43,25 +41,25 @@ def test_walkOrderList_bids(contractsFixture):
     }
     orderId5 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId5 != bytearray(32)), "Save order"
-    bestOrderID = orders.getBestOrderId(contractsFixture.constants.BID(), market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(contractsFixture.constants.BID(), market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
     assert(bestOrderID == orderId5)
     assert(worstOrderID == orderId5)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.6'), bestOrderID) == [orderId5, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.59'), bestOrderID) == [orderId5, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.61'), bestOrderID) == [longTo32Bytes(0), orderId5])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.58'), bestOrderID) == [orderId5, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.595'), bestOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.6'), bestOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.59'), bestOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.61'), bestOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.58'), bestOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.595'), bestOrderID) == [orderId5, longTo32Bytes(0)])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.6'), worstOrderID) == [orderId5, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.59'), worstOrderID) == [orderId5, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.61'), worstOrderID) == [longTo32Bytes(0), orderId5])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.58'), worstOrderID) == [orderId5, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.595'), bestOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.6'), worstOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.59'), worstOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.61'), worstOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.58'), worstOrderID) == [orderId5, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.595'), bestOrderID) == [orderId5, longTo32Bytes(0)])
     order = {
         "orderID": longTo32Bytes(6),
-        "type": contractsFixture.constants.BID(),
+        "type": BID,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.59'),
         "sender": tester.a0,
@@ -74,25 +72,25 @@ def test_walkOrderList_bids(contractsFixture):
     }
     orderId6 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId6 != bytearray(32)), "Save order"
-    bestOrderID = orders.getBestOrderId(contractsFixture.constants.BID(), market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(contractsFixture.constants.BID(), market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
     assert(bestOrderID == orderId5)
     assert(worstOrderID == orderId6)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.6'), bestOrderID) == [orderId5, orderId6])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.59'), bestOrderID) == [orderId6, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.61'), bestOrderID) == [longTo32Bytes(0), orderId5])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.58'), bestOrderID) == [orderId6, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.595'), bestOrderID) == [orderId5, orderId6])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.6'), bestOrderID) == [orderId5, orderId6])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.59'), bestOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.61'), bestOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.58'), bestOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.595'), bestOrderID) == [orderId5, orderId6])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.6'), worstOrderID) == [orderId5, orderId6])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.59'), worstOrderID) == [orderId6, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.61'), worstOrderID) == [longTo32Bytes(0), orderId5])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.58'), worstOrderID) == [orderId6, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.595'), bestOrderID) == [orderId5, orderId6])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.6'), worstOrderID) == [orderId5, orderId6])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.59'), worstOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.61'), worstOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.58'), worstOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.595'), bestOrderID) == [orderId5, orderId6])
     order = {
         "orderID": longTo32Bytes(7),
-        "type": contractsFixture.constants.BID(),
+        "type": BID,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.595'),
         "sender": tester.a0,
@@ -105,20 +103,20 @@ def test_walkOrderList_bids(contractsFixture):
     }
     orderId7 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId7 != bytearray(32)), "Save order"
-    bestOrderID = orders.getBestOrderId(contractsFixture.constants.BID(), market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(contractsFixture.constants.BID(), market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
     assert(bestOrderID == orderId5)
     assert(worstOrderID == orderId6)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.6'), bestOrderID) == [orderId5, orderId7])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.59'), bestOrderID) == [orderId6, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.61'), bestOrderID) == [longTo32Bytes(0), orderId5])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.BID(), fix('0.58'), bestOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.6'), bestOrderID) == [orderId5, orderId7])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.59'), bestOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.61'), bestOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.descendOrderList(BID, fix('0.58'), bestOrderID) == [orderId6, longTo32Bytes(0)])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.6'), worstOrderID) == [orderId5, orderId7])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.59'), worstOrderID) == [orderId6, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.61'), worstOrderID) == [longTo32Bytes(0), orderId5])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.BID(), fix('0.58'), worstOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.6'), worstOrderID) == [orderId5, orderId7])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.59'), worstOrderID) == [orderId6, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.61'), worstOrderID) == [longTo32Bytes(0), orderId5])
+    assert(ordersFetcher.ascendOrderList(BID, fix('0.58'), worstOrderID) == [orderId6, longTo32Bytes(0)])
     assert(orders.removeOrder(orderId5) == 1), "Remove order 5"
     assert(orders.removeOrder(orderId6) == 1), "Remove order 6"
     assert(orders.removeOrder(orderId7) == 1), "Remove order 7"
@@ -130,7 +128,7 @@ def test_walkOrderList_asks(contractsFixture):
     outcomeID = 1
     order = {
         "orderID": longTo32Bytes(8),
-        "type": contractsFixture.constants.ASK(),
+        "type": ASK,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.6'),
         "sender": tester.a0,
@@ -143,23 +141,23 @@ def test_walkOrderList_asks(contractsFixture):
     }
     orderId8 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId8 != bytearray(32)), "Save order"
-    bestOrderID = orders.getBestOrderId(contractsFixture.constants.ASK(), market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(contractsFixture.constants.ASK(), market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
     assert(bestOrderID == orderId8)
     assert(worstOrderID == orderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.6'), bestOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.59'), bestOrderID) == [longTo32Bytes(0), orderId8])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.61'), bestOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.58'), bestOrderID) == [longTo32Bytes(0), orderId8])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.6'), bestOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.59'), bestOrderID) == [longTo32Bytes(0), orderId8])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.61'), bestOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.58'), bestOrderID) == [longTo32Bytes(0), orderId8])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.6'), worstOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.59'), worstOrderID) == [longTo32Bytes(0), orderId8])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.61'), worstOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.58'), worstOrderID) == [longTo32Bytes(0), orderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.6'), worstOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.59'), worstOrderID) == [longTo32Bytes(0), orderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.61'), worstOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.58'), worstOrderID) == [longTo32Bytes(0), orderId8])
     order = {
         "orderID": longTo32Bytes(9),
-        "type": contractsFixture.constants.ASK(),
+        "type": ASK,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.59'),
         "sender": tester.a0,
@@ -172,25 +170,25 @@ def test_walkOrderList_asks(contractsFixture):
     }
     orderId9 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId9 != bytearray(32)), "Save order"
-    bestOrderID = orders.getBestOrderId(contractsFixture.constants.ASK(), market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(contractsFixture.constants.ASK(), market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
     assert(bestOrderID == orderId9)
     assert(worstOrderID == orderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.6'), bestOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.59'), bestOrderID) == [orderId9, orderId8])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.61'), bestOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.58'), bestOrderID) == [longTo32Bytes(0), orderId9])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.595'), bestOrderID) == [orderId9, orderId8])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.6'), bestOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.59'), bestOrderID) == [orderId9, orderId8])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.61'), bestOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.58'), bestOrderID) == [longTo32Bytes(0), orderId9])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.595'), bestOrderID) == [orderId9, orderId8])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.6'), worstOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.59'), worstOrderID) == [orderId9, orderId8])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.61'), worstOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.58'), worstOrderID) == [longTo32Bytes(0), orderId9])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.595'), bestOrderID) == [orderId9, orderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.6'), worstOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.59'), worstOrderID) == [orderId9, orderId8])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.61'), worstOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.58'), worstOrderID) == [longTo32Bytes(0), orderId9])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.595'), bestOrderID) == [orderId9, orderId8])
     order = {
         "orderID": longTo32Bytes(10),
-        "type": contractsFixture.constants.ASK(),
+        "type": ASK,
         "fxpAmount": fix('1'),
         "fxpPrice": fix('0.595'),
         "sender": tester.a0,
@@ -203,20 +201,20 @@ def test_walkOrderList_asks(contractsFixture):
     }
     orderId10 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId10 != bytearray(32)), "Save order"
-    bestOrderID = orders.getBestOrderId(contractsFixture.constants.ASK(), market.address, outcomeID)
-    worstOrderID = orders.getWorstOrderId(contractsFixture.constants.ASK(), market.address, outcomeID)
+    bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
+    worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
     assert(bestOrderID == orderId9)
     assert(worstOrderID == orderId8)
     # walk down order list starting from bestOrderID
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.6'), bestOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.59'), bestOrderID) == [orderId9, orderId10])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.61'), bestOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.descendOrderList(contractsFixture.constants.ASK(), fix('0.58'), bestOrderID) == [longTo32Bytes(0), orderId9])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.6'), bestOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.59'), bestOrderID) == [orderId9, orderId10])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.61'), bestOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.descendOrderList(ASK, fix('0.58'), bestOrderID) == [longTo32Bytes(0), orderId9])
     # walk up order list starting from worstOrderID
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.6'), worstOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.59'), worstOrderID) == [orderId9, orderId10])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.61'), worstOrderID) == [orderId8, longTo32Bytes(0)])
-    assert(ordersFetcher.ascendOrderList(contractsFixture.constants.ASK(), fix('0.58'), worstOrderID) == [longTo32Bytes(0), orderId9])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.6'), worstOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.59'), worstOrderID) == [orderId9, orderId10])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.61'), worstOrderID) == [orderId8, longTo32Bytes(0)])
+    assert(ordersFetcher.ascendOrderList(ASK, fix('0.58'), worstOrderID) == [longTo32Bytes(0), orderId9])
     assert(orders.removeOrder(orderId8) == 1), "Remove order 8"
     assert(orders.removeOrder(orderId9) == 1), "Remove order 9"
     assert(orders.removeOrder(orderId10) == 1), "Remove order 10"
@@ -242,8 +240,8 @@ def test_orderBidSorting(where, orderType, hints, fixture):
     ordersFetcher = fixture.contracts['OrdersFetcher']
 
     # setup pre-existing orders
-    worstPrice = fix('0.60') if orderType == fixture.constants.BID() else fix('0.66')
-    bestPrice = fix('0.66') if orderType == fixture.constants.BID() else fix('0.60')
+    worstPrice = fix('0.60') if orderType == BID else fix('0.66')
+    bestPrice = fix('0.66') if orderType == BID else fix('0.60')
     worstOrderId = orders.saveOrder(orderType, market.address, fix('1'), worstPrice, tester.a0, YES, worstPrice, 0, longTo32Bytes(0), longTo32Bytes(0), 0)
     bestOrderId = orders.saveOrder(orderType, market.address, fix('1'), bestPrice, tester.a0, YES, bestPrice, 0, longTo32Bytes(0), longTo32Bytes(0), 0)
 
@@ -257,7 +255,7 @@ def test_orderBidSorting(where, orderType, hints, fixture):
 
     # insert our new order
     if where == 'best':
-        orderPrice = fix('0.67') if orderType == fixture.constants.BID() else fix('0.59')
+        orderPrice = fix('0.67') if orderType == BID else fix('0.59')
         betterOrderId = longTo32Bytes(0)
         worseOrderId = bestOrderId if hints else longTo32Bytes(0)
     if where == 'middle':
@@ -265,7 +263,7 @@ def test_orderBidSorting(where, orderType, hints, fixture):
         betterOrderId = bestOrderId if hints else longTo32Bytes(0)
         worseOrderId = worstOrderId if hints else longTo32Bytes(0)
     if where == 'worst':
-        orderPrice = fix('0.59') if orderType == fixture.constants.BID() else fix('0.67')
+        orderPrice = fix('0.59') if orderType == BID else fix('0.67')
         betterOrderId = worstOrderId if hints else longTo32Bytes(0)
         worseOrderId = longTo32Bytes(0)
     insertedOrder = orders.saveOrder(orderType, market.address, fix('1'), orderPrice, tester.a0, YES, orderPrice, 0, betterOrderId, worseOrderId, 0)
@@ -281,9 +279,9 @@ def test_saveOrder(contractsFixture):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
-    orderId1 = orders.saveOrder(contractsFixture.constants.BID(), market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId1 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId2 = orders.saveOrder(contractsFixture.constants.ASK(), market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId2 = orders.saveOrder(ASK, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
 
     assert(ordersFetcher.getOrder(orderId1) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order1 didn't return the expected array of data"
@@ -306,9 +304,9 @@ def test_fillOrder(contractsFixture):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
-    orderId1 = orders.saveOrder(contractsFixture.constants.BID(), market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId1 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId2 = orders.saveOrder(contractsFixture.constants.BID(), market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId2 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
 
     # orderID, fill, money, shares
@@ -335,11 +333,11 @@ def test_removeOrder(contractsFixture):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
-    orderId1 = orders.saveOrder(contractsFixture.constants.BID(), market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId1 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId2 = orders.saveOrder(contractsFixture.constants.BID(), market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId2 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId3 = orders.saveOrder(contractsFixture.constants.BID(), market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId3 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId3 != bytearray(32)), "saveOrder wasn't executed successfully"
     assert(ordersFetcher.getOrder(orderId3) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order3 didn't return the expected data array"
     assert(orders.removeOrder(orderId3) == 1), "removeOrder wasn't executed successfully"

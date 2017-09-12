@@ -4,6 +4,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
 from utils import bytesToLong, longTo32Bytes, longToHexString, fix, unfix
+from constants import BID, ASK
 
 tester.STARTGAS = long(6.7 * 10**6)
 
@@ -17,7 +18,7 @@ def test_cancelBid(contractsFixture):
     makeOrder = contractsFixture.contracts['MakeOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
-    orderType = contractsFixture.constants.BID()
+    orderType = BID
     fxpAmount = fix('1')
     fxpPrice = fix('0.6')
     outcomeID = YES
@@ -52,7 +53,7 @@ def test_cancelAsk(contractsFixture):
     makeOrder = contractsFixture.contracts['MakeOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
-    orderType = contractsFixture.constants.ASK()
+    orderType = ASK
     fxpAmount = fix('1')
     fxpPrice = fix('0.6')
     outcomeID = 1
@@ -87,7 +88,7 @@ def test_exceptions(contractsFixture):
     makeOrder = contractsFixture.contracts['MakeOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
-    orderType = contractsFixture.constants.BID()
+    orderType = BID
     fxpAmount = fix('1')
     fxpPrice = fix('0.6')
     outcomeID = YES
