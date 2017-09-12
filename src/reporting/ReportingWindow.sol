@@ -169,7 +169,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
     }
 
-    function checkIn() public returns (bool) {
+    function checkIn() public afterInitialized returns (bool) {
         uint256 _totalReportableMarkets = getLimitedReporterMarketsCount() + getAllReporterMarketsCount();
         require(_totalReportableMarkets < 1);
         require(isActive());
