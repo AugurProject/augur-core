@@ -4,15 +4,14 @@ from pytest import fixture, mark, lazy_fixture, raises
 from datetime import timedelta
 from reporting_utils import proceedToAutomatedReporting, proceedToLimitedReporting, proceedToAllReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
-''' TODO: it should actually be impossible to have a reporting window with 0 markets to report on. The current thinking is to have reporting windows create a special IMarket on creation that will be reported on IFF no markets in the window enter limited reporting
-def test_automatedReportingRedemption(registrationTokenRedemptionFixture):
+def test_automatedReportingNoReport(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
     reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = registrationTokenRedemptionFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the AUTOMATED REPORTING phase
-    proceedToAutomatedReporting(registrationTokenRedemptionFixture, market)
+    proceedToAutomatedReporting(registrationTokenRedemptionFixture, market, [0,2])
 
     # To progress into the AUTOMATED DISPUTE phase we do an automated report
     assert market.automatedReport([0,2], sender=tester.k0)
@@ -23,15 +22,48 @@ def test_automatedReportingRedemption(registrationTokenRedemptionFixture):
     # Time passes until the end of the reporting window
     registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
+    # The reporter may not redeem their registration token as they did not report on the market that becomes reportable when there are no normally occuring reportable markets
+    with raises(TransactionFailed, message="Reporters should not be able to redeem their bond if they do not report"):
+        registrationToken.redeem(sender=tester.k1)
+
+def test_fallbackMarketReporting(registrationTokenRedemptionFixture):
+    market = registrationTokenRedemptionFixture.market1
+    reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    reputationToken = registrationTokenRedemptionFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
+    registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
+
+    # Proceed to the AUTOMATED REPORTING phase
+    proceedToAutomatedReporting(registrationTokenRedemptionFixture, market, [0,2])
+
+    # To progress into the AUTOMATED DISPUTE phase we do an automated report
+    assert market.automatedReport([0,2], sender=tester.k0)
+
+    # We're now in the AUTOMATED DISPUTE PHASE
+    assert market.getReportingState() == registrationTokenRedemptionFixture.constants.AUTOMATED_DISPUTE()
+
+    # We can't yet report on the fallback market since the reporting window hasn't started
+    fallbackMarket = registrationTokenRedemptionFixture.applySignature('FallbackMarket', reportingWindow.getFallbackMarket())
+    fallbackReportingToken = registrationTokenRedemptionFixture.applySignature('ReportingToken', fallbackMarket.getReportingToken())
+    with raises(TransactionFailed, message="The fallback market should only be able to be reported on once the reporting window starts and has no markets that can be reported on"):
+        fallbackReportingToken.buy(1, sender=tester.k1)
+
+    # Time passes until the beginning of the reporting window
+    registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+
+    # Since there are no normal markets on which we can report the fallback market can now be reported on
+    assert fallbackReportingToken.buy(1, sender=tester.k1)
+
+    # Time passes until the end of the reporting window
+    registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+
     # Before redeeming a registration token the reporter does not have their registration bond in their rep balance
     previousBalance = reputationToken.balanceOf(tester.a1)
 
-    # The reporter may redeem their registration token as there were no markets needing reporting
+    # The reporter may redeem their registration token as they reported on the only market needing it
     assert registrationToken.redeem(sender=tester.k1)
 
     # The reporter now has their bond back
     assert reputationToken.balanceOf(tester.a1) == previousBalance + registrationTokenRedemptionFixture.constants.REGISTRATION_TOKEN_BOND_AMOUNT()
-'''
 
 @mark.parametrize('makeReport', [
     True,

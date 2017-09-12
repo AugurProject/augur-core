@@ -178,6 +178,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         _newReportingWindow.migrateMarketInFromSibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
+        reportingWindow.updateMarketPhase();
         return true;
     }
 
@@ -244,6 +245,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         _newReportingWindow.migrateMarketInFromNibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
+        reportingWindow.updateMarketPhase();
         // reset to unreported state
         limitedReportersDisputeBondToken = IDisputeBond(0);
         allReportersDisputeBondToken = IDisputeBond(0);

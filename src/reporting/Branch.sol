@@ -172,7 +172,7 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
     }
 
     function isContainerForMarket(Typed _shadyTarget) constant returns (bool) {
-        if (_shadyTarget.getTypeName() != "Market") {
+        if (_shadyTarget.getTypeName() != "Market" && _shadyTarget.getTypeName() != "FallbackMarket") {
             return false;
         }
         IMarket _shadyMarket = IMarket(_shadyTarget);
