@@ -21,7 +21,7 @@ contract IReportingWindow is Typed {
     function getRegistrationToken() public constant returns (IRegistrationToken);
     function getStartTime() public constant returns (uint256);
     function getEndTime() public constant returns (uint256);
-    function getFallbackMarket() constant returns (IMarket);
+    function checkIn() public returns (bool);
     function isContainerForRegistrationToken(IRegistrationToken _shadyRegistrationToken) public constant returns (bool);
     function isContainerForMarket(IMarket _shadyMarket) public constant returns (bool);
     function isDoneReporting(address _reporter) public constant returns (bool);

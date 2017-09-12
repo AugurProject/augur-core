@@ -17,7 +17,6 @@ import 'ROOT/factories/SetFactory.sol';
 import 'ROOT/factories/RegistrationTokenFactory.sol';
 import 'ROOT/reporting/Reporting.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
-import 'ROOT/factories/FallbackMarketFactory.sol';
 
 
 contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWindow {
@@ -34,7 +33,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set private markets;
     Set private limitedReporterMarkets;
     Set private allReporterMarkets;
-    IMarket private fallbackMarket;
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
@@ -49,7 +47,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         markets = _setFactory.createSet(controller, this);
         limitedReporterMarkets = _setFactory.createSet(controller, this);
         allReporterMarkets = _setFactory.createSet(controller, this);
-        fallbackMarket = FallbackMarketFactory(controller.lookup("FallbackMarketFactory")).createMarket(controller, this);
         return true;
     }
 
@@ -117,13 +114,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function noteReport(IMarket _market, address _reporter, bytes32 _payoutDistributionHash) public afterInitialized returns (bool) {
-        uint256 _totalReportableMarkets = getLimitedReporterMarketsCount() + getAllReporterMarketsCount();
-        if (_totalReportableMarkets < 1) {
-            require(isActive());
-            require(_market == fallbackMarket);
-        } else {
-            require(markets.contains(_market));
-        }
+        require(markets.contains(_market));
         require(_market.getReportingTokenOrZeroByPayoutDistributionHash(_payoutDistributionHash) == msg.sender);
         IMarket.ReportingState _state = _market.getReportingState();
         require(_state == IMarket.ReportingState.ALL_REPORTING || _state == IMarket.ReportingState.LIMITED_REPORTING);
@@ -178,8 +169,13 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
     }
 
-    function getFallbackMarket() constant returns (IMarket) {
-        return fallbackMarket;
+    function checkIn() public returns (bool) {
+        uint256 _totalReportableMarkets = getLimitedReporterMarketsCount() + getAllReporterMarketsCount();
+        require(_totalReportableMarkets < 1);
+        require(isActive());
+        require(getRegistrationToken().balanceOf(msg.sender) > 0);
+        reporterStatus[msg.sender].finishedReporting = true;
+        return true;
     }
 
     function isActive() public afterInitialized constant returns (bool) {
@@ -280,9 +276,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function isContainerForMarket(IMarket _shadyMarket) public afterInitialized constant returns (bool) {
-        if (_shadyMarket == fallbackMarket) {
-            return true;
-        }
         if (_shadyMarket.getTypeName() != "Market") {
             return false;
         }

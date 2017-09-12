@@ -26,7 +26,7 @@ def test_automatedReportingNoReport(registrationTokenRedemptionFixture):
     with raises(TransactionFailed, message="Reporters should not be able to redeem their bond if they do not report"):
         registrationToken.redeem(sender=tester.k1)
 
-def test_fallbackMarketReporting(registrationTokenRedemptionFixture):
+def test_checkInReporting(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
     reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = registrationTokenRedemptionFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
@@ -41,17 +41,15 @@ def test_fallbackMarketReporting(registrationTokenRedemptionFixture):
     # We're now in the AUTOMATED DISPUTE PHASE
     assert market.getReportingState() == registrationTokenRedemptionFixture.constants.AUTOMATED_DISPUTE()
 
-    # We can't yet report on the fallback market since the reporting window hasn't started
-    fallbackMarket = registrationTokenRedemptionFixture.applySignature('FallbackMarket', reportingWindow.getFallbackMarket())
-    fallbackReportingToken = registrationTokenRedemptionFixture.applySignature('ReportingToken', fallbackMarket.getReportingToken())
-    with raises(TransactionFailed, message="The fallback market should only be able to be reported on once the reporting window starts and has no markets that can be reported on"):
-        fallbackReportingToken.buy(1, sender=tester.k1)
+    # We can't yet check in since the reporting window hasn't started
+    with raises(TransactionFailed, message="The checkIn method should only be callable once the reporting window starts and has no markets that can be reported on"):
+        reportingWindow.checkIn(sender=tester.k1)
 
     # Time passes until the beginning of the reporting window
     registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
 
-    # Since there are no normal markets on which we can report the fallback market can now be reported on
-    assert fallbackReportingToken.buy(1, sender=tester.k1)
+    # Since there are no normal markets on which we can report the checkIn function can be called
+    assert reportingWindow.checkIn(sender=tester.k1)
 
     # Time passes until the end of the reporting window
     registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
