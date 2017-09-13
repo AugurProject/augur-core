@@ -5,12 +5,9 @@ from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
 from utils import bytesToLong, longTo32Bytes, longToHexString, bytesToHexString, fix, unfix, captureFilteredLogs
 from uuid import uuid4
-from constants import BID, ASK
+from constants import BID, ASK, YES, NO
 
 tester.STARTGAS = long(6.7 * 10**6)
-
-YES = 1
-NO = 0
 
 ATTOSHARES = 0
 DISPLAY_PRICE = 1

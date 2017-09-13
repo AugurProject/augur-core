@@ -5,13 +5,10 @@ from os import getenv
 from pytest import fixture, mark
 from random import randint, random as randfloat
 from utils import bytesToLong, fix
-from constants import BID, ASK
+from constants import BID, ASK, YES, NO
 
 pytestmark = mark.skipif(not getenv('INCLUDE_FUZZY_TESTS'), reason="take forever to run")
 
-# binary outcomes
-YES = 1
-NO = 0
 
 # order fields
 ATTOSHARES = 0

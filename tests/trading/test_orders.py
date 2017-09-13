@@ -5,10 +5,7 @@ from ethereum.tools.tester import TransactionFailed
 import numpy as np
 from pytest import fixture, mark, lazy_fixture, raises
 from utils import fix, bytesToLong, bytesToHexString, longTo32Bytes, longToHexString, stringToBytes
-from constants import BID, ASK
-
-NO = 0
-YES = 1
+from constants import BID, ASK, YES, NO
 
 WEI_TO_ETH = 10**18
 

@@ -2,10 +2,7 @@
 
 from ethereum.tools import tester
 from utils import fix, bytesToHexString, captureFilteredLogs, longTo32Bytes, longToHexString
-from constants import BID, ASK
-
-NO = 0
-YES = 1
+from constants import BID, ASK, YES, NO
 
 
 def test_publicTakeOrder_bid(contractsFixture):

@@ -4,14 +4,9 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture, mark, lazy_fixture
 from utils import bytesToLong, longToHexString, longTo32Bytes, bytesToHexString, fix, unfix
+from constants import BID, ASK, YES, NO
 
 tester.STARTGAS = long(6.7 * 10**6)
-
-YES = 1
-NO = 0
-
-BID = 0
-ASK = 1
 
 
 def test_make_ask_with_shares_take_with_shares(fundedRepFixture):

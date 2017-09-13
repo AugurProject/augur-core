@@ -4,10 +4,8 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
 from utils import fix, longTo32Bytes
-from constants import LONG
+from constants import LONG, YES, NO
 
-NO = 0
-YES = 1
 
 def test_escapeHatch(contractsFixture):
     controller = contractsFixture.controller
