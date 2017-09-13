@@ -176,13 +176,7 @@ contract Orders is DelegationTarget, IOrders {
 
     function removeOrder(bytes32 _orderId) public onlyWhitelistedCallers returns (bool) {
         removeOrderFromList(_orderId);
-        // TODO: Test replacing the lines below with `delete orders[_orderId]` to see if we can get a full gas refund.
-        orders[_orderId].id = bytes32(0);
-        orders[_orderId].fxpPrice = 0;
-        orders[_orderId].fxpAmount = 0;
-        orders[_orderId].maker = 0;
-        orders[_orderId].fxpMoneyEscrowed = 0;
-        orders[_orderId].fxpSharesEscrowed = 0;
+        delete orders[_orderId];
         return true;
     }
 
