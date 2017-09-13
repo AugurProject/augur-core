@@ -2,7 +2,6 @@ FROM python:2.7.13
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
 	&& apt-get install -y nodejs
-RUN npm install -g AugurProject/solium
 
 RUN wget --quiet --output-document /usr/local/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.16/solc-static-linux \
 	&& chmod a+x /usr/local/bin/solc
@@ -10,9 +9,12 @@ RUN wget --quiet --output-document /usr/local/bin/solc https://github.com/ethere
 ENV PYTHONUNBUFFERED=1
 
 # install dependencies
+WORKDIR /app
+COPY package.json /app/package.json
+RUN npm install npx
+RUN npm install
 COPY requirements.txt /app/requirements.txt
-RUN cd /app \
-	&& pip install --upgrade pip setuptools \
+RUN pip install --upgrade pip setuptools \
 	&& pip install -r requirements.txt
 
 COPY .soliumignore /app/.soliumignore
