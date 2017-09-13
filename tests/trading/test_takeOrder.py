@@ -2,15 +2,8 @@
 
 from ethereum.tools import tester
 from utils import fix, bytesToHexString, captureFilteredLogs, longTo32Bytes, longToHexString
+from constants import BID, ASK, YES, NO
 
-BID = 1
-ASK = 2
-
-NO = 0
-YES = 1
-
-BUY = 1
-SELL = 2
 
 def test_publicTakeOrder_bid(contractsFixture):
     cash = contractsFixture.cash

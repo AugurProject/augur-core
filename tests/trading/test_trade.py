@@ -2,16 +2,8 @@
 
 from ethereum.tools import tester
 from utils import longTo32Bytes, longToHexString, bytesToHexString, fix, captureFilteredLogs
+from constants import BID, ASK, YES, NO
 
-NO = 0
-YES = 1
-
-BID = 1
-ASK = 2
-
-# complete set log type
-BUY = 1
-SELL = 2
 
 def test_one_bid_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
@@ -559,7 +551,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
             "_event_type": "MakeOrder",
             "market": market.address,
             "outcome": YES,
-            "orderType": BUY,
+            "orderType": BID,
             "orderId": fillOrderID,
             "fxpPrice": fix('0.6'),
             "sender": bytesToHexString(tester.a2),
@@ -783,7 +775,7 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
             "_event_type": "MakeOrder",
             "market": market.address,
             "outcome": YES,
-            "orderType": BUY,
+            "orderType": BID,
             "orderId": fillOrderID,
             "fxpPrice": fix('0.6'),
             "sender": bytesToHexString(tester.a2),

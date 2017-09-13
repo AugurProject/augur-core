@@ -2,9 +2,7 @@
 
 from ethereum.tools import tester
 from utils import fix, longToHexString, bytesToLong
-
-NO = 0
-YES = 1
+from constants import YES, NO
 
 def test_topics(fundedRepFixture):
     branch = fundedRepFixture.branch

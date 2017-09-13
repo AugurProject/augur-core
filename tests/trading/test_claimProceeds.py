@@ -5,9 +5,8 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
 from utils import fix
+from constants import YES, NO
 
-NO = 0
-YES = 1
 
 def captureLog(contract, logs, message):
     translated = contract.translator.listen(message)

@@ -5,9 +5,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
 from utils import bytesToHexString, longToHexString, bytesToLong, fix, captureFilteredLogs
-
-YES = 1
-NO = 0
+from constants import YES, NO
 
 def test_publicBuyCompleteSets(fundedRepFixture):
     branch = fundedRepFixture.branch

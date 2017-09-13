@@ -276,10 +276,10 @@ class ContractsFixture:
         reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ReportingToken']), reportingTokenAddress)
         return reportingToken
 
-    def getChildBranch(self, parentBranch, market, payoutDistribution):
+    def getOrCreateChildBranch(self, parentBranch, market, payoutDistribution):
         payoutDistributionHash = market.derivePayoutDistributionHash(payoutDistribution)
         assert payoutDistributionHash
-        childBranchAddress = parentBranch.getChildBranch(payoutDistributionHash)
+        childBranchAddress = parentBranch.getOrCreateChildBranch(payoutDistributionHash)
         assert childBranchAddress
         childBranch = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Branch']), childBranchAddress)
         return(childBranch)

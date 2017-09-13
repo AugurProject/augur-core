@@ -3,11 +3,9 @@ import numpy as np
 from os import getenv
 from pytest import fixture, mark, lazy_fixture
 from utils import fix
+from constants import BID, ASK
 
 pytestmark = mark.skipif(not getenv('INCLUDE_FUZZY_TESTS'), reason="take forever to run")
-
-BID = 1
-ASK = 2
 
 ATTOSHARES = 0
 DISPLAY_PRICE = 1

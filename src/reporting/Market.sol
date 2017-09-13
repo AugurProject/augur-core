@@ -178,6 +178,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         _newReportingWindow.migrateMarketInFromSibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
+        reportingWindow.updateMarketPhase();
         return true;
     }
 
@@ -239,11 +240,12 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         IBranch _currentBranch = getBranch();
         // follow the forking market to its branch and then attach to the next reporting window on that branch
         bytes32 _winningForkPayoutDistributionHash = _currentBranch.getForkingMarket().getFinalPayoutDistributionHash();
-        IBranch _destinationBranch = _currentBranch.getChildBranch(_winningForkPayoutDistributionHash);
+        IBranch _destinationBranch = _currentBranch.getOrCreateChildBranch(_winningForkPayoutDistributionHash);
         IReportingWindow _newReportingWindow = _destinationBranch.getNextReportingWindow();
         _newReportingWindow.migrateMarketInFromNibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
+        reportingWindow.updateMarketPhase();
         // reset to unreported state
         limitedReportersDisputeBondToken = IDisputeBond(0);
         allReportersDisputeBondToken = IDisputeBond(0);

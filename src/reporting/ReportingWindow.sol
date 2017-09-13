@@ -169,6 +169,15 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
     }
 
+    function checkIn() public afterInitialized returns (bool) {
+        uint256 _totalReportableMarkets = getLimitedReporterMarketsCount() + getAllReporterMarketsCount();
+        require(_totalReportableMarkets < 1);
+        require(isActive());
+        require(getRegistrationToken().balanceOf(msg.sender) > 0);
+        reporterStatus[msg.sender].finishedReporting = true;
+        return true;
+    }
+
     function isActive() public afterInitialized constant returns (bool) {
         if (block.timestamp <= getStartTime()) {
             return false;
@@ -282,13 +291,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         require(!limitedReporterMarkets.contains(_market));
         require(!allReporterMarkets.contains(_market));
         markets.addSetItem(_market);
-        IMarket.ReportingState _state = _market.getReportingState();
-        if (_state == IMarket.ReportingState.ALL_REPORTING) {
-            allReporterMarkets.addSetItem(_market);
-        }
-        if (_state == IMarket.ReportingState.LIMITED_REPORTING) {
-            limitedReporterMarkets.addSetItem(_market);
-        }
         return true;
     }
 

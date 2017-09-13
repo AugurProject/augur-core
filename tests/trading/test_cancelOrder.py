@@ -4,14 +4,9 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
 from utils import bytesToLong, longTo32Bytes, longToHexString, fix, unfix
+from constants import BID, ASK, YES, NO
 
 tester.STARTGAS = long(6.7 * 10**6)
-
-BID = 1
-ASK = 2
-
-YES = 1
-NO = 0
 
 def test_cancelBid(contractsFixture):
     cash = contractsFixture.cash
