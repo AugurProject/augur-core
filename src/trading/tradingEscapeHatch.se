@@ -54,9 +54,6 @@ def getFrozenShareValue(market: address, outcome: uint8):
     if self.frozenShareValue[market][outcome]:
         return self.frozenShareValue[market][outcome]
 
-    minValue = market.getMinDisplayPrice()
-    maxValue = market.getMaxDisplayPrice()
-    range = maxValue - minValue
     numberOfMissingBids = 0
     shiftedPrices = array(numberOfOutcomes)
     sumOfBids = 0
@@ -65,18 +62,16 @@ def getFrozenShareValue(market: address, outcome: uint8):
     tempOutcome = 0
     while tempOutcome < numberOfOutcomes:
         lastTradePrice = ORDERS.getLastOutcomePrice(market, tempOutcome)
-        # intentionally not a safeSub since minValue may be negate
-        lastTradePriceShifted = lastTradePrice - minValue
-        if lastTradePriceShifted:
-            shiftedPrices[tempOutcome] = lastTradePriceShifted
-            sumOfBids += lastTradePriceShifted
+        if lastTradePrice:
+            shiftedPrices[tempOutcome] = lastTradePrice
+            sumOfBids += lastTradePrice
         else:
             numberOfMissingBids += 1
         tempOutcome += 1
 
     # fill in any outcome prices that have no order history
     if numberOfMissingBids:
-        fauxBidPrice = (market.getCompleteSetCostInAttotokens() - sumOfBids) / numberOfMissingBids
+        fauxBidPrice = (10 ** 18 - sumOfBids) / numberOfMissingBids
         # to avoid any oddities, every share is worth _something_, even if it is just 1 attotoken
         if fauxBidPrice <= 0:
             fauxBidPrice = 1
@@ -94,7 +89,7 @@ def getFrozenShareValue(market: address, outcome: uint8):
     while tempOutcome < numberOfOutcomes:
         # FIXME: think about this math, can shiftedPrice * range be greater than 2*254?  Can shiftedPrice / denominator lead to rounding errors?  Should we * then / or / then *?
         # Yes it can be greater, shifted / denominator will lead to rounding errors
-        self.frozenShareValue[market][tempOutcome] = safeFxpDiv(safeFxpMul(shiftedPrices[tempOutcome], range), denominator)
+        self.frozenShareValue[market][tempOutcome] = safeFxpDiv(safeFxpMul(shiftedPrices[tempOutcome], 10 ** 18), denominator)
         tempOutcome += 1
 
     return self.frozenShareValue[market][outcome]

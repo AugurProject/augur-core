@@ -359,18 +359,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return feePerEthInAttoeth;
     }
 
-    function getMaxDisplayPrice() public constant returns (int256) {
-        return 1 ether;
-    }
-
-    function getMinDisplayPrice() public constant returns (int256) {
-        return 0;
-    }
-
-    function getCompleteSetCostInAttotokens() public constant returns (uint256) {
-        return 1 ether;
-    }
-
     function getTopic() public constant returns (bytes32) {
         return topic;
     }
