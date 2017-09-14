@@ -34,6 +34,7 @@ contract IMarket is Typed, IOwnable {
     function getNumberOfOutcomes() public constant returns (uint8);
     function getPayoutDenominator() public constant returns (uint256);
     function getTopic() public constant returns (bytes32);
+    function getTickSize() public constant returns (uint256);
     function getDenominationToken() public constant returns (ICash);
     function getShareToken(uint8 _outcome)  public constant returns (IShareToken);
     function getAutomatedReporterDisputeBondToken() public constant returns (IDisputeBond);

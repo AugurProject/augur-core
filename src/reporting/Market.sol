@@ -363,6 +363,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return topic;
     }
 
+    function getTickSize() public constant returns (uint256) {
+        return tickSize;
+    }
+
     function getFinalizationTime() public constant returns (uint256) {
         return finalizationTime;
     }

@@ -55,6 +55,7 @@ library Order {
         require(_displayPrice <= 1 ether);
         require(_displayPrice > 0);
         require(_displayPrice.isMultipleOf(_market.getNumberOfOutcomes()));
+        require(_displayPrice.isMultipleOf(_market.getTickSize()));
 
         IOrders _orders = IOrders(_controller.lookup("Orders"));
 
