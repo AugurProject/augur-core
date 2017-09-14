@@ -148,7 +148,7 @@ def test_limitedReportingRedemptionSingleMarketRedeemerDidntReport(registrationT
 ])
 def test_limitedReportingRedemptionMultipleMarketHappyPath(registrationTokenRedemptionFixture, makeReport):
     market = registrationTokenRedemptionFixture.market1
-    market2 = registrationTokenRedemptionFixture.createReasonableBinaryMarket(registrationTokenRedemptionFixture.branch, registrationTokenRedemptionFixture.cash)
+    market2 = registrationTokenRedemptionFixture.createReasonableBinaryMarket(registrationTokenRedemptionFixture.branch, 10 ** 16, registrationTokenRedemptionFixture.cash)
     reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = registrationTokenRedemptionFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
@@ -184,7 +184,7 @@ def test_limitedReportingRedemptionMultipleMarketHappyPath(registrationTokenRede
 ])
 def test_limitedReportingRedemptionMultipleMarketInsufficientReport(registrationTokenRedemptionFixture, makeReport):
     market = registrationTokenRedemptionFixture.market1
-    market2 = registrationTokenRedemptionFixture.createReasonableBinaryMarket(registrationTokenRedemptionFixture.branch, registrationTokenRedemptionFixture.cash)
+    market2 = registrationTokenRedemptionFixture.createReasonableBinaryMarket(registrationTokenRedemptionFixture.branch, 10 ** 16, registrationTokenRedemptionFixture.cash)
     reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = registrationTokenRedemptionFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
@@ -212,7 +212,7 @@ def registrationTokenRedemptionSnapshot(sessionFixture):
     # Move to the next reporting window for these tests as we want to control market creation and reporting in isolation
     originalReportingWindow = sessionFixture.applySignature('ReportingWindow', sessionFixture.binaryMarket.getReportingWindow())
     sessionFixture.chain.head_state.timestamp = originalReportingWindow.getEndTime() + 1
-    market = sessionFixture.market1 = sessionFixture.createReasonableBinaryMarket(sessionFixture.branch, sessionFixture.cash)
+    market = sessionFixture.market1 = sessionFixture.createReasonableBinaryMarket(sessionFixture.branch, 10 ** 16, sessionFixture.cash)
     return initializeReportingFixture(sessionFixture, market)
 
 @fixture
