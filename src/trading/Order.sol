@@ -49,13 +49,13 @@ library Order {
     // Constructor
     //
 
-    function create(IController _controller, address _maker, uint8 _outcome, Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal returns (Data) {
+    function create(IController _controller, address _maker, uint8 _outcome, Order.TradeTypes _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal returns (Data) {
         require(_market.getTypeName() == "Market");
         require(_outcome < _market.getNumberOfOutcomes());
-        require(_displayPrice <= 1 ether);
-        require(_displayPrice > 0);
-        require(_displayPrice.isMultipleOf(_market.getNumberOfOutcomes()));
-        require(_displayPrice.isMultipleOf(_market.getTickSize()));
+        require(_price <= 1 ether);
+        require(_price > 0);
+        require(_price.isMultipleOf(_market.getNumberOfOutcomes()));
+        require(_price.isMultipleOf(_market.getTickSize()));
 
         IOrders _orders = IOrders(_controller.lookup("Orders"));
 
@@ -67,7 +67,7 @@ library Order {
             outcome: _outcome,
             tradeType: _type,
             fxpAmount: _attoshares,
-            fxpPrice: _displayPrice,
+            fxpPrice: _price,
             fxpSharesEscrowed: 0,
             fxpMoneyEscrowed: 0,
             betterOrderId: _betterOrderId,

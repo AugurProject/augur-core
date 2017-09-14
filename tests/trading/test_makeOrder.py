@@ -30,9 +30,9 @@ def test_publicMakeOrder_bid(contractsFixture):
     orderID = makeOrder.publicMakeOrder(BID, 10**18, 10**17, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7)
     assert orderID
 
-    amount, displayPrice, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
+    amount, price, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
     assert amount == 10**18
-    assert displayPrice == 10**17
+    assert price == 10**17
     assert owner == bytesToHexString(tester.a0)
     assert tokensEscrowed == 10**17
     assert sharesEscrowed == 0
@@ -49,9 +49,9 @@ def test_publicMakeOrder_ask(contractsFixture):
 
     orderID = makeOrder.publicMakeOrder(ASK, 10**18, 10**17, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), 7)
 
-    amount, displayPrice, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
+    amount, price, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
     assert amount == 10**18
-    assert displayPrice == 10**17
+    assert price == 10**17
     assert owner == bytesToHexString(tester.a0)
     assert tokensEscrowed == 10**18 - 10**17
     assert sharesEscrowed == 0
@@ -81,9 +81,9 @@ def test_publicMakeOrder_bid2(contractsFixture):
     orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1)
     assert orderID != bytearray(32), "Order ID should be non-zero"
 
-    amount, displayPrice, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
+    amount, price, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
     assert amount == fxpAmount
-    assert displayPrice == fxpPrice
+    assert price == fxpPrice
     assert owner == bytesToHexString(tester.a1)
     assert tokensEscrowed == 0.6 * 10**18
     assert sharesEscrowed == 0
@@ -94,7 +94,7 @@ def test_publicMakeOrder_bid2(contractsFixture):
             "_event_type": "MakeOrder",
             "tradeGroupId": tradeGroupID,
             "fxpAmount": amount,
-            "fxpPrice": displayPrice,
+            "fxpPrice": price,
             "fxpMoneyEscrowed": tokensEscrowed,
             "fxpSharesEscrowed": sharesEscrowed,
             "orderId": orderID,
@@ -191,9 +191,9 @@ def test_ask_withPartialShares(contractsFixture):
 
     # validate the order contains expected results
     assert orderID != bytearray(32), "Order ID should be non-zero"
-    amount, displayPrice, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
+    amount, price, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
     assert amount == fix('2')
-    assert displayPrice == fix('0.6')
+    assert price == fix('0.6')
     assert owner == bytesToHexString(tester.a1)
     assert tokensEscrowed == fix('0.32')
     assert sharesEscrowed == fix('1.2')
@@ -203,7 +203,7 @@ def test_ask_withPartialShares(contractsFixture):
             "_event_type": "MakeOrder",
             "tradeGroupId": 42,
             "fxpAmount": amount,
-            "fxpPrice": displayPrice,
+            "fxpPrice": price,
             "fxpMoneyEscrowed": tokensEscrowed,
             "fxpSharesEscrowed": sharesEscrowed,
             "orderId": orderID,

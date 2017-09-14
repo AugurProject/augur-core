@@ -36,7 +36,7 @@ contract Orders is DelegationTarget, IOrders {
 
     // Getters
     // this function doesn't work because delegated contracts can't return tuples or dynamic arrays
-    function getOrders(bytes32 _orderId) public constant returns (uint256 _amount, uint256 _displayPrice, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId) {
+    function getOrders(bytes32 _orderId) public constant returns (uint256 _amount, uint256 _price, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId) {
         Order.Data storage _order = orders[_orderId];
         return (_order.fxpAmount, _order.fxpPrice, _order.maker, _order.fxpSharesEscrowed, _order.fxpMoneyEscrowed, _order.betterOrderId, _order.worseOrderId);
     }
