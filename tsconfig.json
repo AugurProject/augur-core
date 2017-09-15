@@ -1,0 +1,21 @@
+{
+    compilerOptions: {
+        baseUrl: ".",
+        target: "es2017",
+        module: "commonjs",
+        sourceMap: true,
+        outDir: "output",
+        rootDir: "source",
+        paths: {
+            *: [
+                "./typings/*"
+            ]
+        },
+        watch: true,
+        emitDecoratorMetadata: true,
+        experimentalDecorators: true,
+        strictNullChecks: true,
+        alwaysStrict: true,
+        allowJs: true
+    }
+}
