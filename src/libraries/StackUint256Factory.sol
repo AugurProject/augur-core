@@ -4,6 +4,7 @@ import 'ROOT/Controller.sol';
 import 'ROOT/libraries/IterableMapUint256.sol';
 import "ROOT/libraries/Delegator.sol";
 
+
 contract StackUint256Factory {
     function createStackUint256(Controller _controller, address _owner) returns (StackUint256) {
         Delegator _delegator = new Delegator(_controller, "StackUint256");
