@@ -4,7 +4,7 @@ import "ROOT/libraries/DelegationTarget.sol";
 import "ROOT/libraries/Initializable.sol";
 
 
-contract IterableMapBytes21 is DelegationTarget, Initializable {
+contract IterableMapBytes32 is DelegationTarget, Initializable {
     struct Item {
         bool hasItem;
         bytes32 value;
