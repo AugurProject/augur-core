@@ -64,7 +64,7 @@ def finalizeMarket(headState, market, payoutNumerators):
 def test_helpers(fundedRepFixture):
     market = fundedRepFixture.scalarMarket
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,40*10**18])
+    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,10**18])
 
     assert claimProceeds.calculateMarketCreatorFee(market.address, fix('3')) == fix('0.03')
     assert claimProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
@@ -81,7 +81,7 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
     yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
-    expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
+    expectedValue = 1.2 * 10 ** 18
     expectedFees = expectedValue * 0.0101
     expectedPayout = expectedValue - expectedFees
 
@@ -111,7 +111,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     shareToken2 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(2))
     shareToken1 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(1))
     shareToken0 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(0))
-    expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
+    expectedValue = 1.2 * 10 ** 18
     expectedFees = expectedValue * 0.0101
     expectedPayout = expectedValue - expectedFees
 
@@ -150,7 +150,7 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     acquireLongShares(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k1)
     # get NO shares with a2
     acquireShortShareSet(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [10**19, 3*10**19])
+    finalizeMarket(fundedRepFixture.chain.head_state, market, [25 * 10**16, 75 * 10**16])
 
     # redeem shares with a1
     claimProceeds.claimProceeds(market.address, sender = tester.k1)

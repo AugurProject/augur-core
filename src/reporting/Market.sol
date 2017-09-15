@@ -30,10 +30,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     // CONSIDER: change the payoutNumerator/payoutDenominator to use fixed point numbers instead of integers; PRO: some people find fixed point decimal values easier to grok; CON: rounding errors can occur and it is easier to screw up the math if you don't handle fixed point values correctly
     uint256 private payoutDenominator;
     uint256 private feePerEthInAttoeth;
-
-    // CONSIDER: we really don't need these
-    int256 private maxDisplayPrice;
-    int256 private minDisplayPrice;
+    uint256 private tickSize;
 
     // CONSIDER: figure out approprate values for these
     uint256 private constant AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
@@ -71,15 +68,17 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         _;
     }
 
-    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
+    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _tickSize, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(address(_reportingWindow) != NULL_ADDRESS);
         require(_numOutcomes >= 2);
         require(_numOutcomes <= 8);
+        require(_tickSize > 0);
+        require(_tickSize <= 1 ether);
+        require(_tickSize.isMultipleOf(_numOutcomes));
         // payoutDenominator must be a multiple of numOutcomes so we can evenly split complete set share payout on indeterminate
-        require((_payoutDenominator % _numOutcomes) == 0);
+        require(_payoutDenominator.isMultipleOf(_numOutcomes));
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
-        require(_minDisplayPrice < _maxDisplayPrice);
         require(_creator != NULL_ADDRESS);
         require(_cash.getTypeName() == "Cash");
         // FIXME: require market to be on a non-forking branch; repeat this check up the stack as well if necessary (e.g., in reporting window)
@@ -88,10 +87,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         reportingWindow = _reportingWindow;
         endTime = _endTime;
         numOutcomes = _numOutcomes;
+        tickSize = _tickSize;
         payoutDenominator = _payoutDenominator;
         feePerEthInAttoeth = _feePerEthInAttoeth;
-        maxDisplayPrice = _maxDisplayPrice;
-        minDisplayPrice = _minDisplayPrice;
         marketCreationBlock = block.number;
         topic = _topic;
         automatedReporterAddress = _automatedReporterAddress;
@@ -361,20 +359,12 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return feePerEthInAttoeth;
     }
 
-    function getMaxDisplayPrice() public constant returns (int256) {
-        return maxDisplayPrice;
-    }
-
-    function getMinDisplayPrice() public constant returns (int256) {
-        return minDisplayPrice;
-    }
-
-    function getCompleteSetCostInAttotokens() public constant returns (uint256) {
-        return uint256(maxDisplayPrice.sub(minDisplayPrice));
-    }
-
     function getTopic() public constant returns (bytes32) {
         return topic;
+    }
+
+    function getTickSize() public constant returns (uint256) {
+        return tickSize;
     }
 
     function getFinalizationTime() public constant returns (uint256) {

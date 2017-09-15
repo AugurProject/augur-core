@@ -240,7 +240,7 @@ def test_forking(reportingFixture, makeReport, finalizeByMigration):
 ])
 def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
     market = reportingFixture.binaryMarket
-    newMarket = reportingFixture.createReasonableBinaryMarket(reportingFixture.branch, reportingFixture.cash)
+    newMarket = reportingFixture.createReasonableBinaryMarket(reportingFixture.branch, 10 ** 16, reportingFixture.cash)
 
     # We proceed the standard market to the FORKING state
     proceedToForking(reportingFixture,  market, makeReport, tester.k1, tester.k2, tester.k3, [0,2], [2,0])

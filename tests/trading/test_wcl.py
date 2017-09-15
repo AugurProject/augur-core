@@ -320,7 +320,7 @@ import contextlib
 def placeholder_context():
     yield None
 
-@mark.parametrize('type,outcome,displayPrice,orderSize,makerYesShares,makerNoShares,makerTokens,takeSize,takerYesShares,takerNoShares,takerTokens,expectMakeRaise,expectedMakerYesShares,expectedMakerNoShares,expectedMakerTokens,expectTakeRaise,expectedTakerYesShares,expectedTakerNoShares,expectedTakerTokens,fixture', [
+@mark.parametrize('type,outcome,price,orderSize,makerYesShares,makerNoShares,makerTokens,takeSize,takerYesShares,takerNoShares,takerTokens,expectMakeRaise,expectedMakerYesShares,expectedMakerNoShares,expectedMakerTokens,expectTakeRaise,expectedTakerYesShares,expectedTakerNoShares,expectedTakerTokens,fixture', [
     # | ------ ORDER ------ |   | ------ MAKER START ------ |   | ------ TAKER START ------ |  | ------- MAKER FINISH -------  |    | ------- TAKER FINISH -------  |
     #   type,outcome,  price,   size,    yes,     no,   tkns,   size,    yes,     no,   tkns,  raise,    yes,     no,      tkns,    raise,    yes,     no,      tkns,
     (    BID,    YES,  '0.6',  '1.2',    '0',    '0', '0.72',  '1.2',  '1.2',    '0',    '0',  False,  '1.2',    '0',       '0',    False,    '0',    '0',    '0.72', lazy_fixture('fundedRepFixture')),
@@ -352,11 +352,11 @@ def placeholder_context():
     (    ASK,    YES,  '0.6',  '1.2',  '1.2',    '0',    '0',  '1.2',    '0',  '1.2',    '0',  False,    '0',    '0','0.712728',    False,    '0',    '0','0.475152', lazy_fixture('fundedRepFixture')),
     (    ASK,    YES,  '0.6',  '1.2',    '0',    '0', '0.48',  '1.2',    '0',  '1.2',    '0',  False,    '0',  '1.2',       '0',    False,    '0',    '0',    '0.48', lazy_fixture('fundedRepFixture')),
 ])
-def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, makerNoShares, makerTokens, takeSize, takerYesShares, takerNoShares, takerTokens, expectMakeRaise, expectedMakerYesShares, expectedMakerNoShares, expectedMakerTokens, expectTakeRaise, expectedTakerYesShares, expectedTakerNoShares, expectedTakerTokens, fixture):
+def test_parametrized(type, outcome, price, orderSize, makerYesShares, makerNoShares, makerTokens, takeSize, takerYesShares, takerNoShares, takerTokens, expectMakeRaise, expectedMakerYesShares, expectedMakerNoShares, expectedMakerTokens, expectTakeRaise, expectedTakerYesShares, expectedTakerNoShares, expectedTakerTokens, fixture):
     # TODO: add support for wider range markets
-    displayPrice = fix(displayPrice)
-    assert displayPrice < 10**18
-    assert displayPrice > 0
+    price = fix(price)
+    assert price < 10**18
+    assert price > 0
 
     orderSize = fix(orderSize)
     makerYesShares = fix(makerYesShares)
@@ -411,7 +411,7 @@ def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, ma
     acquireShares(NO, makerNoShares, makeOrder.address, sender = makerKey)
     acquireTokens(makerTokens, makeOrder.address, sender = makerKey)
     with raises(TransactionFailed) if expectMakeRaise else placeholder_context():
-        orderID = makeOrder.publicMakeOrder(type, orderSize, displayPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = makerKey)
+        orderID = makeOrder.publicMakeOrder(type, orderSize, price, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = makerKey)
 
     # take order
     acquireShares(YES, takerYesShares, takeOrder.address, sender = takerKey)

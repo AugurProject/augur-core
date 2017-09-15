@@ -16,7 +16,7 @@ def test_market_creation(contractsFixture):
 
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
     with raises(TransactionFailed, message="Markets can only use Cash as their denomination token"):
-        contractsFixture.createReasonableBinaryMarket(branch, shareToken)
+        contractsFixture.createReasonableBinaryMarket(branch, 10 ** 16, shareToken)
 
     assert market.getBranch() == branch.address
     assert market.getNumberOfOutcomes() == 2

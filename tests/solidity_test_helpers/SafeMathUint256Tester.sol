@@ -37,4 +37,8 @@ contract SafeMathUint256Tester {
     function fxpDiv(uint256 _a, uint256 _b, uint256 _base) public constant returns (uint256) {
         return SafeMathUint256.fxpDiv(_a, _b, _base);
     }
+
+    function isMultipleOf(uint256 _a, uint256 _b) public constant returns (bool) {
+        return SafeMathUint256.isMultipleOf(_a, _b);
+    }
 }
