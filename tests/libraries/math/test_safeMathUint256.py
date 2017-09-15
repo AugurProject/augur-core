@@ -126,3 +126,24 @@ def test_fxpDiv(a, b, base, expectedResult, testerContractsFixture):
             safeMathUint256Tester.fxpDiv(a, b, base)
     else:
         assert safeMathUint256Tester.fxpDiv(a, b, base) == expectedResult
+
+@mark.parametrize('a, b, expectedResult', [
+    (1, 1, True),
+    (2, 1, True),
+    (4, 2, True),
+    (9, 3, True),
+    (4, 3, False),
+    (8, 5, False),
+    (2 * 10 ** 18, 10 ** 18, True),
+    (2 * 10 ** 18, 2, True),
+    (1, 0, "TransactionFailed")
+])
+def test_isMultipleOf(a, b, expectedResult, testerContractsFixture):
+    testerContractsFixture.uploadAndAddToController("../tests/solidity_test_helpers/SafeMathUint256Tester.sol")
+    safeMathUint256Tester = testerContractsFixture.contracts['SafeMathUint256Tester']
+    if (expectedResult == "TransactionFailed"):
+        with raises(TransactionFailed):
+            safeMathUint256Tester.isMultipleOf(a, b)
+    else:
+        assert safeMathUint256Tester.isMultipleOf(a, b) == expectedResult
+        
