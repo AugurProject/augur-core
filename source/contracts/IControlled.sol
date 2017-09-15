@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/IController.sol';
+import './IController.sol';
 
 
 contract IControlled {
