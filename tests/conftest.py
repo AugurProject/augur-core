@@ -153,7 +153,7 @@ class ContractsFixture:
         startingGas = self.chain.head_state.gas_used
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)
         print 'Gas Used: %s' % (self.chain.head_state.gas_used - startingGas)
-        self.scalarMarket = self.createReasonableScalarMarket(self.branch, -10 * 10**18, 30 * 10**18, self.cash)
+        self.scalarMarket = self.createReasonableScalarMarket(self.branch, 40, self.cash)
         self.constants = self.uploadAndAddToController("solidity_test_helpers/Constants.sol")
         self.chain.mine(1)
         self.originalHead = self.chain.head_state
@@ -284,14 +284,14 @@ class ContractsFixture:
 
     def createCategoricalMarket(self, branch, numOutcomes, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic):
         marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, automatedReporterAddress, topic, value = marketCreationFee, startgas=long(6.7 * 10**6))
+        marketAddress = self.contracts['MarketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, 10 ** 18, automatedReporterAddress, topic, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic):
+    def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, priceRange, automatedReporterAddress, topic):
         marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createScalarMarket(branch.address, endTime, feePerEthInWei, denominationToken.address, minDisplayPrice, maxDisplayPrice, automatedReporterAddress, topic, value = marketCreationFee)
+        marketAddress = self.contracts['MarketCreation'].createScalarMarket(branch.address, endTime, feePerEthInWei, denominationToken.address, priceRange, 10 ** 18, automatedReporterAddress, topic, value = marketCreationFee)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
@@ -315,14 +315,13 @@ class ContractsFixture:
             automatedReporterAddress = tester.a0,
             topic = 'Sports'.ljust(32, '\x00'))
 
-    def createReasonableScalarMarket(self, branch, minDisplayPrice, maxDisplayPrice, denominationToken):
+    def createReasonableScalarMarket(self, branch, priceRange, denominationToken):
         return self.createScalarMarket(
             branch = branch,
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
-            minDisplayPrice = minDisplayPrice,
-            maxDisplayPrice = maxDisplayPrice,
+            priceRange = priceRange,
             automatedReporterAddress = tester.a0,
             topic = 'Sports'.ljust(32, '\x00'))
 

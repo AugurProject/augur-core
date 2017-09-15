@@ -26,16 +26,16 @@ contract IMarket is Typed, IOwnable {
         FINALIZED
     }
 
-    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable returns (bool _success);
+    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _marketDenominator, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _automatedReporterAddress, bytes32 _topic) public payable returns (bool _success);
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool);
     function derivePayoutDistributionHash(uint256[] _payoutNumerators) public constant returns (bytes32);
     function getBranch() public constant returns (IBranch);
     function getReportingWindow() public constant returns (IReportingWindow);
     function getNumberOfOutcomes() public constant returns (uint8);
-    function getMinDisplayPrice() public constant returns (int256);
-    function getMaxDisplayPrice() public constant returns (int256);
+    function getMinDisplayPrice() public constant returns (uint256);
+    function getMaxDisplayPrice() public constant returns (uint256);
     function getCompleteSetCostInAttotokens() public constant returns (uint256);
-    function getPayoutDenominator() public constant returns (uint256);
+    function getMarketDenominator() public constant returns (uint256);
     function getTopic() public constant returns (bytes32);
     function getDenominationToken() public constant returns (ICash);
     function getShareToken(uint8 _outcome)  public constant returns (IShareToken);

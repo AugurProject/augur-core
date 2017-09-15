@@ -20,8 +20,8 @@ def initializeReportingFixture(sessionFixture, market):
 
     reportingWindow = sessionFixture.applySignature('ReportingWindow', market.getReportingWindow())
     firstRegistrationToken = sessionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
-    reportingTokenNo = sessionFixture.getReportingToken(market, [2,0])
-    reportingTokenYes = sessionFixture.getReportingToken(market, [0,2])
+    reportingTokenNo = sessionFixture.getReportingToken(market, [10**18,0])
+    reportingTokenYes = sessionFixture.getReportingToken(market, [0,10**18])
 
     # Tester 0, 1, 2, and 3 will buy registration tokens so they can report on the market
     firstRegistrationToken.register(sender=tester.k0)

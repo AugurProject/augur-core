@@ -11,10 +11,10 @@ def test_automatedReportingNoReport(registrationTokenRedemptionFixture):
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the AUTOMATED REPORTING phase
-    proceedToAutomatedReporting(registrationTokenRedemptionFixture, market, [0,2])
+    proceedToAutomatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
 
     # To progress into the AUTOMATED DISPUTE phase we do an automated report
-    assert market.automatedReport([0,2], sender=tester.k0)
+    assert market.automatedReport([0,10**18], sender=tester.k0)
 
     # We're now in the AUTOMATED DISPUTE PHASE
     assert market.getReportingState() == registrationTokenRedemptionFixture.constants.AUTOMATED_DISPUTE()
@@ -33,10 +33,10 @@ def test_checkInReporting(registrationTokenRedemptionFixture):
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the AUTOMATED REPORTING phase
-    proceedToAutomatedReporting(registrationTokenRedemptionFixture, market, [0,2])
+    proceedToAutomatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
 
     # To progress into the AUTOMATED DISPUTE phase we do an automated report
-    assert market.automatedReport([0,2], sender=tester.k0)
+    assert market.automatedReport([0,10**18], sender=tester.k0)
 
     # We're now in the AUTOMATED DISPUTE PHASE
     assert market.getReportingState() == registrationTokenRedemptionFixture.constants.AUTOMATED_DISPUTE()
@@ -74,13 +74,13 @@ def test_limitedReportingRedemptionSingleMarketHappyPath(registrationTokenRedemp
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,2])
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,10**18])
 
     # We only need to report on 1 market to satisfy reporting requirements
     assert reportingWindow.getRequiredReportsPerReporterForlimitedReporterMarkets() == 1
 
     # Have a tester report on the markets
-    reportingTokenNo = registrationTokenRedemptionFixture.getReportingToken(market, [2,0])
+    reportingTokenNo = registrationTokenRedemptionFixture.getReportingToken(market, [10**18,0])
     reportingTokenNo.buy(1, sender=tester.k1)
 
     # Time passes until the end of the reporting window
@@ -106,7 +106,7 @@ def test_limitedReportingRedemptionSingleMarketNoReports(registrationTokenRedemp
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,2])
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,10**18])
 
     # Time passes until the end of the reporting window
     registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
@@ -126,13 +126,13 @@ def test_limitedReportingRedemptionSingleMarketRedeemerDidntReport(registrationT
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,2])
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,10**18])
 
     # We only need to report on 1 market to satisfy reporting requirements
     assert reportingWindow.getRequiredReportsPerReporterForlimitedReporterMarkets() == 1
 
     # Have a tester report on the markets
-    reportingTokenNo = registrationTokenRedemptionFixture.getReportingToken(market, [2,0])
+    reportingTokenNo = registrationTokenRedemptionFixture.getReportingToken(market, [10**18,0])
     reportingTokenNo.buy(1, sender=tester.k1)
 
     # Time passes until the end of the reporting window
@@ -154,16 +154,16 @@ def test_limitedReportingRedemptionMultipleMarketHappyPath(registrationTokenRede
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase for both markets
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,2])
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market2, makeReport, tester.k1, [0,2])
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,10**18])
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market2, makeReport, tester.k1, [0,10**18])
 
     # We need to report on 2 markets to satisfy reporting requirements
     assert reportingWindow.getRequiredReportsPerReporterForlimitedReporterMarkets() == 2
 
     # Have a tester report on both the markets
-    reportingTokenNo = registrationTokenRedemptionFixture.getReportingToken(market, [2,0])
+    reportingTokenNo = registrationTokenRedemptionFixture.getReportingToken(market, [10**18,0])
     reportingTokenNo.buy(1, sender=tester.k1)
-    reportingTokenNo2 = registrationTokenRedemptionFixture.getReportingToken(market2, [2,0])
+    reportingTokenNo2 = registrationTokenRedemptionFixture.getReportingToken(market2, [10**18,0])
     reportingTokenNo2.buy(1, sender=tester.k1)
 
     # Time passes until the end of the reporting window
@@ -190,13 +190,13 @@ def test_limitedReportingRedemptionMultipleMarketInsufficientReport(registration
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
     # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,2])
+    proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,10**18])
     
     # We need to report on 2 markets to satisfy reporting requirements
     assert reportingWindow.getRequiredReportsPerReporterForlimitedReporterMarkets() == 2
 
     # Have a tester report on one market
-    reportingTokenNo = registrationTokenRedemptionFixture.getReportingToken(market, [2,0])
+    reportingTokenNo = registrationTokenRedemptionFixture.getReportingToken(market, [10**18,0])
     reportingTokenNo.buy(1, sender=tester.k1)
 
     # Time passes until the end of the reporting window

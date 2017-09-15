@@ -89,7 +89,7 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     acquireLongShares(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k1)
     # get NO shares with a2
     acquireShortShareSet(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,2])
+    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,10**18])
 
     # redeem shares with a1
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
@@ -119,7 +119,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     acquireLongShares(fundedRepFixture, market, 2, fix('1.2'), claimProceeds.address, sender = tester.k1)
     # get short shares with a2
     acquireShortShareSet(fundedRepFixture, market, 2, fix('1.2'), claimProceeds.address, sender = tester.k2)
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,0,3])
+    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,0,10**18])
 
     # redeem shares with a1
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
@@ -177,7 +177,7 @@ def test_reedem_failure(fundedRepFixture):
     # set timestamp to after market end
     fundedRepFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have tester.a0 subimt automated report (75% high, 25% low, range -10*10^18 to 30*10^18)
-    market.automatedReport([0, 2], sender = tester.k0)
+    market.automatedReport([0, 10**18], sender = tester.k0)
     # set timestamp to after automated dispute end
     fundedRepFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
 
