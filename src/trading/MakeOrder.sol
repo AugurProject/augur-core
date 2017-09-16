@@ -19,7 +19,6 @@ contract MakeOrder is Controlled, ReentrancyGuard {
         Order.Data memory _orderData = Order.create(controller, _maker, _outcome, _type, _attoshares, _displayPrice, _market, _betterOrderId, _worseOrderId);
         Order.escrowFunds(_orderData);
         require(_orderData.orders.getAmount(_orderData.getOrderId()) == 0);
-
         return Order.saveOrder(_orderData, _tradeGroupId);
     }
 }

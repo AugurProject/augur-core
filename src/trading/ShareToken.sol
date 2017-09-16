@@ -49,4 +49,11 @@ contract ShareToken is DelegationTarget, Typed, Initializable, VariableSupplyTok
     function isShareToken() constant public returns(bool) {
         return true;
     }
+
+    function transfer(address _to, uint256 _value) public returns(bool) {
+        balances[msg.sender] = balances[msg.sender].sub(_value);
+        balances[_to] = balances[_to].add(_value);
+        Transfer(msg.sender, _to, _value);
+        return true;
+    }
 }

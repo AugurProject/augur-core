@@ -167,8 +167,9 @@ library Trade {
         _data.contracts.denominationToken.transferFrom(_data.taker.participantAddress, this, _takerTokensToCover);
 
         // buy complete sets
-        if (_data.contracts.denominationToken.allowance(this, _data.contracts.completeSets) < _numberOfCompleteSets) {
-            _data.contracts.denominationToken.approve(_data.contracts.completeSets, _numberOfCompleteSets);
+        uint256 _cost = _numberOfCompleteSets.mul(_data.contracts.market.getMarketDenominator());
+        if (_data.contracts.denominationToken.allowance(this, _data.contracts.completeSets) < _cost) {
+            _data.contracts.denominationToken.approve(_data.contracts.completeSets, _cost);
         }
         _data.contracts.completeSets.buyCompleteSets(this, _data.contracts.market, _numberOfCompleteSets);
 
@@ -180,7 +181,6 @@ library Trade {
             _data.contracts.shortShareTokens[_i].transfer(_shortBuyer, _numberOfCompleteSets);
         }
 
-        // update available shares for maker and taker
         _data.maker.sharesToBuy -= _numberOfCompleteSets;
         _data.taker.sharesToBuy -= _numberOfCompleteSets;
     }
@@ -241,12 +241,11 @@ library Trade {
         return _startingSharesToBuy
             .sub(_endingSharesToBuy)
             .mul((_direction == Direction.Long) ? _data.order.sharePriceLong : _data.order.sharePriceShort)
-            .div(_data.order.sharePriceRange)
         ; // move semicolon up a line when https://github.com/duaraghav8/Solium/issues/110 is fixed
     }
 
     function getTokensToCover(Data _data, Direction _direction, uint256 _numShares) internal constant returns (uint256) {
-        return getTokensToCover(_direction, _data.order.sharePriceRange, _data.order.sharePriceLong, _data.order.sharePriceShort, _numShares);
+        return getTokensToCover(_direction, _data.order.sharePriceLong, _data.order.sharePriceShort, _numShares);
     }
 
     //
@@ -306,11 +305,8 @@ library Trade {
         });
     }
 
-    function getTokensToCover(Direction _direction, uint256 _sharePriceRange, uint256 _sharePriceLong, uint256 _sharePriceShort, uint256 _numShares) internal constant returns (uint256) {
-        return _numShares
-            .mul((_direction == Direction.Long) ? _sharePriceLong : _sharePriceShort)
-            .div(_sharePriceRange)
-        ; // move semicolon up a line when https://github.com/duaraghav8/Solium/issues/110 is fixed
+    function getTokensToCover(Direction _direction, uint256 _sharePriceLong, uint256 _sharePriceShort, uint256 _numShares) internal constant returns (uint256) {
+        return _numShares.mul((_direction == Direction.Long) ? _sharePriceLong : _sharePriceShort);
     }
 
     function getShortShareTokens(IMarket _market, uint8 _longOutcome) private constant returns (IShareToken[] memory) {
@@ -385,7 +381,6 @@ contract TakeOrder is Controlled, ReentrancyGuard, ITakeOrder {
         // AUDIT: is there a reentry risk here?  we execute all of the above code, which includes transferring tokens around, before we mark the order as filled
         _tradeData.contracts.orders.takeOrderLog(_tradeData.order.orderId, _tradeData.taker.participantAddress, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getTakerSharesDepleted(), _tradeData.getTakerTokensDepleted(), _tradeGroupId);
         _tradeData.contracts.orders.fillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
-
         return _tradeData.taker.sharesToSell.add(_tradeData.taker.sharesToBuy);
     }
 }

@@ -17,10 +17,10 @@ contract Orders is DelegationTarget, IOrders {
     using Order for Order.Data;
     using SafeMathUint256 for uint256;
 
-    event CancelOrder(address indexed market, address indexed sender, uint256 price, uint256 fxpAmount, bytes32 orderId, uint8 outcome, Order.TradeTypes orderType, uint256 cashRefund, uint256 sharesRefund);
-    event BuyCompleteSets(address indexed sender, address indexed market, uint256 fxpAmount, uint256 numOutcomes);
-    event SellCompleteSets(address indexed sender, address indexed market, uint256 fxpAmount, uint256 numOutcomes, uint256 marketCreatorFee, uint256 reportingFee);
-    event MakeOrder(address indexed market, address indexed sender, Order.TradeTypes indexed orderType, uint256 price, uint256 fxpAmount, uint8 outcome, bytes32 orderId, uint256 fxpMoneyEscrowed, uint256 fxpSharesEscrowed, uint256 tradeGroupId);
+    event CancelOrder(address indexed market, address indexed sender, uint256 price, uint256 amount, bytes32 orderId, uint8 outcome, Order.TradeTypes orderType, uint256 cashRefund, uint256 sharesRefund);
+    event BuyCompleteSets(address indexed sender, address indexed market, uint256 amount, uint256 numOutcomes);
+    event SellCompleteSets(address indexed sender, address indexed market, uint256 amount, uint256 numOutcomes, uint256 marketCreatorFee, uint256 reportingFee);
+    event MakeOrder(address indexed market, address indexed sender, Order.TradeTypes indexed orderType, uint256 price, uint256 amount, uint8 outcome, bytes32 orderId, uint256 moneyEscrowed, uint256 sharesEscrowed, uint256 tradeGroupId);
     event TakeOrder(address indexed market, uint8 indexed outcome, Order.TradeTypes indexed orderType, bytes32 orderId, uint256 price, address maker, address taker, uint256 makerShares, uint256 makerTokens, uint256 takerShares, uint256 takerTokens, uint256 tradeGroupId);
 
     struct MarketOrders {
@@ -37,7 +37,7 @@ contract Orders is DelegationTarget, IOrders {
     // this function doesn't work because delegated contracts can't return tuples or dynamic arrays
     function getOrders(bytes32 _orderId) public constant returns (uint256 _amount, uint256 _displayPrice, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId) {
         Order.Data storage _order = orders[_orderId];
-        return (_order.fxpAmount, _order.price, _order.maker, _order.fxpSharesEscrowed, _order.fxpMoneyEscrowed, _order.betterOrderId, _order.worseOrderId);
+        return (_order.amount, _order.price, _order.maker, _order.sharesEscrowed, _order.moneyEscrowed, _order.betterOrderId, _order.worseOrderId);
     }
 
     function getMarket(bytes32 _orderId) public constant returns (IMarket) {
@@ -53,7 +53,7 @@ contract Orders is DelegationTarget, IOrders {
     }
 
     function getAmount(bytes32 _orderId) public constant returns (uint256) {
-        return orders[_orderId].fxpAmount;
+        return orders[_orderId].amount;
     }
 
     function getPrice(bytes32 _orderId) public constant returns (uint256) {
@@ -65,11 +65,11 @@ contract Orders is DelegationTarget, IOrders {
     }
 
     function getOrderSharesEscrowed(bytes32 _orderId) public constant returns (uint256) {
-        return orders[_orderId].fxpSharesEscrowed;
+        return orders[_orderId].sharesEscrowed;
     }
 
     function getOrderMoneyEscrowed(bytes32 _orderId) public constant returns (uint256) {
-        return orders[_orderId].fxpMoneyEscrowed;
+        return orders[_orderId].moneyEscrowed;
     }
 
     function getVolume(IMarket _market) public constant returns (uint256) {
@@ -96,8 +96,8 @@ contract Orders is DelegationTarget, IOrders {
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)];
     }
 
-    function getOrderId(Order.TradeTypes _type, IMarket _market, uint256 _fxpAmount, uint256 _price, address _sender, uint256 _blockNumber, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bytes32) {
-        return sha256(_type, _market, _fxpAmount, _price, _sender, _blockNumber, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
+    function getOrderId(Order.TradeTypes _type, IMarket _market, uint256 _amount, uint256 _price, address _sender, uint256 _blockNumber, uint8 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed) public constant returns (bytes32) {
+        return sha256(_type, _market, _amount, _price, _sender, _blockNumber, _outcome, _moneyEscrowed, _sharesEscrowed);
     }
 
     function isBetterPrice(Order.TradeTypes _type, uint256 _price, bytes32 _orderId) public constant returns (bool) {
@@ -156,9 +156,9 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    function saveOrder(Order.TradeTypes _type, IMarket _market, uint256 _fxpAmount, uint256 price, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bytes32 _orderId) {
+    function saveOrder(Order.TradeTypes _type, IMarket _market, uint256 _amount, uint256 price, address _sender, uint8 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bytes32 _orderId) {
         require(_outcome < _market.getNumberOfOutcomes());
-        _orderId = getOrderId(_type, _market, _fxpAmount, price, _sender, block.number, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
+        _orderId = getOrderId(_type, _market, _amount, price, _sender, block.number, _outcome, _moneyEscrowed, _sharesEscrowed);
         Order.Data storage _order = orders[_orderId];
         _order.orders = this;
         _order.market = _market;
@@ -166,12 +166,12 @@ contract Orders is DelegationTarget, IOrders {
         _order.tradeType = _type;
         _order.outcome = _outcome;
         _order.price = price;
-        _order.fxpAmount = _fxpAmount;
+        _order.amount = _amount;
         _order.maker = _sender;
-        _order.fxpMoneyEscrowed = _fxpMoneyEscrowed;
-        _order.fxpSharesEscrowed = _fxpSharesEscrowed;
+        _order.moneyEscrowed = _moneyEscrowed;
+        _order.sharesEscrowed = _sharesEscrowed;
         insertOrderIntoList(_order, _betterOrderId, _worseOrderId);
-        MakeOrder(_market, _sender, _type, price, _fxpAmount, _outcome, _orderId, _fxpMoneyEscrowed, _fxpSharesEscrowed, _tradeGroupId);
+        MakeOrder(_market, _sender, _type, price, _amount, _outcome, _orderId, _moneyEscrowed, _sharesEscrowed, _tradeGroupId);
         return _orderId;
     }
 
@@ -187,22 +187,22 @@ contract Orders is DelegationTarget, IOrders {
         require(_order.outcome < _order.market.getNumberOfOutcomes());
         require(_order.tradeType == Order.TradeTypes.Bid || _order.tradeType == Order.TradeTypes.Ask);
         require(_orderId != bytes32(0));
-        require(_sharesFilled <= _order.fxpSharesEscrowed);
-        require(_tokensFilled <= _order.fxpMoneyEscrowed);
+        require(_sharesFilled <= _order.sharesEscrowed);
+        require(_tokensFilled <= _order.moneyEscrowed);
         require(_order.price <= _order.market.getMarketDenominator());
         uint256 _fill = 0;
         if (_order.tradeType == Order.TradeTypes.Bid) {
-            _fill = _sharesFilled + _tokensFilled.mul(_order.market.getMarketDenominator()).div(_order.price);
+            _fill = _sharesFilled + _tokensFilled.div(_order.price);
         } else if (_order.tradeType == Order.TradeTypes.Ask) {
-            _fill = _sharesFilled + _tokensFilled.mul(_order.market.getMarketDenominator()).div(_order.market.getMarketDenominator().sub(_order.price));
+            _fill = _sharesFilled + _tokensFilled.div(_order.market.getMarketDenominator().sub(_order.price));
         }
-        require(_fill <= _order.fxpAmount);
-        _order.fxpAmount -= _fill;
-        _order.fxpMoneyEscrowed -= _tokensFilled;
-        _order.fxpSharesEscrowed -= _sharesFilled;
-        if (_order.fxpAmount == 0) {
-            require(_order.fxpMoneyEscrowed == 0);
-            require(_order.fxpSharesEscrowed == 0);
+        require(_fill <= _order.amount);
+        _order.amount -= _fill;
+        _order.moneyEscrowed -= _tokensFilled;
+        _order.sharesEscrowed -= _sharesFilled;
+        if (_order.amount == 0) {
+            require(_order.moneyEscrowed == 0);
+            require(_order.sharesEscrowed == 0);
             removeOrderFromList(_orderId);
             _order.price = 0;
             _order.maker = address(0);
@@ -218,19 +218,19 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    function buyCompleteSetsLog(address _sender, IMarket _market, uint256 _fxpAmount, uint256 _numOutcomes) public constant returns (bool) {
-        BuyCompleteSets(_sender, _market, _fxpAmount, _numOutcomes);
+    function buyCompleteSetsLog(address _sender, IMarket _market, uint256 _amount, uint256 _numOutcomes) public constant returns (bool) {
+        BuyCompleteSets(_sender, _market, _amount, _numOutcomes);
         return true;
     }
 
-    function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _fxpAmount, uint256 _numOutcomes, uint256 _marketCreatorFee, uint256 _reportingFee) public constant returns (bool) {
-        SellCompleteSets(_sender, _market, _fxpAmount, _numOutcomes, _marketCreatorFee, _reportingFee);
+    function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _amount, uint256 _numOutcomes, uint256 _marketCreatorFee, uint256 _reportingFee) public constant returns (bool) {
+        SellCompleteSets(_sender, _market, _amount, _numOutcomes, _marketCreatorFee, _reportingFee);
         return true;
     }
 
     function cancelOrderLog(bytes32 _orderId) public constant returns (bool) {
         Order.Data storage _order = orders[_orderId];
-        CancelOrder(_order.market, _order.maker, _order.price, _order.fxpAmount, _orderId, _order.outcome, _order.tradeType, _order.fxpMoneyEscrowed, _order.fxpSharesEscrowed);
+        CancelOrder(_order.market, _order.maker, _order.price, _order.amount, _orderId, _order.outcome, _order.tradeType, _order.moneyEscrowed, _order.sharesEscrowed);
         return true;
     }
 

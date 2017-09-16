@@ -37,10 +37,10 @@ library Order {
         address maker;
         uint8 outcome;
         Order.TradeTypes tradeType;
-        uint256 fxpAmount;
+        uint256 amount;
         uint256 price;
-        uint256 fxpSharesEscrowed;
-        uint256 fxpMoneyEscrowed;
+        uint256 sharesEscrowed;
+        uint256 moneyEscrowed;
         bytes32 betterOrderId;
         bytes32 worseOrderId;
     }
@@ -63,10 +63,10 @@ library Order {
             maker: _maker,
             outcome: _outcome,
             tradeType: _type,
-            fxpAmount: _attoshares,
+            amount: _attoshares,
             price: _price,
-            fxpSharesEscrowed: 0,
-            fxpMoneyEscrowed: 0,
+            sharesEscrowed: 0,
+            moneyEscrowed: 0,
             betterOrderId: _betterOrderId,
             worseOrderId: _worseOrderId
         });
@@ -78,7 +78,7 @@ library Order {
 
     function getOrderId(Order.Data _orderData) internal constant returns (bytes32) {
         if (_orderData.id == bytes32(0)) {
-            bytes32 _orderId = _orderData.orders.getOrderId(_orderData.tradeType, _orderData.market, _orderData.fxpAmount, _orderData.price, _orderData.maker, block.number, _orderData.outcome, _orderData.fxpMoneyEscrowed, _orderData.fxpSharesEscrowed);
+            bytes32 _orderId = _orderData.orders.getOrderId(_orderData.tradeType, _orderData.market, _orderData.amount, _orderData.price, _orderData.maker, block.number, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed);
             require(_orderData.orders.getAmount(_orderId) == 0);
             _orderData.id = _orderId;
         }
@@ -102,7 +102,7 @@ library Order {
     }
 
     function saveOrder(Order.Data _orderData, uint256 _tradeGroupId) internal returns (bytes32) {
-        return _orderData.orders.saveOrder(_orderData.tradeType, _orderData.market, _orderData.fxpAmount, _orderData.price, _orderData.maker, _orderData.outcome, _orderData.fxpMoneyEscrowed, _orderData.fxpSharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId);
+        return _orderData.orders.saveOrder(_orderData.tradeType, _orderData.market, _orderData.amount, _orderData.price, _orderData.maker, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId);
     }
 
     //
@@ -110,12 +110,12 @@ library Order {
     //
 
     function escrowFundsForBid(Order.Data _orderData) private returns (bool) {
-        uint256 _orderValueInAttotokens = SafeMathUint256.fxpMul(_orderData.fxpAmount, SafeMathUint256.sub(_orderData.market.getMarketDenominator(), _orderData.price), 1 ether);
+        uint256 _orderValueInAttotokens = _orderData.amount.mul(SafeMathUint256.sub(_orderData.market.getMarketDenominator(), _orderData.price));
         require(_orderValueInAttotokens >= MIN_ORDER_VALUE);
 
-        require(_orderData.fxpMoneyEscrowed == 0);
-        require(_orderData.fxpSharesEscrowed == 0);
-        uint256 _attosharesToCover = _orderData.fxpAmount;
+        require(_orderData.moneyEscrowed == 0);
+        require(_orderData.sharesEscrowed == 0);
+        uint256 _attosharesToCover = _orderData.amount;
         uint8 _numberOfOutcomes = _orderData.market.getNumberOfOutcomes();
 
         // Figure out how many almost-complete-sets (just missing `outcome` share) the maker has
@@ -129,46 +129,46 @@ library Order {
 
         // Take shares into escrow if they have any almost-complete-sets
         if (_attosharesHeld > 0) {
-            _orderData.fxpSharesEscrowed = SafeMathUint256.min(_attosharesHeld, _attosharesToCover);
-            _attosharesToCover -= _orderData.fxpSharesEscrowed;
+            _orderData.sharesEscrowed = SafeMathUint256.min(_attosharesHeld, _attosharesToCover);
+            _attosharesToCover -= _orderData.sharesEscrowed;
             for (_i = 0; _i < _numberOfOutcomes; _i++) {
                 if (_i != _orderData.outcome) {
-                    _orderData.market.getShareToken(_i).transferFrom(_orderData.maker, _orderData.market, _orderData.fxpSharesEscrowed);
+                    _orderData.market.getShareToken(_i).transferFrom(_orderData.maker, _orderData.market, _orderData.sharesEscrowed);
                 }
             }
         }
         // If not able to cover entire order with shares alone, then cover remaining with tokens
         if (_attosharesToCover > 0) {
-            _orderData.fxpMoneyEscrowed = SafeMathUint256.fxpMul(_attosharesToCover, _orderData.price, 1 ether);
-            require(_orderData.market.getDenominationToken().transferFrom(_orderData.maker, _orderData.market, _orderData.fxpMoneyEscrowed));
+            _orderData.moneyEscrowed = _attosharesToCover.mul(_orderData.price);
+            require(_orderData.market.getDenominationToken().transferFrom(_orderData.maker, _orderData.market, _orderData.moneyEscrowed));
         }
 
         return true;
     }
 
     function escrowFundsForAsk(Order.Data _orderData) private returns (bool) {
-        uint256 _orderValueInAttotokens = SafeMathUint256.fxpMul(_orderData.fxpAmount, _orderData.price, 1 ether);
+        uint256 _orderValueInAttotokens = _orderData.amount.mul(_orderData.price);
         require(_orderValueInAttotokens >= MIN_ORDER_VALUE);
 
-        require(_orderData.fxpMoneyEscrowed == 0);
-        require(_orderData.fxpSharesEscrowed == 0);
+        require(_orderData.moneyEscrowed == 0);
+        require(_orderData.sharesEscrowed == 0);
         IShareToken _shareToken = _orderData.market.getShareToken(_orderData.outcome);
-        uint256 _attosharesToCover = _orderData.fxpAmount;
+        uint256 _attosharesToCover = _orderData.amount;
 
         // Figure out how many shares of the outcome the maker has
         uint256 _attosharesHeld = _shareToken.balanceOf(_orderData.maker);
 
         // Take shares in escrow if user has shares
         if (_attosharesHeld > 0) {
-            _orderData.fxpSharesEscrowed = SafeMathUint256.min(_attosharesHeld, _attosharesToCover);
-            _attosharesToCover -= _orderData.fxpSharesEscrowed;
-            _shareToken.transferFrom(_orderData.maker, _orderData.market, _orderData.fxpSharesEscrowed);
+            _orderData.sharesEscrowed = SafeMathUint256.min(_attosharesHeld, _attosharesToCover);
+            _attosharesToCover -= _orderData.sharesEscrowed;
+            _shareToken.transferFrom(_orderData.maker, _orderData.market, _orderData.sharesEscrowed);
         }
 
         // If not able to cover entire order with shares alone, then cover remaining with tokens
         if (_attosharesToCover > 0) {
-            _orderData.fxpMoneyEscrowed = SafeMathUint256.fxpMul(_attosharesToCover, SafeMathUint256.sub(_orderData.market.getMarketDenominator(), _orderData.price), 1 ether);
-            require(_orderData.market.getDenominationToken().transferFrom(_orderData.maker, _orderData.market, _orderData.fxpMoneyEscrowed));
+            _orderData.moneyEscrowed = _attosharesToCover.mul(SafeMathUint256.sub(_orderData.market.getMarketDenominator(), _orderData.price));
+            require(_orderData.market.getDenominationToken().transferFrom(_orderData.maker, _orderData.market, _orderData.moneyEscrowed));
         }
 
         return true;

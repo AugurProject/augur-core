@@ -164,8 +164,8 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
             "price": fix('0.6'),
             "sender": bytesToHexString(tester.a2),
             "fxpAmount": fix('0.3'),
-            "fxpMoneyEscrowed": fix('0.3', '0.4'),
-            "fxpSharesEscrowed": 0L,
+            "moneyEscrowed": fix('0.3', '0.4'),
+            "sharesEscrowed": 0L,
             "tradeGroupId": tradeGroupID,
         },
     ]
@@ -387,8 +387,8 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
             "price": fix('0.6'),
             "sender": bytesToHexString(tester.a2),
             "fxpAmount": fix('0.3'),
-            "fxpMoneyEscrowed": fix('0.3', '0.4'),
-            "fxpSharesEscrowed": 0L,
+            "moneyEscrowed": fix('0.3', '0.4'),
+            "sharesEscrowed": 0L,
             "tradeGroupId": tradeGroupID,
         },
     ]
@@ -556,8 +556,8 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
             "price": fix('0.6'),
             "sender": bytesToHexString(tester.a2),
             "fxpAmount": fix('0.3'),
-            "fxpMoneyEscrowed": fix('0.3', '0.6'),
-            "fxpSharesEscrowed": 0L,
+            "moneyEscrowed": fix('0.3', '0.6'),
+            "sharesEscrowed": 0L,
             "tradeGroupId": tradeGroupID,
         },
     ]
@@ -780,8 +780,8 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
             "price": fix('0.6'),
             "sender": bytesToHexString(tester.a2),
             "fxpAmount": fix('0.3'),
-            "fxpMoneyEscrowed": fix('0.3', '0.6'),
-            "fxpSharesEscrowed": 0L,
+            "moneyEscrowed": fix('0.3', '0.6'),
+            "sharesEscrowed": 0L,
             "tradeGroupId": tradeGroupID,
         },
     ]
