@@ -20,7 +20,7 @@ class SolidityContractCompiler {
     public compileContracts() {
         // Compile all contracts in this.inputDirectoryPath
         const inputJson: any = this.generateCompilerInput();
-        const compilerOutput: any = solc.compile(inputJson);
+        const compilerOutput: any = solc.compileStandardWrapper(inputJson);
         // console.log(compilerOutput);
         if (compilerOutput.errors.length > 0) {
             // TODO: Improve error handling
