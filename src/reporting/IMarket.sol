@@ -32,9 +32,6 @@ contract IMarket is Typed, IOwnable {
     function getBranch() public constant returns (IBranch);
     function getReportingWindow() public constant returns (IReportingWindow);
     function getNumberOfOutcomes() public constant returns (uint8);
-    function getMinDisplayPrice() public constant returns (uint256);
-    function getMaxDisplayPrice() public constant returns (uint256);
-    function getCompleteSetCostInAttotokens() public constant returns (uint256);
     function getMarketDenominator() public constant returns (uint256);
     function getTopic() public constant returns (bytes32);
     function getDenominationToken() public constant returns (ICash);

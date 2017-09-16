@@ -81,7 +81,7 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
     yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
-    expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
+    expectedValue = 1.2 * market.getMarketDenominator()
     expectedFees = expectedValue * 0.0101
     expectedPayout = expectedValue - expectedFees
 
@@ -111,7 +111,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     shareToken2 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(2))
     shareToken1 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(1))
     shareToken0 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(0))
-    expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
+    expectedValue = 1.2 * market.getMarketDenominator()
     expectedFees = expectedValue * 0.0101
     expectedPayout = expectedValue - expectedFees
 

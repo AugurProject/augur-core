@@ -189,14 +189,13 @@ contract Orders is DelegationTarget, IOrders {
         require(_orderId != bytes32(0));
         require(_sharesFilled <= _order.fxpSharesEscrowed);
         require(_tokensFilled <= _order.fxpMoneyEscrowed);
-        require(_order.fxpPrice <= _order.market.getMaxDisplayPrice());
-        require(_order.fxpPrice >= _order.market.getMinDisplayPrice());
+        require(_order.fxpPrice <= _order.market.getMarketDenominator());
         uint256 _fill = 0;
         // The fxpDiv below is needed to make tokensFilled be in the appropriate base for division against the fpxPrice value. fxpDiv will multiply the initial value by the final provided value before doing division.
         if (_order.tradeType == Order.TradeTypes.Bid) {
-            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(_order.fxpPrice.sub(_order.market.getMinDisplayPrice())), 1 ether);
+            _fill = _sharesFilled + _tokensFilled.fxpDiv(_order.fxpPrice, 1 ether);
         } else if (_order.tradeType == Order.TradeTypes.Ask) {
-            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(_order.market.getMaxDisplayPrice().sub(_order.fxpPrice)), 1 ether);
+            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(_order.market.getMarketDenominator().sub(_order.fxpPrice)), 1 ether);
         }
         require(_fill <= _order.fxpAmount);
         _order.fxpAmount -= _fill;
