@@ -27,7 +27,7 @@ def test_walkOrderList_bids(contractsFixture):
         "orderID": longTo32Bytes(5),
         "type": BID,
         "fxpAmount": fix('1'),
-        "fxpPrice": fix('0.6'),
+        "price": fix('0.6'),
         "sender": tester.a0,
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.6'),
@@ -36,7 +36,7 @@ def test_walkOrderList_bids(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId5 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId5 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId5 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
@@ -58,7 +58,7 @@ def test_walkOrderList_bids(contractsFixture):
         "orderID": longTo32Bytes(6),
         "type": BID,
         "fxpAmount": fix('1'),
-        "fxpPrice": fix('0.59'),
+        "price": fix('0.59'),
         "sender": tester.a0,
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.59'),
@@ -67,7 +67,7 @@ def test_walkOrderList_bids(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId6 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId6 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId6 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
@@ -89,7 +89,7 @@ def test_walkOrderList_bids(contractsFixture):
         "orderID": longTo32Bytes(7),
         "type": BID,
         "fxpAmount": fix('1'),
-        "fxpPrice": fix('0.595'),
+        "price": fix('0.595'),
         "sender": tester.a0,
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.595'),
@@ -98,7 +98,7 @@ def test_walkOrderList_bids(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId7 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId7 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId7 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(BID, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(BID, market.address, outcomeID)
@@ -127,7 +127,7 @@ def test_walkOrderList_asks(contractsFixture):
         "orderID": longTo32Bytes(8),
         "type": ASK,
         "fxpAmount": fix('1'),
-        "fxpPrice": fix('0.6'),
+        "price": fix('0.6'),
         "sender": tester.a0,
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.6'),
@@ -136,7 +136,7 @@ def test_walkOrderList_asks(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId8 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId8 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId8 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
@@ -156,7 +156,7 @@ def test_walkOrderList_asks(contractsFixture):
         "orderID": longTo32Bytes(9),
         "type": ASK,
         "fxpAmount": fix('1'),
-        "fxpPrice": fix('0.59'),
+        "price": fix('0.59'),
         "sender": tester.a0,
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.59'),
@@ -165,7 +165,7 @@ def test_walkOrderList_asks(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId9 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId9 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId9 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)
@@ -187,7 +187,7 @@ def test_walkOrderList_asks(contractsFixture):
         "orderID": longTo32Bytes(10),
         "type": ASK,
         "fxpAmount": fix('1'),
-        "fxpPrice": fix('0.595'),
+        "price": fix('0.595'),
         "sender": tester.a0,
         "outcome": outcomeID,
         "fxpMoneyEscrowed": fix('0.595'),
@@ -196,7 +196,7 @@ def test_walkOrderList_asks(contractsFixture):
         "worseOrderID": longTo32Bytes(0),
         "tradeGroupID": 0
     }
-    orderId10 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["fxpPrice"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
+    orderId10 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["fxpMoneyEscrowed"], order["fxpSharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId10 != bytearray(32)), "Save order"
     bestOrderID = orders.getBestOrderId(ASK, market.address, outcomeID)
     worstOrderID = orders.getWorstOrderId(ASK, market.address, outcomeID)

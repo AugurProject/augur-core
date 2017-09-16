@@ -4,7 +4,7 @@ from ethereum.tools import tester
 from os import getenv
 from pytest import fixture, mark
 from random import randint, random as randfloat
-from utils import bytesToLong, fix
+from utils import bytesToLong, longTo32Bytes, bytesToHexString, fix
 from constants import BID, ASK, YES, NO
 
 pytestmark = mark.skipif(not getenv('INCLUDE_FUZZY_TESTS'), reason="take forever to run")
@@ -99,13 +99,13 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     acquireLongShares(orderOutcome, makerLongShares, makeOrder.address, sender = makerKey)
     acquireShortShareSet(orderOutcome, makerShortShares, makeOrder.address, sender = makerKey)
     acquireTokens(makerTokens, makeOrder.address, sender = makerKey)
-    orderID = makeOrder.publicMakeOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, 0, 0, 42, sender = makerKey)
+    orderID = makeOrder.publicMakeOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = makerKey)
 
     # validate the order
     order = ordersFetcher.getOrder(orderID)
     assert order[ATTOSHARES] == orderSize
     assert order[DISPLAY_PRICE] == orderPrice
-    assert order[OWNER] == bytesToLong(makerAddress)
+    assert order[OWNER] == bytesToHexString(makerAddress)
     assert order[TOKENS_ESCROWED] == makerTokens
     assert order[SHARES_ESCROWED] == makerLongShares or makerShortShares
 
@@ -113,7 +113,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     acquireLongShares(orderOutcome, takerLongShares, takeOrder.address, sender = takerKey)
     acquireShortShareSet(orderOutcome, takerShortShares, takeOrder.address, sender = takerKey)
     acquireTokens(takerTokens, takeOrder.address, sender = takerKey)
-    remaining = takeOrder.publicTakeOrder(orderID, orderType, market.address, orderOutcome, orderSize, sender = takerKey)
+    remaining = takeOrder.publicTakeOrder(orderID, orderSize, 42, sender = takerKey)
     assert not remaining
 
     # assert final state

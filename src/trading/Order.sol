@@ -1,7 +1,7 @@
 // Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
 // Bid / Ask actions: puts orders on the book
-// price is always in 10**18 fxp, so a price of 1 is 1 WEI.
+// price is denominated by the specific market's marketDenominator 
 // amount is the number of attoshares the order is for (either to buy or to sell). For a currency with 18 decimals [like ether] if you buy 10**18 at a price of 10**18 then that's going to buy you ONE share [10**18 units] at a cost of ONE ETH [10**18 wei]. For a currency with say 9 decimals, if you buy 10**9 at a price of 10**18 that'll also buy you ONE full unit of that currency worth of shares. If you buy 10**9 at a price of 10**17 that'll buy you POINT_ONE full units of that currency worth of shares [so it'll cost you 10**8]. If you buy 10**8 amount at a price of 10**18 you're also effectively paying POINT_ONE units of currency, this time it's just to get you 10x less shares [in other words you're paying 10x more per share].
 // price is the exact price you want to buy/sell at [which may not be the cost, for example to short a binary market it'll cost 1-price, to go long it'll cost price]
 // smallest order value is 10**14 WEI
@@ -38,7 +38,7 @@ library Order {
         uint8 outcome;
         Order.TradeTypes tradeType;
         uint256 fxpAmount;
-        uint256 fxpPrice;
+        uint256 price;
         uint256 fxpSharesEscrowed;
         uint256 fxpMoneyEscrowed;
         bytes32 betterOrderId;
@@ -49,10 +49,10 @@ library Order {
     // Constructor
     //
 
-    function create(IController _controller, address _maker, uint8 _outcome, Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal returns (Data) {
+    function create(IController _controller, address _maker, uint8 _outcome, Order.TradeTypes _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal returns (Data) {
         require(_market.getTypeName() == "Market");
         require(_outcome < _market.getNumberOfOutcomes());
-        require(_displayPrice < _market.getMarketDenominator());
+        require(_price < _market.getMarketDenominator());
 
         IOrders _orders = IOrders(_controller.lookup("Orders"));
 
@@ -64,7 +64,7 @@ library Order {
             outcome: _outcome,
             tradeType: _type,
             fxpAmount: _attoshares,
-            fxpPrice: _displayPrice,
+            price: _price,
             fxpSharesEscrowed: 0,
             fxpMoneyEscrowed: 0,
             betterOrderId: _betterOrderId,
@@ -78,7 +78,7 @@ library Order {
 
     function getOrderId(Order.Data _orderData) internal constant returns (bytes32) {
         if (_orderData.id == bytes32(0)) {
-            bytes32 _orderId = _orderData.orders.getOrderId(_orderData.tradeType, _orderData.market, _orderData.fxpAmount, _orderData.fxpPrice, _orderData.maker, block.number, _orderData.outcome, _orderData.fxpMoneyEscrowed, _orderData.fxpSharesEscrowed);
+            bytes32 _orderId = _orderData.orders.getOrderId(_orderData.tradeType, _orderData.market, _orderData.fxpAmount, _orderData.price, _orderData.maker, block.number, _orderData.outcome, _orderData.fxpMoneyEscrowed, _orderData.fxpSharesEscrowed);
             require(_orderData.orders.getAmount(_orderId) == 0);
             _orderData.id = _orderId;
         }
@@ -102,7 +102,7 @@ library Order {
     }
 
     function saveOrder(Order.Data _orderData, uint256 _tradeGroupId) internal returns (bytes32) {
-        return _orderData.orders.saveOrder(_orderData.tradeType, _orderData.market, _orderData.fxpAmount, _orderData.fxpPrice, _orderData.maker, _orderData.outcome, _orderData.fxpMoneyEscrowed, _orderData.fxpSharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId);
+        return _orderData.orders.saveOrder(_orderData.tradeType, _orderData.market, _orderData.fxpAmount, _orderData.price, _orderData.maker, _orderData.outcome, _orderData.fxpMoneyEscrowed, _orderData.fxpSharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId);
     }
 
     //
@@ -110,7 +110,7 @@ library Order {
     //
 
     function escrowFundsForBid(Order.Data _orderData) private returns (bool) {
-        uint256 _orderValueInAttotokens = SafeMathUint256.fxpMul(_orderData.fxpAmount, SafeMathUint256.sub(_orderData.market.getMarketDenominator(), uint256(_orderData.fxpPrice)), 1 ether);
+        uint256 _orderValueInAttotokens = SafeMathUint256.fxpMul(_orderData.fxpAmount, SafeMathUint256.sub(_orderData.market.getMarketDenominator(), _orderData.price), 1 ether);
         require(_orderValueInAttotokens >= MIN_ORDER_VALUE);
 
         require(_orderData.fxpMoneyEscrowed == 0);
@@ -139,7 +139,7 @@ library Order {
         }
         // If not able to cover entire order with shares alone, then cover remaining with tokens
         if (_attosharesToCover > 0) {
-            _orderData.fxpMoneyEscrowed = SafeMathUint256.fxpMul(_attosharesToCover, uint256(_orderData.fxpPrice), 1 ether);
+            _orderData.fxpMoneyEscrowed = SafeMathUint256.fxpMul(_attosharesToCover, _orderData.price, 1 ether);
             require(_orderData.market.getDenominationToken().transferFrom(_orderData.maker, _orderData.market, _orderData.fxpMoneyEscrowed));
         }
 
@@ -147,7 +147,7 @@ library Order {
     }
 
     function escrowFundsForAsk(Order.Data _orderData) private returns (bool) {
-        uint256 _orderValueInAttotokens = SafeMathUint256.fxpMul(_orderData.fxpAmount, uint256(_orderData.fxpPrice), 1 ether);
+        uint256 _orderValueInAttotokens = SafeMathUint256.fxpMul(_orderData.fxpAmount, _orderData.price, 1 ether);
         require(_orderValueInAttotokens >= MIN_ORDER_VALUE);
 
         require(_orderData.fxpMoneyEscrowed == 0);
@@ -167,7 +167,7 @@ library Order {
 
         // If not able to cover entire order with shares alone, then cover remaining with tokens
         if (_attosharesToCover > 0) {
-            _orderData.fxpMoneyEscrowed = SafeMathUint256.fxpMul(_attosharesToCover, SafeMathUint256.sub(_orderData.market.getMarketDenominator(), uint256(_orderData.fxpPrice)), 1 ether);
+            _orderData.fxpMoneyEscrowed = SafeMathUint256.fxpMul(_attosharesToCover, SafeMathUint256.sub(_orderData.market.getMarketDenominator(), _orderData.price), 1 ether);
             require(_orderData.market.getDenominationToken().transferFrom(_orderData.maker, _orderData.market, _orderData.fxpMoneyEscrowed));
         }
 

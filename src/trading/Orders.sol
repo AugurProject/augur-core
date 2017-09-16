@@ -17,10 +17,10 @@ contract Orders is DelegationTarget, IOrders {
     using Order for Order.Data;
     using SafeMathUint256 for uint256;
 
-    event CancelOrder(address indexed market, address indexed sender, uint256 fxpPrice, uint256 fxpAmount, bytes32 orderId, uint8 outcome, Order.TradeTypes orderType, uint256 cashRefund, uint256 sharesRefund);
+    event CancelOrder(address indexed market, address indexed sender, uint256 price, uint256 fxpAmount, bytes32 orderId, uint8 outcome, Order.TradeTypes orderType, uint256 cashRefund, uint256 sharesRefund);
     event BuyCompleteSets(address indexed sender, address indexed market, uint256 fxpAmount, uint256 numOutcomes);
     event SellCompleteSets(address indexed sender, address indexed market, uint256 fxpAmount, uint256 numOutcomes, uint256 marketCreatorFee, uint256 reportingFee);
-    event MakeOrder(address indexed market, address indexed sender, Order.TradeTypes indexed orderType, uint256 fxpPrice, uint256 fxpAmount, uint8 outcome, bytes32 orderId, uint256 fxpMoneyEscrowed, uint256 fxpSharesEscrowed, uint256 tradeGroupId);
+    event MakeOrder(address indexed market, address indexed sender, Order.TradeTypes indexed orderType, uint256 price, uint256 fxpAmount, uint8 outcome, bytes32 orderId, uint256 fxpMoneyEscrowed, uint256 fxpSharesEscrowed, uint256 tradeGroupId);
     event TakeOrder(address indexed market, uint8 indexed outcome, Order.TradeTypes indexed orderType, bytes32 orderId, uint256 price, address maker, address taker, uint256 makerShares, uint256 makerTokens, uint256 takerShares, uint256 takerTokens, uint256 tradeGroupId);
 
     struct MarketOrders {
@@ -37,7 +37,7 @@ contract Orders is DelegationTarget, IOrders {
     // this function doesn't work because delegated contracts can't return tuples or dynamic arrays
     function getOrders(bytes32 _orderId) public constant returns (uint256 _amount, uint256 _displayPrice, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId) {
         Order.Data storage _order = orders[_orderId];
-        return (_order.fxpAmount, _order.fxpPrice, _order.maker, _order.fxpSharesEscrowed, _order.fxpMoneyEscrowed, _order.betterOrderId, _order.worseOrderId);
+        return (_order.fxpAmount, _order.price, _order.maker, _order.fxpSharesEscrowed, _order.fxpMoneyEscrowed, _order.betterOrderId, _order.worseOrderId);
     }
 
     function getMarket(bytes32 _orderId) public constant returns (IMarket) {
@@ -57,7 +57,7 @@ contract Orders is DelegationTarget, IOrders {
     }
 
     function getPrice(bytes32 _orderId) public constant returns (uint256) {
-        return orders[_orderId].fxpPrice;
+        return orders[_orderId].price;
     }
 
     function getOrderMaker(bytes32 _orderId) public constant returns (address) {
@@ -96,34 +96,34 @@ contract Orders is DelegationTarget, IOrders {
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)];
     }
 
-    function getOrderId(Order.TradeTypes _type, IMarket _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint256 _blockNumber, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bytes32) {
-        return sha256(_type, _market, _fxpAmount, _fxpPrice, _sender, _blockNumber, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
+    function getOrderId(Order.TradeTypes _type, IMarket _market, uint256 _fxpAmount, uint256 _price, address _sender, uint256 _blockNumber, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed) public constant returns (bytes32) {
+        return sha256(_type, _market, _fxpAmount, _price, _sender, _blockNumber, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
     }
 
-    function isBetterPrice(Order.TradeTypes _type, uint256 _fxpPrice, bytes32 _orderId) public constant returns (bool) {
+    function isBetterPrice(Order.TradeTypes _type, uint256 _price, bytes32 _orderId) public constant returns (bool) {
         require(_type == Order.TradeTypes.Bid || _type == Order.TradeTypes.Ask);
         if (_type == Order.TradeTypes.Bid) {
-            return (_fxpPrice > orders[_orderId].fxpPrice);
+            return (_price > orders[_orderId].price);
         } else if (_type == Order.TradeTypes.Ask) {
-            return (_fxpPrice < orders[_orderId].fxpPrice);
+            return (_price < orders[_orderId].price);
         }
     }
 
-    function isWorsePrice(Order.TradeTypes _type, uint256 _fxpPrice, bytes32 _orderId) public constant returns (bool) {
+    function isWorsePrice(Order.TradeTypes _type, uint256 _price, bytes32 _orderId) public constant returns (bool) {
         if (_type == Order.TradeTypes.Bid) {
-            return (_fxpPrice < orders[_orderId].fxpPrice);
+            return (_price < orders[_orderId].price);
         } else {
-            return (_fxpPrice > orders[_orderId].fxpPrice);
+            return (_price > orders[_orderId].price);
         }
     }
 
-    function assertIsNotBetterPrice(Order.TradeTypes _type, uint256 _fxpPrice, bytes32 _betterOrderId) public constant returns (bool) {
-        require(!isBetterPrice(_type, _fxpPrice, _betterOrderId));
+    function assertIsNotBetterPrice(Order.TradeTypes _type, uint256 _price, bytes32 _betterOrderId) public constant returns (bool) {
+        require(!isBetterPrice(_type, _price, _betterOrderId));
         return true;
     }
 
-    function assertIsNotWorsePrice(Order.TradeTypes _type, uint256 _fxpPrice, bytes32 _worseOrderId) public returns (bool) {
-        require(!isWorsePrice(_type, _fxpPrice, _worseOrderId));
+    function assertIsNotWorsePrice(Order.TradeTypes _type, uint256 _price, bytes32 _worseOrderId) public returns (bool) {
+        require(!isWorsePrice(_type, _price, _worseOrderId));
         return true;
     }
 
@@ -131,13 +131,13 @@ contract Orders is DelegationTarget, IOrders {
         bytes32 _bestOrderId = bestOrder[getBestOrderWorstOrderHash(_order.market, _order.outcome, _order.tradeType)];
         bytes32 _worstOrderId = worstOrder[getBestOrderWorstOrderHash(_order.market, _order.outcome, _order.tradeType)];
         IOrdersFetcher _ordersFetcher = IOrdersFetcher(controller.lookup("OrdersFetcher"));
-        (_betterOrderId, _worseOrderId) = _ordersFetcher.findBoundingOrders(_order.tradeType, _order.fxpPrice, _bestOrderId, _worstOrderId, _betterOrderId, _worseOrderId);
+        (_betterOrderId, _worseOrderId) = _ordersFetcher.findBoundingOrders(_order.tradeType, _order.price, _bestOrderId, _worstOrderId, _betterOrderId, _worseOrderId);
         if (_order.tradeType == Order.TradeTypes.Bid) {
-            _bestOrderId = updateBestBidOrder(_order.id, _order.market, _order.fxpPrice, _order.outcome);
-            _worstOrderId = updateWorstBidOrder(_order.id, _order.market, _order.fxpPrice, _order.outcome);
+            _bestOrderId = updateBestBidOrder(_order.id, _order.market, _order.price, _order.outcome);
+            _worstOrderId = updateWorstBidOrder(_order.id, _order.market, _order.price, _order.outcome);
         } else {
-            _bestOrderId = updateBestAskOrder(_order.id, _order.market, _order.fxpPrice, _order.outcome);
-            _worstOrderId = updateWorstAskOrder(_order.id, _order.market, _order.fxpPrice, _order.outcome);
+            _bestOrderId = updateBestAskOrder(_order.id, _order.market, _order.price, _order.outcome);
+            _worstOrderId = updateWorstAskOrder(_order.id, _order.market, _order.price, _order.outcome);
         }
         if (_bestOrderId == _order.id) {
             _betterOrderId = bytes32(0);
@@ -156,22 +156,22 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    function saveOrder(Order.TradeTypes _type, IMarket _market, uint256 _fxpAmount, uint256 _fxpPrice, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bytes32 _orderId) {
+    function saveOrder(Order.TradeTypes _type, IMarket _market, uint256 _fxpAmount, uint256 price, address _sender, uint8 _outcome, uint256 _fxpMoneyEscrowed, uint256 _fxpSharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bytes32 _orderId) {
         require(_outcome < _market.getNumberOfOutcomes());
-        _orderId = getOrderId(_type, _market, _fxpAmount, _fxpPrice, _sender, block.number, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
+        _orderId = getOrderId(_type, _market, _fxpAmount, price, _sender, block.number, _outcome, _fxpMoneyEscrowed, _fxpSharesEscrowed);
         Order.Data storage _order = orders[_orderId];
         _order.orders = this;
         _order.market = _market;
         _order.id = _orderId;
         _order.tradeType = _type;
         _order.outcome = _outcome;
-        _order.fxpPrice = _fxpPrice;
+        _order.price = price;
         _order.fxpAmount = _fxpAmount;
         _order.maker = _sender;
         _order.fxpMoneyEscrowed = _fxpMoneyEscrowed;
         _order.fxpSharesEscrowed = _fxpSharesEscrowed;
         insertOrderIntoList(_order, _betterOrderId, _worseOrderId);
-        MakeOrder(_market, _sender, _type, _fxpPrice, _fxpAmount, _outcome, _orderId, _fxpMoneyEscrowed, _fxpSharesEscrowed, _tradeGroupId);
+        MakeOrder(_market, _sender, _type, price, _fxpAmount, _outcome, _orderId, _fxpMoneyEscrowed, _fxpSharesEscrowed, _tradeGroupId);
         return _orderId;
     }
 
@@ -189,13 +189,12 @@ contract Orders is DelegationTarget, IOrders {
         require(_orderId != bytes32(0));
         require(_sharesFilled <= _order.fxpSharesEscrowed);
         require(_tokensFilled <= _order.fxpMoneyEscrowed);
-        require(_order.fxpPrice <= _order.market.getMarketDenominator());
+        require(_order.price <= _order.market.getMarketDenominator());
         uint256 _fill = 0;
-        // The fxpDiv below is needed to make tokensFilled be in the appropriate base for division against the fpxPrice value. fxpDiv will multiply the initial value by the final provided value before doing division.
         if (_order.tradeType == Order.TradeTypes.Bid) {
-            _fill = _sharesFilled + _tokensFilled.fxpDiv(_order.fxpPrice, 1 ether);
+            _fill = _sharesFilled + _tokensFilled.mul(_order.market.getMarketDenominator()).div(_order.price);
         } else if (_order.tradeType == Order.TradeTypes.Ask) {
-            _fill = _sharesFilled + _tokensFilled.fxpDiv(uint(_order.market.getMarketDenominator().sub(_order.fxpPrice)), 1 ether);
+            _fill = _sharesFilled + _tokensFilled.mul(_order.market.getMarketDenominator()).div(_order.market.getMarketDenominator().sub(_order.price));
         }
         require(_fill <= _order.fxpAmount);
         _order.fxpAmount -= _fill;
@@ -205,7 +204,7 @@ contract Orders is DelegationTarget, IOrders {
             require(_order.fxpMoneyEscrowed == 0);
             require(_order.fxpSharesEscrowed == 0);
             removeOrderFromList(_orderId);
-            _order.fxpPrice = 0;
+            _order.price = 0;
             _order.maker = address(0);
             _order.betterOrderId = bytes32(0);
             _order.worseOrderId = bytes32(0);
@@ -215,7 +214,7 @@ contract Orders is DelegationTarget, IOrders {
 
     function takeOrderLog(bytes32 _orderId, address _taker, uint256 _makerSharesFilled, uint256 _makerTokensFilled, uint256 _takerSharesFilled, uint256 _takerTokensFilled, uint256 _tradeGroupId) public constant returns (bool) {
         Order.Data storage _order = orders[_orderId];
-        TakeOrder(_order.market, _order.outcome, _order.tradeType, _orderId, _order.fxpPrice, _order.maker, _taker, _makerSharesFilled, _makerTokensFilled, _takerSharesFilled, _takerTokensFilled, _tradeGroupId);
+        TakeOrder(_order.market, _order.outcome, _order.tradeType, _orderId, _order.price, _order.maker, _taker, _makerSharesFilled, _makerTokensFilled, _takerSharesFilled, _takerTokensFilled, _tradeGroupId);
         return true;
     }
 
@@ -231,12 +230,12 @@ contract Orders is DelegationTarget, IOrders {
 
     function cancelOrderLog(bytes32 _orderId) public constant returns (bool) {
         Order.Data storage _order = orders[_orderId];
-        CancelOrder(_order.market, _order.maker, _order.fxpPrice, _order.fxpAmount, _orderId, _order.outcome, _order.tradeType, _order.fxpMoneyEscrowed, _order.fxpSharesEscrowed);
+        CancelOrder(_order.market, _order.maker, _order.price, _order.fxpAmount, _orderId, _order.outcome, _order.tradeType, _order.fxpMoneyEscrowed, _order.fxpSharesEscrowed);
         return true;
     }
 
-    function setPrice(IMarket _market, uint8 _outcome, uint256 _fxpPrice) external returns (bool) {
-        marketOrderData[_market].prices[_outcome] = _fxpPrice;
+    function setPrice(IMarket _market, uint8 _outcome, uint256 _price) external returns (bool) {
+        marketOrderData[_market].prices[_outcome] = _price;
         return true;
     }
 
@@ -266,9 +265,9 @@ contract Orders is DelegationTarget, IOrders {
     /**
      * @dev If best bid is not set or price higher than best bid price, this order is the new best bid.
      */
-    function updateBestBidOrder(bytes32 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes32) {
+    function updateBestBidOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint8 _outcome) private returns (bytes32) {
         bytes32 _bestBidOrderId = bestOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Bid)];
-        if (_bestBidOrderId == bytes32(0) || _fxpPrice > orders[_bestBidOrderId].fxpPrice) {
+        if (_bestBidOrderId == bytes32(0) || _price > orders[_bestBidOrderId].price) {
             bestOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Bid)] = _orderId;
         }
         return bestOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Bid)];
@@ -277,9 +276,9 @@ contract Orders is DelegationTarget, IOrders {
     /**
      * @dev If worst bid is not set or price lower than worst bid price, this order is the new worst bid.
      */
-    function updateWorstBidOrder(bytes32 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes32) {
+    function updateWorstBidOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint8 _outcome) private returns (bytes32) {
         bytes32 _worstBidOrderId = worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Bid)];
-        if (_worstBidOrderId == bytes32(0) || _fxpPrice < orders[_worstBidOrderId].fxpPrice) {
+        if (_worstBidOrderId == bytes32(0) || _price < orders[_worstBidOrderId].price) {
             worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Bid)] = _orderId;
         }
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Bid)];
@@ -288,9 +287,9 @@ contract Orders is DelegationTarget, IOrders {
     /**
      * @dev If best ask is not set or price lower than best ask price, this order is the new best ask.
      */
-    function updateBestAskOrder(bytes32 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes32) {
+    function updateBestAskOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint8 _outcome) private returns (bytes32) {
         bytes32 _bestAskOrderId = bestOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Ask)];
-        if (_bestAskOrderId == bytes32(0) || _fxpPrice < orders[_bestAskOrderId].fxpPrice) {
+        if (_bestAskOrderId == bytes32(0) || _price < orders[_bestAskOrderId].price) {
             bestOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Ask)] = _orderId;
         }
         return bestOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Ask)];
@@ -299,9 +298,9 @@ contract Orders is DelegationTarget, IOrders {
     /**
      * @dev If worst ask is not set or price higher than worst ask price, this order is the new worst ask.
      */
-    function updateWorstAskOrder(bytes32 _orderId, IMarket _market, uint256 _fxpPrice, uint8 _outcome) private returns (bytes32) {
+    function updateWorstAskOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint8 _outcome) private returns (bytes32) {
         bytes32 _worstAskOrderId = worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Ask)];
-        if (_worstAskOrderId == bytes32(0) || _fxpPrice > orders[_worstAskOrderId].fxpPrice) {
+        if (_worstAskOrderId == bytes32(0) || _price > orders[_worstAskOrderId].price) {
             worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Ask)] = _orderId;
         }
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Ask)];
