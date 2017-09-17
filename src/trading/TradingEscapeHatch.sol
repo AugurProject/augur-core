@@ -44,12 +44,12 @@ contract TradingEscapeHatch is DelegationTarget, ITradingEscapeHatch {
         int256 _maxValue = _market.getMaxDisplayPrice();
         uint256 _range = uint256(_maxValue - _minValue);
 
-        memorizeFrozenShareValues(_market, _numOutcomes, _minValue, _range);
+        memoizeFrozenShareValues(_market, _numOutcomes, _minValue, _range);
 
         return frozenShareValues[_market][_outcome];
     }
 
-    function memorizeFrozenShareValues(IMarket _market, uint8 _numOutcomes, int256 _minValue, uint256 _range) internal {
+    function memoizeFrozenShareValues(IMarket _market, uint8 _numOutcomes, int256 _minValue, uint256 _range) internal {
         uint256 _numberOfMissingBids = 0;
         uint256[] memory _shiftedPrices = new uint256[](_numOutcomes);
         uint256 _sumOfBids = 0;
