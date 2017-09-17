@@ -1,6 +1,0 @@
-def compare(first: int256, second: int256):
-    if (first == second):
-        return(0)
-    elif (first > second):
-        return(1)
-    return(-1)

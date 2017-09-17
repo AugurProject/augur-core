@@ -31,6 +31,5 @@ contract IOrders {
     function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _fxpAmount, uint256 _numOutcomes, uint256 _marketCreatorFee, uint256 _reportingFee) public constant returns (bool);
     function cancelOrderLog(bytes32 _orderId) public constant returns (bool);
     function takeOrderLog(bytes32 _orderId, address _taker, uint256 _makerSharesFilled, uint256 _makerTokensFilled, uint256 _takerSharesFilled, uint256 _takerTokensFilled, uint256 _tradeGroupId) public constant returns (bool);
-    function modifyMarketVolume(IMarket _market, uint256 _fxpAmount) external returns (bool);
     function setPrice(IMarket _market, uint8 _outcome, int256 _fxpPrice) external returns (bool);
 }

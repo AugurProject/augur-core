@@ -9,7 +9,6 @@ from json import dump as json_dump, load as json_load
 from os import path, walk, makedirs, listdir
 from pytest import fixture
 from re import findall
-from serpent import mk_full_signature, compile as compile_serpent
 from solc import compile_standard
 from utils import bytesToHexString, bytesToLong, longToHexString
 from copy import deepcopy
@@ -44,9 +43,7 @@ class ContractsFixture:
             print('generating signature for ' + name)
             extension = path.splitext(filename)[1]
             signature = None
-            if extension == '.se':
-                signature = mk_full_signature(relativeFilePath)
-            elif extension == '.sol':
+            if extension == '.sol':
                 signature = ContractsFixture.compileSolidity(relativeFilePath)['abi']
             else:
                 raise
@@ -78,9 +75,7 @@ class ContractsFixture:
             print('compiling ' + name + '...')
             extension = path.splitext(filename)[1]
             compiledCode = None
-            if extension == '.se':
-                compiledCode = compile_serpent(relativeFilePath)
-            elif extension == '.sol':
+            if extension == '.sol':
                 compiledCode = bytearray.fromhex(ContractsFixture.compileSolidity(relativeFilePath)['evm']['bytecode']['object'])
             else:
                 raise
@@ -220,7 +215,7 @@ class ContractsFixture:
             for filename in filenames:
                 name = path.splitext(filename)[0]
                 extension = path.splitext(filename)[1]
-                if extension != '.se' and extension != '.sol': continue
+                if extension != '.sol': continue
                 if name == 'controller': continue
                 contractsToDelegate = ['Orders', 'tradingEscapeHatch']
                 if name in contractsToDelegate:
@@ -235,7 +230,7 @@ class ContractsFixture:
         for filename in listdir(resolveRelativePath('../src/trading')):
             name = path.splitext(filename)[0]
             extension = path.splitext(filename)[1]
-            if extension != '.se' and extension != '.sol': continue
+            if extension != '.sol': continue
             if not name in self.contracts: continue
             self.controller.addToWhitelist(self.contracts[name].address)
 

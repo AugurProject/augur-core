@@ -43,7 +43,6 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
-src/functions/output.se
 
 # Translations
 *.mo
@@ -63,11 +62,8 @@ target/
 \#*\#
 
 bower_components
-serpent/ui
 .gitstats
 *.mw
-serpent/old-tests
-serpent
 python
 Downloads
 src-extern
