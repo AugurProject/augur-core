@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import './Controlled.sol';
+import 'Controlled.sol';
 
 
 contract Apple is Controlled {
