@@ -2,13 +2,13 @@
     "devDependencies": {
         "@types/mkdirp": "^0.5.1",
         "@types/node": "^8.0.28",
+        "solc": "^0.4.16",
         "solium": "github:AugurProject/solium"
     },
     "dependencies": {
         "fs": "0.0.1-security",
         "mkdir-recursive": "^0.3.0",
         "mkdirp": "^0.5.1",
-        "recursive-readdir": "^2.2.1",
-        "solc": "^0.4.16"
+        "recursive-readdir": "^2.2.1"
     }
 }
