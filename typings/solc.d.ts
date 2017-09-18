@@ -12,7 +12,6 @@ declare module 'solc' {
         sources: {
             [globalName: string]: CompilerInputSourceFile,
         };
-        error?: string[];
     }
     type ReadCallback = (path: string) => { contents?: string, error?: string};
     function compileStandardWrapper(input: string, readCallback?: ReadCallback);

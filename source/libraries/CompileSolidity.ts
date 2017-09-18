@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 
-import { CompileContractsOutput } from 'compileSolidity';
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 import * as recursiveReadDir from 'recursive-readdir';
 import { CompilerInput, CompilerInputSourceCode, CompilerInputSourceFile, compileStandardWrapper } from 'solc';
+
+interface CompileContractsOutput {
+    output?: string;
+}
 
 class SolidityContractCompiler {
     private contractInputDirectoryPath: string;
@@ -22,9 +25,6 @@ class SolidityContractCompiler {
         try {
             // Compile all contracts in the specified input directory
             const inputJson: CompilerInput = await this.generateCompilerInput();
-            if (inputJson.error) {
-                throw new Error("The following error was encountered while attempting to generate compiler input:\n\n" + inputJson.error);
-            }
             const compilerOutput: any = compileStandardWrapper(JSON.stringify(inputJson), this.readCallback);
             const compileOutputJson = JSON.parse(compilerOutput);
             if (compileOutputJson.errors) {
@@ -32,7 +32,7 @@ class SolidityContractCompiler {
                 for (let error of compileOutputJson.errors) {
                     errors += error.formattedMessage + "\n";
                 }
-                throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
+                // throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
             }
 
             // Create output directory (if it doesn't exist)
@@ -47,7 +47,7 @@ class SolidityContractCompiler {
 
             return { output: "Contracts in " + this.contractInputDirectoryPath + " were successfully compiled by solc and saved to " + contractOutputFilePath};
         } catch (error) {
-            return { error: error.message };
+            throw error;
         }
     }
 
@@ -56,7 +56,6 @@ class SolidityContractCompiler {
             const result = fs.readFileSync(path, 'utf8');
             return { contents: result };
         } catch (error) {
-            console.log(error);
             return { error: error.message };
         }
     }
@@ -81,8 +80,15 @@ class SolidityContractCompiler {
                 inputJson.sources[files[index].replace(contractInputDirectoryPath, "")] = {"urls": [files[index]]};
             }
         } catch (error) {
-            inputJson.error = error.message;
+            throw error;
         }
         return inputJson;
     }
 }
+
+const inputDirectoryPath = path.join(__dirname, "../../source/contracts");
+const outputDirectoryPath = path.join(__dirname, "../contracts");
+const outputFileName = "augurCore";
+
+const solidityContractCompiler = new SolidityContractCompiler(inputDirectoryPath, outputDirectoryPath, outputFileName);
+const result = solidityContractCompiler.compileContracts().then(function (result) { console.log(result); });
