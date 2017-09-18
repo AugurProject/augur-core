@@ -11,6 +11,7 @@ import 'ROOT/trading/IMakeOrder.sol';
 contract MakeOrder is Controlled, ReentrancyGuard {
     using Order for Order.Data;
 
+    // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
     function publicMakeOrder(Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, uint8 _outcome, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) external onlyInGoodTimes nonReentrant returns (bytes32) {
         return this.makeOrder(msg.sender, _type, _attoshares, _displayPrice, _market, _outcome, _betterOrderId, _worseOrderId, _tradeGroupId);
     }

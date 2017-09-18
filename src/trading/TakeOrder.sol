@@ -11,7 +11,7 @@ import 'ROOT/trading/IOrders.sol';
 import 'ROOT/trading/IShareToken.sol';
 import 'ROOT/trading/Order.sol';
 
-
+// CONSIDER: At some point it would probably be a good idea to shift much of the logic from trading contracts into extensions. In particular this means sorting for making and WCL calculcations + order walking for taking.
 library Trade {
     using SafeMathUint256 for uint256;
 
@@ -367,6 +367,7 @@ contract TakeOrder is Controlled, ReentrancyGuard, ITakeOrder {
     using Trade for Trade.Data;
     using DirectionExtensions for Trade.Direction;
 
+    // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
     function publicTakeOrder(bytes32 _orderId, uint256 _amountTakerWants, uint256 _tradeGroupId) external onlyInGoodTimes nonReentrant returns (uint256) {
         return this.takeOrder(msg.sender, _orderId, _amountTakerWants, _tradeGroupId);
     }

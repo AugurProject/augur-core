@@ -21,20 +21,20 @@ def test_escapeHatch(contractsFixture):
     # make order with cash
     assert cash.depositEther(value=fix('100'), sender=tester.k1) == 1, "depositEther to account 1 should succeed"
     assert cash.approve(makeOrder.address, fix('10'), sender=tester.k1) == 1, "Approve makeOrder contract to spend cash from account 1"
-    orderID = makeOrder.publicMakeOrder(contractsFixture.constants.ASK(), fix('1'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
+    orderID = makeOrder.publicMakeOrder(contractsFixture.constants.ASK(), 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
     assert orderID
 
     # take order with cash using on-chain matcher
     assert cash.depositEther(value=fix('100'), sender=tester.k2) == 1, "depositEther to account 1 should succeed"
     assert cash.approve(takeOrder.address, fix('10'), sender=tester.k2) == 1, "Approve takeOrder contract to spend cash from account 2"
-    assert trade.publicTakeBestOrder(LONG, market.address, YES, fix('1'), fix('0.6'), sender=tester.k2) == 0
+    assert trade.publicTakeBestOrder(LONG, market.address, YES, 1, fix('0.6'), sender=tester.k2) == 0
 
     # assert starting values
     assert cash.balanceOf(tester.a1) == fix('100') - fix('1', '0.4')
     assert cash.balanceOf(tester.a2) == fix('100') - fix('1', '0.6')
     assert cash.balanceOf(market.address) == fix('1')
-    assert noShareToken.balanceOf(tester.a1) == fix('1')
-    assert yesShareToken.balanceOf(tester.a2) == fix('1')
+    assert noShareToken.balanceOf(tester.a1) == 1
+    assert yesShareToken.balanceOf(tester.a2) == 1
     with raises(TransactionFailed):
         tradingEscapeHatch.claimSharesInUpdate(market.address)
 

@@ -22,26 +22,27 @@ def test_publicBuyCompleteSets(fundedRepFixture):
     assert not yesShareToken.totalSupply()
     assert not noShareToken.totalSupply()
 
-    cash.depositEther(value = fix('30'), sender = tester.k1)
-    cash.approve(completeSets.address, fix('20'), sender=tester.k1)
+    cost = 10 * market.getMarketDenominator()
+    cash.depositEther(value = cost, sender = tester.k1)
+    cash.approve(completeSets.address, cost, sender=tester.k1)
     captureFilteredLogs(fundedRepFixture.chain.head_state, orders, logs)
-    assert completeSets.publicBuyCompleteSets(market.address, fix('10'), sender=tester.k1)
+    assert completeSets.publicBuyCompleteSets(market.address, 10, sender=tester.k1)
 
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             "sender": bytesToHexString(tester.a1),
-            "fxpAmount": fix('10'),
+            "amount": 10L,
             "numOutcomes": 2L,
             "market": market.address
         },
     ]
-    assert yesShareToken.balanceOf(tester.a1) == fix('10'), "Should have 10 shares of outcome 1"
-    assert noShareToken.balanceOf(tester.a1) == fix('10'), "Should have 10 shares of outcome 2"
-    assert cash.balanceOf(tester.a1) == fix('20'), "Decrease in sender's cash should equal 10"
-    assert cash.balanceOf(market.address) == fix('10'), "Increase in market's cash should equal 10"
-    assert yesShareToken.totalSupply() == fix('10'), "Increase in yes shares purchased for this market should be 18"
-    assert noShareToken.totalSupply() == fix('10'), "Increase in yes shares purchased for this market should be 18"
+    assert yesShareToken.balanceOf(tester.a1) == 10, "Should have 10 shares of outcome 1"
+    assert noShareToken.balanceOf(tester.a1) == 10, "Should have 10 shares of outcome 2"
+    assert cash.balanceOf(tester.a1) == 0, "Decrease in sender's cash should equal 10"
+    assert cash.balanceOf(market.address) == cost, "Increase in market's cash should equal the cost to purchase the complete set"
+    assert yesShareToken.totalSupply() == 10, "Increase in yes shares purchased for this market should be 10"
+    assert noShareToken.totalSupply() == 10, "Increase in yes shares purchased for this market should be 10"
 
 def test_publicBuyCompleteSets_failure(fundedRepFixture):
     branch = fundedRepFixture.branch
@@ -50,20 +51,21 @@ def test_publicBuyCompleteSets_failure(fundedRepFixture):
     completeSets = fundedRepFixture.contracts['CompleteSets']
     orders = fundedRepFixture.contracts['Orders']
 
-    fxpAmount = fix('10')
-    cash.depositEther(value = fix('10000'), sender = tester.k1)
-    cash.approve(completeSets.address, fix('10000'), sender=tester.k1)
+    amount = 10
+    cost = 10 * market.getMarketDenominator()
+    cash.depositEther(value = cost, sender = tester.k1)
+    cash.approve(completeSets.address, cost, sender=tester.k1)
 
     # Permissions exceptions
     with raises(TransactionFailed):
-        completeSets.buyCompleteSets(tester.a1, market.address, fxpAmount, sender=tester.k1)
+        completeSets.buyCompleteSets(tester.a1, market.address, amount, sender=tester.k1)
 
     # buyCompleteSets exceptions
     with raises(TransactionFailed):
-        completeSets.publicBuyCompleteSets(tester.a1, fxpAmount, sender=tester.k1)
-    assert cash.approve(completeSets.address, fxpAmount - 1, sender=tester.k1) == 1, "Approve completeSets contract to spend slightly less cash than needed"
+        completeSets.publicBuyCompleteSets(tester.a1, amount, sender=tester.k1)
+    assert cash.approve(completeSets.address, cost - 1, sender=tester.k1) == 1, "Approve completeSets contract to spend slightly less cash than needed"
     with raises(TransactionFailed):
-        completeSets.publicBuyCompleteSets(market.address, fxpAmount, sender=tester.k1)
+        completeSets.publicBuyCompleteSets(market.address, amount, sender=tester.k1)
 
 def test_publicSellCompleteSets(fundedRepFixture):
     branch = fundedRepFixture.branch
@@ -82,27 +84,28 @@ def test_publicSellCompleteSets(fundedRepFixture):
     assert not yesShareToken.totalSupply()
     assert not noShareToken.totalSupply()
 
-    cash.depositEther(value = fix('10'), sender = tester.k1)
-    cash.approve(completeSets.address, fix('10'), sender = tester.k1)
-    completeSets.publicBuyCompleteSets(market.address, fix('10'), sender = tester.k1)
+    cost = 10 * market.getMarketDenominator()
+    cash.depositEther(value = cost, sender = tester.k1)
+    cash.approve(completeSets.address, cost, sender = tester.k1)
+    completeSets.publicBuyCompleteSets(market.address, 10, sender = tester.k1)
     captureFilteredLogs(fundedRepFixture.chain.head_state, orders, logs)
-    result = completeSets.publicSellCompleteSets(market.address, fix('9'), sender=tester.k1)
+    result = completeSets.publicSellCompleteSets(market.address, 9, sender=tester.k1)
 
     assert logs == [
         {
             "_event_type": "SellCompleteSets",
             "sender": bytesToHexString(tester.a1),
             "reportingFee": fix('0.0009'),
-            "fxpAmount": fix('9'),
+            "amount": 9,
             "marketCreatorFee": fix('0.09'),
             "numOutcomes": 2,
             "market": market.address
         },
     ]
-    assert yesShareToken.balanceOf(tester.a1) == fix('1'), "Should have 1 share of outcome yes"
-    assert noShareToken.balanceOf(tester.a1) == fix('1'), "Should have 1 share of outcome no"
-    assert yesShareToken.totalSupply() == fix('1')
-    assert noShareToken.totalSupply() == fix('1')
+    assert yesShareToken.balanceOf(tester.a1) == 1, "Should have 1 share of outcome yes"
+    assert noShareToken.balanceOf(tester.a1) == 1, "Should have 1 share of outcome no"
+    assert yesShareToken.totalSupply() == 1
+    assert noShareToken.totalSupply() == 1
     assert cash.balanceOf(tester.a1) == fix('8.9091')
     assert cash.balanceOf(market.address) == fix('1')
     assert cash.balanceOf(tester.a0) == fix('0.09')
@@ -118,12 +121,12 @@ def test_publicSellCompleteSets_failure(fundedRepFixture):
 
     cash.depositEther(value = fix('10000'), sender = tester.k1)
     cash.approve(completeSets.address, fix('10000'), sender = tester.k1)
-    completeSets.publicBuyCompleteSets(market.address, fix('10'), sender = tester.k1)
+    completeSets.publicBuyCompleteSets(market.address, 10, sender = tester.k1)
 
     # Permissions exceptions
     with raises(TransactionFailed):
-        completeSets.sellCompleteSets(tester.a1, market.address, fix('10'), sender=tester.k1)
+        completeSets.sellCompleteSets(tester.a1, market.address, 10, sender=tester.k1)
 
     # sellCompleteSets exceptions
     with raises(TransactionFailed):
-        completeSets.publicSellCompleteSets(market.address, fix('10') + 1, sender=tester.k1)
+        completeSets.publicSellCompleteSets(market.address, 10 + 1, sender=tester.k1)

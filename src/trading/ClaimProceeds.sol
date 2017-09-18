@@ -58,8 +58,7 @@ contract ClaimProceeds is Controlled, ReentrancyGuard, IClaimProceeds {
 
     function calculateProceeds(IMarket _market, IReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) public constant returns (uint256) {
         uint256 _payoutNumerator = _winningReportingToken.getPayoutNumerator(_outcome);
-        uint256 _marketDenominator = _market.getMarketDenominator();
-        return _numberOfShares.mul(_payoutNumerator).div(_marketDenominator);
+        return _numberOfShares.mul(_payoutNumerator);
     }
 
     function calculateReportingFee(IMarket _market, uint256 _amount) public constant returns (uint256) {
