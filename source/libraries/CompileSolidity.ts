@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { CompileContractsOutput } from 'compileSolidity';
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
@@ -17,52 +18,55 @@ class SolidityContractCompiler {
         this.contractOutputFileName = contractOutputFileName;
     }
 
-    public async compileContracts() {
+    public async compileContracts(): Promise<CompileContractsOutput> {
         try {
-            // Compile all contracts in this.inputDirectoryPath
+            // Compile all contracts in the specified input directory
             const inputJson: CompilerInput = await this.generateCompilerInput();
-            console.log(inputJson);
-            console.log('---------');
+            if (inputJson.error) {
+                throw new Error("The following error was encountered while attempting to generate compiler input:\n\n" + inputJson.error);
+            }
             const compilerOutput: any = compileStandardWrapper(JSON.stringify(inputJson), this.readCallback);
-            console.log(compilerOutput);
-            // if (compilerOutput.errors.length > 0) {
-            //     // TODO: Improve error handling
-            //     console.error("The compiler encountered the following warnings/errors:");
-            //     for (let error of compilerOutput.errors) {
-            //         console.error(error);
-            //     }
-            // }
+            const compileOutputJson = JSON.parse(compilerOutput);
+            if (compileOutputJson.errors) {
+                let errors = "";
+                for (let error of compileOutputJson.errors) {
+                    errors += error.formattedMessage + "\n";
+                }
+                throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
+            }
 
-            // // Create output directory (if it doesn't exist) and save contract bytecodes to single file
-            // mkdirp(this.contractOutputDirectoryPath);
-            // const contractOutputFilePath = this.contractOutputDirectoryPath + "/" + this.contractOutputFileName;
-            // let wstream: any = fs.createWriteStream(contractOutputFilePath);
-            // for (let contract in compilerOutput.contracts) {
-            //     wstream.write(compilerOutput.contracts[contract].bytecode);
-            // }
+            // Create output directory (if it doesn't exist)
+            mkdirp(this.contractOutputDirectoryPath);
 
-            // console.log("Saved " + contractOutputFilePath);
+            // Output contract data to single file
+            const contractOutputFilePath = this.contractOutputDirectoryPath + "/" + this.contractOutputFileName;
+            let wstream: any = fs.createWriteStream(contractOutputFilePath);
+            for (let contract in compileOutputJson.contracts) {
+                wstream.write(JSON.stringify(compileOutputJson.contracts[contract]));
+            }
+
+            return { output: "Contracts in " + this.contractInputDirectoryPath + " were successfully compiled by solc and saved to " + contractOutputFilePath};
         } catch (error) {
-            console.error(error);
-        }
-    }
-
-    public readCallback(path: string): { content?: string, error?: string } {
-        try {
-            const result = fs.readFileSync(path, 'utf8');
-            return { content: result };
-        } catch (error) {
-            console.log(error)
             return { error: error.message };
         }
     }
 
-    private ignoreFunc(file: string, stats: fs.Stats): boolean {
+    public readCallback(path: string): { contents?: string, error?: string } {
+        try {
+            const result = fs.readFileSync(path, 'utf8');
+            return { contents: result };
+        } catch (error) {
+            console.log(error);
+            return { error: error.message };
+        }
+    }
+
+    private ignoreFile(file: string, stats: fs.Stats): boolean {
         return stats.isFile() && path.extname(file) != ".sol";
     }
 
     private async generateCompilerInput(): Promise<CompilerInput> {
-        var inputJson: CompilerInput = {
+        let inputJson: CompilerInput = {
             "language": "Solidity",
             "sources": {}
         };
@@ -72,22 +76,13 @@ class SolidityContractCompiler {
                 contractInputDirectoryPath += path.sep;
             }
 
-            const files: any = await recursiveReadDir(this.contractInputDirectoryPath, [this.ignoreFunc]);
+            const files: any = await recursiveReadDir(this.contractInputDirectoryPath, [this.ignoreFile]);
             for (let index in files) {
                 inputJson.sources[files[index].replace(contractInputDirectoryPath, "")] = {"urls": [files[index]]};
             }
         } catch (error) {
-            console.error(error);
+            inputJson.error = error.message;
         }
         return inputJson;
     }
 }
-
-
-const inputDirectoryPath = path.join(__dirname, "../../source/contracts");
-const outputDirectoryPath = path.join(__dirname, "../contracts");
-const outputFileName = "augurCore";
-
-const solidityContractCompiler = new SolidityContractCompiler(inputDirectoryPath, outputDirectoryPath, outputFileName);
-console.log(solidityContractCompiler.readCallback('/Users/aaron/Documents/Augur/augur-core/source/contracts/Apple.sol'));
-//solidityContractCompiler.compileContracts();
