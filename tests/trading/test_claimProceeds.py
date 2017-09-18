@@ -121,7 +121,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     acquireLongShares(fundedRepFixture, market, 2, 1, claimProceeds.address, sender = tester.k1)
     # get short shares with a2
     acquireShortShareSet(fundedRepFixture, market, 2, 1, claimProceeds.address, sender = tester.k2)
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,0,10**18])
+    finalizeMarket(fundedRepFixture.chain.head_state, market, [0, 0, 3 * 10 ** 17])
 
     # redeem shares with a1
     claimProceeds.claimProceeds(market.address, sender = tester.k1)

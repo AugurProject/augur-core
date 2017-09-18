@@ -70,8 +70,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         require(address(_reportingWindow) != NULL_ADDRESS);
         require(_numOutcomes >= 2);
         require(_numOutcomes <= 8);
-        // TODO marketDenominator must be a multiple of numOutcomes so we can evenly split complete set share payout on indeterminate
-        // require((_marketDenominator.isMultipleOf(_numOutcomes)));
+        require((_marketDenominator.isMultipleOf(_numOutcomes)));
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(_cash.getTypeName() == "Cash");

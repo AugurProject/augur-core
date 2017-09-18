@@ -279,12 +279,12 @@ class ContractsFixture:
         childBranch = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Branch']), childBranchAddress)
         return(childBranch)
 
-    def createBinaryMarket(self, branch, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic):
-        return self.createCategoricalMarket(branch, 2, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic)
+    def createBinaryMarket(self, branch, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic, numTicks):
+        return self.createCategoricalMarket(branch, 2, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic, numTicks)
 
-    def createCategoricalMarket(self, branch, numOutcomes, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic):
+    def createCategoricalMarket(self, branch, numOutcomes, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, topic, numTicks):
         marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, 10 ** 18, automatedReporterAddress, topic, value = marketCreationFee, startgas=long(6.7 * 10**6))
+        marketAddress = self.contracts['MarketCreation'].createCategoricalMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, topic, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
@@ -303,7 +303,8 @@ class ContractsFixture:
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             automatedReporterAddress = tester.a0,
-            topic = 'Sports'.ljust(32, '\x00'))
+            topic = 'Sports'.ljust(32, '\x00'),
+            numTicks = 10 ** 18)
 
     def createReasonableCategoricalMarket(self, branch, numOutcomes, denominationToken):
         return self.createCategoricalMarket(
@@ -313,7 +314,8 @@ class ContractsFixture:
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             automatedReporterAddress = tester.a0,
-            topic = 'Sports'.ljust(32, '\x00'))
+            topic = 'Sports'.ljust(32, '\x00'),
+            numTicks = 3 * 10 ** 17)
 
     def createReasonableScalarMarket(self, branch, priceRange, denominationToken):
         return self.createScalarMarket(
