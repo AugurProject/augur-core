@@ -85,10 +85,3 @@ class SolidityContractCompiler {
         return inputJson;
     }
 }
-
-const inputDirectoryPath = path.join(__dirname, "../../source/contracts");
-const outputDirectoryPath = path.join(__dirname, "../contracts");
-const outputFileName = "augurCore";
-
-const solidityContractCompiler = new SolidityContractCompiler(inputDirectoryPath, outputDirectoryPath, outputFileName);
-const result = solidityContractCompiler.compileContracts().then(function (result) { console.log(result); });
