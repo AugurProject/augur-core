@@ -1,5 +1,9 @@
 {
     "devDependencies": {
+        "mkdirp": "^0.5.1",
+        "@types/mkdirp": "^0.5.1",
+        "recursive-readdir": "^2.2.1",
+        "solc": "^0.4.16",
         "solium": "github:AugurProject/solium"
     }
 }
