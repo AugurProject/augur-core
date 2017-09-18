@@ -11,6 +11,7 @@ import 'ROOT/trading/IOrders.sol';
 import 'ROOT/trading/IShareToken.sol';
 import 'ROOT/trading/Order.sol';
 
+
 // CONSIDER: At some point it would probably be a good idea to shift much of the logic from trading contracts into extensions. In particular this means sorting for making and WCL calculcations + order walking for taking.
 library Trade {
     using SafeMathUint256 for uint256;
