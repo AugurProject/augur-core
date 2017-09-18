@@ -32,7 +32,7 @@ class SolidityContractCompiler {
                 for (let error of compileOutputJson.errors) {
                     errors += error.formattedMessage + "\n";
                 }
-                // throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
+                throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
             }
 
             // Create output directory (if it doesn't exist)
