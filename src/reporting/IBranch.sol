@@ -4,7 +4,6 @@ import 'ROOT/libraries/Typed.sol';
 import 'ROOT/reporting/IReputationToken.sol';
 import 'ROOT/reporting/IReportingWindow.sol';
 import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/trading/ITopics.sol';
 
 
 contract IBranch is Typed {
@@ -14,7 +13,6 @@ contract IBranch is Typed {
     function getOrCreateChildBranch(bytes32 _parentPayoutDistributionHash) public returns (IBranch);
     function getChildBranch(bytes32 _parentPayoutDistributionHash) public constant returns (IBranch);
     function getReputationToken() public constant returns (IReputationToken);
-    function getTopics() public constant returns (ITopics);
     function getForkingMarket() public constant returns (IMarket);
     function getForkEndTime() public constant returns (uint256);
     function getParentPayoutDistributionHash() public constant returns (bytes32);

@@ -1,5 +1,0 @@
-# Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
-
-macro assertPrivateCall():
-    if (msg.sender != self):
-        ~invalid()

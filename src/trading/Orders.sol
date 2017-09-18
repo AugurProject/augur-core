@@ -238,12 +238,6 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    function modifyMarketVolume(IMarket _market, uint256 _fxpAmount) external returns (bool) {
-        marketOrderData[_market].volume += _fxpAmount;
-        _market.getBranch().getTopics().updatePopularity(_market.getTopic(), _fxpAmount);
-        return true;
-    }
-
     function setPrice(IMarket _market, uint8 _outcome, int256 _fxpPrice) external returns (bool) {
         marketOrderData[_market].prices[_outcome] = _fxpPrice;
         return true;

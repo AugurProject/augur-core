@@ -54,7 +54,6 @@ contract Trade is Controlled, ReentrancyGuard {
             // If the price is acceptable relative to the trade type
             if (_type == Order.TradeTypes.Bid ? _fxpOrderPrice >= _fxpPrice : _fxpOrderPrice <= _fxpPrice) {
                 _orders.setPrice(_market, _outcome, _fxpOrderPrice);
-                _orders.modifyMarketVolume(_market, _bestFxpAmount);
                 bytes32 _nextOrderId = _orders.getWorseOrderId(_orderId);
                 if (_orders.getOrderMaker(_orderId) != _sender) {
                     _bestFxpAmount = ITakeOrder(controller.lookup("TakeOrder")).takeOrder(_sender, _orderId, _bestFxpAmount, _tradeGroupId);
