@@ -5,7 +5,6 @@ import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/Typed.sol';
 import 'ROOT/libraries/Initializable.sol';
 import 'ROOT/factories/ReputationTokenFactory.sol';
-import 'ROOT/factories/TopicsFactory.sol';
 import 'ROOT/factories/ReportingWindowFactory.sol';
 import 'ROOT/factories/BranchFactory.sol';
 import 'ROOT/reporting/IMarket.sol';
@@ -14,7 +13,6 @@ import 'ROOT/reporting/IReportingToken.sol';
 import 'ROOT/reporting/IDisputeBond.sol';
 import 'ROOT/reporting/IRegistrationToken.sol';
 import 'ROOT/reporting/IReportingWindow.sol';
-import 'ROOT/trading/ITopics.sol';
 import 'ROOT/reporting/Reporting.sol';
 
 
@@ -22,7 +20,6 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
     IBranch private parentBranch;
     bytes32 private parentPayoutDistributionHash;
     IReputationToken private reputationToken;
-    ITopics private topics;
     IMarket private forkingMarket;
     uint256 private forkEndTime;
     mapping(uint256 => IReportingWindow) private reportingWindows;
@@ -34,7 +31,6 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         parentPayoutDistributionHash = _parentPayoutDistributionHash;
         reputationToken = ReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this);
         require(reputationToken != address(0));
-        topics = TopicsFactory(controller.lookup("TopicsFactory")).createTopics(controller);
         return true;
     }
 
@@ -60,10 +56,6 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
 
     function getReputationToken() public constant returns (IReputationToken) {
         return reputationToken;
-    }
-
-    function getTopics() public constant returns (ITopics) {
-        return topics;
     }
 
     function getForkingMarket() public constant returns (IMarket) {

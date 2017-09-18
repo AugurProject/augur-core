@@ -1,8 +1,0 @@
-# empty placeholder until Micah's changes are in
-data controller
-
-def init():
-    self.controller = 0x0
-
-def test():
-    return(5)

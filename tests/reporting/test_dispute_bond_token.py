@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
-# CONSIDER: We may want to add a helper method to the fixture in conftest.py since
-# acquiring reputation is likely to be a pretty common operation.  It probably
-# would be easiest to make it so`tester.k9` starts out with all of the REP in
-# `__init__` of that fixture and then when someone needs REP, we can just transfer from them.
+# CONSIDER: We may want to add a helper method to the fixture in conftest.py since acquiring reputation is likely to be a pretty common operation.  It probably would be easiest to make it so`tester.k9` starts out with all of the REP in `__init__` of that fixture and then when someone needs REP, we can just transfer from them.
 
-# CONSIDER: We may also want to move the bond-related constants to their own serpent contract
-# under tests/serpent_test_helpers if they will be used in other test files.
+# CONSIDER: We may also want to move the bond-related constants to their own contract under tests/solidity_test_helpers if they will be used in other test files.
 
 # CONSIDER: Break up test_dispute_bond_tokens() into more functions
 

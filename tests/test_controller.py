@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-# Test the functions in src/functions/controller.se
-# Uses tests/controller_test.se as a helper (to set the controller, etc.)
-
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
@@ -40,13 +37,13 @@ def test_suicide(controller, decentralizedController, controllerUser):
     assert decentralizedController.owner() == bytesToHexString(tester.a0)
     with raises(TransactionFailed): decentralizedController.suicide(controllerUser.address, tester.a0, sender = tester.k0)
     assert controller.suicide(controllerUser.address, tester.a0, sender = tester.k0)
-    assert controllerUser.getSuicideFundsDestination() == bytesToLong(tester.a0)
+    assert controllerUser.suicideFundsDestination() == bytesToHexString(tester.a0)
 
 def test_updateController(controller, decentralizedController, controllerUser):
     with raises(TransactionFailed): controller.updateController(controllerUser.address, tester.a0, sender = tester.k2)
     with raises(TransactionFailed): decentralizedController.updateController(controllerUser.address, tester.a0, sender = tester.k0)
     assert controller.updateController(controllerUser.address, tester.a0, sender = tester.k0)
-    assert controllerUser.getUpdatedController() == bytesToLong(tester.a0)
+    assert controllerUser.updatedController() == bytesToHexString(tester.a0)
 
 def test_transferOwnership(controller, decentralizedController):
     with raises(TransactionFailed): controller.transferOwnership(tester.a1, sender = tester.k2)
@@ -81,7 +78,7 @@ def controller(contractsFixture):
 
 @fixture
 def controllerUser(contractsFixture):
-    return contractsFixture.upload('serpent_test_helpers/controllerUser.se')
+    return contractsFixture.upload('solidity_test_helpers/ControllerUser.sol')
 
 @fixture
 def decentralizedController(contractsFixture):

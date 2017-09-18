@@ -13,7 +13,6 @@ import 'ROOT/trading/ICash.sol';
 import 'ROOT/trading/IShareToken.sol';
 import 'ROOT/extensions/MarketExtensions.sol';
 import 'ROOT/extensions/MarketFeeCalculator.sol';
-import 'ROOT/factories/MapFactory.sol';
 import 'ROOT/factories/ShareTokenFactory.sol';
 import 'ROOT/factories/ReportingTokenFactory.sol';
 import 'ROOT/factories/DisputeBondTokenFactory.sol';
