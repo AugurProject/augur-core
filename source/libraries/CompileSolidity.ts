@@ -36,7 +36,7 @@ class SolidityContractCompiler {
             }
 
             // Create output directory (if it doesn't exist)
-            mkdirp(this.contractOutputDirectoryPath);
+            mkdirp(this.contractOutputDirectoryPath, this.mkdirpCallback);
 
             // Output contract data to single file
             const contractOutputFilePath = this.contractOutputDirectoryPath + "/" + this.contractOutputFileName;
@@ -51,6 +51,10 @@ class SolidityContractCompiler {
         }
     }
 
+    private ignoreFile(file: string, stats: fs.Stats): boolean {
+        return stats.isFile() && path.extname(file) != ".sol";
+    }
+
     public readCallback(path: string): { contents?: string, error?: string } {
         try {
             const result = fs.readFileSync(path, 'utf8');
@@ -60,8 +64,10 @@ class SolidityContractCompiler {
         }
     }
 
-    private ignoreFile(file: string, stats: fs.Stats): boolean {
-        return stats.isFile() && path.extname(file) != ".sol";
+    private mkdirpCallback(error): void {
+        if (error) {
+            throw new Error (error);
+        }
     }
 
     private async generateCompilerInput(): Promise<CompilerInput> {
