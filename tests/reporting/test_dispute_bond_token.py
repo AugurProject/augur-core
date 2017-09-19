@@ -7,8 +7,8 @@
 # CONSIDER: Break up test_dispute_bond_tokens() into more functions
 
 from ethereum.tools import tester
-from pytest import raises, fixture, mark, lazy_fixture
-from utils import bytesToLong, bytesToHexString, fix
+from pytest import mark
+from utils import bytesToHexString
 
 REP_TOTAL = 11 * 10**6 # Total number of REP tokens in existence
 REP_DIVISOR = 10**18 # Amount by which a single REP token can be divided

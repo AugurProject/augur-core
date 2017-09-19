@@ -2,7 +2,7 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import fixture, mark, lazy_fixture, raises
+from pytest import fixture, mark, raises
 
 @fixture(scope='session')
 def testerSnapshot(sessionFixture):

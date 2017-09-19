@@ -2,11 +2,11 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import fixture, mark, lazy_fixture, raises
+from pytest import fixture
 from ethereum.config import config_metropolis
 
 #config_metropolis['BLOCK_GAS_LIMIT'] = 2**128
- 
+
 @fixture(scope="session")
 def arraySnapshot(sessionFixture):
     arrayHelper = sessionFixture.upload('solidity_test_helpers/ArrayHelper.sol')

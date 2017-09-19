@@ -1,8 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import fixture, mark, lazy_fixture, raises
-from datetime import timedelta
-from reporting_utils import proceedToAutomatedReporting, proceedToLimitedReporting, proceedToAllReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
+from pytest import fixture, mark, raises
+from reporting_utils import proceedToAutomatedReporting, proceedToLimitedReporting, initializeReportingFixture
 
 def test_automatedReportingNoReport(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
@@ -191,7 +190,7 @@ def test_limitedReportingRedemptionMultipleMarketInsufficientReport(registration
 
     # Proceed to the LIMITED REPORTING phase
     proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,10**18])
-    
+
     # We need to report on 2 markets to satisfy reporting requirements
     assert reportingWindow.getRequiredReportsPerReporterForlimitedReporterMarkets() == 2
 
