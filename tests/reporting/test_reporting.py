@@ -1,7 +1,6 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import fixture, mark, lazy_fixture, raises
-from datetime import timedelta
+from pytest import fixture, mark, raises
 from reporting_utils import proceedToAutomatedReporting, proceedToLimitedReporting, proceedToAllReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 tester.STARTGAS = long(6.7 * 10**6)
@@ -57,7 +56,7 @@ def test_reportingFullHappyPath(reportingFixture):
     secondRegistrationToken = reportingFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
     secondRegistrationToken.register(sender=tester.k2)
     assert secondRegistrationToken.balanceOf(tester.a2) == 1
-    assert reputationToken.balanceOf(tester.a2) == 1 * 10**6 * 10**18 - 2 * 10**18 
+    assert reputationToken.balanceOf(tester.a2) == 1 * 10**6 * 10**18 - 2 * 10**18
 
     # Tester 2 reports for the NO outcome
     reportingFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1

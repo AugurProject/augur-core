@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import fixture, mark, lazy_fixture, raises
+from pytest import fixture, raises
 from utils import stringToBytes
 
 @fixture(scope="session")
