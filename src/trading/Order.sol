@@ -14,6 +14,7 @@ import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/trading/IOrders.sol';
 
 
+// CONSIDER: Is `price` the most appropriate name for the value being used? It does correspond 1:1 with the attoETH per share, but the range might be considered unusual?
 library Order {
     using SafeMathUint256 for uint256;
 
@@ -110,7 +111,7 @@ library Order {
     //
 
     function escrowFundsForBid(Order.Data _orderData) private returns (bool) {
-        uint256 _orderValueInAttotokens = _orderData.amount.mul(SafeMathUint256.sub(_orderData.market.getMarketDenominator(), _orderData.price));
+        uint256 _orderValueInAttotokens = _orderData.market.getMarketDenominator().sub(_orderData.price).mul(_orderData.amount);
         require(_orderValueInAttotokens >= MIN_ORDER_VALUE);
 
         require(_orderData.moneyEscrowed == 0);
@@ -167,7 +168,7 @@ library Order {
 
         // If not able to cover entire order with shares alone, then cover remaining with tokens
         if (_attosharesToCover > 0) {
-            _orderData.moneyEscrowed = _attosharesToCover.mul(SafeMathUint256.sub(_orderData.market.getMarketDenominator(), _orderData.price));
+            _orderData.moneyEscrowed = _orderData.market.getMarketDenominator().sub(_orderData.price).mul(_attosharesToCover);
             require(_orderData.market.getDenominationToken().transferFrom(_orderData.maker, _orderData.market, _orderData.moneyEscrowed));
         }
 

@@ -82,7 +82,7 @@ contract TradingEscapeHatch is DelegationTarget, ITradingEscapeHatch {
             // FIXME: Think about this math, can shiftedPrice * range be greater than 2*254?
             //        Can shiftedPrice / _sumOfBids lead to rounding errors?  Should we * then / or / then *?
             //        Yes it can be greater, shifted / _sumOfBids will lead to rounding errors
-            frozenShareValues[_market][_tempOutcome] = _shiftedPrices[_tempOutcome].fxpMul(_market.getMarketDenominator(), 1 ether).fxpDiv(_sumOfBids, 1 ether);
+            frozenShareValues[_market][_tempOutcome] = _shiftedPrices[_tempOutcome].mul(_market.getMarketDenominator()).div(_sumOfBids);
         }
     }
 }

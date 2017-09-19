@@ -146,4 +146,3 @@ def test_isMultipleOf(a, b, expectedResult, testerContractsFixture):
             safeMathUint256Tester.isMultipleOf(a, b)
     else:
         assert safeMathUint256Tester.isMultipleOf(a, b) == expectedResult
-        

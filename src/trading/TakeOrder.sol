@@ -323,12 +323,10 @@ library Trade {
     }
 
     function getSharePriceDetails(IMarket _market, IOrders _orders, bytes32 _orderId) private constant returns (uint256 _sharePriceRange, uint256 _sharePriceLong, uint256 _sharePriceShort) {
-        uint256 _maxDisplayPrice = _market.getMarketDenominator();
-        uint256 _orderDisplayPrice = _orders.getPrice(_orderId);
-        _sharePriceRange = _maxDisplayPrice;
-        _sharePriceLong = _orderDisplayPrice;
-        _sharePriceShort = uint256(_maxDisplayPrice - _orderDisplayPrice);
-        return (_sharePriceRange, _sharePriceLong, _sharePriceShort);
+        uint256 _marketDenominator = _market.getMarketDenominator();
+        uint256 _orderPrice = _orders.getPrice(_orderId);
+        _sharePriceShort = uint256(_marketDenominator - _orderPrice);
+        return (_marketDenominator, _orderPrice, _sharePriceShort);
     }
 
     function getDirections(IOrders _orders, bytes32 _orderId) private constant returns (Direction _makerDirection, Direction _takerDirection) {
