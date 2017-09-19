@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
-from utils import bytesToLong, longToHexString, bytesToHexString
+from utils import longToHexString, bytesToHexString
 
 def test_whitelists(controller):
     assert controller.assertIsWhitelisted(tester.a0, sender = tester.k2)
