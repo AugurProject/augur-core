@@ -17,22 +17,22 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
     logs = []
 
     # create order
-    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('2', '0.6'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('2', '0.6'), sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
-    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
+    assert cash.depositEther(value=fix('2', '0.4'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('2', '0.4'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix('1.2'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicSell(market.address, YES, 2, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             u"sender": takeOrder.address,
-            u"fxpAmount": fix('1.2'),
+            u"amount": 2,
             u"numOutcomes": 2L,
             u"market": market.address
         },
@@ -46,9 +46,9 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
             u"maker": bytesToHexString(tester.a1),
             u"taker": bytesToHexString(tester.a2),
             u"makerShares": 0L,
-            u"makerTokens": fix('1.2', '0.6'),
+            u"makerTokens": fix('2', '0.6'),
             u"takerShares": 0L,
-            u"takerTokens": fix('1.2', '0.4'),
+            u"takerTokens": fix('2', '0.4'),
             u"tradeGroupId": tradeGroupID,
         },
     ]
@@ -69,22 +69,22 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
     logs = []
 
     # create order
-    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('2', '0.6'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('2', '0.6'), sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
-    assert cash.depositEther(value=fix('0.7', '0.4'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('0.7', '0.4'), sender = tester.k2)
+    assert cash.depositEther(value=fix('1', '0.4'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('1', '0.4'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix('0.7'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicSell(market.address, YES, 1, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('0.7'),
+            "amount": 1,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -98,13 +98,13 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('0.7', '0.6'),
+            "makerTokens": fix('1', '0.6'),
             "takerShares": 0L,
-            "takerTokens": fix('0.7', '0.4'),
+            "takerTokens": fix('1', '0.4'),
             "tradeGroupId": tradeGroupID,
         },
     ]
-    assert ordersFetcher.getOrder(orderID) == [fix('0.5'), fix('0.6'), bytesToHexString(tester.a1), fix('0.5', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0L]
+    assert ordersFetcher.getOrder(orderID) == [1, fix('0.6'), bytesToHexString(tester.a1), fix('1', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0L]
     assert fillOrderID == longTo32Bytes(1)
 
 
@@ -120,23 +120,23 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
     logs = []
 
     # create order
-    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('4', '0.6'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('4', '0.6'), sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(BID, 4, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
-    assert cash.depositEther(value=fix('1.5', '0.4'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
-    assert cash.approve(makeOrder.address, fix('0.3', '0.4'), sender = tester.k2)
+    assert cash.depositEther(value=fix('5', '0.4'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('4', '0.4'), sender = tester.k2)
+    assert cash.approve(makeOrder.address, fix('1', '0.4'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix('1.5'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicSell(market.address, YES, 5, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('1.2'),
+            "amount": 4,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -150,9 +150,9 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('1.2', '0.6'),
+            "makerTokens": fix('4', '0.6'),
             "takerShares": 0L,
-            "takerTokens": fix('1.2', '0.4'),
+            "takerTokens": fix('4', '0.4'),
             "tradeGroupId": tradeGroupID,
         },
         {
@@ -161,16 +161,16 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
             "outcome": YES,
             "orderType": ASK,
             "orderId": fillOrderID,
-            "fxpPrice": fix('0.6'),
+            "price": fix('0.6'),
             "sender": bytesToHexString(tester.a2),
-            "fxpAmount": fix('0.3'),
-            "fxpMoneyEscrowed": fix('0.3', '0.4'),
-            "fxpSharesEscrowed": 0L,
+            "amount": 1,
+            "moneyEscrowed": fix('1', '0.4'),
+            "sharesEscrowed": 0L,
             "tradeGroupId": tradeGroupID,
         },
     ]
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(fillOrderID) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(fillOrderID) == [1, fix('0.6'), bytesToHexString(tester.a2), fix('1', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
 
 def test_two_bids_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
@@ -184,26 +184,26 @@ def test_two_bids_on_books_buy_both(contractsFixture):
     logs = []
 
     # create order 1
-    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('4', '0.6'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('4', '0.6'), sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(BID, 4, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
-    assert cash.depositEther(value=fix('0.3', '0.6'), sender = tester.k3)
-    assert cash.approve(makeOrder.address, fix('0.3', '0.6'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(BID, fix('0.3'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
+    assert cash.depositEther(value=fix('1', '0.6'), sender = tester.k3)
+    assert cash.approve(makeOrder.address, fix('1', '0.6'), sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(BID, 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take best order
-    assert cash.depositEther(value=fix('1.5', '0.4'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('1.5', '0.4'), sender = tester.k2)
+    assert cash.depositEther(value=fix('5', '0.4'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('5', '0.4'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix('1.5'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicSell(market.address, YES, 5, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('1.2'),
+            "amount": 4,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -217,15 +217,15 @@ def test_two_bids_on_books_buy_both(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('1.2', '0.6'),
+            "makerTokens": fix('4', '0.6'),
             "takerShares": 0L,
-            "takerTokens": fix('1.2', '0.4'),
+            "takerTokens": fix('4', '0.4'),
             "tradeGroupId": tradeGroupID,
         },
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('0.3'),
+            "amount": 1,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -239,9 +239,9 @@ def test_two_bids_on_books_buy_both(contractsFixture):
             "maker": bytesToHexString(tester.a3),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('0.3', '0.6'),
+            "makerTokens": fix('1', '0.6'),
             "takerShares": 0L,
-            "takerTokens": fix('0.3', '0.4'),
+            "takerTokens": fix('1', '0.4'),
             "tradeGroupId": tradeGroupID,
         },
     ]
@@ -261,26 +261,26 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     logs = []
 
     # create order 1
-    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('12', '0.6'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('12', '0.6'), sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
-    assert cash.depositEther(value=fix('0.7', '0.6'), sender = tester.k3)
-    assert cash.approve(makeOrder.address, fix('0.7', '0.6'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(BID, fix('0.7'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
+    assert cash.depositEther(value=fix('7', '0.6'), sender = tester.k3)
+    assert cash.approve(makeOrder.address, fix('7', '0.6'), sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(BID, 7, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take best order
-    assert cash.depositEther(value=fix('1.5', '0.4'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('1.5', '0.4'), sender = tester.k2)
+    assert cash.depositEther(value=fix('15', '0.4'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('15', '0.4'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix('1.5'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicSell(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('1.2'),
+            "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -294,15 +294,15 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('1.2', '0.6'),
+            "makerTokens": fix('12', '0.6'),
             "takerShares": 0L,
-            "takerTokens": fix('1.2', '0.4'),
+            "takerTokens": fix('12', '0.4'),
             "tradeGroupId": tradeGroupID,
         },
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('0.3'),
+            "amount": 3,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -316,15 +316,15 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
             "maker": bytesToHexString(tester.a3),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('0.3', '0.6'),
+            "makerTokens": fix('3', '0.6'),
             "takerShares": 0L,
-            "takerTokens": fix('0.3', '0.4'),
+            "takerTokens": fix('3', '0.4'),
             "tradeGroupId": tradeGroupID,
         },
     ]
 
     assert ordersFetcher.getOrder(orderID1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(orderID2) == [fix('0.4'), fix('0.6'), bytesToHexString(tester.a3), fix('0.4', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID2) == [4, fix('0.6'), bytesToHexString(tester.a3), fix('4', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
 def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
@@ -339,27 +339,27 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     logs = []
 
     # create order 1
-    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.6'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(BID, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('12', '0.6'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('12', '0.6'), sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
-    assert cash.depositEther(value=fix('0.7', '0.6'), sender = tester.k3)
-    assert cash.approve(makeOrder.address, fix('0.7', '0.6'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(BID, fix('0.7'), fix('0.5'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
+    assert cash.depositEther(value=fix('7', '0.6'), sender = tester.k3)
+    assert cash.approve(makeOrder.address, fix('7', '0.6'), sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(BID, 7, fix('0.5'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take/make
-    assert cash.depositEther(value=fix('1.5', '0.4'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('1.2', '0.4'), sender = tester.k2)
-    assert cash.approve(makeOrder.address, fix('0.3', '0.4'), sender = tester.k2)
+    assert cash.depositEther(value=fix('15', '0.4'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('12', '0.4'), sender = tester.k2)
+    assert cash.approve(makeOrder.address, fix('03', '0.4'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix('1.5'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicSell(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('1.2'),
+            "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -373,9 +373,9 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('1.2', '0.6'),
+            "makerTokens": fix('12', '0.6'),
             "takerShares": 0L,
-            "takerTokens": fix('1.2', '0.4'),
+            "takerTokens": fix('12', '0.4'),
             "tradeGroupId": tradeGroupID,
         },
         {
@@ -384,17 +384,17 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
             "outcome": YES,
             "orderType": ASK,
             "orderId": fillOrderID,
-            "fxpPrice": fix('0.6'),
+            "price": fix('0.6'),
             "sender": bytesToHexString(tester.a2),
-            "fxpAmount": fix('0.3'),
-            "fxpMoneyEscrowed": fix('0.3', '0.4'),
-            "fxpSharesEscrowed": 0L,
+            "amount": 3,
+            "moneyEscrowed": fix('3', '0.4'),
+            "sharesEscrowed": 0L,
             "tradeGroupId": tradeGroupID,
         },
     ]
     assert ordersFetcher.getOrder(orderID1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(orderID2) == [fix('0.7'), fix('0.5'), bytesToHexString(tester.a3), fix('0.7', '0.5'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(fillOrderID) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID2) == [7, fix('0.5'), bytesToHexString(tester.a3), fix('7', '0.5'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(fillOrderID) == [3, fix('0.6'), bytesToHexString(tester.a2), fix('3', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
 
 def test_one_ask_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
@@ -409,22 +409,22 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     logs = []
 
     # create order
-    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('12', '0.4'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('12', '0.4'), sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
-    assert cash.depositEther(value=fix('1.2', '0.6'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
+    assert cash.depositEther(value=fix('12', '0.6'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('12', '0.6'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix('1.2'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicBuy(market.address, YES, 12, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('1.2'),
+            "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -438,9 +438,9 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('1.2', '0.4'),
+            "makerTokens": fix('12', '0.4'),
             "takerShares": 0L,
-            "takerTokens": fix('1.2', '0.6'),
+            "takerTokens": fix('12', '0.6'),
             "tradeGroupId": tradeGroupID,
         },
     ]
@@ -460,22 +460,22 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     logs = []
 
     # create order
-    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('12', '0.4'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('12', '0.4'), sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
-    assert cash.depositEther(value=fix('0.7', '0.6'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('0.7', '0.6'), sender = tester.k2)
+    assert cash.depositEther(value=fix('7', '0.6'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('7', '0.6'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix('0.7'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicBuy(market.address, YES, 7, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('0.7'),
+            "amount": 7,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -489,15 +489,15 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('0.7', '0.4'),
+            "makerTokens": fix('7', '0.4'),
             "takerShares": 0L,
-            "takerTokens": fix('0.7', '0.6'),
+            "takerTokens": fix('7', '0.6'),
             "tradeGroupId": tradeGroupID,
         },
     ]
 
 
-    assert ordersFetcher.getOrder(orderID) == [fix('0.5'), fix('0.6'), bytesToHexString(tester.a1), fix('0.5', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID) == [5, fix('0.6'), bytesToHexString(tester.a1), fix('5', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
 def test_one_ask_on_books_buy_excess_order(contractsFixture):
@@ -512,23 +512,23 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
     logs = []
 
     # create order
-    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('12', '0.4'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('12', '0.4'), sender = tester.k1)
+    orderID = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
 
     # take best order
-    assert cash.depositEther(value=fix('1.5', '0.6'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
-    assert cash.approve(makeOrder.address, fix('0.3', '0.6'), sender = tester.k2)
+    assert cash.depositEther(value=fix('15', '0.6'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('12', '0.6'), sender = tester.k2)
+    assert cash.approve(makeOrder.address, fix('3', '0.6'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix('1.5'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicBuy(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('1.2'),
+            "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -542,9 +542,9 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('1.2', '0.4'),
+            "makerTokens": fix('12', '0.4'),
             "takerShares": 0L,
-            "takerTokens": fix('1.2', '0.6'),
+            "takerTokens": fix('12', '0.6'),
             "tradeGroupId": tradeGroupID,
         },
         {
@@ -553,16 +553,16 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
             "outcome": YES,
             "orderType": BID,
             "orderId": fillOrderID,
-            "fxpPrice": fix('0.6'),
+            "price": fix('0.6'),
             "sender": bytesToHexString(tester.a2),
-            "fxpAmount": fix('0.3'),
-            "fxpMoneyEscrowed": fix('0.3', '0.6'),
-            "fxpSharesEscrowed": 0L,
+            "amount": 3,
+            "moneyEscrowed": fix('3', '0.6'),
+            "sharesEscrowed": 0L,
             "tradeGroupId": tradeGroupID,
         },
     ]
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(fillOrderID) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(fillOrderID) == [3, fix('0.6'), bytesToHexString(tester.a2), fix('3', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
 
 def test_two_asks_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
@@ -576,26 +576,26 @@ def test_two_asks_on_books_buy_both(contractsFixture):
     logs = []
 
     # create order 1
-    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('12', '0.4'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('12', '0.4'), sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
-    assert cash.depositEther(value=fix('0.3', '0.4'), sender = tester.k3)
-    assert cash.approve(makeOrder.address, fix('0.3', '0.4'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(ASK, fix('0.3'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
+    assert cash.depositEther(value=fix('3', '0.4'), sender = tester.k3)
+    assert cash.approve(makeOrder.address, fix('3', '0.4'), sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(ASK, 3, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take best order
-    assert cash.depositEther(value=fix('1.5', '0.6'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('1.5', '0.6'), sender = tester.k2)
+    assert cash.depositEther(value=fix('15', '0.6'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('15', '0.6'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix('1.5'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicBuy(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('1.2'),
+            "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -609,15 +609,15 @@ def test_two_asks_on_books_buy_both(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('1.2', '0.4'),
+            "makerTokens": fix('12', '0.4'),
             "takerShares": 0L,
-            "takerTokens": fix('1.2', '0.6'),
+            "takerTokens": fix('12', '0.6'),
             "tradeGroupId": tradeGroupID,
         },
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('0.3'),
+            "amount": 3,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -631,9 +631,9 @@ def test_two_asks_on_books_buy_both(contractsFixture):
             "maker": bytesToHexString(tester.a3),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('0.3', '0.4'),
+            "makerTokens": fix('3', '0.4'),
             "takerShares": 0L,
-            "takerTokens": fix('0.3', '0.6'),
+            "takerTokens": fix('3', '0.6'),
             "tradeGroupId": tradeGroupID,
         },
     ]
@@ -654,26 +654,26 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     logs = []
 
     # create order 1
-    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('12', '0.4'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('12', '0.4'), sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
-    assert cash.depositEther(value=fix('0.7', '0.4'), sender = tester.k3)
-    assert cash.approve(makeOrder.address, fix('0.7', '0.4'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(ASK, fix('0.7'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
+    assert cash.depositEther(value=fix('7', '0.4'), sender = tester.k3)
+    assert cash.approve(makeOrder.address, fix('7', '0.4'), sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(ASK, 7, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take best order
-    assert cash.depositEther(value=fix('1.5', '0.6'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('1.5', '0.6'), sender = tester.k2)
+    assert cash.depositEther(value=fix('15', '0.6'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('15', '0.6'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix('1.5'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicBuy(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('1.2'),
+            "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -687,15 +687,15 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('1.2', '0.4'),
+            "makerTokens": fix('12', '0.4'),
             "takerShares": 0L,
-            "takerTokens": fix('1.2', '0.6'),
+            "takerTokens": fix('12', '0.6'),
             "tradeGroupId": tradeGroupID,
         },
         {
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
-            "fxpAmount": fix('0.3'),
+            "amount": 3,
             "numOutcomes": 2L,
             "market": market.address
         },
@@ -709,15 +709,15 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
             "maker": bytesToHexString(tester.a3),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('0.3', '0.4'),
+            "makerTokens": fix('3', '0.4'),
             "takerShares": 0L,
-            "takerTokens": fix('0.3', '0.6'),
+            "takerTokens": fix('3', '0.6'),
             "tradeGroupId": tradeGroupID,
         },
     ]
 
     assert ordersFetcher.getOrder(orderID1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(orderID2) == [fix('0.4'), fix('0.6'), bytesToHexString(tester.a3), fix('0.4', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID2) == [4, fix('0.6'), bytesToHexString(tester.a3), fix('4', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
 def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
@@ -732,20 +732,20 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     logs = []
 
     # create order 1
-    assert cash.depositEther(value=fix('1.2', '0.4'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('1.2', '0.4'), sender = tester.k1)
-    orderID1 = makeOrder.publicMakeOrder(ASK, fix('1.2'), fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
+    assert cash.depositEther(value=fix('12', '0.4'), sender = tester.k1)
+    assert cash.approve(makeOrder.address, fix('12', '0.4'), sender = tester.k1)
+    orderID1 = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1)
     # create order 2
-    assert cash.depositEther(value=fix('0.7', '0.4'), sender = tester.k3)
-    assert cash.approve(makeOrder.address, fix('0.7', '0.4'), sender = tester.k3)
-    orderID2 = makeOrder.publicMakeOrder(ASK, fix('0.7'), fix('0.7'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
+    assert cash.depositEther(value=fix('7', '0.4'), sender = tester.k3)
+    assert cash.approve(makeOrder.address, fix('7', '0.4'), sender = tester.k3)
+    orderID2 = makeOrder.publicMakeOrder(ASK, 7, fix('0.7'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3)
 
     # take/make
-    assert cash.depositEther(value=fix('1.5', '0.6'), sender = tester.k2)
-    assert cash.approve(takeOrder.address, fix('1.2', '0.6'), sender = tester.k2)
-    assert cash.approve(makeOrder.address, fix('0.3', '0.6'), sender = tester.k2)
+    assert cash.depositEther(value=fix('15', '0.6'), sender = tester.k2)
+    assert cash.approve(takeOrder.address, fix('12', '0.6'), sender = tester.k2)
+    assert cash.approve(makeOrder.address, fix('3', '0.6'), sender = tester.k2)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix('1.5'), fix('0.6'), tradeGroupID, sender = tester.k2)
+    fillOrderID = trade.publicBuy(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2)
 
     # assert
     assert logs == [
@@ -753,7 +753,7 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
             "_event_type": "BuyCompleteSets",
             "sender": takeOrder.address,
             "market": market.address,
-            "fxpAmount": fix('1.2'),
+            "amount": 12,
             "numOutcomes": 2L,
         },
         {
@@ -766,9 +766,9 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0L,
-            "makerTokens": fix('1.2', '0.4'),
+            "makerTokens": fix('12', '0.4'),
             "takerShares": 0L,
-            "takerTokens": fix('1.2', '0.6'),
+            "takerTokens": fix('12', '0.6'),
             "tradeGroupId": tradeGroupID,
         },
         {
@@ -777,14 +777,14 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
             "outcome": YES,
             "orderType": BID,
             "orderId": fillOrderID,
-            "fxpPrice": fix('0.6'),
+            "price": fix('0.6'),
             "sender": bytesToHexString(tester.a2),
-            "fxpAmount": fix('0.3'),
-            "fxpMoneyEscrowed": fix('0.3', '0.6'),
-            "fxpSharesEscrowed": 0L,
+            "amount": 3,
+            "moneyEscrowed": fix('3', '0.6'),
+            "sharesEscrowed": 0L,
             "tradeGroupId": tradeGroupID,
         },
     ]
     assert ordersFetcher.getOrder(orderID1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(orderID2) == [fix('0.7'), fix('0.7'), bytesToHexString(tester.a3), fix('0.7', '0.3'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
-    assert ordersFetcher.getOrder(fillOrderID) == [fix('0.3'), fix('0.6'), bytesToHexString(tester.a2), fix('0.3', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(orderID2) == [7, fix('0.7'), bytesToHexString(tester.a3), fix('7', '0.3'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert ordersFetcher.getOrder(fillOrderID) == [3, fix('0.6'), bytesToHexString(tester.a2), fix('3', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]

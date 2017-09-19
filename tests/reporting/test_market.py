@@ -12,7 +12,7 @@ def test_market_creation(contractsFixture):
     market = contractsFixture.binaryMarket
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
     shadyReportingToken = contractsFixture.upload('../src/reporting/ReportingToken.sol', 'shadyReportingToken')
-    shadyReportingToken.initialize(market.address, [0,2])
+    shadyReportingToken.initialize(market.address, [0,10**18])
 
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
     with raises(TransactionFailed, message="Markets can only use Cash as their denomination token"):
@@ -20,7 +20,7 @@ def test_market_creation(contractsFixture):
 
     assert market.getBranch() == branch.address
     assert market.getNumberOfOutcomes() == 2
-    assert market.getPayoutDenominator() == 2
+    assert market.getMarketDenominator() == 10**18
     assert reportingWindow.getReputationToken() == branch.getReputationToken()
     assert market.getFinalPayoutDistributionHash() == stringToBytes("")
     assert market.getReportingState() == contractsFixture.constants.PRE_REPORTING()

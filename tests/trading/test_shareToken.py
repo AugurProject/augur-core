@@ -10,7 +10,7 @@ def test_init(contractsFixture):
 
     # FIXME: enable after we fix Delegated contract string handling
     # assert shareToken.name() == "Shares", "currency name"
-    assert shareToken.decimals() == 18, "number of decimals"
+    assert shareToken.decimals() == 0, "number of decimals"
     # assert shareToken.symbol() == "SHARE", "currency symbol"
 
 def test_createShares(contractsFixture):

@@ -26,7 +26,7 @@ contract TradingEscapeHatch is DelegationTarget, ITradingEscapeHatch {
             if (_sharesOwned > 0) {
                 uint256 _frozenShareValue = getFrozenShareValue(_market, _numOutcomes, _outcome);
                 _shareToken.destroyShares(msg.sender, _sharesOwned);
-                uint256 _amountToTransfer = _sharesOwned.fxpMul(_frozenShareValue, 1 ether);
+                uint256 _amountToTransfer = _sharesOwned.mul(_frozenShareValue);
                 require(_marketCurrency.transferFrom(_market, msg.sender, _amountToTransfer));
             }
         }
@@ -40,16 +40,11 @@ contract TradingEscapeHatch is DelegationTarget, ITradingEscapeHatch {
             return frozenShareValues[_market][_outcome];
         }
 
-        int256 _minValue = _market.getMinDisplayPrice();
-        int256 _maxValue = _market.getMaxDisplayPrice();
-        uint256 _range = uint256(_maxValue - _minValue);
-
-        memoizeFrozenShareValues(_market, _numOutcomes, _minValue, _range);
-
+        memoizeFrozenShareValues(_market, _numOutcomes);
         return frozenShareValues[_market][_outcome];
     }
 
-    function memoizeFrozenShareValues(IMarket _market, uint8 _numOutcomes, int256 _minValue, uint256 _range) internal {
+    function memoizeFrozenShareValues(IMarket _market, uint8 _numOutcomes) internal {
         uint256 _numberOfMissingBids = 0;
         uint256[] memory _shiftedPrices = new uint256[](_numOutcomes);
         uint256 _sumOfBids = 0;
@@ -59,7 +54,7 @@ contract TradingEscapeHatch is DelegationTarget, ITradingEscapeHatch {
         for (uint8 _tempOutcome = 0; _tempOutcome < _numOutcomes; ++_tempOutcome) {
             uint256 _lastTradePrice = uint256(_orders.getLastOutcomePrice(_market, _tempOutcome));
             // intentionally not a safeSub since minValue may be negative
-            uint256 _lastTradePriceShifted = _lastTradePrice - uint256(_minValue);
+            uint256 _lastTradePriceShifted = _lastTradePrice;
             if (_lastTradePriceShifted > 0) {
                 _shiftedPrices[_tempOutcome] = _lastTradePriceShifted;
                 _sumOfBids += _lastTradePriceShifted;
@@ -70,7 +65,7 @@ contract TradingEscapeHatch is DelegationTarget, ITradingEscapeHatch {
 
         // fill in any outcome prices that have no order history
         if (_numberOfMissingBids > 0) {
-            uint256 _fauxBidPrice = (_market.getCompleteSetCostInAttotokens() - _sumOfBids) / _numberOfMissingBids;
+            uint256 _fauxBidPrice = (_market.getMarketDenominator() - _sumOfBids) / _numberOfMissingBids;
             // to avoid any oddities, every share is worth _something_, even if it is just 1 attotoken
             if (_fauxBidPrice == 0)
                 _fauxBidPrice = 1;
@@ -87,7 +82,7 @@ contract TradingEscapeHatch is DelegationTarget, ITradingEscapeHatch {
             // FIXME: Think about this math, can shiftedPrice * range be greater than 2*254?
             //        Can shiftedPrice / _sumOfBids lead to rounding errors?  Should we * then / or / then *?
             //        Yes it can be greater, shifted / _sumOfBids will lead to rounding errors
-            frozenShareValues[_market][_tempOutcome] = _shiftedPrices[_tempOutcome].fxpMul(_range, 1 ether).fxpDiv(_sumOfBids, 1 ether);
+            frozenShareValues[_market][_tempOutcome] = _shiftedPrices[_tempOutcome].mul(_market.getMarketDenominator()).div(_sumOfBids);
         }
     }
 }

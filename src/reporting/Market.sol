@@ -26,13 +26,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     using SafeMathUint256 for uint256;
     using SafeMathInt256 for int256;
 
-    // CONSIDER: change the payoutNumerator/payoutDenominator to use fixed point numbers instead of integers; PRO: some people find fixed point decimal values easier to grok; CON: rounding errors can occur and it is easier to screw up the math if you don't handle fixed point values correctly
-    uint256 private payoutDenominator;
+    uint256 private marketDenominator;
     uint256 private feePerEthInAttoeth;
-
-    // CONSIDER: we really don't need these
-    int256 private maxDisplayPrice;
-    int256 private minDisplayPrice;
 
     // CONSIDER: figure out approprate values for these
     uint256 private constant AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
@@ -70,15 +65,13 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         _;
     }
 
-    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _payoutDenominator, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, int256 _minDisplayPrice, int256 _maxDisplayPrice, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
+    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _marketDenominator, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(address(_reportingWindow) != NULL_ADDRESS);
         require(_numOutcomes >= 2);
         require(_numOutcomes <= 8);
-        // payoutDenominator must be a multiple of numOutcomes so we can evenly split complete set share payout on indeterminate
-        require((_payoutDenominator % _numOutcomes) == 0);
+        require((_marketDenominator.isMultipleOf(_numOutcomes)));
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
-        require(_minDisplayPrice < _maxDisplayPrice);
         require(_creator != NULL_ADDRESS);
         require(_cash.getTypeName() == "Cash");
         // FIXME: require market to be on a non-forking branch; repeat this check up the stack as well if necessary (e.g., in reporting window)
@@ -87,10 +80,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         reportingWindow = _reportingWindow;
         endTime = _endTime;
         numOutcomes = _numOutcomes;
-        payoutDenominator = _payoutDenominator;
+        marketDenominator = _marketDenominator;
         feePerEthInAttoeth = _feePerEthInAttoeth;
-        maxDisplayPrice = _maxDisplayPrice;
-        minDisplayPrice = _minDisplayPrice;
         marketCreationBlock = block.number;
         topic = _topic;
         automatedReporterAddress = _automatedReporterAddress;
@@ -110,7 +101,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         // TODO: log tags (0-2)
         // TODO: log outcome labels (same number as numOutcomes)
         // TODO: log type (scalar, binary, categorical)
-        // TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, payoutDenominator, cash address, etc.)
+        // TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, marketDenominator, cash address, etc.)
     }
 
     function createShareToken(uint8 _outcome) private returns (IShareToken) {
@@ -284,10 +275,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function derivePayoutDistributionHash(uint256[] _payoutNumerators) public constant returns (bytes32) {
         uint256 _sum = 0;
         for (uint8 i = 0; i < _payoutNumerators.length; i++) {
-            require(_payoutNumerators[i] <= payoutDenominator);
+            require(_payoutNumerators[i] <= marketDenominator);
             _sum = _sum.add(_payoutNumerators[i]);
         }
-        require(_sum == payoutDenominator);
+        require(_sum == marketDenominator);
         return sha3(_payoutNumerators);
     }
 
@@ -348,8 +339,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return finalPayoutDistributionHash;
     }
 
-    function getPayoutDenominator() public constant returns (uint256) {
-        return payoutDenominator;
+    function getMarketDenominator() public constant returns (uint256) {
+        return marketDenominator;
     }
 
     function getDenominationToken() public constant returns (ICash) {
@@ -358,18 +349,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function getMarketCreatorSettlementFeeInAttoethPerEth() public constant returns (uint256) {
         return feePerEthInAttoeth;
-    }
-
-    function getMaxDisplayPrice() public constant returns (int256) {
-        return maxDisplayPrice;
-    }
-
-    function getMinDisplayPrice() public constant returns (int256) {
-        return minDisplayPrice;
-    }
-
-    function getCompleteSetCostInAttotokens() public constant returns (uint256) {
-        return uint256(maxDisplayPrice.sub(minDisplayPrice));
     }
 
     function getTopic() public constant returns (bytes32) {

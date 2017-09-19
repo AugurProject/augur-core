@@ -12,7 +12,7 @@ contract ShareToken is DelegationTarget, Typed, Initializable, VariableSupplyTok
 
     //FIXME: Delegated contracts cannot currently use string values, so we will need to find a workaround if this hasn't been fixed before we release
     string constant public name = "Shares";
-    uint256 constant public decimals = 18;
+    uint256 constant public decimals = 0;
     string constant public symbol = "SHARE";
 
     IMarket private market;

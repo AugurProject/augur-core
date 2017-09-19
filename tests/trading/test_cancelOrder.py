@@ -16,7 +16,7 @@ def test_cancelBid(contractsFixture):
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
     orderType = BID
-    fxpAmount = fix('1')
+    fxpAmount = 1
     fxpPrice = fix('0.6')
     outcomeID = YES
     tradeGroupID = 42
@@ -51,7 +51,7 @@ def test_cancelAsk(contractsFixture):
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
     orderType = ASK
-    fxpAmount = fix('1')
+    fxpAmount = 1
     fxpPrice = fix('0.6')
     outcomeID = 1
     tradeGroupID = 42
@@ -86,7 +86,7 @@ def test_exceptions(contractsFixture):
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
     orderType = BID
-    fxpAmount = fix('1')
+    fxpAmount = 1
     fxpPrice = fix('0.6')
     outcomeID = YES
     tradeGroupID = 42

@@ -11,8 +11,8 @@ def test_reportingFullHappyPath(reportingFixture):
     market = reportingFixture.binaryMarket
     branch = reportingFixture.branch
     reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
-    reportingTokenNo = reportingFixture.getReportingToken(market, [2,0])
-    reportingTokenYes = reportingFixture.getReportingToken(market, [0,2])
+    reportingTokenNo = reportingFixture.getReportingToken(market, [10**18,0])
+    reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
 
     # We can't yet report on the market as it's in the pre reporting phase
     assert market.getReportingState() == reportingFixture.constants.PRE_REPORTING()
@@ -81,10 +81,10 @@ def test_reportingFullHappyPath(reportingFixture):
     assert market.getReportingState() == reportingFixture.constants.FORKING()
 
     # The universe forks and there is now a branch where NO and YES are the respective outcomes of each
-    noBranch = reportingFixture.getOrCreateChildBranch(branch, market, [2,0])
+    noBranch = reportingFixture.getOrCreateChildBranch(branch, market, [10**18,0])
     noBranchReputationToken = reportingFixture.applySignature('ReputationToken', noBranch.getReputationToken())
     assert noBranch.address != branch.address
-    yesBranch = reportingFixture.getOrCreateChildBranch(branch, market, [0,2])
+    yesBranch = reportingFixture.getOrCreateChildBranch(branch, market, [0,10**18])
     yesBranchReputationToken = reportingFixture.applySignature('ReputationToken', yesBranch.getReputationToken())
     assert yesBranch.address != branch.address
     assert yesBranch.address != noBranch.address
@@ -124,10 +124,10 @@ def test_automatedReportingHappyPath(reportingFixture):
     market = reportingFixture.binaryMarket
 
     # Proceed to the AUTOMATED REPORTING phase
-    proceedToAutomatedReporting(reportingFixture, market, [0,2])
+    proceedToAutomatedReporting(reportingFixture, market, [0,10**18])
 
     # To progress into the AUTOMATED DISPUTE phase we do an automated report
-    assert market.automatedReport([0,2], sender=tester.k0)
+    assert market.automatedReport([0,10**18], sender=tester.k0)
 
     # We're now in the AUTOMATED DISPUTE PHASE
     assert market.getReportingState() == reportingFixture.constants.AUTOMATED_DISPUTE()
@@ -153,10 +153,10 @@ def test_limitedReportingHappyPath(makeReport, reportingFixture):
     reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
 
     # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(reportingFixture, market, makeReport, tester.k1, [0,2])
+    proceedToLimitedReporting(reportingFixture, market, makeReport, tester.k1, [0,10**18])
 
     # We make one report by Tester 2
-    reportingTokenYes = reportingFixture.getReportingToken(market, [0,2])
+    reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
     reportingTokenYes.buy(1, sender=tester.k2)
     assert reportingTokenYes.balanceOf(tester.a2) == 1
     assert reputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18 - 10 ** 18 - 1
@@ -188,12 +188,12 @@ def test_allReportingHappyPath(reportingFixture, makeReport):
     reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
 
     # Proceed to the ALL REPORTING phase
-    proceedToAllReporting(reportingFixture, market, makeReport, tester.k1, tester.k3, [0,2])
+    proceedToAllReporting(reportingFixture, market, makeReport, tester.k1, tester.k3, [0,10**18])
 
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     # We make one report by Tester 3
-    reportingTokenNo = reportingFixture.getReportingToken(market, [2,0])
+    reportingTokenNo = reportingFixture.getReportingToken(market, [10**18,0])
     registrationToken = reportingFixture.applySignature('RegistrationToken', reportingTokenNo.getRegistrationToken())
     registrationToken.register(sender=tester.k3)
     reportingTokenNo.buy(1, sender=tester.k3)
@@ -226,10 +226,10 @@ def test_allReportingHappyPath(reportingFixture, makeReport):
 def test_forking(reportingFixture, makeReport, finalizeByMigration):
     market = reportingFixture.binaryMarket
     # Proceed to the FORKING phase
-    proceedToForking(reportingFixture, market, makeReport, tester.k1, tester.k3, tester.k3, [0,2], [2,0])
+    proceedToForking(reportingFixture, market, makeReport, tester.k1, tester.k3, tester.k3, [0,10**18], [10**18,0])
 
     # Finalize the market
-    finalizeForkingMarket(reportingFixture, market, finalizeByMigration, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,2], [2,0])
+    finalizeForkingMarket(reportingFixture, market, finalizeByMigration, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,10**18], [10**18,0])
 
 
 @mark.parametrize('makeReport, finalizeByMigration', [
@@ -243,7 +243,7 @@ def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
     newMarket = reportingFixture.createReasonableBinaryMarket(reportingFixture.branch, reportingFixture.cash)
 
     # We proceed the standard market to the FORKING state
-    proceedToForking(reportingFixture,  market, makeReport, tester.k1, tester.k2, tester.k3, [0,2], [2,0])
+    proceedToForking(reportingFixture,  market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], [10**18,0])
 
     # The market we created is now awaiting migration
     assert newMarket.getReportingState() == reportingFixture.constants.AWAITING_MIGRATION()
@@ -253,7 +253,7 @@ def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
         newMarket.migrateThroughOneFork()
 
     # We'll finalize the forking market
-    finalizeForkingMarket(reportingFixture, market, finalizeByMigration, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,2], [2,0])
+    finalizeForkingMarket(reportingFixture, market, finalizeByMigration, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,10**18], [10**18,0])
 
     # Now we can migrate the market to the winning branch
     assert newMarket.migrateThroughOneFork()

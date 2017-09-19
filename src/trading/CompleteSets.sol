@@ -28,7 +28,8 @@ contract CompleteSets is Controlled, ReentrancyGuard, ICompleteSets {
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ERC20 _denominationToken = _market.getDenominationToken();
 
-        require(_denominationToken.transferFrom(_sender, _market, _amount));
+        uint256 _cost = _amount.mul(_market.getMarketDenominator());
+        require(_denominationToken.transferFrom(_sender, _market, _cost));
         for (uint8 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
             _market.getShareToken(_outcome).createShares(_sender, _amount);
         }
@@ -48,11 +49,12 @@ contract CompleteSets is Controlled, ReentrancyGuard, ICompleteSets {
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ERC20 _denominationToken = _market.getDenominationToken();
         uint256 _marketCreatorFeeRate = _market.getMarketCreatorSettlementFeeInAttoethPerEth();
-        uint256 _marketCreatorFee = _amount.mul(_marketCreatorFeeRate).div(1 ether);
+        uint256 _payout = _amount.mul(_market.getMarketDenominator());
+        uint256 _marketCreatorFee = _payout.mul(_marketCreatorFeeRate).div(1 ether);
         IReportingWindow _reportingWindow = _market.getReportingWindow();
         uint256 _reportingFeeRate = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getReportingFeeInAttoethPerEth(_reportingWindow);
-        uint256 _reportingFee = _amount.mul(_reportingFeeRate).div(1 ether);
-        uint256 _payout = _amount.sub(_marketCreatorFee).sub(_reportingFee);
+        uint256 _reportingFee = _payout.mul(_reportingFeeRate).div(1 ether);
+        _payout = _payout.sub(_marketCreatorFee).sub(_reportingFee);
 
         // Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
         for (uint8 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {

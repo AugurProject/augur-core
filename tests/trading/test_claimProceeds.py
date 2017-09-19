@@ -21,9 +21,10 @@ def acquireLongShares(fundedRepFixture, market, outcome, amount, approvalAddress
     completeSets = fundedRepFixture.contracts['CompleteSets']
     makeOrder = fundedRepFixture.contracts['MakeOrder']
     takeOrder = fundedRepFixture.contracts['TakeOrder']
+    cost = amount * market.getMarketDenominator()
 
-    assert cash.depositEther(value=amount, sender = sender)
-    assert cash.approve(completeSets.address, amount, sender = sender)
+    assert cash.depositEther(value=cost, sender = sender)
+    assert cash.approve(completeSets.address, cost, sender = sender)
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
     assert shareToken.approve(approvalAddress, amount, sender = sender)
     for otherOutcome in range(0, market.getNumberOfOutcomes()):
@@ -33,6 +34,7 @@ def acquireLongShares(fundedRepFixture, market, outcome, amount, approvalAddress
 
 def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddress, sender):
     if amount == 0: return
+    cost = amount * market.getMarketDenominator()
 
     cash = fundedRepFixture.cash
     shareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(outcome))
@@ -40,8 +42,8 @@ def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddr
     makeOrder = fundedRepFixture.contracts['MakeOrder']
     takeOrder = fundedRepFixture.contracts['TakeOrder']
 
-    assert cash.depositEther(value=amount, sender = sender)
-    assert cash.approve(completeSets.address, amount, sender = sender)
+    assert cash.depositEther(value=cost, sender = sender)
+    assert cash.approve(completeSets.address, cost, sender = sender)
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
     assert shareToken.transfer(0, amount, sender = sender)
     for otherOutcome in range(0, market.getNumberOfOutcomes()):
@@ -68,12 +70,12 @@ def test_helpers(fundedRepFixture):
 
     assert claimProceeds.calculateMarketCreatorFee(market.address, fix('3')) == fix('0.03')
     assert claimProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
-    assert claimProceeds.calculateProceeds(market.address, market.getFinalWinningReportingToken(), YES, fix('7')) == fix('7')
+    assert claimProceeds.calculateProceeds(market.address, market.getFinalWinningReportingToken(), YES, 7) == 7 * market.getMarketDenominator()
     assert claimProceeds.calculateProceeds(market.address, market.getFinalWinningReportingToken(), NO, fix('11')) == fix('0')
-    (shareholderShare, creatorShare, reporterShare) = claimProceeds.divideUpWinnings(market.address, market.getFinalWinningReportingToken(), YES, fix('13'))
-    assert reporterShare == fix('13', '0.0001')
-    assert creatorShare == fix('13', '0.01')
-    assert shareholderShare == fix('13', '0.9899')
+    (shareholderShare, creatorShare, reporterShare) = claimProceeds.divideUpWinnings(market.address, market.getFinalWinningReportingToken(), YES, 13)
+    assert reporterShare == 13.0 * market.getMarketDenominator() * 0.0001
+    assert creatorShare == 13.0 * market.getMarketDenominator() * .01
+    assert shareholderShare == 13.0 * market.getMarketDenominator() * 0.9899
 
 def test_redeem_shares_in_binary_market(fundedRepFixture):
     cash = fundedRepFixture.cash
@@ -81,15 +83,15 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
     yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
-    expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
+    expectedValue = 1 * market.getMarketDenominator()
     expectedFees = expectedValue * 0.0101
     expectedPayout = expectedValue - expectedFees
 
     # get YES shares with a1
-    acquireLongShares(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k1)
+    acquireLongShares(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k1)
     # get NO shares with a2
-    acquireShortShareSet(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,2])
+    acquireShortShareSet(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k2)
+    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,10**18])
 
     # redeem shares with a1
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
@@ -111,15 +113,15 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     shareToken2 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(2))
     shareToken1 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(1))
     shareToken0 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(0))
-    expectedValue = 1.2 * market.getCompleteSetCostInAttotokens()
+    expectedValue = 1 * market.getMarketDenominator()
     expectedFees = expectedValue * 0.0101
     expectedPayout = expectedValue - expectedFees
 
     # get long shares with a1
-    acquireLongShares(fundedRepFixture, market, 2, fix('1.2'), claimProceeds.address, sender = tester.k1)
+    acquireLongShares(fundedRepFixture, market, 2, 1, claimProceeds.address, sender = tester.k1)
     # get short shares with a2
-    acquireShortShareSet(fundedRepFixture, market, 2, fix('1.2'), claimProceeds.address, sender = tester.k2)
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,0,3])
+    acquireShortShareSet(fundedRepFixture, market, 2, 1, claimProceeds.address, sender = tester.k2)
+    finalizeMarket(fundedRepFixture.chain.head_state, market, [0, 0, 3 * 10 ** 17])
 
     # redeem shares with a1
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
@@ -142,14 +144,14 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
     yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
-    expectedValue = fix('1.2')
+    expectedValue = 1 * market.getMarketDenominator()
     expectedFees = expectedValue * 0.0101
     expectedPayout = expectedValue - expectedFees
 
     # get YES shares with a1
-    acquireLongShares(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k1)
+    acquireLongShares(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k1)
     # get NO shares with a2
-    acquireShortShareSet(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
+    acquireShortShareSet(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k2)
     finalizeMarket(fundedRepFixture.chain.head_state, market, [10**19, 3*10**19])
 
     # redeem shares with a1
@@ -171,13 +173,13 @@ def test_reedem_failure(fundedRepFixture):
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
 
     # get YES shares with a1
-    acquireLongShares(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k1)
+    acquireLongShares(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k1)
     # get NO shares with a2
-    acquireShortShareSet(fundedRepFixture, market, YES, fix('1.2'), claimProceeds.address, sender = tester.k2)
+    acquireShortShareSet(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
     fundedRepFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have tester.a0 subimt automated report (75% high, 25% low, range -10*10^18 to 30*10^18)
-    market.automatedReport([0, 2], sender = tester.k0)
+    market.automatedReport([0, 10**18], sender = tester.k0)
     # set timestamp to after automated dispute end
     fundedRepFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
 

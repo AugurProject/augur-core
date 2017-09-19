@@ -54,6 +54,10 @@ library SafeMathUint256 {
         return 0;
     }
 
+    function isMultipleOf(uint256 a, uint256 b) internal constant returns (bool) {
+        return a % b == 0;
+    }
+
     // Float [fixed point] Operations
     function fxpMul(uint256 a, uint256 b, uint256 base) internal constant returns (uint256) {
         return div(mul(a, b), base);
