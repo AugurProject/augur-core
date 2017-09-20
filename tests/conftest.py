@@ -147,8 +147,10 @@ class ContractsFixture:
         self.uploadAllContracts()
         self.whitelistTradingContracts()
         self.initializeAllContracts()
+        self.approveCentralAuthority()
         self.branch = self.createBranch(0, "")
         self.cash = self.getSeededCash()
+        self.augur = self.contracts['Augur']
         self.binaryMarket = self.createReasonableBinaryMarket(self.branch, self.cash)
         startingGas = self.chain.head_state.gas_used
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)
@@ -235,7 +237,7 @@ class ContractsFixture:
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Cash','CompleteSets','MakeOrder','TakeOrder','CancelOrder','Trade','ClaimProceeds','OrdersFetcher','TradingEscapeHatch']
+        contractsToInitialize = ['Augur','Cash','CompleteSets','MakeOrder','TakeOrder','CancelOrder','Trade','ClaimProceeds','OrdersFetcher','TradingEscapeHatch']
         for contractName in contractsToInitialize:
             if getattr(self.contracts[contractName], "setController", None):
                 self.contracts[contractName].setController(self.controller.address)
@@ -252,6 +254,14 @@ class ContractsFixture:
         cash = self.contracts['Cash']
         cash.depositEther(value = 1, sender = tester.k9)
         return cash
+
+    def approveCentralAuthority(self):
+        authority = self.contracts['Augur']
+        contractsToApprove = ['Cash']
+        testersGivingApproval = [getattr(tester, 'k%i' % x) for x in range(0,10)]
+        for testerKey in testersGivingApproval:
+            for contractName in contractsToApprove:
+                self.contracts[contractName].approve(authority.address, 2**254, sender=testerKey)
 
     def uploadShareToken(self, controllerAddress = None):
         controllerAddress = controllerAddress if controllerAddress else self.controller.address
