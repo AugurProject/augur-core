@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
-from utils import bytesToHexString, longToHexString, bytesToLong, fix, captureFilteredLogs
+from utils import bytesToHexString, fix, captureFilteredLogs
 from constants import YES, NO
 
 def test_publicBuyCompleteSets(fundedRepFixture):

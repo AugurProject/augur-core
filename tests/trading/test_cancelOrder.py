@@ -2,8 +2,8 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import raises, fixture
-from utils import bytesToLong, longTo32Bytes, longToHexString, fix, unfix
+from pytest import raises
+from utils import longTo32Bytes, longToHexString, fix
 from constants import BID, ASK, YES, NO
 
 tester.STARTGAS = long(6.7 * 10**6)

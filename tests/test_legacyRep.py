@@ -1,6 +1,4 @@
 from ethereum.tools import tester
-from ethereum.tools.tester import TransactionFailed
-from pytest import raises
 
 def test_legacyRepFaucet(contractsFixture):
     legacyRep = contractsFixture.contracts['LegacyRepContract']

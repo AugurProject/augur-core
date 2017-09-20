@@ -1,5 +1,4 @@
 from ethereum.tools import tester
-from utils import longToHexString
 
 def test_decimals(contractsFixture):
     reputationTokenFactory = contractsFixture.contracts['ReputationTokenFactory']

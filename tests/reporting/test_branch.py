@@ -1,4 +1,3 @@
-from ethereum.tools import tester
 from utils import longToHexString, stringToBytes
 
 def test_branch_creation(contractsFixture):
