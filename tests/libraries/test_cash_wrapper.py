@@ -28,8 +28,14 @@ def test_modifiers(testerContractsFixture):
     assert cash.balanceOf(tester.a1) == 42
     assert cashWrapperHelper.getETHBalance(tester.a1) == originalETHBalance - 42
 
-    # Now call a function which converts existing Cash balance to ETH and withdraws it
-    cash.approve(cashWrapperHelper.address, cash.balanceOf(tester.a1), sender=tester.k1)
+    # Initially we can't call the function which converts existing Cash to ETH since this helper contract isn't whitelisted
+    with raises(TransactionFailed):
+        cashWrapperHelper.toETHFunction(sender=tester.k1)
+
+    # Whitelist the contract
+    testerContractsFixture.controller.addToWhitelist(cashWrapperHelper.address)
+
+    # Now call the function which converts existing Cash balance to ETH and withdraws it
     cashWrapperHelper.toETHFunction(sender=tester.k1)
     assert cash.balanceOf(tester.a1) == 0
     assert cashWrapperHelper.getETHBalance(tester.a1) == originalETHBalance
