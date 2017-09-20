@@ -1,6 +1,7 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/trading/ICompleteSets.sol';
+import 'ROOT/Augur.sol';
 import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
@@ -9,15 +10,16 @@ import 'ROOT/extensions/MarketFeeCalculator.sol';
 import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/reporting/IReportingWindow.sol';
 import 'ROOT/trading/IOrders.sol';
+import 'ROOT/libraries/CashWrapper.sol';
 
 
-contract CompleteSets is Controlled, ReentrancyGuard, ICompleteSets {
+contract CompleteSets is Controlled, CashWrapper, ReentrancyGuard, ICompleteSets {
     using SafeMathUint256 for uint256;
 
     /**
      * Buys `_amount` shares of every outcome in the specified market.
     **/
-    function publicBuyCompleteSets(IMarket _market, uint256 _amount) external onlyInGoodTimes nonReentrant returns (bool) {
+    function publicBuyCompleteSets(IMarket _market, uint256 _amount) external payable convertToCash onlyInGoodTimes nonReentrant returns (bool) {
         return this.buyCompleteSets(msg.sender, _market, _amount);
     }
 
@@ -27,9 +29,10 @@ contract CompleteSets is Controlled, ReentrancyGuard, ICompleteSets {
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ERC20 _denominationToken = _market.getDenominationToken();
+        Augur _augur = Augur(controller.lookup("Augur"));
 
         uint256 _cost = _amount.mul(_market.getMarketDenominator());
-        require(_denominationToken.transferFrom(_sender, _market, _cost));
+        require(_augur.trustedTransfer(_denominationToken, _sender, _market, _cost));
         for (uint8 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
             _market.getShareToken(_outcome).createShares(_sender, _amount);
         }

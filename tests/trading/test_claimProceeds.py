@@ -23,9 +23,7 @@ def acquireLongShares(fundedRepFixture, market, outcome, amount, approvalAddress
     takeOrder = fundedRepFixture.contracts['TakeOrder']
     cost = amount * market.getMarketDenominator()
 
-    assert cash.depositEther(value=cost, sender = sender)
-    assert cash.approve(completeSets.address, cost, sender = sender)
-    assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
+    assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cost)
     assert shareToken.approve(approvalAddress, amount, sender = sender)
     for otherOutcome in range(0, market.getNumberOfOutcomes()):
         if otherOutcome == outcome: continue
@@ -42,9 +40,7 @@ def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddr
     makeOrder = fundedRepFixture.contracts['MakeOrder']
     takeOrder = fundedRepFixture.contracts['TakeOrder']
 
-    assert cash.depositEther(value=cost, sender = sender)
-    assert cash.approve(completeSets.address, cost, sender = sender)
-    assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
+    assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cost)
     assert shareToken.transfer(0, amount, sender = sender)
     for otherOutcome in range(0, market.getNumberOfOutcomes()):
         if otherOutcome == outcome: continue

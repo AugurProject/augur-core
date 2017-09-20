@@ -1,6 +1,7 @@
 pragma solidity ^0.4.13;
 
 import 'ROOT/trading/ITakeOrder.sol';
+import 'ROOT/Augur.sol';
 import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
@@ -10,6 +11,7 @@ import 'ROOT/trading/ICompleteSets.sol';
 import 'ROOT/trading/IOrders.sol';
 import 'ROOT/trading/IShareToken.sol';
 import 'ROOT/trading/Order.sol';
+import 'ROOT/libraries/CashWrapper.sol';
 
 
 // CONSIDER: At some point it would probably be a good idea to shift much of the logic from trading contracts into extensions. In particular this means sorting for making and WCL calculcations + order walking for taking.
@@ -28,6 +30,7 @@ library Trade {
         ICash denominationToken;
         IShareToken longShareToken;
         IShareToken[] shortShareTokens;
+        Augur augur;
     }
 
     // TODO: come up with a better name, or consolidate `Trade.Data` and `Order.Data`
@@ -124,7 +127,7 @@ library Trade {
 
         // transfer tokens from taker to maker
         uint256 _tokensToCover = getTokensToCover(_data, _data.taker.direction, _numberOfSharesToTrade);
-        _data.contracts.denominationToken.transferFrom(_data.taker.participantAddress, _data.maker.participantAddress, _tokensToCover);
+        _data.contracts.augur.trustedTransfer(_data.contracts.denominationToken, _data.taker.participantAddress, _data.maker.participantAddress, _tokensToCover);
 
         // update available assets for maker and taker
         _data.maker.sharesToSell -= _numberOfSharesToTrade;
@@ -164,13 +167,14 @@ library Trade {
         // transfer tokens to this contract
         uint256 _makerTokensToCover = getTokensToCover(_data, _data.maker.direction, _numberOfCompleteSets);
         uint256 _takerTokensToCover = getTokensToCover(_data, _data.taker.direction, _numberOfCompleteSets);
+
         _data.contracts.denominationToken.transferFrom(_data.contracts.market, this, _makerTokensToCover);
-        _data.contracts.denominationToken.transferFrom(_data.taker.participantAddress, this, _takerTokensToCover);
+        _data.contracts.augur.trustedTransfer(_data.contracts.denominationToken, _data.taker.participantAddress, this, _takerTokensToCover);
 
         // buy complete sets
         uint256 _cost = _numberOfCompleteSets.mul(_data.contracts.market.getMarketDenominator());
-        if (_data.contracts.denominationToken.allowance(this, _data.contracts.completeSets) < _cost) {
-            _data.contracts.denominationToken.approve(_data.contracts.completeSets, _cost);
+        if (_data.contracts.denominationToken.allowance(this, _data.contracts.augur) < _cost) {
+            _data.contracts.denominationToken.approve(_data.contracts.augur, _cost);
         }
         _data.contracts.completeSets.buyCompleteSets(this, _data.contracts.market, _numberOfCompleteSets);
 
@@ -263,7 +267,8 @@ library Trade {
             completeSets: ICompleteSets(_controller.lookup("CompleteSets")),
             denominationToken: _market.getDenominationToken(),
             longShareToken: _market.getShareToken(_outcome),
-            shortShareTokens: getShortShareTokens(_market, _outcome)
+            shortShareTokens: getShortShareTokens(_market, _outcome),
+            augur: Augur(_controller.lookup("Augur"))
         });
     }
 
@@ -361,13 +366,13 @@ library DirectionExtensions {
 }
 
 
-contract TakeOrder is Controlled, ReentrancyGuard, ITakeOrder {
+contract TakeOrder is Controlled, CashWrapper, ReentrancyGuard, ITakeOrder {
     using SafeMathUint256 for uint256;
     using Trade for Trade.Data;
     using DirectionExtensions for Trade.Direction;
 
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
-    function publicTakeOrder(bytes32 _orderId, uint256 _amountTakerWants, uint256 _tradeGroupId) external onlyInGoodTimes nonReentrant returns (uint256) {
+    function publicTakeOrder(bytes32 _orderId, uint256 _amountTakerWants, uint256 _tradeGroupId) external payable convertToCash onlyInGoodTimes nonReentrant returns (uint256) {
         return this.takeOrder(msg.sender, _orderId, _amountTakerWants, _tradeGroupId);
     }
 

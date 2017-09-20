@@ -22,14 +22,12 @@ def test_cancelBid(contractsFixture):
     tradeGroupID = 42
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
-    assert cash.depositEther(value = fix('10000'), sender = tester.k1) == 1, "Deposit cash"
-    assert(cash.approve(makeOrder.address, fix('10000'), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
-    makerInitialCash = cash.balanceOf(tester.a1)
+    makerInitialCash = fix(10000)
     makerInitialShares = yesShareToken.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
     marketInitialNoShares = noShareToken.totalSupply()
-    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1)
+    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10000'))
     assert orderID, "Order ID should be non-zero"
     _,_,owner,_,_,_,_,_ = ordersFetcher.getOrder(orderID)
     assert owner, "Order should have an owner"
@@ -57,14 +55,12 @@ def test_cancelAsk(contractsFixture):
     tradeGroupID = 42
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
-    assert cash.depositEther(value = fix('10000'), sender = tester.k1) == 1, "Deposit cash"
-    assert(cash.approve(makeOrder.address, fix('10000'), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
-    makerInitialCash = cash.balanceOf(tester.a1)
+    makerInitialCash = fix(10000)
     makerInitialShares = yesShareToken.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
     marketInitialNoShares = noShareToken.totalSupply()
-    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1)
+    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10000'))
     assert(orderID != bytearray(32)), "Order ID should be non-zero"
     _,_,owner,_,_,_,_,_ = ordersFetcher.getOrder(orderID)
     assert owner, "Order should have an owner"
@@ -90,11 +86,9 @@ def test_exceptions(contractsFixture):
     fxpPrice = fix('0.6')
     outcomeID = YES
     tradeGroupID = 42
-    assert cash.depositEther(value = fix('10000'), sender = tester.k1) == 1, "Deposit cash"
-    assert(cash.approve(makeOrder.address, fix('10000'), sender = tester.k1) == 1), "Approve makeOrder contract to spend cash"
-    makerInitialCash = cash.balanceOf(tester.a1)
+    makerInitialCash = fix(10000)
     marketInitialCash = cash.balanceOf(market.address)
-    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1)
+    orderID = makeOrder.publicMakeOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10000'))
     assert(orderID != bytearray(32)), "Order ID should be non-zero"
 
     # cancelOrder exceptions

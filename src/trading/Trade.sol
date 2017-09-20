@@ -9,24 +9,25 @@ import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/trading/IMakeOrder.sol';
 import 'ROOT/trading/IOrders.sol';
 import 'ROOT/trading/ITakeOrder.sol';
+import 'ROOT/libraries/CashWrapper.sol';
 
 
-contract Trade is Controlled, ReentrancyGuard {
+contract Trade is Controlled, CashWrapper, ReentrancyGuard {
     uint256 private constant MINIMUM_GAS_NEEDED = 300000;
 
-    function publicBuy(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) external onlyInGoodTimes nonReentrant returns (bytes32) {
+    function publicBuy(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) external payable convertToCash onlyInGoodTimes nonReentrant returns (bytes32) {
         return trade(msg.sender, Order.TradeDirections.Long, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
     }
 
-    function publicSell(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) external onlyInGoodTimes nonReentrant returns (bytes32) {
+    function publicSell(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) external payable convertToCash onlyInGoodTimes nonReentrant returns (bytes32) {
         return trade(msg.sender, Order.TradeDirections.Short, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
     }
 
-    function publicTrade(Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) external onlyInGoodTimes nonReentrant returns (bytes32) {
+    function publicTrade(Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) external payable convertToCash onlyInGoodTimes nonReentrant returns (bytes32) {
         return trade(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
     }
 
-    function publicTakeBestOrder(Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) external onlyInGoodTimes nonReentrant returns (uint256) {
+    function publicTakeBestOrder(Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) external payable convertToCash onlyInGoodTimes nonReentrant returns (uint256) {
         return takeBestOrder(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
     }
 

@@ -18,19 +18,23 @@ contract Cash is Controlled, Typed, VariableSupplyToken, ICash {
     uint256 constant public decimals = 18;
 
     function depositEther() external payable onlyInGoodTimes returns(bool) {
-        return this.depositEtherFor.value(msg.value)(msg.sender);
+        mint(msg.sender, msg.value);
+        return true;
     }
 
-    function depositEtherFor(address _to) public payable onlyInGoodTimes returns(bool) {
+    function depositEtherFor(address _to) external payable onlyInGoodTimes returns(bool) {
         mint(_to, msg.value);
         return true;
     }
 
     function withdrawEther(uint256 _amount) external onlyInGoodTimes returns(bool) {
-        return withdrawEtherTo(msg.sender, _amount);
+        require(_amount > 0 && _amount <= balances[msg.sender]);
+        burn(msg.sender, _amount);
+        msg.sender.transfer(_amount);
+        return true;
     }
 
-    function withdrawEtherTo(address _to, uint256 _amount) public onlyInGoodTimes returns(bool) {
+    function withdrawEtherTo(address _to, uint256 _amount) external onlyInGoodTimes returns(bool) {
         require(_amount > 0 && _amount <= balances[msg.sender]);
         burn(msg.sender, _amount);
         _to.transfer(_amount);

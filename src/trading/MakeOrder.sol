@@ -6,17 +6,18 @@ import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';
 import 'ROOT/trading/Order.sol';
 import 'ROOT/trading/IMakeOrder.sol';
+import 'ROOT/libraries/CashWrapper.sol';
 
 
-contract MakeOrder is Controlled, ReentrancyGuard {
+contract MakeOrder is Controlled, CashWrapper, ReentrancyGuard {
     using Order for Order.Data;
 
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
-    function publicMakeOrder(Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, uint8 _outcome, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) external onlyInGoodTimes nonReentrant returns (bytes32) {
+    function publicMakeOrder(Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, uint8 _outcome, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) external payable convertToCash onlyInGoodTimes nonReentrant returns (bytes32) {
         return this.makeOrder(msg.sender, _type, _attoshares, _displayPrice, _market, _outcome, _betterOrderId, _worseOrderId, _tradeGroupId);
     }
 
-    function makeOrder(address _maker, Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, uint8 _outcome, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bytes32) {
+    function makeOrder(address _maker, Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, uint8 _outcome, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) external onlyWhitelistedCallers returns (bytes32) {
         Order.Data memory _orderData = Order.create(controller, _maker, _outcome, _type, _attoshares, _displayPrice, _market, _betterOrderId, _worseOrderId);
         Order.escrowFunds(_orderData);
         require(_orderData.orders.getAmount(_orderData.getOrderId()) == 0);
