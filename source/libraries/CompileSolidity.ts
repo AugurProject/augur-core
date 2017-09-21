@@ -5,7 +5,7 @@ import * as readFile from 'fs-readfile-promise';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 import * as recursiveReadDir from 'recursive-readdir';
-import { CompilerInput, CompilerInputSourceCode, CompilerInputSourceFile, compileStandardWrapper } from 'solc';
+import { CompilerInput, CompilerInputSourceCode, CompilerInputSourceFile, CompilerOutput, CompilerOutputError, CompilerOutputContractAbi, CompilerOutputEvmBytecode, compileStandardWrapper } from 'solc';
 
 interface CompileContractsOutput {
     output?: string;
@@ -25,12 +25,12 @@ class SolidityContractCompiler {
     public async compileContracts(): Promise<CompileContractsOutput> {
         try {
             // Compile all contracts in the specified input directory
-            const compilerInputJson: CompilerInput = await this.generateCompilerInput();
-            const compilerOutput: any = compileStandardWrapper(JSON.stringify(compilerInputJson), this.readCallback);
-            const compilerOutputJson = JSON.parse(compilerOutput);
-            if (compilerOutputJson.errors) {
+            const compilerInputJson = await this.generateCompilerInput();
+            const compilerOutputJson: string = compileStandardWrapper(JSON.stringify(compilerInputJson), this.readCallback);
+            const compilerOutput: CompilerOutput = JSON.parse(compilerOutputJson);
+            if (compilerOutput.errors) {
                 let errors = "";
-                for (let error of compilerOutputJson.errors) {
+                for (let error of compilerOutput.errors) {
                     errors += error.formattedMessage + "\n";
                 }
                 throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
@@ -42,8 +42,8 @@ class SolidityContractCompiler {
             // Output contract data to single file
             const contractOutputFilePath = this.contractOutputDirectoryPath + "/" + this.contractOutputFileName;
             let wstream: any = fs.createWriteStream(contractOutputFilePath);
-            for (let contract in compilerOutputJson.contracts) {
-                wstream.write(JSON.stringify(compilerOutputJson.contracts[contract]));
+            for (let contract in compilerOutput.contracts) {
+                wstream.write(JSON.stringify(compilerOutput.contracts[contract]));
             }
 
             return { output: "Contracts in " + this.contractInputDirectoryPath + " were successfully compiled by solc and saved to " + contractOutputFilePath};
