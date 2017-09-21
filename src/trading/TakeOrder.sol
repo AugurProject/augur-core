@@ -382,7 +382,6 @@ contract TakeOrder is Controlled, CashWrapper, ReentrancyGuard, ITakeOrder {
         _tradeData.tradeMakerTokensForTakerShares();
         _tradeData.tradeMakerTokensForTakerTokens();
         // Turn any remaining Cash balance the maker has into ETH. This is done for the taker though the use of a CashWrapper modifier
-        // TODO: Are there tests for this?
         uint256 _makerCashBalance = _tradeData.contracts.denominationToken.balanceOf(_tradeData.maker.participantAddress);
         if (_makerCashBalance > 0) {
             _tradeData.contracts.augur.trustedTransfer(_tradeData.contracts.denominationToken, _tradeData.maker.participantAddress, this, _makerCashBalance);

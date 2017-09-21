@@ -40,7 +40,7 @@ contract ClaimProceeds is Controlled, CashWrapper, ReentrancyGuard, IClaimProcee
             }
             if (_creatorShare > 0) {
                 // For this payout we transfer Cash to this contract and then convert it into ETH before giving it ot the market owner
-                // TODO: Are there tests for this?
+                // TODO: Write tests for this
                 require(_denominationToken.transferFrom(_market, this, _creatorShare));
                 _denominationToken.withdrawEtherTo(_market.getOwner(), _creatorShare);
             }
