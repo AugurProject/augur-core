@@ -5,7 +5,7 @@ import * as readFile from 'fs-readfile-promise';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 import * as recursiveReadDir from 'recursive-readdir';
-import { CompilerInput, CompilerInputSourceCode, CompilerInputSourceFile, CompilerOutput, CompilerOutputError, CompilerOutputContractAbi, CompilerOutputEvmBytecode, compileStandardWrapper } from 'solc';
+import { CompilerInput, CompilerOutput, compileStandardWrapper } from 'solc';
 
 interface CompileContractsOutput {
     output?: string;
