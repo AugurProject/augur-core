@@ -1,6 +1,10 @@
 {
     "devDependencies": {
         "@types/mkdirp": "^0.5.1",
+        "ethereumjs-testrpc": "^4.1.3",
+        "ethjs-contract": "^0.1.9",
+        "ethjs-provider-http": "^0.1.6",
+        "ethjs-query": "^0.2.9",
         "fs-readfile-promise": "^3.0.0",
         "mkdirp": "^0.5.1",
         "path": "^0.12.7",
