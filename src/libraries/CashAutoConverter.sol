@@ -8,7 +8,7 @@ import 'ROOT/Augur.sol';
 /**
  * @title Provides modifiers which take care of Cash/ETH conversion
  */
-contract CashWrapper is Controlled {
+contract CashAutoConverter is Controlled {
     /**
      * @dev Convert any ETH provided in the transaction into Cash before the function executes
      */

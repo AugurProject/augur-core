@@ -10,10 +10,10 @@ import 'ROOT/extensions/MarketFeeCalculator.sol';
 import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/reporting/IReportingWindow.sol';
 import 'ROOT/trading/IOrders.sol';
-import 'ROOT/libraries/CashWrapper.sol';
+import 'ROOT/libraries/CashAutoConverter.sol';
 
 
-contract CompleteSets is Controlled, CashWrapper, ReentrancyGuard, ICompleteSets {
+contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, ICompleteSets {
     using SafeMathUint256 for uint256;
 
     /**

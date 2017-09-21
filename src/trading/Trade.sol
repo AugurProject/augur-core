@@ -9,10 +9,10 @@ import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/trading/IMakeOrder.sol';
 import 'ROOT/trading/IOrders.sol';
 import 'ROOT/trading/ITakeOrder.sol';
-import 'ROOT/libraries/CashWrapper.sol';
+import 'ROOT/libraries/CashAutoConverter.sol';
 
 
-contract Trade is Controlled, CashWrapper, ReentrancyGuard {
+contract Trade is Controlled, CashAutoConverter, ReentrancyGuard {
     uint256 private constant MINIMUM_GAS_NEEDED = 300000;
 
     function publicBuy(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) external payable convertToCash onlyInGoodTimes nonReentrant returns (bytes32) {

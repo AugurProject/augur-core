@@ -4,12 +4,12 @@ import 'ROOT/trading/ITradingEscapeHatch.sol';
 import 'ROOT/trading/ICash.sol';
 import 'ROOT/trading/IOrders.sol';
 import 'ROOT/trading/IShareToken.sol';
-import 'ROOT/libraries/CashWrapper.sol';
+import 'ROOT/libraries/CashAutoConverter.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 
 
-contract TradingEscapeHatch is DelegationTarget, CashWrapper, ITradingEscapeHatch {
+contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, ITradingEscapeHatch {
     using SafeMathUint256 for uint256;
 
     // market => (outcome => frozenShareValue)

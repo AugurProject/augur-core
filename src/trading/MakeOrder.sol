@@ -6,10 +6,10 @@ import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';
 import 'ROOT/trading/Order.sol';
 import 'ROOT/trading/IMakeOrder.sol';
-import 'ROOT/libraries/CashWrapper.sol';
+import 'ROOT/libraries/CashAutoConverter.sol';
 
 
-contract MakeOrder is Controlled, CashWrapper, ReentrancyGuard {
+contract MakeOrder is Controlled, CashAutoConverter, ReentrancyGuard {
     using Order for Order.Data;
 
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?

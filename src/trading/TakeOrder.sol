@@ -11,7 +11,7 @@ import 'ROOT/trading/ICompleteSets.sol';
 import 'ROOT/trading/IOrders.sol';
 import 'ROOT/trading/IShareToken.sol';
 import 'ROOT/trading/Order.sol';
-import 'ROOT/libraries/CashWrapper.sol';
+import 'ROOT/libraries/CashAutoConverter.sol';
 
 
 // CONSIDER: At some point it would probably be a good idea to shift much of the logic from trading contracts into extensions. In particular this means sorting for making and WCL calculcations + order walking for taking.
@@ -365,7 +365,7 @@ library DirectionExtensions {
 }
 
 
-contract TakeOrder is Controlled, CashWrapper, ReentrancyGuard, ITakeOrder {
+contract TakeOrder is Controlled, CashAutoConverter, ReentrancyGuard, ITakeOrder {
     using SafeMathUint256 for uint256;
     using Trade for Trade.Data;
     using DirectionExtensions for Trade.Direction;
@@ -381,7 +381,7 @@ contract TakeOrder is Controlled, CashWrapper, ReentrancyGuard, ITakeOrder {
         _tradeData.tradeMakerSharesForTakerTokens();
         _tradeData.tradeMakerTokensForTakerShares();
         _tradeData.tradeMakerTokensForTakerTokens();
-        // Turn any remaining Cash balance the maker has into ETH. This is done for the taker though the use of a CashWrapper modifier
+        // Turn any remaining Cash balance the maker has into ETH. This is done for the taker though the use of a CashAutoConverter modifier
         uint256 _makerCashBalance = _tradeData.contracts.denominationToken.balanceOf(_tradeData.maker.participantAddress);
         if (_makerCashBalance > 0) {
             _tradeData.contracts.augur.trustedTransfer(_tradeData.contracts.denominationToken, _tradeData.maker.participantAddress, this, _makerCashBalance);

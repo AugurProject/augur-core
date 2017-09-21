@@ -3,7 +3,7 @@ pragma solidity ^0.4.13;
 import 'ROOT/trading/IClaimProceeds.sol';
 import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';
-import 'ROOT/libraries/CashWrapper.sol';
+import 'ROOT/libraries/CashAutoConverter.sol';
 import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/trading/ICash.sol';
 import 'ROOT/extensions/MarketFeeCalculator.sol';
@@ -16,7 +16,7 @@ import 'ROOT/reporting/Reporting.sol';
  * @title ClaimProceeds
  * @dev This allows users to claim their money from a market by exchanging their shares
  */
-contract ClaimProceeds is Controlled, CashWrapper, ReentrancyGuard, IClaimProceeds {
+contract ClaimProceeds is Controlled, CashAutoConverter, ReentrancyGuard, IClaimProceeds {
     using SafeMathUint256 for uint256;
 
     function claimProceeds(IMarket _market) convertFromCash onlyInGoodTimes nonReentrant external returns(bool) {

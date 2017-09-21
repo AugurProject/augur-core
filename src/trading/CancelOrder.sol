@@ -7,7 +7,7 @@ pragma solidity ^0.4.13;
 import 'ROOT/trading/ICancelOrder.sol';
 import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';
-import 'ROOT/libraries/CashWrapper.sol';
+import 'ROOT/libraries/CashAutoConverter.sol';
 import 'ROOT/trading/Order.sol';
 import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/trading/ICash.sol';
@@ -18,7 +18,7 @@ import 'ROOT/trading/IOrders.sol';
  * @title CancelOrder
  * @dev This allows you to cancel orders on the book.
  */
-contract CancelOrder is Controlled, CashWrapper, ReentrancyGuard, ICancelOrder {
+contract CancelOrder is Controlled, CashAutoConverter, ReentrancyGuard, ICancelOrder {
     /**
      * @dev Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
      * @return true if successful; throw on failure
