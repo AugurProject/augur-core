@@ -365,13 +365,13 @@ library DirectionExtensions {
 }
 
 
-contract TakeOrder is Controlled, CashAutoConverter, ReentrancyGuard, ITakeOrder {
+contract TakeOrder is CashAutoConverter, ReentrancyGuard, ITakeOrder {
     using SafeMathUint256 for uint256;
     using Trade for Trade.Data;
     using DirectionExtensions for Trade.Direction;
 
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
-    function publicTakeOrder(bytes32 _orderId, uint256 _amountTakerWants, uint256 _tradeGroupId) external payable convertToCash onlyInGoodTimes nonReentrant returns (uint256) {
+    function publicTakeOrder(bytes32 _orderId, uint256 _amountTakerWants, uint256 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (uint256) {
         return this.takeOrder(msg.sender, _orderId, _amountTakerWants, _tradeGroupId);
     }
 

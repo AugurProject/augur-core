@@ -9,11 +9,11 @@ import 'ROOT/trading/IMakeOrder.sol';
 import 'ROOT/libraries/CashAutoConverter.sol';
 
 
-contract MakeOrder is Controlled, CashAutoConverter, ReentrancyGuard {
+contract MakeOrder is CashAutoConverter, ReentrancyGuard {
     using Order for Order.Data;
 
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
-    function publicMakeOrder(Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, uint8 _outcome, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) external payable convertToCash onlyInGoodTimes nonReentrant returns (bytes32) {
+    function publicMakeOrder(Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, uint8 _outcome, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
         return this.makeOrder(msg.sender, _type, _attoshares, _displayPrice, _market, _outcome, _betterOrderId, _worseOrderId, _tradeGroupId);
     }
 

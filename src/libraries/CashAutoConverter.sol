@@ -10,30 +10,22 @@ import 'ROOT/Augur.sol';
  */
 contract CashAutoConverter is Controlled {
     /**
-     * @dev Convert any ETH provided in the transaction into Cash before the function executes
+     * @dev Convert any ETH provided in the transaction into Cash before the function executes and convert any remaining Cash balance into ETH after the function completes
      */
-    modifier convertToCash() {
+    modifier convertToAndFromCash() {
         ethToCash();
         _;
         cashToETH();
     }
 
-    /**
-     * @dev Withdraw any Cash held by the sender into ETH and transfer it to them after the function executes
-     */
-    modifier convertFromCash() {
-        _;
-        cashToETH();
-    }
-
-    function ethToCash() payable public returns (bool) {
+    function ethToCash() private returns (bool) {
         if (msg.value > 0) {
             ICash(controller.lookup("Cash")).depositEtherFor.value(msg.value)(msg.sender);
         }
         return true;
     }
 
-    function cashToETH() public returns (bool) {
+    function cashToETH() private returns (bool) {
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _tokenBalance = _cash.balanceOf(msg.sender);
         if (_tokenBalance > 0) {

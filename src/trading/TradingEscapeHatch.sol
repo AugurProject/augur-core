@@ -15,7 +15,7 @@ contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, ITradingEsca
     // market => (outcome => frozenShareValue)
     mapping(address => mapping(uint8 => uint256)) private frozenShareValues;
 
-    function claimSharesInUpdate(IMarket _market) public convertFromCash onlyInBadTimes returns(bool) {
+    function claimSharesInUpdate(IMarket _market) public convertToAndFromCash onlyInBadTimes returns(bool) {
         require(address(_market) != address(0));
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();

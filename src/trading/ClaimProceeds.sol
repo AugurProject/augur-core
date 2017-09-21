@@ -16,10 +16,10 @@ import 'ROOT/reporting/Reporting.sol';
  * @title ClaimProceeds
  * @dev This allows users to claim their money from a market by exchanging their shares
  */
-contract ClaimProceeds is Controlled, CashAutoConverter, ReentrancyGuard, IClaimProceeds {
+contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
     using SafeMathUint256 for uint256;
 
-    function claimProceeds(IMarket _market) convertFromCash onlyInGoodTimes nonReentrant external returns(bool) {
+    function claimProceeds(IMarket _market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
         require(_market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(block.timestamp > _market.getFinalizationTime() + Reporting.claimProceedsWaitTime());
 
