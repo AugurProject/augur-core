@@ -1,7 +1,9 @@
 {
     "devDependencies": {
-        "mkdirp": "^0.5.1",
         "@types/mkdirp": "^0.5.1",
+        "fs-readfile-promise": "^3.0.0",
+        "mkdirp": "^0.5.1",
+        "path": "^0.12.7",
         "recursive-readdir": "^2.2.1",
         "solc": "^0.4.16",
         "solium": "github:AugurProject/solium"
