@@ -79,6 +79,8 @@ def test_publicSellCompleteSets(fundedRepFixture):
     cost = 10 * market.getMarketDenominator()
     completeSets.publicBuyCompleteSets(market.address, 10, sender = tester.k1, value = cost)
     captureFilteredLogs(fundedRepFixture.chain.head_state, orders, logs)
+    initialTester1ETH = fundedRepFixture.utils.getETHBalance(tester.a1)
+    initialTester0ETH = fundedRepFixture.utils.getETHBalance(tester.a0)
     result = completeSets.publicSellCompleteSets(market.address, 9, sender=tester.k1)
 
     assert logs == [
@@ -96,9 +98,9 @@ def test_publicSellCompleteSets(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a1) == 1, "Should have 1 share of outcome no"
     assert yesShareToken.totalSupply() == 1
     assert noShareToken.totalSupply() == 1
-    assert cash.balanceOf(tester.a1) == fix('8.9091')
+    assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialTester1ETH + fix('8.9091')
     assert cash.balanceOf(market.address) == fix('1')
-    assert cash.balanceOf(tester.a0) == fix('0.09')
+    assert fundedRepFixture.utils.getETHBalance(tester.a0) == initialTester0ETH + fix('0.09')
     assert cash.balanceOf(market.getReportingWindow()) == fix('0.0009')
 
 def test_publicSellCompleteSets_failure(fundedRepFixture):

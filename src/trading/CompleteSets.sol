@@ -5,7 +5,7 @@ import 'ROOT/Augur.sol';
 import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
-import 'ROOT/libraries/token/ERC20.sol';
+import 'ROOT/trading/ICash.sol';
 import 'ROOT/extensions/MarketFeeCalculator.sol';
 import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/reporting/IReportingWindow.sol';
@@ -28,7 +28,7 @@ contract CompleteSets is Controlled, CashWrapper, ReentrancyGuard, ICompleteSets
         require(_market != IMarket(0));
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
-        ERC20 _denominationToken = _market.getDenominationToken();
+        ICash _denominationToken = _market.getDenominationToken();
         Augur _augur = Augur(controller.lookup("Augur"));
 
         uint256 _cost = _amount.mul(_market.getMarketDenominator());
@@ -41,7 +41,7 @@ contract CompleteSets is Controlled, CashWrapper, ReentrancyGuard, ICompleteSets
         return true;
     }
 
-    function publicSellCompleteSets(IMarket _market, uint256 _amount) external onlyInGoodTimes nonReentrant returns (bool) {
+    function publicSellCompleteSets(IMarket _market, uint256 _amount) external convertFromCash onlyInGoodTimes nonReentrant returns (bool) {
         return this.sellCompleteSets(msg.sender, _market, _amount);
     }
 
@@ -50,7 +50,7 @@ contract CompleteSets is Controlled, CashWrapper, ReentrancyGuard, ICompleteSets
         require(_market != IMarket(0));
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
-        ERC20 _denominationToken = _market.getDenominationToken();
+        ICash _denominationToken = _market.getDenominationToken();
         uint256 _marketCreatorFeeRate = _market.getMarketCreatorSettlementFeeInAttoethPerEth();
         uint256 _payout = _amount.mul(_market.getMarketDenominator());
         uint256 _marketCreatorFee = _payout.mul(_marketCreatorFeeRate).div(1 ether);
@@ -65,7 +65,10 @@ contract CompleteSets is Controlled, CashWrapper, ReentrancyGuard, ICompleteSets
         }
 
         if (_marketCreatorFee != 0) {
-            require(_denominationToken.transferFrom(_market, _market.getOwner(), _marketCreatorFee));
+            // For this payout we transfer Cash to this contract and then convert it into ETH before giving it ot the market owner
+            // TODO: Are there tests for this?
+            require(_denominationToken.transferFrom(_market, this, _marketCreatorFee));
+            _denominationToken.withdrawEtherTo(_market.getOwner(), _marketCreatorFee);
         }
         if (_reportingFee != 0) {
             require(_denominationToken.transferFrom(_market, _reportingWindow, _reportingFee));

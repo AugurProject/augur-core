@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/trading/Cash.sol';
+import 'ROOT/trading/ICash.sol';
 import 'ROOT/Controlled.sol';
 import 'ROOT/Augur.sol';
 
@@ -15,6 +15,7 @@ contract CashWrapper is Controlled {
     modifier convertToCash() {
         ethToCash();
         _;
+        cashToETH();
     }
 
     /**
@@ -27,18 +28,16 @@ contract CashWrapper is Controlled {
 
     function ethToCash() payable public returns (bool) {
         if (msg.value > 0) {
-            Cash _cash = Cash(controller.lookup("Cash"));
-            _cash.depositEtherFor.value(msg.value)(msg.sender);
+            ICash(controller.lookup("Cash")).depositEtherFor.value(msg.value)(msg.sender);
         }
         return true;
     }
 
     function cashToETH() public returns (bool) {
-        Cash _cash = Cash(controller.lookup("Cash"));
-        Augur _augur = Augur(controller.lookup("Augur"));
+        ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _tokenBalance = _cash.balanceOf(msg.sender);
         if (_tokenBalance > 0) {
-            _augur.trustedTransfer(_cash, msg.sender, this, _tokenBalance);
+            Augur(controller.lookup("Augur")).trustedTransfer(_cash, msg.sender, this, _tokenBalance);
             _cash.withdrawEtherTo(msg.sender, _tokenBalance);
         }
         return true;

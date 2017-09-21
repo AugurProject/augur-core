@@ -15,12 +15,17 @@ def test_publicTakeOrder_bid(contractsFixture):
     tradeGroupID = 42
     logs = []
 
+    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
+    initialTakerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    makerCost = fix('2', '0.6')
+    takerCost = fix('2', '0.4')
+
     # create order
-    orderID = makeOrder.publicMakeOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('2', '0.6'))
+    orderID = makeOrder.publicMakeOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=makerCost)
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = takeOrder.publicTakeOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fix('2', '0.4'))
+    fillOrderID = takeOrder.publicTakeOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=takerCost)
 
     # assert
     assert logs == [
@@ -41,12 +46,15 @@ def test_publicTakeOrder_bid(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0,
-            "makerTokens": int(fix('2', '0.6')),
+            "makerTokens": int(makerCost),
             "takerShares": 0,
-            "takerTokens": int(fix('2', '0.4')),
+            "takerTokens": int(takerCost),
             "tradeGroupId": 42,
         },
     ]
+
+    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH - makerCost
+    assert contractsFixture.utils.getETHBalance(tester.a2) == initialTakerETH - takerCost
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0
 
@@ -60,12 +68,17 @@ def test_publicTakeOrder_ask(contractsFixture):
     tradeGroupID = 42
     logs = []
 
+    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
+    initialTakerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    makerCost = fix('2', '0.4')
+    takerCost = fix('2', '0.6')
+
     # create order
-    orderID = makeOrder.publicMakeOrder(ASK, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('2', '0.4'))
+    orderID = makeOrder.publicMakeOrder(ASK, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=makerCost)
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = takeOrder.publicTakeOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fix('2', '0.6'))
+    fillOrderID = takeOrder.publicTakeOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=takerCost)
 
     # assert
     assert logs == [
@@ -86,12 +99,15 @@ def test_publicTakeOrder_ask(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0,
-            "makerTokens": fix('2', '0.4'),
+            "makerTokens": makerCost,
             "takerShares": 0,
-            "takerTokens": fix('2', '0.6'),
+            "takerTokens": takerCost,
             "tradeGroupId": tradeGroupID
         },
     ]
+
+    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH - makerCost
+    assert contractsFixture.utils.getETHBalance(tester.a2) == initialTakerETH - takerCost
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0
 
@@ -106,12 +122,17 @@ def test_publicTakeOrder_bid_scalar(contractsFixture):
     tradeGroupID = 42
     logs = []
 
+    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
+    initialTakerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    makerCost = fix('2', '0.6')
+    takerCost = fix('2', '39.4')
+
     # create order
-    orderID = makeOrder.publicMakeOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('2', '0.6'))
+    orderID = makeOrder.publicMakeOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=makerCost)
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = takeOrder.publicTakeOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fix('2', '39.4'))
+    fillOrderID = takeOrder.publicTakeOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=takerCost)
 
     # assert
     assert logs == [
@@ -132,11 +153,14 @@ def test_publicTakeOrder_bid_scalar(contractsFixture):
             "maker": bytesToHexString(tester.a1),
             "taker": bytesToHexString(tester.a2),
             "makerShares": 0,
-            "makerTokens": int(fix('2', '0.6')),
+            "makerTokens": int(makerCost),
             "takerShares": 0,
-            "takerTokens": int(fix('2', '39.4')),
+            "takerTokens": int(takerCost),
             "tradeGroupId": 42,
         },
     ]
+
+    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH - makerCost
+    assert contractsFixture.utils.getETHBalance(tester.a2) == initialTakerETH - takerCost
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0

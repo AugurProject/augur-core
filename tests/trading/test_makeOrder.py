@@ -71,6 +71,7 @@ def test_publicMakeOrder_bid2(contractsFixture):
 
     marketInitialCash = cash.balanceOf(market.address)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
+    makerInitialETH = contractsFixture.utils.getETHBalance(tester.a1)
     orderID = makeOrder.publicMakeOrder(orderType, amount, fxpPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10'))
     assert orderID != bytearray(32), "Order ID should be non-zero"
 
@@ -80,7 +81,8 @@ def test_publicMakeOrder_bid2(contractsFixture):
     assert owner == bytesToHexString(tester.a1)
     assert tokensEscrowed == 0.6 * 10**18
     assert sharesEscrowed == 0
-    assert cash.balanceOf(tester.a1) == 9.4 * 10**18
+    assert cash.balanceOf(tester.a1) == 0
+    assert contractsFixture.utils.getETHBalance(tester.a1) == makerInitialETH - long(0.6 * 10**18)
     assert cash.balanceOf(market.address) - marketInitialCash == 0.6 * 10**18
     assert logs == [
         {

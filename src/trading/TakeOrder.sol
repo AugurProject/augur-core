@@ -125,7 +125,6 @@ library Trade {
             }
         }
 
-        // transfer tokens from taker to maker
         uint256 _tokensToCover = getTokensToCover(_data, _data.taker.direction, _numberOfSharesToTrade);
         _data.contracts.augur.trustedTransfer(_data.contracts.denominationToken, _data.taker.participantAddress, _data.maker.participantAddress, _tokensToCover);
 
@@ -382,6 +381,13 @@ contract TakeOrder is Controlled, CashWrapper, ReentrancyGuard, ITakeOrder {
         _tradeData.tradeMakerSharesForTakerTokens();
         _tradeData.tradeMakerTokensForTakerShares();
         _tradeData.tradeMakerTokensForTakerTokens();
+        // Turn any remaining Cash balance the maker has into ETH. This is done for the taker though the use of a CashWrapper modifier
+        // TODO: Are there tests for this?
+        uint256 _makerCashBalance = _tradeData.contracts.denominationToken.balanceOf(_tradeData.maker.participantAddress);
+        if (_makerCashBalance > 0) {
+            _tradeData.contracts.augur.trustedTransfer(_tradeData.contracts.denominationToken, _tradeData.maker.participantAddress, this, _makerCashBalance);
+            _tradeData.contracts.denominationToken.withdrawEtherTo(_tradeData.maker.participantAddress, _makerCashBalance);
+        }
 
         // AUDIT: is there a reentry risk here?  we execute all of the above code, which includes transferring tokens around, before we mark the order as filled
         _tradeData.contracts.orders.takeOrderLog(_tradeData.order.orderId, _tradeData.taker.participantAddress, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getTakerSharesDepleted(), _tradeData.getTakerTokensDepleted(), _tradeGroupId);

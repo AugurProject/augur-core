@@ -32,18 +32,22 @@ def test_make_ask_with_shares_take_with_shares(fundedRepFixture):
     assert yesShareToken.approve(makeOrder.address, 12, sender = tester.k1)
     askOrderID = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender = tester.k1)
     assert askOrderID
-    assert cash.balanceOf(tester.a1) == fix('0')
+    assert cash.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a1) == 12
 
     # 3. take ASK order for YES with NO shares
+    initialMakerETH = fundedRepFixture.utils.getETHBalance(tester.a1)
+    initialTakerETH = fundedRepFixture.utils.getETHBalance(tester.a2)
     assert noShareToken.approve(takeOrder.address, 12, sender = tester.k2)
     fxpAmountRemaining = takeOrder.publicTakeOrder(askOrderID, 12, sender = tester.k2)
     makerFee = completeSetFees * 0.6
     takerFee = completeSetFees * 0.4
     assert fxpAmountRemaining == 0
-    assert cash.balanceOf(tester.a1) == fix('12', '0.6') - makerFee
-    assert cash.balanceOf(tester.a2) == fix('12', '0.4') - takerFee
+    assert cash.balanceOf(tester.a1) == 0
+    assert cash.balanceOf(tester.a2) == 0
+    assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.6') - long(makerFee)
+    assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialTakerETH + fix('12', '0.4') - long(takerFee)
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 12
     assert noShareToken.balanceOf(tester.a1) == 12
@@ -74,10 +78,14 @@ def test_make_ask_with_shares_take_with_cash(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a1) == 12
 
     # 3. take ASK order for YES with cash
+    initialMakerETH = fundedRepFixture.utils.getETHBalance(tester.a1)
+    initialTakerETH = fundedRepFixture.utils.getETHBalance(tester.a2)
     fxpAmountRemaining = takeOrder.publicTakeOrder(askOrderID, 12, sender = tester.k2, value=fix('12', '0.6'))
     assert fxpAmountRemaining == 0
-    assert cash.balanceOf(tester.a1) == fix('12', '0.6')
-    assert cash.balanceOf(tester.a2) == fix('0')
+    assert cash.balanceOf(tester.a1) == 0
+    assert cash.balanceOf(tester.a2) == 0
+    assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.6')
+    assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialTakerETH - fix('12', '0.6')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 12
     assert noShareToken.balanceOf(tester.a1) == 12
@@ -107,11 +115,15 @@ def test_make_ask_with_cash_take_with_shares(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. take ASK order for YES with shares of NO
+    initialMakerETH = fundedRepFixture.utils.getETHBalance(tester.a1)
+    initialTakerETH = fundedRepFixture.utils.getETHBalance(tester.a2)
     assert noShareToken.approve(takeOrder.address, 12, sender = tester.k2)
     amountRemaining = takeOrder.publicTakeOrder(askOrderID, 12, sender = tester.k2)
     assert amountRemaining == 0, "Amount remaining should be 0"
-    assert cash.balanceOf(tester.a1) == fix('0')
-    assert cash.balanceOf(tester.a2) == fix('12', '0.4')
+    assert cash.balanceOf(tester.a1) == 0
+    assert cash.balanceOf(tester.a2) == 0
+    assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialMakerETH
+    assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialTakerETH + fix('12', '0.4')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 12
     assert noShareToken.balanceOf(tester.a1) == 12
@@ -174,15 +186,19 @@ def test_make_bid_with_shares_take_with_shares(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. take BID order for YES with shares of YES
+    initialMakerETH = fundedRepFixture.utils.getETHBalance(tester.a1)
+    initialTakerETH = fundedRepFixture.utils.getETHBalance(tester.a2)
     assert yesShareToken.approve(takeOrder.address, 12, sender = tester.k2)
     leftoverInOrder = takeOrder.publicTakeOrder(orderID, 12, sender = tester.k2)
     makerFee = completeSetFees * 0.4
     takerFee = completeSetFees * 0.6
     assert leftoverInOrder == 0
-    makerBalance = fix('12', '0.4') - makerFee
-    takerBalance = fix('12', '0.6') - takerFee
-    assert cash.balanceOf(tester.a1) == makerBalance
-    assert cash.balanceOf(tester.a2) == takerBalance
+    makerPayment = fix('12', '0.4') - makerFee
+    takerPayment = fix('12', '0.6') - takerFee
+    assert cash.balanceOf(tester.a1) == 0
+    assert cash.balanceOf(tester.a2) == 0
+    assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialMakerETH + long(makerPayment)
+    assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialTakerETH + long(takerPayment)
     assert yesShareToken.balanceOf(tester.a1) == 12
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
@@ -213,10 +229,14 @@ def test_make_bid_with_shares_take_with_cash(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. take BID order for YES with cash
+    initialMakerETH = fundedRepFixture.utils.getETHBalance(tester.a1)
+    initialTakerETH = fundedRepFixture.utils.getETHBalance(tester.a2)
     leftoverInOrder = takeOrder.publicTakeOrder(orderID, 12, sender = tester.k2, value=fix('12', '0.4'))
     assert leftoverInOrder == 0
-    assert cash.balanceOf(tester.a1) == fix('12', '0.4')
-    assert cash.balanceOf(tester.a2) == fix('0')
+    assert cash.balanceOf(tester.a1) == 0
+    assert cash.balanceOf(tester.a2) == 0
+    assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.4')
+    assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialTakerETH - fix('12', '0.4')
     assert yesShareToken.balanceOf(tester.a1) == 12
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
@@ -246,11 +266,15 @@ def test_make_bid_with_cash_take_with_shares(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. take BID order for YES with shares of YES
+    initialMakerETH = fundedRepFixture.utils.getETHBalance(tester.a1)
+    initialTakerETH = fundedRepFixture.utils.getETHBalance(tester.a2)
     assert yesShareToken.approve(takeOrder.address, 12, sender = tester.k2)
     leftoverInOrder = takeOrder.publicTakeOrder(orderID, 12, sender = tester.k2)
     assert leftoverInOrder == 0
-    assert cash.balanceOf(tester.a1) == fix('0')
-    assert cash.balanceOf(tester.a2) == fix('12', '0.6')
+    assert cash.balanceOf(tester.a1) == 0
+    assert cash.balanceOf(tester.a2) == 0
+    assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialMakerETH
+    assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialTakerETH + fix('12', '0.6')
     assert yesShareToken.balanceOf(tester.a1) == 12
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
@@ -288,9 +312,9 @@ import contextlib
 def placeholder_context():
     yield None
 
-@mark.parametrize('type,outcome,displayPrice,orderSize,makerYesShares,makerNoShares,makerTokens,takeSize,takerYesShares,takerNoShares,takerTokens,expectMakeRaise,expectedMakerYesShares,expectedMakerNoShares,expectedMakerTokens,expectTakeRaise,expectedTakerYesShares,expectedTakerNoShares,expectedTakerTokens,fixture', [
+@mark.parametrize('type,outcome,displayPrice,orderSize,makerYesShares,makerNoShares,makerCost,takeSize,takerYesShares,takerNoShares,takerCost,expectMakeRaise,expectedMakerYesShares,expectedMakerNoShares,expectedMakerPayout,expectTakeRaise,expectedTakerYesShares,expectedTakerNoShares,expectedTakerPayout,fixture', [
     # | ------ ORDER ------ |   | ------ MAKER START ------ |   | ------ TAKER START ------ |  | ------- MAKER FINISH -------  |    | ------- TAKER FINISH -------  |
-    #   type,outcome,  price,   size,    yes,     no,   tkns,   size,    yes,     no,   tkns,  raise,    yes,     no,      tkns,    raise,    yes,     no,      tkns,
+    #   type,outcome,  price,   size,    yes,     no,   cost,   size,    yes,     no,   cost,  raise,    yes,     no,      pay,    raise,    yes,     no,      pay,
     (    BID,    YES,  '0.6',  '12',    '0',    '0', '7.2',  '12',  '12',    '0',    '0',  False,  '12',    '0',       '0',    False,    '0',    '0',    '7.2', lazy_fixture('fundedRepFixture')),
     (    BID,    YES,  '0.6',  '12',    '0',  '12',    '0',  '12',  '12',    '0',    '0',  False,    '0',    '0','4.75152',    False,    '0',    '0','7.12728', lazy_fixture('fundedRepFixture')),
     (    BID,    YES,  '0.6',  '12',    '0',    '0', '7.2',  '12',    '0',    '0', '4.8',  False,  '12',    '0',       '0',    False,    '0',  '12',       '0', lazy_fixture('fundedRepFixture')),
@@ -320,7 +344,7 @@ def placeholder_context():
     (    ASK,    YES,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',  '12',    '0',  False,    '0',    '0','7.12728',    False,    '0',    '0','4.75152', lazy_fixture('fundedRepFixture')),
     (    ASK,    YES,  '0.6',  '12',    '0',    '0', '4.8',  '12',    '0',  '12',    '0',  False,    '0',  '12',       '0',    False,    '0',    '0',    '4.8', lazy_fixture('fundedRepFixture')),
 ])
-def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, makerNoShares, makerTokens, takeSize, takerYesShares, takerNoShares, takerTokens, expectMakeRaise, expectedMakerYesShares, expectedMakerNoShares, expectedMakerTokens, expectTakeRaise, expectedTakerYesShares, expectedTakerNoShares, expectedTakerTokens, fixture):
+def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, makerNoShares, makerCost, takeSize, takerYesShares, takerNoShares, takerCost, expectMakeRaise, expectedMakerYesShares, expectedMakerNoShares, expectedMakerPayout, expectTakeRaise, expectedTakerYesShares, expectedTakerNoShares, expectedTakerPayout, fixture):
     # TODO: add support for wider range markets
     displayPrice = fix(displayPrice)
     assert displayPrice < 10**18
@@ -329,20 +353,20 @@ def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, ma
     orderSize = int(orderSize)
     makerYesShares = int(makerYesShares)
     makerNoShares = int(makerNoShares)
-    makerTokens = fix(makerTokens)
+    makerCost = fix(makerCost)
 
     takeSize = int(takeSize)
     takerYesShares = int(takerYesShares)
     takerNoShares = int(takerNoShares)
-    takerTokens = fix(takerTokens)
+    takerCost = fix(takerCost)
 
     expectedMakerYesShares = int(expectedMakerYesShares)
     expectedMakerNoShares = int(expectedMakerNoShares)
-    expectedMakerTokens = fix(expectedMakerTokens)
+    expectedMakerPayout = fix(expectedMakerPayout)
 
     expectedTakerYesShares = int(expectedTakerYesShares)
     expectedTakerNoShares = int(expectedTakerNoShares)
-    expectedTakerTokens = fix(expectedTakerTokens)
+    expectedTakerPayout = fix(expectedTakerPayout)
 
     makerAddress = tester.a1
     makerKey = tester.k1
@@ -371,17 +395,21 @@ def test_parametrized(type, outcome, displayPrice, orderSize, makerYesShares, ma
     acquireShares(YES, makerYesShares, makeOrder.address, sender = makerKey)
     acquireShares(NO, makerNoShares, makeOrder.address, sender = makerKey)
     with raises(TransactionFailed) if expectMakeRaise else placeholder_context():
-        orderID = makeOrder.publicMakeOrder(type, orderSize, displayPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = makerKey, value = makerTokens)
+        orderID = makeOrder.publicMakeOrder(type, orderSize, displayPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = makerKey, value = makerCost)
 
     # take order
     acquireShares(YES, takerYesShares, takeOrder.address, sender = takerKey)
     acquireShares(NO, takerNoShares, takeOrder.address, sender = takerKey)
+    initialMakerETH = fixture.utils.getETHBalance(makerAddress)
+    initialTakerETH = fixture.utils.getETHBalance(takerAddress)
     with raises(TransactionFailed) if expectTakeRaise else placeholder_context():
-        takeOrder.publicTakeOrder(orderID, takeSize, sender = takerKey, value = takerTokens)
+        takeOrder.publicTakeOrder(orderID, takeSize, sender = takerKey, value = takerCost)
 
     # assert final state
-    assert cash.balanceOf(makerAddress) == expectedMakerTokens
-    assert cash.balanceOf(takerAddress) == expectedTakerTokens
+    assert cash.balanceOf(makerAddress) == 0
+    assert cash.balanceOf(takerAddress) == 0
+    assert fixture.utils.getETHBalance(makerAddress) == initialMakerETH + expectedMakerPayout
+    assert fixture.utils.getETHBalance(takerAddress) == initialTakerETH + expectedTakerPayout - takerCost
     assert yesShareToken.balanceOf(makerAddress) == expectedMakerYesShares
     assert yesShareToken.balanceOf(takerAddress) == expectedTakerYesShares
     assert noShareToken.balanceOf(makerAddress) == expectedMakerNoShares

@@ -27,14 +27,14 @@ contract Cash is Controlled, Typed, VariableSupplyToken, ICash {
         return true;
     }
 
-    function withdrawEther(uint256 _amount) external onlyInGoodTimes returns(bool) {
+    function withdrawEther(uint256 _amount) external returns(bool) {
         require(_amount > 0 && _amount <= balances[msg.sender]);
         burn(msg.sender, _amount);
         msg.sender.transfer(_amount);
         return true;
     }
 
-    function withdrawEtherTo(address _to, uint256 _amount) external onlyInGoodTimes returns(bool) {
+    function withdrawEtherTo(address _to, uint256 _amount) external returns(bool) {
         require(_amount > 0 && _amount <= balances[msg.sender]);
         burn(msg.sender, _amount);
         _to.transfer(_amount);
