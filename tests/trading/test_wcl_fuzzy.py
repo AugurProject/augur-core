@@ -35,9 +35,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         takeOrder = contractsFixture.contracts['TakeOrder']
 
         cashRequired = amount * market.getMarketDenominator() / 10**18
-        assert cash.depositEther(value=cashRequired, sender = sender)
-        assert cash.approve(completeSets.address, cashRequired, sender = sender)
-        assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
+        assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cashRequired)
         assert shareToken.approve(approvalAddress, amount, sender = sender)
         for otherOutcome in range(0, market.getNumberOfOutcomes()):
             if otherOutcome == outcome: continue
@@ -54,24 +52,12 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         takeOrder = contractsFixture.contracts['TakeOrder']
 
         cashRequired = amount * market.getMarketDenominator() / 10**18
-        assert cash.depositEther(value=cashRequired, sender = sender)
-        assert cash.approve(completeSets.address, cashRequired, sender = sender)
-        assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
+        assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cashRequired)
         assert shareToken.transfer(0, amount, sender = sender)
         for otherOutcome in range(0, market.getNumberOfOutcomes()):
             if otherOutcome == outcome: continue
             otherShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(otherOutcome))
             assert otherShareToken.approve(approvalAddress, amount, sender = sender)
-
-    def acquireTokens(amount, approvalAddress, sender):
-        if amount == 0: return
-
-        cash = contractsFixture.cash
-        makeOrder = contractsFixture.contracts['MakeOrder']
-        takeOrder = contractsFixture.contracts['TakeOrder']
-
-        assert cash.depositEther(value = amount, sender = sender)
-        assert cash.approve(approvalAddress, amount, sender = sender)
 
     legacyRepContract = contractsFixture.contracts['LegacyRepContract']
     legacyRepContract.faucet(long(11 * 10**6 * 10**18))
@@ -98,8 +84,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     # make order
     acquireLongShares(orderOutcome, makerLongShares, makeOrder.address, sender = makerKey)
     acquireShortShareSet(orderOutcome, makerShortShares, makeOrder.address, sender = makerKey)
-    acquireTokens(makerTokens, makeOrder.address, sender = makerKey)
-    orderID = makeOrder.publicMakeOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = makerKey)
+    orderID = makeOrder.publicMakeOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = makerKey, value = makerTokens)
 
     # validate the order
     order = ordersFetcher.getOrder(orderID)
@@ -112,8 +97,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     # take order
     acquireLongShares(orderOutcome, takerLongShares, takeOrder.address, sender = takerKey)
     acquireShortShareSet(orderOutcome, takerShortShares, takeOrder.address, sender = takerKey)
-    acquireTokens(takerTokens, takeOrder.address, sender = takerKey)
-    remaining = takeOrder.publicTakeOrder(orderID, orderSize, 42, sender = takerKey)
+    remaining = takeOrder.publicTakeOrder(orderID, orderSize, 42, sender = takerKey, value = takerTokens)
     assert not remaining
 
     # assert final state

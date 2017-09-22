@@ -23,9 +23,7 @@ def acquireLongShares(fundedRepFixture, market, outcome, amount, approvalAddress
     takeOrder = fundedRepFixture.contracts['TakeOrder']
     cost = amount * market.getMarketDenominator()
 
-    assert cash.depositEther(value=cost, sender = sender)
-    assert cash.approve(completeSets.address, cost, sender = sender)
-    assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
+    assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cost)
     assert shareToken.approve(approvalAddress, amount, sender = sender)
     for otherOutcome in range(0, market.getNumberOfOutcomes()):
         if otherOutcome == outcome: continue
@@ -42,9 +40,7 @@ def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddr
     makeOrder = fundedRepFixture.contracts['MakeOrder']
     takeOrder = fundedRepFixture.contracts['TakeOrder']
 
-    assert cash.depositEther(value=cost, sender = sender)
-    assert cash.approve(completeSets.address, cost, sender = sender)
-    assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender)
+    assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cost)
     assert shareToken.transfer(0, amount, sender = sender)
     for otherOutcome in range(0, market.getNumberOfOutcomes()):
         if otherOutcome == outcome: continue
@@ -85,7 +81,7 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
     expectedValue = 1 * market.getMarketDenominator()
     expectedFees = expectedValue * 0.0101
-    expectedPayout = expectedValue - expectedFees
+    expectedPayout = long(expectedValue - expectedFees)
 
     # get YES shares with a1
     acquireLongShares(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k1)
@@ -94,13 +90,15 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     finalizeMarket(fundedRepFixture.chain.head_state, market, [0,10**18])
 
     # redeem shares with a1
+    initialLongHolderETH = fundedRepFixture.utils.getETHBalance(tester.a1)
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # redeem shares with a2
+    initialShortHolderETH = fundedRepFixture.utils.getETHBalance(tester.a2)
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
-    assert cash.balanceOf(tester.a1) == expectedPayout
-    assert cash.balanceOf(tester.a2) == 0
+    assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout
+    assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialShortHolderETH
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
@@ -115,7 +113,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     shareToken0 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(0))
     expectedValue = 1 * market.getMarketDenominator()
     expectedFees = expectedValue * 0.0101
-    expectedPayout = expectedValue - expectedFees
+    expectedPayout = long(expectedValue - expectedFees)
 
     # get long shares with a1
     acquireLongShares(fundedRepFixture, market, 2, 1, claimProceeds.address, sender = tester.k1)
@@ -124,13 +122,15 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     finalizeMarket(fundedRepFixture.chain.head_state, market, [0, 0, 3 * 10 ** 17])
 
     # redeem shares with a1
+    initialLongHolderETH = fundedRepFixture.utils.getETHBalance(tester.a1)
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # redeem shares with a2
+    initialShortHolderETH = fundedRepFixture.utils.getETHBalance(tester.a2)
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
-    assert cash.balanceOf(tester.a1) == expectedPayout
-    assert cash.balanceOf(tester.a2) == 0
+    assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout
+    assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialShortHolderETH
     assert shareToken2.balanceOf(tester.a1) == 0
     assert shareToken2.balanceOf(tester.a2) == 0
     assert shareToken1.balanceOf(tester.a1) == 0
@@ -146,7 +146,7 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
     expectedValue = 1 * market.getMarketDenominator()
     expectedFees = expectedValue * 0.0101
-    expectedPayout = expectedValue - expectedFees
+    expectedPayout = long(expectedValue - expectedFees)
 
     # get YES shares with a1
     acquireLongShares(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k1)
@@ -155,13 +155,15 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     finalizeMarket(fundedRepFixture.chain.head_state, market, [10**19, 3*10**19])
 
     # redeem shares with a1
+    initialLongHolderETH = fundedRepFixture.utils.getETHBalance(tester.a1)
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # redeem shares with a2
+    initialShortHolderETH = fundedRepFixture.utils.getETHBalance(tester.a2)
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
-    assert cash.balanceOf(tester.a1) == expectedPayout * 3 / 4
-    assert cash.balanceOf(tester.a2) == expectedPayout * 1 / 4
+    assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout * 3 / 4
+    assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialShortHolderETH + expectedPayout * 1 / 4
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0

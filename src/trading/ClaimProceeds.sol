@@ -3,6 +3,7 @@ pragma solidity ^0.4.13;
 import 'ROOT/trading/IClaimProceeds.sol';
 import 'ROOT/Controlled.sol';
 import 'ROOT/libraries/ReentrancyGuard.sol';
+import 'ROOT/libraries/CashAutoConverter.sol';
 import 'ROOT/reporting/IMarket.sol';
 import 'ROOT/trading/ICash.sol';
 import 'ROOT/extensions/MarketFeeCalculator.sol';
@@ -15,10 +16,10 @@ import 'ROOT/reporting/Reporting.sol';
  * @title ClaimProceeds
  * @dev This allows users to claim their money from a market by exchanging their shares
  */
-contract ClaimProceeds is Controlled, ReentrancyGuard, IClaimProceeds {
+contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
     using SafeMathUint256 for uint256;
 
-    function claimProceeds(IMarket _market) onlyInGoodTimes nonReentrant external returns(bool) {
+    function claimProceeds(IMarket _market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
         require(_market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(block.timestamp > _market.getFinalizationTime() + Reporting.claimProceedsWaitTime());
 
@@ -38,7 +39,10 @@ contract ClaimProceeds is Controlled, ReentrancyGuard, IClaimProceeds {
                 require(_denominationToken.transferFrom(_market, msg.sender, _shareHolderShare));
             }
             if (_creatorShare > 0) {
-                require(_denominationToken.transferFrom(_market, _market.getOwner(), _creatorShare));
+                // For this payout we transfer Cash to this contract and then convert it into ETH before giving it ot the market owner
+                // TODO: Write tests for this
+                require(_denominationToken.transferFrom(_market, this, _creatorShare));
+                _denominationToken.withdrawEtherTo(_market.getOwner(), _creatorShare);
             }
             if (_reporterShare > 0) {
                 require(_denominationToken.transferFrom(_market, _market.getReportingWindow(), _reporterShare));
