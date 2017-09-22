@@ -187,7 +187,7 @@ def test_allReportingHappyPath(reportingFixture, makeReport):
     reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
 
     # Proceed to the ALL REPORTING phase
-    proceedToAllReporting(reportingFixture, market, makeReport, tester.k1, tester.k3, [0,10**18])
+    proceedToAllReporting(reportingFixture, market, makeReport, tester.k1, tester.k3, [0,10**18], tester.k2, [10**18,0])
 
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
@@ -225,7 +225,7 @@ def test_allReportingHappyPath(reportingFixture, makeReport):
 def test_forking(reportingFixture, makeReport, finalizeByMigration):
     market = reportingFixture.binaryMarket
     # Proceed to the FORKING phase
-    proceedToForking(reportingFixture, market, makeReport, tester.k1, tester.k3, tester.k3, [0,10**18], [10**18,0])
+    proceedToForking(reportingFixture, market, makeReport, tester.k1, tester.k3, tester.k3, [0,10**18], tester.k2, [10**18,0], [10**18,0])
 
     # Finalize the market
     finalizeForkingMarket(reportingFixture, market, finalizeByMigration, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,10**18], [10**18,0])
@@ -242,7 +242,7 @@ def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
     newMarket = reportingFixture.createReasonableBinaryMarket(reportingFixture.branch, reportingFixture.cash)
 
     # We proceed the standard market to the FORKING state
-    proceedToForking(reportingFixture,  market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], [10**18,0])
+    proceedToForking(reportingFixture,  market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], tester.k2, [10**18,0], [10**18,0])
 
     # The market we created is now awaiting migration
     assert newMarket.getReportingState() == reportingFixture.constants.AWAITING_MIGRATION()
@@ -260,9 +260,36 @@ def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
     # Now that we're on the correct branch we are back to the LIMITED REPORTING phase
     assert newMarket.getReportingState() == reportingFixture.constants.LIMITED_REPORTING()
 
+@mark.parametrize('pastDisputePhase, limited', [
+    (True, True),
+    (False, True),
+    (True, False),
+    (False, False),
+])
+def test_noReports(reportingFixture, pastDisputePhase, limited):
+    market = reportingFixture.binaryMarket
 
-# FIXME Test the case where no reports are recieved within a window and it passes into awaiting finalization. It should move the market to the next reporting window.
+    # Proceed to the desired REPORTING phase
+    if (limited):
+        proceedToLimitedReporting(reportingFixture, market, False, tester.k1, [0,10**18])
+    else:
+        proceedToAllReporting(reportingFixture, market, True, tester.k1, tester.k3, [0,10**18], tester.k2, [10**18,0])
 
+    originalReportingState = market.getReportingState()
+    reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
+
+    if (pastDisputePhase):
+        reportingFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    else:
+        reportingFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    
+    # If we receive no reports by the time Limited Reporting is finished we will be in the AWAITING FINALIZATION phase
+    assert market.getReportingState() == reportingFixture.constants.AWAITING_FINALIZATION()
+
+    # We can finalize it, which for this special case will move it to the next reporting window where it will be back in REPORTING
+    assert market.tryFinalize()
+    assert market.getReportingState() == originalReportingState
+    assert market.getReportingWindow() != reportingWindow.address
 
 @fixture(scope="session")
 def reportingSnapshot(sessionFixture):
