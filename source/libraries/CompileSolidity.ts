@@ -11,7 +11,7 @@ interface CompileContractsOutput {
     output?: string;
 }
 
-class SolidityContractCompiler {
+export class SolidityContractCompiler {
     private contractInputDirectoryPath: string;
     private contractOutputDirectoryPath: string;
     private contractOutputFileName: string;
