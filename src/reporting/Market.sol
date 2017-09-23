@@ -188,14 +188,20 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function tryFinalize() public returns (bool) {
-        if (getReportingState() != ReportingState.AWAITING_FINALIZATION) {
+        ReportingState _state = getReportingState();
+        if (_state < ReportingState.AWAITING_FINALIZATION) {
+            return false;
+        }
+
+        if (_state == ReportingState.FINALIZED) {
             return false;
         }
 
         // If we're waiting for finalization and no reports have been recieved we move to the next reporting window
-        if (!hasReceivedAReport()) {
+        if (_state == ReportingState.AWAITING_FINALIZATION_MIGRATION) {
             IReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
-            return migrateReportingWindow(_newReportingWindow);
+            migrateReportingWindow(_newReportingWindow);
+            return false;
         }
 
         if (getBranch().getForkingMarket() == this) {
@@ -213,20 +219,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         // FIXME: if finalPayoutDistributionHash == getIdentityDistributionId(), transfer validity bond to reportingWindow (reporter fee pot)
         // FIXME: if automated report is wrong, transfer automated report bond to reportingWindow
         // FIXME: if automated report is right, transfer automated report bond to market creator
-    }
-
-    // This function should not use the ReportingState since we may be in AWAITING_FINALIZATION which would make the method of determining reporting ambiguous 
-    function hasReceivedAReport() private constant returns (bool) {
-        if (getBranch().getForkingMarket() == this) {
-            return true;
-        }
-        if (address(limitedReportersDisputeBondToken) != NULL_ADDRESS) {
-            return reportingWindow.hasReceivedAllReport(this);
-        }
-        if (automatedReportReceivedTime == 0 || address(automatedReporterDisputeBondToken) != NULL_ADDRESS) {
-            return reportingWindow.getNumberOfReportsByMarket(this) > 0;
-        }
-        return true;
     }
 
     function migrateThroughAllForks() public returns (bool) {
@@ -461,20 +453,32 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             return ReportingState.FORKING;
         }
 
-        if (block.timestamp > reportingWindow.getEndTime()) {
-            return ReportingState.AWAITING_FINALIZATION;
-        }
+        bool _reportingWindowOver = block.timestamp > reportingWindow.getEndTime();
 
         // If a limited dispute bond has been posted we are in some phase of all reporting depending on time
         if (_limitedReportDisputed) {
+            bool _hasReceivedReport = reportingWindow.hasReceivedAllReport(this);
+            if (_reportingWindowOver) {
+                if (!_hasReceivedReport) {
+                    return ReportingState.AWAITING_FINALIZATION_MIGRATION;
+                }
+                return ReportingState.AWAITING_FINALIZATION;
+            }
             if (reportingWindow.isDisputeActive()) {
-                if (reportingWindow.hasReceivedAllReport(this)) {
+                if (_hasReceivedReport) {
                     return ReportingState.ALL_DISPUTE;
                 } else {
-                    return ReportingState.AWAITING_FINALIZATION;
+                    return ReportingState.AWAITING_FINALIZATION_MIGRATION;
                 }
             }
             return ReportingState.ALL_REPORTING;
+        }
+
+        if (_reportingWindowOver) {
+            if (reportingWindow.getNumberOfReportsByMarket(this) < 1) {
+                return ReportingState.AWAITING_FINALIZATION_MIGRATION;
+            }
+            return ReportingState.AWAITING_FINALIZATION;
         }
 
         // Either no automated report was made or the automated report was disputed so we are in some phase of limited reporting
@@ -482,7 +486,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             if (reportingWindow.getNumberOfReportsByMarket(this) > 0) {
                 return ReportingState.LIMITED_DISPUTE;
             } else {
-                return ReportingState.AWAITING_FINALIZATION;
+                return ReportingState.AWAITING_FINALIZATION_MIGRATION;
             }
         }
 

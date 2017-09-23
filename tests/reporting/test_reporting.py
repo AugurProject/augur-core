@@ -283,11 +283,11 @@ def test_noReports(reportingFixture, pastDisputePhase, limited):
     else:
         reportingFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     
-    # If we receive no reports by the time Limited Reporting is finished we will be in the AWAITING FINALIZATION phase
-    assert market.getReportingState() == reportingFixture.constants.AWAITING_FINALIZATION()
+    # If we receive no reports by the time Limited Reporting is finished we will be in the AWAITING FINALIZATION MIGRATION phase
+    assert market.getReportingState() == reportingFixture.constants.AWAITING_FINALIZATION_MIGRATION()
 
     # We can finalize it, which for this special case will move it to the next reporting window where it will be back in REPORTING
-    assert market.tryFinalize()
+    assert market.tryFinalize() == 0
     assert market.getReportingState() == originalReportingState
     assert market.getReportingWindow() != reportingWindow.address
 

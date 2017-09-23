@@ -16,6 +16,7 @@ contract Constants {
     IMarket.ReportingState public constant ALL_DISPUTE = IMarket.ReportingState.ALL_DISPUTE;
     IMarket.ReportingState public constant FORKING = IMarket.ReportingState.FORKING;
     IMarket.ReportingState public constant AWAITING_FINALIZATION = IMarket.ReportingState.AWAITING_FINALIZATION;
+    IMarket.ReportingState public constant AWAITING_FINALIZATION_MIGRATION = IMarket.ReportingState.AWAITING_FINALIZATION_MIGRATION;
     IMarket.ReportingState public constant FINALIZED = IMarket.ReportingState.FINALIZED;
 
     uint256 public constant AUTOMATED_REPORTING_DURATION_SECONDS = Reporting.automatedReportingDurationSeconds();
