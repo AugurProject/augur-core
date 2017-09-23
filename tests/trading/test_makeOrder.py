@@ -24,10 +24,8 @@ def test_publicMakeOrder_bid(contractsFixture):
     market = contractsFixture.binaryMarket
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['MakeOrder']
-    cash.depositEther(value = 10**17)
-    cash.approve(makeOrder.address, 10**17)
 
-    orderID = makeOrder.publicMakeOrder(BID, 1, 10**17, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7)
+    orderID = makeOrder.publicMakeOrder(BID, 1, 10**17, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 10**17)
     assert orderID
 
     amount, displayPrice, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
@@ -44,10 +42,8 @@ def test_publicMakeOrder_ask(contractsFixture):
     market = contractsFixture.binaryMarket
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     makeOrder = contractsFixture.contracts['MakeOrder']
-    cash.depositEther(value = 10**18)
-    cash.approve(makeOrder.address, 10**18)
 
-    orderID = makeOrder.publicMakeOrder(ASK, 1, 10**17, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), 7)
+    orderID = makeOrder.publicMakeOrder(ASK, 1, 10**17, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), 7, value = 10**18)
 
     amount, displayPrice, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
     assert amount == 1
@@ -73,12 +69,10 @@ def test_publicMakeOrder_bid2(contractsFixture):
     outcome = 0
     tradeGroupID = 42
 
-    assert cash.depositEther(value = fix('10'), sender = tester.k1) == 1, "Deposit cash"
-    assert cash.approve(makeOrder.address, fix('10'), sender = tester.k1) == 1, "Approve makeOrder contract to spend cash"
-    makerInitialCash = cash.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    orderID = makeOrder.publicMakeOrder(orderType, amount, fxpPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1)
+    makerInitialETH = contractsFixture.utils.getETHBalance(tester.a1)
+    orderID = makeOrder.publicMakeOrder(orderType, amount, fxpPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10'))
     assert orderID != bytearray(32), "Order ID should be non-zero"
 
     retAmount, displayPrice, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
@@ -87,7 +81,8 @@ def test_publicMakeOrder_bid2(contractsFixture):
     assert owner == bytesToHexString(tester.a1)
     assert tokensEscrowed == 0.6 * 10**18
     assert sharesEscrowed == 0
-    assert makerInitialCash - cash.balanceOf(tester.a1) == 0.6 * 10**18
+    assert cash.balanceOf(tester.a1) == 0
+    assert contractsFixture.utils.getETHBalance(tester.a1) == makerInitialETH - long(0.6 * 10**18)
     assert cash.balanceOf(market.address) - marketInitialCash == 0.6 * 10**18
     assert logs == [
         {
@@ -134,15 +129,12 @@ def test_makeOrder_failure(contractsFixture):
         makeOrder.publicMakeOrder(ASK, 1, 1, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
     with raises(TransactionFailed):
         makeOrder.publicMakeOrder(ASK, 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
-    assert cash.depositEther(value=fix('2'), sender=tester.k1)
-    assert cash.approve(completeSets.address, fix('2'), sender=tester.k1)
-    assert completeSets.publicBuyCompleteSets(market.address, 2, sender=tester.k1)
+    assert completeSets.publicBuyCompleteSets(market.address, 2, sender=tester.k1, value=fix('2'))
     with raises(TransactionFailed):
         makeOrder.publicMakeOrder(ASK, 1, fix('3'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
     with raises(TransactionFailed):
         makeOrder.publicMakeOrder(ASK, 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
 
-    assert cash.approve(makeOrder.address, fix('100'), sender=tester.k1) == 1, "Approve makeOrder contract to spend cash from account 1"
     assert yesShareToken.approve(makeOrder.address, 12, sender=tester.k1) == 1, "Approve makeOrder contract to spend shares from the user's account (account 1)"
     assert yesShareToken.allowance(tester.a1, makeOrder.address) == 12, "MakeOrder contract's allowance should be equal to the amount approved"
 
@@ -169,22 +161,15 @@ def test_ask_withPartialShares(contractsFixture):
     logs = []
 
     # buy 2 complete sets
-    assert cash.depositEther(value=fix('2'), sender = tester.k1)
-    assert cash.approve(completeSets.address, fix('2'), sender = tester.k1)
-    assert completeSets.publicBuyCompleteSets(market.address, 2, sender = tester.k1)
+    assert completeSets.publicBuyCompleteSets(market.address, 2, sender = tester.k1, value=fix('2'))
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 2
     assert noShareToken.balanceOf(tester.a1) == 2
 
-    # get enough cash to cover shorting 1 more shares
-    assert cash.depositEther(value=fix('1', '0.4'), sender = tester.k1)
-    assert cash.balanceOf(tester.a1) == fix('0.4')
-
     # create ASK order for 3 shares with a mix of shares and cash
     assert yesShareToken.approve(makeOrder.address, fix('2'), sender = tester.k1)
-    assert cash.approve(makeOrder.address, fix('0.4'), sender = tester.k1)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    orderID = makeOrder.publicMakeOrder(ASK, 3, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
+    orderID = makeOrder.publicMakeOrder(ASK, 3, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1, value=fix('0.4'))
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a1) == 2

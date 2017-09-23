@@ -151,6 +151,7 @@ class ContractsFixture:
         self.branch = self.createBranch(0, "")
         self.cash = self.getSeededCash()
         self.augur = self.contracts['Augur']
+        self.utils = self.upload("solidity_test_helpers/Utils.sol")
         self.binaryMarket = self.createReasonableBinaryMarket(self.branch, self.cash)
         startingGas = self.chain.head_state.gas_used
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)
@@ -219,7 +220,7 @@ class ContractsFixture:
                 extension = path.splitext(filename)[1]
                 if extension != '.sol': continue
                 if name == 'controller': continue
-                contractsToDelegate = ['Orders', 'tradingEscapeHatch']
+                contractsToDelegate = ['Orders', 'TradingEscapeHatch']
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
                     self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
@@ -237,7 +238,7 @@ class ContractsFixture:
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Augur','Cash','CompleteSets','MakeOrder','TakeOrder','CancelOrder','Trade','ClaimProceeds','OrdersFetcher','TradingEscapeHatch']
+        contractsToInitialize = ['Augur','Cash','CompleteSets','MakeOrder','TakeOrder','CancelOrder','Trade','ClaimProceeds','OrdersFetcher']
         for contractName in contractsToInitialize:
             if getattr(self.contracts[contractName], "setController", None):
                 self.contracts[contractName].setController(self.controller.address)
