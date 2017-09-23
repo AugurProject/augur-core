@@ -8,6 +8,7 @@
 
 pragma solidity ^0.4.13;
 
+import 'ROOT/Augur.sol';
 import 'ROOT/IController.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 import 'ROOT/reporting/IMarket.sol';
@@ -32,6 +33,7 @@ library Order {
         // Contracts
         IOrders orders;
         IMarket market;
+        Augur augur;
 
         // Order
         bytes32 id;
@@ -56,10 +58,12 @@ library Order {
         require(_price < _market.getMarketDenominator());
 
         IOrders _orders = IOrders(_controller.lookup("Orders"));
+        Augur _augur = Augur(_controller.lookup("Augur"));
 
         return Data({
             orders: _orders,
             market: _market,
+            augur: _augur,
             id: 0,
             maker: _maker,
             outcome: _outcome,
@@ -141,7 +145,7 @@ library Order {
         // If not able to cover entire order with shares alone, then cover remaining with tokens
         if (_attosharesToCover > 0) {
             _orderData.moneyEscrowed = _attosharesToCover.mul(_orderData.price);
-            require(_orderData.market.getDenominationToken().transferFrom(_orderData.maker, _orderData.market, _orderData.moneyEscrowed));
+            require(_orderData.augur.trustedTransfer(_orderData.market.getDenominationToken(), _orderData.maker, _orderData.market, _orderData.moneyEscrowed));
         }
 
         return true;
@@ -169,7 +173,7 @@ library Order {
         // If not able to cover entire order with shares alone, then cover remaining with tokens
         if (_attosharesToCover > 0) {
             _orderData.moneyEscrowed = _orderData.market.getMarketDenominator().sub(_orderData.price).mul(_attosharesToCover);
-            require(_orderData.market.getDenominationToken().transferFrom(_orderData.maker, _orderData.market, _orderData.moneyEscrowed));
+            require(_orderData.augur.trustedTransfer(_orderData.market.getDenominationToken(), _orderData.maker, _orderData.market, _orderData.moneyEscrowed));
         }
 
         return true;

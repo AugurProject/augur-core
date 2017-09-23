@@ -37,8 +37,6 @@ def test_withdrawEther(contractsFixture):
     startingCashSupply = cash.totalSupply()
 
     assert cash.withdrawEther(5)
-    contractsFixture.chain.head_state.timestamp += long(timedelta(days=3).total_seconds())
-    assert cash.withdrawEther(5)
 
     assert startingUserEthBalance + 5 == contractsFixture.chain.head_state.get_balance(tester.a0)
     assert startingUserCashBalance - 5 == cash.balanceOf(tester.a0)

@@ -4,17 +4,18 @@ import 'ROOT/trading/ITradingEscapeHatch.sol';
 import 'ROOT/trading/ICash.sol';
 import 'ROOT/trading/IOrders.sol';
 import 'ROOT/trading/IShareToken.sol';
+import 'ROOT/libraries/CashAutoConverter.sol';
 import 'ROOT/libraries/DelegationTarget.sol';
 import 'ROOT/libraries/math/SafeMathUint256.sol';
 
 
-contract TradingEscapeHatch is DelegationTarget, ITradingEscapeHatch {
+contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, ITradingEscapeHatch {
     using SafeMathUint256 for uint256;
 
     // market => (outcome => frozenShareValue)
     mapping(address => mapping(uint8 => uint256)) private frozenShareValues;
 
-    function claimSharesInUpdate(IMarket _market) public onlyInBadTimes returns(bool) {
+    function claimSharesInUpdate(IMarket _market) public convertToAndFromCash onlyInBadTimes returns(bool) {
         require(address(_market) != address(0));
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
