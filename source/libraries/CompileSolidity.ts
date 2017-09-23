@@ -42,9 +42,7 @@ export class SolidityContractCompiler {
             // Output contract data to single file
             const contractOutputFilePath = this.contractOutputDirectoryPath + "/" + this.contractOutputFileName;
             let wstream: any = fs.createWriteStream(contractOutputFilePath);
-            for (let contract in compilerOutput.contracts) {
-                wstream.write(JSON.stringify(compilerOutput.contracts[contract]));
-            }
+            wstream.write(JSON.stringify(compilerOutput.contracts));
 
             return { output: "Contracts in " + this.contractInputDirectoryPath + " were successfully compiled by solc and saved to " + contractOutputFilePath};
         } catch (error) {
@@ -73,8 +71,15 @@ export class SolidityContractCompiler {
 
     private async generateCompilerInput(): Promise<CompilerInput> {
         let inputJson: CompilerInput = {
-            "language": "Solidity",
-            "sources": {}
+            language: "Solidity",
+            settings: {
+                outputSelection: {
+                    "*": {
+                        "*": [ "abi", "evm.bytecode.object" ]
+                    }
+                }
+            },
+            sources: {}
         };
         try {
             let contractInputDirectoryPath = this.contractInputDirectoryPath;
