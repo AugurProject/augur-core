@@ -260,22 +260,16 @@ def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
     # Now that we're on the correct branch we are back to the LIMITED REPORTING phase
     assert newMarket.getReportingState() == reportingFixture.constants.LIMITED_REPORTING()
 
-@mark.parametrize('pastDisputePhase, limited', [
-    (True, True),
-    (False, True),
-    (True, False),
-    (False, False),
+@mark.parametrize('pastDisputePhase', [
+    True,
+    False
 ])
-def test_noReports(reportingFixture, pastDisputePhase, limited):
+def test_noReports(reportingFixture, pastDisputePhase):
     market = reportingFixture.binaryMarket
 
-    # Proceed to the desired REPORTING phase
-    if (limited):
-        proceedToLimitedReporting(reportingFixture, market, False, tester.k1, [0,10**18])
-    else:
-        proceedToAllReporting(reportingFixture, market, True, tester.k1, tester.k3, [0,10**18], tester.k2, [10**18,0])
+    # Proceed to the LIMITED REPORTING phase
+    proceedToLimitedReporting(reportingFixture, market, False, tester.k1, [0,10**18])
 
-    originalReportingState = market.getReportingState()
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     if (pastDisputePhase):
@@ -283,12 +277,12 @@ def test_noReports(reportingFixture, pastDisputePhase, limited):
     else:
         reportingFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     
-    # If we receive no reports by the time Limited Reporting is finished we will be in the AWAITING FINALIZATION MIGRATION phase
-    assert market.getReportingState() == reportingFixture.constants.AWAITING_FINALIZATION_MIGRATION()
+    # If we receive no reports by the time Limited Reporting is finished we will be in the AWAITING FINALIZATION phase
+    assert market.getReportingState() == reportingFixture.constants.AWAITING_FINALIZATION()
 
-    # We can finalize it, which for this special case will move it to the next reporting window where it will be back in REPORTING
+    # We can finalize it, which for this special case will move it to the next reporting window where it will be back in LIMITED REPORTING
     assert market.tryFinalize() == 0
-    assert market.getReportingState() == originalReportingState
+    assert market.getReportingState() == reportingFixture.constants.LIMITED_REPORTING()
     assert market.getReportingWindow() != reportingWindow.address
 
 @fixture(scope="session")

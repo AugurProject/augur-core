@@ -23,7 +23,6 @@ contract IMarket is Typed, IOwnable {
         ALL_DISPUTE,
         FORKING,
         AWAITING_FINALIZATION,
-        AWAITING_FINALIZATION_MIGRATION,
         FINALIZED
     }
 

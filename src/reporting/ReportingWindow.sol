@@ -36,7 +36,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set.Data private allReporterMarkets;
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
-    mapping(address => bool) private receivedAllReport;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
 
     function initialize(IBranch _branch, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
@@ -221,14 +220,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return _minimumReportsPerMarket;
     }
 
-    function getNumberOfReportsByMarket(IMarket _market) public afterInitialized constant returns (uint256) {
-        return numberOfReportsByMarket[_market];
-    }
-
-    function hasReceivedAllReport(IMarket _market) public afterInitialized constant returns (bool) {
-        return receivedAllReport[_market];
-    }
-
     function getMaxReportsPerLimitedReporterMarket() public afterInitialized constant returns (uint256) {
         return getTargetReportsPerLimitedReporterMarket() + 2;
     }
@@ -291,11 +282,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         if (marketsReportedOn.count >= getTargetReportsPerReporter()) {
             reporterStatus[_reporter].finishedReporting = true;
         }
-        if (_market.getReportingState() == IMarket.ReportingState.LIMITED_REPORTING) {
-            numberOfReportsByMarket[_market] += 1;
-        } else {
-            receivedAllReport[_market] = true;
-        }
+        numberOfReportsByMarket[_market] += 1;
         return true;
     }
 

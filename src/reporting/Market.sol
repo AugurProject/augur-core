@@ -187,16 +187,12 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function tryFinalize() public returns (bool) {
         ReportingState _state = getReportingState();
-        if (_state < ReportingState.AWAITING_FINALIZATION) {
-            return false;
-        }
-
-        if (_state == ReportingState.FINALIZED) {
+        if (_state != ReportingState.AWAITING_FINALIZATION) {
             return false;
         }
 
         // If we're waiting for finalization and no reports have been recieved we move to the next reporting window
-        if (_state == ReportingState.AWAITING_FINALIZATION_MIGRATION) {
+        if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
             IReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
             migrateReportingWindow(_newReportingWindow);
             return false;
@@ -451,36 +447,25 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
         // If a limited dispute bond has been posted we are in some phase of all reporting depending on time
         if (_limitedReportDisputed) {
-            bool _hasReceivedReport = reportingWindow.hasReceivedAllReport(this);
             if (_reportingWindowOver) {
-                if (!_hasReceivedReport) {
-                    return ReportingState.AWAITING_FINALIZATION_MIGRATION;
-                }
                 return ReportingState.AWAITING_FINALIZATION;
             }
             if (reportingWindow.isDisputeActive()) {
-                if (_hasReceivedReport) {
-                    return ReportingState.ALL_DISPUTE;
-                } else {
-                    return ReportingState.AWAITING_FINALIZATION_MIGRATION;
-                }
+                return ReportingState.ALL_DISPUTE;
             }
             return ReportingState.ALL_REPORTING;
         }
 
         if (_reportingWindowOver) {
-            if (reportingWindow.getNumberOfReportsByMarket(this) < 1) {
-                return ReportingState.AWAITING_FINALIZATION_MIGRATION;
-            }
             return ReportingState.AWAITING_FINALIZATION;
         }
 
         // Either no automated report was made or the automated report was disputed so we are in some phase of limited reporting
         if (reportingWindow.isDisputeActive()) {
-            if (reportingWindow.getNumberOfReportsByMarket(this) > 0) {
-                return ReportingState.LIMITED_DISPUTE;
+            if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
+                return ReportingState.AWAITING_FINALIZATION;
             } else {
-                return ReportingState.AWAITING_FINALIZATION_MIGRATION;
+                return ReportingState.LIMITED_DISPUTE;
             }
         }
 
