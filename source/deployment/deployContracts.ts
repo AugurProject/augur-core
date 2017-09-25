@@ -12,32 +12,28 @@ import { RpcClient } from "../libraries/RpcClient";
 
 
 export async function compileAndDeployContracts(contractInputDirectoryPath, contractOutputDirectoryPath, contractOutputFileName, httpProviderport, gas): Promise<ContractBlockchainData[]> {
-    try {
-        // Compile contracts to a single output file
-        const solidityContractCompiler = new SolidityContractCompiler(contractInputDirectoryPath, contractOutputDirectoryPath, contractOutputFileName);
-        const compilerResult = await solidityContractCompiler.compileContracts();
+    // Compile contracts to a single output file
+    const solidityContractCompiler = new SolidityContractCompiler(contractInputDirectoryPath, contractOutputDirectoryPath, contractOutputFileName);
+    const compilerResult = await solidityContractCompiler.compileContracts();
 
-        // Initialize RPC client
-        const rpcClient = new RpcClient();
-        await rpcClient.listen(httpProviderport);
+    // Initialize RPC client
+    const rpcClient = new RpcClient();
+    await rpcClient.listen(httpProviderport);
 
-        // Initialize Eth object
-        const httpProviderUrl = "http://localhost:" + httpProviderport;
-        const eth = new Eth(new HttpProvider(httpProviderUrl));
-        const accounts = await eth.accounts();
-        const fromAccount = accounts[0];
+    // Initialize Eth object
+    const httpProviderUrl = "http://localhost:" + httpProviderport;
+    const eth = new Eth(new HttpProvider(httpProviderUrl));
+    const accounts = await eth.accounts();
+    const fromAccount = accounts[0];
 
-        // Read in contract ABIs and bytecodes as JSON string
-        const contractJson = await fs.readFile(contractOutputDirectoryPath + "/" + contractOutputFileName, "utf8");
+    // Read in contract ABIs and bytecodes as JSON string
+    const contractJson = await fs.readFile(contractOutputDirectoryPath + "/" + contractOutputFileName, "utf8");
 
-        // Deploy contracts to blockchain
-        const contractDeployer = new ContractDeployer();
-        const contracts = await contractDeployer.deployContracts(eth, contractJson, fromAccount, gas);
+    // Deploy contracts to blockchain
+    const contractDeployer = new ContractDeployer();
+    const contracts = await contractDeployer.deployContracts(eth, contractJson, fromAccount, gas);
 
-        return contracts;
-    } catch (error) {
-        throw error;
-    }
+    return contracts;
 }
 
 

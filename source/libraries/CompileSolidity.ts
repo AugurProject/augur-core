@@ -23,31 +23,27 @@ export class SolidityContractCompiler {
     }
 
     public async compileContracts(): Promise<CompileContractsOutput> {
-        try {
-            // Compile all contracts in the specified input directory
-            const compilerInputJson = await this.generateCompilerInput();
-            const compilerOutputJson: string = compileStandardWrapper(JSON.stringify(compilerInputJson), this.readCallback);
-            const compilerOutput: CompilerOutput = JSON.parse(compilerOutputJson);
-            if (compilerOutput.errors) {
-                let errors = "";
-                for (let error of compilerOutput.errors) {
-                    errors += error.formattedMessage + "\n";
-                }
-                throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
+        // Compile all contracts in the specified input directory
+        const compilerInputJson = await this.generateCompilerInput();
+        const compilerOutputJson: string = compileStandardWrapper(JSON.stringify(compilerInputJson), this.readCallback);
+        const compilerOutput: CompilerOutput = JSON.parse(compilerOutputJson);
+        if (compilerOutput.errors) {
+            let errors = "";
+            for (let error of compilerOutput.errors) {
+                errors += error.formattedMessage + "\n";
             }
-
-            // Create output directory (if it doesn't exist)
-            mkdirp(this.contractOutputDirectoryPath, this.mkdirpCallback);
-
-            // Output contract data to single file
-            const contractOutputFilePath = this.contractOutputDirectoryPath + "/" + this.contractOutputFileName;
-            let wstream: any = fs.createWriteStream(contractOutputFilePath);
-            wstream.write(JSON.stringify(compilerOutput.contracts));
-
-            return { output: "Contracts in " + this.contractInputDirectoryPath + " were successfully compiled by solc and saved to " + contractOutputFilePath};
-        } catch (error) {
-            throw error;
+            throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
         }
+
+        // Create output directory (if it doesn't exist)
+        mkdirp(this.contractOutputDirectoryPath, this.mkdirpCallback);
+
+        // Output contract data to single file
+        const contractOutputFilePath = this.contractOutputDirectoryPath + "/" + this.contractOutputFileName;
+        let wstream: any = fs.createWriteStream(contractOutputFilePath);
+        wstream.write(JSON.stringify(compilerOutput.contracts));
+
+        return { output: "Contracts in " + this.contractInputDirectoryPath + " were successfully compiled by solc and saved to " + contractOutputFilePath};
     }
 
     private ignoreFile(file: string, stats: fs.Stats): boolean {
@@ -81,22 +77,20 @@ export class SolidityContractCompiler {
             },
             sources: {}
         };
-        try {
-            let contractInputDirectoryPath = this.contractInputDirectoryPath;
-            if (contractInputDirectoryPath.lastIndexOf(path.sep) != contractInputDirectoryPath.length) {
-                contractInputDirectoryPath += path.sep;
-            }
 
-            const filePaths: any = await recursiveReadDir(this.contractInputDirectoryPath, [this.ignoreFile]);
-            const filesPromises = filePaths.map(async filePath => await readFile(filePath));
-            const files = await Promise.all(filesPromises);
-
-            for (var file in files) {
-                inputJson.sources[filePaths[file].replace(contractInputDirectoryPath, "")] = { content : files[file].toString() };
-            }
-        } catch (error) {
-            throw error;
+        let contractInputDirectoryPath = this.contractInputDirectoryPath;
+        if (contractInputDirectoryPath.lastIndexOf(path.sep) != contractInputDirectoryPath.length) {
+            contractInputDirectoryPath += path.sep;
         }
+
+        const filePaths: any = await recursiveReadDir(this.contractInputDirectoryPath, [this.ignoreFile]);
+        const filesPromises = filePaths.map(async filePath => await readFile(filePath));
+        const files = await Promise.all(filesPromises);
+
+        for (var file in files) {
+            inputJson.sources[filePaths[file].replace(contractInputDirectoryPath, "")] = { content : files[file].toString() };
+        }
+
         return inputJson;
     }
 }
