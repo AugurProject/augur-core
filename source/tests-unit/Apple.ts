@@ -13,15 +13,17 @@ import { compileAndDeployContracts } from "../deployment/deployContracts";
 
 
 describe('Apple', () => {
+    let contracts: ContractBlockchainData[] = [];
     beforeEach(async function(done) {
-        // TODO: Figure out how to prevent this from timing out by using a "done" function
+        // TODO: Prevent this from timing out by using a "done" function
         const contractInputDirectoryPath = path.join(__dirname, "../../source/contracts");
         const contractOutputDirectoryPath = path.join(__dirname, "../contracts");
         const contractOutputFileName = "augurCore";
         const httpProviderport = 8545;
         const gas = 3000000;
 
-        return await compileAndDeployContracts(contractInputDirectoryPath, contractOutputDirectoryPath, contractOutputFileName, httpProviderport, gas);
+        contracts = await compileAndDeployContracts(contractInputDirectoryPath, contractOutputDirectoryPath, contractOutputFileName, httpProviderport, gas);
+        done();
     });
     describe('#getTypeName()', function() {
         it('unable to get contract type name', async function() {
