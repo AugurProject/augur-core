@@ -300,9 +300,9 @@ class ContractsFixture:
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, priceRange, automatedReporterAddress, topic):
+    def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, numTicks, automatedReporterAddress, topic):
         marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createScalarMarket(branch.address, endTime, feePerEthInWei, denominationToken.address, priceRange, 10 ** 18, automatedReporterAddress, topic, value = marketCreationFee)
+        marketAddress = self.contracts['MarketCreation'].createScalarMarket(branch.address, endTime, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, topic, value = marketCreationFee)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
@@ -334,7 +334,7 @@ class ContractsFixture:
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
-            priceRange = priceRange,
+            numTicks = 40 * 10 ** 18,
             automatedReporterAddress = tester.a0,
             topic = 'Sports'.ljust(32, '\x00'))
 

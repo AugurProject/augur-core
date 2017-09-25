@@ -47,10 +47,10 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _marketDenominator, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _automatedReporterAddress, bytes32 _topic) public afterInitialized payable returns (IMarket _newMarket) {
+    function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _automatedReporterAddress, bytes32 _topic) public afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
         require(branch.getReportingWindowByMarketEndTime(_endTime, _automatedReporterAddress != 0).getTypeName() == "ReportingWindow");
-        _newMarket = MarketFactory(controller.lookup("MarketFactory")).createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _marketDenominator, _feePerEthInWei, _denominationToken, _creator, _automatedReporterAddress, _topic);
+        _newMarket = MarketFactory(controller.lookup("MarketFactory")).createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _automatedReporterAddress, _topic);
         markets.add(_newMarket);
         limitedReporterMarkets.add(_newMarket);
         return _newMarket;
