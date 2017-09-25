@@ -42,7 +42,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     uint256 private endTime;
     uint8 private numOutcomes;
     uint256 private marketCreationBlock;
-    bytes32 private topic;
     address private automatedReporterAddress;
     mapping(bytes32 => IReportingToken) private reportingTokens;
     ICash private cash;
@@ -65,7 +64,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         _;
     }
 
-    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
+    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _automatedReporterAddress) public payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(address(_reportingWindow) != NULL_ADDRESS);
         require(_numOutcomes >= 2);
@@ -83,7 +82,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         numTicks = _numTicks;
         feePerEthInAttoeth = _feePerEthInAttoeth;
         marketCreationBlock = block.number;
-        topic = _topic;
         automatedReporterAddress = _automatedReporterAddress;
         cash = _cash;
         owner = _creator;
@@ -358,10 +356,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function getMarketCreatorSettlementFeeInAttoethPerEth() public constant returns (uint256) {
         return feePerEthInAttoeth;
-    }
-
-    function getTopic() public constant returns (bytes32) {
-        return topic;
     }
 
     function getFinalizationTime() public constant returns (uint256) {
