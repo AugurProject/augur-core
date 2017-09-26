@@ -21,7 +21,7 @@ def test_publicBuyCompleteSets(fundedRepFixture):
     assert not yesShareToken.totalSupply()
     assert not noShareToken.totalSupply()
 
-    cost = 10 * market.getMarketDenominator()
+    cost = 10 * market.getNumTicks()
     captureFilteredLogs(fundedRepFixture.chain.head_state, orders, logs)
     assert completeSets.publicBuyCompleteSets(market.address, 10, sender=tester.k1, value=cost)
 
@@ -49,7 +49,7 @@ def test_publicBuyCompleteSets_failure(fundedRepFixture):
     orders = fundedRepFixture.contracts['Orders']
 
     amount = 10
-    cost = 10 * market.getMarketDenominator()
+    cost = 10 * market.getNumTicks()
 
     # Permissions exceptions
     with raises(TransactionFailed):
@@ -76,7 +76,7 @@ def test_publicSellCompleteSets(fundedRepFixture):
     assert not yesShareToken.totalSupply()
     assert not noShareToken.totalSupply()
 
-    cost = 10 * market.getMarketDenominator()
+    cost = 10 * market.getNumTicks()
     completeSets.publicBuyCompleteSets(market.address, 10, sender = tester.k1, value = cost)
     captureFilteredLogs(fundedRepFixture.chain.head_state, orders, logs)
     initialTester1ETH = fundedRepFixture.utils.getETHBalance(tester.a1)
@@ -110,7 +110,7 @@ def test_publicSellCompleteSets_failure(fundedRepFixture):
     completeSets = fundedRepFixture.contracts['CompleteSets']
     orders = fundedRepFixture.contracts['Orders']
 
-    cost = 10 * market.getMarketDenominator()
+    cost = 10 * market.getNumTicks()
     completeSets.publicBuyCompleteSets(market.address, 10, sender = tester.k1, value = cost)
 
     # Permissions exceptions

@@ -171,7 +171,7 @@ library Trade {
         _data.contracts.augur.trustedTransfer(_data.contracts.denominationToken, _data.taker.participantAddress, this, _takerTokensToCover);
 
         // buy complete sets
-        uint256 _cost = _numberOfCompleteSets.mul(_data.contracts.market.getMarketDenominator());
+        uint256 _cost = _numberOfCompleteSets.mul(_data.contracts.market.getNumTicks());
         if (_data.contracts.denominationToken.allowance(this, _data.contracts.augur) < _cost) {
             _data.contracts.denominationToken.approve(_data.contracts.augur, _cost);
         }
@@ -327,10 +327,10 @@ library Trade {
     }
 
     function getSharePriceDetails(IMarket _market, IOrders _orders, bytes32 _orderId) private constant returns (uint256 _sharePriceRange, uint256 _sharePriceLong, uint256 _sharePriceShort) {
-        uint256 _marketDenominator = _market.getMarketDenominator();
+        uint256 _numTicks = _market.getNumTicks();
         uint256 _orderPrice = _orders.getPrice(_orderId);
-        _sharePriceShort = uint256(_marketDenominator - _orderPrice);
-        return (_marketDenominator, _orderPrice, _sharePriceShort);
+        _sharePriceShort = uint256(_numTicks - _orderPrice);
+        return (_numTicks, _orderPrice, _sharePriceShort);
     }
 
     function getDirections(IOrders _orders, bytes32 _orderId) private constant returns (Direction _makerDirection, Direction _takerDirection) {

@@ -20,7 +20,7 @@ def test_market_creation(contractsFixture):
 
     assert market.getBranch() == branch.address
     assert market.getNumberOfOutcomes() == 2
-    assert market.getMarketDenominator() == 10**18
+    assert market.getNumTicks() == 10**18
     assert reportingWindow.getReputationToken() == branch.getReputationToken()
     assert market.getFinalPayoutDistributionHash() == stringToBytes("")
     assert market.getReportingState() == contractsFixture.constants.PRE_REPORTING()
