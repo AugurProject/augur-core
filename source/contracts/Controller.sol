@@ -87,7 +87,7 @@ contract Controller is IController {
      * Contract Administration [dev mode can use it]
      */
 
-    function suicideFunds(IControlled _target, address _destination) public devModeOwnerOnly returns(bool) {
+    function suicide(IControlled _target, address _destination) public devModeOwnerOnly returns(bool) {
         _target.suicideFunds(_destination);
         return true;
     }
