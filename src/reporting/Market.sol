@@ -406,14 +406,20 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function getReportingState() public constant returns (ReportingState) {
-        // Before trading in the market is finished
-        if (block.timestamp < endTime) {
-            return ReportingState.PRE_REPORTING;
-        }
-
         // This market has been finalized
         if (finalPayoutDistributionHash != bytes32(0)) {
             return ReportingState.FINALIZED;
+        }
+
+        // If there is an active fork we need to migrate
+        IMarket _forkingMarket = getBranch().getForkingMarket();
+        if (address(_forkingMarket) != NULL_ADDRESS && _forkingMarket != this) {
+            return ReportingState.AWAITING_MIGRATION;
+        }
+
+        // Before trading in the market is finished
+        if (block.timestamp < endTime) {
+            return ReportingState.PRE_REPORTING;
         }
 
         // Automated reporting period has not passed yet
@@ -428,12 +434,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         if (automatedReportReceivedTime != 0 && !_automatedReportDisputed) {
             bool _beforeAutomatedDisputeDue = block.timestamp < getAutomatedReportDisputeDueTimestamp();
             return _beforeAutomatedDisputeDue ? ReportingState.AUTOMATED_DISPUTE : ReportingState.AWAITING_FINALIZATION;
-        }
-
-        // Since we've established that we're past automated reporting if there is an active fork we need to migrate
-        IMarket _forkingMarket = getBranch().getForkingMarket();
-        if (address(_forkingMarket) != NULL_ADDRESS && _forkingMarket != this) {
-            return ReportingState.AWAITING_MIGRATION;
         }
 
         // If this market is the one forking we are in the process of migration or we're ready to finalize migration
