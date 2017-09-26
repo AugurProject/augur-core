@@ -102,7 +102,7 @@ class ContractsFixture:
                 }
             },
             'settings': {
-                'remappings': [ 'ROOT=%s' % resolveRelativePath("../src") ],
+                'remappings': [ 'ROOT=%s' % resolveRelativePath("../source/contracts") ],
                 'outputSelection': {
                     '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
                 }
@@ -128,7 +128,7 @@ class ContractsFixture:
                 ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
         matches = findall("import ['\"]ROOT/(.*?)['\"]", fileContents)
         for match in matches:
-            dependencyPath = path.join(BASE_PATH, '..', 'src', match)
+            dependencyPath = path.join(BASE_PATH, '..', 'source/contracts', match)
             if not dependencyPath in knownDependencies:
                 ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
         return(knownDependencies)
@@ -142,7 +142,7 @@ class ContractsFixture:
         config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
         self.chain = tester.Chain(env=Env(config=config_metropolis))
         self.contracts = {}
-        self.controller = self.upload('../src/Controller.sol')
+        self.controller = self.upload('../source/contracts/Controller.sol')
         assert self.controller.owner() == bytesToHexString(tester.a0)
         self.uploadAllContracts()
         self.whitelistTradingContracts()
@@ -212,7 +212,7 @@ class ContractsFixture:
     ####
 
     def uploadAllContracts(self):
-        for directory, _, filenames in walk(resolveRelativePath('../src')):
+        for directory, _, filenames in walk(resolveRelativePath('../source/contracts')):
             # skip the legacy reputation directory since it is unnecessary and we don't support uploads of contracts with constructors yet
             if 'legacy_reputation' in directory: continue
             for filename in filenames:
@@ -224,13 +224,13 @@ class ContractsFixture:
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
                     self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
-                    self.uploadAndAddToController("../src/libraries/Delegator.sol", name, "delegator", constructorArgs=[self.controller.address, delegationTargetName.ljust(32, '\x00')])
+                    self.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", name, "delegator", constructorArgs=[self.controller.address, delegationTargetName.ljust(32, '\x00')])
                     self.contracts[name] = self.applySignature(name, self.contracts[name].address)
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 
     def whitelistTradingContracts(self):
-        for filename in listdir(resolveRelativePath('../src/trading')):
+        for filename in listdir(resolveRelativePath('../source/contracts/trading')):
             name = path.splitext(filename)[0]
             extension = path.splitext(filename)[1]
             if extension != '.sol': continue
