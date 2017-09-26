@@ -34,7 +34,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         makeOrder = contractsFixture.contracts['MakeOrder']
         takeOrder = contractsFixture.contracts['TakeOrder']
 
-        cashRequired = amount * market.getMarketDenominator() / 10**18
+        cashRequired = amount * market.getNumTicks() / 10**18
         assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cashRequired)
         assert shareToken.approve(approvalAddress, amount, sender = sender)
         for otherOutcome in range(0, market.getNumberOfOutcomes()):
@@ -51,7 +51,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         makeOrder = contractsFixture.contracts['MakeOrder']
         takeOrder = contractsFixture.contracts['TakeOrder']
 
-        cashRequired = amount * market.getMarketDenominator() / 10**18
+        cashRequired = amount * market.getNumTicks() / 10**18
         assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cashRequired)
         assert shareToken.transfer(0, amount, sender = sender)
         for otherOutcome in range(0, market.getNumberOfOutcomes()):
@@ -114,8 +114,8 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
 
 def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * fxpPrice / 10**18)
-    shortCost = long(fxpAmount * (market.getMarketDenominator() - fxpPrice) / 10**18)
-    completeSetFees = long(fxpAmount * market.getMarketDenominator() * fix('0.0101') / 10**18 / 10**18)
+    shortCost = long(fxpAmount * (market.getNumTicks() - fxpPrice) / 10**18)
+    completeSetFees = long(fxpAmount * market.getNumTicks() * fix('0.0101') / 10**18 / 10**18)
     shortFee = long((completeSetFees * shortCost) / (longCost + shortCost))
     longFee = completeSetFees - shortFee
 
@@ -205,8 +205,8 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
 
 def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * fxpPrice / 10**18)
-    shortCost = long(fxpAmount * (market.getMarketDenominator() - fxpPrice) / 10**18)
-    completeSetFees = long(fxpAmount * market.getMarketDenominator() * fix('0.0101') / 10**18 / 10**18)
+    shortCost = long(fxpAmount * (market.getNumTicks() - fxpPrice) / 10**18)
+    completeSetFees = long(fxpAmount * market.getNumTicks() * fix('0.0101') / 10**18 / 10**18)
     longFee = long((completeSetFees * longCost) / (longCost + shortCost))
     shortFee = completeSetFees - longFee
 
@@ -299,7 +299,7 @@ def test_binary(contractsFixture, randomAmount, randomNormalizedPrice):
     print 'Random amount: ' + str(randomAmount)
     print 'Random price: ' + str(randomNormalizedPrice)
     fxpAmount = fix(randomAmount)
-    fxpPrice = long(randomNormalizedPrice * market.getMarketDenominator())
+    fxpPrice = long(randomNormalizedPrice * market.getNumTicks())
     print "Start Fuzzy WCL tests - Binary Market - bidOrders."
     print ""
     execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice)
@@ -318,7 +318,7 @@ def test_categorical(contractsFixture, randomAmount, randomNormalizedPrice):
     print 'Random amount: ' + str(randomAmount)
     print 'Random price: ' + str(randomNormalizedPrice)
     fxpAmount = fix(randomAmount)
-    fxpPrice = long(randomNormalizedPrice * market.getMarketDenominator())
+    fxpPrice = long(randomNormalizedPrice * market.getNumTicks())
     print "Start Fuzzy WCL tests - Categorical Market - bidOrders."
     print ""
     execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice)
@@ -337,7 +337,7 @@ def test_scalar(contractsFixture, randomAmount, randomNormalizedPrice):
     print 'Random amount: ' + str(randomAmount)
     print 'Random price: ' + str(randomNormalizedPrice)
     fxpAmount = fix(randomAmount)
-    fxpPrice = long(randomNormalizedPrice * market.getMarketDenominator())
+    fxpPrice = long(randomNormalizedPrice * market.getNumTicks())
     print "Start Fuzzy WCL tests - Scalar Market - bidOrders."
     print ""
     execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice)
@@ -354,7 +354,7 @@ def test_scalar(contractsFixture, randomAmount, randomNormalizedPrice):
 # check randomly generated numbers to make sure they aren't unreasonable
 def check_randoms(market, price):
     fxpPrice = fix(price)
-    fxpMaxDisplayPrice = market.getMarketDenominator()
+    fxpMaxDisplayPrice = market.getNumTicks()
     fxpTradingFee = fix('0.0101')
     if fxpPrice <= 0:
         return 0

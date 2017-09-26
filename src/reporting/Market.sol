@@ -26,7 +26,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     using SafeMathUint256 for uint256;
     using SafeMathInt256 for int256;
 
-    uint256 private marketDenominator;
+    uint256 private numTicks;
     uint256 private feePerEthInAttoeth;
 
     // CONSIDER: figure out approprate values for these
@@ -42,7 +42,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     uint256 private endTime;
     uint8 private numOutcomes;
     uint256 private marketCreationBlock;
-    bytes32 private topic;
     address private automatedReporterAddress;
     mapping(bytes32 => IReportingToken) private reportingTokens;
     ICash private cash;
@@ -65,12 +64,12 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         _;
     }
 
-    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _marketDenominator, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _automatedReporterAddress, bytes32 _topic) public payable beforeInitialized returns (bool _success) {
+    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _automatedReporterAddress) public payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(address(_reportingWindow) != NULL_ADDRESS);
         require(_numOutcomes >= 2);
         require(_numOutcomes <= 8);
-        require((_marketDenominator.isMultipleOf(_numOutcomes)));
+        require((_numTicks.isMultipleOf(_numOutcomes)));
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(_cash.getTypeName() == "Cash");
@@ -80,10 +79,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         reportingWindow = _reportingWindow;
         endTime = _endTime;
         numOutcomes = _numOutcomes;
-        marketDenominator = _marketDenominator;
+        numTicks = _numTicks;
         feePerEthInAttoeth = _feePerEthInAttoeth;
         marketCreationBlock = block.number;
-        topic = _topic;
         automatedReporterAddress = _automatedReporterAddress;
         cash = _cash;
         owner = _creator;
@@ -101,7 +99,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         // TODO: log tags (0-2)
         // TODO: log outcome labels (same number as numOutcomes)
         // TODO: log type (scalar, binary, categorical)
-        // TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, marketDenominator, cash address, etc.)
+        // TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, numTicks, cash address, etc.)
     }
 
     function createShareToken(uint8 _outcome) private returns (IShareToken) {
@@ -209,7 +207,13 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         // FIXME: if finalPayoutDistributionHash == getIdentityDistributionId(), transfer validity bond to reportingWindow (reporter fee pot)
         // FIXME: if automated report is wrong, transfer automated report bond to reportingWindow
         // FIXME: if automated report is right, transfer automated report bond to market creator
-        // FIXME: handle markets that get 0 reports during their scheduled reporting window. We should move to the next reporting window in this case.
+    }
+
+    function migrateDueToNoReports() public returns (bool) {
+        require(getReportingState() == ReportingState.AWAITING_NO_REPORT_MIGRATION);
+        IReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
+        migrateReportingWindow(_newReportingWindow);
+        return false;
     }
 
     function migrateThroughAllForks() public returns (bool) {
@@ -222,7 +226,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     // returns 0 if no move occurs, 1 if move occurred, throws if a fork not yet resolved
     function migrateThroughOneFork() public returns (bool) {
-        if (getReportingState() != ReportingState.AWAITING_MIGRATION) {
+        if (getReportingState() != ReportingState.AWAITING_FORK_MIGRATION) {
             return false;
         }
         // only proceed if the forking market is finalized
@@ -275,10 +279,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function derivePayoutDistributionHash(uint256[] _payoutNumerators) public constant returns (bytes32) {
         uint256 _sum = 0;
         for (uint8 i = 0; i < _payoutNumerators.length; i++) {
-            require(_payoutNumerators[i] <= marketDenominator);
+            require(_payoutNumerators[i] <= numTicks);
             _sum = _sum.add(_payoutNumerators[i]);
         }
-        require(_sum == marketDenominator);
+        require(_sum == numTicks);
         return sha3(_payoutNumerators);
     }
 
@@ -339,8 +343,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return finalPayoutDistributionHash;
     }
 
-    function getMarketDenominator() public constant returns (uint256) {
-        return marketDenominator;
+    function getNumTicks() public constant returns (uint256) {
+        return numTicks;
     }
 
     function getDenominationToken() public constant returns (ICash) {
@@ -349,10 +353,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function getMarketCreatorSettlementFeeInAttoethPerEth() public constant returns (uint256) {
         return feePerEthInAttoeth;
-    }
-
-    function getTopic() public constant returns (bytes32) {
-        return topic;
     }
 
     function getFinalizationTime() public constant returns (uint256) {
@@ -406,14 +406,20 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function getReportingState() public constant returns (ReportingState) {
-        // Before trading in the market is finished
-        if (block.timestamp < endTime) {
-            return ReportingState.PRE_REPORTING;
-        }
-
         // This market has been finalized
         if (finalPayoutDistributionHash != bytes32(0)) {
             return ReportingState.FINALIZED;
+        }
+
+        // If there is an active fork we need to migrate
+        IMarket _forkingMarket = getBranch().getForkingMarket();
+        if (address(_forkingMarket) != NULL_ADDRESS && _forkingMarket != this) {
+            return ReportingState.AWAITING_FORK_MIGRATION;
+        }
+
+        // Before trading in the market is finished
+        if (block.timestamp < endTime) {
+            return ReportingState.PRE_REPORTING;
         }
 
         // Automated reporting period has not passed yet
@@ -430,13 +436,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             return _beforeAutomatedDisputeDue ? ReportingState.AUTOMATED_DISPUTE : ReportingState.AWAITING_FINALIZATION;
         }
 
-        // Since we've established that we're past automated reporting if there is an active fork we need to migrate
-        IMarket _forkingMarket = getBranch().getForkingMarket();
-        if (address(_forkingMarket) != NULL_ADDRESS && _forkingMarket != this) {
-            return ReportingState.AWAITING_MIGRATION;
-        }
-
-        // If this market is the one forking we are in the process of migration or we're ready to finalize migration
+        // If this market is the one forking we are in the process of migration or we're ready to finalize
         if (_forkingMarket == this) {
             if (getWinningPayoutDistributionHashFromFork() != bytes32(0)) {
                 return ReportingState.AWAITING_FINALIZATION;
@@ -444,24 +444,34 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             return ReportingState.FORKING;
         }
 
+        bool _reportingWindowOver = block.timestamp > reportingWindow.getEndTime();
+
+        if (_reportingWindowOver) {
+            if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
+                return ReportingState.AWAITING_NO_REPORT_MIGRATION;
+            }
+            return ReportingState.AWAITING_FINALIZATION;
+        }
+
         // If a limited dispute bond has been posted we are in some phase of all reporting depending on time
         if (_limitedReportDisputed) {
-            if (block.timestamp > reportingWindow.getEndTime()) {
-                return ReportingState.AWAITING_FINALIZATION;
-            }
             if (reportingWindow.isDisputeActive()) {
-                return ReportingState.ALL_DISPUTE;
+                if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
+                    return ReportingState.AWAITING_NO_REPORT_MIGRATION;
+                } else {
+                    return ReportingState.ALL_DISPUTE;
+                }
             }
             return ReportingState.ALL_REPORTING;
         }
 
         // Either no automated report was made or the automated report was disputed so we are in some phase of limited reporting
-        if (block.timestamp > reportingWindow.getEndTime()) {
-            return ReportingState.AWAITING_FINALIZATION;
-        }
-
         if (reportingWindow.isDisputeActive()) {
-            return ReportingState.LIMITED_DISPUTE;
+            if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
+                return ReportingState.AWAITING_NO_REPORT_MIGRATION;
+            } else {
+                return ReportingState.LIMITED_DISPUTE;
+            }
         }
 
         return ReportingState.LIMITED_REPORTING;

@@ -189,12 +189,12 @@ contract Orders is DelegationTarget, IOrders {
         require(_orderId != bytes32(0));
         require(_sharesFilled <= _order.sharesEscrowed);
         require(_tokensFilled <= _order.moneyEscrowed);
-        require(_order.price <= _order.market.getMarketDenominator());
+        require(_order.price <= _order.market.getNumTicks());
         uint256 _fill = 0;
         if (_order.tradeType == Order.TradeTypes.Bid) {
             _fill = _sharesFilled + _tokensFilled.div(_order.price);
         } else if (_order.tradeType == Order.TradeTypes.Ask) {
-            _fill = _sharesFilled + _tokensFilled.div(_order.market.getMarketDenominator().sub(_order.price));
+            _fill = _sharesFilled + _tokensFilled.div(_order.market.getNumTicks().sub(_order.price));
         }
         require(_fill <= _order.amount);
         _order.amount -= _fill;
