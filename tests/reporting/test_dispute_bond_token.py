@@ -201,6 +201,13 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     reportingTokenB = contractsFixture.getReportingToken(market, OUTCOME_B)
     reportingTokenC = contractsFixture.getReportingToken(market, OUTCOME_C)
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    aBranchReputationToken = None
+    bBranchReputationToken = None
+    cBranchReputationToken = None
+    aBranch = None
+    bBranch = None
+    cBranch = None
+    winningReportingToken = None
 
     automatedReporterDisputeBondToken = None
     limitedReportersDisputeBondToken = None
@@ -463,211 +470,12 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             printDisputeBondTokenBalances(reputationToken, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, False)
 
         # Redeem winning/forked reporting tokens
-        # TODO: Break this section into separate function
-        if (allReportersDisputerAccountNum):
-            # Reputation staked on a particular outcome must be redeemed only on the branch for that outcome.
-            # Reputation held in a dispute bond against a particular outcome must be redeemed on a branch other than the disputed outcome.
-            migrators = {}
-            for row in allReportersDisputeStakes:
-                migrators[row[0]] = row[1]
-
-            print 'Migrators array:'
-            print str(migrators) + "\n"
-
-            for row in automatedReporterDisputeStakes:
-                destinationReputationToken = None
-                if (migrators[row[0]] and migrators[row[0]] == OUTCOME_A):
-                    print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch A"
-                    reportingToken = reportingTokenA
-                    destinationReputationToken = aBranchReputationToken
-                if (migrators[row[0]] and migrators[row[0]] == OUTCOME_B):
-                    print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch B"
-                    reportingToken = reportingTokenB
-                    destinationReputationToken = bBranchReputationToken
-                if (migrators[row[0]] and migrators[row[0]] == OUTCOME_C):
-                    print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch C"
-                    reportingToken = reportingTokenC
-                    destinationReputationToken = cBranchReputationToken
-                if (destinationReputationToken):
-                    accountBalanceBeforeRedemption = destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
-                    expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.totalSupply()
-                    print "accountBalanceBeforeRedemption: " + str(accountBalanceBeforeRedemption)
-                    print "expectedWinnings: " + str(expectedWinnings)
-                    reportingToken.redeemForkedTokens(sender=getattr(tester, 'k' + str(row[0])))
-                    assert destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalanceBeforeRedemption + expectedWinnings
-                    print "Transferred " + str(expectedWinnings) + " to account a" + str(row[0]) + "\n"
-
-            for row in limitedReportersDisputeStakes:
-                destinationReputationToken = None
-                print row
-                if (migrators[row[0]] and migrators[row[0]] == OUTCOME_A):
-                    print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch A"
-                    reportingToken = reportingTokenA
-                    destinationReputationToken = aBranchReputationToken
-                if (migrators[row[0]] and migrators[row[0]] == OUTCOME_B):
-                    print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch B"
-                    reportingToken = reportingTokenB
-                    destinationReputationToken = bBranchReputationToken
-                if (migrators[row[0]] and migrators[row[0]] == OUTCOME_C):
-                    print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch C"
-                    reportingToken = reportingTokenC
-                    destinationReputationToken = cBranchReputationToken
-                if (destinationReputationToken):
-                    accountBalanceBeforeRedemption = destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
-                    expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.totalSupply()
-                    print "accountBalanceBeforeRedemption: " + str(accountBalanceBeforeRedemption)
-                    print "expectedWinnings: " + str(expectedWinnings)
-                    reportingToken.redeemForkedTokens(sender=getattr(tester, 'k' + str(row[0])))
-                    assert destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalanceBeforeRedemption + expectedWinnings
-                    print "Transferred " + str(expectedWinnings) + " to account a" + str(row[0]) + "\n"
-
-            print "Original branch test accounts"
-            printTestAccountBalances(reputationToken, False)
-            print "A branch test accounts"
-            printTestAccountBalances(aBranchReputationToken, False)
-            print "B branch test accounts"
-            printTestAccountBalances(bBranchReputationToken, False)
-            print "C branch test accounts"
-            printTestAccountBalances(cBranchReputationToken, False)
-        else:
-            # Calculate total reporting tokens staked on winning outcome
-            totalStakedOnWinningOutcome = 0
-            winningOutcomeStakes = {}
-            for row in automatedReporterDisputeStakes:
-                if (market.derivePayoutDistributionHash(row[1]) == winningReportingToken.getPayoutDistributionHash()):
-                    totalStakedOnWinningOutcome += row[2]
-                    if (row[0] in winningOutcomeStakes):
-                        winningOutcomeStakes[row[0]] += row[2]
-                    else:
-                        winningOutcomeStakes.update({row[0]: row[2]})
-            for row in limitedReportersDisputeStakes:
-                if (market.derivePayoutDistributionHash(row[1]) == winningReportingToken.getPayoutDistributionHash()):
-                    totalStakedOnWinningOutcome += row[2]
-                    if (row[0] in winningOutcomeStakes):
-                        winningOutcomeStakes[row[0]] += row[2]
-                    else:
-                        winningOutcomeStakes.update({row[0]: row[2]})
-
-            print "Total reporting tokens staked on winning outcome: " + str(totalStakedOnWinningOutcome)
-            print winningOutcomeStakes
-            print ""
-
-            print "Redeeming winning reporting tokens"
-            for key in winningOutcomeStakes:
-                accountBalanceBeforeRedemption = reputationToken.balanceOf(getattr(tester, 'a' + str(key)))
-                expectedWinnings = reputationToken.balanceOf(winningReportingToken.address) * winningOutcomeStakes[key] / winningReportingToken.totalSupply()
-                winningReportingToken.redeemWinningTokens(sender=getattr(tester, 'k' + str(key)))
-                assert reputationToken.balanceOf(getattr(tester, 'a' + str(key))) == accountBalanceBeforeRedemption + expectedWinnings
-                print "Transferred " + str(expectedWinnings) + " to account a" + str(key)
-            printTestAccountBalances(reputationToken, False)
+        handleReportingTokens(market, allReportersDisputerAccountNum, automatedReporterDisputeStakes, limitedReportersDisputeStakes, allReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aBranchReputationToken, bBranchReputationToken, cBranchReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
 
         contractsFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
         # Have correct dispute bond holders withdraw from dispute token
-        # TODO: Break this section out into separate function
-        if (allReportersDisputerAccountNum == None):
-            if (automatedReporterDisputeBondToken and market.getFinalPayoutDistributionHash() != automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash()):
-                print "Withdrawing automated reporter dispute bond tokens"
-                accountBalanceBeforeWithdrawl = reputationToken.balanceOf(automatedReporterDisputeBondToken.getBondHolder())
-                disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(automatedReporterDisputeBondToken.address)
-                automatedReporterDisputeBondToken.withdraw(sender=getattr(tester, 'k' + str(automatedReporterDisputerAccountNum)))
-                assert reputationToken.balanceOf(automatedReporterDisputeBondToken.address) == 0
-                assert reputationToken.balanceOf(automatedReporterDisputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
-            if (limitedReportersDisputeBondToken and market.getFinalPayoutDistributionHash() != limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash()):
-                print "Withdrawing limited reporters dispute bond tokens"
-                accountBalanceBeforeWithdrawl = reputationToken.balanceOf(limitedReportersDisputeBondToken.getBondHolder())
-                disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(limitedReportersDisputeBondToken.address)
-                limitedReportersDisputeBondToken.withdraw(sender=getattr(tester, 'k' + str(limitedReportersDisputerAccountNum)))
-                assert reputationToken.balanceOf(limitedReportersDisputeBondToken.address) == 0
-                assert reputationToken.balanceOf(limitedReportersDisputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
-        else:
-            # Withdraw dispute bond tokens to the branch the disputers migrated to
-            print "All reporters dispute stakes:"
-            for row in allReportersDisputeStakes:
-                disputeAccountNum = None
-                disputeBondToken = None
-                print str(row) + "\n"
-                if (row[0] == automatedReporterDisputerAccountNum):
-                    disputeAccountNum = automatedReporterDisputerAccountNum
-                    disputeBondToken = automatedReporterDisputeBondToken
-                    disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
-                    destinationBranch = None
-                    destinationBranchReputationToken = None
-                    #print "disputedPayoutDistributionHash:" + str(disputeBondToken.getDisputedPayoutDistributionHash())
-                    #print "market.derivePayoutDistributionHash(row[1]): " + str(market.derivePayoutDistributionHash(row[1]))
-                    if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1])):
-                        if (row[1] == OUTCOME_A):
-                            destinationBranch = aBranch
-                            destinationBranchReputationToken = aBranchReputationToken
-                            print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to branch A"
-                        elif (row[1] == OUTCOME_B):
-                            destinationBranch = bBranch
-                            destinationBranchReputationToken = bBranchReputationToken
-                            print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to branch B"
-                        elif (row[1] == OUTCOME_C):
-                            destinationBranch = cBranch
-                            destinationBranchReputationToken = cBranchReputationToken
-                            print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to branch C"
-                        if (destinationBranch and destinationBranchReputationToken):
-                            accountBalanceBeforeWithdrawl = destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder())
-                            disputeBondToken.withdrawToBranch(destinationBranch.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
-                            assert reputationToken.balanceOf(disputeBondToken.address) == 0
-                            assert destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
-                            printTestAccountBalances(destinationBranchReputationToken, True)
-                if (row[0] == limitedReportersDisputerAccountNum):
-                    disputeAccountNum = limitedReportersDisputerAccountNum
-                    disputeBondToken = limitedReportersDisputeBondToken
-                    disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
-                    destinationBranch = None
-                    destinationBranchReputationToken = None
-                    #print "disputedPayoutDistributionHash:" + str(disputeBondToken.getDisputedPayoutDistributionHash())
-                    #print "market.derivePayoutDistributionHash(row[1]): " + str(market.derivePayoutDistributionHash(row[1]))
-                    if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1])):
-                        if (row[1] == OUTCOME_A):
-                            destinationBranch = aBranch
-                            destinationBranchReputationToken = aBranchReputationToken
-                            print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to branch A"
-                        elif (row[1] == OUTCOME_B):
-                            destinationBranch = bBranch
-                            destinationBranchReputationToken = bBranchReputationToken
-                            print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to branch B"
-                        elif (row[1] == OUTCOME_C):
-                            destinationBranch = cBranch
-                            destinationBranchReputationToken = cBranchReputationToken
-                            print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to branch C"
-                        if (destinationBranch and destinationBranchReputationToken):
-                            accountBalanceBeforeWithdrawl = destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder())
-                            disputeBondToken.withdrawToBranch(destinationBranch.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
-                            assert reputationToken.balanceOf(disputeBondToken.address) == 0
-                            assert destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
-                            printTestAccountBalances(destinationBranchReputationToken, True)
-                if (row[0] == allReportersDisputerAccountNum):
-                    disputeAccountNum = allReportersDisputerAccountNum
-                    disputeBondToken = allReportersDisputeBondToken
-                    disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
-                    destinationBranch = None
-                    destinationBranchReputationToken = None
-                    #print "disputedPayoutDistributionHash:" + str(disputeBondToken.getDisputedPayoutDistributionHash())
-                    #print "market.derivePayoutDistributionHash(row[1]): " + str(market.derivePayoutDistributionHash(row[1]))
-                    if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1])):
-                        if (row[1] == OUTCOME_A):
-                            destinationBranch = aBranch
-                            destinationBranchReputationToken = aBranchReputationToken
-                            print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to branch A"
-                        elif (row[1] == OUTCOME_B):
-                            destinationBranch = bBranch
-                            destinationBranchReputationToken = bBranchReputationToken
-                            print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to branch B"
-                        elif (row[1] == OUTCOME_C):
-                            destinationBranch = cBranch
-                            destinationBranchReputationToken = cBranchReputationToken
-                            print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to branch C"
-                        if (destinationBranch and destinationBranchReputationToken):
-                            accountBalanceBeforeWithdrawl = destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder())
-                            disputeBondToken.withdrawToBranch(destinationBranch.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
-                            assert reputationToken.balanceOf(disputeBondToken.address) == 0
-                            assert destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
-                            printTestAccountBalances(destinationBranchReputationToken, True)
+        withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedReporterDisputerAccountNum, limitedReportersDisputerAccountNum, allReportersDisputerAccountNum, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, reputationToken, winningReportingToken, aBranch, bBranch, cBranch, aBranchReputationToken, bBranchReputationToken, cBranchReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
 
     print "Final test account balances"
     if (allReportersDisputerAccountNum):
@@ -691,3 +499,206 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             assert row[2] == cBranchReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
         elif (row[1] == None):
             assert row[2] == reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
+
+def handleReportingTokens(market, allReportersDisputerAccountNum, automatedReporterDisputeStakes, limitedReportersDisputeStakes, allReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aBranchReputationToken, bBranchReputationToken, cBranchReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
+    if (allReportersDisputerAccountNum):
+        # Reputation staked on a particular outcome must be redeemed only on the branch for that outcome.
+        # Reputation held in a dispute bond against a particular outcome must be redeemed on a branch other than the disputed outcome.
+        migrators = {}
+        for row in allReportersDisputeStakes:
+            migrators[row[0]] = row[1]
+
+        print 'Migrators array:'
+        print str(migrators) + "\n"
+
+        for row in automatedReporterDisputeStakes:
+            destinationReputationToken = None
+            if (migrators[row[0]] and migrators[row[0]] == OUTCOME_A):
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch A"
+                reportingToken = reportingTokenA
+                destinationReputationToken = aBranchReputationToken
+            if (migrators[row[0]] and migrators[row[0]] == OUTCOME_B):
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch B"
+                reportingToken = reportingTokenB
+                destinationReputationToken = bBranchReputationToken
+            if (migrators[row[0]] and migrators[row[0]] == OUTCOME_C):
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch C"
+                reportingToken = reportingTokenC
+                destinationReputationToken = cBranchReputationToken
+            if (destinationReputationToken):
+                accountBalanceBeforeRedemption = destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
+                expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.totalSupply()
+                print "accountBalanceBeforeRedemption: " + str(accountBalanceBeforeRedemption)
+                print "expectedWinnings: " + str(expectedWinnings)
+                reportingToken.redeemForkedTokens(sender=getattr(tester, 'k' + str(row[0])))
+                assert destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalanceBeforeRedemption + expectedWinnings
+                print "Transferred " + str(expectedWinnings) + " to account a" + str(row[0]) + "\n"
+
+        for row in limitedReportersDisputeStakes:
+            destinationReputationToken = None
+            print row
+            if (migrators[row[0]] and migrators[row[0]] == OUTCOME_A):
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch A"
+                reportingToken = reportingTokenA
+                destinationReputationToken = aBranchReputationToken
+            if (migrators[row[0]] and migrators[row[0]] == OUTCOME_B):
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch B"
+                reportingToken = reportingTokenB
+                destinationReputationToken = bBranchReputationToken
+            if (migrators[row[0]] and migrators[row[0]] == OUTCOME_C):
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch C"
+                reportingToken = reportingTokenC
+                destinationReputationToken = cBranchReputationToken
+            if (destinationReputationToken):
+                accountBalanceBeforeRedemption = destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
+                expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.totalSupply()
+                print "accountBalanceBeforeRedemption: " + str(accountBalanceBeforeRedemption)
+                print "expectedWinnings: " + str(expectedWinnings)
+                reportingToken.redeemForkedTokens(sender=getattr(tester, 'k' + str(row[0])))
+                assert destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalanceBeforeRedemption + expectedWinnings
+                print "Transferred " + str(expectedWinnings) + " to account a" + str(row[0]) + "\n"
+
+        print "Original branch test accounts"
+        printTestAccountBalances(reputationToken, False)
+        print "A branch test accounts"
+        printTestAccountBalances(aBranchReputationToken, False)
+        print "B branch test accounts"
+        printTestAccountBalances(bBranchReputationToken, False)
+        print "C branch test accounts"
+        printTestAccountBalances(cBranchReputationToken, False)
+    else:
+        # Calculate total reporting tokens staked on winning outcome
+        totalStakedOnWinningOutcome = 0
+        winningOutcomeStakes = {}
+        for row in automatedReporterDisputeStakes:
+            if (market.derivePayoutDistributionHash(row[1]) == winningReportingToken.getPayoutDistributionHash()):
+                totalStakedOnWinningOutcome += row[2]
+                if (row[0] in winningOutcomeStakes):
+                    winningOutcomeStakes[row[0]] += row[2]
+                else:
+                    winningOutcomeStakes.update({row[0]: row[2]})
+        for row in limitedReportersDisputeStakes:
+            if (market.derivePayoutDistributionHash(row[1]) == winningReportingToken.getPayoutDistributionHash()):
+                totalStakedOnWinningOutcome += row[2]
+                if (row[0] in winningOutcomeStakes):
+                    winningOutcomeStakes[row[0]] += row[2]
+                else:
+                    winningOutcomeStakes.update({row[0]: row[2]})
+
+        print "Total reporting tokens staked on winning outcome: " + str(totalStakedOnWinningOutcome)
+        print winningOutcomeStakes
+        print ""
+
+        print "Redeeming winning reporting tokens"
+        for key in winningOutcomeStakes:
+            accountBalanceBeforeRedemption = reputationToken.balanceOf(getattr(tester, 'a' + str(key)))
+            expectedWinnings = reputationToken.balanceOf(winningReportingToken.address) * winningOutcomeStakes[key] / winningReportingToken.totalSupply()
+            winningReportingToken.redeemWinningTokens(sender=getattr(tester, 'k' + str(key)))
+            assert reputationToken.balanceOf(getattr(tester, 'a' + str(key))) == accountBalanceBeforeRedemption + expectedWinnings
+            print "Transferred " + str(expectedWinnings) + " to account a" + str(key)
+        printTestAccountBalances(reputationToken, False)
+
+def withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedReporterDisputerAccountNum, limitedReportersDisputerAccountNum, allReportersDisputerAccountNum, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, reputationToken, winningReportingToken, aBranch, bBranch, cBranch, aBranchReputationToken, bBranchReputationToken, cBranchReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
+    if (allReportersDisputerAccountNum == None):
+        if (automatedReporterDisputeBondToken and market.getFinalPayoutDistributionHash() != automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash()):
+            print "Withdrawing automated reporter dispute bond tokens"
+            accountBalanceBeforeWithdrawl = reputationToken.balanceOf(automatedReporterDisputeBondToken.getBondHolder())
+            disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(automatedReporterDisputeBondToken.address)
+            automatedReporterDisputeBondToken.withdraw(sender=getattr(tester, 'k' + str(automatedReporterDisputerAccountNum)))
+            assert reputationToken.balanceOf(automatedReporterDisputeBondToken.address) == 0
+            assert reputationToken.balanceOf(automatedReporterDisputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
+        if (limitedReportersDisputeBondToken and market.getFinalPayoutDistributionHash() != limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash()):
+            print "Withdrawing limited reporters dispute bond tokens"
+            accountBalanceBeforeWithdrawl = reputationToken.balanceOf(limitedReportersDisputeBondToken.getBondHolder())
+            disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(limitedReportersDisputeBondToken.address)
+            limitedReportersDisputeBondToken.withdraw(sender=getattr(tester, 'k' + str(limitedReportersDisputerAccountNum)))
+            assert reputationToken.balanceOf(limitedReportersDisputeBondToken.address) == 0
+            assert reputationToken.balanceOf(limitedReportersDisputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
+    else:
+        # Withdraw dispute bond tokens to the branch the disputers migrated to
+        print "All reporters dispute stakes:"
+        for row in allReportersDisputeStakes:
+            disputeAccountNum = None
+            disputeBondToken = None
+            print str(row) + "\n"
+            if (row[0] == automatedReporterDisputerAccountNum):
+                disputeAccountNum = automatedReporterDisputerAccountNum
+                disputeBondToken = automatedReporterDisputeBondToken
+                disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
+                destinationBranch = None
+                destinationBranchReputationToken = None
+                #print "disputedPayoutDistributionHash:" + str(disputeBondToken.getDisputedPayoutDistributionHash())
+                #print "market.derivePayoutDistributionHash(row[1]): " + str(market.derivePayoutDistributionHash(row[1]))
+                if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1])):
+                    if (row[1] == OUTCOME_A):
+                        destinationBranch = aBranch
+                        destinationBranchReputationToken = aBranchReputationToken
+                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to branch A"
+                    elif (row[1] == OUTCOME_B):
+                        destinationBranch = bBranch
+                        destinationBranchReputationToken = bBranchReputationToken
+                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to branch B"
+                    elif (row[1] == OUTCOME_C):
+                        destinationBranch = cBranch
+                        destinationBranchReputationToken = cBranchReputationToken
+                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to branch C"
+                    if (destinationBranch and destinationBranchReputationToken):
+                        accountBalanceBeforeWithdrawl = destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder())
+                        disputeBondToken.withdrawToBranch(destinationBranch.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
+                        assert reputationToken.balanceOf(disputeBondToken.address) == 0
+                        assert destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
+                        printTestAccountBalances(destinationBranchReputationToken, True)
+            if (row[0] == limitedReportersDisputerAccountNum):
+                disputeAccountNum = limitedReportersDisputerAccountNum
+                disputeBondToken = limitedReportersDisputeBondToken
+                disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
+                destinationBranch = None
+                destinationBranchReputationToken = None
+                #print "disputedPayoutDistributionHash:" + str(disputeBondToken.getDisputedPayoutDistributionHash())
+                #print "market.derivePayoutDistributionHash(row[1]): " + str(market.derivePayoutDistributionHash(row[1]))
+                if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1])):
+                    if (row[1] == OUTCOME_A):
+                        destinationBranch = aBranch
+                        destinationBranchReputationToken = aBranchReputationToken
+                        print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to branch A"
+                    elif (row[1] == OUTCOME_B):
+                        destinationBranch = bBranch
+                        destinationBranchReputationToken = bBranchReputationToken
+                        print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to branch B"
+                    elif (row[1] == OUTCOME_C):
+                        destinationBranch = cBranch
+                        destinationBranchReputationToken = cBranchReputationToken
+                        print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to branch C"
+                    if (destinationBranch and destinationBranchReputationToken):
+                        accountBalanceBeforeWithdrawl = destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder())
+                        disputeBondToken.withdrawToBranch(destinationBranch.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
+                        assert reputationToken.balanceOf(disputeBondToken.address) == 0
+                        assert destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
+                        printTestAccountBalances(destinationBranchReputationToken, True)
+            if (row[0] == allReportersDisputerAccountNum):
+                disputeAccountNum = allReportersDisputerAccountNum
+                disputeBondToken = allReportersDisputeBondToken
+                disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
+                destinationBranch = None
+                destinationBranchReputationToken = None
+                #print "disputedPayoutDistributionHash:" + str(disputeBondToken.getDisputedPayoutDistributionHash())
+                #print "market.derivePayoutDistributionHash(row[1]): " + str(market.derivePayoutDistributionHash(row[1]))
+                if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1])):
+                    if (row[1] == OUTCOME_A):
+                        destinationBranch = aBranch
+                        destinationBranchReputationToken = aBranchReputationToken
+                        print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to branch A"
+                    elif (row[1] == OUTCOME_B):
+                        destinationBranch = bBranch
+                        destinationBranchReputationToken = bBranchReputationToken
+                        print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to branch B"
+                    elif (row[1] == OUTCOME_C):
+                        destinationBranch = cBranch
+                        destinationBranchReputationToken = cBranchReputationToken
+                        print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to branch C"
+                    if (destinationBranch and destinationBranchReputationToken):
+                        accountBalanceBeforeWithdrawl = destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder())
+                        disputeBondToken.withdrawToBranch(destinationBranch.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
+                        assert reputationToken.balanceOf(disputeBondToken.address) == 0
+                        assert destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
+                        printTestAccountBalances(destinationBranchReputationToken, True)
