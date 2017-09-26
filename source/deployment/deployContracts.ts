@@ -10,15 +10,29 @@ import { SolidityContractCompiler } from "../libraries/CompileSolidity";
 import { ContractDeployer } from "../libraries/ContractDeployer";
 import { RpcClient } from "../libraries/RpcClient";
 
+const CONTRACT_INPUT_DIR_PATH = path.join(__dirname, "../../source/contracts");
+const CONTRACT_OUTPUT_DIR_PATH = path.join(__dirname, "../contracts");
+const COMPILED_CONTRACT_OUTPUT_FILE_NAME = "augurCore";
+const GAS_AMOUNT = 3000000;
+const DEFAULT_ETHEREUM_PORT = 8545;
 
-export async function compileAndDeployContracts(contractInputDirectoryPath, contractOutputDirectoryPath, contractOutputFileName, httpProviderport, gas): Promise<ContractBlockchainData[]> {
+// Set these variables to use node settings other than TestRPC on port 8545
+const ETHEREUM_HOST = "";
+const ETHEREUM_PORT = "";
+
+
+export async function compileAndDeployContracts(): Promise<ContractBlockchainData[]> {
     // Compile contracts to a single output file
-    const solidityContractCompiler = new SolidityContractCompiler(contractInputDirectoryPath, contractOutputDirectoryPath, contractOutputFileName);
+    const solidityContractCompiler = new SolidityContractCompiler(CONTRACT_INPUT_DIR_PATH, CONTRACT_OUTPUT_DIR_PATH, COMPILED_CONTRACT_OUTPUT_FILE_NAME);
     const compilerResult = await solidityContractCompiler.compileContracts();
 
-    // Initialize RPC client
-    const rpcClient = new RpcClient();
-    await rpcClient.listen(httpProviderport);
+    // Initialize Ethereum node details (if necessary)
+    const httpProviderport = (ETHEREUM_PORT == "") ? DEFAULT_ETHEREUM_PORT : ETHEREUM_PORT;
+    if (ETHEREUM_HOST == "") {
+        console.log('TESTRPC');
+        const rpcClient = new RpcClient();
+        await rpcClient.listen(httpProviderport);
+    }
 
     // Initialize Eth object
     const httpProviderUrl = "http://localhost:" + httpProviderport;
@@ -27,11 +41,11 @@ export async function compileAndDeployContracts(contractInputDirectoryPath, cont
     const fromAccount = accounts[0];
 
     // Read in contract ABIs and bytecodes as JSON string
-    const contractJson = await fs.readFile(contractOutputDirectoryPath + "/" + contractOutputFileName, "utf8");
+    const contractJson = await fs.readFile(CONTRACT_OUTPUT_DIR_PATH + "/" + COMPILED_CONTRACT_OUTPUT_FILE_NAME, "utf8");
 
     // Deploy contracts to blockchain
     const contractDeployer = new ContractDeployer();
-    const contracts = await contractDeployer.deployContracts(eth, contractJson, fromAccount, gas);
+    const contracts = await contractDeployer.deployContracts(eth, contractJson, fromAccount, GAS_AMOUNT);
 
     return contracts;
 }
@@ -39,14 +53,7 @@ export async function compileAndDeployContracts(contractInputDirectoryPath, cont
 
 // If this script is not being imported by another module (i.e., it is being run independently via the command line)
 if (!module.parent) {
-    // TODO: This script can either be run independently via the command line or be required by another file (such as a unit test).  In the future, we should probably modify it to accept commmand line parmeters instead of hard-coding the constants below.
-    const contractInputDirectoryPath = path.join(__dirname, "../../source/contracts");
-    const contractOutputDirectoryPath = path.join(__dirname, "../contracts");
-    const contractOutputFileName = "augurCore";
-    const httpProviderport = 8545;
-    const gas = 3000000;
-
-    compileAndDeployContracts(contractInputDirectoryPath, contractOutputDirectoryPath, contractOutputFileName, httpProviderport, gas).then(() => {
+    compileAndDeployContracts().then(() => {
         process.exit();
     }).catch(error => {
         console.log(error);
