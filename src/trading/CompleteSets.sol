@@ -31,7 +31,7 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
         ICash _denominationToken = _market.getDenominationToken();
         Augur _augur = Augur(controller.lookup("Augur"));
 
-        uint256 _cost = _amount.mul(_market.getMarketDenominator());
+        uint256 _cost = _amount.mul(_market.getNumTicks());
         require(_augur.trustedTransfer(_denominationToken, _sender, _market, _cost));
         for (uint8 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
             _market.getShareToken(_outcome).createShares(_sender, _amount);
@@ -52,7 +52,7 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _denominationToken = _market.getDenominationToken();
         uint256 _marketCreatorFeeRate = _market.getMarketCreatorSettlementFeeInAttoethPerEth();
-        uint256 _payout = _amount.mul(_market.getMarketDenominator());
+        uint256 _payout = _amount.mul(_market.getNumTicks());
         uint256 _marketCreatorFee = _payout.mul(_marketCreatorFeeRate).div(1 ether);
         IReportingWindow _reportingWindow = _market.getReportingWindow();
         uint256 _reportingFeeRate = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getReportingFeeInAttoethPerEth(_reportingWindow);

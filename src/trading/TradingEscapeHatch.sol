@@ -66,7 +66,7 @@ contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, ITradingEsca
 
         // fill in any outcome prices that have no order history
         if (_numberOfMissingBids > 0) {
-            uint256 _fauxBidPrice = (_market.getMarketDenominator() - _sumOfBids) / _numberOfMissingBids;
+            uint256 _fauxBidPrice = (_market.getNumTicks() - _sumOfBids) / _numberOfMissingBids;
             // to avoid any oddities, every share is worth _something_, even if it is just 1 attotoken
             if (_fauxBidPrice == 0)
                 _fauxBidPrice = 1;
@@ -83,7 +83,7 @@ contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, ITradingEsca
             // FIXME: Think about this math, can shiftedPrice * range be greater than 2*254?
             //        Can shiftedPrice / _sumOfBids lead to rounding errors?  Should we * then / or / then *?
             //        Yes it can be greater, shifted / _sumOfBids will lead to rounding errors
-            frozenShareValues[_market][_tempOutcome] = _shiftedPrices[_tempOutcome].mul(_market.getMarketDenominator()).div(_sumOfBids);
+            frozenShareValues[_market][_tempOutcome] = _shiftedPrices[_tempOutcome].mul(_market.getNumTicks()).div(_sumOfBids);
         }
     }
 }

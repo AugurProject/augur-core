@@ -117,7 +117,7 @@ def test_publicTakeOrder_bid_scalar(contractsFixture):
     takeOrder = contractsFixture.contracts['TakeOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    # We're testing the scalar market because it has a different marketDenominator than 10**18 as the other do. In particular it's marketDenominator is 40*18**18
+    # We're testing the scalar market because it has a different numTicks than 10**18 as the other do. In particular it's numTicks is 40*18**18
     market = contractsFixture.scalarMarket
     tradeGroupID = 42
     logs = []
