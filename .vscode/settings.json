@@ -14,7 +14,7 @@
     "solidity.compilerRemappings": [
         {
             "prefix": "ROOT",
-            "target": "./src"
+            "target": "./source/contracts"
         }
     ],
     "python.linting.pylintEnabled": false

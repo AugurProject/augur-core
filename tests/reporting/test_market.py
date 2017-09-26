@@ -11,7 +11,7 @@ def test_market_creation(contractsFixture):
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    shadyReportingToken = contractsFixture.upload('../src/reporting/ReportingToken.sol', 'shadyReportingToken')
+    shadyReportingToken = contractsFixture.upload('../source/contracts/reporting/ReportingToken.sol', 'shadyReportingToken')
     shadyReportingToken.initialize(market.address, [0,10**18])
 
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
