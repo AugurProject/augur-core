@@ -32,7 +32,14 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     function buy(uint256 _attotokens) public afterInitialized returns (bool) {
         IMarket.ReportingState _state = market.getReportingState();
-        require(_state == IMarket.ReportingState.LIMITED_REPORTING || _state == IMarket.ReportingState.ALL_REPORTING);
+        if (_state == IMarket.ReportingState.AWAITING_NO_REPORT_MIGRATION) {
+            market.migrateDueToNoReports();
+            if (getRegistrationToken().balanceOf(msg.sender) == 0) {
+                return false;
+            }
+        } else {
+            require(_state == IMarket.ReportingState.LIMITED_REPORTING || _state == IMarket.ReportingState.ALL_REPORTING);
+        }
         require(getRegistrationToken().balanceOf(msg.sender) > 0);
         require(market.isContainerForReportingToken(this));
         getReputationToken().trustedTransfer(msg.sender, this, _attotokens);
