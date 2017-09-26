@@ -16,9 +16,10 @@ contract IMarket is Typed, IOwnable {
         PRE_REPORTING,
         AUTOMATED_REPORTING,
         AUTOMATED_DISPUTE,
-        AWAITING_MIGRATION,
+        AWAITING_FORK_MIGRATION,
         LIMITED_REPORTING,
         LIMITED_DISPUTE,
+        AWAITING_NO_REPORT_MIGRATION,
         ALL_REPORTING,
         ALL_DISPUTE,
         FORKING,
@@ -43,6 +44,7 @@ contract IMarket is Typed, IOwnable {
     function getFinalPayoutDistributionHash() public constant returns (bytes32);
     function getFinalWinningReportingToken() public constant returns (IReportingToken);
     function getReportingTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public constant returns (IReportingToken);
+    function migrateDueToNoReports() public returns (bool);
     function isContainerForReportingToken(Typed _shadyTarget) public constant returns (bool);
     function isContainerForDisputeBondToken(Typed _shadyTarget) public constant returns (bool);
     function isContainerForShareToken(Typed _shadyTarget) public constant returns (bool);

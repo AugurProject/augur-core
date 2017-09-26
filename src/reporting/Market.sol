@@ -186,15 +186,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function tryFinalize() public returns (bool) {
-        ReportingState _state = getReportingState();
-        if (_state != ReportingState.AWAITING_FINALIZATION) {
-            return false;
-        }
+        require(tentativeWinningPayoutDistributionHash != bytes32(0));
 
-        // If we're waiting for finalization and no reports have been recieved we move to the next reporting window
-        if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
-            IReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
-            migrateReportingWindow(_newReportingWindow);
+        if (getReportingState() != ReportingState.AWAITING_FINALIZATION) {
             return false;
         }
 
@@ -215,6 +209,13 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         // FIXME: if automated report is right, transfer automated report bond to market creator
     }
 
+    function migrateDueToNoReports() public returns (bool) {
+        require(getReportingState() == ReportingState.AWAITING_NO_REPORT_MIGRATION);
+        IReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
+        migrateReportingWindow(_newReportingWindow);
+        return false;
+    }
+
     function migrateThroughAllForks() public returns (bool) {
         // this will loop until we run out of gas, follow forks until there are no more, or have reached an active fork (which will throw)
         while (migrateThroughOneFork()) {
@@ -225,7 +226,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     // returns 0 if no move occurs, 1 if move occurred, throws if a fork not yet resolved
     function migrateThroughOneFork() public returns (bool) {
-        if (getReportingState() != ReportingState.AWAITING_MIGRATION) {
+        if (getReportingState() != ReportingState.AWAITING_FORK_MIGRATION) {
             return false;
         }
         // only proceed if the forking market is finalized
@@ -413,7 +414,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         // If there is an active fork we need to migrate
         IMarket _forkingMarket = getBranch().getForkingMarket();
         if (address(_forkingMarket) != NULL_ADDRESS && _forkingMarket != this) {
-            return ReportingState.AWAITING_MIGRATION;
+            return ReportingState.AWAITING_FORK_MIGRATION;
         }
 
         // Before trading in the market is finished
@@ -435,7 +436,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             return _beforeAutomatedDisputeDue ? ReportingState.AUTOMATED_DISPUTE : ReportingState.AWAITING_FINALIZATION;
         }
 
-        // If this market is the one forking we are in the process of migration or we're ready to finalize migration
+        // If this market is the one forking we are in the process of migration or we're ready to finalize
         if (_forkingMarket == this) {
             if (getWinningPayoutDistributionHashFromFork() != bytes32(0)) {
                 return ReportingState.AWAITING_FINALIZATION;
@@ -445,25 +446,29 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
         bool _reportingWindowOver = block.timestamp > reportingWindow.getEndTime();
 
-        // If a limited dispute bond has been posted we are in some phase of all reporting depending on time
-        if (_limitedReportDisputed) {
-            if (_reportingWindowOver) {
-                return ReportingState.AWAITING_FINALIZATION;
+        if (_reportingWindowOver) {
+            if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
+                return ReportingState.AWAITING_NO_REPORT_MIGRATION;
             }
-            if (reportingWindow.isDisputeActive()) {
-                return ReportingState.ALL_DISPUTE;
-            }
-            return ReportingState.ALL_REPORTING;
+            return ReportingState.AWAITING_FINALIZATION;
         }
 
-        if (_reportingWindowOver) {
-            return ReportingState.AWAITING_FINALIZATION;
+        // If a limited dispute bond has been posted we are in some phase of all reporting depending on time
+        if (_limitedReportDisputed) {
+            if (reportingWindow.isDisputeActive()) {
+                if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
+                    return ReportingState.AWAITING_NO_REPORT_MIGRATION;
+                } else {
+                    return ReportingState.ALL_DISPUTE;
+                }
+            }
+            return ReportingState.ALL_REPORTING;
         }
 
         // Either no automated report was made or the automated report was disputed so we are in some phase of limited reporting
         if (reportingWindow.isDisputeActive()) {
             if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
-                return ReportingState.AWAITING_FINALIZATION;
+                return ReportingState.AWAITING_NO_REPORT_MIGRATION;
             } else {
                 return ReportingState.LIMITED_DISPUTE;
             }

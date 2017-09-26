@@ -245,7 +245,7 @@ def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
     proceedToForking(reportingFixture,  market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], tester.k2, [10**18,0], [10**18,0])
 
     # The market we created is now awaiting migration
-    assert newMarket.getReportingState() == reportingFixture.constants.AWAITING_MIGRATION()
+    assert newMarket.getReportingState() == reportingFixture.constants.AWAITING_FORK_MIGRATION()
 
     # If we attempt to migrate now it will not work since the forking market is not finalized
     with raises(TransactionFailed, message="Migration cannot occur until the forking market is finalized"):
@@ -277,11 +277,16 @@ def test_noReports(reportingFixture, pastDisputePhase):
     else:
         reportingFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     
-    # If we receive no reports by the time Limited Reporting is finished we will be in the AWAITING FINALIZATION phase
-    assert market.getReportingState() == reportingFixture.constants.AWAITING_FINALIZATION()
+    # If we receive no reports by the time Limited Reporting is finished we will be in the AWAITING NO REPORT MIGRATION phase
+    assert market.getReportingState() == reportingFixture.constants.AWAITING_NO_REPORT_MIGRATION()
 
-    # We can finalize it, which for this special case will move it to the next reporting window where it will be back in LIMITED REPORTING
-    assert market.tryFinalize() == 0
+    # We can try to report on the market, which will move it to the next reporting window where it will be back in LIMITED REPORTING
+    reportingToken = reportingFixture.getReportingToken(market, [0,10**18])
+    registrationToken = reportingFixture.applySignature('RegistrationToken', reportingToken.getRegistrationToken())
+
+    # We get false back from the attempt to report since we aren't registered for the reporting window it migrates to, but the migration still occurs
+    assert reportingToken.buy(1, sender=tester.k2) == False
+
     assert market.getReportingState() == reportingFixture.constants.LIMITED_REPORTING()
     assert market.getReportingWindow() != reportingWindow.address
 
