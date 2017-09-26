@@ -26,10 +26,9 @@ export async function compileAndDeployContracts(): Promise<ContractBlockchainDat
     const solidityContractCompiler = new SolidityContractCompiler(CONTRACT_INPUT_DIR_PATH, CONTRACT_OUTPUT_DIR_PATH, COMPILED_CONTRACT_OUTPUT_FILE_NAME);
     const compilerResult = await solidityContractCompiler.compileContracts();
 
-    // Initialize Ethereum node details (if necessary)
+    // Initialize Ethereum node details
     const httpProviderport = (ETHEREUM_PORT == "") ? DEFAULT_ETHEREUM_PORT : ETHEREUM_PORT;
     if (ETHEREUM_HOST == "") {
-        console.log('TESTRPC');
         const rpcClient = new RpcClient();
         await rpcClient.listen(httpProviderport);
     }
