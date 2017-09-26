@@ -6,12 +6,8 @@ import * as TestRpc from 'ethereumjs-testrpc';
 
 export class RpcClient {
     public async listen(port): Promise<boolean> {
-        try {
-            const server = TestRpc.server();
-            server.listen(port);
-            return true;
-        } catch (error) {
-            throw error;
-        }
+        const server = TestRpc.server();
+        server.listen(port);
+        return true;
     }
 }

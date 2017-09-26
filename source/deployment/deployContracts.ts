@@ -16,19 +16,15 @@ const COMPILED_CONTRACT_OUTPUT_FILE_NAME = "augurCore";
 const GAS_AMOUNT = 3000000;
 const DEFAULT_ETHEREUM_PORT = 8545;
 
-// Set these variables to use node settings other than TestRPC on port 8545
-const ETHEREUM_HOST = "";
-const ETHEREUM_PORT = "";
-
 
 export async function compileAndDeployContracts(): Promise<ContractBlockchainData[]> {
     // Compile contracts to a single output file
     const solidityContractCompiler = new SolidityContractCompiler(CONTRACT_INPUT_DIR_PATH, CONTRACT_OUTPUT_DIR_PATH, COMPILED_CONTRACT_OUTPUT_FILE_NAME);
     const compilerResult = await solidityContractCompiler.compileContracts();
 
-    // Initialize Ethereum node details
-    const httpProviderport = (ETHEREUM_PORT == "") ? DEFAULT_ETHEREUM_PORT : ETHEREUM_PORT;
-    if (ETHEREUM_HOST == "") {
+    // Initialize Ethereum node details.  (If no host is specified, TestRPC will be used.)
+    const httpProviderport = (typeof process.env.ETHEREUM_PORT == 'undefined') ? DEFAULT_ETHEREUM_PORT : process.env.ETHEREUM_PORT;
+    if (typeof process.env.ETHEREUM_HOST == 'undefined') {
         const rpcClient = new RpcClient();
         await rpcClient.listen(httpProviderport);
     }
