@@ -108,7 +108,7 @@ def test_transferFrom(contractsFixture):
 
 def test_setController(contractsFixture):
     shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
-    newController = contractsFixture.upload('../src/Controller.sol', 'newController')
+    newController = contractsFixture.upload('../source/contracts/Controller.sol', 'newController')
     newController.setValue('shareToken'.ljust(32, '\x00'), shareToken.address)
 
     contractsFixture.controller.updateController(shareToken.address, newController.address, sender=tester.k0)

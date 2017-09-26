@@ -82,6 +82,6 @@ def controllerUser(contractsFixture):
 
 @fixture
 def decentralizedController(contractsFixture):
-    decentralizedController = contractsFixture.upload('../src/Controller.sol', 'decentralizedController')
+    decentralizedController = contractsFixture.upload('../source/contracts/Controller.sol', 'decentralizedController')
     decentralizedController.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k0)
     return decentralizedController
