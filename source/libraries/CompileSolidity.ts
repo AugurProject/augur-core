@@ -17,12 +17,35 @@ export class SolidityContractCompiler {
     private contractOutputFileName: string;
 
     public constructor(contractInputDirectoryPath: string, contractOutputDirectoryPath: string, contractOutputFileName: string) {
+        if (contractInputDirectoryPath.lastIndexOf(path.sep) != contractInputDirectoryPath.length - 1) {
+            contractInputDirectoryPath += path.sep;
+        }
+        if (contractOutputDirectoryPath.lastIndexOf(path.sep) != contractOutputDirectoryPath.length - 1) {
+            contractOutputDirectoryPath += path.sep;
+        }
         this.contractInputDirectoryPath = contractInputDirectoryPath;
         this.contractOutputDirectoryPath = contractOutputDirectoryPath;
         this.contractOutputFileName = contractOutputFileName;
     }
 
+    public readCallback(path: string): { contents?: string, error?: string } {
+        try {
+            const result = fs.readFileSync(path, 'utf8');
+            return { contents: result };
+        } catch (error) {
+            return { error: error.message };
+        }
+    }
+
     public async compileContracts(): Promise<CompileContractsOutput> {
+        // Check if all contracts are cached (and thus do not need to be compiled)
+        const stats = fs.statSync(this.contractOutputDirectoryPath + this.contractOutputFileName);
+        const lastCompiledTimestamp = stats.mtime;
+        const uncachedFiles = await recursiveReadDir(this.contractInputDirectoryPath, [function(file: string, stats: fs.Stats): boolean {return stats.isDirectory() || (stats.isFile() && path.extname(file) != ".sol") || (stats.isFile() && path.extname(file) == ".sol" && stats.mtime < lastCompiledTimestamp);}]);
+        if (uncachedFiles.length == 0) {
+            return { output: "Contracts in " + this.contractInputDirectoryPath + " have not been modified since last cache was created" };
+        }
+
         // Compile all contracts in the specified input directory
         const compilerInputJson = await this.generateCompilerInput();
         const compilerOutputJson: string = compileStandardWrapper(JSON.stringify(compilerInputJson), this.readCallback);
@@ -39,7 +62,7 @@ export class SolidityContractCompiler {
         mkdirp(this.contractOutputDirectoryPath, this.mkdirpCallback);
 
         // Output contract data to single file
-        const contractOutputFilePath = this.contractOutputDirectoryPath + "/" + this.contractOutputFileName;
+        const contractOutputFilePath = this.contractOutputDirectoryPath + this.contractOutputFileName;
         let wstream: any = fs.createWriteStream(contractOutputFilePath);
         wstream.write(JSON.stringify(compilerOutput.contracts));
 
@@ -47,16 +70,7 @@ export class SolidityContractCompiler {
     }
 
     private ignoreFile(file: string, stats: fs.Stats): boolean {
-        return stats.isFile() && path.extname(file) != ".sol";
-    }
-
-    public readCallback(path: string): { contents?: string, error?: string } {
-        try {
-            const result = fs.readFileSync(path, 'utf8');
-            return { contents: result };
-        } catch (error) {
-            return { error: error.message };
-        }
+        return !stats.isDirectory() && path.extname(file) != ".sol";
     }
 
     private mkdirpCallback(error): void {
@@ -66,6 +80,10 @@ export class SolidityContractCompiler {
     }
 
     private async generateCompilerInput(): Promise<CompilerInput> {
+        const filePaths: any = await recursiveReadDir(this.contractInputDirectoryPath, [this.ignoreFile]);
+        const filesPromises = filePaths.map(async filePath => await readFile(filePath));
+        const files = await Promise.all(filesPromises);
+
         let inputJson: CompilerInput = {
             language: "Solidity",
             settings: {
@@ -77,18 +95,8 @@ export class SolidityContractCompiler {
             },
             sources: {}
         };
-
-        let contractInputDirectoryPath = this.contractInputDirectoryPath;
-        if (contractInputDirectoryPath.lastIndexOf(path.sep) != contractInputDirectoryPath.length) {
-            contractInputDirectoryPath += path.sep;
-        }
-
-        const filePaths: any = await recursiveReadDir(this.contractInputDirectoryPath, [this.ignoreFile]);
-        const filesPromises = filePaths.map(async filePath => await readFile(filePath));
-        const files = await Promise.all(filesPromises);
-
         for (var file in files) {
-            inputJson.sources[filePaths[file].replace(contractInputDirectoryPath, "")] = { content : files[file].toString() };
+            inputJson.sources[filePaths[file].replace(this.contractInputDirectoryPath, "")] = { content : files[file].toString() };
         }
 
         return inputJson;

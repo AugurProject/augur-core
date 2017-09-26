@@ -19,10 +19,11 @@ export class ContractDeployer {
         let deployedContracts = [];
         for (let contractFileName in contractFiles) {
             for (let contractName in contractFiles[contractFileName]) {
-                // Filter out interface contracts, as the do not need to be deployed
+                // Filter out interface contracts, as they do not need to be deployed
                 if (contractFiles[contractFileName][contractName].evm.bytecode.object != '') {
-                    // TODO: Change this to allow contracts to be deployed asynchronously; test to make sure name conflicts are avoided
-                    deployedContracts[contractName] =  await this.deployContract(ethjs, contractFiles[contractFileName][contractName].abi, contractFiles[contractFileName][contractName].evm.bytecode.object, from, gas);
+                    // TODO: Change this to allow contracts to be deployed asynchronously
+                    deployedContracts[contractFileName] = [];
+                    deployedContracts[contractFileName][contractName] = await this.deployContract(ethjs, contractFiles[contractFileName][contractName].abi, contractFiles[contractFileName][contractName].evm.bytecode.object, from, gas);
                 }
             }
         }

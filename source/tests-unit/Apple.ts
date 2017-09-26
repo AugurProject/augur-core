@@ -1,20 +1,13 @@
 import * as binascii from 'binascii';
-import * as fs from 'async-file';
 import * as path from 'path';
-import * as HttpProvider from 'ethjs-provider-http';
-import * as Eth from 'ethjs-query';
-import * as EthContract from 'ethjs-contract';
 import { expect } from 'chai';
 import { ContractBlockchainData } from 'contract-deployment';
-import { SolidityContractCompiler } from "../libraries/CompileSolidity";
-import { ContractDeployer } from "../libraries/ContractDeployer";
-import { RpcClient } from "../libraries/RpcClient";
 import { compileAndDeployContracts } from "../deployment/deployContracts";
 
 
 describe('Apple', () => {
     let contracts: ContractBlockchainData[] = [];
-    beforeEach(async function(done) {
+    beforeEach(async () => {
         // TODO: Prevent this from timing out by using a "done" function
         const contractInputDirectoryPath = path.join(__dirname, "../../source/contracts");
         const contractOutputDirectoryPath = path.join(__dirname, "../contracts");
@@ -23,14 +16,10 @@ describe('Apple', () => {
         const gas = 3000000;
 
         contracts = await compileAndDeployContracts(contractInputDirectoryPath, contractOutputDirectoryPath, contractOutputFileName, httpProviderport, gas);
-        done();
     });
-    describe('#getTypeName()', function() {
-        it('unable to get contract type name', async function() {
-            // Test Apple's getTypeName() function
-            const contractTypeNameHex = (await contracts["Apple"].getTypeName())[0];
-            const contractTypeName = binascii.unhexlify(contractTypeNameHex).replace(/\u0000/g, '');
-            expect(contractTypeName).to.equal("Apple");
-        });
+    it('#getTypeName()', async () => {
+        const contractTypeNameHex = (await contracts['Apple.sol']["Apple"].getTypeName())[0];
+        const contractTypeName = binascii.unhexlify(contractTypeNameHex).replace(/\u0000/g, '');
+        expect(contractTypeName).to.equal("Apple");
     });
 });
