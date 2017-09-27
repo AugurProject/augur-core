@@ -102,7 +102,7 @@ class ContractsFixture:
                 }
             },
             'settings': {
-                'remappings': [ "=" + resolveRelativePath("../source/contracts") + "/" ],
+                'remappings': [ '=%s/' % resolveRelativePath("../source/contracts") ],
                 'outputSelection': {
                     '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
                 }
