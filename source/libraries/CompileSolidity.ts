@@ -39,11 +39,15 @@ export class SolidityContractCompiler {
 
     public async compileContracts(): Promise<CompileContractsOutput> {
         // Check if all contracts are cached (and thus do not need to be compiled)
-        const stats = fs.statSync(this.contractOutputDirectoryPath + this.contractOutputFileName);
-        const lastCompiledTimestamp = stats.mtime;
-        const uncachedFiles = await recursiveReadDir(this.contractInputDirectoryPath, [function(file: string, stats: fs.Stats): boolean {return stats.isDirectory() || (stats.isFile() && path.extname(file) != ".sol") || (stats.isFile() && path.extname(file) == ".sol" && stats.mtime < lastCompiledTimestamp);}]);
-        if (uncachedFiles.length == 0) {
-            return { output: "Contracts in " + this.contractInputDirectoryPath + " have not been modified since last cache was created" };
+        try {
+            const stats = fs.statSync(this.contractOutputDirectoryPath + this.contractOutputFileName);
+            const lastCompiledTimestamp = stats.mtime;
+            const uncachedFiles = await recursiveReadDir(this.contractInputDirectoryPath, [function(file: string, stats: fs.Stats): boolean {return stats.isDirectory() || (stats.isFile() && path.extname(file) != ".sol") || (stats.isFile() && path.extname(file) == ".sol" && stats.mtime < lastCompiledTimestamp);}]);
+            if (uncachedFiles.length == 0) {
+                return { output: "Contracts in " + this.contractInputDirectoryPath + " have not been modified since last cache was created" };
+            }
+        } catch (error) {
+            // Unable to read compiled contracts output file (likely because it has not been generated)
         }
 
         // Compile all contracts in the specified input directory
