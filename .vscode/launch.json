@@ -10,7 +10,8 @@
             "args": [
                 "-r",
                 "ts-node/register",
-                "source/tests-unit/**/*.ts"
+                "source/tests-unit/**/*.ts",
+                "--no-timeouts"
             ]
         }
     ]
