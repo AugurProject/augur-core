@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/arrays/Uint256Arrays.sol';
+import 'libraries/arrays/Uint256Arrays.sol';
 
 
 contract ArrayHelper {

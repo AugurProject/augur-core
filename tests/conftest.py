@@ -102,7 +102,7 @@ class ContractsFixture:
                 }
             },
             'settings': {
-                'remappings': [ 'ROOT=%s' % resolveRelativePath("../source/contracts") ],
+                'remappings': [ "=" + resolveRelativePath("../source/contracts") + "/" ],
                 'outputSelection': {
                     '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
                 }
@@ -126,7 +126,7 @@ class ContractsFixture:
             dependencyPath = path.abspath(path.join(fileDirectory, match))
             if not dependencyPath in knownDependencies:
                 ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
-        matches = findall("import ['\"]ROOT/(.*?)['\"]", fileContents)
+        matches = findall("import ['\"](.*?)['\"]", fileContents)
         for match in matches:
             dependencyPath = path.join(BASE_PATH, '..', 'source/contracts', match)
             if not dependencyPath in knownDependencies:

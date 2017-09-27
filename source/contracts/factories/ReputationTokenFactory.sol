@@ -1,9 +1,9 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/Delegator.sol';
-import 'ROOT/IController.sol';
-import 'ROOT/reporting/IBranch.sol';
-import 'ROOT/reporting/IReputationToken.sol';
+import 'libraries/Delegator.sol';
+import 'IController.sol';
+import 'reporting/IBranch.sol';
+import 'reporting/IReputationToken.sol';
 
 
 contract ReputationTokenFactory {

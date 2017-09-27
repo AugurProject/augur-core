@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/token/StandardToken.sol';
+import 'libraries/token/StandardToken.sol';
 
 
 contract VariableSupplyToken is StandardToken {

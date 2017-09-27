@@ -1,18 +1,18 @@
 // Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
 // Bid / Ask actions: puts orders on the book
-// price is denominated by the specific market's numTicks 
+// price is denominated by the specific market's numTicks
 // amount is the number of attoshares the order is for (either to buy or to sell). For a currency with 18 decimals [like ether] if you buy 10**18 at a price of 10**18 then that's going to buy you ONE share [10**18 units] at a cost of ONE ETH [10**18 wei]. For a currency with say 9 decimals, if you buy 10**9 at a price of 10**18 that'll also buy you ONE full unit of that currency worth of shares. If you buy 10**9 at a price of 10**17 that'll buy you POINT_ONE full units of that currency worth of shares [so it'll cost you 10**8]. If you buy 10**8 amount at a price of 10**18 you're also effectively paying POINT_ONE units of currency, this time it's just to get you 10x less shares [in other words you're paying 10x more per share].
 // price is the exact price you want to buy/sell at [which may not be the cost, for example to short a binary market it'll cost 1-price, to go long it'll cost price]
 // smallest order value is 10**14 WEI
 
 pragma solidity ^0.4.13;
 
-import 'ROOT/Augur.sol';
-import 'ROOT/IController.sol';
-import 'ROOT/libraries/math/SafeMathUint256.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/trading/IOrders.sol';
+import 'Augur.sol';
+import 'IController.sol';
+import 'libraries/math/SafeMathUint256.sol';
+import 'reporting/IMarket.sol';
+import 'trading/IOrders.sol';
 
 
 // CONSIDER: Is `price` the most appropriate name for the value being used? It does correspond 1:1 with the attoETH per share, but the range might be considered unusual?

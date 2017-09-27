@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import "ROOT/legacy_reputation/Ownable.sol";
+import "legacy_reputation/Ownable.sol";
 
 
 /**

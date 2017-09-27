@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/token/BasicToken.sol';
-import 'ROOT/libraries/token/ERC20.sol';
+import 'libraries/token/BasicToken.sol';
+import 'libraries/token/ERC20.sol';
 
 
 /**

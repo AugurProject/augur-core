@@ -1,14 +1,14 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/trading/IClaimProceeds.sol';
-import 'ROOT/Controlled.sol';
-import 'ROOT/libraries/ReentrancyGuard.sol';
-import 'ROOT/libraries/CashAutoConverter.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/trading/ICash.sol';
-import 'ROOT/extensions/MarketFeeCalculator.sol';
-import 'ROOT/libraries/math/SafeMathUint256.sol';
-import 'ROOT/reporting/Reporting.sol';
+import 'trading/IClaimProceeds.sol';
+import 'Controlled.sol';
+import 'libraries/ReentrancyGuard.sol';
+import 'libraries/CashAutoConverter.sol';
+import 'reporting/IMarket.sol';
+import 'trading/ICash.sol';
+import 'extensions/MarketFeeCalculator.sol';
+import 'libraries/math/SafeMathUint256.sol';
+import 'reporting/Reporting.sol';
 
 
 // AUDIT: Ensure that a malicious market can't subversively cause share tokens to be paid out incorrectly.

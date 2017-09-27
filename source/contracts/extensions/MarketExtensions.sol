@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/IReportingWindow.sol';
-import 'ROOT/reporting/IMarket.sol';
+import 'reporting/IReportingWindow.sol';
+import 'reporting/IMarket.sol';
 
 
 /**

@@ -1,11 +1,11 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/Typed.sol';
-import 'ROOT/reporting/IBranch.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/reporting/IRegistrationToken.sol';
-import 'ROOT/reporting/IReputationToken.sol';
-import 'ROOT/trading/ICash.sol';
+import 'libraries/Typed.sol';
+import 'reporting/IBranch.sol';
+import 'reporting/IMarket.sol';
+import 'reporting/IRegistrationToken.sol';
+import 'reporting/IReputationToken.sol';
+import 'trading/ICash.sol';
 
 
 contract IReportingWindow is Typed {

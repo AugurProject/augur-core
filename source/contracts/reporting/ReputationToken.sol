@@ -1,14 +1,14 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/IReputationToken.sol';
-import 'ROOT/libraries/DelegationTarget.sol';
-import 'ROOT/libraries/Typed.sol';
-import 'ROOT/libraries/Initializable.sol';
-import 'ROOT/libraries/token/StandardToken.sol';
-import 'ROOT/libraries/token/ERC20.sol';
-import 'ROOT/reporting/IBranch.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/libraries/math/SafeMathUint256.sol';
+import 'reporting/IReputationToken.sol';
+import 'libraries/DelegationTarget.sol';
+import 'libraries/Typed.sol';
+import 'libraries/Initializable.sol';
+import 'libraries/token/StandardToken.sol';
+import 'libraries/token/ERC20.sol';
+import 'reporting/IBranch.sol';
+import 'reporting/IMarket.sol';
+import 'libraries/math/SafeMathUint256.sol';
 
 
 contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToken, IReputationToken {

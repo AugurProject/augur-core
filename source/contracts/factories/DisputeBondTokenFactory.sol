@@ -1,9 +1,9 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/Delegator.sol';
-import 'ROOT/reporting/IDisputeBond.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/IController.sol';
+import 'libraries/Delegator.sol';
+import 'reporting/IDisputeBond.sol';
+import 'reporting/IMarket.sol';
+import 'IController.sol';
 
 
 contract DisputeBondTokenFactory {

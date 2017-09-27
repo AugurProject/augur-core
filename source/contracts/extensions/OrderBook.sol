@@ -2,10 +2,10 @@ pragma solidity ^0.4.13;
 
 // NOTE: We're using uint256[100] to get back orderIds from the orderFetcher as Solidity currently lacks the ability to receive dynamic arrays from external contract calls. Really we should not be returning arbitrary size arrays from internal contracts anywhere. The list gets shrunk to the desired size before returning
 
-import 'ROOT/libraries/arrays/Uint256Arrays.sol';
-import 'ROOT/Controlled.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/trading/IOrders.sol';
+import 'libraries/arrays/Uint256Arrays.sol';
+import 'Controlled.sol';
+import 'reporting/IMarket.sol';
+import 'trading/IOrders.sol';
 
 
 contract OrderBook is Controlled {

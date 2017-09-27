@@ -1,25 +1,25 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/libraries/DelegationTarget.sol';
-import 'ROOT/libraries/Typed.sol';
-import 'ROOT/libraries/Initializable.sol';
-import 'ROOT/libraries/Ownable.sol';
-import 'ROOT/reporting/IBranch.sol';
-import 'ROOT/reporting/IReportingToken.sol';
-import 'ROOT/reporting/IReputationToken.sol';
-import 'ROOT/reporting/IDisputeBond.sol';
-import 'ROOT/trading/ICash.sol';
-import 'ROOT/trading/IShareToken.sol';
-import 'ROOT/extensions/MarketExtensions.sol';
-import 'ROOT/extensions/MarketFeeCalculator.sol';
-import 'ROOT/factories/ShareTokenFactory.sol';
-import 'ROOT/factories/ReportingTokenFactory.sol';
-import 'ROOT/factories/DisputeBondTokenFactory.sol';
-import 'ROOT/libraries/token/ERC20Basic.sol';
-import 'ROOT/libraries/math/SafeMathUint256.sol';
-import 'ROOT/libraries/math/SafeMathInt256.sol';
-import 'ROOT/reporting/Reporting.sol';
+import 'reporting/IMarket.sol';
+import 'libraries/DelegationTarget.sol';
+import 'libraries/Typed.sol';
+import 'libraries/Initializable.sol';
+import 'libraries/Ownable.sol';
+import 'reporting/IBranch.sol';
+import 'reporting/IReportingToken.sol';
+import 'reporting/IReputationToken.sol';
+import 'reporting/IDisputeBond.sol';
+import 'trading/ICash.sol';
+import 'trading/IShareToken.sol';
+import 'extensions/MarketExtensions.sol';
+import 'extensions/MarketFeeCalculator.sol';
+import 'factories/ShareTokenFactory.sol';
+import 'factories/ReportingTokenFactory.sol';
+import 'factories/DisputeBondTokenFactory.sol';
+import 'libraries/token/ERC20Basic.sol';
+import 'libraries/math/SafeMathUint256.sol';
+import 'libraries/math/SafeMathInt256.sol';
+import 'reporting/Reporting.sol';
 
 
 contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {

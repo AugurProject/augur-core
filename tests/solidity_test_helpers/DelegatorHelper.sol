@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/DelegationTarget.sol';
-import 'ROOT/libraries/Typed.sol';
+import 'libraries/DelegationTarget.sol';
+import 'libraries/Typed.sol';
 
 
 contract DelegatorHelper is DelegationTarget, Typed {
