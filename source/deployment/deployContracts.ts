@@ -11,7 +11,7 @@ import { ContractDeployer } from "../libraries/ContractDeployer";
 import { RpcClient } from "../libraries/RpcClient";
 
 const CONTRACT_INPUT_DIR_PATH = path.join(__dirname, "../../source/contracts");
-const CONTRACT_OUTPUT_DIR_PATH = path.join(__dirname, "../contracts");
+const CONTRACT_OUTPUT_DIR_PATH = path.join(__dirname, "../../output/contracts");
 const COMPILED_CONTRACT_OUTPUT_FILE_NAME = "augurCore";
 const GAS_AMOUNT = 3000000;
 const DEFAULT_ETHEREUM_PORT = 8545;

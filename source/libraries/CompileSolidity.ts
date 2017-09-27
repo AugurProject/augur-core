@@ -100,7 +100,8 @@ export class SolidityContractCompiler {
             sources: {}
         };
         for (var file in files) {
-            inputJson.sources[filePaths[file].replace(this.contractInputDirectoryPath, "")] = { content : files[file].toString() };
+            const filePath = filePaths[file].replace(this.contractInputDirectoryPath, "").replace(/\\/g, "/");
+            inputJson.sources[filePath] = { content : files[file].toString() };
         }
 
         return inputJson;

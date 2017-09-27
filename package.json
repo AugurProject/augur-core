@@ -18,6 +18,8 @@
         "path": "^0.12.7",
         "recursive-readdir": "^2.2.1",
         "solc": "^0.4.16",
-        "solium": "github:AugurProject/solium"
+        "solium": "github:AugurProject/solium",
+        "ts-node": "^3.3.0",
+        "typescript": "^2.5.3"
     }
 }
