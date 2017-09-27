@@ -1,12 +1,12 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/trading/ITradingEscapeHatch.sol';
-import 'ROOT/trading/ICash.sol';
-import 'ROOT/trading/IOrders.sol';
-import 'ROOT/trading/IShareToken.sol';
-import 'ROOT/libraries/CashAutoConverter.sol';
-import 'ROOT/libraries/DelegationTarget.sol';
-import 'ROOT/libraries/math/SafeMathUint256.sol';
+import 'trading/ITradingEscapeHatch.sol';
+import 'trading/ICash.sol';
+import 'trading/IOrders.sol';
+import 'trading/IShareToken.sol';
+import 'libraries/CashAutoConverter.sol';
+import 'libraries/DelegationTarget.sol';
+import 'libraries/math/SafeMathUint256.sol';
 
 
 contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, ITradingEscapeHatch {
@@ -80,7 +80,7 @@ contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, ITradingEsca
 
         // set the final prices to be what should be paid out to each outcome share holder
         for (_tempOutcome = 0; _tempOutcome < _numOutcomes; ++_tempOutcome) {
-            // The market denominator will have to be < ~10**26 or a single complete set would be unpurcahseable with the total supply of ETH, so there is no realistic risk of overflow here in any case where shares actually exist in the market 
+            // The market denominator will have to be < ~10**26 or a single complete set would be unpurchaseable with the total supply of ETH, so there is no realistic risk of overflow here in any case where shares actually exist in the market
             frozenShareValues[_market][_tempOutcome] = _shiftedPrices[_tempOutcome].mul(_market.getNumTicks()).div(_sumOfBids);
         }
     }

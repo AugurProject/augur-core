@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/trading/Order.sol';
-import 'ROOT/reporting/IMarket.sol';
+import 'trading/Order.sol';
+import 'reporting/IMarket.sol';
 
 
 contract IOrdersFetcher {

@@ -1,14 +1,14 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/Typed.sol';
-import 'ROOT/libraries/IOwnable.sol';
-import 'ROOT/trading/ICash.sol';
-import 'ROOT/trading/IShareToken.sol';
-import 'ROOT/reporting/IBranch.sol';
-import 'ROOT/reporting/IReportingWindow.sol';
-import 'ROOT/reporting/IReportingToken.sol';
-import 'ROOT/reporting/IDisputeBond.sol';
-import 'ROOT/trading/IShareToken.sol';
+import 'libraries/Typed.sol';
+import 'libraries/IOwnable.sol';
+import 'trading/ICash.sol';
+import 'trading/IShareToken.sol';
+import 'reporting/IBranch.sol';
+import 'reporting/IReportingWindow.sol';
+import 'reporting/IReportingToken.sol';
+import 'reporting/IDisputeBond.sol';
+import 'trading/IShareToken.sol';
 
 
 contract IMarket is Typed, IOwnable {

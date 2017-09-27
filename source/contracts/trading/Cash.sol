@@ -1,9 +1,9 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/trading/ICash.sol';
-import 'ROOT/Controlled.sol';
-import 'ROOT/libraries/Typed.sol';
-import 'ROOT/libraries/token/VariableSupplyToken.sol';
+import 'trading/ICash.sol';
+import 'Controlled.sol';
+import 'libraries/Typed.sol';
+import 'libraries/token/VariableSupplyToken.sol';
 
 
 /**

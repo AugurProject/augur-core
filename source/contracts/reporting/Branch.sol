@@ -1,19 +1,19 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/IBranch.sol';
-import 'ROOT/libraries/DelegationTarget.sol';
-import 'ROOT/libraries/Typed.sol';
-import 'ROOT/libraries/Initializable.sol';
-import 'ROOT/factories/ReputationTokenFactory.sol';
-import 'ROOT/factories/ReportingWindowFactory.sol';
-import 'ROOT/factories/BranchFactory.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/reporting/IReputationToken.sol';
-import 'ROOT/reporting/IReportingToken.sol';
-import 'ROOT/reporting/IDisputeBond.sol';
-import 'ROOT/reporting/IRegistrationToken.sol';
-import 'ROOT/reporting/IReportingWindow.sol';
-import 'ROOT/reporting/Reporting.sol';
+import 'reporting/IBranch.sol';
+import 'libraries/DelegationTarget.sol';
+import 'libraries/Typed.sol';
+import 'libraries/Initializable.sol';
+import 'factories/ReputationTokenFactory.sol';
+import 'factories/ReportingWindowFactory.sol';
+import 'factories/BranchFactory.sol';
+import 'reporting/IMarket.sol';
+import 'reporting/IReputationToken.sol';
+import 'reporting/IReportingToken.sol';
+import 'reporting/IDisputeBond.sol';
+import 'reporting/IRegistrationToken.sol';
+import 'reporting/IReportingWindow.sol';
+import 'reporting/Reporting.sol';
 
 
 contract Branch is DelegationTarget, Typed, Initializable, IBranch {

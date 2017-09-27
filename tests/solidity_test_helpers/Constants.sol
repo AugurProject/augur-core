@@ -1,8 +1,8 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/reporting/Reporting.sol';
-import 'ROOT/trading/Order.sol';
+import 'reporting/IMarket.sol';
+import 'reporting/Reporting.sol';
+import 'trading/Order.sol';
 
 
 contract Constants {

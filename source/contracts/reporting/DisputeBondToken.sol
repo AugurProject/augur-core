@@ -1,14 +1,14 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/IDisputeBond.sol';
-import 'ROOT/libraries/DelegationTarget.sol';
-import 'ROOT/libraries/Typed.sol';
-import 'ROOT/libraries/Initializable.sol';
-import 'ROOT/libraries/token/ERC20Basic.sol';
-import 'ROOT/reporting/IBranch.sol';
-import 'ROOT/reporting/IReputationToken.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/libraries/math/SafeMathUint256.sol';
+import 'reporting/IDisputeBond.sol';
+import 'libraries/DelegationTarget.sol';
+import 'libraries/Typed.sol';
+import 'libraries/Initializable.sol';
+import 'libraries/token/ERC20Basic.sol';
+import 'reporting/IBranch.sol';
+import 'reporting/IReputationToken.sol';
+import 'reporting/IMarket.sol';
+import 'libraries/math/SafeMathUint256.sol';
 
 
 // CONSIDER: This could probably just be made Ownable instead if implementing ERC20Basic

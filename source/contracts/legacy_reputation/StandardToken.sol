@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/legacy_reputation/BasicToken.sol';
-import 'ROOT/legacy_reputation/ERC20.sol';
+import 'legacy_reputation/BasicToken.sol';
+import 'legacy_reputation/ERC20.sol';
 
 
 /**

@@ -1,9 +1,9 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/Typed.sol';
-import 'ROOT/reporting/IReputationToken.sol';
-import 'ROOT/reporting/IReportingWindow.sol';
-import 'ROOT/reporting/IMarket.sol';
+import 'libraries/Typed.sol';
+import 'reporting/IReputationToken.sol';
+import 'reporting/IReportingWindow.sol';
+import 'reporting/IMarket.sol';
 
 
 contract IBranch is Typed {

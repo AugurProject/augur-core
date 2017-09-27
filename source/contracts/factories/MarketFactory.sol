@@ -1,10 +1,10 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/Delegator.sol';
-import 'ROOT/reporting/IReportingWindow.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/trading/ICash.sol';
-import 'ROOT/IController.sol';
+import 'libraries/Delegator.sol';
+import 'reporting/IReportingWindow.sol';
+import 'reporting/IMarket.sol';
+import 'trading/ICash.sol';
+import 'IController.sol';
 
 
 contract MarketFactory {
