@@ -36,47 +36,47 @@ def initializeReportingFixture(sessionFixture, market):
 
     return sessionFixture.chain.snapshot()
 
-def proceedToAutomatedReporting(testFixture, market, reportOutcomes):
+def proceedToDesignatedReporting(testFixture, market, reportOutcomes):
     cash = testFixture.cash
     universe = testFixture.universe
     reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
-    # We can't yet do an automated report on the market as it's in the pre reporting phase
+    # We can't yet do a designated report on the market as it's in the pre reporting phase
     if (market.getReportingState() == testFixture.constants.PRE_REPORTING()):
         with raises(TransactionFailed, message="Reporting cannot be done in the PRE REPORTING state"):
-            market.automatedReport(reportOutcomes, sender=tester.k0)
+            market.designatedReport(reportOutcomes, sender=tester.k0)
 
     # Fast forward to the reporting phase time
     reportingWindow = testFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
     testFixture.chain.head_state.timestamp = market.getEndTime() + 1
 
-    # This will cause us to be in the AUTOMATED REPORTING phase
-    assert market.getReportingState() == testFixture.constants.AUTOMATED_REPORTING()
+    # This will cause us to be in the DESIGNATED REPORTING phase
+    assert market.getReportingState() == testFixture.constants.DESIGNATED_REPORTING()
 
 def proceedToLimitedReporting(testFixture, market, makeReport, disputer, reportOutcomes):
-    if (market.getReportingState() != testFixture.constants.AUTOMATED_REPORTING()):
-        proceedToAutomatedReporting(testFixture, market, reportOutcomes)
+    if (market.getReportingState() != testFixture.constants.DESIGNATED_REPORTING()):
+        proceedToDesignatedReporting(testFixture, market, reportOutcomes)
 
-    # To proceed to limited reporting we will either dispute an automated report or not make an automated report within the alotted time window for doing so
+    # To proceed to limited reporting we will either dispute a designated report or not make a designated report within the alotted time window for doing so
     if (makeReport):
-        assert market.automatedReport(reportOutcomes, sender=tester.k0)
-        assert market.getReportingState() == testFixture.constants.AUTOMATED_DISPUTE()
-        assert market.disputeAutomatedReport(sender=disputer)
+        assert market.designatedReport(reportOutcomes, sender=tester.k0)
+        assert market.getReportingState() == testFixture.constants.DESIGNATED_DISPUTE()
+        assert market.disputeDesignatedReport(sender=disputer)
     else:
-        testFixture.chain.head_state.timestamp = market.getEndTime() + testFixture.constants.AUTOMATED_REPORTING_DURATION_SECONDS() + 1
+        testFixture.chain.head_state.timestamp = market.getEndTime() + testFixture.constants.DESIGNATED_REPORTING_DURATION_SECONDS() + 1
 
     # We're in the LIMITED REPORTING phase now
     assert market.getReportingState() == testFixture.constants.LIMITED_REPORTING()
 
-def proceedToAllReporting(testFixture, market, makeReport, automatedDisputer, limitedDisputer, reportOutcomes, limitedReporter, limitedReportOutcomes):
+def proceedToAllReporting(testFixture, market, makeReport, designatedDisputer, limitedDisputer, reportOutcomes, limitedReporter, limitedReportOutcomes):
     cash = testFixture.cash
     universe = testFixture.universe
     reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     if (market.getReportingState() != testFixture.constants.LIMITED_REPORTING()):
-        proceedToLimitedReporting(testFixture, market, makeReport, automatedDisputer, reportOutcomes)
+        proceedToLimitedReporting(testFixture, market, makeReport, designatedDisputer, reportOutcomes)
 
     reportingToken = testFixture.getReportingToken(market, limitedReportOutcomes)
 
@@ -96,14 +96,14 @@ def proceedToAllReporting(testFixture, market, makeReport, automatedDisputer, li
     # We're in the ALL REPORTING phase now
     assert market.getReportingState() == testFixture.constants.ALL_REPORTING()
 
-def proceedToForking(testFixture, market, makeReport, automatedDisputer, limitedDisputer, reporter, reportOutcomes, limitedReporter, limitedReportOutcomes, allReportOutcomes):
+def proceedToForking(testFixture, market, makeReport, designatedDisputer, limitedDisputer, reporter, reportOutcomes, limitedReporter, limitedReportOutcomes, allReportOutcomes):
     market = testFixture.binaryMarket
     universe = testFixture.universe
     reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
 
     # Proceed to the ALL REPORTING phase
     if (market.getReportingState() != testFixture.constants.ALL_REPORTING()):
-        proceedToAllReporting(testFixture, market, makeReport, automatedDisputer, limitedDisputer, reportOutcomes, limitedReporter, limitedReportOutcomes)
+        proceedToAllReporting(testFixture, market, makeReport, designatedDisputer, limitedDisputer, reportOutcomes, limitedReporter, limitedReportOutcomes)
 
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
 

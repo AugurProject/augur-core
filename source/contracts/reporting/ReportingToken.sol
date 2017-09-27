@@ -98,7 +98,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         require(market.isContainerForReportingToken(this));
         require(getUniverse().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() != this);
-        migrateLosingTokenRepToDisputeBond(market.getAutomatedReporterDisputeBondToken());
+        migrateLosingTokenRepToDisputeBond(market.getDesignatedReporterDisputeBondToken());
         migrateLosingTokenRepToDisputeBond(market.getLimitedReportersDisputeBondToken());
         migrateLosingTokenRepToWinningToken();
         return true;

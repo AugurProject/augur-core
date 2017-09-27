@@ -13,7 +13,7 @@ from utils import bytesToHexString
 REP_TOTAL = 11 * 10**6 # Total number of REP tokens in existence
 REP_DIVISOR = 10**18 # Amount by which a single REP token can be divided
 
-AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20
+DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20
 LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21
 ALL_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22
 
@@ -45,13 +45,13 @@ def printReportingTokenBalances(reputationToken, reportingTokenA, reportingToken
     print str(reputationToken.balanceOf(reportingTokenB.address) / divisor)
     print str(reputationToken.balanceOf(reportingTokenC.address) /divisor) + "\n"
 
-def printDisputeBondTokenBalances(reputationToken, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, showRepFractions):
+def printDisputeBondTokenBalances(reputationToken, designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, showRepFractions):
     divisor = REP_DIVISOR
     if (showRepFractions):
         divisor = 1
     print "----- DISPUTE BOND TOKEN BALANCES -----"
-    if (automatedReporterDisputeBondToken):
-        print "automatedReporterDisputeBondToken balance: " + str(reputationToken.balanceOf(automatedReporterDisputeBondToken.address) / divisor)
+    if (designatedReporterDisputeBondToken):
+        print "designatedReporterDisputeBondToken balance: " + str(reputationToken.balanceOf(designatedReporterDisputeBondToken.address) / divisor)
     if (limitedReportersDisputeBondToken):
         print "limitedReportersDisputeBondToken balance: " + str(reputationToken.balanceOf(limitedReportersDisputeBondToken.address) / divisor)
     if (allReportersDisputeBondToken):
@@ -100,24 +100,24 @@ def buyReportingTokens(marketType, disputeStakes, reputationToken, reportingToke
         assert reputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalance - row[2]
     print ""
 
-def calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, tentativeWinningPayoutDistributionHash):
+def calculateTotalLosingDisputeBondTokens(designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, tentativeWinningPayoutDistributionHash):
     totalLosingDisputeBondTokens = 0
-    if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == tentativeWinningPayoutDistributionHash):
-        totalLosingDisputeBondTokens += AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT
+    if (designatedReporterDisputeBondToken and designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == tentativeWinningPayoutDistributionHash):
+        totalLosingDisputeBondTokens += DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT
     if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == tentativeWinningPayoutDistributionHash):
         totalLosingDisputeBondTokens += LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT
     return totalLosingDisputeBondTokens
 
-@mark.parametrize('marketType,automatedReporterAccountNum,automatedReporterOutcome,automatedReporterDisputerAccountNum,automatedReporterDisputeStakes,limitedReportersDisputerAccountNum,limitedReportersDisputeStakes,allReportersDisputerAccountNum,allReportersDisputeStakes,expectedAccountBalances', [
+@mark.parametrize('marketType,designatedReporterAccountNum,designatedReporterOutcome,designatedReporterDisputerAccountNum,designatedReporterDisputeStakes,limitedReportersDisputerAccountNum,limitedReportersDisputeStakes,allReportersDisputerAccountNum,allReportersDisputeStakes,expectedAccountBalances', [
     # CONSIDER: Create test cases where:
-    # - There is no automated reporting (just limited reporters & all reporters)
+    # - There is no designated reporting (just limited reporters & all reporters)
     # - There is a tie between 2 outcomes
 
     # ----- Start categorical market test cases -----
-    # Test case where there is an automated reporter & no disputes
+    # Test case where there is a designated reporter & no disputes
     (MARKET_TYPE_CATEGORICAL, 0, CATEGORICAL_OUTCOME_A, None, [], None, [], None, [], [[0, None, 1000000 * REP_DIVISOR], [1, None, 1000000 * REP_DIVISOR]]),
 
-    # Test cases where automated reporter is disputed
+    # Test cases where designated reporter is disputed
     # No losing tokens; bond holder was incorrect (bond holder gets nothing back, correct token holders get bonus)
     (MARKET_TYPE_CATEGORICAL, 0, CATEGORICAL_OUTCOME_A, 1, [[2, CATEGORICAL_OUTCOME_A, 105 * REP_DIVISOR]], None, [], None, [], [[0,  None, 1000000 * REP_DIVISOR], [1, None, 998900 * REP_DIVISOR], [2, None, 1001099 * REP_DIVISOR]]),
     # Some losing tokens; some winning tokens; bond holder was incorrect (bond holder gets nothing, winning token holders get bonus)
@@ -129,7 +129,7 @@ def calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, lim
     # No losing tokens; bond holder was right (bond holder gets 1x back, winning tokens get no bonus)
     (MARKET_TYPE_CATEGORICAL, 0, CATEGORICAL_OUTCOME_A, 1, [[1, CATEGORICAL_OUTCOME_B, 200 * REP_DIVISOR], [2, CATEGORICAL_OUTCOME_B, 100 * REP_DIVISOR]], None, [], None, [], [[0,  None, 1000000 * REP_DIVISOR], [1, None, 999999 * REP_DIVISOR], [2, None, 999999 * REP_DIVISOR]]),
 
-    # Test cases where automated reporter & limited reporters are disputed
+    # Test cases where designated reporter & limited reporters are disputed
     # No losing tokens; bond holder was incorrect (bond holder gets nothing back, correct token holders get bonus)
     (MARKET_TYPE_CATEGORICAL, 0, CATEGORICAL_OUTCOME_A, 1, [[0, CATEGORICAL_OUTCOME_A, 105 * REP_DIVISOR]], 2, [[3, CATEGORICAL_OUTCOME_A, 150 * REP_DIVISOR]], None, [], [[0, None, 1004981352941176470588235], [1, None, 998900000000000000000000], [2, None, 989000000000000000000000], [3, None, 1007116647058823529411765]]),
     # Some losing tokens; some winning tokens; bond holders were incorrect (bond holders get nothing, winning token holders get bonus)
@@ -141,7 +141,7 @@ def calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, lim
     # No losing tokens; first bond holder was right (first bond holder get 1x back, winning tokens get no bonus)
     (MARKET_TYPE_CATEGORICAL, 0, CATEGORICAL_OUTCOME_A, 1, [[2, CATEGORICAL_OUTCOME_B, 105 * REP_DIVISOR]], 0, [[3, CATEGORICAL_OUTCOME_B, 150 * REP_DIVISOR]], None, [], [[0, None, 989000000000000000000000], [1, None, 1000000000000000000000000], [2, None, 1004528411764705882352941], [3, None, 1006469588235294117647059]]),
 
-    # Test cases where automated reporter, limited reporters, & all reporters are disputed.  (Users should always end up with roughly the same amount of REP they started with, since there is no REP redistribution in the event of a fork)
+    # Test cases where designated reporter, limited reporters, & all reporters are disputed.  (Users should always end up with roughly the same amount of REP they started with, since there is no REP redistribution in the event of a fork)
     (MARKET_TYPE_CATEGORICAL, 0, CATEGORICAL_OUTCOME_A, 1, [[0, CATEGORICAL_OUTCOME_A, 105 * REP_DIVISOR]], 2, [[3, CATEGORICAL_OUTCOME_A, 150 * REP_DIVISOR]], 1, [[0, CATEGORICAL_OUTCOME_A], [1, CATEGORICAL_OUTCOME_B], [2, CATEGORICAL_OUTCOME_B], [3, CATEGORICAL_OUTCOME_A], [4, CATEGORICAL_OUTCOME_A]], [[0, None, 0], [1, None, 0], [2, None, 0], [3, None, 0], [4, None, 0], [0, CATEGORICAL_OUTCOME_A, 999999000000000000000000], [1, CATEGORICAL_OUTCOME_A, 0], [2, CATEGORICAL_OUTCOME_A, 0], [3, CATEGORICAL_OUTCOME_A, 999999000000000000000000], [4, CATEGORICAL_OUTCOME_A, 1000000000000000000000000], [0, CATEGORICAL_OUTCOME_B, 0], [1, CATEGORICAL_OUTCOME_B, 1000000000000000000000000], [2, CATEGORICAL_OUTCOME_B, 1000000000000000000000000], [3, CATEGORICAL_OUTCOME_B, 0], [4, CATEGORICAL_OUTCOME_B, 0], [0, CATEGORICAL_OUTCOME_C, 0], [1, CATEGORICAL_OUTCOME_C, 0], [2, CATEGORICAL_OUTCOME_C, 0], [3, CATEGORICAL_OUTCOME_C, 0], [4, CATEGORICAL_OUTCOME_C, 0]]),
     (MARKET_TYPE_CATEGORICAL, 0, CATEGORICAL_OUTCOME_A, 1, [[0, CATEGORICAL_OUTCOME_A, 105 * REP_DIVISOR], [1, CATEGORICAL_OUTCOME_B, 100 * REP_DIVISOR]], 2, [[3, CATEGORICAL_OUTCOME_A, 150 * REP_DIVISOR]], 4, [[0, CATEGORICAL_OUTCOME_A], [1, CATEGORICAL_OUTCOME_B], [2, CATEGORICAL_OUTCOME_B], [3, CATEGORICAL_OUTCOME_A], [4, CATEGORICAL_OUTCOME_B], [5, CATEGORICAL_OUTCOME_A], [6, CATEGORICAL_OUTCOME_A]], [[0, None, 0], [1, None, 0], [2, None, 0], [3, None, 0], [4, None, 0], [5, None, 0], [6, None, 0], [0, CATEGORICAL_OUTCOME_A, 999999000000000000000000], [1, CATEGORICAL_OUTCOME_A, 0], [2, CATEGORICAL_OUTCOME_A, 0], [3, CATEGORICAL_OUTCOME_A, 999999000000000000000000], [4, CATEGORICAL_OUTCOME_A, 0], [5, CATEGORICAL_OUTCOME_A, 1000000000000000000000000], [6, CATEGORICAL_OUTCOME_A, 1000000000000000000000000], [0, CATEGORICAL_OUTCOME_B, 0], [1, CATEGORICAL_OUTCOME_B, 999999000000000000000000], [2, CATEGORICAL_OUTCOME_B, 1000000000000000000000000], [3, CATEGORICAL_OUTCOME_B, 0], [4, CATEGORICAL_OUTCOME_B, 1000000000000000000000000], [5, CATEGORICAL_OUTCOME_B, 0], [6, CATEGORICAL_OUTCOME_B, 0], [0, CATEGORICAL_OUTCOME_C, 0], [1, CATEGORICAL_OUTCOME_C, 0], [2, CATEGORICAL_OUTCOME_C, 0], [3, CATEGORICAL_OUTCOME_C, 0], [4, CATEGORICAL_OUTCOME_C, 0], [5, CATEGORICAL_OUTCOME_C, 0], [6, CATEGORICAL_OUTCOME_C, 0]]),
     (MARKET_TYPE_CATEGORICAL, 0, CATEGORICAL_OUTCOME_A, 1, [[0, CATEGORICAL_OUTCOME_A, 105 * REP_DIVISOR], [1, CATEGORICAL_OUTCOME_B, 100 * REP_DIVISOR], [2, CATEGORICAL_OUTCOME_C, 100 * REP_DIVISOR]], 2, [[3, CATEGORICAL_OUTCOME_B, 150 * REP_DIVISOR]], 4, [[0, CATEGORICAL_OUTCOME_A], [1, CATEGORICAL_OUTCOME_B], [2, CATEGORICAL_OUTCOME_C], [3, CATEGORICAL_OUTCOME_B], [4, CATEGORICAL_OUTCOME_A], [5, CATEGORICAL_OUTCOME_B], [6, CATEGORICAL_OUTCOME_B]], [[0, None, 0], [1, None, 0], [2, None, 0], [3, None, 0], [4, None, 0], [5, None, 0], [6, None, 0], [0, CATEGORICAL_OUTCOME_A, 999999000000000000000000], [1, CATEGORICAL_OUTCOME_A, 0], [2, CATEGORICAL_OUTCOME_A, 0], [3, CATEGORICAL_OUTCOME_A, 0], [4, CATEGORICAL_OUTCOME_A, 1000000000000000000000000], [5, CATEGORICAL_OUTCOME_A, 0], [6, CATEGORICAL_OUTCOME_A, 0], [0, CATEGORICAL_OUTCOME_B, 0], [1, CATEGORICAL_OUTCOME_B, 999999000000000000000000], [2, CATEGORICAL_OUTCOME_B, 0], [3, CATEGORICAL_OUTCOME_B, 999999000000000000000000], [4, CATEGORICAL_OUTCOME_B, 0], [5, CATEGORICAL_OUTCOME_B, 1000000000000000000000000], [6, CATEGORICAL_OUTCOME_B, 1000000000000000000000000], [0, CATEGORICAL_OUTCOME_C, 0], [1, CATEGORICAL_OUTCOME_C, 0], [2, CATEGORICAL_OUTCOME_C, 999999000000000000000000], [3, CATEGORICAL_OUTCOME_C, 0], [4, CATEGORICAL_OUTCOME_C, 0], [5, CATEGORICAL_OUTCOME_C, 0], [6, CATEGORICAL_OUTCOME_C, 0]]),
@@ -150,10 +150,10 @@ def calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, lim
     # ----- End categorical market test cases -----
 
     # ----- Start scalar market test cases -----
-    # Test case where there is an automated reporter & no disputes
+    # Test case where there is a designated reporter & no disputes
     (MARKET_TYPE_SCALAR, 0, SCALAR_OUTCOME_A, None, [], None, [], None, [], [[0, None, 1000000 * REP_DIVISOR], [1, None, 1000000 * REP_DIVISOR]]),
 
-    # Test cases where automated reporter is disputed
+    # Test cases where designated reporter is disputed
     # No losing tokens; bond holder was incorrect (bond holder gets nothing back, correct token holders get bonus)
     (MARKET_TYPE_SCALAR, 0, SCALAR_OUTCOME_A, 1, [[2, SCALAR_OUTCOME_A, 105 * REP_DIVISOR]], None, [], None, [], [[0,  None, 1000000 * REP_DIVISOR], [1, None, 998900 * REP_DIVISOR], [2, None, 1001099 * REP_DIVISOR]]),
     # Some losing tokens; some winning tokens; bond holder was incorrect (bond holder gets nothing, winning token holders get bonus)
@@ -165,7 +165,7 @@ def calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, lim
     # No losing tokens; bond holder was right (bond holder gets 1x back, winning tokens get no bonus)
     (MARKET_TYPE_SCALAR, 0, SCALAR_OUTCOME_A, 1, [[1, SCALAR_OUTCOME_B, 200 * REP_DIVISOR], [2, SCALAR_OUTCOME_B, 100 * REP_DIVISOR]], None, [], None, [], [[0,  None, 1000000 * REP_DIVISOR], [1, None, 999999 * REP_DIVISOR], [2, None, 999999 * REP_DIVISOR]]),
 
-    # Test cases where automated reporter & limited reporters are disputed
+    # Test cases where designated reporter & limited reporters are disputed
     # No losing tokens; bond holder was incorrect (bond holder gets nothing back, correct token holders get bonus)
     (MARKET_TYPE_SCALAR, 0, SCALAR_OUTCOME_A, 1, [[0, SCALAR_OUTCOME_A, 105 * REP_DIVISOR]], 2, [[3, SCALAR_OUTCOME_A, 150 * REP_DIVISOR]], None, [], [[0, None, 1004981352941176470588235], [1, None, 998900000000000000000000], [2, None, 989000000000000000000000], [3, None, 1007116647058823529411765]]),
     # Some losing tokens; some winning tokens; bond holders were incorrect (bond holders get nothing, winning token holders get bonus)
@@ -177,7 +177,7 @@ def calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, lim
     # No losing tokens; first bond holder was right (first bond holder get 1x back, winning tokens get no bonus)
     (MARKET_TYPE_SCALAR, 0, SCALAR_OUTCOME_A, 1, [[2, SCALAR_OUTCOME_B, 105 * REP_DIVISOR]], 0, [[3, SCALAR_OUTCOME_B, 150 * REP_DIVISOR]], None, [], [[0, None, 989000000000000000000000], [1, None, 1000000000000000000000000], [2, None, 1004528411764705882352941], [3, None, 1006469588235294117647059]]),
 
-    # Test cases where automated reporter, limited reporters, & all reporters are disputed.  (Users should always end up with roughly the same amount of REP they started with, since there is no REP redistribution in the event of a fork)
+    # Test cases where designated reporter, limited reporters, & all reporters are disputed.  (Users should always end up with roughly the same amount of REP they started with, since there is no REP redistribution in the event of a fork)
     (MARKET_TYPE_SCALAR, 0, SCALAR_OUTCOME_A, 1, [[0, SCALAR_OUTCOME_A, 105 * REP_DIVISOR]], 2, [[3, SCALAR_OUTCOME_A, 150 * REP_DIVISOR]], 1, [[0, SCALAR_OUTCOME_A], [1, SCALAR_OUTCOME_B], [2, SCALAR_OUTCOME_B], [3, SCALAR_OUTCOME_A], [4, SCALAR_OUTCOME_A]], [[0, None, 0], [1, None, 0], [2, None, 0], [3, None, 0], [4, None, 0], [0, SCALAR_OUTCOME_A, 999999000000000000000000], [1, SCALAR_OUTCOME_A, 0], [2, SCALAR_OUTCOME_A, 0], [3, SCALAR_OUTCOME_A, 999999000000000000000000], [4, SCALAR_OUTCOME_A, 1000000000000000000000000], [0, SCALAR_OUTCOME_B, 0], [1, SCALAR_OUTCOME_B, 1000000000000000000000000], [2, SCALAR_OUTCOME_B, 1000000000000000000000000], [3, SCALAR_OUTCOME_B, 0], [4, SCALAR_OUTCOME_B, 0], [0, SCALAR_OUTCOME_C, 0], [1, SCALAR_OUTCOME_C, 0], [2, SCALAR_OUTCOME_C, 0], [3, SCALAR_OUTCOME_C, 0], [4, SCALAR_OUTCOME_C, 0]]),
     (MARKET_TYPE_SCALAR, 0, SCALAR_OUTCOME_A, 1, [[0, SCALAR_OUTCOME_A, 105 * REP_DIVISOR], [1, SCALAR_OUTCOME_B, 100 * REP_DIVISOR]], 2, [[3, SCALAR_OUTCOME_A, 150 * REP_DIVISOR]], 4, [[0, SCALAR_OUTCOME_A], [1, SCALAR_OUTCOME_B], [2, SCALAR_OUTCOME_B], [3, SCALAR_OUTCOME_A], [4, SCALAR_OUTCOME_B], [5, SCALAR_OUTCOME_A], [6, SCALAR_OUTCOME_A]], [[0, None, 0], [1, None, 0], [2, None, 0], [3, None, 0], [4, None, 0], [5, None, 0], [6, None, 0], [0, SCALAR_OUTCOME_A, 999999000000000000000000], [1, SCALAR_OUTCOME_A, 0], [2, SCALAR_OUTCOME_A, 0], [3, SCALAR_OUTCOME_A, 999999000000000000000000], [4, SCALAR_OUTCOME_A, 0], [5, SCALAR_OUTCOME_A, 1000000000000000000000000], [6, SCALAR_OUTCOME_A, 1000000000000000000000000], [0, SCALAR_OUTCOME_B, 0], [1, SCALAR_OUTCOME_B, 999999000000000000000000], [2, SCALAR_OUTCOME_B, 1000000000000000000000000], [3, SCALAR_OUTCOME_B, 0], [4, SCALAR_OUTCOME_B, 1000000000000000000000000], [5, SCALAR_OUTCOME_B, 0], [6, SCALAR_OUTCOME_B, 0], [0, SCALAR_OUTCOME_C, 0], [1, SCALAR_OUTCOME_C, 0], [2, SCALAR_OUTCOME_C, 0], [3, SCALAR_OUTCOME_C, 0], [4, SCALAR_OUTCOME_C, 0], [5, SCALAR_OUTCOME_C, 0], [6, SCALAR_OUTCOME_C, 0]]),
     (MARKET_TYPE_SCALAR, 0, SCALAR_OUTCOME_A, 1, [[0, SCALAR_OUTCOME_A, 105 * REP_DIVISOR], [1, SCALAR_OUTCOME_B, 100 * REP_DIVISOR], [2, SCALAR_OUTCOME_C, 100 * REP_DIVISOR]], 2, [[3, SCALAR_OUTCOME_B, 150 * REP_DIVISOR]], 4, [[0, SCALAR_OUTCOME_A], [1, SCALAR_OUTCOME_B], [2, SCALAR_OUTCOME_C], [3, SCALAR_OUTCOME_B], [4, SCALAR_OUTCOME_A], [5, SCALAR_OUTCOME_B], [6, SCALAR_OUTCOME_B]], [[0, None, 0], [1, None, 0], [2, None, 0], [3, None, 0], [4, None, 0], [5, None, 0], [6, None, 0], [0, SCALAR_OUTCOME_A, 999999000000000000000000], [1, SCALAR_OUTCOME_A, 0], [2, SCALAR_OUTCOME_A, 0], [3, SCALAR_OUTCOME_A, 0], [4, SCALAR_OUTCOME_A, 1000000000000000000000000], [5, SCALAR_OUTCOME_A, 0], [6, SCALAR_OUTCOME_A, 0], [0, SCALAR_OUTCOME_B, 0], [1, SCALAR_OUTCOME_B, 999999000000000000000000], [2, SCALAR_OUTCOME_B, 0], [3, SCALAR_OUTCOME_B, 999999000000000000000000], [4, SCALAR_OUTCOME_B, 0], [5, SCALAR_OUTCOME_B, 1000000000000000000000000], [6, SCALAR_OUTCOME_B, 1000000000000000000000000], [0, SCALAR_OUTCOME_C, 0], [1, SCALAR_OUTCOME_C, 0], [2, SCALAR_OUTCOME_C, 999999000000000000000000], [3, SCALAR_OUTCOME_C, 0], [4, SCALAR_OUTCOME_C, 0], [5, SCALAR_OUTCOME_C, 0], [6, SCALAR_OUTCOME_C, 0]]),
@@ -185,7 +185,7 @@ def calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, lim
     (MARKET_TYPE_SCALAR, 0, SCALAR_OUTCOME_A, 1, [[2, SCALAR_OUTCOME_B, 105 * REP_DIVISOR]], 0, [[3, SCALAR_OUTCOME_B, 150 * REP_DIVISOR]], 4, [[0, SCALAR_OUTCOME_A], [1, SCALAR_OUTCOME_B], [2, SCALAR_OUTCOME_B], [3, SCALAR_OUTCOME_B], [4, SCALAR_OUTCOME_A], [5, SCALAR_OUTCOME_B], [6, SCALAR_OUTCOME_B]], [[0, None, 0], [1, None, 0], [2, None, 0], [3, None, 0], [4, None, 0], [5, None, 0], [6, None, 0], [0, SCALAR_OUTCOME_A, 1000000000000000000000000], [1, SCALAR_OUTCOME_A, 0], [2, SCALAR_OUTCOME_A, 0], [3, SCALAR_OUTCOME_A, 0], [4, SCALAR_OUTCOME_A, 1000000000000000000000000], [5, SCALAR_OUTCOME_A, 0], [6, SCALAR_OUTCOME_A, 0], [0, SCALAR_OUTCOME_B, 0], [1, SCALAR_OUTCOME_B, 1000000000000000000000000], [2, SCALAR_OUTCOME_B, 999999000000000000000000], [3, SCALAR_OUTCOME_B, 999999000000000000000000], [4, SCALAR_OUTCOME_B, 0], [5, SCALAR_OUTCOME_B, 1000000000000000000000000], [6, SCALAR_OUTCOME_B, 1000000000000000000000000], [0, SCALAR_OUTCOME_C, 0], [1, SCALAR_OUTCOME_C, 0], [2, SCALAR_OUTCOME_C, 0], [3, SCALAR_OUTCOME_C, 0], [4, SCALAR_OUTCOME_C, 0], [5, SCALAR_OUTCOME_C, 0], [6, SCALAR_OUTCOME_C, 0]]),
     # ----- End scalar market test cases -----
 ])
-def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedReporterOutcome, automatedReporterDisputerAccountNum, automatedReporterDisputeStakes, limitedReportersDisputerAccountNum, limitedReportersDisputeStakes, allReportersDisputerAccountNum, allReportersDisputeStakes, expectedAccountBalances, contractsFixture):
+def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designatedReporterOutcome, designatedReporterDisputerAccountNum, designatedReporterDisputeStakes, limitedReportersDisputerAccountNum, limitedReportersDisputeStakes, allReportersDisputerAccountNum, allReportersDisputeStakes, expectedAccountBalances, contractsFixture):
     universe = contractsFixture.universe
     if (marketType == MARKET_TYPE_CATEGORICAL):
         market = contractsFixture.categoricalMarket
@@ -209,7 +209,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     cUniverse = None
     winningReportingToken = None
 
-    automatedReporterDisputeBondToken = None
+    designatedReporterDisputeBondToken = None
     limitedReportersDisputeBondToken = None
     allReportersDisputeBondToken = None
 
@@ -227,29 +227,29 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     # Fast forward to one second after the next reporting window
     contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
 
-    # Perform automated report (if there is one)
-    if (len(automatedReporterOutcome) > 0):
-        market.automatedReport(automatedReporterOutcome, sender=getattr(tester, 'k' + str(automatedReporterAccountNum)))
+    # Perform designated report (if there is one)
+    if (len(designatedReporterOutcome) > 0):
+        market.designatedReport(designatedReporterOutcome, sender=getattr(tester, 'k' + str(designatedReporterAccountNum)))
 
-        # If someone disputes the automated reporter outcome
-        if (automatedReporterDisputerAccountNum != None):
+        # If someone disputes the designated reporter outcome
+        if (designatedReporterDisputerAccountNum != None):
             # Fast forward to one second after dispute start time
-            contractsFixture.chain.head_state.timestamp = market.getAutomatedReportDueTimestamp() + 1
+            contractsFixture.chain.head_state.timestamp = market.getDesignatedReportDueTimestamp() + 1
 
-            print "a" + str(automatedReporterDisputerAccountNum) + " is disputing automated reporter outcome"
+            print "a" + str(designatedReporterDisputerAccountNum) + " is disputing designated reporter outcome"
 
-            # Dispute the automated reporter outcome
-            disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(automatedReporterDisputerAccountNum)))
-            market.disputeAutomatedReport(sender=getattr(tester, 'k' + str(automatedReporterDisputerAccountNum)))
-            automatedReporterDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getAutomatedReporterDisputeBondToken())
-            assert automatedReporterDisputeBondToken.getMarket() == market.address
+            # Dispute the designated reporter outcome
+            disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(designatedReporterDisputerAccountNum)))
+            market.disputeDesignatedReport(sender=getattr(tester, 'k' + str(designatedReporterDisputerAccountNum)))
+            designatedReporterDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getDesignatedReporterDisputeBondToken())
+            assert designatedReporterDisputeBondToken.getMarket() == market.address
 
             # Ensure correct bond amount was sent to dispute bond token
-            assert reputationToken.balanceOf(getattr(tester, 'a' + str(automatedReporterDisputerAccountNum))) == disputerAccountBalance - AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT
-            assert reputationToken.balanceOf(automatedReporterDisputeBondToken.address) == AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT
-            assert automatedReporterDisputeBondToken.getBondRemainingToBePaidOut() == AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT * 2
+            assert reputationToken.balanceOf(getattr(tester, 'a' + str(designatedReporterDisputerAccountNum))) == disputerAccountBalance - DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT
+            assert reputationToken.balanceOf(designatedReporterDisputeBondToken.address) == DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT
+            assert designatedReporterDisputeBondToken.getBondRemainingToBePaidOut() == DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT * 2
 
-            # CONSIDER: Are these asserts required when disputing automated reporter
+            # CONSIDER: Are these asserts required when disputing designated reporter
             # outcome like they are when disputing limited/all rerporters outcomes?
             # assert not reportingWindow.isContainerForMarket(market.address)
             # assert universe.isContainerForMarket(market.address)
@@ -258,13 +258,13 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
 
             # Buy registration tokens
             registrationToken = contractsFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
-            buyRegistrationTokens(automatedReporterDisputeStakes, registrationToken, reputationToken)
+            buyRegistrationTokens(designatedReporterDisputeStakes, registrationToken, reputationToken)
 
             # Fast forward to reporting start time
             contractsFixture.chain.head_state.timestamp = reportingWindow.getReportingStartTime() + 1
 
             # Have test accounts report on the outcome
-            buyReportingTokens(marketType, automatedReporterDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC)
+            buyReportingTokens(marketType, designatedReporterDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC)
 
             # Fast forward to one second after dispute end time
             contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
@@ -273,7 +273,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         # Fast forward to one second after dispute start time
         contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
-        print "a" + str(automatedReporterDisputerAccountNum) + " is disputing limited reporters outcome"
+        print "a" + str(designatedReporterDisputerAccountNum) + " is disputing limited reporters outcome"
 
         # Dispute the limited reporters result
         disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(limitedReportersDisputerAccountNum)))
@@ -308,7 +308,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
         # Have test account dispute the limited reporting result
-        print "a" + str(automatedReporterDisputerAccountNum) + " is disputing all reporters outcome (and forking)"
+        print "a" + str(designatedReporterDisputerAccountNum) + " is disputing all reporters outcome (and forking)"
 
         # Dispute the all reporters result
         disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(allReportersDisputerAccountNum)))
@@ -354,13 +354,13 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         # Fast forward to one second after dispute end time
         contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
 
-    if (automatedReporterDisputerAccountNum == None and limitedReportersDisputerAccountNum == None and allReportersDisputerAccountNum == None):
+    if (designatedReporterDisputerAccountNum == None and limitedReportersDisputerAccountNum == None and allReportersDisputerAccountNum == None):
         contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
 
     tentativeWinningReportingTokenAddress = market.getReportingTokenOrZeroByPayoutDistributionHash(market.getTentativeWinningPayoutDistributionHash())
     tentativeWinningReportingTokenBalance = reputationToken.balanceOf(tentativeWinningReportingTokenAddress)
 
-    totalLosingDisputeBondTokens = calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, market.getTentativeWinningPayoutDistributionHash())
+    totalLosingDisputeBondTokens = calculateTotalLosingDisputeBondTokens(designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, market.getTentativeWinningPayoutDistributionHash())
 
     # Finalize market (i.e., transfer losing dispute bond tokens to winning reporting token)
     print "\nFinalizing market\n"
@@ -379,15 +379,15 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         printTestAccountBalances(reputationToken, False)
 
     printReportingTokenBalances(reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, False)
-    printDisputeBondTokenBalances(reputationToken, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, False)
+    printDisputeBondTokenBalances(reputationToken, designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, False)
 
     # Verify that losing dispute bonds went to the winning reporting token
     if (allReportersDisputerAccountNum == None):
         winningReportingToken = contractsFixture.applySignature('ReportingToken', market.getFinalWinningReportingToken())
         winningReportingTokenBalance = reputationToken.balanceOf(winningReportingToken.address)
 
-        if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == market.getTentativeWinningPayoutDistributionHash()):
-            assert reputationToken.balanceOf(automatedReporterDisputeBondToken.address) == 0
+        if (designatedReporterDisputeBondToken and designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == market.getTentativeWinningPayoutDistributionHash()):
+            assert reputationToken.balanceOf(designatedReporterDisputeBondToken.address) == 0
         if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == market.getTentativeWinningPayoutDistributionHash()):
             assert reputationToken.balanceOf(limitedReportersDisputeBondToken.address) == 0
         assert winningReportingTokenBalance == tentativeWinningReportingTokenBalance + totalLosingDisputeBondTokens
@@ -397,7 +397,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         print "Total losing dispute bond tokens: " + str(totalLosingDisputeBondTokens / REP_DIVISOR)
         print "Winning reporting token balance after market finalization: " + str(winningReportingTokenBalance / REP_DIVISOR) + "\n"
 
-    if (automatedReporterDisputerAccountNum != None or limitedReportersDisputerAccountNum != None):
+    if (designatedReporterDisputerAccountNum != None or limitedReportersDisputerAccountNum != None):
         # Migrate losing reporting tokens (if no fork occurred)
         if (allReportersDisputerAccountNum == None):
             winningReportingTokenBalanceBeforeMigration = reputationToken.balanceOf(winningReportingToken.address)
@@ -414,24 +414,24 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
                 totalLosingReportingTokens += reputationToken.balanceOf(reportingTokenA.address)
                 totalLosingReportingTokens += reputationToken.balanceOf(reportingTokenB.address)
 
-            amountSentToAutomatedReporterDisputeBondToken = 0
+            amountSentToDesignatedReporterDisputeBondToken = 0
             amountSentToLimitedReportersDisputeBondToken = 0
             amountSentToAllReportersDisputeBondToken = 0
             # Calculate how many losing tokens should be sent to each winning dispute bond token
-            if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
-                automatedReporterDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(automatedReporterDisputeBondToken.address)
-                amountNeeded = automatedReporterDisputeBondToken.getBondRemainingToBePaidOut() - automatedReporterDisputeBondTokenBalanceBeforeMigration
-                amountSentToAutomatedReporterDisputeBondToken = min(amountNeeded, totalLosingReportingTokens)
+            if (designatedReporterDisputeBondToken and designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+                designatedReporterDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(designatedReporterDisputeBondToken.address)
+                amountNeeded = designatedReporterDisputeBondToken.getBondRemainingToBePaidOut() - designatedReporterDisputeBondTokenBalanceBeforeMigration
+                amountSentToDesignatedReporterDisputeBondToken = min(amountNeeded, totalLosingReportingTokens)
             if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
                 limitedReportersDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(limitedReportersDisputeBondToken.address)
                 amountNeeded = limitedReportersDisputeBondToken.getBondRemainingToBePaidOut() - limitedReportersDisputeBondTokenBalanceBeforeMigration
-                amountSentToLimitedReportersDisputeBondToken = min(amountNeeded, totalLosingReportingTokens - amountSentToAutomatedReporterDisputeBondToken)
+                amountSentToLimitedReportersDisputeBondToken = min(amountNeeded, totalLosingReportingTokens - amountSentToDesignatedReporterDisputeBondToken)
             if (allReportersDisputeBondToken and allReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
                 allReportersDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(allReportersDisputeBondToken.address)
                 amountNeeded = allReportersDisputeBondToken.getBondRemainingToBePaidOut() - allReportersDisputeBondTokenBalanceBeforeMigration
-                amountSentToAllReportersDisputeBondToken = min(amountNeeded, totalLosingReportingTokens - amountSentToLimitedReportersDisputeBondToken - amountSentToAutomatedReporterDisputeBondToken)
+                amountSentToAllReportersDisputeBondToken = min(amountNeeded, totalLosingReportingTokens - amountSentToLimitedReportersDisputeBondToken - amountSentToDesignatedReporterDisputeBondToken)
             # Calculate remaining losing tokens to be sent to winning reporting token
-            amountSentToWinningReportingToken = totalLosingReportingTokens - amountSentToAllReportersDisputeBondToken - amountSentToLimitedReportersDisputeBondToken - amountSentToAutomatedReporterDisputeBondToken
+            amountSentToWinningReportingToken = totalLosingReportingTokens - amountSentToAllReportersDisputeBondToken - amountSentToLimitedReportersDisputeBondToken - amountSentToDesignatedReporterDisputeBondToken
 
             print "Migrating losing reporting tokens"
             if (market.getFinalPayoutDistributionHash() == reportingTokenA.getPayoutDistributionHash()):
@@ -450,8 +450,8 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
                 reportingTokenB.migrateLosingTokens()
                 assert reputationToken.balanceOf(reportingTokenB.address) == 0
 
-            if (automatedReporterDisputeBondToken and automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
-                assert reputationToken.balanceOf(automatedReporterDisputeBondToken.address) == automatedReporterDisputeBondTokenBalanceBeforeMigration + amountSentToAutomatedReporterDisputeBondToken
+            if (designatedReporterDisputeBondToken and designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+                assert reputationToken.balanceOf(designatedReporterDisputeBondToken.address) == designatedReporterDisputeBondTokenBalanceBeforeMigration + amountSentToDesignatedReporterDisputeBondToken
             if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
                 assert reputationToken.balanceOf(limitedReportersDisputeBondToken.address) == limitedReportersDisputeBondTokenBalanceBeforeMigration + amountSentToLimitedReportersDisputeBondToken
             if (allReportersDisputeBondToken and allReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
@@ -461,21 +461,21 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             winningReportingTokenBalance = reputationToken.balanceOf(winningReportingToken.address)
 
             print "Total losing reporting tokens: " + str(totalLosingReportingTokens)
-            print "Amount sent to automated reporter dispute bond token: " + str(amountSentToAutomatedReporterDisputeBondToken)
+            print "Amount sent to designated reporter dispute bond token: " + str(amountSentToDesignatedReporterDisputeBondToken)
             print "Amount sent to limited reporters dispute bond token: " + str(amountSentToLimitedReportersDisputeBondToken)
             print "Amount sent to all reporters dispute bond token: " + str(amountSentToAllReportersDisputeBondToken)
             print "Amount sent to winning reporting token: : " + str(amountSentToWinningReportingToken)
             print "Winning reporting token balance before migration: " + str(winningReportingTokenBalanceBeforeMigration / REP_DIVISOR)
             print "Winning reporting token balance after migration: " + str(winningReportingTokenBalance / REP_DIVISOR) + "\n"
-            printDisputeBondTokenBalances(reputationToken, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, False)
+            printDisputeBondTokenBalances(reputationToken, designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, False)
 
         # Redeem winning/forked reporting tokens
-        handleReportingTokens(market, allReportersDisputerAccountNum, automatedReporterDisputeStakes, limitedReportersDisputeStakes, allReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
+        handleReportingTokens(market, allReportersDisputerAccountNum, designatedReporterDisputeStakes, limitedReportersDisputeStakes, allReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
 
         contractsFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
         # Have correct dispute bond holders withdraw from dispute token
-        withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedReporterDisputerAccountNum, limitedReportersDisputerAccountNum, allReportersDisputerAccountNum, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, reputationToken, winningReportingToken, aUniverse, bUniverse, cUniverse, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
+        withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, designatedReporterDisputerAccountNum, limitedReportersDisputerAccountNum, allReportersDisputerAccountNum, designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, reputationToken, winningReportingToken, aUniverse, bUniverse, cUniverse, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
 
     print "Final test account balances"
     if (allReportersDisputerAccountNum):
@@ -500,7 +500,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         elif (row[1] == None):
             assert row[2] == reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
 
-def handleReportingTokens(market, allReportersDisputerAccountNum, automatedReporterDisputeStakes, limitedReportersDisputeStakes, allReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
+def handleReportingTokens(market, allReportersDisputerAccountNum, designatedReporterDisputeStakes, limitedReportersDisputeStakes, allReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
     if (allReportersDisputerAccountNum):
         # Reputation staked on a particular outcome must be redeemed only on the universe for that outcome.
         # Reputation held in a dispute bond against a particular outcome must be redeemed on a universe other than the disputed outcome.
@@ -511,7 +511,7 @@ def handleReportingTokens(market, allReportersDisputerAccountNum, automatedRepor
         print 'Migrators array:'
         print str(migrators) + "\n"
 
-        for row in automatedReporterDisputeStakes:
+        for row in designatedReporterDisputeStakes:
             destinationReputationToken = None
             if (migrators[row[0]] and migrators[row[0]] == OUTCOME_A):
                 print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on universe A"
@@ -570,7 +570,7 @@ def handleReportingTokens(market, allReportersDisputerAccountNum, automatedRepor
         # Calculate total reporting tokens staked on winning outcome
         totalStakedOnWinningOutcome = 0
         winningOutcomeStakes = {}
-        for row in automatedReporterDisputeStakes:
+        for row in designatedReporterDisputeStakes:
             if (market.derivePayoutDistributionHash(row[1]) == winningReportingToken.getPayoutDistributionHash()):
                 totalStakedOnWinningOutcome += row[2]
                 if (row[0] in winningOutcomeStakes):
@@ -598,15 +598,15 @@ def handleReportingTokens(market, allReportersDisputerAccountNum, automatedRepor
             print "Transferred " + str(expectedWinnings) + " to account a" + str(key)
         printTestAccountBalances(reputationToken, False)
 
-def withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedReporterDisputerAccountNum, limitedReportersDisputerAccountNum, allReportersDisputerAccountNum, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, reputationToken, winningReportingToken, aUniverse, bUniverse, cUniverse, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
+def withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, designatedReporterDisputerAccountNum, limitedReportersDisputerAccountNum, allReportersDisputerAccountNum, designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, reputationToken, winningReportingToken, aUniverse, bUniverse, cUniverse, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
     if (allReportersDisputerAccountNum == None):
-        if (automatedReporterDisputeBondToken and market.getFinalPayoutDistributionHash() != automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash()):
-            print "Withdrawing automated reporter dispute bond tokens"
-            accountBalanceBeforeWithdrawl = reputationToken.balanceOf(automatedReporterDisputeBondToken.getBondHolder())
-            disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(automatedReporterDisputeBondToken.address)
-            automatedReporterDisputeBondToken.withdraw(sender=getattr(tester, 'k' + str(automatedReporterDisputerAccountNum)))
-            assert reputationToken.balanceOf(automatedReporterDisputeBondToken.address) == 0
-            assert reputationToken.balanceOf(automatedReporterDisputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
+        if (designatedReporterDisputeBondToken and market.getFinalPayoutDistributionHash() != designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash()):
+            print "Withdrawing designated reporter dispute bond tokens"
+            accountBalanceBeforeWithdrawl = reputationToken.balanceOf(designatedReporterDisputeBondToken.getBondHolder())
+            disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(designatedReporterDisputeBondToken.address)
+            designatedReporterDisputeBondToken.withdraw(sender=getattr(tester, 'k' + str(designatedReporterDisputerAccountNum)))
+            assert reputationToken.balanceOf(designatedReporterDisputeBondToken.address) == 0
+            assert reputationToken.balanceOf(designatedReporterDisputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
         if (limitedReportersDisputeBondToken and market.getFinalPayoutDistributionHash() != limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash()):
             print "Withdrawing limited reporters dispute bond tokens"
             accountBalanceBeforeWithdrawl = reputationToken.balanceOf(limitedReportersDisputeBondToken.getBondHolder())
@@ -621,9 +621,9 @@ def withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedR
             disputeAccountNum = None
             disputeBondToken = None
             print str(row) + "\n"
-            if (row[0] == automatedReporterDisputerAccountNum):
-                disputeAccountNum = automatedReporterDisputerAccountNum
-                disputeBondToken = automatedReporterDisputeBondToken
+            if (row[0] == designatedReporterDisputerAccountNum):
+                disputeAccountNum = designatedReporterDisputerAccountNum
+                disputeBondToken = designatedReporterDisputeBondToken
                 disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
                 destinationUniverse = None
                 destinationUniverseReputationToken = None
@@ -633,15 +633,15 @@ def withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedR
                     if (row[1] == OUTCOME_A):
                         destinationUniverse = aUniverse
                         destinationUniverseReputationToken = aUniverseReputationToken
-                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to universe A"
+                        print "Withdrawing designated reporter dispute bond tokens for a" + str(row[0]) + " to universe A"
                     elif (row[1] == OUTCOME_B):
                         destinationUniverse = bUniverse
                         destinationUniverseReputationToken = bUniverseReputationToken
-                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to universe B"
+                        print "Withdrawing designated reporter dispute bond tokens for a" + str(row[0]) + " to universe B"
                     elif (row[1] == OUTCOME_C):
                         destinationUniverse = cUniverse
                         destinationUniverseReputationToken = cUniverseReputationToken
-                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to universe C"
+                        print "Withdrawing designated reporter dispute bond tokens for a" + str(row[0]) + " to universe C"
                     if (destinationUniverse and destinationUniverseReputationToken):
                         accountBalanceBeforeWithdrawl = destinationUniverseReputationToken.balanceOf(disputeBondToken.getBondHolder())
                         disputeBondToken.withdrawToUniverse(destinationUniverse.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))

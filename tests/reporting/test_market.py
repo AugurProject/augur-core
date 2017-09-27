@@ -25,4 +25,4 @@ def test_market_creation(contractsFixture):
     assert market.getFinalPayoutDistributionHash() == stringToBytes("")
     assert market.getReportingState() == contractsFixture.constants.PRE_REPORTING()
     assert market.isContainerForReportingToken(shadyReportingToken.address) == 0
-    assert market.getAutomatedReportDueTimestamp() == market.getEndTime() + timedelta(days=3).total_seconds()
+    assert market.getDesignatedReportDueTimestamp() == market.getEndTime() + timedelta(days=3).total_seconds()

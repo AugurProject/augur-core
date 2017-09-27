@@ -10,7 +10,7 @@ import 'trading/ICash.sol';
 
 contract IReportingWindow is Typed {
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public returns (bool);
-    function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _automatedReporterAddress) public payable returns (IMarket _newMarket);
+    function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _designatedReporterAddress) public payable returns (IMarket _newMarket);
     function migrateMarketInFromSibling() public returns (bool);
     function migrateMarketInFromNibling() public returns (bool);
     function removeMarket() public returns (bool);
