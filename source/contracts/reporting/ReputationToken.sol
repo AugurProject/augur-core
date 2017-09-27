@@ -6,7 +6,7 @@ import 'libraries/Typed.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/StandardToken.sol';
 import 'libraries/token/ERC20.sol';
-import 'reporting/IBranch.sol';
+import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
@@ -18,13 +18,13 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
     string constant public name = "Reputation";
     string constant public symbol = "REP";
     uint256 constant public decimals = 18;
-    IBranch private branch;
+    IUniverse private universe;
     IReputationToken private topMigrationDestination;
 
-    function initialize(IBranch _branch) public beforeInitialized returns (bool) {
+    function initialize(IUniverse _universe) public beforeInitialized returns (bool) {
         endInitialization();
-        require(_branch != address(0));
-        branch = _branch;
+        require(_universe != address(0));
+        universe = _universe;
         return true;
     }
 
@@ -44,7 +44,7 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
     }
 
     function migrateIn(address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
-        require(ReputationToken(msg.sender) == branch.getParentBranch().getReputationToken());
+        require(ReputationToken(msg.sender) == universe.getParentUniverse().getReputationToken());
         balances[_reporter] = balances[_reporter].add(_attotokens);
         supply = supply.add(_attotokens);
         return true;
@@ -62,7 +62,7 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         Typed _caller = Typed(msg.sender);
-        require(branch.isContainerForReportingWindow(_caller) || branch.isContainerForRegistrationToken(_caller) || branch.isContainerForMarket(_caller) || branch.isContainerForReportingToken(_caller));
+        require(universe.isContainerForReportingWindow(_caller) || universe.isContainerForRegistrationToken(_caller) || universe.isContainerForMarket(_caller) || universe.isContainerForReportingToken(_caller));
         balances[_source] = balances[_source].sub(_attotokens);
         balances[_destination] = balances[_destination].add(_attotokens);
         supply = supply.add(_attotokens);
@@ -71,10 +71,10 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
     }
 
     function assertReputationTokenIsLegit(IReputationToken _shadyReputationToken) private returns (bool) {
-        var _shadyBranch = _shadyReputationToken.getBranch();
-        require(branch.isParentOf(_shadyBranch));
-        var _legitBranch = _shadyBranch;
-        require(_legitBranch.getReputationToken() == _shadyReputationToken);
+        var _shadyUniverse = _shadyReputationToken.getUniverse();
+        require(universe.isParentOf(_shadyUniverse));
+        var _legitUniverse = _shadyUniverse;
+        require(_legitUniverse.getReputationToken() == _shadyReputationToken);
         return true;
     }
 
@@ -82,8 +82,8 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         return "ReputationToken";
     }
 
-    function getBranch() constant returns (IBranch) {
-        return branch;
+    function getUniverse() constant returns (IUniverse) {
+        return universe;
     }
 
     function getTopMigrationDestination() constant returns (IReputationToken) {

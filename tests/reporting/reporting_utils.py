@@ -7,10 +7,10 @@ def initializeReportingFixture(sessionFixture, market):
     # Seed legacy rep contract
     legacyRepContract = sessionFixture.contracts['LegacyRepContract']
     legacyRepContract.faucet(long(11 * 10**6 * 10**18))
-    branch = sessionFixture.branch
+    universe = sessionFixture.universe
 
-    # Get the reputation token for this branch and migrate legacy REP to it
-    reputationToken = sessionFixture.applySignature('ReputationToken', branch.getReputationToken())
+    # Get the reputation token for this universe and migrate legacy REP to it
+    reputationToken = sessionFixture.applySignature('ReputationToken', universe.getReputationToken())
     legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
     reputationToken.migrateFromLegacyRepContract()
 
@@ -38,8 +38,8 @@ def initializeReportingFixture(sessionFixture, market):
 
 def proceedToAutomatedReporting(testFixture, market, reportOutcomes):
     cash = testFixture.cash
-    branch = testFixture.branch
-    reputationToken = testFixture.applySignature('ReputationToken', branch.getReputationToken())
+    universe = testFixture.universe
+    reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     # We can't yet do an automated report on the market as it's in the pre reporting phase
@@ -48,7 +48,7 @@ def proceedToAutomatedReporting(testFixture, market, reportOutcomes):
             market.automatedReport(reportOutcomes, sender=tester.k0)
 
     # Fast forward to the reporting phase time
-    reportingWindow = testFixture.applySignature('ReportingWindow', branch.getNextReportingWindow())
+    reportingWindow = testFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
     testFixture.chain.head_state.timestamp = market.getEndTime() + 1
 
     # This will cause us to be in the AUTOMATED REPORTING phase
@@ -71,8 +71,8 @@ def proceedToLimitedReporting(testFixture, market, makeReport, disputer, reportO
 
 def proceedToAllReporting(testFixture, market, makeReport, automatedDisputer, limitedDisputer, reportOutcomes, limitedReporter, limitedReportOutcomes):
     cash = testFixture.cash
-    branch = testFixture.branch
-    reputationToken = testFixture.applySignature('ReputationToken', branch.getReputationToken())
+    universe = testFixture.universe
+    reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     if (market.getReportingState() != testFixture.constants.LIMITED_REPORTING()):
@@ -98,8 +98,8 @@ def proceedToAllReporting(testFixture, market, makeReport, automatedDisputer, li
 
 def proceedToForking(testFixture, market, makeReport, automatedDisputer, limitedDisputer, reporter, reportOutcomes, limitedReporter, limitedReportOutcomes, allReportOutcomes):
     market = testFixture.binaryMarket
-    branch = testFixture.branch
-    reputationToken = testFixture.applySignature('ReputationToken', branch.getReputationToken())
+    universe = testFixture.universe
+    reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
 
     # Proceed to the ALL REPORTING phase
     if (market.getReportingState() != testFixture.constants.ALL_REPORTING()):
@@ -125,26 +125,26 @@ def proceedToForking(testFixture, market, makeReport, automatedDisputer, limited
     assert market.getReportingState() == testFixture.constants.FORKING()
 
 def finalizeForkingMarket(reportingFixture, market, finalizeByMigration, yesMigratorAddress, yesMigratorKey, noMigratorAddress1, noMigratorKey1, noMigratorAddress2, noMigratorKey2, firstReportOutcomes, secondReportOutcomes):
-    branch = reportingFixture.branch
-    reputationToken = reportingFixture.applySignature('ReputationToken', branch.getReputationToken())
+    universe = reportingFixture.universe
+    reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())
 
-    # The universe forks and there is now a branch where NO and YES are the respective outcomes of each
-    noBranch = reportingFixture.getOrCreateChildBranch(branch, market, secondReportOutcomes)
-    noBranchReputationToken = reportingFixture.applySignature('ReputationToken', noBranch.getReputationToken())
-    assert noBranch.address != branch.address
-    yesBranch = reportingFixture.getOrCreateChildBranch(branch, market, firstReportOutcomes)
-    yesBranchReputationToken = reportingFixture.applySignature('ReputationToken', yesBranch.getReputationToken())
-    assert yesBranch.address != branch.address
-    assert yesBranch.address != noBranch.address
+    # The universe forks and there is now a universe where NO and YES are the respective outcomes of each
+    noUniverse = reportingFixture.getOrCreateChildUniverse(universe, market, secondReportOutcomes)
+    noUniverseReputationToken = reportingFixture.applySignature('ReputationToken', noUniverse.getReputationToken())
+    assert noUniverse.address != universe.address
+    yesUniverse = reportingFixture.getOrCreateChildUniverse(universe, market, firstReportOutcomes)
+    yesUniverseReputationToken = reportingFixture.applySignature('ReputationToken', yesUniverse.getReputationToken())
+    assert yesUniverse.address != universe.address
+    assert yesUniverse.address != noUniverse.address
 
     # Attempting to finalize the fork now will not succeed as no REP has been migrated and not enough time has passed
     assert market.tryFinalize() == 0
 
-    # A Tester moves their REP to the YES branch
+    # A Tester moves their REP to the YES universe
     balance = reputationToken.balanceOf(yesMigratorAddress)
-    reputationToken.migrateOut(yesBranchReputationToken.address, yesMigratorAddress, reputationToken.balanceOf(yesMigratorAddress), sender = yesMigratorKey)
+    reputationToken.migrateOut(yesUniverseReputationToken.address, yesMigratorAddress, reputationToken.balanceOf(yesMigratorAddress), sender = yesMigratorKey)
     assert not reputationToken.balanceOf(yesMigratorAddress)
-    assert yesBranchReputationToken.balanceOf(yesMigratorAddress) == balance
+    assert yesUniverseReputationToken.balanceOf(yesMigratorAddress) == balance
 
     # Attempting to finalize the fork now will not succeed as a majority or REP has not yet migrated and fork end time has not been reached
     assert market.tryFinalize() == 0
@@ -155,19 +155,19 @@ def finalizeForkingMarket(reportingFixture, market, finalizeByMigration, yesMigr
     winningTokenAddress = reportingTokenYes.address
 
     if (finalizeByMigration):
-        # 2 Testers move their combined REP to the NO branch
+        # 2 Testers move their combined REP to the NO universe
         tester1Balance = reputationToken.balanceOf(noMigratorAddress1)
-        reputationToken.migrateOut(noBranchReputationToken.address, noMigratorAddress1, reputationToken.balanceOf(noMigratorAddress1), sender = noMigratorKey1)
+        reputationToken.migrateOut(noUniverseReputationToken.address, noMigratorAddress1, reputationToken.balanceOf(noMigratorAddress1), sender = noMigratorKey1)
         assert not reputationToken.balanceOf(noMigratorAddress1)
-        assert noBranchReputationToken.balanceOf(noMigratorAddress1) == tester1Balance
+        assert noUniverseReputationToken.balanceOf(noMigratorAddress1) == tester1Balance
         tester2Balance = reputationToken.balanceOf(noMigratorAddress2)
-        reputationToken.migrateOut(noBranchReputationToken.address, noMigratorAddress2, reputationToken.balanceOf(noMigratorAddress2), sender = noMigratorKey2)
+        reputationToken.migrateOut(noUniverseReputationToken.address, noMigratorAddress2, reputationToken.balanceOf(noMigratorAddress2), sender = noMigratorKey2)
         assert not reputationToken.balanceOf(noMigratorAddress2)
-        assert noBranchReputationToken.balanceOf(noMigratorAddress2) == tester2Balance
+        assert noUniverseReputationToken.balanceOf(noMigratorAddress2) == tester2Balance
         winningTokenAddress = reportingTokenNo.address
     else:
         # Time marches on past the fork end time
-        reportingFixture.chain.head_state.timestamp = branch.getForkEndTime() + 1
+        reportingFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1
 
     # We can finalize the market now
     assert market.tryFinalize()

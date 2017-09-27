@@ -7,7 +7,7 @@ import 'libraries/DelegationTarget.sol';
 import 'libraries/Typed.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/collections/Set.sol';
-import 'reporting/IBranch.sol';
+import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IRegistrationToken.sol';
 import 'reporting/IMarket.sol';
@@ -28,7 +28,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         bool finishedReporting;
     }
 
-    IBranch private branch;
+    IUniverse private universe;
     uint256 private startTime;
     IRegistrationToken private registrationToken;
     Set.Data private markets;
@@ -38,10 +38,10 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
 
-    function initialize(IBranch _branch, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
+    function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
-        branch = _branch;
-        startTime = _reportingWindowId * branch.getReportingPeriodDurationInSeconds();
+        universe = _universe;
+        startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         RegistrationTokenFactory _registrationTokenFactory = RegistrationTokenFactory(controller.lookup("RegistrationTokenFactory"));
         registrationToken = _registrationTokenFactory.createRegistrationToken(controller, this);
         return true;
@@ -49,7 +49,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _automatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
-        require(branch.getReportingWindowByMarketEndTime(_endTime, _automatedReporterAddress != 0).getTypeName() == "ReportingWindow");
+        require(universe.getReportingWindowByMarketEndTime(_endTime, _automatedReporterAddress != 0).getTypeName() == "ReportingWindow");
         _newMarket = MarketFactory(controller.lookup("MarketFactory")).createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _automatedReporterAddress);
         markets.add(_newMarket);
         limitedReporterMarkets.add(_newMarket);
@@ -59,7 +59,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     function migrateMarketInFromSibling() public afterInitialized returns (bool) {
         IMarket _market = IMarket(msg.sender);
         IReportingWindow _shadyReportingWindow = _market.getReportingWindow();
-        require(branch.isContainerForReportingWindow(_shadyReportingWindow));
+        require(universe.isContainerForReportingWindow(_shadyReportingWindow));
         IReportingWindow _originalReportingWindow = _shadyReportingWindow;
         require(_originalReportingWindow.isContainerForMarket(_market));
         privateAddMarket(_market);
@@ -68,11 +68,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function migrateMarketInFromNibling() public afterInitialized returns (bool) {
         IMarket _market = IMarket(msg.sender);
-        IBranch _shadyBranch = _market.getBranch();
-        require(_shadyBranch == branch.getParentBranch());
-        IBranch _originalBranch = _shadyBranch;
+        IUniverse _shadyUniverse = _market.getUniverse();
+        require(_shadyUniverse == universe.getParentUniverse());
+        IUniverse _originalUniverse = _shadyUniverse;
         IReportingWindow _shadyReportingWindow = _market.getReportingWindow();
-        require(_originalBranch.isContainerForReportingWindow(_shadyReportingWindow));
+        require(_originalUniverse.isContainerForReportingWindow(_shadyReportingWindow));
         IReportingWindow _originalReportingWindow = _shadyReportingWindow;
         require(_originalReportingWindow.isContainerForMarket(_market));
         privateAddMarket(_market);
@@ -128,8 +128,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return "ReportingWindow";
     }
 
-    function getBranch() public afterInitialized constant returns (IBranch) {
-        return branch;
+    function getUniverse() public afterInitialized constant returns (IUniverse) {
+        return universe;
     }
 
     function getRegistrationToken() public afterInitialized constant returns (IRegistrationToken) {
@@ -137,7 +137,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function getReputationToken() public afterInitialized constant returns (IReputationToken) {
-        return branch.getReputationToken();
+        return universe.getReputationToken();
     }
 
     function getStartTime() public afterInitialized constant returns (uint256) {
@@ -287,6 +287,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function isForkingMarketFinalized() public afterInitialized constant returns (bool) {
-        return getBranch().getForkingMarket().getReportingState() == IMarket.ReportingState.FINALIZED;
+        return getUniverse().getForkingMarket().getReportingState() == IMarket.ReportingState.FINALIZED;
     }
 }

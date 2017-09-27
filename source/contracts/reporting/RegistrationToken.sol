@@ -8,7 +8,7 @@ import 'libraries/Typed.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/StandardToken.sol';
 import 'reporting/IReportingToken.sol';
-import 'reporting/IBranch.sol';
+import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
@@ -55,8 +55,8 @@ contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardTo
         return reportingWindow;
     }
 
-    function getBranch() public constant returns (IBranch) {
-        return reportingWindow.getBranch();
+    function getUniverse() public constant returns (IUniverse) {
+        return reportingWindow.getUniverse();
     }
 
     function getReputationToken() public constant returns (IReputationToken) {

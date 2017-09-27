@@ -7,7 +7,7 @@ from utils import bytesToHexString, fix, captureFilteredLogs
 from constants import YES, NO
 
 def test_publicBuyCompleteSets(fundedRepFixture):
-    branch = fundedRepFixture.branch
+    universe = fundedRepFixture.universe
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
     completeSets = fundedRepFixture.contracts['CompleteSets']
@@ -42,7 +42,7 @@ def test_publicBuyCompleteSets(fundedRepFixture):
     assert noShareToken.totalSupply() == 10, "Increase in yes shares purchased for this market should be 10"
 
 def test_publicBuyCompleteSets_failure(fundedRepFixture):
-    branch = fundedRepFixture.branch
+    universe = fundedRepFixture.universe
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
     completeSets = fundedRepFixture.contracts['CompleteSets']
@@ -60,7 +60,7 @@ def test_publicBuyCompleteSets_failure(fundedRepFixture):
         completeSets.publicBuyCompleteSets(tester.a1, amount, sender=tester.k1, value=cost)
 
 def test_publicSellCompleteSets(fundedRepFixture):
-    branch = fundedRepFixture.branch
+    universe = fundedRepFixture.universe
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
     completeSets = fundedRepFixture.contracts['CompleteSets']
@@ -104,7 +104,7 @@ def test_publicSellCompleteSets(fundedRepFixture):
     assert cash.balanceOf(market.getReportingWindow()) == fix('0.0009')
 
 def test_publicSellCompleteSets_failure(fundedRepFixture):
-    branch = fundedRepFixture.branch
+    universe = fundedRepFixture.universe
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
     completeSets = fundedRepFixture.contracts['CompleteSets']

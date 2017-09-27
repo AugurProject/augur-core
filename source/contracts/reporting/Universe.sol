@@ -1,12 +1,12 @@
 pragma solidity ^0.4.13;
 
-import 'reporting/IBranch.sol';
+import 'reporting/IUniverse.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/Typed.sol';
 import 'libraries/Initializable.sol';
 import 'factories/ReputationTokenFactory.sol';
 import 'factories/ReportingWindowFactory.sol';
-import 'factories/BranchFactory.sol';
+import 'factories/UniverseFactory.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingToken.sol';
@@ -16,18 +16,18 @@ import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
 
 
-contract Branch is DelegationTarget, Typed, Initializable, IBranch {
-    IBranch private parentBranch;
+contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
+    IUniverse private parentUniverse;
     bytes32 private parentPayoutDistributionHash;
     IReputationToken private reputationToken;
     IMarket private forkingMarket;
     uint256 private forkEndTime;
     mapping(uint256 => IReportingWindow) private reportingWindows;
-    mapping(bytes32 => IBranch) private childBranches;
+    mapping(bytes32 => IUniverse) private childUniversees;
 
-    function initialize(IBranch _parentBranch, bytes32 _parentPayoutDistributionHash) external beforeInitialized returns (bool) {
+    function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external beforeInitialized returns (bool) {
         endInitialization();
-        parentBranch = _parentBranch;
+        parentUniverse = _parentUniverse;
         parentPayoutDistributionHash = _parentPayoutDistributionHash;
         reputationToken = ReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this);
         require(reputationToken != address(0));
@@ -43,11 +43,11 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
     }
 
     function getTypeName() public constant returns (bytes32) {
-        return "Branch";
+        return "Universe";
     }
 
-    function getParentBranch() public constant returns (IBranch) {
-        return parentBranch;
+    function getParentUniverse() public constant returns (IUniverse) {
+        return parentUniverse;
     }
 
     function getParentPayoutDistributionHash() public constant returns (bytes32) {
@@ -70,8 +70,8 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return reportingWindows[_reportingWindowId];
     }
 
-    function getChildBranch(bytes32 _parentPayoutDistributionHash) public constant returns (IBranch) {
-        return childBranches[_parentPayoutDistributionHash];
+    function getChildUniverse(bytes32 _parentPayoutDistributionHash) public constant returns (IUniverse) {
+        return childUniversees[_parentPayoutDistributionHash];
     }
 
     function getReportingWindowId(uint256 _timestamp) public constant returns (uint256) {
@@ -110,11 +110,11 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return getReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
     }
 
-    function getOrCreateChildBranch(bytes32 _parentPayoutDistributionHash) public returns (IBranch) {
-        if (childBranches[_parentPayoutDistributionHash] == address(0)) {
-            childBranches[_parentPayoutDistributionHash] = BranchFactory(controller.lookup("BranchFactory")).createBranch(controller, this, _parentPayoutDistributionHash);
+    function getOrCreateChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
+        if (childUniversees[_parentPayoutDistributionHash] == address(0)) {
+            childUniversees[_parentPayoutDistributionHash] = UniverseFactory(controller.lookup("UniverseFactory")).createUniverse(controller, this, _parentPayoutDistributionHash);
         }
-        return childBranches[_parentPayoutDistributionHash];
+        return childUniversees[_parentPayoutDistributionHash];
     }
 
     function isContainerForReportingWindow(Typed _shadyTarget) public constant returns (bool) {
@@ -211,9 +211,9 @@ contract Branch is DelegationTarget, Typed, Initializable, IBranch {
         return _legitMarket.isContainerForShareToken(_shadyShareToken);
     }
 
-    function isParentOf(IBranch _shadyChild) public constant returns (bool) {
+    function isParentOf(IUniverse _shadyChild) public constant returns (bool) {
         bytes32 _parentPayoutDistributionHash = _shadyChild.getParentPayoutDistributionHash();
-        return childBranches[_parentPayoutDistributionHash] == _shadyChild;
+        return childUniversees[_parentPayoutDistributionHash] == _shadyChild;
     }
 
     function getReportingWindowForForkEndTime() public constant returns (IReportingWindow) {

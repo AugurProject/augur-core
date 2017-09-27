@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
 import 'libraries/Typed.sol';
-import 'reporting/IBranch.sol';
+import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IRegistrationToken.sol';
 import 'reporting/IReputationToken.sol';
@@ -9,14 +9,14 @@ import 'trading/ICash.sol';
 
 
 contract IReportingWindow is Typed {
-    function initialize(IBranch _branch, uint256 _reportingWindowId) public returns (bool);
+    function initialize(IUniverse _universe, uint256 _reportingWindowId) public returns (bool);
     function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _automatedReporterAddress) public payable returns (IMarket _newMarket);
     function migrateMarketInFromSibling() public returns (bool);
     function migrateMarketInFromNibling() public returns (bool);
     function removeMarket() public returns (bool);
     function noteReport(IMarket _market, address _reporter, bytes32 _payoutDistributionHash) public returns (bool);
     function updateMarketPhase() public returns (bool);
-    function getBranch() public constant returns (IBranch);
+    function getUniverse() public constant returns (IUniverse);
     function getReputationToken() public constant returns (IReputationToken);
     function getRegistrationToken() public constant returns (IRegistrationToken);
     function getStartTime() public constant returns (uint256);

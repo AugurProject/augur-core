@@ -186,7 +186,7 @@ def calculateTotalLosingDisputeBondTokens(automatedReporterDisputeBondToken, lim
     # ----- End scalar market test cases -----
 ])
 def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedReporterOutcome, automatedReporterDisputerAccountNum, automatedReporterDisputeStakes, limitedReportersDisputerAccountNum, limitedReportersDisputeStakes, allReportersDisputerAccountNum, allReportersDisputeStakes, expectedAccountBalances, contractsFixture):
-    branch = contractsFixture.branch
+    universe = contractsFixture.universe
     if (marketType == MARKET_TYPE_CATEGORICAL):
         market = contractsFixture.categoricalMarket
         OUTCOME_A = CATEGORICAL_OUTCOME_A
@@ -201,12 +201,12 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     reportingTokenB = contractsFixture.getReportingToken(market, OUTCOME_B)
     reportingTokenC = contractsFixture.getReportingToken(market, OUTCOME_C)
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    aBranchReputationToken = None
-    bBranchReputationToken = None
-    cBranchReputationToken = None
-    aBranch = None
-    bBranch = None
-    cBranch = None
+    aUniverseReputationToken = None
+    bUniverseReputationToken = None
+    cUniverseReputationToken = None
+    aUniverse = None
+    bUniverse = None
+    cUniverse = None
     winningReportingToken = None
 
     automatedReporterDisputeBondToken = None
@@ -217,8 +217,8 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     legacyRepContract = contractsFixture.contracts['LegacyRepContract']
     legacyRepContract.faucet(long(REP_TOTAL * REP_DIVISOR))
 
-    # Get the reputation token for this branch and migrate legacy REP to it
-    reputationToken = contractsFixture.applySignature('ReputationToken', branch.getReputationToken())
+    # Get the reputation token for this universe and migrate legacy REP to it
+    reputationToken = contractsFixture.applySignature('ReputationToken', universe.getReputationToken())
     legacyRepContract.approve(reputationToken.address, REP_TOTAL * REP_DIVISOR)
     reputationToken.migrateFromLegacyRepContract()
 
@@ -252,7 +252,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             # CONSIDER: Are these asserts required when disputing automated reporter
             # outcome like they are when disputing limited/all rerporters outcomes?
             # assert not reportingWindow.isContainerForMarket(market.address)
-            # assert branch.isContainerForMarket(market.address)
+            # assert universe.isContainerForMarket(market.address)
             # reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
             # assert reportingWindow.isContainerForMarket(market.address)
 
@@ -286,7 +286,7 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         assert reputationToken.balanceOf(limitedReportersDisputeBondToken.address) == LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT
 
         assert not reportingWindow.isContainerForMarket(market.address)
-        assert branch.isContainerForMarket(market.address)
+        assert universe.isContainerForMarket(market.address)
         reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
         assert reportingWindow.isContainerForMarket(market.address)
 
@@ -321,35 +321,35 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
         assert reputationToken.balanceOf(allReportersDisputeBondToken.address) == ALL_REPORTERS_DISPUTE_BOND_AMOUNT
 
         assert not reportingWindow.isContainerForMarket(market.address)
-        assert branch.isContainerForMarket(market.address)
+        assert universe.isContainerForMarket(market.address)
         reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
         assert reportingWindow.isContainerForMarket(market.address)
 
-        aBranch = contractsFixture.getOrCreateChildBranch(branch, market, OUTCOME_A)
-        aBranchReputationToken = contractsFixture.applySignature('ReputationToken', aBranch.getReputationToken())
-        assert aBranch.address != branch.address
-        bBranch = contractsFixture.getOrCreateChildBranch(branch, market, OUTCOME_B)
-        bBranchReputationToken = contractsFixture.applySignature('ReputationToken', bBranch.getReputationToken())
-        assert bBranch.address != branch.address
-        cBranch = contractsFixture.getOrCreateChildBranch(branch, market, OUTCOME_C)
-        cBranchReputationToken = contractsFixture.applySignature('ReputationToken', cBranch.getReputationToken())
-        assert bBranch.address != branch.address
-        assert aBranch.address != bBranch.address
-        assert aBranch.address != cBranch.address
-        assert bBranch.address != cBranch.address
+        aUniverse = contractsFixture.getOrCreateChildUniverse(universe, market, OUTCOME_A)
+        aUniverseReputationToken = contractsFixture.applySignature('ReputationToken', aUniverse.getReputationToken())
+        assert aUniverse.address != universe.address
+        bUniverse = contractsFixture.getOrCreateChildUniverse(universe, market, OUTCOME_B)
+        bUniverseReputationToken = contractsFixture.applySignature('ReputationToken', bUniverse.getReputationToken())
+        assert bUniverse.address != universe.address
+        cUniverse = contractsFixture.getOrCreateChildUniverse(universe, market, OUTCOME_C)
+        cUniverseReputationToken = contractsFixture.applySignature('ReputationToken', cUniverse.getReputationToken())
+        assert bUniverse.address != universe.address
+        assert aUniverse.address != bUniverse.address
+        assert aUniverse.address != cUniverse.address
+        assert bUniverse.address != cUniverse.address
 
         # Participate in the fork by moving REP
         for row in allReportersDisputeStakes:
             if (row[1] == OUTCOME_A):
-                destinationBranchReputationToken = aBranchReputationToken
+                destinationUniverseReputationToken = aUniverseReputationToken
             elif (row[1] == OUTCOME_B):
-                destinationBranchReputationToken = bBranchReputationToken
+                destinationUniverseReputationToken = bUniverseReputationToken
             elif (row[1] == OUTCOME_C):
-                destinationBranchReputationToken = cBranchReputationToken
+                destinationUniverseReputationToken = cUniverseReputationToken
             accountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
-            reputationToken.migrateOut(destinationBranchReputationToken.address, getattr(tester, 'a' + str(row[0])), reputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))), sender=getattr(tester, 'k' + str(row[0])))
+            reputationToken.migrateOut(destinationUniverseReputationToken.address, getattr(tester, 'a' + str(row[0])), reputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))), sender=getattr(tester, 'k' + str(row[0])))
             assert not reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
-            assert destinationBranchReputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalance
+            assert destinationUniverseReputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalance
 
         # Fast forward to one second after dispute end time
         contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
@@ -367,14 +367,14 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
     market.tryFinalize()
     assert market.getReportingState() == contractsFixture.constants.FINALIZED()
     if (allReportersDisputerAccountNum):
-        print "Original branch test accounts"
+        print "Original universe test accounts"
         printTestAccountBalances(reputationToken, False)
-        print "A branch test accounts"
-        printTestAccountBalances(aBranchReputationToken, False)
-        print "B branch test accounts"
-        printTestAccountBalances(bBranchReputationToken, False)
-        print "C branch test accounts"
-        printTestAccountBalances(cBranchReputationToken, False)
+        print "A universe test accounts"
+        printTestAccountBalances(aUniverseReputationToken, False)
+        print "B universe test accounts"
+        printTestAccountBalances(bUniverseReputationToken, False)
+        print "C universe test accounts"
+        printTestAccountBalances(cUniverseReputationToken, False)
     else:
         printTestAccountBalances(reputationToken, False)
 
@@ -470,40 +470,40 @@ def test_dispute_bond_tokens(marketType, automatedReporterAccountNum, automatedR
             printDisputeBondTokenBalances(reputationToken, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, False)
 
         # Redeem winning/forked reporting tokens
-        handleReportingTokens(market, allReportersDisputerAccountNum, automatedReporterDisputeStakes, limitedReportersDisputeStakes, allReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aBranchReputationToken, bBranchReputationToken, cBranchReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
+        handleReportingTokens(market, allReportersDisputerAccountNum, automatedReporterDisputeStakes, limitedReportersDisputeStakes, allReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
 
         contractsFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
         # Have correct dispute bond holders withdraw from dispute token
-        withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedReporterDisputerAccountNum, limitedReportersDisputerAccountNum, allReportersDisputerAccountNum, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, reputationToken, winningReportingToken, aBranch, bBranch, cBranch, aBranchReputationToken, bBranchReputationToken, cBranchReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
+        withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedReporterDisputerAccountNum, limitedReportersDisputerAccountNum, allReportersDisputerAccountNum, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, reputationToken, winningReportingToken, aUniverse, bUniverse, cUniverse, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
 
     print "Final test account balances"
     if (allReportersDisputerAccountNum):
-        print "Original branch test accounts"
+        print "Original universe test accounts"
         printTestAccountBalances(reputationToken, True)
-        print "A branch test accounts"
-        printTestAccountBalances(aBranchReputationToken, True)
-        print "B branch test accounts"
-        printTestAccountBalances(bBranchReputationToken, True)
-        print "C branch test accounts"
-        printTestAccountBalances(cBranchReputationToken, True)
+        print "A universe test accounts"
+        printTestAccountBalances(aUniverseReputationToken, True)
+        print "B universe test accounts"
+        printTestAccountBalances(bUniverseReputationToken, True)
+        print "C universe test accounts"
+        printTestAccountBalances(cUniverseReputationToken, True)
     else:
         printTestAccountBalances(reputationToken, True)
 
     for row in expectedAccountBalances:
         if (row[1] == OUTCOME_A):
-            assert row[2] == aBranchReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
+            assert row[2] == aUniverseReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
         elif (row[1] == OUTCOME_B):
-            assert row[2] == bBranchReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
+            assert row[2] == bUniverseReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
         elif (row[1] == OUTCOME_C):
-            assert row[2] == cBranchReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
+            assert row[2] == cUniverseReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
         elif (row[1] == None):
             assert row[2] == reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
 
-def handleReportingTokens(market, allReportersDisputerAccountNum, automatedReporterDisputeStakes, limitedReportersDisputeStakes, allReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aBranchReputationToken, bBranchReputationToken, cBranchReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
+def handleReportingTokens(market, allReportersDisputerAccountNum, automatedReporterDisputeStakes, limitedReportersDisputeStakes, allReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
     if (allReportersDisputerAccountNum):
-        # Reputation staked on a particular outcome must be redeemed only on the branch for that outcome.
-        # Reputation held in a dispute bond against a particular outcome must be redeemed on a branch other than the disputed outcome.
+        # Reputation staked on a particular outcome must be redeemed only on the universe for that outcome.
+        # Reputation held in a dispute bond against a particular outcome must be redeemed on a universe other than the disputed outcome.
         migrators = {}
         for row in allReportersDisputeStakes:
             migrators[row[0]] = row[1]
@@ -514,17 +514,17 @@ def handleReportingTokens(market, allReportersDisputerAccountNum, automatedRepor
         for row in automatedReporterDisputeStakes:
             destinationReputationToken = None
             if (migrators[row[0]] and migrators[row[0]] == OUTCOME_A):
-                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch A"
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on universe A"
                 reportingToken = reportingTokenA
-                destinationReputationToken = aBranchReputationToken
+                destinationReputationToken = aUniverseReputationToken
             if (migrators[row[0]] and migrators[row[0]] == OUTCOME_B):
-                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch B"
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on universe B"
                 reportingToken = reportingTokenB
-                destinationReputationToken = bBranchReputationToken
+                destinationReputationToken = bUniverseReputationToken
             if (migrators[row[0]] and migrators[row[0]] == OUTCOME_C):
-                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch C"
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on universe C"
                 reportingToken = reportingTokenC
-                destinationReputationToken = cBranchReputationToken
+                destinationReputationToken = cUniverseReputationToken
             if (destinationReputationToken):
                 accountBalanceBeforeRedemption = destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
                 expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.totalSupply()
@@ -538,17 +538,17 @@ def handleReportingTokens(market, allReportersDisputerAccountNum, automatedRepor
             destinationReputationToken = None
             print row
             if (migrators[row[0]] and migrators[row[0]] == OUTCOME_A):
-                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch A"
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on universe A"
                 reportingToken = reportingTokenA
-                destinationReputationToken = aBranchReputationToken
+                destinationReputationToken = aUniverseReputationToken
             if (migrators[row[0]] and migrators[row[0]] == OUTCOME_B):
-                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch B"
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on universe B"
                 reportingToken = reportingTokenB
-                destinationReputationToken = bBranchReputationToken
+                destinationReputationToken = bUniverseReputationToken
             if (migrators[row[0]] and migrators[row[0]] == OUTCOME_C):
-                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on branch C"
+                print "Redeeming forked reporting tokens for tester.a" + str(row[0]) + " on universe C"
                 reportingToken = reportingTokenC
-                destinationReputationToken = cBranchReputationToken
+                destinationReputationToken = cUniverseReputationToken
             if (destinationReputationToken):
                 accountBalanceBeforeRedemption = destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
                 expectedWinnings = reputationToken.balanceOf(reportingToken.address) * row[2] / reportingToken.totalSupply()
@@ -558,14 +558,14 @@ def handleReportingTokens(market, allReportersDisputerAccountNum, automatedRepor
                 assert destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalanceBeforeRedemption + expectedWinnings
                 print "Transferred " + str(expectedWinnings) + " to account a" + str(row[0]) + "\n"
 
-        print "Original branch test accounts"
+        print "Original universe test accounts"
         printTestAccountBalances(reputationToken, False)
-        print "A branch test accounts"
-        printTestAccountBalances(aBranchReputationToken, False)
-        print "B branch test accounts"
-        printTestAccountBalances(bBranchReputationToken, False)
-        print "C branch test accounts"
-        printTestAccountBalances(cBranchReputationToken, False)
+        print "A universe test accounts"
+        printTestAccountBalances(aUniverseReputationToken, False)
+        print "B universe test accounts"
+        printTestAccountBalances(bUniverseReputationToken, False)
+        print "C universe test accounts"
+        printTestAccountBalances(cUniverseReputationToken, False)
     else:
         # Calculate total reporting tokens staked on winning outcome
         totalStakedOnWinningOutcome = 0
@@ -598,7 +598,7 @@ def handleReportingTokens(market, allReportersDisputerAccountNum, automatedRepor
             print "Transferred " + str(expectedWinnings) + " to account a" + str(key)
         printTestAccountBalances(reputationToken, False)
 
-def withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedReporterDisputerAccountNum, limitedReportersDisputerAccountNum, allReportersDisputerAccountNum, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, reputationToken, winningReportingToken, aBranch, bBranch, cBranch, aBranchReputationToken, bBranchReputationToken, cBranchReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
+def withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedReporterDisputerAccountNum, limitedReportersDisputerAccountNum, allReportersDisputerAccountNum, automatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, reputationToken, winningReportingToken, aUniverse, bUniverse, cUniverse, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
     if (allReportersDisputerAccountNum == None):
         if (automatedReporterDisputeBondToken and market.getFinalPayoutDistributionHash() != automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash()):
             print "Withdrawing automated reporter dispute bond tokens"
@@ -615,7 +615,7 @@ def withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedR
             assert reputationToken.balanceOf(limitedReportersDisputeBondToken.address) == 0
             assert reputationToken.balanceOf(limitedReportersDisputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
     else:
-        # Withdraw dispute bond tokens to the branch the disputers migrated to
+        # Withdraw dispute bond tokens to the universe the disputers migrated to
         print "All reporters dispute stakes:"
         for row in allReportersDisputeStakes:
             disputeAccountNum = None
@@ -625,80 +625,80 @@ def withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, automatedR
                 disputeAccountNum = automatedReporterDisputerAccountNum
                 disputeBondToken = automatedReporterDisputeBondToken
                 disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
-                destinationBranch = None
-                destinationBranchReputationToken = None
+                destinationUniverse = None
+                destinationUniverseReputationToken = None
                 #print "disputedPayoutDistributionHash:" + str(disputeBondToken.getDisputedPayoutDistributionHash())
                 #print "market.derivePayoutDistributionHash(row[1]): " + str(market.derivePayoutDistributionHash(row[1]))
                 if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1])):
                     if (row[1] == OUTCOME_A):
-                        destinationBranch = aBranch
-                        destinationBranchReputationToken = aBranchReputationToken
-                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to branch A"
+                        destinationUniverse = aUniverse
+                        destinationUniverseReputationToken = aUniverseReputationToken
+                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to universe A"
                     elif (row[1] == OUTCOME_B):
-                        destinationBranch = bBranch
-                        destinationBranchReputationToken = bBranchReputationToken
-                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to branch B"
+                        destinationUniverse = bUniverse
+                        destinationUniverseReputationToken = bUniverseReputationToken
+                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to universe B"
                     elif (row[1] == OUTCOME_C):
-                        destinationBranch = cBranch
-                        destinationBranchReputationToken = cBranchReputationToken
-                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to branch C"
-                    if (destinationBranch and destinationBranchReputationToken):
-                        accountBalanceBeforeWithdrawl = destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder())
-                        disputeBondToken.withdrawToBranch(destinationBranch.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
+                        destinationUniverse = cUniverse
+                        destinationUniverseReputationToken = cUniverseReputationToken
+                        print "Withdrawing automated reporter dispute bond tokens for a" + str(row[0]) + " to universe C"
+                    if (destinationUniverse and destinationUniverseReputationToken):
+                        accountBalanceBeforeWithdrawl = destinationUniverseReputationToken.balanceOf(disputeBondToken.getBondHolder())
+                        disputeBondToken.withdrawToUniverse(destinationUniverse.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
                         assert reputationToken.balanceOf(disputeBondToken.address) == 0
-                        assert destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
-                        printTestAccountBalances(destinationBranchReputationToken, True)
+                        assert destinationUniverseReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
+                        printTestAccountBalances(destinationUniverseReputationToken, True)
             if (row[0] == limitedReportersDisputerAccountNum):
                 disputeAccountNum = limitedReportersDisputerAccountNum
                 disputeBondToken = limitedReportersDisputeBondToken
                 disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
-                destinationBranch = None
-                destinationBranchReputationToken = None
+                destinationUniverse = None
+                destinationUniverseReputationToken = None
                 #print "disputedPayoutDistributionHash:" + str(disputeBondToken.getDisputedPayoutDistributionHash())
                 #print "market.derivePayoutDistributionHash(row[1]): " + str(market.derivePayoutDistributionHash(row[1]))
                 if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1])):
                     if (row[1] == OUTCOME_A):
-                        destinationBranch = aBranch
-                        destinationBranchReputationToken = aBranchReputationToken
-                        print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to branch A"
+                        destinationUniverse = aUniverse
+                        destinationUniverseReputationToken = aUniverseReputationToken
+                        print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to universe A"
                     elif (row[1] == OUTCOME_B):
-                        destinationBranch = bBranch
-                        destinationBranchReputationToken = bBranchReputationToken
-                        print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to branch B"
+                        destinationUniverse = bUniverse
+                        destinationUniverseReputationToken = bUniverseReputationToken
+                        print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to universe B"
                     elif (row[1] == OUTCOME_C):
-                        destinationBranch = cBranch
-                        destinationBranchReputationToken = cBranchReputationToken
-                        print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to branch C"
-                    if (destinationBranch and destinationBranchReputationToken):
-                        accountBalanceBeforeWithdrawl = destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder())
-                        disputeBondToken.withdrawToBranch(destinationBranch.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
+                        destinationUniverse = cUniverse
+                        destinationUniverseReputationToken = cUniverseReputationToken
+                        print "Withdrawing limited reporters dispute bond tokens for a" + str(row[0]) + " to universe C"
+                    if (destinationUniverse and destinationUniverseReputationToken):
+                        accountBalanceBeforeWithdrawl = destinationUniverseReputationToken.balanceOf(disputeBondToken.getBondHolder())
+                        disputeBondToken.withdrawToUniverse(destinationUniverse.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
                         assert reputationToken.balanceOf(disputeBondToken.address) == 0
-                        assert destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
-                        printTestAccountBalances(destinationBranchReputationToken, True)
+                        assert destinationUniverseReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
+                        printTestAccountBalances(destinationUniverseReputationToken, True)
             if (row[0] == allReportersDisputerAccountNum):
                 disputeAccountNum = allReportersDisputerAccountNum
                 disputeBondToken = allReportersDisputeBondToken
                 disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
-                destinationBranch = None
-                destinationBranchReputationToken = None
+                destinationUniverse = None
+                destinationUniverseReputationToken = None
                 #print "disputedPayoutDistributionHash:" + str(disputeBondToken.getDisputedPayoutDistributionHash())
                 #print "market.derivePayoutDistributionHash(row[1]): " + str(market.derivePayoutDistributionHash(row[1]))
                 if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1])):
                     if (row[1] == OUTCOME_A):
-                        destinationBranch = aBranch
-                        destinationBranchReputationToken = aBranchReputationToken
-                        print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to branch A"
+                        destinationUniverse = aUniverse
+                        destinationUniverseReputationToken = aUniverseReputationToken
+                        print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to universe A"
                     elif (row[1] == OUTCOME_B):
-                        destinationBranch = bBranch
-                        destinationBranchReputationToken = bBranchReputationToken
-                        print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to branch B"
+                        destinationUniverse = bUniverse
+                        destinationUniverseReputationToken = bUniverseReputationToken
+                        print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to universe B"
                     elif (row[1] == OUTCOME_C):
-                        destinationBranch = cBranch
-                        destinationBranchReputationToken = cBranchReputationToken
-                        print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to branch C"
-                    if (destinationBranch and destinationBranchReputationToken):
-                        accountBalanceBeforeWithdrawl = destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder())
-                        disputeBondToken.withdrawToBranch(destinationBranch.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
+                        destinationUniverse = cUniverse
+                        destinationUniverseReputationToken = cUniverseReputationToken
+                        print "Withdrawing all reporters dispute bond tokens for a" + str(row[0]) + " to universe C"
+                    if (destinationUniverse and destinationUniverseReputationToken):
+                        accountBalanceBeforeWithdrawl = destinationUniverseReputationToken.balanceOf(disputeBondToken.getBondHolder())
+                        disputeBondToken.withdrawToUniverse(destinationUniverse.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
                         assert reputationToken.balanceOf(disputeBondToken.address) == 0
-                        assert destinationBranchReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
-                        printTestAccountBalances(destinationBranchReputationToken, True)
+                        assert destinationUniverseReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
+                        printTestAccountBalances(destinationUniverseReputationToken, True)

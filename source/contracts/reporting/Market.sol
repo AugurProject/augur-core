@@ -5,7 +5,7 @@ import 'libraries/DelegationTarget.sol';
 import 'libraries/Typed.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/Ownable.sol';
-import 'reporting/IBranch.sol';
+import 'reporting/IUniverse.sol';
 import 'reporting/IReportingToken.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IDisputeBond.sol';
@@ -73,7 +73,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(_cash.getTypeName() == "Cash");
-        // FIXME: require market to be on a non-forking branch; repeat this check up the stack as well if necessary (e.g., in reporting window)
+        // FIXME: require market to be on a non-forking universe; repeat this check up the stack as well if necessary (e.g., in reporting window)
         // CONSIDER: should we allow creator to send extra ETH, is there risk of variability in bond requirements?
         require(msg.value == MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getMarketCreationCost(_reportingWindow));
         reportingWindow = _reportingWindow;
@@ -149,7 +149,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         require(getReportingState() == ReportingState.LIMITED_DISPUTE);
         limitedReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, limitedReportersDisputeBondToken, LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT);
-        IReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
+        IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
         return migrateReportingWindow(_newReportingWindow);
     }
 
@@ -157,8 +157,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         require(getReportingState() == ReportingState.ALL_DISPUTE);
         allReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, ALL_REPORTERS_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, allReportersDisputeBondToken, ALL_REPORTERS_DISPUTE_BOND_AMOUNT);
-        reportingWindow.getBranch().fork();
-        IReportingWindow _newReportingWindow = getBranch().getReportingWindowForForkEndTime();
+        reportingWindow.getUniverse().fork();
+        IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
         return migrateReportingWindow(_newReportingWindow);
     }
 
@@ -192,7 +192,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             return false;
         }
 
-        if (getBranch().getForkingMarket() == this) {
+        if (getUniverse().getForkingMarket() == this) {
             tentativeWinningPayoutDistributionHash = getWinningPayoutDistributionHashFromFork();
         }
         finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
@@ -211,7 +211,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function migrateDueToNoReports() public returns (bool) {
         require(getReportingState() == ReportingState.AWAITING_NO_REPORT_MIGRATION);
-        IReportingWindow _newReportingWindow = getBranch().getNextReportingWindow();
+        IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
         migrateReportingWindow(_newReportingWindow);
         return false;
     }
@@ -231,11 +231,11 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         }
         // only proceed if the forking market is finalized
         require(reportingWindow.isForkingMarketFinalized());
-        IBranch _currentBranch = getBranch();
-        // follow the forking market to its branch and then attach to the next reporting window on that branch
-        bytes32 _winningForkPayoutDistributionHash = _currentBranch.getForkingMarket().getFinalPayoutDistributionHash();
-        IBranch _destinationBranch = _currentBranch.getOrCreateChildBranch(_winningForkPayoutDistributionHash);
-        IReportingWindow _newReportingWindow = _destinationBranch.getNextReportingWindow();
+        IUniverse _currentUniverse = getUniverse();
+        // follow the forking market to its universe and then attach to the next reporting window on that universe
+        bytes32 _winningForkPayoutDistributionHash = _currentUniverse.getForkingMarket().getFinalPayoutDistributionHash();
+        IUniverse _destinationUniverse = _currentUniverse.getOrCreateChildUniverse(_winningForkPayoutDistributionHash);
+        IReportingWindow _newReportingWindow = _destinationUniverse.getNextReportingWindow();
         _newReportingWindow.migrateMarketInFromNibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
@@ -264,7 +264,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function transferIncorrectDisputeBondsToWinningReportingToken() private returns (bool) {
         require(getReportingState() == ReportingState.FINALIZED);
         IReputationToken _reputationToken = reportingWindow.getReputationToken();
-        if (getBranch().getForkingMarket() == this) {
+        if (getUniverse().getForkingMarket() == this) {
             return true;
         }
         if (address(automatedReporterDisputeBondToken) != NULL_ADDRESS && automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
@@ -302,8 +302,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return reportingWindow;
     }
 
-    function getBranch() public constant returns (IBranch) {
-        return reportingWindow.getBranch();
+    function getUniverse() public constant returns (IUniverse) {
+        return reportingWindow.getUniverse();
     }
 
     function getAutomatedReporterDisputeBondToken() public constant returns (IDisputeBond) {
@@ -412,7 +412,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         }
 
         // If there is an active fork we need to migrate
-        IMarket _forkingMarket = getBranch().getForkingMarket();
+        IMarket _forkingMarket = getUniverse().getForkingMarket();
         if (address(_forkingMarket) != NULL_ADDRESS && _forkingMarket != this) {
             return ReportingState.AWAITING_FORK_MIGRATION;
         }

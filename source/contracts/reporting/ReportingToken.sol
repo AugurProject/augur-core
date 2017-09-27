@@ -5,7 +5,7 @@ import 'libraries/DelegationTarget.sol';
 import 'libraries/Typed.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/VariableSupplyToken.sol';
-import 'reporting/IBranch.sol';
+import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingToken.sol';
 import 'reporting/IDisputeBond.sol';
@@ -26,7 +26,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
         market = _market;
         payoutNumerators = _payoutNumerators;
-        // TODO: call a function on `self.getBranch()` that logs the creation of this token with an index for the market, function needs to verify that caller is `branch.isContainerForReportingToken(thisToken)`
+        // TODO: call a function on `self.getUniverse()` that logs the creation of this token with an index for the market, function needs to verify that caller is `universe.isContainerForReportingToken(thisToken)`
         return true;
     }
 
@@ -63,13 +63,13 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     function redeemForkedTokens() public afterInitialized returns (bool) {
         require(market.isContainerForReportingToken(this));
-        require(getBranch().getForkingMarket() == market);
+        require(getUniverse().getForkingMarket() == market);
         var _sourceReputationToken = getReputationToken();
         var _reputationSupply = _sourceReputationToken.balanceOf(this);
         var _attotokens = balances[msg.sender];
         var _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(msg.sender, _attotokens);
-        var _destinationReputationToken = getBranch().getOrCreateChildBranch(getPayoutDistributionHash()).getReputationToken();
+        var _destinationReputationToken = getUniverse().getOrCreateChildUniverse(getPayoutDistributionHash()).getReputationToken();
         _sourceReputationToken.migrateOut(_destinationReputationToken, this, _attotokens);
         _destinationReputationToken.transfer(msg.sender, _reporterReputationShare);
         return true;
@@ -79,7 +79,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     function redeemWinningTokens() public afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
-        require(getBranch().getForkingMarket() != market);
+        require(getUniverse().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() == this);
         var _reputationToken = getReputationToken();
         var _reputationSupply = _reputationToken.balanceOf(this);
@@ -96,7 +96,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     function migrateLosingTokens() public afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
-        require(getBranch().getForkingMarket() != market);
+        require(getUniverse().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() != this);
         migrateLosingTokenRepToDisputeBond(market.getAutomatedReporterDisputeBondToken());
         migrateLosingTokenRepToDisputeBond(market.getLimitedReportersDisputeBondToken());
@@ -135,8 +135,8 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return "ReportingToken";
     }
 
-    function getBranch() public constant returns (IBranch) {
-        return market.getBranch();
+    function getUniverse() public constant returns (IUniverse) {
+        return market.getUniverse();
     }
 
     function getReputationToken() public constant returns (IReputationToken) {

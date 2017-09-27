@@ -148,15 +148,15 @@ class ContractsFixture:
         self.whitelistTradingContracts()
         self.initializeAllContracts()
         self.approveCentralAuthority()
-        self.branch = self.createBranch(0, "")
+        self.universe = self.createUniverse(0, "")
         self.cash = self.getSeededCash()
         self.augur = self.contracts['Augur']
         self.utils = self.upload("solidity_test_helpers/Utils.sol")
-        self.binaryMarket = self.createReasonableBinaryMarket(self.branch, self.cash)
+        self.binaryMarket = self.createReasonableBinaryMarket(self.universe, self.cash)
         startingGas = self.chain.head_state.gas_used
-        self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)
+        self.categoricalMarket = self.createReasonableCategoricalMarket(self.universe, 3, self.cash)
         print 'Gas Used: %s' % (self.chain.head_state.gas_used - startingGas)
-        self.scalarMarket = self.createReasonableScalarMarket(self.branch, 40, self.cash)
+        self.scalarMarket = self.createReasonableScalarMarket(self.universe, 40, self.cash)
         self.constants = self.uploadAndAddToController("solidity_test_helpers/Constants.sol")
         self.chain.mine(1)
         self.originalHead = self.chain.head_state
@@ -271,10 +271,10 @@ class ContractsFixture:
         shareToken = shareTokenFactory.createShareToken(controllerAddress)
         return self.applySignature('shareToken', shareToken)
 
-    def createBranch(self, parentBranch, payoutDistributionHash):
-        branchAddress = self.contracts['BranchFactory'].createBranch(self.controller.address, parentBranch, payoutDistributionHash)
-        branch = self.applySignature('Branch', branchAddress)
-        return branch
+    def createUniverse(self, parentUniverse, payoutDistributionHash):
+        universeAddress = self.contracts['UniverseFactory'].createUniverse(self.controller.address, parentUniverse, payoutDistributionHash)
+        universe = self.applySignature('Universe', universeAddress)
+        return universe
 
     def getReportingToken(self, market, payoutDistribution):
         reportingTokenAddress = market.getReportingToken(payoutDistribution)
@@ -282,43 +282,43 @@ class ContractsFixture:
         reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ReportingToken']), reportingTokenAddress)
         return reportingToken
 
-    def getOrCreateChildBranch(self, parentBranch, market, payoutDistribution):
+    def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
         payoutDistributionHash = market.derivePayoutDistributionHash(payoutDistribution)
         assert payoutDistributionHash
-        childBranchAddress = parentBranch.getOrCreateChildBranch(payoutDistributionHash)
-        assert childBranchAddress
-        childBranch = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Branch']), childBranchAddress)
-        return(childBranch)
+        childUniverseAddress = parentUniverse.getOrCreateChildUniverse(payoutDistributionHash)
+        assert childUniverseAddress
+        childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
+        return(childUniverse)
 
-    def createBinaryMarket(self, branch, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks):
-        return self.createCategoricalMarket(branch, 2, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks)
+    def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks):
+        return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks)
 
-    def createCategoricalMarket(self, branch, numOutcomes, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks):
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
+    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks):
+        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
+        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, numTicks, automatedReporterAddress):
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createMarket(branch.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, value = marketCreationFee)
+    def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, automatedReporterAddress):
+        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
+        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, value = marketCreationFee)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createReasonableBinaryMarket(self, branch, denominationToken):
+    def createReasonableBinaryMarket(self, universe, denominationToken):
         return self.createBinaryMarket(
-            branch = branch,
+            universe = universe,
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             automatedReporterAddress = tester.a0,
             numTicks = 10 ** 18)
 
-    def createReasonableCategoricalMarket(self, branch, numOutcomes, denominationToken):
+    def createReasonableCategoricalMarket(self, universe, numOutcomes, denominationToken):
         return self.createCategoricalMarket(
-            branch = branch,
+            universe = universe,
             numOutcomes = numOutcomes,
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
@@ -326,9 +326,9 @@ class ContractsFixture:
             automatedReporterAddress = tester.a0,
             numTicks = 3 * 10 ** 17)
 
-    def createReasonableScalarMarket(self, branch, priceRange, denominationToken):
+    def createReasonableScalarMarket(self, universe, priceRange, denominationToken):
         return self.createScalarMarket(
-            branch = branch,
+            universe = universe,
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
@@ -349,10 +349,10 @@ def fundedRepSnapshot(sessionFixture):
     sessionFixture.resetSnapshot()
     legacyRepContract = sessionFixture.contracts['LegacyRepContract']
     legacyRepContract.faucet(11 * 10**6 * 10**18)
-    branch = sessionFixture.branch
+    universe = sessionFixture.universe
 
-    # Get the reputation token for this branch and migrate legacy REP to it
-    reputationToken = sessionFixture.applySignature('ReputationToken', branch.getReputationToken())
+    # Get the reputation token for this universe and migrate legacy REP to it
+    reputationToken = sessionFixture.applySignature('ReputationToken', universe.getReputationToken())
     legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
     reputationToken.migrateFromLegacyRepContract()
 
