@@ -101,7 +101,7 @@ def test_publicMakeOrder_bid2(contractsFixture):
     ]
 
 def test_makeOrder_failure(contractsFixture):
-    branch = contractsFixture.branch
+    universe = contractsFixture.universe
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['Orders']
@@ -148,7 +148,7 @@ def test_makeOrder_failure(contractsFixture):
         makeOrder.publicMakeOrder(ASK, 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
 
 def test_ask_withPartialShares(contractsFixture):
-    branch = contractsFixture.branch
+    universe = contractsFixture.universe
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['Orders']

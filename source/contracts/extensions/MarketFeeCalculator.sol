@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
 import 'reporting/IReputationToken.sol';
-import 'reporting/IBranch.sol';
+import 'reporting/IUniverse.sol';
 import 'reporting/IReportingWindow.sol';
 
 
@@ -19,8 +19,8 @@ contract MarketFeeCalculator {
         // TODO: get the real data for this
         uint256 _totalMarketsInPreviousWindow = 1000;
         uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
-        IBranch _branch = _reportingWindow.getBranch();
-        IReportingWindow _previousReportingWindow = _branch.getReportingWindowByTimestamp(_previousTimestamp);
+        IUniverse _universe = _reportingWindow.getUniverse();
+        IReportingWindow _previousReportingWindow = _universe.getReportingWindowByTimestamp(_previousTimestamp);
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
         if (_previousValidityBondInAttoeth == 0) {
             _previousValidityBondInAttoeth = 1 * 10 ** 16;
@@ -50,11 +50,11 @@ contract MarketFeeCalculator {
         if (_currentPerEthFee != 0) {
             return _currentPerEthFee;
         }
-        IBranch _branch = _reportingWindow.getBranch();
-        uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth(_branch);
+        IUniverse _universe = _reportingWindow.getUniverse();
+        uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth(_universe);
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth(_reportingWindow);
         uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
-        IReportingWindow _previousReportingWindow = _branch.getReportingWindowByTimestamp(_previousTimestamp);
+        IReportingWindow _previousReportingWindow = _universe.getReportingWindowByTimestamp(_previousTimestamp);
         uint256 _previousPerEthFee = shareSettlementPerEthFee[_previousReportingWindow];
         if (_previousPerEthFee == 0) {
             _previousPerEthFee = 1 * 10 ** 16;
@@ -67,10 +67,10 @@ contract MarketFeeCalculator {
         return _currentPerEthFee;
     }
 
-    function getRepMarketCapInAttoeth(IBranch _branch) constant public returns (uint256) {
+    function getRepMarketCapInAttoeth(IUniverse _universe) constant public returns (uint256) {
         // TODO: get these from an auto-generated market
         uint256 _attorepPerEth = 11 * 10 ** 18;
-        uint256 _repMarketCapInAttoeth = _branch.getReputationToken().totalSupply() * _attorepPerEth;
+        uint256 _repMarketCapInAttoeth = _universe.getReputationToken().totalSupply() * _attorepPerEth;
         return _repMarketCapInAttoeth;
     }
 

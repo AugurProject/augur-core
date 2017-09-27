@@ -4,7 +4,7 @@ import 'libraries/Typed.sol';
 import 'libraries/IOwnable.sol';
 import 'trading/ICash.sol';
 import 'trading/IShareToken.sol';
-import 'reporting/IBranch.sol';
+import 'reporting/IUniverse.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IReportingToken.sol';
 import 'reporting/IDisputeBond.sol';
@@ -30,7 +30,7 @@ contract IMarket is Typed, IOwnable {
     function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _automatedReporterAddress) public payable returns (bool _success);
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool);
     function derivePayoutDistributionHash(uint256[] _payoutNumerators) public constant returns (bytes32);
-    function getBranch() public constant returns (IBranch);
+    function getUniverse() public constant returns (IUniverse);
     function getReportingWindow() public constant returns (IReportingWindow);
     function getNumberOfOutcomes() public constant returns (uint8);
     function getNumTicks() public constant returns (uint256);

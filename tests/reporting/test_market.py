@@ -7,7 +7,7 @@ from utils import stringToBytes
 tester.STARTGAS = long(6.7 * 10**6)
 
 def test_market_creation(contractsFixture):
-    branch = contractsFixture.branch
+    universe = contractsFixture.universe
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
@@ -16,12 +16,12 @@ def test_market_creation(contractsFixture):
 
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
     with raises(TransactionFailed, message="Markets can only use Cash as their denomination token"):
-        contractsFixture.createReasonableBinaryMarket(branch, shareToken)
+        contractsFixture.createReasonableBinaryMarket(universe, shareToken)
 
-    assert market.getBranch() == branch.address
+    assert market.getUniverse() == universe.address
     assert market.getNumberOfOutcomes() == 2
     assert market.getNumTicks() == 10**18
-    assert reportingWindow.getReputationToken() == branch.getReputationToken()
+    assert reportingWindow.getReputationToken() == universe.getReputationToken()
     assert market.getFinalPayoutDistributionHash() == stringToBytes("")
     assert market.getReportingState() == contractsFixture.constants.PRE_REPORTING()
     assert market.isContainerForReportingToken(shadyReportingToken.address) == 0

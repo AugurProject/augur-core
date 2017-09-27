@@ -62,10 +62,10 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     legacyRepContract = contractsFixture.contracts['LegacyRepContract']
     legacyRepContract.faucet(long(11 * 10**6 * 10**18))
     contractsFixture.chain.head_state.timestamp += 15000
-    branch = contractsFixture.branch
+    universe = contractsFixture.universe
 
-    # Get the reputation token for this branch and migrate legacy REP to it
-    reputationToken = contractsFixture.applySignature('ReputationToken', branch.getReputationToken())
+    # Get the reputation token for this universe and migrate legacy REP to it
+    reputationToken = contractsFixture.applySignature('ReputationToken', universe.getReputationToken())
     legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
     reputationToken.migrateFromLegacyRepContract()
 
