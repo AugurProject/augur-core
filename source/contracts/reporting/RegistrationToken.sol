@@ -2,16 +2,16 @@
 
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/IRegistrationToken.sol';
-import 'ROOT/libraries/DelegationTarget.sol';
-import 'ROOT/libraries/Typed.sol';
-import 'ROOT/libraries/Initializable.sol';
-import 'ROOT/libraries/token/StandardToken.sol';
-import 'ROOT/reporting/IReportingToken.sol';
-import 'ROOT/reporting/IBranch.sol';
-import 'ROOT/reporting/IReputationToken.sol';
-import 'ROOT/reporting/IReportingWindow.sol';
-import 'ROOT/reporting/Reporting.sol';
+import 'reporting/IRegistrationToken.sol';
+import 'libraries/DelegationTarget.sol';
+import 'libraries/Typed.sol';
+import 'libraries/Initializable.sol';
+import 'libraries/token/StandardToken.sol';
+import 'reporting/IReportingToken.sol';
+import 'reporting/IBranch.sol';
+import 'reporting/IReputationToken.sol';
+import 'reporting/IReportingWindow.sol';
+import 'reporting/Reporting.sol';
 
 
 contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardToken, IRegistrationToken {

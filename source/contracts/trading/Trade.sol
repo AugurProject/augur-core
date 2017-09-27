@@ -2,14 +2,14 @@
 
 pragma solidity ^0.4.13;
 
-import 'ROOT/Controlled.sol';
-import 'ROOT/libraries/ReentrancyGuard.sol';
-import 'ROOT/trading/Order.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/trading/IMakeOrder.sol';
-import 'ROOT/trading/IOrders.sol';
-import 'ROOT/trading/ITakeOrder.sol';
-import 'ROOT/libraries/CashAutoConverter.sol';
+import 'Controlled.sol';
+import 'libraries/ReentrancyGuard.sol';
+import 'trading/Order.sol';
+import 'reporting/IMarket.sol';
+import 'trading/IMakeOrder.sol';
+import 'trading/IOrders.sol';
+import 'trading/ITakeOrder.sol';
+import 'libraries/CashAutoConverter.sol';
 
 
 contract Trade is CashAutoConverter, ReentrancyGuard {

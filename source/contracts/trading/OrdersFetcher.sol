@@ -4,12 +4,12 @@
 
 pragma solidity ^0.4.13;
 
-import 'ROOT/trading/IOrdersFetcher.sol';
-import 'ROOT/Controlled.sol';
-import 'ROOT/libraries/arrays/Bytes32Arrays.sol';
-import 'ROOT/trading/Order.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/trading/IOrders.sol';
+import 'trading/IOrdersFetcher.sol';
+import 'Controlled.sol';
+import 'libraries/arrays/Bytes32Arrays.sol';
+import 'trading/Order.sol';
+import 'reporting/IMarket.sol';
+import 'trading/IOrders.sol';
 
 
 /**

@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/Typed.sol';
-import 'ROOT/reporting/IMarket.sol';
+import 'libraries/Typed.sol';
+import 'reporting/IMarket.sol';
 
 
 contract IDisputeBond is Typed {

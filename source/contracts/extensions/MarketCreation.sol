@@ -1,9 +1,9 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/IBranch.sol';
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/trading/ICash.sol';
-import 'ROOT/reporting/IReportingWindow.sol';
+import 'reporting/IBranch.sol';
+import 'reporting/IMarket.sol';
+import 'trading/ICash.sol';
+import 'reporting/IReportingWindow.sol';
 
 
 contract MarketCreation {

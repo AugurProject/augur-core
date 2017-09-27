@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/CashAutoConverter.sol';
-import 'ROOT/trading/ICash.sol';
+import 'libraries/CashAutoConverter.sol';
+import 'trading/ICash.sol';
 
 
 contract CashWrapperHelper is CashAutoConverter {

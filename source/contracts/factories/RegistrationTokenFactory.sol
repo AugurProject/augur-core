@@ -1,9 +1,9 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/libraries/Delegator.sol';
-import 'ROOT/reporting/IReportingWindow.sol';
-import 'ROOT/reporting/IRegistrationToken.sol';
-import 'ROOT/IController.sol';
+import 'libraries/Delegator.sol';
+import 'reporting/IReportingWindow.sol';
+import 'reporting/IRegistrationToken.sol';
+import 'IController.sol';
 
 
 contract RegistrationTokenFactory {

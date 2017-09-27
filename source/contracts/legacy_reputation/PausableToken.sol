@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/legacy_reputation/StandardToken.sol';
-import 'ROOT/legacy_reputation/Pausable.sol';
+import 'legacy_reputation/StandardToken.sol';
+import 'legacy_reputation/Pausable.sol';
 
 
 /**

@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/trading/Order.sol';
+import 'trading/Order.sol';
 
 
 contract ITakeOrder {

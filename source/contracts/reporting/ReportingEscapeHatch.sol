@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/IReportingEscapeHatch.sol';
-import 'ROOT/libraries/DelegationTarget.sol';
+import 'reporting/IReportingEscapeHatch.sol';
+import 'libraries/DelegationTarget.sol';
 
 
 contract ReportingEscapeHatch is DelegationTarget, IReportingEscapeHatch {

@@ -1,8 +1,8 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/IReputationToken.sol';
-import 'ROOT/reporting/IBranch.sol';
-import 'ROOT/reporting/IReportingWindow.sol';
+import 'reporting/IReputationToken.sol';
+import 'reporting/IBranch.sol';
+import 'reporting/IReportingWindow.sol';
 
 
 contract MarketFeeCalculator {
