@@ -191,7 +191,7 @@ def test_allReportingHappyPath(reportingFixture, makeReport):
 
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
-    # We make one report by Tester 3
+    # We make one report by Tester 3 for the NO outcome
     reportingTokenNo = reportingFixture.getReportingToken(market, [10**18,0])
     registrationToken = reportingFixture.applySignature('RegistrationToken', reportingTokenNo.getRegistrationToken())
     registrationToken.register(sender=tester.k3)
@@ -199,6 +199,15 @@ def test_allReportingHappyPath(reportingFixture, makeReport):
     assert reportingTokenNo.balanceOf(tester.a3) == 1
     assert reputationToken.balanceOf(tester.a3) == 1 * 10 ** 6 * 10 ** 18 - 2 * 10 ** 18 - 11 * 10 ** 21 - 1
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
+
+    # If a dispute bond was placed for this outcome it is actually not the tentative winning outcome since the bond amount counts negatively toward its stake
+    if (makeReport):
+        assert tentativeWinner != reportingTokenNo.getPayoutDistributionHash()
+        # If we buy (LIMITED_BOND_AMOUNT - AUTOMATED_BOND_AMOUNT) that will be sufficient to make the outcome win
+        negativeBondBalance = reportingFixture.constants.LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT() - reportingFixture.constants.AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT()
+        reportingTokenNo.buy(negativeBondBalance, sender=tester.k3)
+        tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
+
     assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
 
     # To progress into the ALL DISPUTE phase we move time forward

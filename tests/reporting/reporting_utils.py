@@ -114,7 +114,10 @@ def proceedToForking(testFixture, market, makeReport, designatedDisputer, limite
     registrationToken.register(sender=reporter)
     reportingTokenNo.buy(1, sender=reporter)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-    assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
+    if (makeReport):
+        assert tentativeWinner != reportingTokenNo.getPayoutDistributionHash()
+    else:
+        assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
 
     # To progress into the ALL DISPUTE phase we move time forward
     testFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1

@@ -8,6 +8,10 @@ library Reporting {
     uint256 private constant REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     uint256 private constant CLAIM_PROCEEDS_WAIT_TIME = 3 days;
     uint256 private constant REGISTRATION_TOKEN_BOND_AMOUNT = 1 ether;
+    // CONSIDER: figure out approprate values for these
+    uint256 private constant AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
+    uint256 private constant LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21;
+    uint256 private constant ALL_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22;
 
     function designatedReportingDurationSeconds() internal constant returns (uint256) { return DESIGNATED_REPORTING_DURATION_SECONDS; }
     function designatedReportingDisputeDurationSeconds() internal constant returns (uint256) { return DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS; }
@@ -15,4 +19,7 @@ library Reporting {
     function reportingDisputeDurationSeconds() internal constant returns (uint256) { return REPORTING_DISPUTE_DURATION_SECONDS; }
     function claimProceedsWaitTime() internal constant returns (uint256) { return CLAIM_PROCEEDS_WAIT_TIME; }
     function getRegistrationTokenBondAmount() internal constant returns (uint256) { return REGISTRATION_TOKEN_BOND_AMOUNT; }
+    function automatedReporterDisputeBondAmount() internal constant returns (uint256) { return AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT; }
+    function limitedReportersDisputeBondAmount() internal constant returns (uint256) { return LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT; }
+    function allReportersDisputeBondAmount() internal constant returns (uint256) { return ALL_REPORTERS_DISPUTE_BOND_AMOUNT; }
 }
