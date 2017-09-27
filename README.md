@@ -62,9 +62,9 @@ py.test -s tests/trading_tests.py
 
 The source code folders are split into six folders: extensions, factories, libraries, reporting, and trading. Splitting the folders this way allows for a separation of concerns and better modularity.
 - source/contracts/extensions -- contains files that deal with market creation, bond validity, getting the market price and reporting fee in attoeth (10^-18 eth), creating order books, reporting messages, and getting free REP (reputationTokens)
-- source/contracts/factories -- contains files that are constructors for universees, markets, reputation Tokens, reporting Periods/Windows, tradeable asset shareTokens, and topics for prediction.
+- source/contracts/factories -- contains files that are constructors for universes, markets, reputation Tokens, reporting Periods/Windows, tradeable asset shareTokens, and topics for prediction.
 - source/contracts/libraries -- contains data structures used elsewhere in the source code.
-- source/contracts/reporting -- contains source files for the creation and manipulation of universees, markets, and various types of tokens (registration Tokens, reporting Tokens, and reputation Tokens).
+- source/contracts/reporting -- contains source files for the creation and manipulation of universes, markets, and various types of tokens (registration Tokens, reporting Tokens, and reputation Tokens).
 - source/contracts/trading -- contains source code files that handle user actions regarding orders, claims, topics, and other trade functions.
 
 ## Security model

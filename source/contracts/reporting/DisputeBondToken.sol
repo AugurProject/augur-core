@@ -41,7 +41,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
         return true;
     }
 
-    // FIXME: We should be minting coins in this scenario in order to achieve 2x target payout for bond holders during a fork.  Ideally, the amount minted is capped at the amount of tokens redeemed on other universees, so we may have to require the user to supply universees to deduct from with their call to this.
+    // FIXME: We should be minting coins in this scenario in order to achieve 2x target payout for bond holders during a fork.  Ideally, the amount minted is capped at the amount of tokens redeemed on other universes, so we may have to require the user to supply universes to deduct from with their call to this.
     function withdrawToUniverse(IUniverse _shadyUniverse) public returns (bool) {
         require(msg.sender == bondHolder);
         require(!market.isContainerForDisputeBondToken(this) || getUniverse().getForkingMarket() == market);

@@ -23,7 +23,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     IMarket private forkingMarket;
     uint256 private forkEndTime;
     mapping(uint256 => IReportingWindow) private reportingWindows;
-    mapping(bytes32 => IUniverse) private childUniversees;
+    mapping(bytes32 => IUniverse) private childUniverses;
 
     function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external beforeInitialized returns (bool) {
         endInitialization();
@@ -71,7 +71,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     }
 
     function getChildUniverse(bytes32 _parentPayoutDistributionHash) public constant returns (IUniverse) {
-        return childUniversees[_parentPayoutDistributionHash];
+        return childUniverses[_parentPayoutDistributionHash];
     }
 
     function getReportingWindowId(uint256 _timestamp) public constant returns (uint256) {
@@ -111,10 +111,10 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     }
 
     function getOrCreateChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
-        if (childUniversees[_parentPayoutDistributionHash] == address(0)) {
-            childUniversees[_parentPayoutDistributionHash] = UniverseFactory(controller.lookup("UniverseFactory")).createUniverse(controller, this, _parentPayoutDistributionHash);
+        if (childUniverses[_parentPayoutDistributionHash] == address(0)) {
+            childUniverses[_parentPayoutDistributionHash] = UniverseFactory(controller.lookup("UniverseFactory")).createUniverse(controller, this, _parentPayoutDistributionHash);
         }
-        return childUniversees[_parentPayoutDistributionHash];
+        return childUniverses[_parentPayoutDistributionHash];
     }
 
     function isContainerForReportingWindow(Typed _shadyTarget) public constant returns (bool) {
@@ -213,7 +213,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
 
     function isParentOf(IUniverse _shadyChild) public constant returns (bool) {
         bytes32 _parentPayoutDistributionHash = _shadyChild.getParentPayoutDistributionHash();
-        return childUniversees[_parentPayoutDistributionHash] == _shadyChild;
+        return childUniverses[_parentPayoutDistributionHash] == _shadyChild;
     }
 
     function getReportingWindowForForkEndTime() public constant returns (IReportingWindow) {
