@@ -11,11 +11,6 @@
         "*/*.pyc": true,
         "**/*.pyc": true
     },
-    "solidity.compilerRemappings": [
-        {
-            "prefix": "ROOT",
-            "target": "./source/contracts"
-        }
-    ],
-    "python.linting.pylintEnabled": false
+    "python.linting.pylintEnabled": false,
+    "solidity.solidityRoot": "source/contracts"
 }
