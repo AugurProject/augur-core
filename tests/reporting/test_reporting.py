@@ -203,8 +203,8 @@ def test_allReportingHappyPath(reportingFixture, makeReport):
     # If a dispute bond was placed for this outcome it is actually not the tentative winning outcome since the bond amount counts negatively toward its stake
     if (makeReport):
         assert tentativeWinner != reportingTokenNo.getPayoutDistributionHash()
-        # If we buy (LIMITED_BOND_AMOUNT - AUTOMATED_BOND_AMOUNT) that will be sufficient to make the outcome win
-        negativeBondBalance = reportingFixture.constants.LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT() - reportingFixture.constants.AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT()
+        # If we buy (LIMITED_BOND_AMOUNT - DESIGNATED_BOND_AMOUNT) that will be sufficient to make the outcome win
+        negativeBondBalance = reportingFixture.constants.LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT() - reportingFixture.constants.DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
         reportingTokenNo.buy(negativeBondBalance, sender=tester.k3)
         tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
 

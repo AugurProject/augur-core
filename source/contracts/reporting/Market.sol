@@ -205,9 +205,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function getPayoutDistributionHashStake(IReportingToken _reportingToken) public constant returns (int256) {
         int256 _payoutStake = int256(_reportingToken.totalSupply());
         bytes32 _payoutDistributionHash = _reportingToken.getPayoutDistributionHash();
-        if (address(automatedReporterDisputeBondToken) != NULL_ADDRESS) {
-            if (automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.automatedReporterDisputeBondAmount());
+        if (address(designatedReporterDisputeBondToken) != NULL_ADDRESS) {
+            if (designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
+                _payoutStake -= int256(Reporting.designatedReporterDisputeBondAmount());
             }
         }
         if (address(limitedReportersDisputeBondToken) != NULL_ADDRESS) {

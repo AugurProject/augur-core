@@ -19,7 +19,7 @@ contract Constants {
     IMarket.ReportingState public constant AWAITING_FINALIZATION = IMarket.ReportingState.AWAITING_FINALIZATION;
     IMarket.ReportingState public constant FINALIZED = IMarket.ReportingState.FINALIZED;
 
-    uint256 public constant AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT = Reporting.automatedReporterDisputeBondAmount();
+    uint256 public constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = Reporting.designatedReporterDisputeBondAmount();
     uint256 public constant LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT = Reporting.limitedReportersDisputeBondAmount();
     uint256 public constant ALL_REPORTERS_DISPUTE_BOND_AMOUNT = Reporting.allReportersDisputeBondAmount();
 
