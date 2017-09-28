@@ -257,8 +257,8 @@ def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
     # Now we can migrate the market to the winning universe
     assert newMarket.migrateThroughOneFork()
 
-    # Now that we're on the correct universe we are back to the LIMITED REPORTING phase
-    assert newMarket.getReportingState() == reportingFixture.constants.LIMITED_REPORTING()
+    # Now that we're on the correct universe we are send back to the AUTOMATED REPORTING phase
+    assert newMarket.getReportingState() == reportingFixture.constants.AUTOMATED_REPORTING()
 
 @mark.parametrize('pastDisputePhase', [
     True,

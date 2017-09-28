@@ -235,12 +235,12 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         // follow the forking market to its universe and then attach to the next reporting window on that universe
         bytes32 _winningForkPayoutDistributionHash = _currentUniverse.getForkingMarket().getFinalPayoutDistributionHash();
         IUniverse _destinationUniverse = _currentUniverse.getOrCreateChildUniverse(_winningForkPayoutDistributionHash);
-        IReportingWindow _newReportingWindow = _destinationUniverse.getNextReportingWindow();
+        IReportingWindow _newReportingWindow = _destinationUniverse.getNextReportingWindowByMarketEndTime(designatedReporterAddress != NULL_ADDRESS);
         _newReportingWindow.migrateMarketInFromNibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
         reportingWindow.updateMarketPhase();
-        // reset to unreported state
+        // reset to automated reporting
         limitedReportersDisputeBondToken = IDisputeBond(0);
         allReportersDisputeBondToken = IDisputeBond(0);
         tentativeWinningPayoutDistributionHash = bytes32(0);
