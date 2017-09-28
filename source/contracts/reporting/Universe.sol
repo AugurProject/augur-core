@@ -90,9 +90,9 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return reportingWindows[_windowId];
     }
 
-    function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasAutomatedReporter) public returns (IReportingWindow) {
-        if (_hasAutomatedReporter) {
-            return getReportingWindowByTimestamp(_endTime + Reporting.automatedReportingDurationSeconds() + Reporting.automatedReportingDisputeDurationSeconds() + 1 + getReportingPeriodDurationInSeconds());
+    function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasDesignatedReporter) public returns (IReportingWindow) {
+        if (_hasDesignatedReporter) {
+            return getReportingWindowByTimestamp(_endTime + Reporting.designatedReportingDurationSeconds() + Reporting.designatedReportingDisputeDurationSeconds() + 1 + getReportingPeriodDurationInSeconds());
         } else {
             return getReportingWindowByTimestamp(_endTime + 1 + getReportingPeriodDurationInSeconds());
         }

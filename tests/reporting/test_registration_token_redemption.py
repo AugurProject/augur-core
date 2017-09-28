@@ -1,22 +1,22 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, raises
-from reporting_utils import proceedToAutomatedReporting, proceedToLimitedReporting, initializeReportingFixture
+from reporting_utils import proceedToDesignatedReporting, proceedToLimitedReporting, initializeReportingFixture
 
-def test_automatedReportingNoReport(registrationTokenRedemptionFixture):
+def test_designatedReportingNoReport(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
     reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = registrationTokenRedemptionFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
-    # Proceed to the AUTOMATED REPORTING phase
-    proceedToAutomatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
+    # Proceed to the DESIGNATED REPORTING phase
+    proceedToDesignatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
 
-    # To progress into the AUTOMATED DISPUTE phase we do an automated report
-    assert market.automatedReport([0,10**18], sender=tester.k0)
+    # To progress into the DESIGNATED DISPUTE phase we do a designated report
+    assert market.designatedReport([0,10**18], sender=tester.k0)
 
-    # We're now in the AUTOMATED DISPUTE PHASE
-    assert market.getReportingState() == registrationTokenRedemptionFixture.constants.AUTOMATED_DISPUTE()
+    # We're now in the DESIGNATED DISPUTE PHASE
+    assert market.getReportingState() == registrationTokenRedemptionFixture.constants.DESIGNATED_DISPUTE()
 
     # Time passes until the end of the reporting window
     registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
@@ -31,14 +31,14 @@ def test_checkInReporting(registrationTokenRedemptionFixture):
     reputationToken = registrationTokenRedemptionFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
 
-    # Proceed to the AUTOMATED REPORTING phase
-    proceedToAutomatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
+    # Proceed to the DESIGNATED REPORTING phase
+    proceedToDesignatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
 
-    # To progress into the AUTOMATED DISPUTE phase we do an automated report
-    assert market.automatedReport([0,10**18], sender=tester.k0)
+    # To progress into the DESIGNATED DISPUTE phase we do a designated report
+    assert market.designatedReport([0,10**18], sender=tester.k0)
 
-    # We're now in the AUTOMATED DISPUTE PHASE
-    assert market.getReportingState() == registrationTokenRedemptionFixture.constants.AUTOMATED_DISPUTE()
+    # We're now in the DESIGNATED DISPUTE PHASE
+    assert market.getReportingState() == registrationTokenRedemptionFixture.constants.DESIGNATED_DISPUTE()
 
     # We can't yet check in since the reporting window hasn't started
     with raises(TransactionFailed, message="The checkIn method should only be callable once the reporting window starts and has no markets that can be reported on"):

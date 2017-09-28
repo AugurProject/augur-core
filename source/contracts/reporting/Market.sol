@@ -30,7 +30,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     uint256 private feePerEthInAttoeth;
 
     // CONSIDER: figure out approprate values for these
-    uint256 private constant AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
+    uint256 private constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
     uint256 private constant LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21;
     uint256 private constant ALL_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22;
 
@@ -42,19 +42,19 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     uint256 private endTime;
     uint8 private numOutcomes;
     uint256 private marketCreationBlock;
-    address private automatedReporterAddress;
+    address private designatedReporterAddress;
     mapping(bytes32 => IReportingToken) private reportingTokens;
     ICash private cash;
     IShareToken[] private shareTokens;
     uint256 private finalizationTime;
-    uint256 private automatedReportReceivedTime;
+    uint256 private designatedReportReceivedTime;
     bytes32 private tentativeWinningPayoutDistributionHash;
     bytes32 private finalPayoutDistributionHash;
-    IDisputeBond private automatedReporterDisputeBondToken;
+    IDisputeBond private designatedReporterDisputeBondToken;
     IDisputeBond private limitedReportersDisputeBondToken;
     IDisputeBond private allReportersDisputeBondToken;
     uint256 private validityBondAttoeth;
-    uint256 private automatedReporterBondAttoeth;
+    uint256 private designatedReporterBondAttoeth;
 
     /**
      * @dev Makes the function trigger a migration before execution
@@ -64,7 +64,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         _;
     }
 
-    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _automatedReporterAddress) public payable beforeInitialized returns (bool _success) {
+    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(address(_reportingWindow) != NULL_ADDRESS);
         require(_numOutcomes >= 2);
@@ -82,7 +82,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         numTicks = _numTicks;
         feePerEthInAttoeth = _feePerEthInAttoeth;
         marketCreationBlock = block.number;
-        automatedReporterAddress = _automatedReporterAddress;
+        designatedReporterAddress = _designatedReporterAddress;
         cash = _cash;
         owner = _creator;
         for (uint8 _outcome = 0; _outcome < numOutcomes; _outcome++) {
@@ -124,23 +124,23 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function automatedReport(uint256[] _payoutNumerators) public returns (bool) {
-        // intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
-        require(msg.sender == automatedReporterAddress);
-        require(getReportingState() == ReportingState.AUTOMATED_REPORTING);
+    function designatedReport(uint256[] _payoutNumerators) public returns (bool) {
+        // intentionally does not migrate the market as designated report markets won't actually migrate unless a dispute bond has been placed or the designated report doesn't occur
+        require(msg.sender == designatedReporterAddress);
+        require(getReportingState() == ReportingState.DESIGNATED_REPORTING);
         // we have to create the reporting token so the rest of the system works (winning reporting token must exist)
         getReportingToken(_payoutNumerators);
-        automatedReportReceivedTime = block.timestamp;
+        designatedReportReceivedTime = block.timestamp;
         tentativeWinningPayoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
         reportingWindow.updateMarketPhase();
         return true;
     }
 
-    function disputeAutomatedReport() public returns (bool) {
-        // intentionally does not migrate the market as automated report markets won't actually migrate unless a dispute bond has been placed or the automated report doesn't occur
-        require(getReportingState() == ReportingState.AUTOMATED_DISPUTE);
-        automatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
-        reportingWindow.getReputationToken().trustedTransfer(msg.sender, automatedReporterDisputeBondToken, AUTOMATED_REPORTER_DISPUTE_BOND_AMOUNT);
+    function disputeDesignatedReport() public returns (bool) {
+        // intentionally does not migrate the market as designated report markets won't actually migrate unless a dispute bond has been placed or the designated report doesn't occur
+        require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
+        designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT, tentativeWinningPayoutDistributionHash);
+        reportingWindow.getReputationToken().trustedTransfer(msg.sender, designatedReporterDisputeBondToken, DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT);
         reportingWindow.updateMarketPhase();
         return true;
     }
@@ -205,8 +205,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         // TODO: figure out how to make it so fee distribution is delayed until all markets have been finalized; we can enforce it contract side and let the UI deal with the actual work
         // FIXME: if finalPayoutDistributionHash != getIdentityDistributionId(), pay back validity bond holder
         // FIXME: if finalPayoutDistributionHash == getIdentityDistributionId(), transfer validity bond to reportingWindow (reporter fee pot)
-        // FIXME: if automated report is wrong, transfer automated report bond to reportingWindow
-        // FIXME: if automated report is right, transfer automated report bond to market creator
+        // FIXME: if designated report is wrong, transfer designated report bond to reportingWindow
+        // FIXME: if designated report is right, transfer designated report bond to market creator
     }
 
     function migrateDueToNoReports() public returns (bool) {
@@ -267,8 +267,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         if (getUniverse().getForkingMarket() == this) {
             return true;
         }
-        if (address(automatedReporterDisputeBondToken) != NULL_ADDRESS && automatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
-            _reputationToken.trustedTransfer(automatedReporterDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(automatedReporterDisputeBondToken));
+        if (address(designatedReporterDisputeBondToken) != NULL_ADDRESS && designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
+            _reputationToken.trustedTransfer(designatedReporterDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(designatedReporterDisputeBondToken));
         }
         if (address(limitedReportersDisputeBondToken) != NULL_ADDRESS && limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
             _reputationToken.trustedTransfer(limitedReportersDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(limitedReportersDisputeBondToken));
@@ -306,8 +306,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return reportingWindow.getUniverse();
     }
 
-    function getAutomatedReporterDisputeBondToken() public constant returns (IDisputeBond) {
-        return automatedReporterDisputeBondToken;
+    function getDesignatedReporterDisputeBondToken() public constant returns (IDisputeBond) {
+        return designatedReporterDisputeBondToken;
     }
 
     function getLimitedReportersDisputeBondToken() public constant returns (IDisputeBond) {
@@ -382,7 +382,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             return false;
         }
         IDisputeBond _shadyDisputeBond = IDisputeBond(_shadyTarget);
-        if (automatedReporterDisputeBondToken == _shadyDisputeBond) {
+        if (designatedReporterDisputeBondToken == _shadyDisputeBond) {
             return true;
         }
         if (limitedReportersDisputeBondToken == _shadyDisputeBond) {
@@ -394,15 +394,15 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return false;
     }
 
-    function getAutomatedReportDueTimestamp() public constant returns (uint256) {
-        if (automatedReportReceivedTime != 0) {
-            return automatedReportReceivedTime;
+    function getDesignatedReportDueTimestamp() public constant returns (uint256) {
+        if (designatedReportReceivedTime != 0) {
+            return designatedReportReceivedTime;
         }
-        return endTime + Reporting.automatedReportingDurationSeconds();
+        return endTime + Reporting.designatedReportingDurationSeconds();
     }
 
-    function getAutomatedReportDisputeDueTimestamp() public constant returns (uint256) {
-        return getAutomatedReportDueTimestamp() + Reporting.automatedReportingDisputeDurationSeconds();
+    function getDesignatedReportDisputeDueTimestamp() public constant returns (uint256) {
+        return getDesignatedReportDueTimestamp() + Reporting.designatedReportingDisputeDurationSeconds();
     }
 
     function getReportingState() public constant returns (ReportingState) {
@@ -422,18 +422,18 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             return ReportingState.PRE_REPORTING;
         }
 
-        // Automated reporting period has not passed yet
-        if (block.timestamp < getAutomatedReportDueTimestamp()) {
-            return ReportingState.AUTOMATED_REPORTING;
+        // Designated reporting period has not passed yet
+        if (block.timestamp < getDesignatedReportDueTimestamp()) {
+            return ReportingState.DESIGNATED_REPORTING;
         }
 
-        bool _automatedReportDisputed = address(automatedReporterDisputeBondToken) != NULL_ADDRESS;
+        bool _designatedReportDisputed = address(designatedReporterDisputeBondToken) != NULL_ADDRESS;
         bool _limitedReportDisputed = address(limitedReportersDisputeBondToken) != NULL_ADDRESS;
 
-        // If we have an automated report that hasn't been disputed it is either in the dispute window or we can finalize the market
-        if (automatedReportReceivedTime != 0 && !_automatedReportDisputed) {
-            bool _beforeAutomatedDisputeDue = block.timestamp < getAutomatedReportDisputeDueTimestamp();
-            return _beforeAutomatedDisputeDue ? ReportingState.AUTOMATED_DISPUTE : ReportingState.AWAITING_FINALIZATION;
+        // If we have a designated report that hasn't been disputed it is either in the dispute window or we can finalize the market
+        if (designatedReportReceivedTime != 0 && !_designatedReportDisputed) {
+            bool _beforeDesignatedDisputeDue = block.timestamp < getDesignatedReportDisputeDueTimestamp();
+            return _beforeDesignatedDisputeDue ? ReportingState.DESIGNATED_DISPUTE : ReportingState.AWAITING_FINALIZATION;
         }
 
         // If this market is the one forking we are in the process of migration or we're ready to finalize
@@ -465,7 +465,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             return ReportingState.ALL_REPORTING;
         }
 
-        // Either no automated report was made or the automated report was disputed so we are in some phase of limited reporting
+        // Either no designated report was made or the designated report was disputed so we are in some phase of limited reporting
         if (reportingWindow.isDisputeActive()) {
             if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
                 return ReportingState.AWAITING_NO_REPORT_MIGRATION;

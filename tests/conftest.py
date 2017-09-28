@@ -290,19 +290,19 @@ class ContractsFixture:
         childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
         return(childUniverse)
 
-    def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks):
-        return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks)
+    def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks):
+        return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks)
 
-    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks):
+    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks):
         marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
+        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, automatedReporterAddress):
+    def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress):
         marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, value = marketCreationFee)
+        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
@@ -313,7 +313,7 @@ class ContractsFixture:
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
-            automatedReporterAddress = tester.a0,
+            designatedReporterAddress = tester.a0,
             numTicks = 10 ** 18)
 
     def createReasonableCategoricalMarket(self, universe, numOutcomes, denominationToken):
@@ -323,7 +323,7 @@ class ContractsFixture:
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
-            automatedReporterAddress = tester.a0,
+            designatedReporterAddress = tester.a0,
             numTicks = 3 * 10 ** 17)
 
     def createReasonableScalarMarket(self, universe, priceRange, denominationToken):
@@ -333,7 +333,7 @@ class ContractsFixture:
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             numTicks = 40 * 10 ** 18,
-            automatedReporterAddress = tester.a0)
+            designatedReporterAddress = tester.a0)
 
 @fixture(scope="session")
 def sessionFixture():

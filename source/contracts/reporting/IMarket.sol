@@ -14,8 +14,8 @@ import 'trading/IShareToken.sol';
 contract IMarket is Typed, IOwnable {
     enum ReportingState {
         PRE_REPORTING,
-        AUTOMATED_REPORTING,
-        AUTOMATED_DISPUTE,
+        DESIGNATED_REPORTING,
+        DESIGNATED_DISPUTE,
         AWAITING_FORK_MIGRATION,
         LIMITED_REPORTING,
         LIMITED_DISPUTE,
@@ -27,7 +27,7 @@ contract IMarket is Typed, IOwnable {
         FINALIZED
     }
 
-    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _automatedReporterAddress) public payable returns (bool _success);
+    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable returns (bool _success);
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool);
     function derivePayoutDistributionHash(uint256[] _payoutNumerators) public constant returns (bytes32);
     function getUniverse() public constant returns (IUniverse);
@@ -36,7 +36,7 @@ contract IMarket is Typed, IOwnable {
     function getNumTicks() public constant returns (uint256);
     function getDenominationToken() public constant returns (ICash);
     function getShareToken(uint8 _outcome)  public constant returns (IShareToken);
-    function getAutomatedReporterDisputeBondToken() public constant returns (IDisputeBond);
+    function getDesignatedReporterDisputeBondToken() public constant returns (IDisputeBond);
     function getLimitedReportersDisputeBondToken() public constant returns (IDisputeBond);
     function getMarketCreatorSettlementFeeInAttoethPerEth() public constant returns (uint256);
     function getReportingState() public constant returns (ReportingState);

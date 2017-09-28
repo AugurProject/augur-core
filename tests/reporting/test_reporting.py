@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, raises
-from reporting_utils import proceedToAutomatedReporting, proceedToLimitedReporting, proceedToAllReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
+from reporting_utils import proceedToDesignatedReporting, proceedToLimitedReporting, proceedToAllReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 tester.STARTGAS = long(6.7 * 10**6)
 
@@ -119,20 +119,20 @@ def test_reportingFullHappyPath(reportingFixture):
     assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 -10 ** 18 - 11000 * 10 ** 18
 
 
-def test_automatedReportingHappyPath(reportingFixture):
+def test_designatedReportingHappyPath(reportingFixture):
     market = reportingFixture.binaryMarket
 
-    # Proceed to the AUTOMATED REPORTING phase
-    proceedToAutomatedReporting(reportingFixture, market, [0,10**18])
+    # Proceed to the DESIGNATED REPORTING phase
+    proceedToDesignatedReporting(reportingFixture, market, [0,10**18])
 
-    # To progress into the AUTOMATED DISPUTE phase we do an automated report
-    assert market.automatedReport([0,10**18], sender=tester.k0)
+    # To progress into the DESIGNATED DISPUTE phase we do a designated report
+    assert market.designatedReport([0,10**18], sender=tester.k0)
 
-    # We're now in the AUTOMATED DISPUTE PHASE
-    assert market.getReportingState() == reportingFixture.constants.AUTOMATED_DISPUTE()
+    # We're now in the DESIGNATED DISPUTE PHASE
+    assert market.getReportingState() == reportingFixture.constants.DESIGNATED_DISPUTE()
 
     # If time passes and no dispute bond is placed the market can be finalized
-    reportingFixture.chain.head_state.timestamp = market.getEndTime() + reportingFixture.constants.AUTOMATED_REPORTING_DURATION_SECONDS() + reportingFixture.constants.AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1
+    reportingFixture.chain.head_state.timestamp = market.getEndTime() + reportingFixture.constants.DESIGNATED_REPORTING_DURATION_SECONDS() + reportingFixture.constants.DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1
 
     # The market is awaiting finalization now
     assert market.getReportingState() == reportingFixture.constants.AWAITING_FINALIZATION()
