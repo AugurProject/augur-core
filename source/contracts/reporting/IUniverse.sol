@@ -20,7 +20,6 @@ contract IUniverse is Typed {
     function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow);
     function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasDesignatedReporter) public returns (IReportingWindow);
     function getNextReportingWindow() public returns (IReportingWindow);
-    function getNextReportingWindowByMarketEndTime(bool _hasDesignatedReporter) public returns (IReportingWindow);
     function getReportingWindowForForkEndTime() public constant returns (IReportingWindow);
     function isParentOf(IUniverse _shadyChild) constant returns (bool);
     function isContainerForReportingWindow(Typed _shadyTarget) public constant returns (bool);

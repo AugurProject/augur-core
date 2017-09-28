@@ -110,10 +110,6 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return getReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
     }
 
-    function getNextReportingWindowByMarketEndTime(bool _hasDesignatedReporter) public returns (IReportingWindow) {
-        return getReportingWindowByMarketEndTime(block.timestamp, _hasDesignatedReporter);
-    }
-
     function getOrCreateChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
         if (childUniverses[_parentPayoutDistributionHash] == address(0)) {
             childUniverses[_parentPayoutDistributionHash] = UniverseFactory(controller.lookup("UniverseFactory")).createUniverse(controller, this, _parentPayoutDistributionHash);
