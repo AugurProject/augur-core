@@ -290,34 +290,19 @@ class ContractsFixture:
         childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
         return(childUniverse)
 
-<<<<<<< 120ea70bd90b49c5fdca3001ad40400728e10de5
-    def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks):
-        return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks)
+    def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks):
+        return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks)
 
-    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks):
+    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks):
         marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
-=======
-    def createBinaryMarket(self, branch, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks):
-        return self.createCategoricalMarket(branch, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks)
-
-    def createCategoricalMarket(self, branch, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks):
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
->>>>>>> automated -> designated
+        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-<<<<<<< 120ea70bd90b49c5fdca3001ad40400728e10de5
-    def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, automatedReporterAddress):
+    def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress):
         marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, value = marketCreationFee)
-=======
-    def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress):
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createMarket(branch.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee)
->>>>>>> automated -> designated
+        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
