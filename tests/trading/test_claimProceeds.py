@@ -19,8 +19,8 @@ def acquireLongShares(fundedRepFixture, market, outcome, amount, approvalAddress
     cash = fundedRepFixture.cash
     shareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(outcome))
     completeSets = fundedRepFixture.contracts['CompleteSets']
-    makeOrder = fundedRepFixture.contracts['MakeOrder']
-    takeOrder = fundedRepFixture.contracts['TakeOrder']
+    createOrder = fundedRepFixture.contracts['CreateOrder']
+    fillOrder = fundedRepFixture.contracts['FillOrder']
     cost = amount * market.getNumTicks()
 
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cost)
@@ -37,8 +37,8 @@ def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddr
     cash = fundedRepFixture.cash
     shareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(outcome))
     completeSets = fundedRepFixture.contracts['CompleteSets']
-    makeOrder = fundedRepFixture.contracts['MakeOrder']
-    takeOrder = fundedRepFixture.contracts['TakeOrder']
+    createOrder = fundedRepFixture.contracts['CreateOrder']
+    fillOrder = fundedRepFixture.contracts['FillOrder']
 
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cost)
     assert shareToken.transfer(0, amount, sender = sender)

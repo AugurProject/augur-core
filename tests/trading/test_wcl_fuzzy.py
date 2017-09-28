@@ -22,7 +22,7 @@ GAS_PRICE = 7
 
 # TODO: turn these into 24 parameterized tests rather than 3 tests that each execute 8 sub-tests
 
-def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOutcome, makerLongShares, makerShortShares, makerTokens, takerLongShares, takerShortShares, takerTokens, expectedMakerLongShares, expectedMakerShortShares, expectedMakerTokens, expectedTakerLongShares, expectedTakerShortShares, expectedTakerTokens):
+def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOutcome, creatorLongShares, creatorShortShares, creatorTokens, fillerLongShares, fillerShortShares, fillerTokens, expectedMakerLongShares, expectedMakerShortShares, expectedMakerTokens, expectedFillerLongShares, expectedFillerShortShares, expectedFillerTokens):
     contractsFixture.resetSnapshot()
 
     def acquireLongShares(outcome, amount, approvalAddress, sender):
@@ -31,8 +31,8 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         cash = contractsFixture.cash
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['CompleteSets']
-        makeOrder = contractsFixture.contracts['MakeOrder']
-        takeOrder = contractsFixture.contracts['TakeOrder']
+        createOrder = contractsFixture.contracts['CreateOrder']
+        fillOrder = contractsFixture.contracts['FillOrder']
 
         cashRequired = amount * market.getNumTicks() / 10**18
         assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cashRequired)
@@ -48,8 +48,8 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         cash = contractsFixture.cash
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['CompleteSets']
-        makeOrder = contractsFixture.contracts['MakeOrder']
-        takeOrder = contractsFixture.contracts['TakeOrder']
+        createOrder = contractsFixture.contracts['CreateOrder']
+        fillOrder = contractsFixture.contracts['FillOrder']
 
         cashRequired = amount * market.getNumTicks() / 10**18
         assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cashRequired)
@@ -72,45 +72,45 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     cash = contractsFixture.cash
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     completeSets = contractsFixture.contracts['CompleteSets']
 
-    makerAddress = tester.a1
-    takerAddress = tester.a2
-    makerKey = tester.k1
-    takerKey = tester.k2
+    creatorAddress = tester.a1
+    fillerAddress = tester.a2
+    creatorKey = tester.k1
+    fillerKey = tester.k2
 
-    # make order
-    acquireLongShares(orderOutcome, makerLongShares, makeOrder.address, sender = makerKey)
-    acquireShortShareSet(orderOutcome, makerShortShares, makeOrder.address, sender = makerKey)
-    orderID = makeOrder.publicMakeOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = makerKey, value = makerTokens)
+    # create order
+    acquireLongShares(orderOutcome, creatorLongShares, createOrder.address, sender = creatorKey)
+    acquireShortShareSet(orderOutcome, creatorShortShares, createOrder.address, sender = creatorKey)
+    orderID = createOrder.publicCreateOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = creatorKey, value = creatorTokens)
 
     # validate the order
     order = ordersFetcher.getOrder(orderID)
     assert order[ATTOSHARES] == orderSize
     assert order[DISPLAY_PRICE] == orderPrice
-    assert order[OWNER] == bytesToHexString(makerAddress)
-    assert order[TOKENS_ESCROWED] == makerTokens
-    assert order[SHARES_ESCROWED] == makerLongShares or makerShortShares
+    assert order[OWNER] == bytesToHexString(creatorAddress)
+    assert order[TOKENS_ESCROWED] == creatorTokens
+    assert order[SHARES_ESCROWED] == creatorLongShares or creatorShortShares
 
-    # take order
-    acquireLongShares(orderOutcome, takerLongShares, takeOrder.address, sender = takerKey)
-    acquireShortShareSet(orderOutcome, takerShortShares, takeOrder.address, sender = takerKey)
-    remaining = takeOrder.publicTakeOrder(orderID, orderSize, 42, sender = takerKey, value = takerTokens)
+    # fill order
+    acquireLongShares(orderOutcome, fillerLongShares, fillOrder.address, sender = fillerKey)
+    acquireShortShareSet(orderOutcome, fillerShortShares, fillOrder.address, sender = fillerKey)
+    remaining = fillOrder.publicFillOrder(orderID, orderSize, 42, sender = fillerKey, value = fillerTokens)
     assert not remaining
 
     # assert final state
-    assert cash.balanceOf(makerAddress) == expectedMakerTokens
-    assert cash.balanceOf(takerAddress) == expectedTakerTokens
+    assert cash.balanceOf(creatorAddress) == expectedMakerTokens
+    assert cash.balanceOf(fillerAddress) == expectedFillerTokens
     for outcome in range(0, market.getNumberOfOutcomes()):
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         if outcome == orderOutcome:
-            assert shareToken.balanceOf(makerAddress) == expectedMakerLongShares
-            assert shareToken.balanceOf(takerAddress) == expectedTakerLongShares
+            assert shareToken.balanceOf(creatorAddress) == expectedMakerLongShares
+            assert shareToken.balanceOf(fillerAddress) == expectedFillerLongShares
         else:
-            assert shareToken.balanceOf(makerAddress) == expectedMakerShortShares
-            assert shareToken.balanceOf(takerAddress) == expectedTakerShortShares
+            assert shareToken.balanceOf(creatorAddress) == expectedMakerShortShares
+            assert shareToken.balanceOf(fillerAddress) == expectedFillerShortShares
 
 def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * fxpPrice / 10**18)
@@ -119,7 +119,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     shortFee = long((completeSetFees * shortCost) / (longCost + shortCost))
     longFee = completeSetFees - shortFee
 
-    print "maker escrows cash, taker pays with cash"
+    print "creator escrows cash, filler pays with cash"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -127,20 +127,20 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
-        makerLongShares = 0,
-        makerShortShares = 0,
-        makerTokens = longCost,
-        takerLongShares = 0,
-        takerShortShares = 0,
-        takerTokens = shortCost,
+        creatorLongShares = 0,
+        creatorShortShares = 0,
+        creatorTokens = longCost,
+        fillerLongShares = 0,
+        fillerShortShares = 0,
+        fillerTokens = shortCost,
         expectedMakerLongShares = fxpAmount,
         expectedMakerShortShares = 0,
         expectedMakerTokens = 0,
-        expectedTakerLongShares = 0,
-        expectedTakerShortShares = fxpAmount,
-        expectedTakerTokens = 0)
+        expectedFillerLongShares = 0,
+        expectedFillerShortShares = fxpAmount,
+        expectedFillerTokens = 0)
 
-    print "maker escrows shares, taker pays with shares"
+    print "creator escrows shares, filler pays with shares"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -148,20 +148,20 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
-        makerLongShares = 0,
-        makerShortShares = fxpAmount,
-        makerTokens = 0,
-        takerLongShares = fxpAmount,
-        takerShortShares = 0,
-        takerTokens = 0,
+        creatorLongShares = 0,
+        creatorShortShares = fxpAmount,
+        creatorTokens = 0,
+        fillerLongShares = fxpAmount,
+        fillerShortShares = 0,
+        fillerTokens = 0,
         expectedMakerLongShares = 0,
         expectedMakerShortShares = 0,
         expectedMakerTokens = shortCost - shortFee,
-        expectedTakerLongShares = 0,
-        expectedTakerShortShares = 0,
-        expectedTakerTokens = longCost - longFee)
+        expectedFillerLongShares = 0,
+        expectedFillerShortShares = 0,
+        expectedFillerTokens = longCost - longFee)
 
-    print "maker escrows cash, taker pays with shares"
+    print "creator escrows cash, filler pays with shares"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -169,20 +169,20 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
-        makerLongShares = 0,
-        makerShortShares = 0,
-        makerTokens = longCost,
-        takerLongShares = fxpAmount,
-        takerShortShares = 0,
-        takerTokens = 0,
+        creatorLongShares = 0,
+        creatorShortShares = 0,
+        creatorTokens = longCost,
+        fillerLongShares = fxpAmount,
+        fillerShortShares = 0,
+        fillerTokens = 0,
         expectedMakerLongShares = fxpAmount,
         expectedMakerShortShares = 0,
         expectedMakerTokens = 0,
-        expectedTakerLongShares = 0,
-        expectedTakerShortShares = 0,
-        expectedTakerTokens = longCost)
+        expectedFillerLongShares = 0,
+        expectedFillerShortShares = 0,
+        expectedFillerTokens = longCost)
 
-    print "maker escrows shares, taker pays with cash"
+    print "creator escrows shares, filler pays with cash"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -190,18 +190,18 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
-        makerLongShares = 0,
-        makerShortShares = fxpAmount,
-        makerTokens = 0,
-        takerLongShares = 0,
-        takerShortShares = 0,
-        takerTokens = shortCost,
+        creatorLongShares = 0,
+        creatorShortShares = fxpAmount,
+        creatorTokens = 0,
+        fillerLongShares = 0,
+        fillerShortShares = 0,
+        fillerTokens = shortCost,
         expectedMakerLongShares = 0,
         expectedMakerShortShares = 0,
         expectedMakerTokens = shortCost,
-        expectedTakerLongShares = 0,
-        expectedTakerShortShares = fxpAmount,
-        expectedTakerTokens = 0)
+        expectedFillerLongShares = 0,
+        expectedFillerShortShares = fxpAmount,
+        expectedFillerTokens = 0)
 
 def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * fxpPrice / 10**18)
@@ -210,7 +210,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     longFee = long((completeSetFees * longCost) / (longCost + shortCost))
     shortFee = completeSetFees - longFee
 
-    print "maker escrows cash, taker pays with cash"
+    print "creator escrows cash, filler pays with cash"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -218,20 +218,20 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
-        makerLongShares = 0,
-        makerShortShares = 0,
-        makerTokens = shortCost,
-        takerLongShares = 0,
-        takerShortShares = 0,
-        takerTokens = longCost,
+        creatorLongShares = 0,
+        creatorShortShares = 0,
+        creatorTokens = shortCost,
+        fillerLongShares = 0,
+        fillerShortShares = 0,
+        fillerTokens = longCost,
         expectedMakerLongShares = 0,
         expectedMakerShortShares = fxpAmount,
         expectedMakerTokens = 0,
-        expectedTakerLongShares = fxpAmount,
-        expectedTakerShortShares = 0,
-        expectedTakerTokens = 0)
+        expectedFillerLongShares = fxpAmount,
+        expectedFillerShortShares = 0,
+        expectedFillerTokens = 0)
 
-    print "maker escrows shares, taker pays with shares"
+    print "creator escrows shares, filler pays with shares"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -239,20 +239,20 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
-        makerLongShares = fxpAmount,
-        makerShortShares = 0,
-        makerTokens = 0,
-        takerLongShares = 0,
-        takerShortShares = fxpAmount,
-        takerTokens = 0,
+        creatorLongShares = fxpAmount,
+        creatorShortShares = 0,
+        creatorTokens = 0,
+        fillerLongShares = 0,
+        fillerShortShares = fxpAmount,
+        fillerTokens = 0,
         expectedMakerLongShares = 0,
         expectedMakerShortShares = 0,
         expectedMakerTokens = longCost - longFee,
-        expectedTakerLongShares = 0,
-        expectedTakerShortShares = 0,
-        expectedTakerTokens = shortCost - shortFee)
+        expectedFillerLongShares = 0,
+        expectedFillerShortShares = 0,
+        expectedFillerTokens = shortCost - shortFee)
 
-    print "maker escrows cash, taker pays with shares"
+    print "creator escrows cash, filler pays with shares"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -260,20 +260,20 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
-        makerLongShares = 0,
-        makerShortShares = 0,
-        makerTokens = shortCost,
-        takerLongShares = 0,
-        takerShortShares = fxpAmount,
-        takerTokens = 0,
+        creatorLongShares = 0,
+        creatorShortShares = 0,
+        creatorTokens = shortCost,
+        fillerLongShares = 0,
+        fillerShortShares = fxpAmount,
+        fillerTokens = 0,
         expectedMakerLongShares = 0,
         expectedMakerShortShares = fxpAmount,
         expectedMakerTokens = 0,
-        expectedTakerLongShares = 0,
-        expectedTakerShortShares = 0,
-        expectedTakerTokens = shortCost)
+        expectedFillerLongShares = 0,
+        expectedFillerShortShares = 0,
+        expectedFillerTokens = shortCost)
 
-    print "maker escrows shares, taker pays with cash"
+    print "creator escrows shares, filler pays with cash"
     execute(
         contractsFixture = contractsFixture,
         market = market,
@@ -281,18 +281,18 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         orderSize = fxpAmount,
         orderPrice = fxpPrice,
         orderOutcome = YES,
-        makerLongShares = fxpAmount,
-        makerShortShares = 0,
-        makerTokens = 0,
-        takerLongShares = 0,
-        takerShortShares = 0,
-        takerTokens = longCost,
+        creatorLongShares = fxpAmount,
+        creatorShortShares = 0,
+        creatorTokens = 0,
+        fillerLongShares = 0,
+        fillerShortShares = 0,
+        fillerTokens = longCost,
         expectedMakerLongShares = 0,
         expectedMakerShortShares = 0,
         expectedMakerTokens = longCost,
-        expectedTakerLongShares = fxpAmount,
-        expectedTakerShortShares = 0,
-        expectedTakerTokens = 0)
+        expectedFillerLongShares = fxpAmount,
+        expectedFillerShortShares = 0,
+        expectedFillerTokens = 0)
 
 def test_binary(contractsFixture, randomAmount, randomNormalizedPrice):
     market = contractsFixture.binaryMarket
@@ -371,19 +371,19 @@ def numberOfIterations():
     return 1
 
 @fixture
-def makerAddress():
+def creatorAddress():
     return tester.a1
 
 @fixture
-def takerAddress():
+def fillerAddress():
     return tester.a2
 
 @fixture
-def makerKey():
+def creatorKey():
     return tester.k1
 
 @fixture
-def takerKey():
+def fillerKey():
     return tester.k2
 
 @fixture
