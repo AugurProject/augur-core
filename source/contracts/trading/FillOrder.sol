@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import 'trading/ITakeOrder.sol';
+import 'trading/IFillOrder.sol';
 import 'Augur.sol';
 import 'Controlled.sol';
 import 'libraries/ReentrancyGuard.sol';
@@ -365,17 +365,17 @@ library DirectionExtensions {
 }
 
 
-contract TakeOrder is CashAutoConverter, ReentrancyGuard, ITakeOrder {
+contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
     using SafeMathUint256 for uint256;
     using Trade for Trade.Data;
     using DirectionExtensions for Trade.Direction;
 
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
-    function publicTakeOrder(bytes32 _orderId, uint256 _amountTakerWants, uint256 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (uint256) {
-        return this.takeOrder(msg.sender, _orderId, _amountTakerWants, _tradeGroupId);
+    function publicFillOrder(bytes32 _orderId, uint256 _amountTakerWants, uint256 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (uint256) {
+        return this.fillOrder(msg.sender, _orderId, _amountTakerWants, _tradeGroupId);
     }
 
-    function takeOrder(address _taker, bytes32 _orderId, uint256 _amountTakerWants, uint256 _tradeGroupId) external onlyWhitelistedCallers returns (uint256) {
+    function fillOrder(address _taker, bytes32 _orderId, uint256 _amountTakerWants, uint256 _tradeGroupId) external onlyWhitelistedCallers returns (uint256) {
         Trade.Data memory _tradeData = Trade.create(controller, _orderId, _taker, _amountTakerWants);
         _tradeData.tradeMakerSharesForTakerShares();
         _tradeData.tradeMakerSharesForTakerTokens();
@@ -389,7 +389,7 @@ contract TakeOrder is CashAutoConverter, ReentrancyGuard, ITakeOrder {
         }
 
         // AUDIT: is there a reentry risk here?  we execute all of the above code, which includes transferring tokens around, before we mark the order as filled
-        _tradeData.contracts.orders.takeOrderLog(_tradeData.order.orderId, _tradeData.taker.participantAddress, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getTakerSharesDepleted(), _tradeData.getTakerTokensDepleted(), _tradeGroupId);
+        _tradeData.contracts.orders.fillOrderLog(_tradeData.order.orderId, _tradeData.taker.participantAddress, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getTakerSharesDepleted(), _tradeData.getTakerTokensDepleted(), _tradeGroupId);
         _tradeData.contracts.orders.fillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
         return _tradeData.taker.sharesToSell.add(_tradeData.taker.sharesToBuy);
     }

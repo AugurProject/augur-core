@@ -20,8 +20,8 @@ contract Orders is DelegationTarget, IOrders {
     event CancelOrder(address indexed market, address indexed sender, uint256 price, uint256 amount, bytes32 orderId, uint8 outcome, Order.TradeTypes orderType, uint256 cashRefund, uint256 sharesRefund);
     event BuyCompleteSets(address indexed sender, address indexed market, uint256 amount, uint256 numOutcomes);
     event SellCompleteSets(address indexed sender, address indexed market, uint256 amount, uint256 numOutcomes, uint256 marketCreatorFee, uint256 reportingFee);
-    event MakeOrder(address indexed market, address indexed sender, Order.TradeTypes indexed orderType, uint256 price, uint256 amount, uint8 outcome, bytes32 orderId, uint256 moneyEscrowed, uint256 sharesEscrowed, uint256 tradeGroupId);
-    event TakeOrder(address indexed market, uint8 indexed outcome, Order.TradeTypes indexed orderType, bytes32 orderId, uint256 price, address maker, address taker, uint256 makerShares, uint256 makerTokens, uint256 takerShares, uint256 takerTokens, uint256 tradeGroupId);
+    event CreateOrder(address indexed market, address indexed sender, Order.TradeTypes indexed orderType, uint256 price, uint256 amount, uint8 outcome, bytes32 orderId, uint256 moneyEscrowed, uint256 sharesEscrowed, uint256 tradeGroupId);
+    event FillOrder(address indexed market, uint8 indexed outcome, Order.TradeTypes indexed orderType, bytes32 orderId, uint256 price, address maker, address taker, uint256 makerShares, uint256 makerTokens, uint256 takerShares, uint256 takerTokens, uint256 tradeGroupId);
 
     struct MarketOrders {
         uint256 volume;
@@ -171,7 +171,7 @@ contract Orders is DelegationTarget, IOrders {
         _order.moneyEscrowed = _moneyEscrowed;
         _order.sharesEscrowed = _sharesEscrowed;
         insertOrderIntoList(_order, _betterOrderId, _worseOrderId);
-        MakeOrder(_market, _sender, _type, price, _amount, _outcome, _orderId, _moneyEscrowed, _sharesEscrowed, _tradeGroupId);
+        CreateOrder(_market, _sender, _type, price, _amount, _outcome, _orderId, _moneyEscrowed, _sharesEscrowed, _tradeGroupId);
         return _orderId;
     }
 
@@ -212,9 +212,9 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    function takeOrderLog(bytes32 _orderId, address _taker, uint256 _makerSharesFilled, uint256 _makerTokensFilled, uint256 _takerSharesFilled, uint256 _takerTokensFilled, uint256 _tradeGroupId) public constant returns (bool) {
+    function fillOrderLog(bytes32 _orderId, address _taker, uint256 _makerSharesFilled, uint256 _makerTokensFilled, uint256 _takerSharesFilled, uint256 _takerTokensFilled, uint256 _tradeGroupId) public constant returns (bool) {
         Order.Data storage _order = orders[_orderId];
-        TakeOrder(_order.market, _order.outcome, _order.tradeType, _orderId, _order.price, _order.maker, _taker, _makerSharesFilled, _makerTokensFilled, _takerSharesFilled, _takerTokensFilled, _tradeGroupId);
+        FillOrder(_order.market, _order.outcome, _order.tradeType, _orderId, _order.price, _order.maker, _taker, _makerSharesFilled, _makerTokensFilled, _takerSharesFilled, _takerTokensFilled, _tradeGroupId);
         return true;
     }
 

@@ -6,9 +6,9 @@ import 'Controlled.sol';
 import 'libraries/ReentrancyGuard.sol';
 import 'trading/Order.sol';
 import 'reporting/IMarket.sol';
-import 'trading/IMakeOrder.sol';
+import 'trading/ICreateOrder.sol';
 import 'trading/IOrders.sol';
-import 'trading/ITakeOrder.sol';
+import 'trading/IFillOrder.sol';
 import 'libraries/CashAutoConverter.sol';
 
 
@@ -41,7 +41,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard {
             return bytes32(1);
         }
         Order.TradeTypes _type = Order.getOrderTradingTypeFromMakerDirection(_direction);
-        return IMakeOrder(controller.lookup("MakeOrder")).makeOrder(_sender, _type, _bestFxpAmount, _price, _market, _outcome, 0, 0, _tradeGroupId);
+        return ICreateOrder(controller.lookup("CreateOrder")).createOrder(_sender, _type, _bestFxpAmount, _price, _market, _outcome, 0, 0, _tradeGroupId);
     }
 
     function takeBestOrder(address _sender, Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) internal returns (uint256 _bestFxpAmount) {
@@ -57,7 +57,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard {
                 _orders.setPrice(_market, _outcome, _orderPrice);
                 bytes32 _nextOrderId = _orders.getWorseOrderId(_orderId);
                 if (_orders.getOrderMaker(_orderId) != _sender) {
-                    _bestFxpAmount = ITakeOrder(controller.lookup("TakeOrder")).takeOrder(_sender, _orderId, _bestFxpAmount, _tradeGroupId);
+                    _bestFxpAmount = IFillOrder(controller.lookup("FillOrder")).fillOrder(_sender, _orderId, _bestFxpAmount, _tradeGroupId);
                 }
                 _orderId = _nextOrderId;
             } else {

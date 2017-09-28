@@ -7,9 +7,9 @@ from constants import BID, ASK, YES, NO
 
 def test_one_bid_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
@@ -17,7 +17,7 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
     logs = []
 
     # create order
-    orderID = makeOrder.publicMakeOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('2', '0.6'))
+    orderID = createOrder.publicCreateOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('2', '0.6'))
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -27,13 +27,13 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            u"sender": takeOrder.address,
+            u"sender": fillOrder.address,
             u"amount": 2,
             u"numOutcomes": 2L,
             u"market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             u"market": market.address,
             u"outcome": YES,
             u"orderType": BID,
@@ -55,9 +55,9 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
 
 def test_one_bid_on_books_buy_partial_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
@@ -65,7 +65,7 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
     logs = []
 
     # create order
-    orderID = makeOrder.publicMakeOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('2', '0.6'))
+    orderID = createOrder.publicCreateOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('2', '0.6'))
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -75,13 +75,13 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 1,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": BID,
@@ -102,9 +102,9 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
 
 def test_one_bid_on_books_buy_excess_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
@@ -112,7 +112,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
     logs = []
 
     # create order
-    orderID = makeOrder.publicMakeOrder(BID, 4, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('4', '0.6'))
+    orderID = createOrder.publicCreateOrder(BID, 4, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('4', '0.6'))
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -122,13 +122,13 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 4,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": BID,
@@ -143,7 +143,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
         {
-            "_event_type": "MakeOrder",
+            "_event_type": "CreateOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": ASK,
@@ -161,9 +161,9 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
 
 def test_two_bids_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -171,9 +171,9 @@ def test_two_bids_on_books_buy_both(contractsFixture):
     logs = []
 
     # create order 1
-    orderID1 = makeOrder.publicMakeOrder(BID, 4, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('4', '0.6'))
+    orderID1 = createOrder.publicCreateOrder(BID, 4, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('4', '0.6'))
     # create order 2
-    orderID2 = makeOrder.publicMakeOrder(BID, 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('1', '0.6'))
+    orderID2 = createOrder.publicCreateOrder(BID, 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('1', '0.6'))
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -183,13 +183,13 @@ def test_two_bids_on_books_buy_both(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 4,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": BID,
@@ -205,13 +205,13 @@ def test_two_bids_on_books_buy_both(contractsFixture):
         },
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 1,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": BID,
@@ -232,9 +232,9 @@ def test_two_bids_on_books_buy_both(contractsFixture):
 
 def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -242,9 +242,9 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     logs = []
 
     # create order 1
-    orderID1 = makeOrder.publicMakeOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.6'))
+    orderID1 = createOrder.publicCreateOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.6'))
     # create order 2
-    orderID2 = makeOrder.publicMakeOrder(BID, 7, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '0.6'))
+    orderID2 = createOrder.publicCreateOrder(BID, 7, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '0.6'))
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -254,13 +254,13 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": BID,
@@ -276,13 +276,13 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
         },
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 3,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": BID,
@@ -304,9 +304,9 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
 
 def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -314,9 +314,9 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     logs = []
 
     # create order 1
-    orderID1 = makeOrder.publicMakeOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.6'))
+    orderID1 = createOrder.publicCreateOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.6'))
     # create order 2
-    orderID2 = makeOrder.publicMakeOrder(BID, 7, fix('0.5'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '0.6'))
+    orderID2 = createOrder.publicCreateOrder(BID, 7, fix('0.5'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '0.6'))
 
     # take/make
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -326,13 +326,13 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": BID,
@@ -347,7 +347,7 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
         {
-            "_event_type": "MakeOrder",
+            "_event_type": "CreateOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": ASK,
@@ -366,9 +366,9 @@ def test_two_bids_on_books_buy_one_full_then_make(contractsFixture):
 
 def test_one_ask_on_books_buy_full_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     tradeGroupID = 42L
@@ -377,7 +377,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     logs = []
 
     # create order
-    orderID = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
+    orderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -387,13 +387,13 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": ASK,
@@ -414,9 +414,9 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
 
 def test_one_ask_on_books_buy_partial_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -424,7 +424,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     logs = []
 
     # create order
-    orderID = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
+    orderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -434,13 +434,13 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 7,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": ASK,
@@ -462,9 +462,9 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
 
 def test_one_ask_on_books_buy_excess_order(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -472,7 +472,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
     logs = []
 
     # create order
-    orderID = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
+    orderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -482,13 +482,13 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": ASK,
@@ -503,7 +503,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
         {
-            "_event_type": "MakeOrder",
+            "_event_type": "CreateOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": BID,
@@ -521,9 +521,9 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
 
 def test_two_asks_on_books_buy_both(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -531,9 +531,9 @@ def test_two_asks_on_books_buy_both(contractsFixture):
     logs = []
 
     # create order 1
-    orderID1 = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
+    orderID1 = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
     # create order 2
-    orderID2 = makeOrder.publicMakeOrder(ASK, 3, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('3', '0.4'))
+    orderID2 = createOrder.publicCreateOrder(ASK, 3, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('3', '0.4'))
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -543,13 +543,13 @@ def test_two_asks_on_books_buy_both(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": ASK,
@@ -565,13 +565,13 @@ def test_two_asks_on_books_buy_both(contractsFixture):
         },
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 3,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": ASK,
@@ -593,9 +593,9 @@ def test_two_asks_on_books_buy_both(contractsFixture):
 
 def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -603,9 +603,9 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     logs = []
 
     # create order 1
-    orderID1 = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
+    orderID1 = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
     # create order 2
-    orderID2 = makeOrder.publicMakeOrder(ASK, 7, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '0.4'))
+    orderID2 = createOrder.publicCreateOrder(ASK, 7, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '0.4'))
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -615,13 +615,13 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 12,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": ASK,
@@ -637,13 +637,13 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
         },
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 3,
             "numOutcomes": 2L,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": ASK,
@@ -665,9 +665,9 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
 
 def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
@@ -675,9 +675,9 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     logs = []
 
     # create order 1
-    orderID1 = makeOrder.publicMakeOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
+    orderID1 = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '0.4'))
     # create order 2
-    orderID2 = makeOrder.publicMakeOrder(ASK, 7, fix('0.7'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '0.4'))
+    orderID2 = createOrder.publicCreateOrder(ASK, 7, fix('0.7'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '0.4'))
 
     # take/make
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
@@ -687,13 +687,13 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "market": market.address,
             "amount": 12,
             "numOutcomes": 2L,
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": ASK,
@@ -708,7 +708,7 @@ def test_two_asks_on_books_buy_one_full_then_make(contractsFixture):
             "tradeGroupId": tradeGroupID,
         },
         {
-            "_event_type": "MakeOrder",
+            "_event_type": "CreateOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": BID,

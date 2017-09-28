@@ -31,8 +31,8 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         cash = contractsFixture.cash
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['CompleteSets']
-        makeOrder = contractsFixture.contracts['MakeOrder']
-        takeOrder = contractsFixture.contracts['TakeOrder']
+        createOrder = contractsFixture.contracts['CreateOrder']
+        fillOrder = contractsFixture.contracts['FillOrder']
 
         cashRequired = amount * market.getNumTicks() / 10**18
         assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cashRequired)
@@ -48,8 +48,8 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
         cash = contractsFixture.cash
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['CompleteSets']
-        makeOrder = contractsFixture.contracts['MakeOrder']
-        takeOrder = contractsFixture.contracts['TakeOrder']
+        createOrder = contractsFixture.contracts['CreateOrder']
+        fillOrder = contractsFixture.contracts['FillOrder']
 
         cashRequired = amount * market.getNumTicks() / 10**18
         assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cashRequired)
@@ -72,8 +72,8 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     cash = contractsFixture.cash
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     completeSets = contractsFixture.contracts['CompleteSets']
 
     makerAddress = tester.a1
@@ -81,10 +81,10 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     makerKey = tester.k1
     takerKey = tester.k2
 
-    # make order
-    acquireLongShares(orderOutcome, makerLongShares, makeOrder.address, sender = makerKey)
-    acquireShortShareSet(orderOutcome, makerShortShares, makeOrder.address, sender = makerKey)
-    orderID = makeOrder.publicMakeOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = makerKey, value = makerTokens)
+    # create order
+    acquireLongShares(orderOutcome, makerLongShares, createOrder.address, sender = makerKey)
+    acquireShortShareSet(orderOutcome, makerShortShares, createOrder.address, sender = makerKey)
+    orderID = createOrder.publicCreateOrder(orderType, orderSize, orderPrice, market.address, orderOutcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = makerKey, value = makerTokens)
 
     # validate the order
     order = ordersFetcher.getOrder(orderID)
@@ -94,10 +94,10 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     assert order[TOKENS_ESCROWED] == makerTokens
     assert order[SHARES_ESCROWED] == makerLongShares or makerShortShares
 
-    # take order
-    acquireLongShares(orderOutcome, takerLongShares, takeOrder.address, sender = takerKey)
-    acquireShortShareSet(orderOutcome, takerShortShares, takeOrder.address, sender = takerKey)
-    remaining = takeOrder.publicTakeOrder(orderID, orderSize, 42, sender = takerKey, value = takerTokens)
+    # fill order
+    acquireLongShares(orderOutcome, takerLongShares, fillOrder.address, sender = takerKey)
+    acquireShortShareSet(orderOutcome, takerShortShares, fillOrder.address, sender = takerKey)
+    remaining = fillOrder.publicFillOrder(orderID, orderSize, 42, sender = takerKey, value = takerTokens)
     assert not remaining
 
     # assert final state

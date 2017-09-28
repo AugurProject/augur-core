@@ -5,10 +5,10 @@ from utils import fix, bytesToHexString, captureFilteredLogs, longTo32Bytes, lon
 from constants import BID, ASK, YES, NO
 
 
-def test_publicTakeOrder_bid(contractsFixture):
+def test_publicFillOrder_bid(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
@@ -21,23 +21,23 @@ def test_publicTakeOrder_bid(contractsFixture):
     takerCost = fix('2', '0.4')
 
     # create order
-    orderID = makeOrder.publicMakeOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=makerCost)
+    orderID = createOrder.publicCreateOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=makerCost)
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = takeOrder.publicTakeOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=takerCost)
+    fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=takerCost)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 2,
             "numOutcomes": 2,
             "market": market.address,
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": BID,
@@ -58,10 +58,10 @@ def test_publicTakeOrder_bid(contractsFixture):
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0
 
-def test_publicTakeOrder_ask(contractsFixture):
+def test_publicFillOrder_ask(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     market = contractsFixture.binaryMarket
@@ -74,23 +74,23 @@ def test_publicTakeOrder_ask(contractsFixture):
     takerCost = fix('2', '0.6')
 
     # create order
-    orderID = makeOrder.publicMakeOrder(ASK, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=makerCost)
+    orderID = createOrder.publicCreateOrder(ASK, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=makerCost)
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = takeOrder.publicTakeOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=takerCost)
+    fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=takerCost)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 2,
             "numOutcomes": 2,
             "market": market.address
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": ASK,
@@ -111,10 +111,10 @@ def test_publicTakeOrder_ask(contractsFixture):
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0
 
-def test_publicTakeOrder_bid_scalar(contractsFixture):
+def test_publicFillOrder_bid_scalar(contractsFixture):
     cash = contractsFixture.cash
-    makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     # We're testing the scalar market because it has a different numTicks than 10**18 as the other do. In particular it's numTicks is 40*18**18
@@ -128,23 +128,23 @@ def test_publicTakeOrder_bid_scalar(contractsFixture):
     takerCost = fix('2', '39.4')
 
     # create order
-    orderID = makeOrder.publicMakeOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=makerCost)
+    orderID = createOrder.publicCreateOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=makerCost)
 
     # take best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    fillOrderID = takeOrder.publicTakeOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=takerCost)
+    fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=takerCost)
 
     # assert
     assert logs == [
         {
             "_event_type": "BuyCompleteSets",
-            "sender": takeOrder.address,
+            "sender": fillOrder.address,
             "amount": 2,
             "numOutcomes": 2,
             "market": market.address,
         },
         {
-            "_event_type": "TakeOrder",
+            "_event_type": "FillOrder",
             "market": market.address,
             "outcome": YES,
             "orderType": BID,
