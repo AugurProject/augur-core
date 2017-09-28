@@ -28,12 +28,12 @@ contract Trade is CashAutoConverter, ReentrancyGuard {
     }
 
     function publicTakeBestOrder(Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (uint256) {
-        return takeBestOrder(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
+        return fillBestOrder(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
     }
 
     // CONSIDER: We may want to return multiple values here to indicate success and the order id seperately.
     function trade(address _sender, Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) internal returns (bytes32) {
-        uint256 _bestFxpAmount = takeBestOrder(_sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
+        uint256 _bestFxpAmount = fillBestOrder(_sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
         if (_bestFxpAmount == 0) {
             return bytes32(1);
         }
@@ -44,9 +44,9 @@ contract Trade is CashAutoConverter, ReentrancyGuard {
         return ICreateOrder(controller.lookup("CreateOrder")).createOrder(_sender, _type, _bestFxpAmount, _price, _market, _outcome, 0, 0, _tradeGroupId);
     }
 
-    function takeBestOrder(address _sender, Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) internal returns (uint256 _bestFxpAmount) {
-        // we need to take a BID if we want to SELL and we need to take an ASK if we want to BUY
-        Order.TradeTypes _type = Order.getOrderTradingTypeFromTakerDirection(_direction);
+    function fillBestOrder(address _sender, Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) internal returns (uint256 _bestFxpAmount) {
+        // we need to fill a BID if we want to SELL and we need to fill an ASK if we want to BUY
+        Order.TradeTypes _type = Order.getOrderTradingTypeFromFillerDirection(_direction);
         IOrders _orders = IOrders(controller.lookup("Orders"));
         bytes32 _orderId = _orders.getBestOrderId(_type, _market, _outcome);
         _bestFxpAmount = _fxpAmount;
@@ -56,7 +56,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard {
             if (_type == Order.TradeTypes.Bid ? _orderPrice >= _price : _orderPrice <= _price) {
                 _orders.setPrice(_market, _outcome, _orderPrice);
                 bytes32 _nextOrderId = _orders.getWorseOrderId(_orderId);
-                if (_orders.getOrderMaker(_orderId) != _sender) {
+                if (_orders.getOrderCreator(_orderId) != _sender) {
                     _bestFxpAmount = IFillOrder(controller.lookup("FillOrder")).fillOrder(_sender, _orderId, _bestFxpAmount, _tradeGroupId);
                 }
                 _orderId = _nextOrderId;

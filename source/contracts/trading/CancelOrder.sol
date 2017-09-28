@@ -33,7 +33,7 @@ contract CancelOrder is CashAutoConverter, ReentrancyGuard, ICancelOrder {
         uint256 _sharesEscrowed = _orders.getOrderSharesEscrowed(_orderId);
 
         // Check that the order ID is correct and that the sender owns the order
-        require(msg.sender == _orders.getOrderMaker(_orderId));
+        require(msg.sender == _orders.getOrderCreator(_orderId));
 
         // Clear the order first
         _orders.removeOrder(_orderId);

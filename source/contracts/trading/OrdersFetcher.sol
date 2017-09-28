@@ -44,7 +44,7 @@ contract OrdersFetcher is Controlled, IOrdersFetcher {
         IOrders _orders = IOrders(controller.lookup("Orders"));
         _attoshares = _orders.getAmount(_orderId);
         _displayPrice = _orders.getPrice(_orderId);
-        _owner = _orders.getOrderMaker(_orderId);
+        _owner = _orders.getOrderCreator(_orderId);
         _tokensEscrowed = _orders.getOrderMoneyEscrowed(_orderId);
         _sharesEscrowed = _orders.getOrderSharesEscrowed(_orderId);
         _betterOrderId = _orders.getBetterOrderId(_orderId);

@@ -17,8 +17,8 @@ contract CreateOrder is CashAutoConverter, ReentrancyGuard {
         return this.createOrder(msg.sender, _type, _attoshares, _displayPrice, _market, _outcome, _betterOrderId, _worseOrderId, _tradeGroupId);
     }
 
-    function createOrder(address _maker, Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, uint8 _outcome, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) external onlyWhitelistedCallers returns (bytes32) {
-        Order.Data memory _orderData = Order.create(controller, _maker, _outcome, _type, _attoshares, _displayPrice, _market, _betterOrderId, _worseOrderId);
+    function createOrder(address _creator, Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, uint8 _outcome, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) external onlyWhitelistedCallers returns (bytes32) {
+        Order.Data memory _orderData = Order.create(controller, _creator, _outcome, _type, _attoshares, _displayPrice, _market, _betterOrderId, _worseOrderId);
         Order.escrowFunds(_orderData);
         require(_orderData.orders.getAmount(_orderData.getOrderId()) == 0);
         return Order.saveOrder(_orderData, _tradeGroupId);

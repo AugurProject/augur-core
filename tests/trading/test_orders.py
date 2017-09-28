@@ -289,8 +289,8 @@ def test_saveOrder(contractsFixture):
     assert(orders.getPrice(orderId1) == fix('0.5')), "price for order1 should be set to 0.5 ETH"
     assert(orders.getPrice(orderId2) == fix('0.5')), "price for order2 should be set to 0.5 ETH"
 
-    assert(orders.getOrderMaker(orderId1) == bytesToHexString(tester.a1)), "orderOwner for order1 should be tester.a1"
-    assert(orders.getOrderMaker(orderId2) == bytesToHexString(tester.a2)), "orderOwner for order2 should be tester.a2"
+    assert(orders.getOrderCreator(orderId1) == bytesToHexString(tester.a1)), "orderOwner for order1 should be tester.a1"
+    assert(orders.getOrderCreator(orderId2) == bytesToHexString(tester.a2)), "orderOwner for order2 should be tester.a2"
 
     assert(orders.removeOrder(orderId1) == 1), "Remove order 1"
     assert(orders.removeOrder(orderId2) == 1), "Remove order 2"

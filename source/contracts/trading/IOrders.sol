@@ -13,7 +13,7 @@ contract IOrders {
     function getOutcome(bytes32 _orderId) public constant returns (uint8);
     function getAmount(bytes32 _orderId) public constant returns (uint256);
     function getPrice(bytes32 _orderId) public constant returns (uint256);
-    function getOrderMaker(bytes32 _orderId) public constant returns (address);
+    function getOrderCreator(bytes32 _orderId) public constant returns (address);
     function getOrderSharesEscrowed(bytes32 _orderId) public constant returns (uint256);
     function getOrderMoneyEscrowed(bytes32 _orderId) public constant returns (uint256);
     function getBetterOrderId(bytes32 _orderId) public constant returns (bytes32);
@@ -30,6 +30,6 @@ contract IOrders {
     function buyCompleteSetsLog(address _sender, IMarket _market, uint256 _fxpAmount, uint256 _numOutcomes) public constant returns (bool);
     function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _fxpAmount, uint256 _numOutcomes, uint256 _marketCreatorFee, uint256 _reportingFee) public constant returns (bool);
     function cancelOrderLog(bytes32 _orderId) public constant returns (bool);
-    function fillOrderLog(bytes32 _orderId, address _taker, uint256 _makerSharesFilled, uint256 _makerTokensFilled, uint256 _takerSharesFilled, uint256 _takerTokensFilled, uint256 _tradeGroupId) public constant returns (bool);
+    function fillOrderLog(bytes32 _orderId, address _filler, uint256 _creatorSharesFilled, uint256 _creatorTokensFilled, uint256 _fillerSharesFilled, uint256 _fillerTokensFilled, uint256 _tradeGroupId) public constant returns (bool);
     function setPrice(IMarket _market, uint8 _outcome, uint256 _price) external returns (bool);
 }
