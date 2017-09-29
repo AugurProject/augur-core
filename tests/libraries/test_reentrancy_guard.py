@@ -20,14 +20,12 @@ def testerContractsFixture(sessionFixture, testerSnapshot):
     return sessionFixture
 
 
-def test_nonReentrant(testerContractsFixture):
-    ReentrancyGuardHelper = testerContractsFixture.contracts[
-        'ReentrancyGuardHelper']
+def test_nonReentrant(testerContractsFixture): 
+    ReentrancyGuardHelper = testerContractsFixture.contracts['ReentrancyGuardHelper']
     # Whitelist the contract
-    testerContractsFixture.controller.addToWhitelist(
-        ReentrancyGuardHelper.address)
+    testerContractsFixture.controller.addToWhitelist(ReentrancyGuardHelper.address)
 
-    assert ReentrancyGuardHelper.testerCanReentrant() == True
+    assert ReentrancyGuardHelper.testerCanReentrant()
 
     with raises(TransactionFailed):
         ReentrancyGuardHelper.testerCanNotReentrant()
