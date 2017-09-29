@@ -37,7 +37,7 @@ export class ContractDeployer {
         await this.uploadAllContracts();
         await this.whitelistTradingContracts();
         await this.initializeAllContracts();
-        // await this.approveCentralAuthority();
+        await this.approveCentralAuthority();
 
         return true;
     }
@@ -149,13 +149,11 @@ export class ContractDeployer {
         const authority = this.uploadedContracts['Augur'];
         const contractsToApprove = ['Cash'];
         const testersGivingApproval = await this.eth.accounts();
-        for (let testerKey of testersGivingApproval) {
-            console.log("TesterKey: " + testerKey);
-            for (let contractName of contractsToApprove) {
-                console.log("contractName: " + contractName);
-                this.uploadedContracts[contractName].approve(authority.address, 2**254, sender=testerKey);
-            }
-        }
+        // for (let testerKey of testersGivingApproval) {
+        //     for (let contractName of contractsToApprove) {
+        //         this.uploadedContracts[contractName].approve(authority.address, 2**254, sender=testerKey);
+        //     }
+        // }
 
         return true;
     }
