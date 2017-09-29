@@ -170,41 +170,40 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool) {
-        IReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
-        require(address(_reportingToken) != NULL_ADDRESS);
+        int256 _tentativeWinningStake = getPayoutDistributionHashStake(tentativeWinningPayoutDistributionHash);
+        int256 _secondPlaceStake = getPayoutDistributionHashStake(bestGuessSecondPlaceTentativeWinningPayoutDistributionHash);
+        int256 _payoutStake = getPayoutDistributionHashStake(_payoutDistributionHash);
 
-        IReportingToken _tentativeWinningReportingToken = reportingTokens[tentativeWinningPayoutDistributionHash];
-        if (address(_tentativeWinningReportingToken) == NULL_ADDRESS) {
-            tentativeWinningPayoutDistributionHash = _payoutDistributionHash;
-            return true;
-        }
-
-        bytes32 _secondPlacePayoutDistributionHash = bestGuessSecondPlaceTentativeWinningPayoutDistributionHash;
-        int256 _tentativeWinningStake = getPayoutDistributionHashStake(_tentativeWinningReportingToken);
-        int256 _payoutStake = getPayoutDistributionHashStake(_reportingToken);
-
-        if (_payoutStake > _tentativeWinningStake) {
-            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
-            tentativeWinningPayoutDistributionHash = _payoutDistributionHash;
-        }
-
-        if (_secondPlacePayoutDistributionHash != bytes32(0)) {
-            IReportingToken _secondPlaceWinningReportingToken = reportingTokens[_secondPlacePayoutDistributionHash];
-            int256 _secondPlaceTentativeWinningStake = getPayoutDistributionHashStake(_secondPlaceWinningReportingToken);
-            if (_secondPlaceTentativeWinningStake > _tentativeWinningStake) {
-                bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
-                tentativeWinningPayoutDistributionHash = _secondPlacePayoutDistributionHash;
-            } else if (_secondPlacePayoutDistributionHash > bestGuessSecondPlaceTentativeWinningPayoutDistributionHash) {
-                bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = _secondPlacePayoutDistributionHash;
-            }
+        if (_tentativeWinningStake >= _payoutStake && _payoutStake >= _secondPlaceStake) {
+            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash : bytes32(0);
+        } else if (_secondPlaceStake >= _tentativeWinningStake && _tentativeWinningStake >= _payoutStake) {
+            tentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
+            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? tentativeWinningPayoutDistributionHash: bytes32(0);
+        } else if (_secondPlaceStake >= _payoutStake && _payoutStake >= _tentativeWinningStake) {
+            tentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
+            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
+        } else if (_payoutStake >= _tentativeWinningStake && _tentativeWinningStake >= _secondPlaceStake) {
+            tentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
+            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? tentativeWinningPayoutDistributionHash: bytes32(0);
+        } else if (_payoutStake >= _secondPlaceStake && _secondPlaceStake >= _tentativeWinningStake) {
+            tentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
         }
 
         return true;
     }
 
-    function getPayoutDistributionHashStake(IReportingToken _reportingToken) public constant returns (int256) {
+    function getPayoutDistributionHashStake(bytes32 _payoutDistributionHash) public constant returns (int256) {
+        if (_payoutDistributionHash == bytes32(0)) {
+            return 0;
+        }
+
+        IReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
+        if (address(_reportingToken) == NULL_ADDRESS) {
+            return 0;
+        }
+
         int256 _payoutStake = int256(_reportingToken.totalSupply());
-        bytes32 _payoutDistributionHash = _reportingToken.getPayoutDistributionHash();
+
         if (address(designatedReporterDisputeBondToken) != NULL_ADDRESS) {
             if (designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
                 _payoutStake -= int256(Reporting.designatedReporterDisputeBondAmount());
@@ -220,12 +219,11 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
                 _payoutStake -= int256(Reporting.allReportersDisputeBondAmount());
             }
         }
+
         return _payoutStake;
     }
 
     function tryFinalize() public returns (bool) {
-        require(tentativeWinningPayoutDistributionHash != bytes32(0));
-
         if (getReportingState() != ReportingState.AWAITING_FINALIZATION) {
             return false;
         }
@@ -233,6 +231,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         if (getUniverse().getForkingMarket() == this) {
             tentativeWinningPayoutDistributionHash = getWinningPayoutDistributionHashFromFork();
         }
+
+        require(tentativeWinningPayoutDistributionHash != bytes32(0));
+
         finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
         finalizationTime = block.timestamp;
         transferIncorrectDisputeBondsToWinningReportingToken();

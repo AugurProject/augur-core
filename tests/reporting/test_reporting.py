@@ -1,6 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, raises
+from utils import longTo32Bytes
 from reporting_utils import proceedToDesignatedReporting, proceedToLimitedReporting, proceedToAllReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 tester.STARTGAS = long(6.7 * 10**6)
@@ -160,6 +161,13 @@ def test_limitedReportingHappyPath(makeReport, reportingFixture):
     assert reportingTokenYes.balanceOf(tester.a2) == 1
     assert reputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18 - 10 ** 18 - 1
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
+    if (makeReport):
+        # The tentative winner will be unset since this outcome is still negative from the dispute bond that was placed
+        assert tentativeWinner == longTo32Bytes(0)
+        # If we buy the full designated bond amount we will have a winner
+        reportingTokenYes.buy(reportingFixture.constants.DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT(), sender=tester.k2)
+        tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
+
     assert tentativeWinner == reportingTokenYes.getPayoutDistributionHash()
 
     # To progress into the LIMITED DISPUTE phase we move time forward
@@ -200,13 +208,13 @@ def test_allReportingHappyPath(reportingFixture, makeReport):
     assert reputationToken.balanceOf(tester.a3) == 1 * 10 ** 6 * 10 ** 18 - 2 * 10 ** 18 - 11 * 10 ** 21 - 1
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
 
-    # If a dispute bond was placed for this outcome it is actually not the tentative winning outcome since the bond amount counts negatively toward its stake
-    if (makeReport):
-        assert tentativeWinner != reportingTokenNo.getPayoutDistributionHash()
-        # If we buy (LIMITED_BOND_AMOUNT - DESIGNATED_BOND_AMOUNT) that will be sufficient to make the outcome win
-        negativeBondBalance = reportingFixture.constants.LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT() - reportingFixture.constants.DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
-        reportingTokenNo.buy(negativeBondBalance, sender=tester.k3)
-        tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
+    # Since this outcome is still in the negatives it will not be counted as a winning outcome
+    assert tentativeWinner == longTo32Bytes(0)
+
+    # If we buy LIMITED_BOND_AMOUNT that will be sufficient to make the outcome win
+    negativeBondBalance = reportingFixture.constants.LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT()
+    reportingTokenNo.buy(negativeBondBalance, sender=tester.k3)
+    tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
 
     assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
 

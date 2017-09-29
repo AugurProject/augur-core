@@ -83,7 +83,7 @@ def proceedToAllReporting(testFixture, market, makeReport, designatedDisputer, l
     # We make one report by the limitedReporter
     registrationToken = testFixture.applySignature('RegistrationToken', reportingToken.getRegistrationToken())
     #registrationToken.register(sender=limitedReporter)
-    reportingToken.buy(1, sender=limitedReporter)
+    assert reportingToken.buy(1, sender=limitedReporter)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == reportingToken.getPayoutDistributionHash()
 
@@ -112,12 +112,11 @@ def proceedToForking(testFixture, market, makeReport, designatedDisputer, limite
     # We make one report by the reporter
     registrationToken = testFixture.applySignature('RegistrationToken', reportingTokenNo.getRegistrationToken())
     registrationToken.register(sender=reporter)
-    reportingTokenNo.buy(1, sender=reporter)
+    # If we buy LIMITED_BOND_AMOUNT that will be sufficient to make the outcome win
+    negativeBondBalance = testFixture.constants.LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT()
+    reportingTokenNo.buy(negativeBondBalance, sender=reporter)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-    if (makeReport):
-        assert tentativeWinner != reportingTokenNo.getPayoutDistributionHash()
-    else:
-        assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
+    assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
 
     # To progress into the ALL DISPUTE phase we move time forward
     testFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
