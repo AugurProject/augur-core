@@ -13,7 +13,7 @@ import { RpcClient } from "../libraries/RpcClient";
 const CONTRACT_INPUT_DIR_PATH = path.join(__dirname, "../../source/contracts");
 const CONTRACT_OUTPUT_DIR_PATH = path.join(__dirname, "../../output/contracts");
 const COMPILED_CONTRACT_OUTPUT_FILE_NAME = "augurCore";
-const GAS_AMOUNT = 3000000;
+const GAS_AMOUNT = 6005250;
 const DEFAULT_ETHEREUM_PORT = 8545;
 
 
@@ -40,9 +40,9 @@ export async function compileAndDeployContracts(): Promise<ContractBlockchainDat
 
     // Deploy contracts to blockchain
     const contractDeployer = new ContractDeployer();
-    const contracts = await contractDeployer.deployContracts(eth, contractJson, fromAccount, GAS_AMOUNT);
+    await contractDeployer.initialize(eth, contractJson, fromAccount, GAS_AMOUNT);
 
-    return contracts;
+    return contractDeployer.getUploadedContracts();
 }
 
 

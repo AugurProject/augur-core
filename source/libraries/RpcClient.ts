@@ -6,7 +6,9 @@ import * as TestRpc from 'ethereumjs-testrpc';
 
 export class RpcClient {
     public async listen(port): Promise<boolean> {
-        const server = TestRpc.server();
+        // Set gas block limit extremely high so new blocks don't have to be mined while uploading contracts
+        const gasBlockLimit = Math.pow(2, 32);
+        const server = TestRpc.server({gasLimit: gasBlockLimit});
         server.listen(port);
         return true;
     }

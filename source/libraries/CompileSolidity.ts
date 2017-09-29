@@ -74,7 +74,8 @@ export class SolidityContractCompiler {
     }
 
     private ignoreFile(file: string, stats: fs.Stats): boolean {
-        return !stats.isDirectory() && path.extname(file) != ".sol";
+        // Ignore the legacy_reputation directory since it is unnecessary and we don't support uploads of contracts with constructors yet
+        return file.indexOf("legacy_reputation") > -1 || (stats.isFile() && path.extname(file) != ".sol");
     }
 
     private mkdirpCallback(error): void {
@@ -84,7 +85,7 @@ export class SolidityContractCompiler {
     }
 
     private async generateCompilerInput(): Promise<CompilerInput> {
-        const filePaths: any = await recursiveReadDir(this.contractInputDirectoryPath, [this.ignoreFile]);
+        const filePaths = await recursiveReadDir(this.contractInputDirectoryPath, [this.ignoreFile]);
         const filesPromises = filePaths.map(async filePath => await readFile(filePath));
         const files = await Promise.all(filesPromises);
 
