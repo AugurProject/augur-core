@@ -34,6 +34,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set.Data private markets;
     Set.Data private limitedReporterMarkets;
     Set.Data private allReporterMarkets;
+    uint256 private indeterminateMarketCount;
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
@@ -105,6 +106,12 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
             limitedReporterMarkets.remove(_market);
         }
 
+        if (_state == IMarket.ReportingState.FINALIZED) {
+            if (_market.isIndeterminate()) {
+                indeterminateMarketCount++;
+            }
+        }
+
         return true;
     }
 
@@ -146,6 +153,14 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function getEndTime() public afterInitialized constant returns (uint256) {
         return getDisputeEndTime();
+    }
+
+    function getNumMarkets() public constant returns (uint256) {
+        return markets.count;
+    }
+
+    function getNumIndeterminateMarkets() public constant returns (uint256) {
+        return indeterminateMarketCount;
     }
 
     function getReportingStartTime() public afterInitialized constant returns (uint256) {

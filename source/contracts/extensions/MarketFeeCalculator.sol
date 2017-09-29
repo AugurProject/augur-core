@@ -3,32 +3,54 @@ pragma solidity ^0.4.13;
 import 'reporting/IReputationToken.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReportingWindow.sol';
+import 'libraries/math/SafeMathUint256.sol';
 
 
 contract MarketFeeCalculator {
+    using SafeMathUint256 for uint256;
+
     mapping (address => uint256) private shareSettlementPerEthFee;
     mapping (address => uint256) private validityBondInAttoeth;
+
+    uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether;
+    uint256 private constant FXP_TARGET_INDETERMINATE_MARKETS = 10 ** 16; // 1% of markets
 
     function getValidityBond(IReportingWindow _reportingWindow) public returns (uint256) {
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
         if (_currentValidityBondInAttoeth != 0) {
             return _currentValidityBondInAttoeth;
         }
-        // TODO: get the real data for this
-        uint256 _indeterminateMarketsInPreviousWindow = 10;
-        // TODO: get the real data for this
-        uint256 _totalMarketsInPreviousWindow = 1000;
         uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
         IUniverse _universe = _reportingWindow.getUniverse();
         IReportingWindow _previousReportingWindow = _universe.getReportingWindowByTimestamp(_previousTimestamp);
+        uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
+        uint256 _indeterminateMarketsInPreviousWindow = _reportingWindow.getNumIndeterminateMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
-        if (_previousValidityBondInAttoeth == 0) {
-            _previousValidityBondInAttoeth = 1 * 10 ** 16;
-        }
-        uint256 _targetIndeterminateMarketsPerHundred = 1;
-        _currentValidityBondInAttoeth = _previousValidityBondInAttoeth * _targetIndeterminateMarketsPerHundred * _totalMarketsInPreviousWindow / _indeterminateMarketsInPreviousWindow / 100;
+
+        _currentValidityBondInAttoeth = calculateValidityBond(_indeterminateMarketsInPreviousWindow, _totalMarketsInPreviousWindow, FXP_TARGET_INDETERMINATE_MARKETS, _previousValidityBondInAttoeth);
         validityBondInAttoeth[_reportingWindow] = _currentValidityBondInAttoeth;
         return _currentValidityBondInAttoeth;
+    }
+
+    function calculateValidityBond(uint256 _indeterminateMarkets, uint256 _totalMarkets, uint256 _fxpTargetIndeterminateMarkets, uint256 _previousValidityBondInAttoeth) constant public returns (uint256) {
+        if (_totalMarkets == 0) {
+            return DEFAULT_VALIDITY_BOND;
+        }
+        if (_previousValidityBondInAttoeth == 0) {
+            _previousValidityBondInAttoeth = DEFAULT_VALIDITY_BOND;
+        }
+        
+        uint256 _fxpBase = uint256(1 ether);
+        uint256 _fxpPercentIndeterminate = _indeterminateMarkets.fxpDiv(_totalMarkets, _fxpBase);
+        uint256 _fxpMultiple = _fxpBase;
+
+        if (_fxpPercentIndeterminate <= _fxpTargetIndeterminateMarkets) {
+            _fxpMultiple = _fxpPercentIndeterminate.fxpDiv(_fxpTargetIndeterminateMarkets.mul(2), _fxpBase).add(_fxpBase.div(2));
+        } else {
+            _fxpMultiple = _fxpBase.fxpDiv(_fxpBase.sub(_fxpTargetIndeterminateMarkets), _fxpBase).fxpMul(_fxpPercentIndeterminate.sub(_fxpTargetIndeterminateMarkets), _fxpBase).add(_fxpBase);
+        }
+
+        return _previousValidityBondInAttoeth.fxpMul(_fxpMultiple, _fxpBase);
     }
 
     function getTargetReporterGasCosts() constant public returns (uint256) {

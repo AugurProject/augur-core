@@ -440,6 +440,12 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return false;
     }
 
+    function isIndeterminate() public constant returns (bool) {
+        IReportingToken _winningReportingToken = getFinalWinningReportingToken();
+        require(address(_winningReportingToken) != NULL_ADDRESS);
+        return _winningReportingToken.isIndeterminate();
+    }
+
     function getDesignatedReportDueTimestamp() public constant returns (uint256) {
         if (designatedReportReceivedTime != 0) {
             return designatedReportReceivedTime;
