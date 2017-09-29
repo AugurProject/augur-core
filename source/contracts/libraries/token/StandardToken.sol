@@ -14,6 +14,9 @@ import 'libraries/token/ERC20.sol';
 contract StandardToken is ERC20, BasicToken {
     using SafeMathUint256 for uint256;
 
+    // Approvals of this amount are simply considered an everlasting approval which is not decremented when transfers occur
+    uint256 public constant ETERNAL_APPROVAL_VALUE = 2 ** 256 - 1;
+
     mapping (address => mapping (address => uint256)) internal allowed;
 
     /**
@@ -30,7 +33,9 @@ contract StandardToken is ERC20, BasicToken {
 
         balances[_to] = balances[_to].add(_value);
         balances[_from] = balances[_from].sub(_value);
-        allowed[_from][msg.sender] = _allowance.sub(_value);
+        if (_allowance != ETERNAL_APPROVAL_VALUE) {
+            allowed[_from][msg.sender] = _allowance.sub(_value);
+        }
         Transfer(_from, _to, _value);
         return true;
     }

@@ -37,7 +37,7 @@ library Order {
 
         // Order
         bytes32 id;
-        address maker;
+        address creator;
         uint8 outcome;
         Order.TradeTypes tradeType;
         uint256 amount;
@@ -52,7 +52,7 @@ library Order {
     // Constructor
     //
 
-    function create(IController _controller, address _maker, uint8 _outcome, Order.TradeTypes _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal returns (Data) {
+    function create(IController _controller, address _creator, uint8 _outcome, Order.TradeTypes _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal returns (Data) {
         require(_market.getTypeName() == "Market");
         require(_outcome < _market.getNumberOfOutcomes());
         require(_price < _market.getNumTicks());
@@ -65,7 +65,7 @@ library Order {
             market: _market,
             augur: _augur,
             id: 0,
-            maker: _maker,
+            creator: _creator,
             outcome: _outcome,
             tradeType: _type,
             amount: _attoshares,
@@ -83,19 +83,19 @@ library Order {
 
     function getOrderId(Order.Data _orderData) internal constant returns (bytes32) {
         if (_orderData.id == bytes32(0)) {
-            bytes32 _orderId = _orderData.orders.getOrderId(_orderData.tradeType, _orderData.market, _orderData.amount, _orderData.price, _orderData.maker, block.number, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed);
+            bytes32 _orderId = _orderData.orders.getOrderId(_orderData.tradeType, _orderData.market, _orderData.amount, _orderData.price, _orderData.creator, block.number, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed);
             require(_orderData.orders.getAmount(_orderId) == 0);
             _orderData.id = _orderId;
         }
         return _orderData.id;
      }
 
-    function getOrderTradingTypeFromMakerDirection(Order.TradeDirections _makerDirection) internal constant returns (Order.TradeTypes) {
-        return (_makerDirection == Order.TradeDirections.Long) ? Order.TradeTypes.Bid : Order.TradeTypes.Ask;
+    function getOrderTradingTypeFromMakerDirection(Order.TradeDirections _creatorDirection) internal constant returns (Order.TradeTypes) {
+        return (_creatorDirection == Order.TradeDirections.Long) ? Order.TradeTypes.Bid : Order.TradeTypes.Ask;
     }
 
-    function getOrderTradingTypeFromTakerDirection(Order.TradeDirections _takerDirection) internal constant returns (Order.TradeTypes) {
-        return (_takerDirection == Order.TradeDirections.Long) ? Order.TradeTypes.Ask : Order.TradeTypes.Bid;
+    function getOrderTradingTypeFromFillerDirection(Order.TradeDirections _fillerDirection) internal constant returns (Order.TradeTypes) {
+        return (_fillerDirection == Order.TradeDirections.Long) ? Order.TradeTypes.Ask : Order.TradeTypes.Bid;
     }
 
     function escrowFunds(Order.Data _orderData) internal returns (bool) {
@@ -107,7 +107,7 @@ library Order {
     }
 
     function saveOrder(Order.Data _orderData, uint256 _tradeGroupId) internal returns (bytes32) {
-        return _orderData.orders.saveOrder(_orderData.tradeType, _orderData.market, _orderData.amount, _orderData.price, _orderData.maker, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId);
+        return _orderData.orders.saveOrder(_orderData.tradeType, _orderData.market, _orderData.amount, _orderData.price, _orderData.creator, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId);
     }
 
     //
@@ -123,12 +123,12 @@ library Order {
         uint256 _attosharesToCover = _orderData.amount;
         uint8 _numberOfOutcomes = _orderData.market.getNumberOfOutcomes();
 
-        // Figure out how many almost-complete-sets (just missing `outcome` share) the maker has
+        // Figure out how many almost-complete-sets (just missing `outcome` share) the creator has
         uint256 _attosharesHeld = 2**254;
         for (uint8 _i = 0; _i < _numberOfOutcomes; _i++) {
             if (_i != _orderData.outcome) {
-                uint256 _makerShareTokenBalance = _orderData.market.getShareToken(_i).balanceOf(_orderData.maker);
-                _attosharesHeld = SafeMathUint256.min(_makerShareTokenBalance, _attosharesHeld);
+                uint256 _creatorShareTokenBalance = _orderData.market.getShareToken(_i).balanceOf(_orderData.creator);
+                _attosharesHeld = SafeMathUint256.min(_creatorShareTokenBalance, _attosharesHeld);
             }
         }
 
@@ -138,14 +138,14 @@ library Order {
             _attosharesToCover -= _orderData.sharesEscrowed;
             for (_i = 0; _i < _numberOfOutcomes; _i++) {
                 if (_i != _orderData.outcome) {
-                    _orderData.market.getShareToken(_i).transferFrom(_orderData.maker, _orderData.market, _orderData.sharesEscrowed);
+                    _orderData.market.getShareToken(_i).transferFrom(_orderData.creator, _orderData.market, _orderData.sharesEscrowed);
                 }
             }
         }
         // If not able to cover entire order with shares alone, then cover remaining with tokens
         if (_attosharesToCover > 0) {
             _orderData.moneyEscrowed = _attosharesToCover.mul(_orderData.price);
-            require(_orderData.augur.trustedTransfer(_orderData.market.getDenominationToken(), _orderData.maker, _orderData.market, _orderData.moneyEscrowed));
+            require(_orderData.augur.trustedTransfer(_orderData.market.getDenominationToken(), _orderData.creator, _orderData.market, _orderData.moneyEscrowed));
         }
 
         return true;
@@ -160,20 +160,20 @@ library Order {
         IShareToken _shareToken = _orderData.market.getShareToken(_orderData.outcome);
         uint256 _attosharesToCover = _orderData.amount;
 
-        // Figure out how many shares of the outcome the maker has
-        uint256 _attosharesHeld = _shareToken.balanceOf(_orderData.maker);
+        // Figure out how many shares of the outcome the creator has
+        uint256 _attosharesHeld = _shareToken.balanceOf(_orderData.creator);
 
         // Take shares in escrow if user has shares
         if (_attosharesHeld > 0) {
             _orderData.sharesEscrowed = SafeMathUint256.min(_attosharesHeld, _attosharesToCover);
             _attosharesToCover -= _orderData.sharesEscrowed;
-            _shareToken.transferFrom(_orderData.maker, _orderData.market, _orderData.sharesEscrowed);
+            _shareToken.transferFrom(_orderData.creator, _orderData.market, _orderData.sharesEscrowed);
         }
 
         // If not able to cover entire order with shares alone, then cover remaining with tokens
         if (_attosharesToCover > 0) {
             _orderData.moneyEscrowed = _orderData.market.getNumTicks().sub(_orderData.price).mul(_attosharesToCover);
-            require(_orderData.augur.trustedTransfer(_orderData.market.getDenominationToken(), _orderData.maker, _orderData.market, _orderData.moneyEscrowed));
+            require(_orderData.augur.trustedTransfer(_orderData.market.getDenominationToken(), _orderData.creator, _orderData.market, _orderData.moneyEscrowed));
         }
 
         return true;

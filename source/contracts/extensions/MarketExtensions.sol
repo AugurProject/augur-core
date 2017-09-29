@@ -11,7 +11,7 @@ import 'reporting/IMarket.sol';
 contract MarketExtensions {
     function getWinningPayoutDistributionHashFromFork(IMarket _market) public constant returns (bytes32) {
         IReportingWindow _reportingWindow = _market.getReportingWindow();
-        if (_reportingWindow.getBranch().getForkingMarket() != _market) {
+        if (_reportingWindow.getUniverse().getForkingMarket() != _market) {
             return 0;
         }
         IReputationToken _winningDestination = _reportingWindow.getReputationToken().getTopMigrationDestination();
@@ -19,9 +19,9 @@ contract MarketExtensions {
             return 0;
         }
         uint256 _halfTotalSupply = 11 * 10**6 * 10**18 / 2;
-        if (_winningDestination.totalSupply() < _halfTotalSupply && block.timestamp < _reportingWindow.getBranch().getForkEndTime()) {
+        if (_winningDestination.totalSupply() < _halfTotalSupply && block.timestamp < _reportingWindow.getUniverse().getForkEndTime()) {
             return 0;
         }
-        return _winningDestination.getBranch().getParentPayoutDistributionHash();
+        return _winningDestination.getUniverse().getParentPayoutDistributionHash();
     }
 }

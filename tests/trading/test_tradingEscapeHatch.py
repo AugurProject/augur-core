@@ -11,8 +11,8 @@ def test_escapeHatch(contractsFixture):
     controller = contractsFixture.controller
     cash = contractsFixture.cash
     market = contractsFixture.binaryMarket
-    makeOrder = contractsFixture.contracts['MakeOrder']
-    takeOrder = contractsFixture.contracts['TakeOrder']
+    createOrder = contractsFixture.contracts['CreateOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
     trade = contractsFixture.contracts['Trade']
     tradingEscapeHatch = contractsFixture.contracts['TradingEscapeHatch']
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
@@ -20,11 +20,11 @@ def test_escapeHatch(contractsFixture):
     initialTester1ETH = contractsFixture.utils.getETHBalance(tester.a1)
     initialTester2ETH = contractsFixture.utils.getETHBalance(tester.a2)
 
-    # make order with cash
-    orderID = makeOrder.publicMakeOrder(contractsFixture.constants.ASK(), 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1, value=fix('0.4'))
+    # create order with cash
+    orderID = createOrder.publicCreateOrder(contractsFixture.constants.ASK(), 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1, value=fix('0.4'))
     assert orderID
 
-    # take order with cash using on-chain matcher
+    # fill order with cash using on-chain matcher
     assert trade.publicTakeBestOrder(LONG, market.address, YES, 1, fix('0.6'), sender=tester.k2, value=fix('0.6')) == 0
 
     # assert starting values

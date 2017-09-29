@@ -5,7 +5,7 @@ import 'libraries/DelegationTarget.sol';
 import 'libraries/Typed.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/ERC20Basic.sol';
-import 'reporting/IBranch.sol';
+import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -33,7 +33,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
         require(msg.sender == bondHolder);
         bool _isFinalized = market.getReportingState() == IMarket.ReportingState.FINALIZED;
         require(!market.isContainerForDisputeBondToken(this) || (_isFinalized && market.getFinalPayoutDistributionHash() != disputedPayoutDistributionHash));
-        require(getBranch().getForkingMarket() != market);
+        require(getUniverse().getForkingMarket() != market);
         IReputationToken _reputationToken = getReputationToken();
         uint256 _amountToTransfer = _reputationToken.balanceOf(this);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
@@ -41,17 +41,17 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
         return true;
     }
 
-    // FIXME: We should be minting coins in this scenario in order to achieve 2x target payout for bond holders during a fork.  Ideally, the amount minted is capped at the amount of tokens redeemed on other branches, so we may have to require the user to supply branches to deduct from with their call to this.
-    function withdrawToBranch(IBranch _shadyBranch) public returns (bool) {
+    // FIXME: We should be minting coins in this scenario in order to achieve 2x target payout for bond holders during a fork.  Ideally, the amount minted is capped at the amount of tokens redeemed on other universes, so we may have to require the user to supply universes to deduct from with their call to this.
+    function withdrawToUniverse(IUniverse _shadyUniverse) public returns (bool) {
         require(msg.sender == bondHolder);
-        require(!market.isContainerForDisputeBondToken(this) || getBranch().getForkingMarket() == market);
-        bool _isChildOfMarketBranch = market.getReportingWindow().getBranch().isParentOf(_shadyBranch);
-        require(_isChildOfMarketBranch);
-        IBranch _legitBranch = _shadyBranch;
-        require(_legitBranch.getParentPayoutDistributionHash() != disputedPayoutDistributionHash);
+        require(!market.isContainerForDisputeBondToken(this) || getUniverse().getForkingMarket() == market);
+        bool _isChildOfMarketUniverse = market.getReportingWindow().getUniverse().isParentOf(_shadyUniverse);
+        require(_isChildOfMarketUniverse);
+        IUniverse _legitUniverse = _shadyUniverse;
+        require(_legitUniverse.getParentPayoutDistributionHash() != disputedPayoutDistributionHash);
         IReputationToken _reputationToken = getReputationToken();
         uint256 _amountToTransfer = _reputationToken.balanceOf(this);
-        IReputationToken _destinationReputationToken = _legitBranch.getReputationToken();
+        IReputationToken _destinationReputationToken = _legitUniverse.getReputationToken();
         _reputationToken.migrateOut(_destinationReputationToken, this, _amountToTransfer);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
         _destinationReputationToken.transfer(bondHolder, _amountToTransfer);
@@ -66,8 +66,8 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
         return market;
     }
 
-    function getBranch() constant public returns (IBranch) {
-        return market.getBranch();
+    function getUniverse() constant public returns (IUniverse) {
+        return market.getUniverse();
     }
 
     function getReputationToken() constant public returns (IReputationToken) {

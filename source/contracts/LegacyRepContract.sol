@@ -4,7 +4,7 @@ import 'libraries/token/VariableSupplyToken.sol';
 
 
 contract LegacyRepContract is VariableSupplyToken {
-    event FundedAccount(address indexed _branch, address indexed _sender, uint256 _repBalance, uint256 _timestamp);
+    event FundedAccount(address indexed _universe, address indexed _sender, uint256 _repBalance, uint256 _timestamp);
 
     uint256 private constant DEFAULT_FAUCET_AMOUNT = 47 ether;
 

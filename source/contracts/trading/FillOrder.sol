@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import 'trading/ITakeOrder.sol';
+import 'trading/IFillOrder.sol';
 import 'Augur.sol';
 import 'Controlled.sol';
 import 'libraries/ReentrancyGuard.sol';
@@ -54,28 +54,28 @@ library Trade {
     struct Data {
         Contracts contracts;
         MyOrder order;
-        Participant maker;
-        Participant taker;
+        Participant creator;
+        Participant filler;
     }
 
     //
     // Constructor
     //
 
-    function create(IController _controller, bytes32 _orderId, address _takerAddress, uint256 _takerSize) internal returns (Data) {
+    function create(IController _controller, bytes32 _orderId, address _fillerAddress, uint256 _fillerSize) internal returns (Data) {
         // TODO: data validation
 
         Contracts memory _contracts = getContracts(_controller, _orderId);
         MyOrder memory _order = getOrder(_contracts, _orderId);
         Order.TradeTypes _orderTradeType = _contracts.orders.getTradeType(_orderId);
-        Participant memory _maker = getMaker(_contracts, _order, _orderTradeType);
-        Participant memory _taker = getTaker(_contracts, _orderTradeType, _takerAddress, _takerSize);
+        Participant memory _creator = getMaker(_contracts, _order, _orderTradeType);
+        Participant memory _filler = getFiller(_contracts, _orderTradeType, _fillerAddress, _fillerSize);
 
         return Data({
             contracts: _contracts,
             order: _order,
-            maker: _maker,
-            taker: _taker
+            creator: _creator,
+            filler: _filler
         });
     }
 
@@ -83,8 +83,8 @@ library Trade {
     // "public" functions
     //
 
-    function tradeMakerSharesForTakerShares(Data _data) internal returns (bool) {
-        uint256 _numberOfCompleteSets = _data.maker.sharesToSell.min(_data.taker.sharesToSell);
+    function tradeMakerSharesForFillerShares(Data _data) internal returns (bool) {
+        uint256 _numberOfCompleteSets = _data.creator.sharesToSell.min(_data.filler.sharesToSell);
         if (_numberOfCompleteSets == 0) {
             return true;
         }
@@ -105,70 +105,70 @@ library Trade {
         _data.contracts.denominationToken.transfer(getLongShareSellerDestination(_data), _longShare);
         _data.contracts.denominationToken.transfer(getShortShareSellerDestination(_data), _shortShare);
 
-        // update available shares for maker and taker
-        _data.maker.sharesToSell -= _numberOfCompleteSets;
-        _data.taker.sharesToSell -= _numberOfCompleteSets;
+        // update available shares for creator and filler
+        _data.creator.sharesToSell -= _numberOfCompleteSets;
+        _data.filler.sharesToSell -= _numberOfCompleteSets;
     }
 
-    function tradeMakerSharesForTakerTokens(Data _data) internal returns (bool) {
-        uint256 _numberOfSharesToTrade = _data.maker.sharesToSell.min(_data.taker.sharesToBuy);
+    function tradeMakerSharesForFillerTokens(Data _data) internal returns (bool) {
+        uint256 _numberOfSharesToTrade = _data.creator.sharesToSell.min(_data.filler.sharesToBuy);
         if (_numberOfSharesToTrade == 0) {
             return true;
         }
 
-        // transfer shares from maker (escrowed in market) to taker
-        if (_data.maker.direction == Direction.Short) {
-            _data.contracts.longShareToken.transferFrom(_data.contracts.market, _data.taker.participantAddress, _numberOfSharesToTrade);
+        // transfer shares from creator (escrowed in market) to filler
+        if (_data.creator.direction == Direction.Short) {
+            _data.contracts.longShareToken.transferFrom(_data.contracts.market, _data.filler.participantAddress, _numberOfSharesToTrade);
         } else {
             for (uint8 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
-                _data.contracts.shortShareTokens[_i].transferFrom(_data.contracts.market, _data.taker.participantAddress, _numberOfSharesToTrade);
+                _data.contracts.shortShareTokens[_i].transferFrom(_data.contracts.market, _data.filler.participantAddress, _numberOfSharesToTrade);
             }
         }
 
-        uint256 _tokensToCover = getTokensToCover(_data, _data.taker.direction, _numberOfSharesToTrade);
-        _data.contracts.augur.trustedTransfer(_data.contracts.denominationToken, _data.taker.participantAddress, _data.maker.participantAddress, _tokensToCover);
+        uint256 _tokensToCover = getTokensToCover(_data, _data.filler.direction, _numberOfSharesToTrade);
+        _data.contracts.augur.trustedTransfer(_data.contracts.denominationToken, _data.filler.participantAddress, _data.creator.participantAddress, _tokensToCover);
 
-        // update available assets for maker and taker
-        _data.maker.sharesToSell -= _numberOfSharesToTrade;
-        _data.taker.sharesToBuy -= _numberOfSharesToTrade;
+        // update available assets for creator and filler
+        _data.creator.sharesToSell -= _numberOfSharesToTrade;
+        _data.filler.sharesToBuy -= _numberOfSharesToTrade;
     }
 
-    function tradeMakerTokensForTakerShares(Data _data) internal returns (bool) {
-        uint256 _numberOfSharesToTrade = _data.taker.sharesToSell.min(_data.maker.sharesToBuy);
+    function tradeMakerTokensForFillerShares(Data _data) internal returns (bool) {
+        uint256 _numberOfSharesToTrade = _data.filler.sharesToSell.min(_data.creator.sharesToBuy);
         if (_numberOfSharesToTrade == 0) {
             return true;
         }
 
-        // transfer shares from taker to maker
-        if (_data.taker.direction == Direction.Short) {
-            _data.contracts.longShareToken.transferFrom(_data.taker.participantAddress, _data.maker.participantAddress, _numberOfSharesToTrade);
+        // transfer shares from filler to creator
+        if (_data.filler.direction == Direction.Short) {
+            _data.contracts.longShareToken.transferFrom(_data.filler.participantAddress, _data.creator.participantAddress, _numberOfSharesToTrade);
         } else {
             for (uint8 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
-                _data.contracts.shortShareTokens[_i].transferFrom(_data.taker.participantAddress, _data.maker.participantAddress, _numberOfSharesToTrade);
+                _data.contracts.shortShareTokens[_i].transferFrom(_data.filler.participantAddress, _data.creator.participantAddress, _numberOfSharesToTrade);
             }
         }
 
-        // transfer tokens from maker (escrowed in market) to taker
-        uint256 _tokensToCover = getTokensToCover(_data, _data.maker.direction, _numberOfSharesToTrade);
-        _data.contracts.denominationToken.transferFrom(_data.contracts.market, _data.taker.participantAddress, _tokensToCover);
+        // transfer tokens from creator (escrowed in market) to filler
+        uint256 _tokensToCover = getTokensToCover(_data, _data.creator.direction, _numberOfSharesToTrade);
+        _data.contracts.denominationToken.transferFrom(_data.contracts.market, _data.filler.participantAddress, _tokensToCover);
 
-        // update available assets for maker and taker
-        _data.maker.sharesToBuy -= _numberOfSharesToTrade;
-        _data.taker.sharesToSell -= _numberOfSharesToTrade;
+        // update available assets for creator and filler
+        _data.creator.sharesToBuy -= _numberOfSharesToTrade;
+        _data.filler.sharesToSell -= _numberOfSharesToTrade;
     }
 
-    function tradeMakerTokensForTakerTokens(Data _data) internal returns (bool) {
-        uint256 _numberOfCompleteSets = _data.maker.sharesToBuy.min(_data.taker.sharesToBuy);
+    function tradeMakerTokensForFillerTokens(Data _data) internal returns (bool) {
+        uint256 _numberOfCompleteSets = _data.creator.sharesToBuy.min(_data.filler.sharesToBuy);
         if (_numberOfCompleteSets == 0) {
             return true;
         }
 
         // transfer tokens to this contract
-        uint256 _makerTokensToCover = getTokensToCover(_data, _data.maker.direction, _numberOfCompleteSets);
-        uint256 _takerTokensToCover = getTokensToCover(_data, _data.taker.direction, _numberOfCompleteSets);
+        uint256 _creatorTokensToCover = getTokensToCover(_data, _data.creator.direction, _numberOfCompleteSets);
+        uint256 _fillerTokensToCover = getTokensToCover(_data, _data.filler.direction, _numberOfCompleteSets);
 
-        _data.contracts.denominationToken.transferFrom(_data.contracts.market, this, _makerTokensToCover);
-        _data.contracts.augur.trustedTransfer(_data.contracts.denominationToken, _data.taker.participantAddress, this, _takerTokensToCover);
+        _data.contracts.denominationToken.transferFrom(_data.contracts.market, this, _creatorTokensToCover);
+        _data.contracts.augur.trustedTransfer(_data.contracts.denominationToken, _data.filler.participantAddress, this, _fillerTokensToCover);
 
         // buy complete sets
         uint256 _cost = _numberOfCompleteSets.mul(_data.contracts.market.getNumTicks());
@@ -185,8 +185,8 @@ library Trade {
             _data.contracts.shortShareTokens[_i].transfer(_shortBuyer, _numberOfCompleteSets);
         }
 
-        _data.maker.sharesToBuy -= _numberOfCompleteSets;
-        _data.taker.sharesToBuy -= _numberOfCompleteSets;
+        _data.creator.sharesToBuy -= _numberOfCompleteSets;
+        _data.filler.sharesToBuy -= _numberOfCompleteSets;
     }
 
     //
@@ -194,51 +194,51 @@ library Trade {
     //
 
     function getLongShareBuyerSource(Data _data) internal constant returns (address) {
-        return (_data.maker.direction == Direction.Long) ? _data.contracts.market : _data.taker.participantAddress;
+        return (_data.creator.direction == Direction.Long) ? _data.contracts.market : _data.filler.participantAddress;
     }
 
     function getShortShareBuyerSource(Data _data) internal constant returns (address) {
-        return (_data.maker.direction == Direction.Short) ? _data.contracts.market : _data.taker.participantAddress;
+        return (_data.creator.direction == Direction.Short) ? _data.contracts.market : _data.filler.participantAddress;
     }
 
     function getLongShareBuyerDestination(Data _data) internal constant returns (address) {
-        return (_data.maker.direction == Direction.Long) ? _data.maker.participantAddress : _data.taker.participantAddress;
+        return (_data.creator.direction == Direction.Long) ? _data.creator.participantAddress : _data.filler.participantAddress;
     }
 
     function getShortShareBuyerDestination(Data _data) internal constant returns (address) {
-        return (_data.maker.direction == Direction.Short) ? _data.maker.participantAddress : _data.taker.participantAddress;
+        return (_data.creator.direction == Direction.Short) ? _data.creator.participantAddress : _data.filler.participantAddress;
     }
 
     function getLongShareSellerSource(Data _data) internal constant returns (address) {
-        return (_data.maker.direction == Direction.Short) ? _data.contracts.market : _data.taker.participantAddress;
+        return (_data.creator.direction == Direction.Short) ? _data.contracts.market : _data.filler.participantAddress;
     }
 
     function getShortShareSellerSource(Data _data) internal constant returns (address) {
-        return (_data.maker.direction == Direction.Long) ? _data.contracts.market : _data.taker.participantAddress;
+        return (_data.creator.direction == Direction.Long) ? _data.contracts.market : _data.filler.participantAddress;
     }
 
     function getLongShareSellerDestination(Data _data) internal constant returns (address) {
-        return (_data.maker.direction == Direction.Short) ? _data.maker.participantAddress : _data.taker.participantAddress;
+        return (_data.creator.direction == Direction.Short) ? _data.creator.participantAddress : _data.filler.participantAddress;
     }
 
     function getShortShareSellerDestination(Data _data) internal constant returns (address) {
-        return (_data.maker.direction == Direction.Long) ? _data.maker.participantAddress : _data.taker.participantAddress;
+        return (_data.creator.direction == Direction.Long) ? _data.creator.participantAddress : _data.filler.participantAddress;
     }
 
     function getMakerSharesDepleted(Data _data) internal constant returns (uint256) {
-        return _data.maker.startingSharesToSell.sub(_data.maker.sharesToSell);
+        return _data.creator.startingSharesToSell.sub(_data.creator.sharesToSell);
     }
 
-    function getTakerSharesDepleted(Data _data) internal constant returns (uint256) {
-        return _data.taker.startingSharesToSell.sub(_data.taker.sharesToSell);
+    function getFillerSharesDepleted(Data _data) internal constant returns (uint256) {
+        return _data.filler.startingSharesToSell.sub(_data.filler.sharesToSell);
     }
 
     function getMakerTokensDepleted(Data _data) internal constant returns (uint256) {
-        return getTokensDepleted(_data, _data.maker.direction, _data.maker.startingSharesToBuy, _data.maker.sharesToBuy);
+        return getTokensDepleted(_data, _data.creator.direction, _data.creator.startingSharesToBuy, _data.creator.sharesToBuy);
     }
 
-    function getTakerTokensDepleted(Data _data) internal constant returns (uint256) {
-        return getTokensDepleted(_data, _data.taker.direction, _data.taker.startingSharesToBuy, _data.taker.sharesToBuy);
+    function getFillerTokensDepleted(Data _data) internal constant returns (uint256) {
+        return getTokensDepleted(_data, _data.filler.direction, _data.filler.startingSharesToBuy, _data.filler.sharesToBuy);
     }
 
     function getTokensDepleted(Data _data, Direction _direction, uint256 _startingSharesToBuy, uint256 _endingSharesToBuy) internal constant returns (uint256) {
@@ -287,7 +287,7 @@ library Trade {
         uint256 _sharesToSell = _contracts.orders.getOrderSharesEscrowed(_order.orderId);
         uint256 _sharesToBuy = _contracts.orders.getAmount(_order.orderId).sub(_sharesToSell);
         return Participant({
-            participantAddress: _contracts.orders.getOrderMaker(_order.orderId),
+            participantAddress: _contracts.orders.getOrderCreator(_order.orderId),
             direction: _direction,
             startingSharesToSell: _sharesToSell,
             startingSharesToBuy: _sharesToBuy,
@@ -296,9 +296,9 @@ library Trade {
         });
     }
 
-    function getTaker(Contracts _contracts, Order.TradeTypes _orderTradeType, address _address, uint256 _size) private constant returns (Participant memory) {
+    function getFiller(Contracts _contracts, Order.TradeTypes _orderTradeType, address _address, uint256 _size) private constant returns (Participant memory) {
         Direction _direction = (_orderTradeType == Order.TradeTypes.Bid) ? Direction.Short : Direction.Long;
-        uint256 _sharesToSell = getTakerSharesToSell(_contracts.longShareToken, _contracts.shortShareTokens, _address, _direction, _size);
+        uint256 _sharesToSell = getFillerSharesToSell(_contracts.longShareToken, _contracts.shortShareTokens, _address, _direction, _size);
         uint256 _sharesToBuy = _size.sub(_sharesToSell);
         return Participant({
             participantAddress: _address,
@@ -333,23 +333,23 @@ library Trade {
         return (_numTicks, _orderPrice, _sharePriceShort);
     }
 
-    function getDirections(IOrders _orders, bytes32 _orderId) private constant returns (Direction _makerDirection, Direction _takerDirection) {
+    function getDirections(IOrders _orders, bytes32 _orderId) private constant returns (Direction _creatorDirection, Direction _fillerDirection) {
         return (_orders.getTradeType(_orderId) == Order.TradeTypes.Bid)
             ? (Direction.Long, Direction.Short)
             : (Direction.Short, Direction.Long)
         ; // move semicolon up a line when https://github.com/duaraghav8/Solium/issues/110 is fixed
     }
 
-    function getTakerSharesToSell(IShareToken _longShareToken, IShareToken[] memory _shortShareTokens, address _taker, Direction _takerDirection, uint256 _takerSize) private constant returns (uint256) {
+    function getFillerSharesToSell(IShareToken _longShareToken, IShareToken[] memory _shortShareTokens, address _filler, Direction _fillerDirection, uint256 _fillerSize) private constant returns (uint256) {
         uint256 _sharesAvailable = SafeMathUint256.maxUint256();
-        if (_takerDirection == Direction.Short) {
-            _sharesAvailable = _longShareToken.balanceOf(_taker);
+        if (_fillerDirection == Direction.Short) {
+            _sharesAvailable = _longShareToken.balanceOf(_filler);
         } else {
             for (uint8 _outcome = 0; _outcome < _shortShareTokens.length; ++_outcome) {
-                _sharesAvailable = _shortShareTokens[_outcome].balanceOf(_taker).min(_sharesAvailable);
+                _sharesAvailable = _shortShareTokens[_outcome].balanceOf(_filler).min(_sharesAvailable);
             }
         }
-        return _sharesAvailable.min(_takerSize);
+        return _sharesAvailable.min(_fillerSize);
     }
 }
 
@@ -365,32 +365,32 @@ library DirectionExtensions {
 }
 
 
-contract TakeOrder is CashAutoConverter, ReentrancyGuard, ITakeOrder {
+contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
     using SafeMathUint256 for uint256;
     using Trade for Trade.Data;
     using DirectionExtensions for Trade.Direction;
 
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
-    function publicTakeOrder(bytes32 _orderId, uint256 _amountTakerWants, uint256 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (uint256) {
-        return this.takeOrder(msg.sender, _orderId, _amountTakerWants, _tradeGroupId);
+    function publicFillOrder(bytes32 _orderId, uint256 _amountFillerWants, uint256 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (uint256) {
+        return this.fillOrder(msg.sender, _orderId, _amountFillerWants, _tradeGroupId);
     }
 
-    function takeOrder(address _taker, bytes32 _orderId, uint256 _amountTakerWants, uint256 _tradeGroupId) external onlyWhitelistedCallers returns (uint256) {
-        Trade.Data memory _tradeData = Trade.create(controller, _orderId, _taker, _amountTakerWants);
-        _tradeData.tradeMakerSharesForTakerShares();
-        _tradeData.tradeMakerSharesForTakerTokens();
-        _tradeData.tradeMakerTokensForTakerShares();
-        _tradeData.tradeMakerTokensForTakerTokens();
-        // Turn any remaining Cash balance the maker has into ETH. This is done for the taker though the use of a CashAutoConverter modifier
-        uint256 _makerCashBalance = _tradeData.contracts.denominationToken.balanceOf(_tradeData.maker.participantAddress);
-        if (_makerCashBalance > 0) {
-            _tradeData.contracts.augur.trustedTransfer(_tradeData.contracts.denominationToken, _tradeData.maker.participantAddress, this, _makerCashBalance);
-            _tradeData.contracts.denominationToken.withdrawEtherTo(_tradeData.maker.participantAddress, _makerCashBalance);
+    function fillOrder(address _filler, bytes32 _orderId, uint256 _amountFillerWants, uint256 _tradeGroupId) external onlyWhitelistedCallers returns (uint256) {
+        Trade.Data memory _tradeData = Trade.create(controller, _orderId, _filler, _amountFillerWants);
+        _tradeData.tradeMakerSharesForFillerShares();
+        _tradeData.tradeMakerSharesForFillerTokens();
+        _tradeData.tradeMakerTokensForFillerShares();
+        _tradeData.tradeMakerTokensForFillerTokens();
+        // Turn any remaining Cash balance the creator has into ETH. This is done for the filler though the use of a CashAutoConverter modifier
+        uint256 _creatorCashBalance = _tradeData.contracts.denominationToken.balanceOf(_tradeData.creator.participantAddress);
+        if (_creatorCashBalance > 0) {
+            _tradeData.contracts.augur.trustedTransfer(_tradeData.contracts.denominationToken, _tradeData.creator.participantAddress, this, _creatorCashBalance);
+            _tradeData.contracts.denominationToken.withdrawEtherTo(_tradeData.creator.participantAddress, _creatorCashBalance);
         }
 
         // AUDIT: is there a reentry risk here?  we execute all of the above code, which includes transferring tokens around, before we mark the order as filled
-        _tradeData.contracts.orders.takeOrderLog(_tradeData.order.orderId, _tradeData.taker.participantAddress, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getTakerSharesDepleted(), _tradeData.getTakerTokensDepleted(), _tradeGroupId);
+        _tradeData.contracts.orders.fillOrderLog(_tradeData.order.orderId, _tradeData.filler.participantAddress, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _tradeGroupId);
         _tradeData.contracts.orders.fillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
-        return _tradeData.taker.sharesToSell.add(_tradeData.taker.sharesToBuy);
+        return _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);
     }
 }
