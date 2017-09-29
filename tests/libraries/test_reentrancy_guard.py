@@ -8,8 +8,7 @@ from pytest import fixture, mark, lazy_fixture, raises
 @fixture(scope='session')
 def testerSnapshot(sessionFixture):
     sessionFixture.resetSnapshot()
-    sessionFixture.uploadAndAddToController(
-        'solidity_test_helpers/ReentrancyGuardHelper.sol')
+    sessionFixture.uploadAndAddToController('solidity_test_helpers/ReentrancyGuardHelper.sol')
     ReentrancyGuardHelper = sessionFixture.contracts['ReentrancyGuardHelper']
     return sessionFixture.chain.snapshot()
 
