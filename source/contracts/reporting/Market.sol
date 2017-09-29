@@ -174,7 +174,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         int256 _secondPlaceStake = getPayoutDistributionHashStake(bestGuessSecondPlaceTentativeWinningPayoutDistributionHash);
         int256 _payoutStake = getPayoutDistributionHashStake(_payoutDistributionHash);
 
-        if (_tentativeWinningStake >= _payoutStake && _payoutStake >= _secondPlaceStake) {
+        if (_tentativeWinningStake >= _secondPlaceStake && _secondPlaceStake >= _payoutStake) {
+            tentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? tentativeWinningPayoutDistributionHash: bytes32(0);
+            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? bestGuessSecondPlaceTentativeWinningPayoutDistributionHash : bytes32(0);
+        } else if (_tentativeWinningStake >= _payoutStake && _payoutStake >= _secondPlaceStake) {
             tentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? tentativeWinningPayoutDistributionHash: bytes32(0);
             bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash : bytes32(0);
         } else if (_secondPlaceStake >= _tentativeWinningStake && _tentativeWinningStake >= _payoutStake) {
