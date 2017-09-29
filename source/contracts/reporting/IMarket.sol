@@ -44,6 +44,7 @@ contract IMarket is Typed, IOwnable {
     function getFinalPayoutDistributionHash() public constant returns (bytes32);
     function getFinalWinningReportingToken() public constant returns (IReportingToken);
     function getReportingTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public constant returns (IReportingToken);
+    function getPayoutDistributionHashStake(bytes32 _payoutDistributionHash) public constant returns (int256);
     function migrateDueToNoReports() public returns (bool);
     function isContainerForReportingToken(Typed _shadyTarget) public constant returns (bool);
     function isContainerForDisputeBondToken(Typed _shadyTarget) public constant returns (bool);
