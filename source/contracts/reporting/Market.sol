@@ -175,6 +175,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         int256 _payoutStake = getPayoutDistributionHashStake(_payoutDistributionHash);
 
         if (_tentativeWinningStake >= _payoutStake && _payoutStake >= _secondPlaceStake) {
+            tentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? tentativeWinningPayoutDistributionHash: bytes32(0);
             bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash : bytes32(0);
         } else if (_secondPlaceStake >= _tentativeWinningStake && _tentativeWinningStake >= _payoutStake) {
             tentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
@@ -187,6 +188,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? tentativeWinningPayoutDistributionHash: bytes32(0);
         } else if (_payoutStake >= _secondPlaceStake && _secondPlaceStake >= _tentativeWinningStake) {
             tentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
+            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
         }
 
         return true;
