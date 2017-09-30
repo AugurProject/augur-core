@@ -14,9 +14,12 @@ import 'reporting/IDisputeBond.sol';
 import 'reporting/IRegistrationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
+import 'libraries/math/SafeMathUint256.sol';
 
 
 contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
+    using SafeMathUint256 for uint256;
+
     IUniverse private parentUniverse;
     bytes32 private parentPayoutDistributionHash;
     IReputationToken private reputationToken;

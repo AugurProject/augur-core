@@ -38,6 +38,10 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
+    uint256 private reportingGasPriceSum;
+    uint256 private numReports;
+    uint256 private marketReportsSum;
+    uint256 private numFinalizedMarkets;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -45,6 +49,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         RegistrationTokenFactory _registrationTokenFactory = RegistrationTokenFactory(controller.lookup("RegistrationTokenFactory"));
         registrationToken = _registrationTokenFactory.createRegistrationToken(controller, this);
+        // Initialize these to some reasonable value to handle the first market ever created without branching code 
+        reportingGasPriceSum = 5;
+        numReports = 1;
+        marketReportsSum = 10;
+        numFinalizedMarkets = 1;
         return true;
     }
 
@@ -110,6 +119,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
             if (_market.isIndeterminate()) {
                 indeterminateMarketCount++;
             }
+            marketReportsSum = marketReportsSum.add(numberOfReportsByMarket[_market]);
+            numFinalizedMarkets++;
         }
 
         return true;
@@ -129,6 +140,14 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         }
         // no credit in all other cases (but user can still report)
         return true;
+    }
+
+    function getAvgReportingGasCost() public constant returns (uint256) {
+        return reportingGasPriceSum.div(numReports);
+    }
+
+    function getAvgReportsPerMarket() public constant returns (uint256) {
+        return marketReportsSum.div(numFinalizedMarkets);
     }
 
     function getTypeName() public afterInitialized constant returns (bytes32) {
@@ -155,11 +174,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return getDisputeEndTime();
     }
 
-    function getNumMarkets() public constant returns (uint256) {
+    function getNumMarkets() public afterInitialized constant returns (uint256) {
         return markets.count;
     }
 
-    function getNumIndeterminateMarkets() public constant returns (uint256) {
+    function getNumIndeterminateMarkets() public afterInitialized constant returns (uint256) {
         return indeterminateMarketCount;
     }
 
@@ -223,6 +242,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         if (_limitedReporterMarketCount == 0) {
             return 0;
         }
+
         uint256 _registeredReporters = registrationToken.getPeakSupply();
         uint256 _minimumReportsPerMarket = BASE_MINIMUM_REPORTERS_PER_MARKET;
         uint256 _totalReportsForAllLimitedReporterMarkets = _minimumReportsPerMarket * _limitedReporterMarketCount;
@@ -298,6 +318,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
             reporterStatus[_reporter].finishedReporting = true;
         }
         numberOfReportsByMarket[_market] += 1;
+        // Record gas price
+        reportingGasPriceSum = reportingGasPriceSum.add(tx.gasprice);
+        numReports++;
         return true;
     }
 

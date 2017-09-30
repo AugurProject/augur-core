@@ -11,6 +11,7 @@ contract MarketFeeCalculator {
 
     mapping (address => uint256) private shareSettlementPerEthFee;
     mapping (address => uint256) private validityBondInAttoeth;
+    mapping (address => uint256) private targetReporterGasCosts;
 
     uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether;
     uint256 private constant FXP_TARGET_INDETERMINATE_MARKETS = 10 ** 16; // 1% of markets
@@ -20,9 +21,7 @@ contract MarketFeeCalculator {
         if (_currentValidityBondInAttoeth != 0) {
             return _currentValidityBondInAttoeth;
         }
-        uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
-        IUniverse _universe = _reportingWindow.getUniverse();
-        IReportingWindow _previousReportingWindow = _universe.getReportingWindowByTimestamp(_previousTimestamp);
+        IReportingWindow _previousReportingWindow = getPreviousReportingWindow(_reportingWindow);
         uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
         uint256 _indeterminateMarketsInPreviousWindow = _reportingWindow.getNumIndeterminateMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
@@ -53,17 +52,20 @@ contract MarketFeeCalculator {
         return _previousValidityBondInAttoeth.fxpMul(_fxpMultiple, _fxpBase);
     }
 
-    function getTargetReporterGasCosts() constant public returns (uint256) {
-        // TODO: get number of registration tokens issued last period
-        // TODO: get target reporter count + wiggle room
-        // TODO: calculate estimated reporters per market
-        uint256 _estimatedReportsPerMarket = 10;
-        // TODO: figure out what the number actually is
-        uint256 _gasToReport = 100000;
-        // we double it to ensure we have more than enough rather than not enough
-        uint256 _estimatedReportingGas = _gasToReport * _estimatedReportsPerMarket * 2;
-        // TODO: multiply this by average gas costs of reporters historically
-        return _estimatedReportingGas;
+    function getTargetReporterGasCosts(IReportingWindow _reportingWindow) constant public returns (uint256) {
+        uint256 _gasToReport = targetReporterGasCosts[_reportingWindow];
+        if (_gasToReport != 0) {
+            return _gasToReport;
+        }
+
+        IReportingWindow _previousReportingWindow = getPreviousReportingWindow(_reportingWindow);
+        uint256 _estimatedReportsPerMarket = _previousReportingWindow.getAvgReportsPerMarket();
+        uint256 _avgGasCost = _previousReportingWindow.getAvgReportingGasCost();
+        // Estimate based on test usage data on 09/29/2017
+        _gasToReport = 700000;
+        // we double it to try and ensure we have more than enough rather than not enough
+        targetReporterGasCosts[_reportingWindow] = _gasToReport * _estimatedReportsPerMarket * _avgGasCost * 2;
+        return targetReporterGasCosts[_reportingWindow];
     }
 
     function getReportingFeeInAttoethPerEth(IReportingWindow _reportingWindow) public returns (uint256) {
@@ -110,7 +112,13 @@ contract MarketFeeCalculator {
         return _outstandingSharesInAttoeth;
     }
 
+    function getPreviousReportingWindow(IReportingWindow _reportingWindow) constant private returns (IReportingWindow) {
+        uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
+        IUniverse _universe = _reportingWindow.getUniverse();
+        return _universe.getReportingWindowByTimestamp(_previousTimestamp);
+    }
+
     function getMarketCreationCost(IReportingWindow _reportingWindow) constant public returns (uint256) {
-        return getValidityBond(_reportingWindow) + getTargetReporterGasCosts();
+        return getValidityBond(_reportingWindow) + getTargetReporterGasCosts(_reportingWindow);
     }
 }
