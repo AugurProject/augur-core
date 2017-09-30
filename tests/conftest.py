@@ -158,8 +158,7 @@ class ContractsFixture:
         print 'Gas Used: %s' % (self.chain.head_state.gas_used - startingGas)
         self.scalarMarket = self.createReasonableScalarMarket(self.universe, 40, self.cash)
         self.constants = self.uploadAndAddToController("solidity_test_helpers/Constants.sol")
-        self.captured = {}
-        self.createSnapshot
+        self.captured = self.createSnapshot()
 
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
@@ -203,8 +202,7 @@ class ContractsFixture:
 
     def createSnapshot(self):
         self.chain.mine(1)
-        self.captured = {'block': self.chain.block, 'head_state': self.chain.head_state, 'contracts' : deepcopy(self.contracts), 'snapshot': self.chain.snapshot()}
-        return self.captured
+        return {'block': self.chain.block, 'head_state': self.chain.head_state, 'contracts' : deepcopy(self.contracts), 'snapshot': self.chain.snapshot()}
 
     def resetToSnapshot(self, captured):
         if len(captured) > 0:
