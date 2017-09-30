@@ -67,7 +67,7 @@ export class SolidityContractCompiler {
 
         // Output contract data to single file
         const contractOutputFilePath = this.contractOutputDirectoryPath + this.contractOutputFileName;
-        let wstream: any = fs.createWriteStream(contractOutputFilePath);
+        let wstream = fs.createWriteStream(contractOutputFilePath);
         wstream.write(JSON.stringify(compilerOutput.contracts));
 
         return { output: "Contracts in " + this.contractInputDirectoryPath + " were successfully compiled by solc and saved to " + contractOutputFilePath};
