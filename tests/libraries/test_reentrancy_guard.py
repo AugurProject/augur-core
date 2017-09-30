@@ -21,8 +21,6 @@ def testerContractsFixture(sessionFixture, testerSnapshot):
 
 def test_nonReentrant(testerContractsFixture): 
     ReentrancyGuardHelper = testerContractsFixture.contracts['ReentrancyGuardHelper']
-    # Whitelist the contract
-    testerContractsFixture.controller.addToWhitelist(ReentrancyGuardHelper.address)
 
     assert ReentrancyGuardHelper.testerCanReentrant()
 
