@@ -27,6 +27,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     uint256 private forkEndTime;
     mapping(uint256 => IReportingWindow) private reportingWindows;
     mapping(bytes32 => IUniverse) private childUniverses;
+    uint256 private openInterestInAttoEth;
 
     function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external beforeInitialized returns (bool) {
         endInitialization();
@@ -221,5 +222,17 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
 
     function getReportingWindowForForkEndTime() public constant returns (IReportingWindow) {
         return getReportingWindowByTimestamp(getForkEndTime());
+    }
+
+    function decrementOpenInterest(uint256 _amount) public onlyWhitelistedCallers returns (bool) {
+        openInterestInAttoEth = openInterestInAttoEth.sub(_amount); 
+    }
+
+    function incrementOpenInterest(uint256 _amount) public onlyWhitelistedCallers returns (bool) {
+        openInterestInAttoEth = openInterestInAttoEth.add(_amount); 
+    }
+
+    function getOpenInterestInAttoEth() public constant returns (uint256) {
+        return openInterestInAttoEth;
     }
 }

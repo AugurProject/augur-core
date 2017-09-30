@@ -38,3 +38,9 @@ def test_validity_bond_calculation(numIndeterminate, targetIndeterminatePerHundr
     targetIndeterminate = targetIndeterminatePerHundred * 10 ** 18 / 100
     newBond = feeCalculator.calculateValidityBond(numIndeterminate, 100, targetIndeterminate, previousBond)
     assert newBond == expectedValue
+
+def test_getTargetReporterGasCosts(contractsFixture):
+    pass
+
+def test_getReportingFeeInAttoethPerEth(contractsFixture):
+    pass

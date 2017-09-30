@@ -15,6 +15,7 @@ contract MarketFeeCalculator {
 
     uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether;
     uint256 private constant FXP_TARGET_INDETERMINATE_MARKETS = 10 ** 16; // 1% of markets
+    uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
 
     function getValidityBond(IReportingWindow _reportingWindow) public returns (uint256) {
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
@@ -77,8 +78,7 @@ contract MarketFeeCalculator {
         IUniverse _universe = _reportingWindow.getUniverse();
         uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth(_universe);
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth(_reportingWindow);
-        uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
-        IReportingWindow _previousReportingWindow = _universe.getReportingWindowByTimestamp(_previousTimestamp);
+        IReportingWindow _previousReportingWindow = getPreviousReportingWindow(_reportingWindow);
         uint256 _previousPerEthFee = shareSettlementPerEthFee[_previousReportingWindow];
         if (_previousPerEthFee == 0) {
             _previousPerEthFee = 1 * 10 ** 16;
@@ -92,24 +92,15 @@ contract MarketFeeCalculator {
     }
 
     function getRepMarketCapInAttoeth(IUniverse _universe) constant public returns (uint256) {
-        // TODO: get these from an auto-generated market
+        // TODO: get this from an auto-generated market or some other special contract
         uint256 _attorepPerEth = 11 * 10 ** 18;
         uint256 _repMarketCapInAttoeth = _universe.getReputationToken().totalSupply() * _attorepPerEth;
         return _repMarketCapInAttoeth;
     }
 
     function getTargetRepMarketCapInAttoeth(IReportingWindow _reportingWindow) constant public returns (uint256) {
-        uint256 _outstandingSharesInAttoeth = getOutstandingSharesInAttoeth(_reportingWindow);
-        uint256 _targetRepMarketCapInAttoeth = _outstandingSharesInAttoeth * 5;
-        return _targetRepMarketCapInAttoeth;
-    }
-
-    function getOutstandingSharesInAttoeth(IReportingWindow) constant public returns (uint256) {
-        // TODO: start tracking the real number and store it somewhere
-        // NOTE: make sure we are getting the share value in attoeth, since complete set fees are not normalized across markets
-        // NOTE: eventually we will need to support shares in multiple denominations
-        uint256 _outstandingSharesInAttoeth = 100 * 10 ** 18;
-        return _outstandingSharesInAttoeth;
+        IUniverse _universe = _reportingWindow.getUniverse();
+        return _universe.getOpenInterestInAttoEth() * TARGET_REP_MARKET_CAP_MULTIPLIER;
     }
 
     function getPreviousReportingWindow(IReportingWindow _reportingWindow) constant private returns (IReportingWindow) {

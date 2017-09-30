@@ -68,7 +68,8 @@ def test_helpers(fundedRepFixture):
     assert claimProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
     assert claimProceeds.calculateProceeds(market.getFinalWinningReportingToken(), YES, 7) == 7 * market.getNumTicks()
     assert claimProceeds.calculateProceeds(market.getFinalWinningReportingToken(), NO, fix('11')) == fix('0')
-    (shareholderShare, creatorShare, reporterShare) = claimProceeds.divideUpWinnings(market.address, market.getFinalWinningReportingToken(), YES, 13)
+    (proceeds, shareholderShare, creatorShare, reporterShare) = claimProceeds.divideUpWinnings(market.address, market.getFinalWinningReportingToken(), YES, 13)
+    assert proceeds == 13.0 * market.getNumTicks()
     assert reporterShare == 13.0 * market.getNumTicks() * 0.0001
     assert creatorShare == 13.0 * market.getNumTicks() * .01
     assert shareholderShare == 13.0 * market.getNumTicks() * 0.9899
