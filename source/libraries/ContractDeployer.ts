@@ -85,6 +85,7 @@ export class ContractDeployer {
     public async uploadAllContracts(): Promise<boolean> {
         const contractsToDelegate = {"Orders": true, "TradingEscapeHatch": true};
 
+        let uploadedContractPromises = [];
         for (let contractFileName in this.compiledContracts) {
             if (contractFileName == "Controller.sol" || contractFileName == "libraries/Delegator.sol") {
                 continue;
@@ -95,21 +96,20 @@ export class ContractDeployer {
                 if (this.compiledContracts[contractFileName][contractName].evm.bytecode.object == "") {
                     continue;
                 }
-
-                // TODO: Change this to allow contracts to be deployed asynchronously
                 if (contractsToDelegate[contractName] == true) {
                     const delegationTargetName = contractName + "Target";
-                    // TODO: Add padding to hexlifiedDelegationTargetName to make it the right length?  It seems to work without padding.
                     const hexlifiedDelegationTargetName = "0x" + binascii.hexlify(delegationTargetName);
                     const delegatorConstructorArgs = [this.controller.address, hexlifiedDelegationTargetName];
 
-                    await this.uploadAndAddToController(contractFileName, delegationTargetName, contractName);
-                    await this.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", contractName, "Delegator", delegatorConstructorArgs);
+                    uploadedContractPromises[delegationTargetName] = this.uploadAndAddToController(contractFileName, delegationTargetName, contractName);
+                    uploadedContractPromises[contractName] = this.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", contractName, "Delegator", delegatorConstructorArgs);
                 } else {
-                    await this.uploadAndAddToController(contractFileName);
+                    uploadedContractPromises[contractFileName] = this.uploadAndAddToController(contractFileName);
                  }
             }
         }
+
+        await Promise.all(uploadedContractPromises);
 
         return true;
     }
