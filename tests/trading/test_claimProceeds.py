@@ -99,7 +99,7 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
-    assert fundedRepFixture.utils.getETHBalance(tester.a0) - initialOwnerBalance == expectedFees
+    assert fundedRepFixture.utils.getETHBalance(tester.a0) - initialOwnerBalance == expectedFees.mul(market.getMarketCreatorSettlementFeeInAttoethPerEth()).div(1 ether)
     assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout
     assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialShortHolderETH
     assert yesShareToken.balanceOf(tester.a1) == 0
@@ -134,7 +134,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
-    assert fundedRepFixture.utils.getETHBalance(tester.a0) - initialOwnerBalance == expectedFees
+    assert fundedRepFixture.utils.getETHBalance(tester.a0) - initialOwnerBalance == expectedFees.mul(market.getMarketCreatorSettlementFeeInAttoethPerEth()).div(1 ether)
     assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout
     assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialShortHolderETH
     assert shareToken2.balanceOf(tester.a1) == 0
@@ -171,7 +171,7 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
 
     
     # assert a1 ends up with cash (minus fees) and a2 does not
-    assert fundedRepFixture.utils.getETHBalance(tester.a0) - initialOwnerBalance == expectedFees
+    assert fundedRepFixture.utils.getETHBalance(tester.a0) - initialOwnerBalance == expectedFees.mul(market.getMarketCreatorSettlementFeeInAttoethPerEth()).div(1 ether)
     assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout * 3 / 4
     assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialShortHolderETH + expectedPayout * 1 / 4
     assert yesShareToken.balanceOf(tester.a1) == 0
