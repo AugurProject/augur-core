@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-import * as binascii from 'binascii';
-import * as path from 'path';
-import * as HttpProvider from 'ethjs-provider-http';
-import * as Eth from 'ethjs-query';
-import * as EthContract from 'ethjs-contract';
+import * as binascii from "binascii";
+import * as path from "path";
+import * as EthAbi from "ethjs-abi";
+import * as HttpProvider from "ethjs-provider-http";
+import * as Eth from "ethjs-query";
+import * as EthContract from "ethjs-contract";
 // TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
-import { ContractBlockchainData, ContractReceipt } from 'contract-deployment';
+import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
 
 
 export class ContractDeployer {
@@ -48,9 +49,8 @@ export class ContractDeployer {
         if (typeof contract == "undefined") {
             return {};
         }
-        const pad = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-        const paddedLookupKey = pad.substring(0, pad.length - lookupKey.length) + lookupKey;
-        const hexlifiedLookupKey = '0x' + binascii.hexlify(paddedLookupKey);
+        // TODO: Add padding to hexlifiedLookupKey to make it the right length?  It seems to work without padding.
+        const hexlifiedLookupKey = "0x" + binascii.hexlify(lookupKey);
         this.controller.setValue(hexlifiedLookupKey, contract.address);
 
         return contract;
@@ -59,11 +59,9 @@ export class ContractDeployer {
     public async upload(relativeFilePath, lookupKey: string = "", signatureKey: string = "", constructorArgs: string[] = []): Promise<ContractBlockchainData> {
         lookupKey = (lookupKey == "") ? path.basename(relativeFilePath).split(".")[0] : lookupKey;
         signatureKey = (signatureKey == "") ? lookupKey : signatureKey;
-
         if (this.uploadedContracts[lookupKey]) {
             return(this.uploadedContracts[lookupKey]);
         }
-
         relativeFilePath = relativeFilePath.replace("../source/contracts/", "");
         const abi = this.compiledContracts[relativeFilePath][signatureKey].abi;
         const bytecode = this.compiledContracts[relativeFilePath][signatureKey].evm.bytecode.object;
@@ -71,7 +69,6 @@ export class ContractDeployer {
         if (bytecode.length == 0) {
             return {};
         }
-
         const contractBuilder = new EthContract(this.eth)(abi, bytecode, { from: this.fromAddress, gas: this.gasAmount });
         let receiptAddress: string;
         if (constructorArgs.length > 0) {
@@ -101,10 +98,9 @@ export class ContractDeployer {
 
                 // TODO: Change this to allow contracts to be deployed asynchronously
                 if (contractsToDelegate[contractName] == true) {
-                    const pad = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
                     const delegationTargetName = contractName + "Target";
-                    const paddedDelegationTargetName = pad.substring(0, pad.length - delegationTargetName.length) + delegationTargetName;
-                    const hexlifiedDelegationTargetName = '0x' + binascii.hexlify(paddedDelegationTargetName);
+                    // TODO: Add padding to hexlifiedDelegationTargetName to make it the right length?  It seems to work without padding.
+                    const hexlifiedDelegationTargetName = "0x" + binascii.hexlify(delegationTargetName);
                     const delegatorConstructorArgs = [this.controller.address, hexlifiedDelegationTargetName];
 
                     await this.uploadAndAddToController(contractFileName, delegationTargetName, contractName);
@@ -121,7 +117,7 @@ export class ContractDeployer {
     public async whitelistTradingContracts(): Promise<boolean> {
         for (let contractFileName in this.compiledContracts) {
             if (contractFileName.indexOf("trading/") > -1) {
-                const contractName = path.basename(contractFileName, '.sol');
+                const contractName = path.basename(contractFileName, ".sol");
                 if (!this.uploadedContracts[contractName]) continue;
                 this.controller.addToWhitelist(this.uploadedContracts[contractName].address);
             }
@@ -131,29 +127,29 @@ export class ContractDeployer {
     }
 
     public async initializeAllContracts(): Promise<boolean> {
-    const contractsToInitialize = ['Augur', 'Cash', 'CompleteSets', 'MakeOrder', 'TakeOrder', 'CancelOrder', 'Trade', 'ClaimProceeds', 'OrdersFetcher'];
+        const contractsToInitialize = ["Augur","Cash","CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimProceeds","OrdersFetcher"];
         for (let contractName of contractsToInitialize) {
             if (this.uploadedContracts[contractName]["setController"]) {
                 this.uploadedContracts[contractName].setController(this.controller.address);
             } else if (this.uploadedContracts[contractName]["initialize"]) {
                 this.uploadedContracts[contractName].initialize(this.controller.address);
             } else {
-                throw new Error("contract has neither 'initialize' nor 'setController' method on it.");
+                throw new Error("Contract " + contractName + " has neither \"initialize\" nor \"setController\" method on it.");
             }
         }
 
         return true;
     }
 
-    public async approveCentralAuthority(self): Promise<boolean> {
-        const authority = this.uploadedContracts['Augur'];
-        const contractsToApprove = ['Cash'];
-        const testersGivingApproval = await this.eth.accounts();
-        // for (let testerKey of testersGivingApproval) {
-        //     for (let contractName of contractsToApprove) {
-        //         this.uploadedContracts[contractName].approve(authority.address, 2**254, sender=testerKey);
-        //     }
-        // }
+    public async approveCentralAuthority(): Promise<boolean> {
+        const authority = this.uploadedContracts["Augur"];
+        const contractsToApprove = ["Cash"];
+
+        // TODO: Approve for specific accounts (not sure how to specify sender).
+
+        for (let contractName of contractsToApprove) {
+            this.uploadedContracts[contractName].approve(authority.address, 2**254/*, sender=hexlifiedPrivateKey*/);
+        }
 
         return true;
     }

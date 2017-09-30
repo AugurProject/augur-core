@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import * as fs from 'fs';
-import * as readFile from 'fs-readfile-promise';
-import * as mkdirp from 'mkdirp';
-import * as path from 'path';
-import * as recursiveReadDir from 'recursive-readdir';
-import { CompilerInput, CompilerOutput, compileStandardWrapper } from 'solc';
+import * as fs from "fs";
+import * as readFile from "fs-readfile-promise";
+import * as mkdirp from "mkdirp";
+import * as path from "path";
+import * as recursiveReadDir from "recursive-readdir";
+import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
 
 interface CompileContractsOutput {
     output?: string;
@@ -30,7 +30,7 @@ export class SolidityContractCompiler {
 
     public readCallback(path: string): { contents?: string, error?: string } {
         try {
-            const result = fs.readFileSync(path, 'utf8');
+            const result = fs.readFileSync(path, "utf8");
             return { contents: result };
         } catch (error) {
             return { error: error.message };
@@ -42,7 +42,7 @@ export class SolidityContractCompiler {
         try {
             const stats = fs.statSync(this.contractOutputDirectoryPath + this.contractOutputFileName);
             const lastCompiledTimestamp = stats.mtime;
-            const uncachedFiles = await recursiveReadDir(this.contractInputDirectoryPath, [function(file: string, stats: fs.Stats): boolean {return stats.isDirectory() || (stats.isFile() && path.extname(file) != ".sol") || (stats.isFile() && path.extname(file) == ".sol" && stats.mtime < lastCompiledTimestamp);}]);
+            const uncachedFiles = await recursiveReadDir(this.contractInputDirectoryPath, [function(file: string, stats: fs.Stats): boolean {return (stats.isFile() && path.extname(file) != ".sol") || (stats.isFile() && path.extname(file) == ".sol" && stats.mtime < lastCompiledTimestamp);}]);
             if (uncachedFiles.length == 0) {
                 return { output: "Contracts in " + this.contractInputDirectoryPath + " have not been modified since last cache was created" };
             }
