@@ -74,6 +74,8 @@ def test_helpers(fundedRepFixture):
     assert shareholderShare == 13.0 * market.getNumTicks() * 0.9899
 
 def test_redeem_shares_in_binary_market(fundedRepFixture):
+    
+    initialOwnerBalance = fundedRepFixture.utils.getETHBalance(tester.a0)
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
@@ -82,7 +84,6 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     expectedValue = 1 * market.getNumTicks()
     expectedFees = expectedValue * 0.0101
     expectedPayout = long(expectedValue - expectedFees)
-    initialOwnerBalance = fundedRepFixture.utils.getETHBalance(tester.a0)
 
     # get YES shares with a1
     acquireLongShares(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k1)
@@ -107,6 +108,7 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a2) == 0
 
 def test_redeem_shares_in_categorical_market(fundedRepFixture):
+    initialOwnerBalance = fundedRepFixture.utils.getETHBalance(tester.a0)
     cash = fundedRepFixture.cash
     market = fundedRepFixture.categoricalMarket
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
@@ -116,7 +118,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     expectedValue = 1 * market.getNumTicks()
     expectedFees = expectedValue * 0.0101
     expectedPayout = long(expectedValue - expectedFees)
-    initialOwnerBalance = fundedRepFixture.utils.getETHBalance(tester.a0)
+
 
     # get long shares with a1
     acquireLongShares(fundedRepFixture, market, 2, 1, claimProceeds.address, sender = tester.k1)
@@ -143,6 +145,8 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     assert shareToken0.balanceOf(tester.a2) == 0
 
 def test_redeem_shares_in_scalar_market(fundedRepFixture):
+    
+    initialOwnerBalance = fundedRepFixture.utils.getETHBalance(tester.a0)
     cash = fundedRepFixture.cash
     market = fundedRepFixture.scalarMarket
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
@@ -151,7 +155,6 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     expectedValue = 1 * market.getNumTicks()
     expectedFees = expectedValue * 0.0101
     expectedPayout = long(expectedValue - expectedFees)
-    initialOwnerBalance = fundedRepFixture.utils.getETHBalance(tester.a0)
 
     # get YES shares with a1
     acquireLongShares(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k1)
