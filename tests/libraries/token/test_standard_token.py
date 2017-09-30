@@ -2,12 +2,25 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import raises
+from pytest import fixture, mark, lazy_fixture, raises
+
+@fixture(scope='session')
+def testerSnapshot(sessionFixture):
+    sessionFixture.resetSnapshot()
+    sessionFixture.uploadAndAddToController("solidity_test_helpers/StandardTokenHelper.sol")
+    standardToken = sessionFixture.contracts['StandardTokenHelper']
+    return sessionFixture.chain.snapshot()
 
 
-def test_eternal_approval_magic(contractsFixture):
+@fixture
+def testerContractsFixture(sessionFixture, testerSnapshot):
+    sessionFixture.chain.revert(testerSnapshot)
+    return sessionFixture
+
+
+def test_eternal_approval_magic(testerContractsFixture):
+    standardToken = testerContractsFixture.contracts['StandardTokenHelper']
     # We'll upload the StandardTokenHelper for use in testing the StandardToken base class here. We just need the faucet added in that subclass
-    standardToken = contractsFixture.uploadAndAddToController("solidity_test_helpers/StandardTokenHelper.sol")
     assert standardToken.totalSupply() == 0
 
     # We get some tokens for tester 0
@@ -37,8 +50,8 @@ def test_eternal_approval_magic(contractsFixture):
     assert standardToken.balanceOf(tester.a0) == 4
     assert standardToken.balanceOf(tester.a1) == 96
     
-def test_create_negative_balance(contractsFixture):
-    standardToken = contractsFixture.uploadAndAddToController("solidity_test_helpers/StandardTokenHelper.sol")
+def test_create_negative_balance(testerContractsFixture):
+    standardToken = testerContractsFixture.contracts['StandardTokenHelper']
     assert standardToken.totalSupply() == 0
     # We get some tokens for tester 0
     assert standardToken.faucet(100)
@@ -47,8 +60,8 @@ def test_create_negative_balance(contractsFixture):
     with raises(TransactionFailed):
         standardToken.transferFrom(tester.a0, tester.a1, 101)
 
-def test_transfer_then_create_negative_balance(contractsFixture):
-    standardToken = contractsFixture.uploadAndAddToController("solidity_test_helpers/StandardTokenHelper.sol")
+def test_transfer_then_create_negative_balance(testerContractsFixture):
+    standardToken = testerContractsFixture.contracts['StandardTokenHelper']
     assert standardToken.totalSupply() == 0
     # We get some tokens for tester 0
     assert standardToken.faucet(10)
@@ -56,16 +69,16 @@ def test_transfer_then_create_negative_balance(contractsFixture):
     # approve and transfer 10 to other tester
     assert standardToken.approve(tester.a1, 10)
     assert standardToken.allowance(tester.a0, tester.a1) == 10
-    assert standardToken.transferFrom(tester.a0, tester.a1, 10, sender=tester.k1)
+    assert standardToken.transfer(tester.a1, 10)
     assert standardToken.balanceOf(tester.a1) == 10
     # approve and allow transfer of more tokens than tester has
     assert standardToken.approve(tester.a1, 11)
     # try to transfer more than tester has  
     with raises(TransactionFailed):
-        standardToken.transferFrom(tester.a0, tester.a1, 11)
+        standardToken.transfer(tester.a1, 11)
 
-def test_approve_allow_transfer_more_than_allow(contractsFixture):
-    standardToken = contractsFixture.uploadAndAddToController("solidity_test_helpers/StandardTokenHelper.sol")
+def test_approve_allow_transfer_more_than_allow(testerContractsFixture):
+    standardToken = testerContractsFixture.contracts['StandardTokenHelper']
     assert standardToken.totalSupply() == 0
     # We get some tokens for tester 0
     assert standardToken.faucet(100000)
@@ -75,10 +88,10 @@ def test_approve_allow_transfer_more_than_allow(contractsFixture):
     assert standardToken.allowance(tester.a0, tester.a1) == 100
     assert standardToken.balanceOf(tester.a1) == 0
     with raises(TransactionFailed):
-        standardToken.transferFrom(tester.a0, tester.a1, 101, sender=tester.k1)
+        standardToken.transfer(tester.a1, 101, sender=tester.k1)
 
-def test_approve_allow_transfer_more_than_allow(contractsFixture):
-    standardToken = contractsFixture.uploadAndAddToController("solidity_test_helpers/StandardTokenHelper.sol")
+def test_approve_allow_transfer_more_than_allow(testerContractsFixture):
+    standardToken = testerContractsFixture.contracts['StandardTokenHelper']
     assert standardToken.totalSupply() == 0
     # We get some tokens for tester 0
     assert standardToken.faucet(100000)
@@ -88,34 +101,28 @@ def test_approve_allow_transfer_more_than_allow(contractsFixture):
     assert standardToken.allowance(tester.a0, tester.a1) == 100
     assert standardToken.balanceOf(tester.a1) == 0
     with raises(TransactionFailed):
-        standardToken.transferFrom(tester.a0, tester.a1, 101, sender=tester.k1)
+        standardToken.transfer(tester.a1, 101, sender=tester.k1)
 
-def test_ping_pong_transfers(contractsFixture):
-    standardToken = contractsFixture.uploadAndAddToController("solidity_test_helpers/StandardTokenHelper.sol")
+def test_ping_pong_transfers(testerContractsFixture):
+    standardToken = testerContractsFixture.contracts['StandardTokenHelper']
     assert standardToken.totalSupply() == 0
     # We get some tokens for tester 0
     assert standardToken.faucet(200)
     assert standardToken.balanceOf(tester.a0) == 200
     assert standardToken.approve(tester.a1, 100)
     assert standardToken.allowance(tester.a0, tester.a1) == 100
-    assert standardToken.transferFrom(tester.a0, tester.a1, 100, sender=tester.k1)
+    assert standardToken.transfer(tester.a1, 100)
     assert standardToken.balanceOf(tester.a0) == 100
     assert standardToken.balanceOf(tester.a1) == 100
-    assert standardToken.allowance(tester.a0, tester.a1) == 0
+    assert standardToken.allowance(tester.a0, tester.a1) == 100
     # transfer back and forth
     for x in range(0, 10):
-        assert standardToken.balanceOf(tester.a0) == 100
-        assert standardToken.balanceOf(tester.a1) == 100
         assert standardToken.approve(tester.a1, 10)
         assert standardToken.allowance(tester.a0, tester.a1) == 10
-        assert standardToken.transferFrom(tester.a0, tester.a1, 10, sender=tester.k1)
-        assert standardToken.balanceOf(tester.a0) == 90
-        assert standardToken.balanceOf(tester.a1) == 110        
+        assert standardToken.transfer(tester.a1, 10)
         assert standardToken.approve(tester.a0, 10, sender=tester.k1)
         assert standardToken.allowance(tester.a1, tester.a0) == 10
-        assert standardToken.transferFrom(tester.a1, tester.a0, 10, sender=tester.k0)
-        assert standardToken.balanceOf(tester.a0) == 100
-        assert standardToken.balanceOf(tester.a1) == 100
+        assert standardToken.transfer(tester.a0, 10, sender=tester.k1)
 
     assert standardToken.balanceOf(tester.a0) == 100
     assert standardToken.balanceOf(tester.a1) == 100
