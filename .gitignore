@@ -77,3 +77,4 @@ tests/compilation_cache/
 .mypy_cache/
 
 /node_modules/
+/output/
