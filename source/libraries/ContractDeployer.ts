@@ -31,7 +31,7 @@ export class ContractDeployer {
 
         this.controller = await this.upload("../source/contracts/Controller.sol");
         const ownerAddress = (await this.controller.owner())[0];
-        if (ownerAddress != fromAddress) {
+        if (ownerAddress !== fromAddress) {
             throw new Error("Controller owner does not equal from address");
         }
 
@@ -43,22 +43,33 @@ export class ContractDeployer {
         return true;
     }
 
+    public async uploadAndAddDelegatedContract(contractFileName: string, contractName: string): Promise<boolean> {
+        const delegationTargetName = contractName + "Target";
+        const hexlifiedDelegationTargetName = "0x" + binascii.hexlify(delegationTargetName);
+        const delegatorConstructorArgs = [this.controller.address, hexlifiedDelegationTargetName];
+
+        await this.uploadAndAddToController(contractFileName, delegationTargetName, contractName);
+        await this.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", contractName, "Delegator", delegatorConstructorArgs);
+
+        return true;
+    }
+
     public async uploadAndAddToController(relativeFilePath: string, lookupKey: string = "", signatureKey: string = "", constructorArgs: any = []): Promise<ContractBlockchainData> {
-        lookupKey = (lookupKey == "") ? path.basename(relativeFilePath).split(".")[0] : lookupKey;
+        lookupKey = (lookupKey === "") ? path.basename(relativeFilePath).split(".")[0] : lookupKey;
         const contract = await this.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs);
-        if (typeof contract == "undefined") {
-            return {};
+        if (typeof contract === "undefined") {
+            throw new Error("Unable to upload " + signatureKey + " contract.");
         }
         // TODO: Add padding to hexlifiedLookupKey to make it the right length?  It seems to work without padding.
         const hexlifiedLookupKey = "0x" + binascii.hexlify(lookupKey);
-        this.controller.setValue(hexlifiedLookupKey, contract.address);
+        await this.controller.setValue(hexlifiedLookupKey, contract.address);
 
         return contract;
     }
 
     public async upload(relativeFilePath, lookupKey: string = "", signatureKey: string = "", constructorArgs: string[] = []): Promise<ContractBlockchainData> {
-        lookupKey = (lookupKey == "") ? path.basename(relativeFilePath).split(".")[0] : lookupKey;
-        signatureKey = (signatureKey == "") ? lookupKey : signatureKey;
+        lookupKey = (lookupKey === "") ? path.basename(relativeFilePath).split(".")[0] : lookupKey;
+        signatureKey = (signatureKey === "") ? lookupKey : signatureKey;
         if (this.uploadedContracts[lookupKey]) {
             return(this.uploadedContracts[lookupKey]);
         }
@@ -66,8 +77,8 @@ export class ContractDeployer {
         const abi = this.compiledContracts[relativeFilePath][signatureKey].abi;
         const bytecode = this.compiledContracts[relativeFilePath][signatureKey].evm.bytecode.object;
         // abstract contracts have a 0-length array for bytecode
-        if (bytecode.length == 0) {
-            return {};
+        if (bytecode.length === 0) {
+            throw new Error("Bytecode is not set for " + signatureKey + ".");
         }
         const contractBuilder = new EthContract(this.eth)(abi, bytecode, { from: this.fromAddress, gas: this.gasAmount });
         let receiptAddress: string;
@@ -87,22 +98,17 @@ export class ContractDeployer {
 
         let uploadedContractPromises = [];
         for (let contractFileName in this.compiledContracts) {
-            if (contractFileName == "Controller.sol" || contractFileName == "libraries/Delegator.sol") {
+            if (contractFileName === "Controller.sol" || contractFileName === "libraries/Delegator.sol") {
                 continue;
             }
 
             for (let contractName in this.compiledContracts[contractFileName]) {
                 // Filter out interface contracts, as they do not need to be deployed
-                if (this.compiledContracts[contractFileName][contractName].evm.bytecode.object == "") {
+                if (this.compiledContracts[contractFileName][contractName].evm.bytecode.object === "") {
                     continue;
                 }
-                if (contractsToDelegate[contractName] == true) {
-                    const delegationTargetName = contractName + "Target";
-                    const hexlifiedDelegationTargetName = "0x" + binascii.hexlify(delegationTargetName);
-                    const delegatorConstructorArgs = [this.controller.address, hexlifiedDelegationTargetName];
-
-                    uploadedContractPromises[delegationTargetName] = this.uploadAndAddToController(contractFileName, delegationTargetName, contractName);
-                    uploadedContractPromises[contractName] = this.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", contractName, "Delegator", delegatorConstructorArgs);
+                if (contractsToDelegate[contractName] === true) {
+                    uploadedContractPromises[contractFileName] = this.uploadAndAddDelegatedContract(contractFileName, contractName);
                 } else {
                     uploadedContractPromises[contractFileName] = this.uploadAndAddToController(contractFileName);
                  }

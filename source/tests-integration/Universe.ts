@@ -10,7 +10,7 @@ describe("Universe", () => {
         contracts = await compileAndDeployContracts();
     });
     it("#getTypeName()", async () => {
-        const contractTypeNameHex = (await contracts["Universe"]["Universe"].getTypeName())[0];
+        const contractTypeNameHex = (await contracts["Universe"].getTypeName())[0];
         const contractTypeName = binascii.unhexlify(contractTypeNameHex).replace(/\u0000/g, "");
         expect(contractTypeName).to.equal("Universe");
     });

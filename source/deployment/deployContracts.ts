@@ -40,8 +40,9 @@ export async function compileAndDeployContracts(): Promise<ContractBlockchainDat
     const compilerResult = await solidityContractCompiler.compileContracts();
 
     // Initialize Ethereum node details.  (If no host is specified, TestRPC will be used.)
-    const httpProviderport = (typeof process.env.ETHEREUM_PORT == "undefined") ? DEFAULT_ETHEREUM_PORT : process.env.ETHEREUM_PORT;
-    if (typeof process.env.ETHEREUM_HOST == "undefined") {
+    const httpProviderPort = (typeof process.env.ETHEREUM_PORT === "undefined") ? DEFAULT_ETHEREUM_PORT : parseInt(process.env.ETHEREUM_PORT || "0");
+    if (typeof process.env.ETHEREUM_HOST === "undefined") {
+        // TODO: Add code to find random open port
         const privateKey = "Augur";
         const hexlifiedPrivateKey = await padAndHexlify(privateKey, 64);
 
@@ -50,11 +51,11 @@ export async function compileAndDeployContracts(): Promise<ContractBlockchainDat
         const options = {gasLimit: GAS_BLOCK_AMOUNT, accounts: accountArray};
 
         const rpcClient = new RpcClient();
-        await rpcClient.listen(httpProviderport, options);
+        await rpcClient.listen(httpProviderPort, options);
     }
 
     // Initialize Eth object
-    const httpProviderUrl = "http://localhost:" + httpProviderport;
+    const httpProviderUrl = "http://localhost:" + httpProviderPort;
     const eth = new Eth(new HttpProvider(httpProviderUrl));
     const accounts = await eth.accounts();
     const fromAccount = accounts[0];

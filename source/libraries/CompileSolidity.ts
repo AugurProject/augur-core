@@ -17,10 +17,10 @@ export class SolidityContractCompiler {
     private contractOutputFileName: string;
 
     public constructor(contractInputDirectoryPath: string, contractOutputDirectoryPath: string, contractOutputFileName: string) {
-        if (contractInputDirectoryPath.lastIndexOf(path.sep) != contractInputDirectoryPath.length - 1) {
+        if (contractInputDirectoryPath.lastIndexOf(path.sep) !== contractInputDirectoryPath.length - 1) {
             contractInputDirectoryPath += path.sep;
         }
-        if (contractOutputDirectoryPath.lastIndexOf(path.sep) != contractOutputDirectoryPath.length - 1) {
+        if (contractOutputDirectoryPath.lastIndexOf(path.sep) !== contractOutputDirectoryPath.length - 1) {
             contractOutputDirectoryPath += path.sep;
         }
         this.contractInputDirectoryPath = contractInputDirectoryPath;
@@ -42,8 +42,8 @@ export class SolidityContractCompiler {
         try {
             const stats = fs.statSync(this.contractOutputDirectoryPath + this.contractOutputFileName);
             const lastCompiledTimestamp = stats.mtime;
-            const uncachedFiles = await recursiveReadDir(this.contractInputDirectoryPath, [function(file: string, stats: fs.Stats): boolean {return (stats.isFile() && path.extname(file) != ".sol") || (stats.isFile() && path.extname(file) == ".sol" && stats.mtime < lastCompiledTimestamp);}]);
-            if (uncachedFiles.length == 0) {
+            const uncachedFiles = await recursiveReadDir(this.contractInputDirectoryPath, [function(file: string, stats: fs.Stats): boolean {return (stats.isFile() && path.extname(file) !== ".sol") || (stats.isFile() && path.extname(file) === ".sol" && stats.mtime < lastCompiledTimestamp);}]);
+            if (uncachedFiles.length === 0) {
                 return { output: "Contracts in " + this.contractInputDirectoryPath + " have not been modified since last cache was created" };
             }
         } catch (error) {
@@ -75,7 +75,7 @@ export class SolidityContractCompiler {
 
     private ignoreFile(file: string, stats: fs.Stats): boolean {
         // Ignore the legacy_reputation directory since it is unnecessary and we don't support uploads of contracts with constructors yet
-        return file.indexOf("legacy_reputation") > -1 || (stats.isFile() && path.extname(file) != ".sol");
+        return file.indexOf("legacy_reputation") > -1 || (stats.isFile() && path.extname(file) !== ".sol");
     }
 
     private mkdirpCallback(error): void {
