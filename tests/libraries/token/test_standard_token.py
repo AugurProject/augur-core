@@ -117,3 +117,21 @@ def test_ping_pong_transfers(testStandardTokenFixture):
     assert standardToken.balanceOf(tester.a0) == 100
     assert standardToken.balanceOf(tester.a1) == 100
 
+def test_transfrom_without_approve(testStandardTokenFixture):
+    standardToken = testStandardTokenFixture.contracts['StandardTokenHelper']
+    assert standardToken.totalSupply() == 0
+    # We get some tokens for tester 0
+    assert standardToken.faucet(10)
+    with raises(TransactionFailed):
+        standardToken.transferFrom(tester.a0,tester.a1, 10)
+
+def test_transfrom_more_than_total_supply(testStandardTokenFixture):
+    standardToken = testStandardTokenFixture.contracts['StandardTokenHelper']
+    assert standardToken.totalSupply() == 0
+    assert standardToken.faucet(10)
+    assert standardToken.totalSupply() == 10
+    assert standardToken.faucet(10)
+    assert standardToken.totalSupply() == 20
+    with raises(TransactionFailed):
+        standardToken.transfer(tester.a1, 21)
+    
