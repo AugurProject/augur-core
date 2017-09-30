@@ -62,7 +62,7 @@ contract CancelOrder is CashAutoConverter, ReentrancyGuard, ICancelOrder {
                 _market.getShareToken(_outcome).transfer(_sender, _sharesEscrowed);
             // unexpected type
             } else {
-                throw;
+                revert();
             }
         }
 

@@ -66,14 +66,16 @@ def test_helpers(fundedRepFixture):
 
     assert claimProceeds.calculateMarketCreatorFee(market.address, fix('3')) == fix('0.03')
     assert claimProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
-    assert claimProceeds.calculateProceeds(market.address, market.getFinalWinningReportingToken(), YES, 7) == 7 * market.getNumTicks()
-    assert claimProceeds.calculateProceeds(market.address, market.getFinalWinningReportingToken(), NO, fix('11')) == fix('0')
+    assert claimProceeds.calculateProceeds(market.getFinalWinningReportingToken(), YES, 7) == 7 * market.getNumTicks()
+    assert claimProceeds.calculateProceeds(market.getFinalWinningReportingToken(), NO, fix('11')) == fix('0')
     (shareholderShare, creatorShare, reporterShare) = claimProceeds.divideUpWinnings(market.address, market.getFinalWinningReportingToken(), YES, 13)
     assert reporterShare == 13.0 * market.getNumTicks() * 0.0001
     assert creatorShare == 13.0 * market.getNumTicks() * .01
     assert shareholderShare == 13.0 * market.getNumTicks() * 0.9899
 
 def test_redeem_shares_in_binary_market(fundedRepFixture):
+    
+    initialOwnerBalance = fundedRepFixture.utils.getETHBalance(tester.a0)
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
@@ -97,6 +99,7 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
+    assert fundedRepFixture.utils.getETHBalance(tester.a0) - initialOwnerBalance == expectedValue * market.getMarketCreatorSettlementFeeInAttoethPerEth()
     assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout
     assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialShortHolderETH
     assert yesShareToken.balanceOf(tester.a1) == 0
@@ -105,6 +108,7 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     assert noShareToken.balanceOf(tester.a2) == 0
 
 def test_redeem_shares_in_categorical_market(fundedRepFixture):
+    initialOwnerBalance = fundedRepFixture.utils.getETHBalance(tester.a0)
     cash = fundedRepFixture.cash
     market = fundedRepFixture.categoricalMarket
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
@@ -114,6 +118,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     expectedValue = 1 * market.getNumTicks()
     expectedFees = expectedValue * 0.0101
     expectedPayout = long(expectedValue - expectedFees)
+
 
     # get long shares with a1
     acquireLongShares(fundedRepFixture, market, 2, 1, claimProceeds.address, sender = tester.k1)
@@ -129,6 +134,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
+    assert fundedRepFixture.utils.getETHBalance(tester.a0) - initialOwnerBalance == expectedValue * market.getMarketCreatorSettlementFeeInAttoethPerEth()
     assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout
     assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialShortHolderETH
     assert shareToken2.balanceOf(tester.a1) == 0
@@ -139,6 +145,8 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     assert shareToken0.balanceOf(tester.a2) == 0
 
 def test_redeem_shares_in_scalar_market(fundedRepFixture):
+    
+    initialOwnerBalance = fundedRepFixture.utils.getETHBalance(tester.a0)
     cash = fundedRepFixture.cash
     market = fundedRepFixture.scalarMarket
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
@@ -161,7 +169,9 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     initialShortHolderETH = fundedRepFixture.utils.getETHBalance(tester.a2)
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
+    
     # assert a1 ends up with cash (minus fees) and a2 does not
+    assert fundedRepFixture.utils.getETHBalance(tester.a0) - initialOwnerBalance == expectedValue * market.getMarketCreatorSettlementFeeInAttoethPerEth()
     assert fundedRepFixture.utils.getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout * 3 / 4
     assert fundedRepFixture.utils.getETHBalance(tester.a2) == initialShortHolderETH + expectedPayout * 1 / 4
     assert yesShareToken.balanceOf(tester.a1) == 0
