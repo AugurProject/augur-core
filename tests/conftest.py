@@ -205,13 +205,13 @@ class ContractsFixture:
         return {'block': self.chain.block, 'head_state': self.chain.head_state, 'contracts' : deepcopy(self.contracts), 'snapshot': self.chain.snapshot()}
 
     def resetToSnapshot(self, captured):
-        if len(captured) > 0:
-            self.chain.block = captured['block']
-            self.chain.revert(captured['snapshot'])
-            self.chain.head_state = captured['head_state']
-            self.contracts = deepcopy(captured['contracts'])
-        else:
-            self.createSnapshot()
+        if len(captured) < 4:
+            raise "captured snapshot doesn't have all parameters in dictionary, need to call createSnapshot"
+        self.chain.block = captured['block']
+        self.chain.revert(captured['snapshot'])
+        self.chain.head_state = captured['head_state']
+        self.contracts = deepcopy(captured['contracts'])
+
     ####
     #### Bulk Operations
     ####

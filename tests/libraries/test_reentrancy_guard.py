@@ -9,11 +9,11 @@ def testerSnapshot(sessionFixture):
     sessionFixture.resetSnapshot()
     sessionFixture.uploadAndAddToController('solidity_test_helpers/ReentrancyGuardHelper.sol')
     ReentrancyGuardHelper = sessionFixture.contracts['ReentrancyGuardHelper']
-    return sessionFixture.chain.snapshot()
+    return sessionFixture.createSnapshot()
 
 @fixture
 def testerContractsFixture(sessionFixture, testerSnapshot):
-    sessionFixture.chain.revert(testerSnapshot)
+    sessionFixture.resetToSnapshot(testerSnapshot)
     return sessionFixture
 
 def test_nonReentrant(testerContractsFixture): 
