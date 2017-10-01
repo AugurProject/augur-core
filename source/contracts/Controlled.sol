@@ -2,6 +2,7 @@ pragma solidity ^0.4.13;
 
 import 'IControlled.sol';
 import 'IController.sol';
+import 'libraries/token/ERC20Basic.sol';
 
 
 contract Controlled is IControlled {
@@ -36,7 +37,16 @@ contract Controlled is IControlled {
         return true;
     }
 
-    function suicideFunds(address _target) public onlyControllerCaller returns(bool) {
+    function suicideFunds(address _target, ERC20Basic[] _tokens) public onlyControllerCaller returns(bool) {
+        // Transfer tokens to target
+        // TODO Uncomment when Market.sol size is fixed
+        // for (uint256 i = 0; i < _tokens.length; i++) {
+        //     ERC20Basic token = _tokens[i];
+        //     uint256 balance = token.balanceOf(this);
+        //     token.transfer(_target, balance);
+        // }
+
+        // Transfer Eth to target and terminate contract
         selfdestruct(_target);
         return true;
     }

@@ -144,4 +144,4 @@ def test_suicideFunds_failure(contractsFixture):
     cash = contractsFixture.cash
 
     with raises(TransactionFailed):
-        cash.suicideFunds(tester.a1, sender = tester.k1)
+        cash.suicideFunds(tester.a1, [], sender = tester.k1)
