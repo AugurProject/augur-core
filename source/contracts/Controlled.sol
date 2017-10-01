@@ -2,6 +2,7 @@ pragma solidity ^0.4.13;
 
 import 'IControlled.sol';
 import 'IController.sol';
+import 'reporting/IUniverse.sol';
 
 
 contract Controlled is IControlled {
@@ -36,11 +37,13 @@ contract Controlled is IControlled {
         return true;
     }
 
-    function suicideFunds(address _target) public onlyControllerCaller returns(bool) {
+    function suicideFunds(address _target, IUniverse _universe) public onlyControllerCaller returns(bool) {
         // Transfer REP tokens to target
-        ERC20Basic repToken = ERC20Basic(controller.lookup("Reputation"));
-        uint256 balance = repToken.balanceOf(this);
-        repToken.transfer(_target, balance);
+        if(_universe) {
+            ERC20Basic repToken = _universe.getReputationToken()
+            uint256 balance = repToken.balanceOf(this);
+            repToken.transfer(_target, balance);   
+        }
 
         // Transfer Eth to target and terminate contract
         selfdestruct(_target);
