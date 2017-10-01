@@ -34,7 +34,7 @@ def initializeReportingFixture(sessionFixture, market):
         assert firstRegistrationToken.balanceOf(address) == 1
         assert reputationToken.balanceOf(address) == 1 * 10**6 * 10**18 - 10**18
 
-    return sessionFixture.chain.snapshot()
+    return sessionFixture.createSnapshot()
 
 def proceedToDesignatedReporting(testFixture, market, reportOutcomes):
     cash = testFixture.cash

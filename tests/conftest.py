@@ -138,6 +138,7 @@ class ContractsFixture:
     ####
 
     def __init__(self):
+        print('******* CREATING CONTRACT FIXTURE ********')
         tester.GASPRICE = 0
         config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
         self.chain = tester.Chain(env=Env(config=config_metropolis))
@@ -361,9 +362,9 @@ def fundedRepSnapshot(sessionFixture):
     legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
     reputationToken.migrateFromLegacyRepContract()
 
-    return sessionFixture.chain.snapshot()
+    return sessionFixture.createSnapshot()
 
 @fixture
 def fundedRepFixture(sessionFixture, fundedRepSnapshot):
-    sessionFixture.chain.revert(fundedRepSnapshot)
+    sessionFixture.resetToSnapshot(fundedRepSnapshot)
     return sessionFixture
