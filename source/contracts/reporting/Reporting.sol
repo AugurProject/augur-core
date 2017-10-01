@@ -14,7 +14,7 @@ library Reporting {
     uint256 private constant LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21;
     uint256 private constant ALL_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22;
 
-    uint256 private constant GAS_TO_REPORT = 568918;
+    uint256 private constant GAS_TO_REPORT = 567796;
     uint256 private constant DEFAULT_REPORTING_GAS_PRICE = 5;
     uint256 private constant DEFAULT_REPORTS_PER_MARKET = 10;
 
