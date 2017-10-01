@@ -2,11 +2,7 @@ pragma solidity ^0.4.13;
 
 import 'IControlled.sol';
 import 'IController.sol';
-<<<<<<< HEAD
 import 'libraries/token/ERC20Basic.sol';
-=======
-import 'reporting/IUniverse.sol';
->>>>>>> ff265f6d75621ab3a926a217964a0138051b3db0
 
 
 contract Controlled is IControlled {
