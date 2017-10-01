@@ -2,6 +2,7 @@
 
 import * as fs from "async-file";
 import * as binascii from "binascii";
+import * as getPort from "get-port";
 import * as path from "path";
 import * as HttpProvider from "ethjs-provider-http";
 import * as Eth from "ethjs-query";
@@ -14,7 +15,6 @@ import { RpcClient } from "../libraries/RpcClient";
 const CONTRACT_INPUT_DIR_PATH = path.join(__dirname, "../../source/contracts");
 const CONTRACT_OUTPUT_DIR_PATH = path.join(__dirname, "../../output/contracts");
 const COMPILED_CONTRACT_OUTPUT_FILE_NAME = "augurCore";
-const DEFAULT_ETHEREUM_PORT = 8545;
 const DEFAULT_TEST_ACCOUNT_BALANCE = 100000000;
 // Set gas block limit extremely high so new blocks don"t have to be mined while uploading contracts
 const GAS_BLOCK_AMOUNT = Math.pow(2, 32);
@@ -40,9 +40,8 @@ export async function compileAndDeployContracts(): Promise<ContractBlockchainDat
     const compilerResult = await solidityContractCompiler.compileContracts();
 
     // Initialize Ethereum node details.  (If no host is specified, TestRPC will be used.)
-    const httpProviderPort = (typeof process.env.ETHEREUM_PORT === "undefined") ? DEFAULT_ETHEREUM_PORT : parseInt(process.env.ETHEREUM_PORT || "0");
+    const httpProviderPort = (typeof process.env.ETHEREUM_PORT === "undefined") ? await getPort() : parseInt(process.env.ETHEREUM_PORT || "0");
     if (typeof process.env.ETHEREUM_HOST === "undefined") {
-        // TODO: Add code to find random open port
         const privateKey = "Augur";
         const hexlifiedPrivateKey = await padAndHexlify(privateKey, 64);
 
@@ -66,7 +65,7 @@ export async function compileAndDeployContracts(): Promise<ContractBlockchainDat
     // Deploy contracts to blockchain
     const contractDeployer = new ContractDeployer();
     await contractDeployer.initialize(eth, contractJson, fromAccount, GAS_AMOUNT);
-
+console.log(contractDeployer.getUploadedContracts());
     return contractDeployer.getUploadedContracts();
 }
 

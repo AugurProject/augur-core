@@ -2,7 +2,7 @@
 
 import * as fs from "fs";
 import * as readFile from "fs-readfile-promise";
-import * as mkdirp from "mkdirp";
+import * as asyncMkdirp from "async-mkdirp";
 import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
 import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
@@ -28,21 +28,15 @@ export class SolidityContractCompiler {
         this.contractOutputFileName = contractOutputFileName;
     }
 
-    public readCallback(path: string): { contents?: string, error?: string } {
-        try {
-            const result = fs.readFileSync(path, "utf8");
-            return { contents: result };
-        } catch (error) {
-            return { error: error.message };
-        }
-    }
-
     public async compileContracts(): Promise<CompileContractsOutput> {
         // Check if all contracts are cached (and thus do not need to be compiled)
         try {
             const stats = fs.statSync(this.contractOutputDirectoryPath + this.contractOutputFileName);
             const lastCompiledTimestamp = stats.mtime;
-            const uncachedFiles = await recursiveReadDir(this.contractInputDirectoryPath, [function(file: string, stats: fs.Stats): boolean {return (stats.isFile() && path.extname(file) !== ".sol") || (stats.isFile() && path.extname(file) === ".sol" && stats.mtime < lastCompiledTimestamp);}]);
+            const ignoreCachedFile = function(file: string, stats: fs.Stats): boolean {
+                return (stats.isFile() && path.extname(file) !== ".sol") || (stats.isFile() && path.extname(file) === ".sol" && stats.mtime < lastCompiledTimestamp);
+            }
+            const uncachedFiles = await recursiveReadDir(this.contractInputDirectoryPath, [ignoreCachedFile]);
             if (uncachedFiles.length === 0) {
                 return { output: "Contracts in " + this.contractInputDirectoryPath + " have not been modified since last cache was created" };
             }
@@ -52,7 +46,7 @@ export class SolidityContractCompiler {
 
         // Compile all contracts in the specified input directory
         const compilerInputJson = await this.generateCompilerInput();
-        const compilerOutputJson: string = compileStandardWrapper(JSON.stringify(compilerInputJson), this.readCallback);
+        const compilerOutputJson: string = compileStandardWrapper(JSON.stringify(compilerInputJson));
         const compilerOutput: CompilerOutput = JSON.parse(compilerOutputJson);
         if (compilerOutput.errors) {
             let errors = "";
@@ -63,29 +57,26 @@ export class SolidityContractCompiler {
         }
 
         // Create output directory (if it doesn't exist)
-        mkdirp(this.contractOutputDirectoryPath, this.mkdirpCallback);
+        await asyncMkdirp(this.contractOutputDirectoryPath);
 
         // Output contract data to single file
         const contractOutputFilePath = this.contractOutputDirectoryPath + this.contractOutputFileName;
-        let wstream = fs.createWriteStream(contractOutputFilePath);
-        wstream.write(JSON.stringify(compilerOutput.contracts));
+        const writeFileCallback = function(error: Error): boolean {
+            if (error) {
+                throw error.message;
+            }
+            return true;
+        }
+        await fs.writeFile(contractOutputFilePath, JSON.stringify(compilerOutput.contracts), writeFileCallback);
 
         return { output: "Contracts in " + this.contractInputDirectoryPath + " were successfully compiled by solc and saved to " + contractOutputFilePath};
     }
 
-    private ignoreFile(file: string, stats: fs.Stats): boolean {
-        // Ignore the legacy_reputation directory since it is unnecessary and we don't support uploads of contracts with constructors yet
-        return file.indexOf("legacy_reputation") > -1 || (stats.isFile() && path.extname(file) !== ".sol");
-    }
-
-    private mkdirpCallback(error): void {
-        if (error) {
-            throw new Error (error);
+    public async generateCompilerInput(): Promise<CompilerInput> {
+        const ignoreFile = function(file: string, stats: fs.Stats): boolean {
+            return file.indexOf("legacy_reputation") > -1 || (stats.isFile() && path.extname(file) !== ".sol");
         }
-    }
-
-    private async generateCompilerInput(): Promise<CompilerInput> {
-        const filePaths = await recursiveReadDir(this.contractInputDirectoryPath, [this.ignoreFile]);
+        const filePaths = await recursiveReadDir(this.contractInputDirectoryPath, [ignoreFile]);
         const filesPromises = filePaths.map(async filePath => await readFile(filePath));
         const files = await Promise.all(filesPromises);
 

@@ -43,15 +43,13 @@ export class ContractDeployer {
         return true;
     }
 
-    public async uploadAndAddDelegatedContract(contractFileName: string, contractName: string): Promise<boolean> {
+    public async uploadAndAddDelegatedToController(contractFileName: string, contractName: string): Promise<ContractBlockchainData|undefined> {
         const delegationTargetName = contractName + "Target";
         const hexlifiedDelegationTargetName = "0x" + binascii.hexlify(delegationTargetName);
         const delegatorConstructorArgs = [this.controller.address, hexlifiedDelegationTargetName];
 
         await this.uploadAndAddToController(contractFileName, delegationTargetName, contractName);
-        await this.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", contractName, "Delegator", delegatorConstructorArgs);
-
-        return true;
+        return await this.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", contractName, "Delegator", delegatorConstructorArgs);
     }
 
     public async uploadAndAddToController(relativeFilePath: string, lookupKey: string = "", signatureKey: string = "", constructorArgs: any = []): Promise<ContractBlockchainData> {
@@ -96,7 +94,7 @@ export class ContractDeployer {
     public async uploadAllContracts(): Promise<boolean> {
         const contractsToDelegate = {"Orders": true, "TradingEscapeHatch": true};
 
-        let uploadedContractPromises = [];
+        let uploadedContractPromises: Promise<ContractBlockchainData|undefined>[] = [];
         for (let contractFileName in this.compiledContracts) {
             if (contractFileName === "Controller.sol" || contractFileName === "libraries/Delegator.sol") {
                 continue;
@@ -108,10 +106,10 @@ export class ContractDeployer {
                     continue;
                 }
                 if (contractsToDelegate[contractName] === true) {
-                    uploadedContractPromises[contractFileName] = this.uploadAndAddDelegatedContract(contractFileName, contractName);
+                    uploadedContractPromises.push(this.uploadAndAddDelegatedToController(contractFileName, contractName));
                 } else {
-                    uploadedContractPromises[contractFileName] = this.uploadAndAddToController(contractFileName);
-                 }
+                    uploadedContractPromises.push(this.uploadAndAddToController(contractFileName));
+                }
             }
         }
 
