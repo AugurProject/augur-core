@@ -50,9 +50,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         RegistrationTokenFactory _registrationTokenFactory = RegistrationTokenFactory(controller.lookup("RegistrationTokenFactory"));
         registrationToken = _registrationTokenFactory.createRegistrationToken(controller, this);
         // Initialize these to some reasonable value to handle the first market ever created without branching code 
-        reportingGasPriceSum = 5;
+        reportingGasPriceSum = Reporting.defaultReportingGasPrice();
+        marketReportsSum = Reporting.defaultReportsPerMarket();
         numReports = 1;
-        marketReportsSum = 10;
         numFinalizedMarkets = 1;
         return true;
     }

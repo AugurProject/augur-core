@@ -4,6 +4,7 @@ import 'reporting/IReputationToken.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReportingWindow.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'reporting/Reporting.sol';
 
 
 contract MarketFeeCalculator {
@@ -62,8 +63,7 @@ contract MarketFeeCalculator {
         IReportingWindow _previousReportingWindow = getPreviousReportingWindow(_reportingWindow);
         uint256 _estimatedReportsPerMarket = _previousReportingWindow.getAvgReportsPerMarket();
         uint256 _avgGasCost = _previousReportingWindow.getAvgReportingGasCost();
-        // Estimate based on test usage data on 09/29/2017
-        _gasToReport = 700000;
+        _gasToReport = Reporting.gasToReport();
         // we double it to try and ensure we have more than enough rather than not enough
         targetReporterGasCosts[_reportingWindow] = _gasToReport * _estimatedReportsPerMarket * _avgGasCost * 2;
         return targetReporterGasCosts[_reportingWindow];
