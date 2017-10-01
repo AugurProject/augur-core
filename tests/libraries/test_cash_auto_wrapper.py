@@ -32,9 +32,9 @@ def testerSnapshot(sessionFixture):
     sessionFixture.uploadAndAddToController('solidity_test_helpers/CashWrapperHelper.sol')
     cashWrapperHelper = sessionFixture.contracts['CashWrapperHelper']
     cashWrapperHelper.setController(sessionFixture.controller.address)
-    return sessionFixture.chain.snapshot()
+    return sessionFixture.createSnapshot()
 
 @fixture
 def testerContractsFixture(sessionFixture, testerSnapshot):
-    sessionFixture.chain.revert(testerSnapshot)
+    sessionFixture.resetToSnapshot(testerSnapshot)
     return sessionFixture
