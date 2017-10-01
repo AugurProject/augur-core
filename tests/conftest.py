@@ -159,11 +159,7 @@ class ContractsFixture:
         print 'Gas Used: %s' % (self.chain.head_state.gas_used - startingGas)
         self.scalarMarket = self.createReasonableScalarMarket(self.universe, 40, self.cash)
         self.constants = self.uploadAndAddToController("solidity_test_helpers/Constants.sol")
-        self.chain.mine(1)
-        self.originalHead = self.chain.head_state
-        self.originalBlock = self.chain.block
-        self.originalContracts = deepcopy(self.contracts)
-        self.snapshot = self.chain.snapshot()
+        self.captured = self.createSnapshot()
 
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
@@ -203,10 +199,19 @@ class ContractsFixture:
         return contract
 
     def resetSnapshot(self):
-        self.chain.block = self.originalBlock
-        self.chain.revert(self.snapshot)
-        self.chain.head_state = self.originalHead
-        self.contracts = deepcopy(self.originalContracts)
+        self.resetToSnapshot(self.captured)
+
+    def createSnapshot(self):
+        self.chain.mine(1)
+        return {'block': self.chain.block, 'head_state': self.chain.head_state, 'contracts' : deepcopy(self.contracts), 'snapshot': self.chain.snapshot()}
+
+    def resetToSnapshot(self, captured):
+        if len(captured) < 4:
+            raise "captured snapshot doesn't have all parameters in dictionary, need to call createSnapshot"
+        self.chain.block = captured['block']
+        self.chain.revert(captured['snapshot'])
+        self.chain.head_state = captured['head_state']
+        self.contracts = deepcopy(captured['contracts'])
 
     ####
     #### Bulk Operations
