@@ -1,14 +1,14 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/reporting/IMarket.sol';
-import 'ROOT/reporting/Reporting.sol';
-import 'ROOT/trading/Order.sol';
+import 'reporting/IMarket.sol';
+import 'reporting/Reporting.sol';
+import 'trading/Order.sol';
 
 
 contract Constants {
     IMarket.ReportingState public constant PRE_REPORTING = IMarket.ReportingState.PRE_REPORTING;
-    IMarket.ReportingState public constant AUTOMATED_REPORTING = IMarket.ReportingState.AUTOMATED_REPORTING;
-    IMarket.ReportingState public constant AUTOMATED_DISPUTE = IMarket.ReportingState.AUTOMATED_DISPUTE;
+    IMarket.ReportingState public constant DESIGNATED_REPORTING = IMarket.ReportingState.DESIGNATED_REPORTING;
+    IMarket.ReportingState public constant DESIGNATED_DISPUTE = IMarket.ReportingState.DESIGNATED_DISPUTE;
     IMarket.ReportingState public constant AWAITING_FORK_MIGRATION = IMarket.ReportingState.AWAITING_FORK_MIGRATION;
     IMarket.ReportingState public constant LIMITED_REPORTING = IMarket.ReportingState.LIMITED_REPORTING;
     IMarket.ReportingState public constant LIMITED_DISPUTE = IMarket.ReportingState.LIMITED_DISPUTE;
@@ -19,8 +19,12 @@ contract Constants {
     IMarket.ReportingState public constant AWAITING_FINALIZATION = IMarket.ReportingState.AWAITING_FINALIZATION;
     IMarket.ReportingState public constant FINALIZED = IMarket.ReportingState.FINALIZED;
 
-    uint256 public constant AUTOMATED_REPORTING_DURATION_SECONDS = Reporting.automatedReportingDurationSeconds();
-    uint256 public constant AUTOMATED_REPORTING_DISPUTE_DURATION_SECONDS = Reporting.automatedReportingDisputeDurationSeconds();
+    uint256 public constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = Reporting.designatedReporterDisputeBondAmount();
+    uint256 public constant LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT = Reporting.limitedReportersDisputeBondAmount();
+    uint256 public constant ALL_REPORTERS_DISPUTE_BOND_AMOUNT = Reporting.allReportersDisputeBondAmount();
+
+    uint256 public constant DESIGNATED_REPORTING_DURATION_SECONDS = Reporting.designatedReportingDurationSeconds();
+    uint256 public constant DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS = Reporting.designatedReportingDisputeDurationSeconds();
 
     uint256 public constant REGISTRATION_TOKEN_BOND_AMOUNT = Reporting.getRegistrationTokenBondAmount();
 

@@ -19,8 +19,8 @@ def acquireLongShares(fundedRepFixture, market, outcome, amount, approvalAddress
     cash = fundedRepFixture.cash
     shareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(outcome))
     completeSets = fundedRepFixture.contracts['CompleteSets']
-    makeOrder = fundedRepFixture.contracts['MakeOrder']
-    takeOrder = fundedRepFixture.contracts['TakeOrder']
+    createOrder = fundedRepFixture.contracts['CreateOrder']
+    fillOrder = fundedRepFixture.contracts['FillOrder']
     cost = amount * market.getNumTicks()
 
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cost)
@@ -37,8 +37,8 @@ def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddr
     cash = fundedRepFixture.cash
     shareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(outcome))
     completeSets = fundedRepFixture.contracts['CompleteSets']
-    makeOrder = fundedRepFixture.contracts['MakeOrder']
-    takeOrder = fundedRepFixture.contracts['TakeOrder']
+    createOrder = fundedRepFixture.contracts['CreateOrder']
+    fillOrder = fundedRepFixture.contracts['FillOrder']
 
     assert completeSets.publicBuyCompleteSets(market.address, amount, sender = sender, value = cost)
     assert shareToken.transfer(0, amount, sender = sender)
@@ -50,10 +50,10 @@ def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddr
 def finalizeMarket(headState, market, payoutNumerators):
     # set timestamp to after market end
     headState.timestamp = market.getEndTime() + 1
-    # have tester.a0 submit automated report
-    market.automatedReport(payoutNumerators, sender = tester.k0)
-    # set timestamp to after automated dispute end
-    headState.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
+    # have tester.a0 submit designated report
+    market.designatedReport(payoutNumerators, sender = tester.k0)
+    # set timestamp to after designated dispute end
+    headState.timestamp = market.getDesignatedReportDisputeDueTimestamp() + 1
     # finalize the market
     assert market.tryFinalize()
     # set timestamp to 3 days later (waiting period)
@@ -180,10 +180,10 @@ def test_reedem_failure(fundedRepFixture):
     acquireShortShareSet(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k2)
     # set timestamp to after market end
     fundedRepFixture.chain.head_state.timestamp = market.getEndTime() + 1
-    # have tester.a0 subimt automated report (75% high, 25% low, range -10*10^18 to 30*10^18)
-    market.automatedReport([0, 10**18], sender = tester.k0)
-    # set timestamp to after automated dispute end
-    fundedRepFixture.chain.head_state.timestamp = market.getAutomatedReportDisputeDueTimestamp() + 1
+    # have tester.a0 subimt designated report (75% high, 25% low, range -10*10^18 to 30*10^18)
+    market.designatedReport([0, 10**18], sender = tester.k0)
+    # set timestamp to after designated dispute end
+    fundedRepFixture.chain.head_state.timestamp = market.getDesignatedReportDisputeDueTimestamp() + 1
 
     # market not finalized
     with raises(TransactionFailed):

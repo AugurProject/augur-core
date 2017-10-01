@@ -1,8 +1,7 @@
 pragma solidity ^0.4.13;
 
-import 'ROOT/IControlled.sol';
-import 'ROOT/reporting/IUniverse.sol';
-
+import 'IControlled.sol';
+import 'reporting/IUniverse.sol';
 
 contract ControllerUser is IControlled {
     address public suicideFundsDestination;

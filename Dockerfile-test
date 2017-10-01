@@ -19,7 +19,7 @@ RUN pip install --upgrade pip setuptools \
 
 COPY .soliumignore /app/.soliumignore
 COPY .soliumrc.json /app/.soliumrc.json
-COPY src/ /app/src/
+COPY source/ /app/source/
 COPY tests/ /app/tests/
 
 WORKDIR /app

@@ -102,7 +102,7 @@ class ContractsFixture:
                 }
             },
             'settings': {
-                'remappings': [ 'ROOT=%s' % resolveRelativePath("../src") ],
+                'remappings': [ '=%s/' % resolveRelativePath("../source/contracts") ],
                 'outputSelection': {
                     '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
                 }
@@ -126,9 +126,9 @@ class ContractsFixture:
             dependencyPath = path.abspath(path.join(fileDirectory, match))
             if not dependencyPath in knownDependencies:
                 ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
-        matches = findall("import ['\"]ROOT/(.*?)['\"]", fileContents)
+        matches = findall("import ['\"](.*?)['\"]", fileContents)
         for match in matches:
-            dependencyPath = path.join(BASE_PATH, '..', 'src', match)
+            dependencyPath = path.join(BASE_PATH, '..', 'source/contracts', match)
             if not dependencyPath in knownDependencies:
                 ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
         return(knownDependencies)
@@ -142,27 +142,23 @@ class ContractsFixture:
         config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
         self.chain = tester.Chain(env=Env(config=config_metropolis))
         self.contracts = {}
-        self.controller = self.upload('../src/Controller.sol')
+        self.controller = self.upload('../source/contracts/Controller.sol')
         assert self.controller.owner() == bytesToHexString(tester.a0)
         self.uploadAllContracts()
         self.whitelistTradingContracts()
         self.initializeAllContracts()
         self.approveCentralAuthority()
-        self.branch = self.createBranch(0, "")
+        self.universe = self.createUniverse(0, "")
         self.cash = self.getSeededCash()
         self.augur = self.contracts['Augur']
         self.utils = self.upload("solidity_test_helpers/Utils.sol")
-        self.binaryMarket = self.createReasonableBinaryMarket(self.branch, self.cash)
+        self.binaryMarket = self.createReasonableBinaryMarket(self.universe, self.cash)
         startingGas = self.chain.head_state.gas_used
-        self.categoricalMarket = self.createReasonableCategoricalMarket(self.branch, 3, self.cash)
+        self.categoricalMarket = self.createReasonableCategoricalMarket(self.universe, 3, self.cash)
         print 'Gas Used: %s' % (self.chain.head_state.gas_used - startingGas)
-        self.scalarMarket = self.createReasonableScalarMarket(self.branch, 40, self.cash)
+        self.scalarMarket = self.createReasonableScalarMarket(self.universe, 40, self.cash)
         self.constants = self.uploadAndAddToController("solidity_test_helpers/Constants.sol")
-        self.chain.mine(1)
-        self.originalHead = self.chain.head_state
-        self.originalBlock = self.chain.block
-        self.originalContracts = deepcopy(self.contracts)
-        self.snapshot = self.chain.snapshot()
+        self.captured = self.createSnapshot()
 
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
@@ -202,17 +198,26 @@ class ContractsFixture:
         return contract
 
     def resetSnapshot(self):
-        self.chain.block = self.originalBlock
-        self.chain.revert(self.snapshot)
-        self.chain.head_state = self.originalHead
-        self.contracts = deepcopy(self.originalContracts)
+        self.resetToSnapshot(self.captured)
+
+    def createSnapshot(self):
+        self.chain.mine(1)
+        return {'block': self.chain.block, 'head_state': self.chain.head_state, 'contracts' : deepcopy(self.contracts), 'snapshot': self.chain.snapshot()}
+
+    def resetToSnapshot(self, captured):
+        if len(captured) < 4:
+            raise "captured snapshot doesn't have all parameters in dictionary, need to call createSnapshot"
+        self.chain.block = captured['block']
+        self.chain.revert(captured['snapshot'])
+        self.chain.head_state = captured['head_state']
+        self.contracts = deepcopy(captured['contracts'])
 
     ####
     #### Bulk Operations
     ####
 
     def uploadAllContracts(self):
-        for directory, _, filenames in walk(resolveRelativePath('../src')):
+        for directory, _, filenames in walk(resolveRelativePath('../source/contracts')):
             # skip the legacy reputation directory since it is unnecessary and we don't support uploads of contracts with constructors yet
             if 'legacy_reputation' in directory: continue
             for filename in filenames:
@@ -224,13 +229,13 @@ class ContractsFixture:
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
                     self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
-                    self.uploadAndAddToController("../src/libraries/Delegator.sol", name, "delegator", constructorArgs=[self.controller.address, delegationTargetName.ljust(32, '\x00')])
+                    self.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", name, "delegator", constructorArgs=[self.controller.address, delegationTargetName.ljust(32, '\x00')])
                     self.contracts[name] = self.applySignature(name, self.contracts[name].address)
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 
     def whitelistTradingContracts(self):
-        for filename in listdir(resolveRelativePath('../src/trading')):
+        for filename in listdir(resolveRelativePath('../source/contracts/trading')):
             name = path.splitext(filename)[0]
             extension = path.splitext(filename)[1]
             if extension != '.sol': continue
@@ -238,7 +243,7 @@ class ContractsFixture:
             self.controller.addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Augur','Cash','CompleteSets','MakeOrder','TakeOrder','CancelOrder','Trade','ClaimProceeds','OrdersFetcher']
+        contractsToInitialize = ['Augur','Cash','CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimProceeds','OrdersFetcher']
         for contractName in contractsToInitialize:
             if getattr(self.contracts[contractName], "setController", None):
                 self.contracts[contractName].setController(self.controller.address)
@@ -271,10 +276,10 @@ class ContractsFixture:
         shareToken = shareTokenFactory.createShareToken(controllerAddress)
         return self.applySignature('shareToken', shareToken)
 
-    def createBranch(self, parentBranch, payoutDistributionHash):
-        branchAddress = self.contracts['BranchFactory'].createBranch(self.controller.address, parentBranch, payoutDistributionHash)
-        branch = self.applySignature('Branch', branchAddress)
-        return branch
+    def createUniverse(self, parentUniverse, payoutDistributionHash):
+        universeAddress = self.contracts['UniverseFactory'].createUniverse(self.controller.address, parentUniverse, payoutDistributionHash)
+        universe = self.applySignature('Universe', universeAddress)
+        return universe
 
     def getReportingToken(self, market, payoutDistribution):
         reportingTokenAddress = market.getReportingToken(payoutDistribution)
@@ -282,58 +287,58 @@ class ContractsFixture:
         reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ReportingToken']), reportingTokenAddress)
         return reportingToken
 
-    def getOrCreateChildBranch(self, parentBranch, market, payoutDistribution):
+    def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
         payoutDistributionHash = market.derivePayoutDistributionHash(payoutDistribution)
         assert payoutDistributionHash
-        childBranchAddress = parentBranch.getOrCreateChildBranch(payoutDistributionHash)
-        assert childBranchAddress
-        childBranch = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Branch']), childBranchAddress)
-        return(childBranch)
+        childUniverseAddress = parentUniverse.getOrCreateChildUniverse(payoutDistributionHash)
+        assert childUniverseAddress
+        childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
+        return(childUniverse)
 
-    def createBinaryMarket(self, branch, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks):
-        return self.createCategoricalMarket(branch, 2, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks)
+    def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks):
+        return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks)
 
-    def createCategoricalMarket(self, branch, numOutcomes, endTime, feePerEthInWei, denominationToken, automatedReporterAddress, numTicks):
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createMarket(branch.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
+    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks):
+        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
+        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createScalarMarket(self, branch, endTime, feePerEthInWei, denominationToken, numTicks, automatedReporterAddress):
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(branch.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
-        marketAddress = self.contracts['MarketCreation'].createMarket(branch.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, automatedReporterAddress, value = marketCreationFee)
+    def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress):
+        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
+        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createReasonableBinaryMarket(self, branch, denominationToken):
+    def createReasonableBinaryMarket(self, universe, denominationToken):
         return self.createBinaryMarket(
-            branch = branch,
+            universe = universe,
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
-            automatedReporterAddress = tester.a0,
+            designatedReporterAddress = tester.a0,
             numTicks = 10 ** 18)
 
-    def createReasonableCategoricalMarket(self, branch, numOutcomes, denominationToken):
+    def createReasonableCategoricalMarket(self, universe, numOutcomes, denominationToken):
         return self.createCategoricalMarket(
-            branch = branch,
+            universe = universe,
             numOutcomes = numOutcomes,
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
-            automatedReporterAddress = tester.a0,
+            designatedReporterAddress = tester.a0,
             numTicks = 3 * 10 ** 17)
 
-    def createReasonableScalarMarket(self, branch, priceRange, denominationToken):
+    def createReasonableScalarMarket(self, universe, priceRange, denominationToken):
         return self.createScalarMarket(
-            branch = branch,
+            universe = universe,
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             numTicks = 40 * 10 ** 18,
-            automatedReporterAddress = tester.a0)
+            designatedReporterAddress = tester.a0)
 
 @fixture(scope="session")
 def sessionFixture():
@@ -349,10 +354,10 @@ def fundedRepSnapshot(sessionFixture):
     sessionFixture.resetSnapshot()
     legacyRepContract = sessionFixture.contracts['LegacyRepContract']
     legacyRepContract.faucet(11 * 10**6 * 10**18)
-    branch = sessionFixture.branch
+    universe = sessionFixture.universe
 
-    # Get the reputation token for this branch and migrate legacy REP to it
-    reputationToken = sessionFixture.applySignature('ReputationToken', branch.getReputationToken())
+    # Get the reputation token for this universe and migrate legacy REP to it
+    reputationToken = sessionFixture.applySignature('ReputationToken', universe.getReputationToken())
     legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
     reputationToken.migrateFromLegacyRepContract()
 

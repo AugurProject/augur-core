@@ -9,7 +9,7 @@ def delegatorSnapshot(sessionFixture):
     name = "DelegatorHelper"
     targetName = "DelegatorHelperTarget"
     sessionFixture.uploadAndAddToController("solidity_test_helpers/DelegatorHelper.sol", targetName, name)
-    sessionFixture.uploadAndAddToController("../src/libraries/Delegator.sol", name, "delegator", constructorArgs=[sessionFixture.controller.address, targetName.ljust(32, '\x00')])
+    sessionFixture.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", name, "delegator", constructorArgs=[sessionFixture.controller.address, targetName.ljust(32, '\x00')])
     sessionFixture.contracts[name] = sessionFixture.applySignature(name, sessionFixture.contracts[name].address)
     return sessionFixture.chain.snapshot()
 

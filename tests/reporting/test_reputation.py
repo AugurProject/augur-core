@@ -3,14 +3,14 @@ from ethereum.tools import tester
 def test_decimals(contractsFixture):
     reputationTokenFactory = contractsFixture.contracts['ReputationTokenFactory']
     assert reputationTokenFactory
-    reputationTokenAddress = reputationTokenFactory.createReputationToken(contractsFixture.controller.address, contractsFixture.branch.address)
+    reputationTokenAddress = reputationTokenFactory.createReputationToken(contractsFixture.controller.address, contractsFixture.universe.address)
     reputationToken = contractsFixture.applySignature('ReputationToken', reputationTokenAddress)
 
     assert reputationToken.decimals() == 18
 
 def test_redeem_legacy_rep(contractsFixture):
-    branch = contractsFixture.branch
-    reputationToken = contractsFixture.applySignature('ReputationToken', branch.getReputationToken())
+    universe = contractsFixture.universe
+    reputationToken = contractsFixture.applySignature('ReputationToken', universe.getReputationToken())
     legacyRepContract = contractsFixture.contracts['LegacyRepContract']
     legacyRepContract.faucet(long(11 * 10**6 * 10**18))
     legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
