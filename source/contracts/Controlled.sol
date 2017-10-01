@@ -40,7 +40,7 @@ contract Controlled is IControlled {
     function suicideFunds(address _target, IUniverse _universe) public onlyControllerCaller returns(bool) {
         // Transfer REP tokens to target
         if(_universe) {
-            ERC20Basic repToken = _universe.getReputationToken()
+            ERC20Basic repToken = _universe.getReputationToken();
             uint256 balance = repToken.balanceOf(this);
             repToken.transfer(_target, balance);   
         }
