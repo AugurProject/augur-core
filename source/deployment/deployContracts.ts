@@ -65,7 +65,7 @@ export async function compileAndDeployContracts(): Promise<ContractBlockchainDat
     // Deploy contracts to blockchain
     const contractDeployer = new ContractDeployer();
     await contractDeployer.initialize(eth, contractJson, fromAccount, GAS_AMOUNT);
-console.log(contractDeployer.getUploadedContracts());
+
     return contractDeployer.getUploadedContracts();
 }
 
