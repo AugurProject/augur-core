@@ -440,6 +440,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return false;
     }
 
+    // CONSIDER: Would it be helpful to add modifiers for this contract like "onlyAfterFinalized" that could protect a function such as this?
     function isIndeterminate() public constant returns (bool) {
         IReportingToken _winningReportingToken = getFinalWinningReportingToken();
         require(address(_winningReportingToken) != NULL_ADDRESS);

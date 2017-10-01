@@ -26,6 +26,8 @@ contract IReportingWindow is Typed {
     function getMaxReportsPerLimitedReporterMarket() public constant returns (uint256);
     function getAvgReportingGasCost() public constant returns (uint256);
     function getAvgReportsPerMarket() public constant returns (uint256);
+    function getNextReportingWindow() constant public returns (IReportingWindow);
+    function getPreviousReportingWindow() constant public returns (IReportingWindow);
     function checkIn() public returns (bool);
     function isContainerForRegistrationToken(IRegistrationToken _shadyRegistrationToken) public constant returns (bool);
     function isContainerForMarket(IMarket _shadyMarket) public constant returns (bool);

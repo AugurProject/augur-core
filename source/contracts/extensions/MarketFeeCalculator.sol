@@ -14,8 +14,8 @@ contract MarketFeeCalculator {
     mapping (address => uint256) private validityBondInAttoeth;
     mapping (address => uint256) private targetReporterGasCosts;
 
-    uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether;
-    uint256 private constant FXP_TARGET_INDETERMINATE_MARKETS = 10 ** 16; // 1% of markets
+    uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
+    uint256 private constant FXP_TARGET_INDETERMINATE_MARKETS = 1 ether / 100; // 1% of markets
     uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
 
     function getValidityBond(IReportingWindow _reportingWindow) public returns (uint256) {
@@ -23,7 +23,7 @@ contract MarketFeeCalculator {
         if (_currentValidityBondInAttoeth != 0) {
             return _currentValidityBondInAttoeth;
         }
-        IReportingWindow _previousReportingWindow = getPreviousReportingWindow(_reportingWindow);
+        IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
         uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
         uint256 _indeterminateMarketsInPreviousWindow = _reportingWindow.getNumIndeterminateMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
@@ -60,7 +60,7 @@ contract MarketFeeCalculator {
             return _gasToReport;
         }
 
-        IReportingWindow _previousReportingWindow = getPreviousReportingWindow(_reportingWindow);
+        IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
         uint256 _estimatedReportsPerMarket = _previousReportingWindow.getAvgReportsPerMarket();
         uint256 _avgGasCost = _previousReportingWindow.getAvgReportingGasCost();
         _gasToReport = Reporting.gasToReport();
@@ -78,7 +78,7 @@ contract MarketFeeCalculator {
         IUniverse _universe = _reportingWindow.getUniverse();
         uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth(_universe);
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth(_reportingWindow);
-        IReportingWindow _previousReportingWindow = getPreviousReportingWindow(_reportingWindow);
+        IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
         uint256 _previousPerEthFee = shareSettlementPerEthFee[_previousReportingWindow];
         if (_previousPerEthFee == 0) {
             _previousPerEthFee = 1 * 10 ** 16;
@@ -101,12 +101,6 @@ contract MarketFeeCalculator {
     function getTargetRepMarketCapInAttoeth(IReportingWindow _reportingWindow) constant public returns (uint256) {
         IUniverse _universe = _reportingWindow.getUniverse();
         return _universe.getOpenInterestInAttoEth() * TARGET_REP_MARKET_CAP_MULTIPLIER;
-    }
-
-    function getPreviousReportingWindow(IReportingWindow _reportingWindow) constant private returns (IReportingWindow) {
-        uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
-        IUniverse _universe = _reportingWindow.getUniverse();
-        return _universe.getReportingWindowByTimestamp(_previousTimestamp);
     }
 
     function getMarketCreationCost(IReportingWindow _reportingWindow) constant public returns (uint256) {
