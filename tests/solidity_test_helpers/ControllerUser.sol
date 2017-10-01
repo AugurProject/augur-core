@@ -3,6 +3,7 @@ pragma solidity ^0.4.13;
 import 'IControlled.sol';
 import 'reporting/IUniverse.sol';
 
+
 contract ControllerUser is IControlled {
     address public suicideFundsDestination;
     address public updatedController;
