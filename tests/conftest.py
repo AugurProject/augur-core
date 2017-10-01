@@ -139,8 +139,14 @@ class ContractsFixture:
     ####
 
     def __init__(self):
-        tester.GASPRICE = 0
+        config_metropolis['GASLIMIT_ADJMAX_FACTOR'] = .000000000001
+        config_metropolis['GENESIS_GAS_LIMIT'] = 2**60
+        config_metropolis['MIN_GAS_LIMIT'] = 2**60
         config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
+
+        for a in range(10):
+            tester.base_alloc[getattr(tester, 'a%i' % a)] = {'balance': 10**24}
+
         self.chain = tester.Chain(env=Env(config=config_metropolis))
         self.contracts = {}
         self.controller = self.upload('../source/contracts/Controller.sol')
