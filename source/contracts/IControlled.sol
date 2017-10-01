@@ -5,5 +5,5 @@ import 'IController.sol';
 
 contract IControlled {
     function setController(IController _controller) public returns(bool);
-    function suicideFunds(address _target) public returns(bool);
+    function suicideFunds(address _target, IUniverse _universe) public returns(bool);
 }
