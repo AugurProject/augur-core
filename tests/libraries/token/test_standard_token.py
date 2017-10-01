@@ -6,7 +6,6 @@ from pytest import fixture, mark, lazy_fixture, raises
 
 @fixture(scope='session')
 def testerSnapshot(sessionFixture):
-    sessionFixture.resetSnapshot()
     sessionFixture.uploadAndAddToController("solidity_test_helpers/StandardTokenHelper.sol")
     standardToken = sessionFixture.contracts['StandardTokenHelper']
     return sessionFixture.createSnapshot()

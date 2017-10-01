@@ -28,7 +28,6 @@ def test_convertToAndFromCash(testerContractsFixture):
 
 @fixture(scope='session')
 def testerSnapshot(sessionFixture):
-    sessionFixture.resetSnapshot()
     sessionFixture.uploadAndAddToController('solidity_test_helpers/CashWrapperHelper.sol')
     cashWrapperHelper = sessionFixture.contracts['CashWrapperHelper']
     cashWrapperHelper.setController(sessionFixture.controller.address)
