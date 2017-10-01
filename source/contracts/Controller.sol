@@ -2,6 +2,7 @@ pragma solidity ^0.4.13;
 
 import 'IController.sol';
 import 'IControlled.sol';
+import 'reporting/IUniverse.sol';
 
 
 contract Controller is IController {
@@ -87,8 +88,8 @@ contract Controller is IController {
      * Contract Administration [dev mode can use it]
      */
 
-    function suicide(IControlled _target, address _destination) public devModeOwnerOnly returns(bool) {
-        _target.suicideFunds(_destination);
+    function suicide(IControlled _target, address _destination, IUniverse _universe) public devModeOwnerOnly returns(bool) {
+        _target.suicideFunds(_destination, _universe);
         return true;
     }
 
