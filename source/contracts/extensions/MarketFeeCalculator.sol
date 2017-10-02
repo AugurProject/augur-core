@@ -41,19 +41,23 @@ contract MarketFeeCalculator {
             _previousValidityBondInAttoeth = DEFAULT_VALIDITY_BOND;
         }
         
-        uint256 _fxpBase = uint256(1 ether);
-        uint256 _fxpPercentIndeterminate = _indeterminateMarkets.fxpDiv(_totalMarkets, _fxpBase);
         uint256 _targetIndeterminateMarkets = _totalMarkets.div(_targetIndeterminateMarketsDivisor);
-        uint256 _fxpMultiple = _fxpBase;
 
         if (_indeterminateMarkets <= _targetIndeterminateMarkets) {
-            _fxpMultiple = _fxpPercentIndeterminate.mul(_targetIndeterminateMarketsDivisor).div(2).add(_fxpBase.div(2));
+            return _indeterminateMarkets
+                .mul(_previousValidityBondInAttoeth)
+                .mul(_targetIndeterminateMarketsDivisor)
+                .div(_totalMarkets)
+                .div(2)
+            .add(_previousValidityBondInAttoeth.div(2));
         } else {
-            uint256 _fxpTargetIndeterminateMarkets = _fxpBase.div(_targetIndeterminateMarketsDivisor);
-            _fxpMultiple = _fxpBase.mul(_fxpPercentIndeterminate.sub(_fxpTargetIndeterminateMarkets)).div(_fxpBase.sub(_fxpTargetIndeterminateMarkets)).add(_fxpBase);
+            return _targetIndeterminateMarketsDivisor
+                .mul(_previousValidityBondInAttoeth.mul(_indeterminateMarkets)
+                .div(_totalMarkets)
+                .sub(_previousValidityBondInAttoeth.div(_targetIndeterminateMarketsDivisor)))
+                .div(_targetIndeterminateMarketsDivisor - 1)
+            .add(_previousValidityBondInAttoeth);
         }
-
-        return _previousValidityBondInAttoeth.fxpMul(_fxpMultiple, _fxpBase);
     }
 
     function getTargetReporterGasCosts(IReportingWindow _reportingWindow) constant public returns (uint256) {

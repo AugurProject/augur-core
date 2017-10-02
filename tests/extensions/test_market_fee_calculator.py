@@ -50,7 +50,7 @@ def test_default_target_reporter_gas_costs(contractsFixture):
     expectedTargetReporterGasCost *= contractsFixture.constants.DEFAULT_REPORTING_GAS_PRICE()
     expectedTargetReporterGasCost *= contractsFixture.constants.DEFAULT_REPORTS_PER_MARKET()
     expectedTargetReporterGasCost *= 2
-    assert targetReporterGasCosts == expectedTargetReporterGasCost 
+    assert targetReporterGasCosts == expectedTargetReporterGasCost
 
 @mark.parametrize('numReports, gasPrice', [
     (1, 1),
