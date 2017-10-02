@@ -9,6 +9,7 @@ declare module 'solc' {
     }
     interface CompilerInput {
         language: "Solidity" | "serpent" | "lll" | "assembly";
+        settings?: any,
         sources: {
             [globalName: string]: CompilerInputSourceFile|CompilerInputSourceCode,
         };
