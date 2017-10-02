@@ -43,20 +43,25 @@ contract MarketFeeCalculator {
         
         uint256 _targetIndeterminateMarkets = _totalMarkets.div(_targetIndeterminateMarketsDivisor);
 
+        // Modify the validity bond based on the previous amount and the number of indeterminate markets. We want the bond to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets being indeterminate results in 2x and 0 indeterminate results in 0.5x.
         if (_indeterminateMarkets <= _targetIndeterminateMarkets) {
+            // FXP formula: previous_bond * percent_invalid / (2 * target_percent_invalid) + 0.5;
             return _indeterminateMarkets
                 .mul(_previousValidityBondInAttoeth)
                 .mul(_targetIndeterminateMarketsDivisor)
                 .div(_totalMarkets)
                 .div(2)
-            .add(_previousValidityBondInAttoeth.div(2));
+                .add(_previousValidityBondInAttoeth.div(2))
+            ; // FIXME: This is here due to a solium bug
         } else {
+            // FXP formula: previous_bond * (1/(1 - target_percent_invalid)) * (percent_invalid - target_percent_invalid) + 1;
             return _targetIndeterminateMarketsDivisor
                 .mul(_previousValidityBondInAttoeth.mul(_indeterminateMarkets)
                 .div(_totalMarkets)
                 .sub(_previousValidityBondInAttoeth.div(_targetIndeterminateMarketsDivisor)))
                 .div(_targetIndeterminateMarketsDivisor - 1)
-            .add(_previousValidityBondInAttoeth);
+                .add(_previousValidityBondInAttoeth)
+            ; // FIXME: This is here due to a solium bug
         }
     }
 
