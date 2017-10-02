@@ -307,6 +307,53 @@ def test_noReports(reportingFixture, pastDisputePhase):
     assert market.getReportingState() == reportingFixture.constants.LIMITED_REPORTING()
     assert market.getReportingWindow() != reportingWindow.address
 
+def test_indeterminate_limited_report(reportingFixture):
+    market = reportingFixture.binaryMarket
+    universe = reportingFixture.universe
+    reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())
+
+    # Proceed to the LIMITED REPORTING phase
+    proceedToLimitedReporting(reportingFixture, market, False, tester.k1, [0,10**18])
+
+    # We make an indeterminate report
+    reportingTokenIndeterminate = reportingFixture.getReportingToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
+    reportingTokenIndeterminate.buy(1, sender=tester.k2)
+    assert reportingTokenIndeterminate.balanceOf(tester.a2) == 1
+    tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
+    assert tentativeWinner == reportingTokenIndeterminate.getPayoutDistributionHash()
+    assert reportingTokenIndeterminate.isIndeterminate()
+
+    # If we finalize the market it will be recorded as an indeterminate result
+    reportingFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    assert market.tryFinalize()
+    assert market.isIndeterminate()
+    assert reportingWindow.getNumIndeterminateMarkets() == 1
+
+def test_indeterminate_designated_report(reportingFixture):
+    market = reportingFixture.binaryMarket
+    reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
+
+    # Proceed to the DESIGNATED REPORTING phase
+    proceedToDesignatedReporting(reportingFixture, market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
+
+    # To progress into the DESIGNATED DISPUTE phase we do a designated report of indeterminate
+    assert market.designatedReport([long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], sender=tester.k0)
+
+    # We're now in the DESIGNATED DISPUTE PHASE
+    assert market.getReportingState() == reportingFixture.constants.DESIGNATED_DISPUTE()
+
+    # If time passes and no dispute bond is placed the market can be finalized
+    reportingFixture.chain.head_state.timestamp = market.getEndTime() + reportingFixture.constants.DESIGNATED_REPORTING_DURATION_SECONDS() + reportingFixture.constants.DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1
+
+    # The market is awaiting finalization now
+    assert market.getReportingState() == reportingFixture.constants.AWAITING_FINALIZATION()
+
+    # If we finalize the market it will be recorded as an indeterminate result
+    assert market.tryFinalize()
+    assert market.isIndeterminate()
+    assert reportingWindow.getNumIndeterminateMarkets() == 1
+
 @fixture(scope="session")
 def reportingSnapshot(sessionFixture):
     sessionFixture.resetSnapshot()

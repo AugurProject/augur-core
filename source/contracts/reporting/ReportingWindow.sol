@@ -17,11 +17,13 @@ import 'factories/MarketFactory.sol';
 import 'factories/RegistrationTokenFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'libraries/math/RunningAverage.sol';
 
 
 contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWindow {
     using SafeMathUint256 for uint256;
     using Set for Set.Data;
+    using RunningAverage for RunningAverage.Data;
 
     struct ReportingStatus {
         Set.Data marketsReportedOn;
@@ -34,9 +36,12 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set.Data private markets;
     Set.Data private limitedReporterMarkets;
     Set.Data private allReporterMarkets;
+    uint256 private indeterminateMarketCount;
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
+    RunningAverage.Data private reportingGasPrice;
+    RunningAverage.Data private marketReports;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -44,6 +49,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         RegistrationTokenFactory _registrationTokenFactory = RegistrationTokenFactory(controller.lookup("RegistrationTokenFactory"));
         registrationToken = _registrationTokenFactory.createRegistrationToken(controller, this);
+        // Initialize these to some reasonable value to handle the first market ever created without branching code 
+        reportingGasPrice.record(Reporting.defaultReportingGasPrice());
+        marketReports.record(Reporting.defaultReportsPerMarket());
         return true;
     }
 
@@ -105,6 +113,13 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
             limitedReporterMarkets.remove(_market);
         }
 
+        if (_state == IMarket.ReportingState.FINALIZED) {
+            if (_market.isIndeterminate()) {
+                indeterminateMarketCount++;
+            }
+            marketReports.record(numberOfReportsByMarket[_market]);
+        }
+
         return true;
     }
 
@@ -122,6 +137,14 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         }
         // no credit in all other cases (but user can still report)
         return true;
+    }
+
+    function getAvgReportingGasCost() public constant returns (uint256) {
+        return reportingGasPrice.currentAverage();
+    }
+
+    function getAvgReportsPerMarket() public constant returns (uint256) {
+        return marketReports.currentAverage();
     }
 
     function getTypeName() public afterInitialized constant returns (bytes32) {
@@ -148,6 +171,14 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return getDisputeEndTime();
     }
 
+    function getNumMarkets() public afterInitialized constant returns (uint256) {
+        return markets.count;
+    }
+
+    function getNumIndeterminateMarkets() public afterInitialized constant returns (uint256) {
+        return indeterminateMarketCount;
+    }
+
     function getReportingStartTime() public afterInitialized constant returns (uint256) {
         return getStartTime();
     }
@@ -162,6 +193,16 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function getDisputeEndTime() public afterInitialized constant returns (uint256) {
         return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
+    }
+
+    function getNextReportingWindow() constant public returns (IReportingWindow) {
+        uint256 _nextTimestamp = getEndTime() + 1;
+        return getUniverse().getReportingWindowByTimestamp(_nextTimestamp);
+    }
+
+    function getPreviousReportingWindow() constant public returns (IReportingWindow) {
+        uint256 _previousTimestamp = getStartTime() - 1;
+        return getUniverse().getReportingWindowByTimestamp(_previousTimestamp);
     }
 
     function checkIn() public afterInitialized returns (bool) {
@@ -208,6 +249,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         if (_limitedReporterMarketCount == 0) {
             return 0;
         }
+
         uint256 _registeredReporters = registrationToken.getPeakSupply();
         uint256 _minimumReportsPerMarket = BASE_MINIMUM_REPORTERS_PER_MARKET;
         uint256 _totalReportsForAllLimitedReporterMarkets = _minimumReportsPerMarket * _limitedReporterMarketCount;
@@ -283,6 +325,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
             reporterStatus[_reporter].finishedReporting = true;
         }
         numberOfReportsByMarket[_market] += 1;
+        reportingGasPrice.record(tx.gasprice);
         return true;
     }
 

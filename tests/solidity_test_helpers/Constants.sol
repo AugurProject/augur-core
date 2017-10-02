@@ -28,6 +28,10 @@ contract Constants {
 
     uint256 public constant REGISTRATION_TOKEN_BOND_AMOUNT = Reporting.getRegistrationTokenBondAmount();
 
+    uint256 public constant GAS_TO_REPORT = Reporting.gasToReport();
+    uint256 public constant DEFAULT_REPORTING_GAS_PRICE = Reporting.defaultReportingGasPrice();
+    uint256 public constant DEFAULT_REPORTS_PER_MARKET = Reporting.defaultReportsPerMarket();
+
     uint8 public constant BID = uint8(Order.TradeTypes.Bid);
     uint8 public constant ASK = uint8(Order.TradeTypes.Ask);
     uint8 public constant LONG = uint8(Order.TradeDirections.Long);
