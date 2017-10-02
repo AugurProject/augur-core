@@ -39,7 +39,7 @@ contract Controlled is IControlled {
 
     function suicideFunds(address _target, ERC20Basic[] _tokens) public onlyControllerCaller returns(bool) {
         // Transfer tokens to target
-        // TODO Uncomment when Market.sol size is fixed
+        // TODO: Uncomment when Market.sol size is fixed
         // for (uint256 i = 0; i < _tokens.length; i++) {
         //     ERC20Basic token = _tokens[i];
         //     uint256 balance = token.balanceOf(this);
