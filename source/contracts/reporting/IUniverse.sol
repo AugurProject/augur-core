@@ -4,6 +4,7 @@ import 'libraries/Typed.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
+import 'reporting/IReportingToken.sol';
 
 
 contract IUniverse is Typed {
@@ -30,4 +31,5 @@ contract IUniverse is Typed {
     function isContainerForShareToken(Typed _shadyTarget) public constant returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);
     function incrementOpenInterest(uint256 _amount) public returns (bool);
+    function logCreateReportingToken(IReportingToken _reportingToken, IMarket _market) public returns (bool);
 }

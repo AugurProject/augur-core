@@ -20,6 +20,8 @@ import 'libraries/math/SafeMathUint256.sol';
 contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     using SafeMathUint256 for uint256;
 
+    event ReportingTokenCreated(address indexed market, address reportingToken);
+
     IUniverse private parentUniverse;
     bytes32 private parentPayoutDistributionHash;
     IReputationToken private reputationToken;
@@ -235,5 +237,10 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
 
     function getOpenInterestInAttoEth() public constant returns (uint256) {
         return openInterestInAttoEth;
+    }
+    
+    function logCreateReportingToken(IReportingToken _reportingToken, IMarket _market) public returns (bool) {
+        ReportingTokenCreated(_market, _reportingToken);
+        return true;
     }
 }

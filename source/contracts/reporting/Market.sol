@@ -70,7 +70,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(_cash.getTypeName() == "Cash");
-        // FIXME: require market to be on a non-forking universe; repeat this check up the stack as well if necessary (e.g., in reporting window)
+        //require(address(getUniverse().getForkingMarket()) == NULL_ADDRESS);
         // CONSIDER: should we allow creator to send extra ETH, is there risk of variability in bond requirements?
         require(msg.value == MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getMarketCreationCost(_reportingWindow));
         reportingWindow = _reportingWindow;
@@ -87,16 +87,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         }
         approveSpenders();
         return true;
-
-        // TODO: we need to update this signature (and all of the places that call it) to allow the creator (UI) to pass in a number of other things which will all be logged here
-        // TODO: log short description
-        // TODO: log long description
-        // TODO: log min display price
-        // TODO: log max display price
-        // TODO: log tags (0-2)
-        // TODO: log outcome labels (same number as numOutcomes)
-        // TODO: log type (scalar, binary, categorical)
-        // TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, numTicks, cash address, etc.)
     }
 
     function createShareToken(uint8 _outcome) private returns (IShareToken) {
@@ -246,7 +236,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return true;
 
         // FIXME: when the market is finalized, we need to add `reportingTokens[finalPayoutDistributionHash].totalSupply()` to the reporting window.  This is necessary for fee collection which is a cross-market operation.
-        // TODO: figure out how to make it so fee distribution is delayed until all markets have been finalized; we can enforce it contract side and let the UI deal with the actual work
         // FIXME: if finalPayoutDistributionHash != getIdentityDistributionId(), pay back validity bond holder
         // FIXME: if finalPayoutDistributionHash == getIdentityDistributionId(), transfer validity bond to reportingWindow (reporter fee pot)
         // FIXME: if designated report is wrong, transfer designated report bond to reportingWindow
