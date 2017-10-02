@@ -12,14 +12,13 @@ ONE = 10 ** 18
 
     # Maximum Decrease
     (0, 1, 2 * ONE, ONE),
-    (0, 99, 2 * ONE, ONE),
+    (0, 50, 2 * ONE, ONE),
     (0, 1, 10 * ONE, 5 * ONE),
 
     # Maximum Increase
-    (100, 1, ONE, 2 * ONE - 1), # Small rounding errors
-    (100, 0, ONE, 2 * ONE),
-    (100, 99, ONE, 2 * ONE),
-    (100, 1, 10 * ONE, 20 * ONE - 10), # Small rounding errors
+    (100, 1, ONE, 2 * ONE),
+    (100, 50, ONE, 2 * ONE),
+    (100, 1, 10 * ONE, 20 * ONE),
 
     # Decrease
     (1, 10, 10 * ONE, 5.5 * ONE),
@@ -37,8 +36,8 @@ ONE = 10 ** 18
 ])
 def test_validity_bond_calculation(numIndeterminate, targetIndeterminatePerHundred, previousBond, expectedValue, contractsFixture):
     feeCalculator = contractsFixture.contracts["MarketFeeCalculator"]
-    targetIndeterminate = targetIndeterminatePerHundred * 10 ** 18 / 100
-    newBond = feeCalculator.calculateValidityBond(numIndeterminate, 100, targetIndeterminate, previousBond)
+    targetIndeterminateDivisor = 100 / targetIndeterminatePerHundred
+    newBond = feeCalculator.calculateValidityBond(numIndeterminate, 100, targetIndeterminateDivisor, previousBond)
     assert newBond == expectedValue
 
 def test_default_target_reporter_gas_costs(contractsFixture):

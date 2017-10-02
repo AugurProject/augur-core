@@ -15,7 +15,7 @@ contract MarketFeeCalculator {
     mapping (address => uint256) private targetReporterGasCosts;
 
     uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
-    uint256 private constant FXP_TARGET_INDETERMINATE_MARKETS = 1 ether / 100; // 1% of markets
+    uint256 private constant TARGET_INDETERMINATE_MARKETS_DIVISOR = 100; // 1% of markets
     uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
 
     function getValidityBond(IReportingWindow _reportingWindow) public returns (uint256) {
@@ -28,12 +28,12 @@ contract MarketFeeCalculator {
         uint256 _indeterminateMarketsInPreviousWindow = _reportingWindow.getNumIndeterminateMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
 
-        _currentValidityBondInAttoeth = calculateValidityBond(_indeterminateMarketsInPreviousWindow, _totalMarketsInPreviousWindow, FXP_TARGET_INDETERMINATE_MARKETS, _previousValidityBondInAttoeth);
+        _currentValidityBondInAttoeth = calculateValidityBond(_indeterminateMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INDETERMINATE_MARKETS_DIVISOR, _previousValidityBondInAttoeth);
         validityBondInAttoeth[_reportingWindow] = _currentValidityBondInAttoeth;
         return _currentValidityBondInAttoeth;
     }
 
-    function calculateValidityBond(uint256 _indeterminateMarkets, uint256 _totalMarkets, uint256 _fxpTargetIndeterminateMarkets, uint256 _previousValidityBondInAttoeth) constant public returns (uint256) {
+    function calculateValidityBond(uint256 _indeterminateMarkets, uint256 _totalMarkets, uint256 _targetIndeterminateMarketsDivisor, uint256 _previousValidityBondInAttoeth) constant public returns (uint256) {
         if (_totalMarkets == 0) {
             return DEFAULT_VALIDITY_BOND;
         }
@@ -43,12 +43,20 @@ contract MarketFeeCalculator {
         
         uint256 _fxpBase = uint256(1 ether);
         uint256 _fxpPercentIndeterminate = _indeterminateMarkets.fxpDiv(_totalMarkets, _fxpBase);
+        uint256 _targetIndeterminateMarkets = _totalMarkets.div(_targetIndeterminateMarketsDivisor);
         uint256 _fxpMultiple = _fxpBase;
 
-        if (_fxpPercentIndeterminate <= _fxpTargetIndeterminateMarkets) {
-            _fxpMultiple = _fxpPercentIndeterminate.fxpDiv(_fxpTargetIndeterminateMarkets.mul(2), _fxpBase).add(_fxpBase.div(2));
+        if (_indeterminateMarkets <= _targetIndeterminateMarkets) {
+            _fxpMultiple = _fxpPercentIndeterminate
+                .mul(_targetIndeterminateMarketsDivisor)
+                .div(2)
+                .add(_fxpBase.div(2));
         } else {
-            _fxpMultiple = _fxpBase.fxpDiv(_fxpBase.sub(_fxpTargetIndeterminateMarkets), _fxpBase).fxpMul(_fxpPercentIndeterminate.sub(_fxpTargetIndeterminateMarkets), _fxpBase).add(_fxpBase);
+            uint256 _fxpTargetIndeterminateMarkets = _fxpBase.div(_targetIndeterminateMarketsDivisor);
+            _fxpMultiple = _fxpBase
+                .mul(_fxpPercentIndeterminate.sub(_fxpTargetIndeterminateMarkets))
+                .div(_fxpBase.sub(_fxpTargetIndeterminateMarkets))
+                .add(_fxpBase);
         }
 
         return _previousValidityBondInAttoeth.fxpMul(_fxpMultiple, _fxpBase);
