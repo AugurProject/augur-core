@@ -20,6 +20,7 @@ def test_publicBuyCompleteSets(fundedRepFixture):
     assert not cash.balanceOf(market.address)
     assert not yesShareToken.totalSupply()
     assert not noShareToken.totalSupply()
+    assert universe.getOpenInterestInAttoEth() == 0
 
     cost = 10 * market.getNumTicks()
     captureFilteredLogs(fundedRepFixture.chain.head_state, orders, logs)
@@ -40,6 +41,7 @@ def test_publicBuyCompleteSets(fundedRepFixture):
     assert cash.balanceOf(market.address) == cost, "Increase in market's cash should equal the cost to purchase the complete set"
     assert yesShareToken.totalSupply() == 10, "Increase in yes shares purchased for this market should be 10"
     assert noShareToken.totalSupply() == 10, "Increase in yes shares purchased for this market should be 10"
+    assert universe.getOpenInterestInAttoEth() == cost, "Open interest in the universe increases by the cost in ETH of the sets purchased"
 
 def test_publicBuyCompleteSets_failure(fundedRepFixture):
     universe = fundedRepFixture.universe
@@ -77,11 +79,14 @@ def test_publicSellCompleteSets(fundedRepFixture):
     assert not noShareToken.totalSupply()
 
     cost = 10 * market.getNumTicks()
+    assert universe.getOpenInterestInAttoEth() == 0
     completeSets.publicBuyCompleteSets(market.address, 10, sender = tester.k1, value = cost)
+    assert universe.getOpenInterestInAttoEth() == 10 * market.getNumTicks()
     captureFilteredLogs(fundedRepFixture.chain.head_state, orders, logs)
     initialTester1ETH = fundedRepFixture.utils.getETHBalance(tester.a1)
     initialTester0ETH = fundedRepFixture.utils.getETHBalance(tester.a0)
     result = completeSets.publicSellCompleteSets(market.address, 9, sender=tester.k1)
+    assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
 
     assert logs == [
         {

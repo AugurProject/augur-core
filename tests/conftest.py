@@ -139,8 +139,14 @@ class ContractsFixture:
     ####
 
     def __init__(self):
-        tester.GASPRICE = 0
+        config_metropolis['GASLIMIT_ADJMAX_FACTOR'] = .000000000001
+        config_metropolis['GENESIS_GAS_LIMIT'] = 2**60
+        config_metropolis['MIN_GAS_LIMIT'] = 2**60
         config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
+
+        for a in range(10):
+            tester.base_alloc[getattr(tester, 'a%i' % a)] = {'balance': 10**24}
+
         self.chain = tester.Chain(env=Env(config=config_metropolis))
         self.contracts = {}
         self.controller = self.upload('../source/contracts/Controller.sol')
@@ -300,14 +306,16 @@ class ContractsFixture:
         return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks)
 
     def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks):
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
+        reportingWindowAddress = universe.getCurrentReportingWindow()
+        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(reportingWindowAddress) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts(reportingWindowAddress)
         marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
     def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress):
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.getCurrentReportingWindow()) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts()
+        reportingWindowAddress = universe.getCurrentReportingWindow()
+        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(reportingWindowAddress) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts(reportingWindowAddress)
         marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)

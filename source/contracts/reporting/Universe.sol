@@ -14,9 +14,12 @@ import 'reporting/IDisputeBond.sol';
 import 'reporting/IRegistrationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
+import 'libraries/math/SafeMathUint256.sol';
 
 
 contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
+    using SafeMathUint256 for uint256;
+
     IUniverse private parentUniverse;
     bytes32 private parentPayoutDistributionHash;
     IReputationToken private reputationToken;
@@ -24,6 +27,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     uint256 private forkEndTime;
     mapping(uint256 => IReportingWindow) private reportingWindows;
     mapping(bytes32 => IUniverse) private childUniverses;
+    uint256 private openInterestInAttoEth;
 
     function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external beforeInitialized returns (bool) {
         endInitialization();
@@ -218,5 +222,18 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
 
     function getReportingWindowForForkEndTime() public constant returns (IReportingWindow) {
         return getReportingWindowByTimestamp(getForkEndTime());
+    }
+
+    function decrementOpenInterest(uint256 _amount) public onlyWhitelistedCallers returns (bool) {
+        openInterestInAttoEth = openInterestInAttoEth.sub(_amount); 
+    }
+
+    // CONSIDER: It would be more correct to decrease open interest for all outstanding shares in a market when it is finalized. We aren't doing this currently since securely and correctly writing this code would require updating the Market contract, which is currently at its size limit.
+    function incrementOpenInterest(uint256 _amount) public onlyWhitelistedCallers returns (bool) {
+        openInterestInAttoEth = openInterestInAttoEth.add(_amount); 
+    }
+
+    function getOpenInterestInAttoEth() public constant returns (uint256) {
+        return openInterestInAttoEth;
     }
 }

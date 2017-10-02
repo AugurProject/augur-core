@@ -21,10 +21,13 @@ contract IUniverse is Typed {
     function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasDesignatedReporter) public returns (IReportingWindow);
     function getNextReportingWindow() public returns (IReportingWindow);
     function getReportingWindowForForkEndTime() public constant returns (IReportingWindow);
+    function getOpenInterestInAttoEth() public constant returns (uint256);
     function isParentOf(IUniverse _shadyChild) constant returns (bool);
     function isContainerForReportingWindow(Typed _shadyTarget) public constant returns (bool);
     function isContainerForRegistrationToken(Typed _shadyTarget) public constant returns (bool);
     function isContainerForMarket(Typed _shadyTarget) public constant returns (bool);
     function isContainerForReportingToken(Typed _shadyTarget) public constant returns (bool);
     function isContainerForShareToken(Typed _shadyTarget) public constant returns (bool);
+    function decrementOpenInterest(uint256 _amount) public returns (bool);
+    function incrementOpenInterest(uint256 _amount) public returns (bool);
 }

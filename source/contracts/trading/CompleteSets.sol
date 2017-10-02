@@ -37,6 +37,8 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
             _market.getShareToken(_outcome).createShares(_sender, _amount);
         }
 
+        _market.getUniverse().incrementOpenInterest(_cost);
+
         IOrders(controller.lookup("Orders")).buyCompleteSetsLog(_sender, _market, _amount, _numOutcomes);
         return true;
     }
@@ -53,6 +55,7 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
         ICash _denominationToken = _market.getDenominationToken();
         uint256 _marketCreatorFeeRate = _market.getMarketCreatorSettlementFeeInAttoethPerEth();
         uint256 _payout = _amount.mul(_market.getNumTicks());
+        _market.getUniverse().decrementOpenInterest(_payout);
         uint256 _marketCreatorFee = _payout.mul(_marketCreatorFeeRate).div(1 ether);
         IReportingWindow _reportingWindow = _market.getReportingWindow();
         uint256 _reportingFeeRate = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getReportingFeeInAttoethPerEth(_reportingWindow);

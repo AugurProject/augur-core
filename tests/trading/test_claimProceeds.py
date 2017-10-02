@@ -68,7 +68,8 @@ def test_helpers(fundedRepFixture):
     assert claimProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
     assert claimProceeds.calculateProceeds(market.getFinalWinningReportingToken(), YES, 7) == 7 * market.getNumTicks()
     assert claimProceeds.calculateProceeds(market.getFinalWinningReportingToken(), NO, fix('11')) == fix('0')
-    (shareholderShare, creatorShare, reporterShare) = claimProceeds.divideUpWinnings(market.address, market.getFinalWinningReportingToken(), YES, 13)
+    (proceeds, shareholderShare, creatorShare, reporterShare) = claimProceeds.divideUpWinnings(market.address, market.getFinalWinningReportingToken(), YES, 13)
+    assert proceeds == 13.0 * market.getNumTicks()
     assert reporterShare == 13.0 * market.getNumTicks() * 0.0001
     assert creatorShare == 13.0 * market.getNumTicks() * .01
     assert shareholderShare == 13.0 * market.getNumTicks() * 0.9899
@@ -76,6 +77,7 @@ def test_helpers(fundedRepFixture):
 def test_redeem_shares_in_binary_market(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.binaryMarket
+    universe = fundedRepFixture.universe
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
     yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
@@ -83,10 +85,14 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     expectedFees = expectedValue * 0.0101
     expectedPayout = long(expectedValue - expectedFees)
 
+    assert universe.getOpenInterestInAttoEth() == 0
+
     # get YES shares with a1
     acquireLongShares(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k1)
+    assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
     # get NO shares with a2
     acquireShortShareSet(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k2)
+    assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
     finalizeMarket(fundedRepFixture.chain.head_state, market, [0,10**18])
 
     # redeem shares with a1
@@ -103,10 +109,12 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a2) == 0
+    assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks() # The corresponding share for tester2's complete set has not been redeemed
 
 def test_redeem_shares_in_categorical_market(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.categoricalMarket
+    universe = fundedRepFixture.universe
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
     shareToken2 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(2))
     shareToken1 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(1))
@@ -115,10 +123,14 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     expectedFees = expectedValue * 0.0101
     expectedPayout = long(expectedValue - expectedFees)
 
+    assert universe.getOpenInterestInAttoEth() == 0
+
     # get long shares with a1
     acquireLongShares(fundedRepFixture, market, 2, 1, claimProceeds.address, sender = tester.k1)
+    assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
     # get short shares with a2
     acquireShortShareSet(fundedRepFixture, market, 2, 1, claimProceeds.address, sender = tester.k2)
+    assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
     finalizeMarket(fundedRepFixture.chain.head_state, market, [0, 0, 3 * 10 ** 17])
 
     # redeem shares with a1
@@ -137,10 +149,12 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     assert shareToken1.balanceOf(tester.a2) == 0
     assert shareToken0.balanceOf(tester.a1) == 0
     assert shareToken0.balanceOf(tester.a2) == 0
+    assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
 
 def test_redeem_shares_in_scalar_market(fundedRepFixture):
     cash = fundedRepFixture.cash
     market = fundedRepFixture.scalarMarket
+    universe = fundedRepFixture.universe
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
     yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
@@ -148,10 +162,14 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     expectedFees = expectedValue * 0.0101
     expectedPayout = long(expectedValue - expectedFees)
 
+    assert universe.getOpenInterestInAttoEth() == 0
+
     # get YES shares with a1
     acquireLongShares(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k1)
+    assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
     # get NO shares with a2
     acquireShortShareSet(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k2)
+    assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
     finalizeMarket(fundedRepFixture.chain.head_state, market, [10**19, 3*10**19])
 
     # redeem shares with a1
@@ -168,6 +186,7 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a2) == 0
+    assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
 
 def test_reedem_failure(fundedRepFixture):
     cash = fundedRepFixture.cash

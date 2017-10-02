@@ -3,45 +3,81 @@ pragma solidity ^0.4.13;
 import 'reporting/IReputationToken.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReportingWindow.sol';
+import 'libraries/math/SafeMathUint256.sol';
+import 'reporting/Reporting.sol';
 
 
 contract MarketFeeCalculator {
+    using SafeMathUint256 for uint256;
+
     mapping (address => uint256) private shareSettlementPerEthFee;
     mapping (address => uint256) private validityBondInAttoeth;
+    mapping (address => uint256) private targetReporterGasCosts;
+
+    uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
+    uint256 private constant TARGET_INDETERMINATE_MARKETS_DIVISOR = 100; // 1% of markets
+    uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
 
     function getValidityBond(IReportingWindow _reportingWindow) public returns (uint256) {
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
         if (_currentValidityBondInAttoeth != 0) {
             return _currentValidityBondInAttoeth;
         }
-        // TODO: get the real data for this
-        uint256 _indeterminateMarketsInPreviousWindow = 10;
-        // TODO: get the real data for this
-        uint256 _totalMarketsInPreviousWindow = 1000;
-        uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
-        IUniverse _universe = _reportingWindow.getUniverse();
-        IReportingWindow _previousReportingWindow = _universe.getReportingWindowByTimestamp(_previousTimestamp);
+        IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
+        uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
+        uint256 _indeterminateMarketsInPreviousWindow = _reportingWindow.getNumIndeterminateMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
-        if (_previousValidityBondInAttoeth == 0) {
-            _previousValidityBondInAttoeth = 1 * 10 ** 16;
-        }
-        uint256 _targetIndeterminateMarketsPerHundred = 1;
-        _currentValidityBondInAttoeth = _previousValidityBondInAttoeth * _targetIndeterminateMarketsPerHundred * _totalMarketsInPreviousWindow / _indeterminateMarketsInPreviousWindow / 100;
+
+        _currentValidityBondInAttoeth = calculateValidityBond(_indeterminateMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INDETERMINATE_MARKETS_DIVISOR, _previousValidityBondInAttoeth);
         validityBondInAttoeth[_reportingWindow] = _currentValidityBondInAttoeth;
         return _currentValidityBondInAttoeth;
     }
 
-    function getTargetReporterGasCosts() constant public returns (uint256) {
-        // TODO: get number of registration tokens issued last period
-        // TODO: get target reporter count + wiggle room
-        // TODO: calculate estimated reporters per market
-        uint256 _estimatedReportsPerMarket = 10;
-        // TODO: figure out what the number actually is
-        uint256 _gasToReport = 100000;
-        // we double it to ensure we have more than enough rather than not enough
-        uint256 _estimatedReportingGas = _gasToReport * _estimatedReportsPerMarket * 2;
-        // TODO: multiply this by average gas costs of reporters historically
-        return _estimatedReportingGas;
+    function calculateValidityBond(uint256 _indeterminateMarkets, uint256 _totalMarkets, uint256 _targetIndeterminateMarketsDivisor, uint256 _previousValidityBondInAttoeth) constant public returns (uint256) {
+        if (_totalMarkets == 0) {
+            return DEFAULT_VALIDITY_BOND;
+        }
+        if (_previousValidityBondInAttoeth == 0) {
+            _previousValidityBondInAttoeth = DEFAULT_VALIDITY_BOND;
+        }
+        
+        uint256 _targetIndeterminateMarkets = _totalMarkets.div(_targetIndeterminateMarketsDivisor);
+
+        // Modify the validity bond based on the previous amount and the number of indeterminate markets. We want the bond to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets being indeterminate results in 2x and 0 indeterminate results in 0.5x.
+        if (_indeterminateMarkets <= _targetIndeterminateMarkets) {
+            // FXP formula: previous_bond * percent_invalid / (2 * target_percent_invalid) + 0.5;
+            return _indeterminateMarkets
+                .mul(_previousValidityBondInAttoeth)
+                .mul(_targetIndeterminateMarketsDivisor)
+                .div(_totalMarkets)
+                .div(2)
+                .add(_previousValidityBondInAttoeth.div(2))
+            ; // FIXME: This is here due to a solium bug
+        } else {
+            // FXP formula: previous_bond * (1/(1 - target_percent_invalid)) * (percent_invalid - target_percent_invalid) + 1;
+            return _targetIndeterminateMarketsDivisor
+                .mul(_previousValidityBondInAttoeth.mul(_indeterminateMarkets)
+                .div(_totalMarkets)
+                .sub(_previousValidityBondInAttoeth.div(_targetIndeterminateMarketsDivisor)))
+                .div(_targetIndeterminateMarketsDivisor - 1)
+                .add(_previousValidityBondInAttoeth)
+            ; // FIXME: This is here due to a solium bug
+        }
+    }
+
+    function getTargetReporterGasCosts(IReportingWindow _reportingWindow) constant public returns (uint256) {
+        uint256 _gasToReport = targetReporterGasCosts[_reportingWindow];
+        if (_gasToReport != 0) {
+            return _gasToReport;
+        }
+
+        IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
+        uint256 _estimatedReportsPerMarket = _previousReportingWindow.getAvgReportsPerMarket();
+        uint256 _avgGasCost = _previousReportingWindow.getAvgReportingGasCost();
+        _gasToReport = Reporting.gasToReport();
+        // we double it to try and ensure we have more than enough rather than not enough
+        targetReporterGasCosts[_reportingWindow] = _gasToReport * _estimatedReportsPerMarket * _avgGasCost * 2;
+        return targetReporterGasCosts[_reportingWindow];
     }
 
     function getReportingFeeInAttoethPerEth(IReportingWindow _reportingWindow) public returns (uint256) {
@@ -53,8 +89,7 @@ contract MarketFeeCalculator {
         IUniverse _universe = _reportingWindow.getUniverse();
         uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth(_universe);
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth(_reportingWindow);
-        uint256 _previousTimestamp = _reportingWindow.getStartTime() - 1;
-        IReportingWindow _previousReportingWindow = _universe.getReportingWindowByTimestamp(_previousTimestamp);
+        IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
         uint256 _previousPerEthFee = shareSettlementPerEthFee[_previousReportingWindow];
         if (_previousPerEthFee == 0) {
             _previousPerEthFee = 1 * 10 ** 16;
@@ -68,27 +103,18 @@ contract MarketFeeCalculator {
     }
 
     function getRepMarketCapInAttoeth(IUniverse _universe) constant public returns (uint256) {
-        // TODO: get these from an auto-generated market
+        // TODO: get this from an auto-generated market or some other special contract
         uint256 _attorepPerEth = 11 * 10 ** 18;
         uint256 _repMarketCapInAttoeth = _universe.getReputationToken().totalSupply() * _attorepPerEth;
         return _repMarketCapInAttoeth;
     }
 
     function getTargetRepMarketCapInAttoeth(IReportingWindow _reportingWindow) constant public returns (uint256) {
-        uint256 _outstandingSharesInAttoeth = getOutstandingSharesInAttoeth(_reportingWindow);
-        uint256 _targetRepMarketCapInAttoeth = _outstandingSharesInAttoeth * 5;
-        return _targetRepMarketCapInAttoeth;
-    }
-
-    function getOutstandingSharesInAttoeth(IReportingWindow) constant public returns (uint256) {
-        // TODO: start tracking the real number and store it somewhere
-        // NOTE: make sure we are getting the share value in attoeth, since complete set fees are not normalized across markets
-        // NOTE: eventually we will need to support shares in multiple denominations
-        uint256 _outstandingSharesInAttoeth = 100 * 10 ** 18;
-        return _outstandingSharesInAttoeth;
+        IUniverse _universe = _reportingWindow.getUniverse();
+        return _universe.getOpenInterestInAttoEth() * TARGET_REP_MARKET_CAP_MULTIPLIER;
     }
 
     function getMarketCreationCost(IReportingWindow _reportingWindow) constant public returns (uint256) {
-        return getValidityBond(_reportingWindow) + getTargetReporterGasCosts();
+        return getValidityBond(_reportingWindow) + getTargetReporterGasCosts(_reportingWindow);
     }
 }
