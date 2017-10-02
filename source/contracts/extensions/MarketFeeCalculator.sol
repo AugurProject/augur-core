@@ -47,16 +47,10 @@ contract MarketFeeCalculator {
         uint256 _fxpMultiple = _fxpBase;
 
         if (_indeterminateMarkets <= _targetIndeterminateMarkets) {
-            _fxpMultiple = _fxpPercentIndeterminate
-                .mul(_targetIndeterminateMarketsDivisor)
-                .div(2)
-                .add(_fxpBase.div(2));
+            _fxpMultiple = _fxpPercentIndeterminate.mul(_targetIndeterminateMarketsDivisor).div(2).add(_fxpBase.div(2));
         } else {
             uint256 _fxpTargetIndeterminateMarkets = _fxpBase.div(_targetIndeterminateMarketsDivisor);
-            _fxpMultiple = _fxpBase
-                .mul(_fxpPercentIndeterminate.sub(_fxpTargetIndeterminateMarkets))
-                .div(_fxpBase.sub(_fxpTargetIndeterminateMarkets))
-                .add(_fxpBase);
+            _fxpMultiple = _fxpBase.mul(_fxpPercentIndeterminate.sub(_fxpTargetIndeterminateMarkets)).div(_fxpBase.sub(_fxpTargetIndeterminateMarkets)).add(_fxpBase);
         }
 
         return _previousValidityBondInAttoeth.fxpMul(_fxpMultiple, _fxpBase);
