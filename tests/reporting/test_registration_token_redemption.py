@@ -211,6 +211,7 @@ def registrationTokenRedemptionSnapshot(sessionFixture):
     # Move to the next reporting window for these tests as we want to control market creation and reporting in isolation
     originalReportingWindow = sessionFixture.applySignature('ReportingWindow', sessionFixture.binaryMarket.getReportingWindow())
     sessionFixture.chain.head_state.timestamp = originalReportingWindow.getEndTime() + 1
+    sessionFixture.chain.mine()
     market = sessionFixture.market1 = sessionFixture.createReasonableBinaryMarket(sessionFixture.universe, sessionFixture.cash)
     return initializeReportingFixture(sessionFixture, market)
 
