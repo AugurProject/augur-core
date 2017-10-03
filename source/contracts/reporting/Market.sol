@@ -315,7 +315,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function doFeePayout(bool _toOwner, uint256 _amount) private returns (bool) {
         if (_toOwner) {
-            getOwner().transfer(_amount);
+            getOwner().call.value(_amount)();
         } else {
             getReportingWindow().receiveValidityBond.value(_amount)();
         }
