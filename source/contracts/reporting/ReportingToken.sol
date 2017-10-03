@@ -166,12 +166,12 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return payoutNumerators[index];
     }
 
-    function isIndeterminate() public constant returns (bool) {
+    function isValid() public constant returns (bool) {
         for (uint8 i = 1; i < payoutNumerators.length; i++) {
             if (payoutNumerators[0] != payoutNumerators[i]) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 }

@@ -4,7 +4,7 @@ from reporting_utils import proceedToLimitedReporting, initializeReportingFixtur
 
 ONE = 10 ** 18
 
-@mark.parametrize('numIndeterminate, targetIndeterminatePerHundred, previousBond, expectedValue', [
+@mark.parametrize('numInvalid, targetInvalidPerHundred, previousBond, expectedValue', [
     # No change
     (1, 1, ONE, ONE),
     (5, 5, ONE, ONE),
@@ -34,10 +34,10 @@ ONE = 10 ** 18
     (80, 50, 10 * ONE, 16 * ONE),
     (90, 50, 10 * ONE, 18 * ONE),
 ])
-def test_validity_bond_calculation(numIndeterminate, targetIndeterminatePerHundred, previousBond, expectedValue, contractsFixture):
+def test_validity_bond_calculation(numInvalid, targetInvalidPerHundred, previousBond, expectedValue, contractsFixture):
     feeCalculator = contractsFixture.contracts["MarketFeeCalculator"]
-    targetIndeterminateDivisor = 100 / targetIndeterminatePerHundred
-    newBond = feeCalculator.calculateValidityBond(numIndeterminate, 100, targetIndeterminateDivisor, previousBond)
+    targetInvalidDivisor = 100 / targetInvalidPerHundred
+    newBond = feeCalculator.calculateValidityBond(numInvalid, 100, targetInvalidDivisor, previousBond)
     assert newBond == expectedValue
 
 def test_default_target_reporter_gas_costs(contractsFixture):

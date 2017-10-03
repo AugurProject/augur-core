@@ -123,7 +123,7 @@ def test_reportingFullHappyPath(reportingFixture):
     increaseInReportingWindowBalance = reportingFixture.utils.getETHBalance(reportingWindow.address) - initialReportingWindowETHBalance
     assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
 
-    # Since the designated report was not indeterminate the market creator gets back the validity bond
+    # Since the designated report was not invalid the market creator gets back the validity bond
     increaseInMarketCreatorBalance = reportingFixture.utils.getETHBalance(market.getOwner()) - initialMarketCreatorETHBalance
     assert increaseInMarketCreatorBalance == expectedMarketCreatorFeePayout
 
@@ -318,7 +318,7 @@ def test_noReports(reportingFixture, pastDisputePhase):
     assert market.getReportingState() == reportingFixture.constants.LIMITED_REPORTING()
     assert market.getReportingWindow() != reportingWindow.address
 
-def test_indeterminate_limited_report(reportingFixture):
+def test_invalid_limited_report(reportingFixture):
     market = reportingFixture.binaryMarket
     universe = reportingFixture.universe
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
@@ -328,26 +328,26 @@ def test_indeterminate_limited_report(reportingFixture):
     # Proceed to the LIMITED REPORTING phase
     proceedToLimitedReporting(reportingFixture, market, False, tester.k1, [0,10**18])
 
-    # We make an indeterminate report
-    reportingTokenIndeterminate = reportingFixture.getReportingToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
-    reportingTokenIndeterminate.buy(1, sender=tester.k2)
-    assert reportingTokenIndeterminate.balanceOf(tester.a2) == 1
+    # We make an invalid report
+    reportingTokenInvalid = reportingFixture.getReportingToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
+    reportingTokenInvalid.buy(1, sender=tester.k2)
+    assert reportingTokenInvalid.balanceOf(tester.a2) == 1
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-    assert tentativeWinner == reportingTokenIndeterminate.getPayoutDistributionHash()
-    assert reportingTokenIndeterminate.isIndeterminate()
+    assert tentativeWinner == reportingTokenInvalid.getPayoutDistributionHash()
+    assert not reportingTokenInvalid.isValid()
 
-    # If we finalize the market it will be recorded as an indeterminate result
+    # If we finalize the market it will be recorded as an invalid result
     initialReportingWindowETHBalance = reportingFixture.utils.getETHBalance(reportingWindow.address)
     reportingFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
     assert market.tryFinalize()
-    assert market.isIndeterminate()
-    assert reportingWindow.getNumIndeterminateMarkets() == 1
+    assert not market.isValid()
+    assert reportingWindow.getNumInvalidMarkets() == 1
 
-    # Since the market resolved with an indeterminate outcome the validity bond is paid out to the reporting window along with the reporter gas cost fee
+    # Since the market resolved with an invalid outcome the validity bond is paid out to the reporting window along with the reporter gas cost fee
     increaseInReportingWindowBalance = reportingFixture.utils.getETHBalance(reportingWindow.address) - initialReportingWindowETHBalance
     assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
 
-def test_indeterminate_designated_report(reportingFixture):
+def test_invalid_designated_report(reportingFixture):
     market = reportingFixture.binaryMarket
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
     expectedReportingWindowFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getValidityBond(reportingWindow.address)
@@ -356,7 +356,7 @@ def test_indeterminate_designated_report(reportingFixture):
     # Proceed to the DESIGNATED REPORTING phase
     proceedToDesignatedReporting(reportingFixture, market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
 
-    # To progress into the DESIGNATED DISPUTE phase we do a designated report of indeterminate
+    # To progress into the DESIGNATED DISPUTE phase we do a designated report of invalid
     assert market.designatedReport([long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], sender=tester.k0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
@@ -368,14 +368,14 @@ def test_indeterminate_designated_report(reportingFixture):
     # The market is awaiting finalization now
     assert market.getReportingState() == reportingFixture.constants.AWAITING_FINALIZATION()
 
-    # If we finalize the market it will be recorded as an indeterminate result
+    # If we finalize the market it will be recorded as an invalid result
     initialReportingWindowETHBalance = reportingFixture.utils.getETHBalance(reportingWindow.address)
     initialMarketCreatorETHBalance = reportingFixture.utils.getETHBalance(market.getOwner())
     assert market.tryFinalize()
-    assert market.isIndeterminate()
-    assert reportingWindow.getNumIndeterminateMarkets() == 1
+    assert not market.isValid()
+    assert reportingWindow.getNumInvalidMarkets() == 1
 
-    # Since the market resolved with an indeterminate outcome the validity bond is paid out to the reporting window
+    # Since the market resolved with an invalid outcome the validity bond is paid out to the reporting window
     increaseInReportingWindowBalance = reportingFixture.utils.getETHBalance(reportingWindow.address) - initialReportingWindowETHBalance
     assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
 

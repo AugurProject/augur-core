@@ -15,7 +15,7 @@ contract MarketFeeCalculator {
     mapping (address => uint256) private targetReporterGasCosts;
 
     uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
-    uint256 private constant TARGET_INDETERMINATE_MARKETS_DIVISOR = 100; // 1% of markets
+    uint256 private constant TARGET_INVALID_MARKETS_DIVISOR = 100; // 1% of markets
     uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
 
     function getValidityBond(IReportingWindow _reportingWindow) public returns (uint256) {
@@ -25,15 +25,15 @@ contract MarketFeeCalculator {
         }
         IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
         uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
-        uint256 _indeterminateMarketsInPreviousWindow = _reportingWindow.getNumIndeterminateMarkets();
+        uint256 _invalidMarketsInPreviousWindow = _reportingWindow.getNumInvalidMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
 
-        _currentValidityBondInAttoeth = calculateValidityBond(_indeterminateMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INDETERMINATE_MARKETS_DIVISOR, _previousValidityBondInAttoeth);
+        _currentValidityBondInAttoeth = calculateValidityBond(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INVALID_MARKETS_DIVISOR, _previousValidityBondInAttoeth);
         validityBondInAttoeth[_reportingWindow] = _currentValidityBondInAttoeth;
         return _currentValidityBondInAttoeth;
     }
 
-    function calculateValidityBond(uint256 _indeterminateMarkets, uint256 _totalMarkets, uint256 _targetIndeterminateMarketsDivisor, uint256 _previousValidityBondInAttoeth) constant public returns (uint256) {
+    function calculateValidityBond(uint256 _invalidMarkets, uint256 _totalMarkets, uint256 _targetInvalidMarketsDivisor, uint256 _previousValidityBondInAttoeth) constant public returns (uint256) {
         if (_totalMarkets == 0) {
             return DEFAULT_VALIDITY_BOND;
         }
@@ -41,25 +41,25 @@ contract MarketFeeCalculator {
             _previousValidityBondInAttoeth = DEFAULT_VALIDITY_BOND;
         }
         
-        uint256 _targetIndeterminateMarkets = _totalMarkets.div(_targetIndeterminateMarketsDivisor);
+        uint256 _targetInvalidMarkets = _totalMarkets.div(_targetInvalidMarketsDivisor);
 
-        // Modify the validity bond based on the previous amount and the number of indeterminate markets. We want the bond to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets being indeterminate results in 2x and 0 indeterminate results in 0.5x.
-        if (_indeterminateMarkets <= _targetIndeterminateMarkets) {
+        // Modify the validity bond based on the previous amount and the number of invalid markets. We want the bond to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets being invalid results in 2x and 0 invalid results in 0.5x.
+        if (_invalidMarkets <= _targetInvalidMarkets) {
             // FXP formula: previous_bond * percent_invalid / (2 * target_percent_invalid) + 0.5;
-            return _indeterminateMarkets
+            return _invalidMarkets
                 .mul(_previousValidityBondInAttoeth)
-                .mul(_targetIndeterminateMarketsDivisor)
+                .mul(_targetInvalidMarketsDivisor)
                 .div(_totalMarkets)
                 .div(2)
                 .add(_previousValidityBondInAttoeth.div(2))
             ; // FIXME: This is here due to a solium bug
         } else {
             // FXP formula: previous_bond * (1/(1 - target_percent_invalid)) * (percent_invalid - target_percent_invalid) + 1;
-            return _targetIndeterminateMarketsDivisor
-                .mul(_previousValidityBondInAttoeth.mul(_indeterminateMarkets)
+            return _targetInvalidMarketsDivisor
+                .mul(_previousValidityBondInAttoeth.mul(_invalidMarkets)
                 .div(_totalMarkets)
-                .sub(_previousValidityBondInAttoeth.div(_targetIndeterminateMarketsDivisor)))
-                .div(_targetIndeterminateMarketsDivisor - 1)
+                .sub(_previousValidityBondInAttoeth.div(_targetInvalidMarketsDivisor)))
+                .div(_targetInvalidMarketsDivisor - 1)
                 .add(_previousValidityBondInAttoeth)
             ; // FIXME: This is here due to a solium bug
         }

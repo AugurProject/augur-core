@@ -22,7 +22,7 @@ contract IReportingWindow is Typed {
     function getStartTime() public constant returns (uint256);
     function getEndTime() public constant returns (uint256);
     function getNumMarkets() public constant returns (uint256);
-    function getNumIndeterminateMarkets() public constant returns (uint256);
+    function getNumInvalidMarkets() public constant returns (uint256);
     function getMaxReportsPerLimitedReporterMarket() public constant returns (uint256);
     function getAvgReportingGasCost() public constant returns (uint256);
     function getAvgReportsPerMarket() public constant returns (uint256);

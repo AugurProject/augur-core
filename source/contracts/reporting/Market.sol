@@ -52,7 +52,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     IDisputeBond private limitedReportersDisputeBondToken;
     IDisputeBond private allReportersDisputeBondToken;
     uint256 private validityBondAttoeth;
-    uint256 private reporterCasCostsFeeAttoeth;
+    uint256 private reporterGasCostsFeeAttoeth;
 
     /**
      * @dev Makes the function trigger a migration before execution
@@ -64,18 +64,16 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable beforeInitialized returns (bool _success) {
         endInitialization();
-        require(_numOutcomes >= 2 && _numOutcomes <= 8);
+        require(2 <= _numOutcomes && _numOutcomes <= 8);
         require((_numTicks.isMultipleOf(_numOutcomes)));
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(_cash.getTypeName() == "Cash");
         reportingWindow = _reportingWindow;
         require(address(getForkingMarket()) == NULL_ADDRESS);
-        // CONSIDER: should we allow creator to send extra ETH, is there risk of variability in bond requirements?
         MarketFeeCalculator _marketFeeCaluclator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
-        reporterCasCostsFeeAttoeth = _marketFeeCaluclator.getTargetReporterGasCosts(_reportingWindow);
+        reporterGasCostsFeeAttoeth = _marketFeeCaluclator.getTargetReporterGasCosts(_reportingWindow);
         validityBondAttoeth = _marketFeeCaluclator.getValidityBond(_reportingWindow);
-        require(msg.value == (reporterCasCostsFeeAttoeth + validityBondAttoeth));
         endTime = _endTime;
         numOutcomes = _numOutcomes;
         numTicks = _numTicks;
@@ -88,6 +86,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
+        // TODO: Refund msg.value - (reporterGasCostsFeeAttoeth + validityBondAttoeth)
         return true;
     }
 
@@ -153,6 +152,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function migrateReportingWindow(IReportingWindow _newReportingWindow) private afterInitialized returns (bool) {
+        // NOTE: This really belongs out of this function and in the dispute functions. It's only here to save on contract size for now
         updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         _newReportingWindow.migrateMarketInFromSibling();
         reportingWindow.removeMarket();
@@ -232,10 +232,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
         finalizationTime = block.timestamp;
         transferIncorrectDisputeBondsToWinningReportingToken();
-        // The validity bond is paid to the owner in any indeterminate outcome and the reporting window otherwise
-        doFeePayout(!isIndeterminate(), validityBondAttoeth);
+        // The validity bond is paid to the owner in any valid outcome and the reporting window otherwise
+        doFeePayout(isValid(), validityBondAttoeth);
         // The reporter gas costs are paid to the owner if the designated report was correct and the reporting window otherwise
-        doFeePayout(finalPayoutDistributionHash == designatedReportPayoutHash, reporterCasCostsFeeAttoeth);
+        doFeePayout(finalPayoutDistributionHash == designatedReportPayoutHash, reporterGasCostsFeeAttoeth);
         reportingWindow.updateMarketPhase();
         return true;
 
@@ -317,7 +317,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         if (_toOwner) {
             getOwner().transfer(_amount);
         } else {
-            // We can't do a simple transfer here since the reporting window is a delegated contract and the fallback function will fail on a standard send/transfer
             getReportingWindow().receiveValidityBond.value(_amount)();
         }
         return true;
@@ -444,9 +443,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     // CONSIDER: Would it be helpful to add modifiers for this contract like "onlyAfterFinalized" that could protect a function such as this?
-    function isIndeterminate() public constant returns (bool) {
+    function isValid() public constant returns (bool) {
         IReportingToken _winningReportingToken = getFinalWinningReportingToken();
-        return _winningReportingToken.isIndeterminate();
+        return _winningReportingToken.isValid();
     }
 
     function getDesignatedReportDueTimestamp() public constant returns (uint256) {
