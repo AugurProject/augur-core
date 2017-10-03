@@ -95,25 +95,6 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture):
     targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(universe.getCurrentReportingWindow())
     assert targetReporterGasCosts == expectedTargetReporterGasCost 
 
-def test_gas_to_report(reportingFixture):
-    # Confirm that the gas to report fee is consistent with out stored value. This test will fail if the gas cost changes.
-    market = reportingFixture.binaryMarket
-    universe = reportingFixture.universe
-    reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())
-
-    # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(reportingFixture, market, True, tester.k1, [0,10**18])
-
-    # We make a report and record gas cost
-    reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
-    startingGas = reportingFixture.chain.head_state.gas_used
-    reportingTokenYes.buy(1, sender=tester.k2)
-    gasUsed = reportingFixture.chain.head_state.gas_used - startingGas
-
-    # Confirm the estimated gas cost is within an exceptable range
-    assert abs(gasUsed - reportingFixture.constants.GAS_TO_REPORT()) < 100000
-
 @fixture(scope="session")
 def reportingSnapshot(sessionFixture):
     sessionFixture.resetSnapshot()
