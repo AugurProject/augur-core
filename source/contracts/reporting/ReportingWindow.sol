@@ -36,12 +36,13 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set.Data private markets;
     Set.Data private limitedReporterMarkets;
     Set.Data private allReporterMarkets;
-    uint256 private indeterminateMarketCount;
+    uint256 private invalidMarketCount;
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
     RunningAverage.Data private reportingGasPrice;
     RunningAverage.Data private marketReports;
+    uint256 private totalWinningReportingTokens;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -114,10 +115,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         }
 
         if (_state == IMarket.ReportingState.FINALIZED) {
-            if (_market.isIndeterminate()) {
-                indeterminateMarketCount++;
+            if (!_market.isValid()) {
+                invalidMarketCount++;
             }
             marketReports.record(numberOfReportsByMarket[_market]);
+            totalWinningReportingTokens = totalWinningReportingTokens.add(_market.getFinalWinningReportingToken().totalSupply());
         }
 
         return true;
@@ -175,8 +177,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return markets.count;
     }
 
-    function getNumIndeterminateMarkets() public afterInitialized constant returns (uint256) {
-        return indeterminateMarketCount;
+    function getNumInvalidMarkets() public afterInitialized constant returns (uint256) {
+        return invalidMarketCount;
     }
 
     function getReportingStartTime() public afterInitialized constant returns (uint256) {
@@ -331,5 +333,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function isForkingMarketFinalized() public afterInitialized constant returns (bool) {
         return getUniverse().getForkingMarket().getReportingState() == IMarket.ReportingState.FINALIZED;
+    }
+
+    function receiveValidityBond() public payable returns (bool) {
+        IMarket _market = IMarket(msg.sender);
+        require(markets.contains(_market));
+        return true;
     }
 }

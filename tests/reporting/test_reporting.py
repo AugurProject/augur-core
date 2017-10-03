@@ -13,6 +13,9 @@ def test_reportingFullHappyPath(reportingFixture):
     reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())
     reportingTokenNo = reportingFixture.getReportingToken(market, [10**18,0])
     reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
+    reportingWindow = reportingFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
+    expectedMarketCreatorFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getValidityBond(reportingWindow.address)
+    expectedReportingWindowFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getTargetReporterGasCosts(reportingWindow.address)
 
     # We can't yet report on the market as it's in the pre reporting phase
     assert market.getReportingState() == reportingFixture.constants.PRE_REPORTING()
@@ -20,7 +23,6 @@ def test_reportingFullHappyPath(reportingFixture):
         reportingTokenNo.buy(100, sender=tester.k0)
 
     # Fast forward to one second after the next reporting window
-    reportingWindow = reportingFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
     reportingFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
 
     # This will cause us to be in the limited reporting phase
@@ -109,16 +111,25 @@ def test_reportingFullHappyPath(reportingFixture):
     assert noUniverseReputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18 - 2 * 10 ** 18 - 2
 
     # We can finalize the market now since a mjaority of REP has moved. Alternatively we could "reportingFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1" to move
+    initialReportingWindowETHBalance = reportingFixture.utils.getETHBalance(reportingWindow.address)
+    initialMarketCreatorETHBalance = reportingFixture.utils.getETHBalance(market.getOwner())
     assert market.tryFinalize()
 
     # The market is now finalized and the NO outcome is the winner
     assert market.getReportingState() == reportingFixture.constants.FINALIZED()
     assert market.getFinalWinningReportingToken() == reportingTokenNo.address
 
+    # Since the market resolved with an outcome other than what the designated reporter made the reporter gas fees are paid out to the reporting window
+    increaseInReportingWindowBalance = reportingFixture.utils.getETHBalance(reportingWindow.address) - initialReportingWindowETHBalance
+    assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
+
+    # Since the designated report was not invalid the market creator gets back the validity bond
+    increaseInMarketCreatorBalance = reportingFixture.utils.getETHBalance(market.getOwner()) - initialMarketCreatorETHBalance
+    assert increaseInMarketCreatorBalance == expectedMarketCreatorFeePayout
+
     # We can redeem forked REP on any universe we didn't dispute
     assert reportingTokenNo.redeemForkedTokens(sender = tester.k0)
     assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 -10 ** 18 - 11000 * 10 ** 18
-
 
 def test_designatedReportingHappyPath(reportingFixture):
     market = reportingFixture.binaryMarket
@@ -307,37 +318,45 @@ def test_noReports(reportingFixture, pastDisputePhase):
     assert market.getReportingState() == reportingFixture.constants.LIMITED_REPORTING()
     assert market.getReportingWindow() != reportingWindow.address
 
-def test_indeterminate_limited_report(reportingFixture):
+def test_invalid_limited_report(reportingFixture):
     market = reportingFixture.binaryMarket
     universe = reportingFixture.universe
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())
+    expectedReportingWindowFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getMarketCreationCost(reportingWindow.address)
 
     # Proceed to the LIMITED REPORTING phase
     proceedToLimitedReporting(reportingFixture, market, False, tester.k1, [0,10**18])
 
-    # We make an indeterminate report
-    reportingTokenIndeterminate = reportingFixture.getReportingToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
-    reportingTokenIndeterminate.buy(1, sender=tester.k2)
-    assert reportingTokenIndeterminate.balanceOf(tester.a2) == 1
+    # We make an invalid report
+    reportingTokenInvalid = reportingFixture.getReportingToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
+    reportingTokenInvalid.buy(1, sender=tester.k2)
+    assert reportingTokenInvalid.balanceOf(tester.a2) == 1
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-    assert tentativeWinner == reportingTokenIndeterminate.getPayoutDistributionHash()
-    assert reportingTokenIndeterminate.isIndeterminate()
+    assert tentativeWinner == reportingTokenInvalid.getPayoutDistributionHash()
+    assert not reportingTokenInvalid.isValid()
 
-    # If we finalize the market it will be recorded as an indeterminate result
+    # If we finalize the market it will be recorded as an invalid result
+    initialReportingWindowETHBalance = reportingFixture.utils.getETHBalance(reportingWindow.address)
     reportingFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
     assert market.tryFinalize()
-    assert market.isIndeterminate()
-    assert reportingWindow.getNumIndeterminateMarkets() == 1
+    assert not market.isValid()
+    assert reportingWindow.getNumInvalidMarkets() == 1
 
-def test_indeterminate_designated_report(reportingFixture):
+    # Since the market resolved with an invalid outcome the validity bond is paid out to the reporting window along with the reporter gas cost fee
+    increaseInReportingWindowBalance = reportingFixture.utils.getETHBalance(reportingWindow.address) - initialReportingWindowETHBalance
+    assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
+
+def test_invalid_designated_report(reportingFixture):
     market = reportingFixture.binaryMarket
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    expectedReportingWindowFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getValidityBond(reportingWindow.address)
+    expectedMarketCreatorFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getTargetReporterGasCosts(reportingWindow.address)
 
     # Proceed to the DESIGNATED REPORTING phase
     proceedToDesignatedReporting(reportingFixture, market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
 
-    # To progress into the DESIGNATED DISPUTE phase we do a designated report of indeterminate
+    # To progress into the DESIGNATED DISPUTE phase we do a designated report of invalid
     assert market.designatedReport([long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], sender=tester.k0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
@@ -349,10 +368,20 @@ def test_indeterminate_designated_report(reportingFixture):
     # The market is awaiting finalization now
     assert market.getReportingState() == reportingFixture.constants.AWAITING_FINALIZATION()
 
-    # If we finalize the market it will be recorded as an indeterminate result
+    # If we finalize the market it will be recorded as an invalid result
+    initialReportingWindowETHBalance = reportingFixture.utils.getETHBalance(reportingWindow.address)
+    initialMarketCreatorETHBalance = reportingFixture.utils.getETHBalance(market.getOwner())
     assert market.tryFinalize()
-    assert market.isIndeterminate()
-    assert reportingWindow.getNumIndeterminateMarkets() == 1
+    assert not market.isValid()
+    assert reportingWindow.getNumInvalidMarkets() == 1
+
+    # Since the market resolved with an invalid outcome the validity bond is paid out to the reporting window
+    increaseInReportingWindowBalance = reportingFixture.utils.getETHBalance(reportingWindow.address) - initialReportingWindowETHBalance
+    assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
+
+    # Since the market resolved with the outcome the designated reporter made the market creator still gets back the reporter gas cost fee
+    increaseInMarketCreatorBalance = reportingFixture.utils.getETHBalance(market.getOwner()) - initialMarketCreatorETHBalance
+    assert increaseInMarketCreatorBalance == expectedMarketCreatorFeePayout
 
 @fixture(scope="session")
 def reportingSnapshot(sessionFixture):

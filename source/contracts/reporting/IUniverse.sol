@@ -4,6 +4,7 @@ import 'libraries/Typed.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
+import 'reporting/IReportingToken.sol';
 
 
 contract IUniverse is Typed {

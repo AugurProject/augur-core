@@ -22,7 +22,7 @@ contract IReportingWindow is Typed {
     function getStartTime() public constant returns (uint256);
     function getEndTime() public constant returns (uint256);
     function getNumMarkets() public constant returns (uint256);
-    function getNumIndeterminateMarkets() public constant returns (uint256);
+    function getNumInvalidMarkets() public constant returns (uint256);
     function getMaxReportsPerLimitedReporterMarket() public constant returns (uint256);
     function getAvgReportingGasCost() public constant returns (uint256);
     function getAvgReportsPerMarket() public constant returns (uint256);
@@ -34,4 +34,5 @@ contract IReportingWindow is Typed {
     function isDoneReporting(address _reporter) public constant returns (bool);
     function isForkingMarketFinalized() public constant returns (bool);
     function isDisputeActive() public constant returns (bool);
+    function receiveValidityBond() public payable returns (bool);
 }

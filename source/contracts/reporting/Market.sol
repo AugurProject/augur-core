@@ -43,6 +43,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     IShareToken[] private shareTokens;
     uint256 private finalizationTime;
     uint256 private designatedReportReceivedTime;
+    bytes32 private designatedReportPayoutHash;
     bytes32 private tentativeWinningPayoutDistributionHash;
     // We keep track of the second place winning payout hash since when a dispute bond is placed it counts negatively toward stake and we can't otherwise figure out which outcome to promote. Since we only store two hashes it may be the case that if promotion occurs this value is not actually second place, but there is only one case where promotion occurs in a market's lifetime, so it will no longer be relevant at that point.
     bytes32 private bestGuessSecondPlaceTentativeWinningPayoutDistributionHash;
@@ -51,7 +52,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     IDisputeBond private limitedReportersDisputeBondToken;
     IDisputeBond private allReportersDisputeBondToken;
     uint256 private validityBondAttoeth;
-    uint256 private designatedReporterBondAttoeth;
+    uint256 private reporterGasCostsFeeAttoeth;
 
     /**
      * @dev Makes the function trigger a migration before execution
@@ -63,17 +64,16 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable beforeInitialized returns (bool _success) {
         endInitialization();
-        require(address(_reportingWindow) != NULL_ADDRESS);
-        require(_numOutcomes >= 2);
-        require(_numOutcomes <= 8);
+        require(2 <= _numOutcomes && _numOutcomes <= 8);
         require((_numTicks.isMultipleOf(_numOutcomes)));
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(_cash.getTypeName() == "Cash");
-        // FIXME: require market to be on a non-forking universe; repeat this check up the stack as well if necessary (e.g., in reporting window)
-        // CONSIDER: should we allow creator to send extra ETH, is there risk of variability in bond requirements?
-        require(msg.value == MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getMarketCreationCost(_reportingWindow));
         reportingWindow = _reportingWindow;
+        require(address(getForkingMarket()) == NULL_ADDRESS);
+        MarketFeeCalculator _marketFeeCaluclator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
+        reporterGasCostsFeeAttoeth = _marketFeeCaluclator.getTargetReporterGasCosts(_reportingWindow);
+        validityBondAttoeth = _marketFeeCaluclator.getValidityBond(_reportingWindow);
         endTime = _endTime;
         numOutcomes = _numOutcomes;
         numTicks = _numTicks;
@@ -86,17 +86,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
+        // TODO: Refund msg.value - (reporterGasCostsFeeAttoeth + validityBondAttoeth)
         return true;
-
-        // TODO: we need to update this signature (and all of the places that call it) to allow the creator (UI) to pass in a number of other things which will all be logged here
-        // TODO: log short description
-        // TODO: log long description
-        // TODO: log min display price
-        // TODO: log max display price
-        // TODO: log tags (0-2)
-        // TODO: log outcome labels (same number as numOutcomes)
-        // TODO: log type (scalar, binary, categorical)
-        // TODO: log any immutable data associated with the market (e.g., endTime, numOutcomes, numTicks, cash address, etc.)
     }
 
     function createShareToken(uint8 _outcome) private returns (IShareToken) {
@@ -129,6 +120,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         getReportingToken(_payoutNumerators);
         designatedReportReceivedTime = block.timestamp;
         tentativeWinningPayoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
+        designatedReportPayoutHash = tentativeWinningPayoutDistributionHash;
         reportingWindow.updateMarketPhase();
         return true;
     }
@@ -147,7 +139,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         limitedReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.limitedReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, limitedReportersDisputeBondToken, Reporting.limitedReportersDisputeBondAmount());
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
-        updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         return migrateReportingWindow(_newReportingWindow);
     }
 
@@ -157,11 +148,12 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, allReportersDisputeBondToken, Reporting.allReportersDisputeBondAmount());
         reportingWindow.getUniverse().fork();
         IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
-        updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         return migrateReportingWindow(_newReportingWindow);
     }
 
     function migrateReportingWindow(IReportingWindow _newReportingWindow) private afterInitialized returns (bool) {
+        // NOTE: This really belongs out of this function and in the dispute functions. It's only here to save on contract size for now
+        updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         _newReportingWindow.migrateMarketInFromSibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
@@ -233,24 +225,23 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             return false;
         }
 
-        if (getUniverse().getForkingMarket() == this) {
+        if (getForkingMarket() == this) {
             tentativeWinningPayoutDistributionHash = getWinningPayoutDistributionHashFromFork();
         }
-
-        require(tentativeWinningPayoutDistributionHash != bytes32(0));
 
         finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
         finalizationTime = block.timestamp;
         transferIncorrectDisputeBondsToWinningReportingToken();
+        // The validity bond is paid to the owner in any valid outcome and the reporting window otherwise
+        doFeePayout(isValid(), validityBondAttoeth);
+        // The reporter gas costs are paid to the owner if the designated report was correct and the reporting window otherwise
+        doFeePayout(finalPayoutDistributionHash == designatedReportPayoutHash, reporterGasCostsFeeAttoeth);
         reportingWindow.updateMarketPhase();
         return true;
 
-        // FIXME: when the market is finalized, we need to add `reportingTokens[finalPayoutDistributionHash].totalSupply()` to the reporting window.  This is necessary for fee collection which is a cross-market operation.
-        // TODO: figure out how to make it so fee distribution is delayed until all markets have been finalized; we can enforce it contract side and let the UI deal with the actual work
-        // FIXME: if finalPayoutDistributionHash != getIdentityDistributionId(), pay back validity bond holder
-        // FIXME: if finalPayoutDistributionHash == getIdentityDistributionId(), transfer validity bond to reportingWindow (reporter fee pot)
-        // FIXME: if designated report is wrong, transfer designated report bond to reportingWindow
-        // FIXME: if designated report is right, transfer designated report bond to market creator
+        // TODO: create a floating designated report bond and charge it for designated reports  
+        // TODO: if designated report is wrong, transfer designated report bond to the winning reporting token
+        // TODO: if designated report is right, transfer designated report bond to market creator
     }
 
     function migrateDueToNoReports() public returns (bool) {
@@ -310,7 +301,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function transferIncorrectDisputeBondsToWinningReportingToken() private returns (bool) {
         require(getReportingState() == ReportingState.FINALIZED);
         IReputationToken _reputationToken = reportingWindow.getReputationToken();
-        if (getUniverse().getForkingMarket() == this) {
+        if (getForkingMarket() == this) {
             return true;
         }
         if (address(designatedReporterDisputeBondToken) != NULL_ADDRESS && designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
@@ -322,10 +313,18 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return true;
     }
 
+    function doFeePayout(bool _toOwner, uint256 _amount) private returns (bool) {
+        if (_toOwner) {
+            getOwner().call.value(_amount)();
+        } else {
+            getReportingWindow().receiveValidityBond.value(_amount)();
+        }
+        return true;
+    }
+
     function derivePayoutDistributionHash(uint256[] _payoutNumerators) public constant returns (bytes32) {
         uint256 _sum = 0;
         for (uint8 i = 0; i < _payoutNumerators.length; i++) {
-            require(_payoutNumerators[i] <= numTicks);
             _sum = _sum.add(_payoutNumerators[i]);
         }
         require(_sum == numTicks);
@@ -381,7 +380,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function getShareToken(uint8 _outcome)  public constant returns (IShareToken) {
-        require(_outcome < numOutcomes);
         return shareTokens[_outcome];
     }
 
@@ -403,6 +401,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function getFinalizationTime() public constant returns (uint256) {
         return finalizationTime;
+    }
+
+    function getForkingMarket() private constant returns (IMarket _market) {
+        return getUniverse().getForkingMarket();
     }
 
     function isContainerForReportingToken(Typed _shadyTarget) public constant returns (bool) {
@@ -441,10 +443,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     // CONSIDER: Would it be helpful to add modifiers for this contract like "onlyAfterFinalized" that could protect a function such as this?
-    function isIndeterminate() public constant returns (bool) {
+    function isValid() public constant returns (bool) {
         IReportingToken _winningReportingToken = getFinalWinningReportingToken();
-        require(address(_winningReportingToken) != NULL_ADDRESS);
-        return _winningReportingToken.isIndeterminate();
+        return _winningReportingToken.isValid();
     }
 
     function getDesignatedReportDueTimestamp() public constant returns (uint256) {
@@ -465,7 +466,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         }
 
         // If there is an active fork we need to migrate
-        IMarket _forkingMarket = getUniverse().getForkingMarket();
+        IMarket _forkingMarket = getForkingMarket();
         if (address(_forkingMarket) != NULL_ADDRESS && _forkingMarket != this) {
             return ReportingState.AWAITING_FORK_MIGRATION;
         }
