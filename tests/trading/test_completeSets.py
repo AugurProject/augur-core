@@ -94,7 +94,7 @@ def test_publicSellCompleteSets(fundedRepFixture):
             "sender": bytesToHexString(tester.a1),
             "reportingFee": fix('0.0009'),
             "amount": 9,
-            "marketCreatorFee": fix('0.09'),
+            "creatorFee": fix('0.09'),
             "numOutcomes": 2,
             "market": market.address
         },
