@@ -2,36 +2,39 @@
 
 import * as binascii from "binascii";
 import * as path from "path";
-import * as EthAbi from "ethjs-abi";
-import * as HttpProvider from "ethjs-provider-http";
-import * as Eth from "ethjs-query";
 import * as EthContract from "ethjs-contract";
+import * as EthQuery from "ethjs-query";
 // TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
 
 
 export class ContractDeployer {
-    private eth;
+    private ethQuery;
     private compiledContracts;
-    private uploadedContracts;
+    private uploadedContracts = [];
     private fromAddress;
     private gasAmount;
     private controller;
+
+    public getController() {
+        return this.controller;
+    }
 
     public getUploadedContracts() {
         return this.uploadedContracts;
     }
 
-    public async initialize(eth: Eth, contractJson: string, fromAddress: string, gasAmount: number): Promise<boolean> {
-        this.eth = eth;
+    public constructor(ethQuery: EthQuery, contractJson: string, fromAddress: string, gasAmount: number) {
+        this.ethQuery = ethQuery;
         this.compiledContracts = JSON.parse(contractJson);
-        this.uploadedContracts = {};
         this.fromAddress = fromAddress;
         this.gasAmount = gasAmount;
+    }
 
+    public async deploy(): Promise<boolean> {
         this.controller = await this.upload("../source/contracts/Controller.sol");
         const ownerAddress = (await this.controller.owner())[0];
-        if (ownerAddress !== fromAddress) {
+        if (ownerAddress !== this.fromAddress) {
             throw new Error("Controller owner does not equal from address");
         }
 
@@ -78,14 +81,14 @@ export class ContractDeployer {
         if (bytecode.length === 0) {
             throw new Error("Bytecode is not set for " + signatureKey + ".");
         }
-        const contractBuilder = new EthContract(this.eth)(abi, bytecode, { from: this.fromAddress, gas: this.gasAmount });
+        const contractBuilder = new EthContract(this.ethQuery)(abi, bytecode, { from: this.fromAddress, gas: this.gasAmount });
         let receiptAddress: string;
         if (constructorArgs.length > 0) {
             receiptAddress = await contractBuilder.new(constructorArgs[0], constructorArgs[1]);
         } else {
             receiptAddress = await contractBuilder.new();
         }
-        const receipt: ContractReceipt = await this.eth.getTransactionReceipt(receiptAddress);
+        const receipt: ContractReceipt = await this.ethQuery.getTransactionReceipt(receiptAddress);
         this.uploadedContracts[lookupKey] = contractBuilder.at(receipt.contractAddress);
 
         return this.uploadedContracts[lookupKey];

@@ -8,6 +8,7 @@ import * as recursiveReadDir from "recursive-readdir";
 import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
 
 interface CompileContractsOutput {
+    errors?: string;
     output?: string;
 }
 
