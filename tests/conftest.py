@@ -153,7 +153,7 @@ class ContractsFixture:
         self.cash = self.getSeededCash()
         self.augur = self.contracts['Augur']
         self.utils = self.upload("solidity_test_helpers/Utils.sol")
-        self.binaryMarket = self.createReasonableBinaryMarket(self.universe, self.cash)
+        self.binaryMarket = self.createResetBinaryMarket(self.universe, self.cash)
         startingGas = self.chain.head_state.gas_used
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.universe, 3, self.cash)
         print 'Gas Used: %s' % (self.chain.head_state.gas_used - startingGas)
@@ -203,15 +203,28 @@ class ContractsFixture:
 
     def createSnapshot(self):
         self.chain.mine(1)
+        print('START TAKE CURRENT BLOCK SNAPSHOT ' + str(self.chain.head_state.block_number))
+        print('FINSIH TAKE CURRENT BLOCK SNAPSHOT ' + str(self.chain.head_state.block_number))        
         return {'block': self.chain.block, 'head_state': self.chain.head_state, 'contracts' : deepcopy(self.contracts), 'snapshot': self.chain.snapshot()}
 
     def resetToSnapshot(self, captured):
+        print('RESET CURRENT BLOCK ' + str(self.chain.head_state.block_number))
         if len(captured) < 4:
             raise "captured snapshot doesn't have all parameters in dictionary, need to call createSnapshot"
         self.chain.block = captured['block']
         self.chain.revert(captured['snapshot'])
         self.chain.head_state = captured['head_state']
         self.contracts = deepcopy(captured['contracts'])
+        print('RESET NOW CURRENT BLOCK ' + str(self.chain.head_state.block_number))
+
+    def pushTimeStamp(self, setTime):
+        print('PUSH TIME CURRENT BLOCK ' + str(self.chain.head_state.block_number))
+        self.chain.head_state.timestamp = setTime
+        self.chain.mine(1)
+        
+    def createResetBinaryMarket(self, uni, token):
+        self.market1 = self.createReasonableBinaryMarket(uni, token)
+        return self.market1
 
     ####
     #### Bulk Operations

@@ -19,7 +19,7 @@ def test_designatedReportingNoReport(registrationTokenRedemptionFixture):
     assert market.getReportingState() == registrationTokenRedemptionFixture.constants.DESIGNATED_DISPUTE()
 
     # Time passes until the end of the reporting window
-    registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    registrationTokenRedemptionFixture.pushTimeStamp(reportingWindow.getEndTime() + 1)
 
     # The reporter may not redeem their registration token as they did not report on the market that becomes reportable when there are no normally occuring reportable markets
     with raises(TransactionFailed, message="Reporters should not be able to redeem their bond if they do not report"):
@@ -45,13 +45,13 @@ def test_checkInReporting(registrationTokenRedemptionFixture):
         reportingWindow.checkIn(sender=tester.k1)
 
     # Time passes until the beginning of the reporting window
-    registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    registrationTokenRedemptionFixture.pushTimeStamp(reportingWindow.getStartTime() + 1)
 
     # Since there are no normal markets on which we can report the checkIn function can be called
     assert reportingWindow.checkIn(sender=tester.k1)
 
     # Time passes until the end of the reporting window
-    registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    registrationTokenRedemptionFixture.pushTimeStamp(reportingWindow.getEndTime() + 1)
 
     # Before redeeming a registration token the reporter does not have their registration bond in their rep balance
     previousBalance = reputationToken.balanceOf(tester.a1)
@@ -83,7 +83,7 @@ def test_limitedReportingRedemptionSingleMarketHappyPath(registrationTokenRedemp
     reportingTokenNo.buy(1, sender=tester.k1)
 
     # Time passes until the end of the reporting window
-    registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    registrationTokenRedemptionFixture.pushTimeStamp(reportingWindow.getEndTime() + 1)
 
     # Before redeeming a registration token the reporter does not have their registration bond in their rep balance
     previousBalance = reputationToken.balanceOf(tester.a1)
@@ -108,7 +108,7 @@ def test_limitedReportingRedemptionSingleMarketNoReports(registrationTokenRedemp
     proceedToLimitedReporting(registrationTokenRedemptionFixture, market, makeReport, tester.k1, [0,10**18])
 
     # Time passes until the end of the reporting window
-    registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    registrationTokenRedemptionFixture.pushTimeStamp(reportingWindow.getEndTime() + 1)
 
     # The reporter may not redeem their registration token as they did not report on the market
     with raises(TransactionFailed, message="Reporters should not be able to redeem their bond if no one reported"):
@@ -135,7 +135,7 @@ def test_limitedReportingRedemptionSingleMarketRedeemerDidntReport(registrationT
     reportingTokenNo.buy(1, sender=tester.k1)
 
     # Time passes until the end of the reporting window
-    registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    registrationTokenRedemptionFixture.pushTimeStamp(reportingWindow.getEndTime() + 1)
 
     # Try to redeem a different tester's registration token and fail as they did not report
     with raises(TransactionFailed, message="Reporters should not be able to redeem their bond if they dont report"):
@@ -166,7 +166,7 @@ def test_limitedReportingRedemptionMultipleMarketHappyPath(registrationTokenRede
     reportingTokenNo2.buy(1, sender=tester.k1)
 
     # Time passes until the end of the reporting window
-    registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    registrationTokenRedemptionFixture.pushTimeStamp(reportingWindow.getEndTime() + 1)
 
     # Before redeeming a registration token the reporter does not have their registration bond in their rep balance
     previousBalance = reputationToken.balanceOf(tester.a1)
@@ -199,7 +199,7 @@ def test_limitedReportingRedemptionMultipleMarketInsufficientReport(registration
     reportingTokenNo.buy(1, sender=tester.k1)
 
     # Time passes until the end of the reporting window
-    registrationTokenRedemptionFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    registrationTokenRedemptionFixture.pushTimeStamp(reportingWindow.getEndTime() + 1)
 
     # The reporter may not redeem their registration token as they did not report on enough markets
     with raises(TransactionFailed, message="Reporters should not be able to redeem their bond if they performed insufficient reporting"):
@@ -210,8 +210,7 @@ def registrationTokenRedemptionSnapshot(sessionFixture):
     sessionFixture.resetSnapshot()
     # Move to the next reporting window for these tests as we want to control market creation and reporting in isolation
     originalReportingWindow = sessionFixture.applySignature('ReportingWindow', sessionFixture.binaryMarket.getReportingWindow())
-    sessionFixture.chain.head_state.timestamp = originalReportingWindow.getEndTime() + 1
-    sessionFixture.chain.mine()
+    sessionFixture.pushTimeStamp(originalReportingWindow.getEndTime() + 1)
     market = sessionFixture.market1 = sessionFixture.createReasonableBinaryMarket(sessionFixture.universe, sessionFixture.cash)
     return initializeReportingFixture(sessionFixture, market)
 
