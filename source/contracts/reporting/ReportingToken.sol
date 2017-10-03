@@ -26,7 +26,6 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
         market = _market;
         payoutNumerators = _payoutNumerators;
-        getUniverse().logCreateReportingToken(this, market);
         return true;
     }
 

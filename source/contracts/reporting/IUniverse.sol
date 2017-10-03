@@ -31,5 +31,4 @@ contract IUniverse is Typed {
     function isContainerForShareToken(Typed _shadyTarget) public constant returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);
     function incrementOpenInterest(uint256 _amount) public returns (bool);
-    function logCreateReportingToken(IReportingToken _reportingToken, IMarket _market) public returns (bool);
 }
