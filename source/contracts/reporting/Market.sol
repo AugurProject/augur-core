@@ -240,7 +240,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return true;
 
         // TODO: create a floating designated report bond and charge it for designated reports  
-        // TODO: if designated report is wrong, transfer designated report bond to reportingWindow
+        // TODO: if designated report is wrong, transfer designated report bond to the winning reporting token
         // TODO: if designated report is right, transfer designated report bond to market creator
     }
 
@@ -315,7 +315,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function doFeePayout(bool _toOwner, uint256 _amount) private returns (bool) {
         if (_toOwner) {
-            getOwner().transfer(_amount);
+            getOwner().value(_amount)();
         } else {
             getReportingWindow().receiveValidityBond.value(_amount)();
         }
