@@ -42,6 +42,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
     RunningAverage.Data private reportingGasPrice;
     RunningAverage.Data private marketReports;
+    uint256 private totalWinningReportingTokens;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -118,6 +119,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
                 indeterminateMarketCount++;
             }
             marketReports.record(numberOfReportsByMarket[_market]);
+            totalWinningReportingTokens = totalWinningReportingTokens.add(_market.getFinalWinningReportingToken().totalSupply());
         }
 
         return true;
@@ -331,5 +333,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function isForkingMarketFinalized() public afterInitialized constant returns (bool) {
         return getUniverse().getForkingMarket().getReportingState() == IMarket.ReportingState.FINALIZED;
+    }
+
+    function receiveValidityBond() public payable returns (bool) {
+        IMarket _market = IMarket(msg.sender);
+        require(markets.contains(_market));
+        return true;
     }
 }

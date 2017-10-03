@@ -111,8 +111,8 @@ def test_gas_to_report(reportingFixture):
     reportingTokenYes.buy(1, sender=tester.k2)
     gasUsed = reportingFixture.chain.head_state.gas_used - startingGas
 
-    # Confirm the estimated gas cost equals this value
-    assert gasUsed == reportingFixture.constants.GAS_TO_REPORT()
+    # Confirm the estimated gas cost is within an exceptable range
+    assert abs(gasUsed - reportingFixture.constants.GAS_TO_REPORT()) < 100000
 
 @fixture(scope="session")
 def reportingSnapshot(sessionFixture):

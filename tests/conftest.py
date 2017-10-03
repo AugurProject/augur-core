@@ -139,6 +139,7 @@ class ContractsFixture:
     ####
 
     def __init__(self):
+        tester.GASPRICE = 0
         config_metropolis['GASLIMIT_ADJMAX_FACTOR'] = .000000000001
         config_metropolis['GENESIS_GAS_LIMIT'] = 2**60
         config_metropolis['MIN_GAS_LIMIT'] = 2**60

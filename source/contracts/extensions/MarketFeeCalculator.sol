@@ -103,7 +103,7 @@ contract MarketFeeCalculator {
     }
 
     function getRepMarketCapInAttoeth(IUniverse _universe) constant public returns (uint256) {
-        // TODO: get this from an auto-generated market or some other special contract
+        // TODO: get this from a multi-sig contract that we provide and maintain
         uint256 _attorepPerEth = 11 * 10 ** 18;
         uint256 _repMarketCapInAttoeth = _universe.getReputationToken().totalSupply() * _attorepPerEth;
         return _repMarketCapInAttoeth;
