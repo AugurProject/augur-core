@@ -28,7 +28,7 @@ contract IOrders {
     function assertIsNotWorsePrice(Order.TradeTypes _type, uint256 _price, bytes32 _worseOrderId) public returns (bool);
     function fillOrder(bytes32 _orderId, uint256 _sharesFilled, uint256 _tokensFilled) public returns (bool);
     function buyCompleteSetsLog(address _sender, IMarket _market, uint256 _fxpAmount, uint256 _numOutcomes) public constant returns (bool);
-    function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _fxpAmount, uint256 _numOutcomes, uint256 _marketCreatorFee, uint256 _reportingFee) public constant returns (bool);
+    function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _fxpAmount, uint256 _numOutcomes, uint256 _creatorFee, uint256 _reportingFee) public constant returns (bool);
     function cancelOrderLog(bytes32 _orderId) public constant returns (bool);
     function fillOrderLog(bytes32 _orderId, address _filler, uint256 _creatorSharesFilled, uint256 _creatorTokensFilled, uint256 _fillerSharesFilled, uint256 _fillerTokensFilled, uint256 _tradeGroupId) public constant returns (bool);
     function setPrice(IMarket _market, uint8 _outcome, uint256 _price) external returns (bool);
