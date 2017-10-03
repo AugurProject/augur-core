@@ -32,12 +32,16 @@ def test_registry(controller, decentralizedController):
     with raises(TransactionFailed): decentralizedController.assertOnlySpecifiedCaller(tester.a2, key2, sender = tester.k0)
     with raises(TransactionFailed): controller.assertOnlySpecifiedCaller(tester.a2, key2, sender = tester.k2)
 
-def test_suicideFunds(controller, decentralizedController, controllerUser):
-    with raises(TransactionFailed): controller.suicideFunds(controllerUser.address, tester.a0, [], sender = tester.k2)
+def test_suicideFunds(contractsFixture, controller, decentralizedController, controllerUser):
+    legacyRepContract = contractsFixture.contracts['LegacyRepContract']
+    legacyRepContract.faucet(0)
+    legacyRepContract.transfer(controllerUser.address, 40 * 10**18)
+    with raises(TransactionFailed): controller.suicideFunds(controllerUser.address, tester.a0, [legacyRepContract.address], sender = tester.k2)
     assert decentralizedController.owner() == bytesToHexString(tester.a0)
-    with raises(TransactionFailed): decentralizedController.suicideFunds(controllerUser.address, tester.a0, [], sender = tester.k0)
-    assert controller.suicideFunds(controllerUser.address, tester.a0, [], sender = tester.k0)
+    with raises(TransactionFailed): decentralizedController.suicideFunds(controllerUser.address, tester.a0, [legacyRepContract.address], sender = tester.k0)
+    assert controller.suicideFunds(controllerUser.address, tester.a0, [legacyRepContract.address], sender = tester.k0)
     assert controllerUser.suicideFundsDestination() == bytesToHexString(tester.a0)
+    assert controllerUser.tokens() == legacyRepContract.address
 
 def test_updateController(controller, decentralizedController, controllerUser):
     with raises(TransactionFailed): controller.updateController(controllerUser.address, tester.a0, sender = tester.k2)
@@ -84,4 +88,5 @@ def controllerUser(contractsFixture):
 def decentralizedController(contractsFixture):
     decentralizedController = contractsFixture.upload('../source/contracts/Controller.sol', 'decentralizedController')
     decentralizedController.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k0)
+
     return decentralizedController
