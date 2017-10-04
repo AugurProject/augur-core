@@ -192,7 +192,7 @@ class ContractsFixture:
         contractTranslator = ContractTranslator(signature)
         if len(constructorArgs) > 0:
             compiledCode += contractTranslator.encode_constructor_arguments(constructorArgs)
-        contractAddress = bytesToHexString(self.chain.contract(compiledCode, startgas=long(6.7 * 10**6)))
+        contractAddress = bytesToHexString(self.chain.contract(compiledCode, language='evm', startgas=long(6.7 * 10**6)))
         contract = ABIContract(self.chain, contractTranslator, contractAddress)
         self.contracts[lookupKey] = contract
         return(contract)
