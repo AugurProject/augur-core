@@ -317,7 +317,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         if (_toOwner) {
             getOwner().call.value(_amount)();
         } else {
-            getReportingWindow().receiveValidityBond.value(_amount)();
+            cash.depositEtherFor.value(_amount)(getReportingWindow());
         }
         return true;
     }

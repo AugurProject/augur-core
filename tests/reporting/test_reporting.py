@@ -111,7 +111,7 @@ def test_reportingFullHappyPath(reportingFixture):
     assert noUniverseReputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18 - 2 * 10 ** 18 - 2
 
     # We can finalize the market now since a mjaority of REP has moved. Alternatively we could "reportingFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1" to move
-    initialReportingWindowETHBalance = reportingFixture.utils.getETHBalance(reportingWindow.address)
+    initialReportingWindowCashBalance = cash.balanceOf(reportingWindow.address)
     initialMarketCreatorETHBalance = reportingFixture.utils.getETHBalance(market.getOwner())
     assert market.tryFinalize()
 
@@ -119,9 +119,9 @@ def test_reportingFullHappyPath(reportingFixture):
     assert market.getReportingState() == reportingFixture.constants.FINALIZED()
     assert market.getFinalWinningReportingToken() == reportingTokenNo.address
 
-    # Since the market resolved with an outcome other than what the designated reporter made the reporter gas fees are paid out to the reporting window
-    increaseInReportingWindowBalance = reportingFixture.utils.getETHBalance(reportingWindow.address) - initialReportingWindowETHBalance
-    assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
+    # Since the market resolved with an outcome other than what the designated reporter made the reporter gas fees are paid out to the reporting window as CASH
+    increaseInReportingWindowCashBalance = cash.balanceOf(reportingWindow.address) - initialReportingWindowCashBalance
+    assert increaseInReportingWindowCashBalance == expectedReportingWindowFeePayout
 
     # Since the designated report was not invalid the market creator gets back the validity bond
     increaseInMarketCreatorBalance = reportingFixture.utils.getETHBalance(market.getOwner()) - initialMarketCreatorETHBalance
@@ -267,7 +267,18 @@ def test_forking(reportingFixture, makeReport, finalizeByMigration):
 ])
 def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
     market = reportingFixture.binaryMarket
-    newMarket = reportingFixture.createReasonableBinaryMarket(reportingFixture.universe, reportingFixture.cash)
+    cash = reportingFixture.cash
+    newMarket = reportingFixture.createReasonableBinaryMarket(reportingFixture.universe, cash)
+    completeSets = reportingFixture.contracts['CompleteSets']
+
+    # We'll do some transactions that cause fee collection here so we can test that fees are properly migrated automatically when a market migrates from a fork
+    cost = 10 * newMarket.getNumTicks()
+    completeSets.publicBuyCompleteSets(newMarket.address, 10, sender = tester.k1, value = cost)
+    completeSets.publicSellCompleteSets(newMarket.address, 10, sender=tester.k1)
+    oldReportingWindowAddress = newMarket.getReportingWindow()
+    fees = cash.balanceOf(oldReportingWindowAddress)
+    assert fees > 0
+    assert cash.balanceOf(oldReportingWindowAddress) == fees
 
     # We proceed the standard market to the FORKING state
     proceedToForking(reportingFixture,  market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], tester.k2, [10**18,0], [10**18,0])
@@ -285,8 +296,14 @@ def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
     # Now we can migrate the market to the winning universe
     assert newMarket.migrateThroughOneFork()
 
+    # We observe that the reporting window no longer has the fees collected
+    assert cash.balanceOf(oldReportingWindowAddress) == 0
+
     # Now that we're on the correct universe we are send back to the DESIGNATED REPORTING phase
     assert newMarket.getReportingState() == reportingFixture.constants.DESIGNATED_REPORTING()
+
+    # We can confirm that migrating the market also triggered a migration of its reporting window's ETH fees to the new reporting window
+    assert cash.balanceOf(newMarket.getReportingWindow()) == fees
 
 @mark.parametrize('pastDisputePhase', [
     True,
@@ -321,6 +338,7 @@ def test_noReports(reportingFixture, pastDisputePhase):
 def test_invalid_limited_report(reportingFixture):
     market = reportingFixture.binaryMarket
     universe = reportingFixture.universe
+    cash = reportingFixture.cash
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())
     expectedReportingWindowFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getMarketCreationCost(reportingWindow.address)
@@ -337,18 +355,19 @@ def test_invalid_limited_report(reportingFixture):
     assert not reportingTokenInvalid.isValid()
 
     # If we finalize the market it will be recorded as an invalid result
-    initialReportingWindowETHBalance = reportingFixture.utils.getETHBalance(reportingWindow.address)
+    initialReportingWindowCashBalance = cash.balanceOf(reportingWindow.address)
     reportingFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
     assert market.tryFinalize()
     assert not market.isValid()
     assert reportingWindow.getNumInvalidMarkets() == 1
 
-    # Since the market resolved with an invalid outcome the validity bond is paid out to the reporting window along with the reporter gas cost fee
-    increaseInReportingWindowBalance = reportingFixture.utils.getETHBalance(reportingWindow.address) - initialReportingWindowETHBalance
+    # Since the market resolved with an invalid outcome the validity bond is paid out to the reporting window along with the reporter gas cost fee in Cash
+    increaseInReportingWindowBalance = cash.balanceOf(reportingWindow.address) - initialReportingWindowCashBalance
     assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
 
 def test_invalid_designated_report(reportingFixture):
     market = reportingFixture.binaryMarket
+    cash = reportingFixture.cash
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
     expectedReportingWindowFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getValidityBond(reportingWindow.address)
     expectedMarketCreatorFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getTargetReporterGasCosts(reportingWindow.address)
@@ -369,14 +388,14 @@ def test_invalid_designated_report(reportingFixture):
     assert market.getReportingState() == reportingFixture.constants.AWAITING_FINALIZATION()
 
     # If we finalize the market it will be recorded as an invalid result
-    initialReportingWindowETHBalance = reportingFixture.utils.getETHBalance(reportingWindow.address)
+    initialReportingWindowCashBalance = cash.balanceOf(reportingWindow.address)
     initialMarketCreatorETHBalance = reportingFixture.utils.getETHBalance(market.getOwner())
     assert market.tryFinalize()
     assert not market.isValid()
     assert reportingWindow.getNumInvalidMarkets() == 1
 
     # Since the market resolved with an invalid outcome the validity bond is paid out to the reporting window
-    increaseInReportingWindowBalance = reportingFixture.utils.getETHBalance(reportingWindow.address) - initialReportingWindowETHBalance
+    increaseInReportingWindowBalance = cash.balanceOf(reportingWindow.address) - initialReportingWindowCashBalance
     assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
 
     # Since the market resolved with the outcome the designated reporter made the market creator still gets back the reporter gas cost fee
