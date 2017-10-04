@@ -244,8 +244,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    // TODO: add reporting fee distribution function. Prevent calling it until all markets on the reporting window are finalized.
-
     function isActive() public afterInitialized constant returns (bool) {
         if (block.timestamp <= getStartTime()) {
             return false;
