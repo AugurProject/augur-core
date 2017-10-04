@@ -146,7 +146,7 @@ def uploadSolidityContract(chain, compileResult, name, contractName):
     print compileResult['contracts'][name][contractName]['evm']['bytecode']['object']
     bytecode = bytearray.fromhex(compileResult['contracts'][name][contractName]['evm']['bytecode']['object'])
     signature = compileResult['contracts'][name][contractName]['abi']
-    address = long(hexlify(chain.contract(bytecode)), 16)
+    address = long(hexlify(chain.contract(bytecode, language='evm')), 16)
     contract = ABIContract(chain, ContractTranslator(signature), address)
     return contract
 
