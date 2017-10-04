@@ -203,11 +203,15 @@ class ContractsFixture:
         self.resetToSnapshot(self.captured)
 
     def createSnapshot(self):
-        return self.chain.head_state.ephemeral_clone()
+        return  { 'block': self.chain.block, 'head_state': self.chain.head_state.ephemeral_clone(), 'snapshot': self.chain.snapshot(), 'contracts': deepcopy(self.contracts) }
 
     def resetToSnapshot(self, captured):
-        self.chain.head_state = captured
-        self.contracts = deepcopy(self.originalContracts)
+        if len(captured) < 4:
+            raise "captured snapshot doesn't have all parameters in dictionary, need to call createSnapshot"
+        self.chain.block = captured['block']
+        self.chain.head_state = captured['head_state']
+        self.chain.revert(captured['snapshot'])
+        self.contracts = deepcopy(captured['contracts'])
 
     def pushTimeStamp(self, setTime):
         self.chain.head_state.timestamp = setTime
