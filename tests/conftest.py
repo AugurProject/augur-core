@@ -216,8 +216,8 @@ class ContractsFixture:
         if len(captured) < 4:
             raise "captured snapshot doesn't have all parameters in dictionary, need to call createSnapshot"
         self.chain.block = captured['block']
-        self.chain.revert(captured['snapshot'])
         self.chain.head_state = captured['head_state']
+        self.chain.revert(captured['snapshot'])
         self.contracts = deepcopy(captured['contracts'])
 
     ####
