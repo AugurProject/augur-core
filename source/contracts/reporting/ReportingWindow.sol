@@ -76,16 +76,17 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function migrateMarketInFromNibling() public afterInitialized returns (bool) {
-        IMarket _market = IMarket(msg.sender);
-        IUniverse _shadyUniverse = _market.getUniverse();
+        IMarket _shadyMarket = IMarket(msg.sender);
+        IUniverse _shadyUniverse = _shadyMarket.getUniverse();
         require(_shadyUniverse == universe.getParentUniverse());
         IUniverse _originalUniverse = _shadyUniverse;
-        IReportingWindow _shadyReportingWindow = _market.getReportingWindow();
+        IReportingWindow _shadyReportingWindow = _shadyMarket.getReportingWindow();
         require(_originalUniverse.isContainerForReportingWindow(_shadyReportingWindow));
         IReportingWindow _originalReportingWindow = _shadyReportingWindow;
-        require(_originalReportingWindow.isContainerForMarket(_market));
-        _shadyReportingWindow.migrateFeesDueToFork();
-        privateAddMarket(_market);
+        require(_originalReportingWindow.isContainerForMarket(_shadyMarket));
+        IMarket _legitMarket = _shadyMarket;
+        _originalReportingWindow.migrateFeesDueToFork();
+        privateAddMarket(_legitMarket);
         return true;
     }
 
@@ -224,6 +225,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function migrateFeesDueToFork() public afterInitialized returns (bool) {
+        require(isForkingMarketFinalized());
         // NOTE: Will need to figure out a way to transfer other denominations when that is implemented
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _balance = _cash.balanceOf(this);
@@ -234,7 +236,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         IUniverse _shadyUniverse = _shadyReportingWindow.getUniverse();
         require(_shadyUniverse.isContainerForReportingWindow(_shadyReportingWindow));
         require(universe.isParentOf(_shadyUniverse));
-        _cash.transfer(_shadyReportingWindow, _balance);
+        IUniverse _destinationUniverse = _shadyUniverse;
+        IReportingWindow _destinationReportingWindow = _shadyReportingWindow;
+        bytes32 _winningForkPayoutDistributionHash = universe.getForkingMarket().getFinalPayoutDistributionHash();
+        require(_destinationUniverse == universe.getOrCreateChildUniverse(_winningForkPayoutDistributionHash));
+        _cash.transfer(_destinationReportingWindow, _balance);
         return true;
     }
 
