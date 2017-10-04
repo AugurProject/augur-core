@@ -239,7 +239,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         IUniverse _destinationUniverse = _shadyUniverse;
         IReportingWindow _destinationReportingWindow = _shadyReportingWindow;
         bytes32 _winningForkPayoutDistributionHash = universe.getForkingMarket().getFinalPayoutDistributionHash();
-        require(_destinationUniverse == universe.getOrCreateChildUniverse(_winningForkPayoutDistributionHash));
+        require(_destinationUniverse == universe.getChildUniverse(_winningForkPayoutDistributionHash));
         _cash.transfer(_destinationReportingWindow, _balance);
         return true;
     }
