@@ -29,10 +29,11 @@ contract IReportingWindow is Typed {
     function getNextReportingWindow() constant public returns (IReportingWindow);
     function getPreviousReportingWindow() constant public returns (IReportingWindow);
     function checkIn() public returns (bool);
+    function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
+    function migrateFeesDueToFork() public returns (bool);
     function isContainerForRegistrationToken(IRegistrationToken _shadyRegistrationToken) public constant returns (bool);
     function isContainerForMarket(IMarket _shadyMarket) public constant returns (bool);
     function isDoneReporting(address _reporter) public constant returns (bool);
     function isForkingMarketFinalized() public constant returns (bool);
     function isDisputeActive() public constant returns (bool);
-    function receiveValidityBond() public payable returns (bool);
 }

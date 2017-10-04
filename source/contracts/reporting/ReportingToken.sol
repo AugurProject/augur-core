@@ -75,8 +75,6 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
-    // TODO: prevent calling this until all markets on the reporting window are finalized.
-    // TODO: add reporting fee distribution to this.
     function redeemWinningTokens() public afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
