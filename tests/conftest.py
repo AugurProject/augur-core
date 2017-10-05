@@ -166,6 +166,8 @@ class ContractsFixture:
         print 'Gas Used: %s' % (self.chain.head_state.gas_used - startingGas)
         self.scalarMarket = self.createReasonableScalarMarket(self.universe, 40, self.cash)
         self.constants = self.uploadAndAddToController("solidity_test_helpers/Constants.sol")
+        self.chain.mine(1)
+        self.originalContracts = deepcopy(self.contracts)
         self.captured = self.createSnapshot()
 
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
@@ -209,16 +211,18 @@ class ContractsFixture:
         self.resetToSnapshot(self.captured)
 
     def createSnapshot(self):
-        self.chain.mine(1)
-        return {'block': self.chain.block, 'head_state': self.chain.head_state, 'contracts' : deepcopy(self.contracts), 'snapshot': self.chain.snapshot()}
+        return  { 'block': self.chain.block, 'head_state': self.chain.head_state, 'snapshot': self.chain.snapshot(), 'contracts': deepcopy(self.contracts) }
 
     def resetToSnapshot(self, captured):
         if len(captured) < 4:
             raise "captured snapshot doesn't have all parameters in dictionary, need to call createSnapshot"
         self.chain.block = captured['block']
-        self.chain.revert(captured['snapshot'])
         self.chain.head_state = captured['head_state']
+        self.chain.revert(captured['snapshot'])
         self.contracts = deepcopy(captured['contracts'])
+
+    def pushTimeStamp(self, setTime):
+        self.chain.head_state.timestamp = setTime
 
     ####
     #### Bulk Operations
@@ -371,9 +375,9 @@ def fundedRepSnapshot(sessionFixture):
     legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
     reputationToken.migrateFromLegacyRepContract()
 
-    return sessionFixture.chain.snapshot()
+    return sessionFixture.createSnapshot()
 
 @fixture
 def fundedRepFixture(sessionFixture, fundedRepSnapshot):
-    sessionFixture.chain.revert(fundedRepSnapshot)
+    sessionFixture.resetToSnapshot(fundedRepSnapshot)
     return sessionFixture

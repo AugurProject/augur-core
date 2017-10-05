@@ -6,13 +6,12 @@ from pytest import fixture, mark, raises
 
 @fixture(scope='session')
 def testerSnapshot(sessionFixture):
-    sessionFixture.resetSnapshot()
     sessionFixture.upload('solidity_test_helpers/SafeMathUint256Tester.sol')
-    return sessionFixture.chain.snapshot()
+    return sessionFixture.createSnapshot()
 
 @fixture
 def testerContractsFixture(sessionFixture, testerSnapshot):
-    sessionFixture.chain.revert(testerSnapshot)
+    sessionFixture.resetToSnapshot(testerSnapshot)
     return sessionFixture
 
 @mark.parametrize('a, b, expectedResult', [
