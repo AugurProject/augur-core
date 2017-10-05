@@ -216,5 +216,5 @@ def registrationTokenRedemptionSnapshot(sessionFixture):
 
 @fixture
 def registrationTokenRedemptionFixture(sessionFixture, registrationTokenRedemptionSnapshot):
-    sessionFixture.chain.revert(registrationTokenRedemptionSnapshot)
+    sessionFixture.resetToSnapshot(registrationTokenRedemptionSnapshot)
     return sessionFixture
