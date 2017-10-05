@@ -33,8 +33,7 @@ library Trade {
         Augur augur;
     }
 
-    // TODO: come up with a better name, or consolidate `Trade.Data` and `Order.Data`
-    struct MyOrder {
+    struct FilledOrder {
         bytes32 orderId;
         uint8 outcome;
         uint256 sharePriceRange;
@@ -53,7 +52,7 @@ library Trade {
 
     struct Data {
         Contracts contracts;
-        MyOrder order;
+        FilledOrder order;
         Participant creator;
         Participant filler;
     }
@@ -66,7 +65,7 @@ library Trade {
         // TODO: data validation
 
         Contracts memory _contracts = getContracts(_controller, _orderId);
-        MyOrder memory _order = getOrder(_contracts, _orderId);
+        FilledOrder memory _order = getOrder(_contracts, _orderId);
         Order.TradeTypes _orderTradeType = _contracts.orders.getTradeType(_orderId);
         Participant memory _creator = getMaker(_contracts, _order, _orderTradeType);
         Participant memory _filler = getFiller(_contracts, _orderTradeType, _fillerAddress, _fillerSize);
@@ -271,9 +270,9 @@ library Trade {
         });
     }
 
-    function getOrder(Contracts _contracts, bytes32 _orderId) private constant returns (MyOrder memory) {
+    function getOrder(Contracts _contracts, bytes32 _orderId) private constant returns (FilledOrder memory) {
         var (_sharePriceRange, _sharePriceLong, _sharePriceShort) = getSharePriceDetails(_contracts.market, _contracts.orders, _orderId);
-        return MyOrder({
+        return FilledOrder({
             orderId: _orderId,
             outcome: _contracts.orders.getOutcome(_orderId),
             sharePriceRange: _sharePriceRange,
@@ -282,7 +281,7 @@ library Trade {
         });
     }
 
-    function getMaker(Contracts _contracts, MyOrder _order, Order.TradeTypes _orderTradeType) private constant returns (Participant memory) {
+    function getMaker(Contracts _contracts, FilledOrder _order, Order.TradeTypes _orderTradeType) private constant returns (Participant memory) {
         Direction _direction = (_orderTradeType == Order.TradeTypes.Bid) ? Direction.Long : Direction.Short;
         uint256 _sharesToSell = _contracts.orders.getOrderSharesEscrowed(_order.orderId);
         uint256 _sharesToBuy = _contracts.orders.getAmount(_order.orderId).sub(_sharesToSell);

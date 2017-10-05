@@ -6,14 +6,13 @@ from pytest import fixture, mark, lazy_fixture, raises
 
 @fixture(scope='session')
 def testerSnapshot(sessionFixture):
-    sessionFixture.resetSnapshot()
     sessionFixture.uploadAndAddToController("solidity_test_helpers/StandardTokenHelper.sol")
     standardToken = sessionFixture.contracts['StandardTokenHelper']
-    return sessionFixture.chain.snapshot()
+    return sessionFixture.createSnapshot()
 
 @fixture
 def testStandardTokenFixture(sessionFixture, testerSnapshot):
-    sessionFixture.chain.revert(testerSnapshot)
+    sessionFixture.resetToSnapshot(testerSnapshot)
     return sessionFixture
 
 def test_eternal_approval_magic(testStandardTokenFixture):

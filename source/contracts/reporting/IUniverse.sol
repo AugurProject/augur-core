@@ -4,6 +4,7 @@ import 'libraries/Typed.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
+import 'reporting/IReportingToken.sol';
 
 
 contract IUniverse is Typed {
@@ -19,6 +20,7 @@ contract IUniverse is Typed {
     function getReportingPeriodDurationInSeconds() public constant returns (uint256);
     function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow);
     function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasDesignatedReporter) public returns (IReportingWindow);
+    function getCurrentReportingWindow() public returns (IReportingWindow);
     function getNextReportingWindow() public returns (IReportingWindow);
     function getReportingWindowForForkEndTime() public constant returns (IReportingWindow);
     function getOpenInterestInAttoEth() public constant returns (uint256);

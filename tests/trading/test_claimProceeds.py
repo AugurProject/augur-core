@@ -64,7 +64,7 @@ def test_helpers(fundedRepFixture):
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
     finalizeMarket(fundedRepFixture.chain.head_state, market, [0,40*10**18])
 
-    assert claimProceeds.calculateMarketCreatorFee(market.address, fix('3')) == fix('0.03')
+    assert claimProceeds.calculateCreatorFee(market.address, fix('3')) == fix('0.03')
     assert claimProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
     assert claimProceeds.calculateProceeds(market.getFinalWinningReportingToken(), YES, 7) == 7 * market.getNumTicks()
     assert claimProceeds.calculateProceeds(market.getFinalWinningReportingToken(), NO, fix('11')) == fix('0')
@@ -82,8 +82,8 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
     expectedValue = 1 * market.getNumTicks()
-    expectedFees = expectedValue * 0.0101
-    expectedPayout = long(expectedValue - expectedFees)
+    expectedSettlementFees = expectedValue * 0.0101
+    expectedPayout = long(expectedValue - expectedSettlementFees)
 
     assert universe.getOpenInterestInAttoEth() == 0
 
@@ -120,8 +120,8 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     shareToken1 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(1))
     shareToken0 = fundedRepFixture.applySignature('ShareToken', market.getShareToken(0))
     expectedValue = 1 * market.getNumTicks()
-    expectedFees = expectedValue * 0.0101
-    expectedPayout = long(expectedValue - expectedFees)
+    expectedSettlementFees = expectedValue * 0.0101
+    expectedPayout = long(expectedValue - expectedSettlementFees)
 
     assert universe.getOpenInterestInAttoEth() == 0
 
@@ -159,8 +159,8 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     yesShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(NO))
     expectedValue = 1 * market.getNumTicks()
-    expectedFees = expectedValue * 0.0101
-    expectedPayout = long(expectedValue - expectedFees)
+    expectedSettlementFees = expectedValue * 0.0101
+    expectedPayout = long(expectedValue - expectedSettlementFees)
 
     assert universe.getOpenInterestInAttoEth() == 0
 

@@ -26,7 +26,6 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
         market = _market;
         payoutNumerators = _payoutNumerators;
-        // TODO: call a function on `self.getUniverse()` that logs the creation of this token with an index for the market, function needs to verify that caller is `universe.isContainerForReportingToken(thisToken)`
         return true;
     }
 
@@ -76,6 +75,8 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
+    // TODO: prevent calling this until all markets on the reporting window are finalized.
+    // TODO: add reporting fee distribution to this.
     function redeemWinningTokens() public afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
@@ -164,12 +165,12 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return payoutNumerators[index];
     }
 
-    function isIndeterminate() public constant returns (bool) {
+    function isValid() public constant returns (bool) {
         for (uint8 i = 1; i < payoutNumerators.length; i++) {
             if (payoutNumerators[0] != payoutNumerators[i]) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 }

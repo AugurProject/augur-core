@@ -4,7 +4,7 @@ from reporting_utils import proceedToLimitedReporting, initializeReportingFixtur
 
 ONE = 10 ** 18
 
-@mark.parametrize('numIndeterminate, targetIndeterminatePerHundred, previousBond, expectedValue', [
+@mark.parametrize('numInvalid, targetInvalidPerHundred, previousBond, expectedValue', [
     # No change
     (1, 1, ONE, ONE),
     (5, 5, ONE, ONE),
@@ -34,10 +34,10 @@ ONE = 10 ** 18
     (80, 50, 10 * ONE, 16 * ONE),
     (90, 50, 10 * ONE, 18 * ONE),
 ])
-def test_validity_bond_calculation(numIndeterminate, targetIndeterminatePerHundred, previousBond, expectedValue, contractsFixture):
+def test_validity_bond_calculation(numInvalid, targetInvalidPerHundred, previousBond, expectedValue, contractsFixture):
     feeCalculator = contractsFixture.contracts["MarketFeeCalculator"]
-    targetIndeterminateDivisor = 100 / targetIndeterminatePerHundred
-    newBond = feeCalculator.calculateValidityBond(numIndeterminate, 100, targetIndeterminateDivisor, previousBond)
+    targetInvalidDivisor = 100 / targetInvalidPerHundred
+    newBond = feeCalculator.calculateValidityBond(numInvalid, 100, targetInvalidDivisor, previousBond)
     assert newBond == expectedValue
 
 def test_default_target_reporter_gas_costs(contractsFixture):
@@ -95,25 +95,6 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture):
     targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(universe.getCurrentReportingWindow())
     assert targetReporterGasCosts == expectedTargetReporterGasCost 
 
-def test_gas_to_report(reportingFixture):
-    # Confirm that the gas to report fee is consistent with out stored value. This test will fail if the gas cost changes.
-    market = reportingFixture.binaryMarket
-    universe = reportingFixture.universe
-    reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())
-
-    # Proceed to the LIMITED REPORTING phase
-    proceedToLimitedReporting(reportingFixture, market, True, tester.k1, [0,10**18])
-
-    # We make a report and record gas cost
-    reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
-    startingGas = reportingFixture.chain.head_state.gas_used
-    reportingTokenYes.buy(1, sender=tester.k2)
-    gasUsed = reportingFixture.chain.head_state.gas_used - startingGas
-
-    # Confirm the estimated gas cost equals this value
-    assert gasUsed == reportingFixture.constants.GAS_TO_REPORT()
-
 @fixture(scope="session")
 def reportingSnapshot(sessionFixture):
     sessionFixture.resetSnapshot()
@@ -121,5 +102,5 @@ def reportingSnapshot(sessionFixture):
 
 @fixture
 def reportingFixture(sessionFixture, reportingSnapshot):
-    sessionFixture.chain.revert(reportingSnapshot)
+    sessionFixture.resetToSnapshot(reportingSnapshot)
     return sessionFixture

@@ -10,11 +10,11 @@ from ethereum.config import config_metropolis
 @fixture(scope="session")
 def arraySnapshot(sessionFixture):
     arrayHelper = sessionFixture.upload('solidity_test_helpers/ArrayHelper.sol')
-    return sessionFixture.chain.snapshot()
+    return sessionFixture.createSnapshot()
 
 @fixture
 def arrayContractsFixture(sessionFixture, arraySnapshot):
-    sessionFixture.chain.revert(arraySnapshot)
+    sessionFixture.resetToSnapshot(arraySnapshot)
     return sessionFixture
 
 def test_arraySlicingOnEmpty(arrayContractsFixture):

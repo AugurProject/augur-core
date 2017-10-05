@@ -36,12 +36,13 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set.Data private markets;
     Set.Data private limitedReporterMarkets;
     Set.Data private allReporterMarkets;
-    uint256 private indeterminateMarketCount;
+    uint256 private invalidMarketCount;
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
     RunningAverage.Data private reportingGasPrice;
     RunningAverage.Data private marketReports;
+    uint256 private totalWinningReportingTokens;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -75,15 +76,17 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function migrateMarketInFromNibling() public afterInitialized returns (bool) {
-        IMarket _market = IMarket(msg.sender);
-        IUniverse _shadyUniverse = _market.getUniverse();
+        IMarket _shadyMarket = IMarket(msg.sender);
+        IUniverse _shadyUniverse = _shadyMarket.getUniverse();
         require(_shadyUniverse == universe.getParentUniverse());
         IUniverse _originalUniverse = _shadyUniverse;
-        IReportingWindow _shadyReportingWindow = _market.getReportingWindow();
+        IReportingWindow _shadyReportingWindow = _shadyMarket.getReportingWindow();
         require(_originalUniverse.isContainerForReportingWindow(_shadyReportingWindow));
         IReportingWindow _originalReportingWindow = _shadyReportingWindow;
-        require(_originalReportingWindow.isContainerForMarket(_market));
-        privateAddMarket(_market);
+        require(_originalReportingWindow.isContainerForMarket(_shadyMarket));
+        IMarket _legitMarket = _shadyMarket;
+        _originalReportingWindow.migrateFeesDueToFork();
+        privateAddMarket(_legitMarket);
         return true;
     }
 
@@ -114,10 +117,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         }
 
         if (_state == IMarket.ReportingState.FINALIZED) {
-            if (_market.isIndeterminate()) {
-                indeterminateMarketCount++;
+            if (!_market.isValid()) {
+                invalidMarketCount++;
             }
             marketReports.record(numberOfReportsByMarket[_market]);
+            totalWinningReportingTokens = totalWinningReportingTokens.add(_market.getFinalWinningReportingToken().totalSupply());
         }
 
         return true;
@@ -175,8 +179,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return markets.count;
     }
 
-    function getNumIndeterminateMarkets() public afterInitialized constant returns (uint256) {
-        return indeterminateMarketCount;
+    function getNumInvalidMarkets() public afterInitialized constant returns (uint256) {
+        return invalidMarketCount;
     }
 
     function getReportingStartTime() public afterInitialized constant returns (uint256) {
@@ -211,6 +215,32 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         require(isActive());
         require(getRegistrationToken().balanceOf(msg.sender) > 0);
         reporterStatus[msg.sender].finishedReporting = true;
+        return true;
+    }
+
+    // This exists as an edge case handler for when a ReportingWindow has no markets but we want to migrate fees to a new universe. If a market exists it should be migrated and that will trigger a fee migration. Otherwise calling this on the desitnation reporting window in the forked universe with the old reporting window as an argument will trigger a fee migration manaully
+    function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public afterInitialized returns (bool) {
+        require(_reportingWindow.getNumMarkets() == 0);
+        _reportingWindow.migrateFeesDueToFork();
+    }
+
+    function migrateFeesDueToFork() public afterInitialized returns (bool) {
+        require(isForkingMarketFinalized());
+        // NOTE: Will need to figure out a way to transfer other denominations when that is implemented
+        ICash _cash = ICash(controller.lookup("Cash"));
+        uint256 _balance = _cash.balanceOf(this);
+        if (_balance == 0) {
+            return false;
+        }
+        IReportingWindow _shadyReportingWindow = IReportingWindow(msg.sender);
+        IUniverse _shadyUniverse = _shadyReportingWindow.getUniverse();
+        require(_shadyUniverse.isContainerForReportingWindow(_shadyReportingWindow));
+        require(universe.isParentOf(_shadyUniverse));
+        IUniverse _destinationUniverse = _shadyUniverse;
+        IReportingWindow _destinationReportingWindow = _shadyReportingWindow;
+        bytes32 _winningForkPayoutDistributionHash = universe.getForkingMarket().getFinalPayoutDistributionHash();
+        require(_destinationUniverse == universe.getChildUniverse(_winningForkPayoutDistributionHash));
+        _cash.transfer(_destinationReportingWindow, _balance);
         return true;
     }
 
