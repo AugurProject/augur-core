@@ -13,6 +13,7 @@ import 'reporting/IRegistrationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'extensions/MarketFeeCalculator.sol';
 
 
 contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IReportingToken {
@@ -36,6 +37,10 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
             if (getRegistrationToken().balanceOf(msg.sender) == 0) {
                 return false;
             }
+        } else if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
+            require(msg.sender == market.getDesignatedReporter());
+            uint256 _designatedDisputeCost = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getDesignatedReportCost(market.getReportingWindow());
+            require(_attotokens == _designatedDisputeCost);
         } else {
             require(_state == IMarket.ReportingState.LIMITED_REPORTING || _state == IMarket.ReportingState.ALL_REPORTING);
         }
@@ -46,6 +51,9 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         bytes32 _payoutDistributionHash = getPayoutDistributionHash();
         market.updateTentativeWinningPayoutDistributionHash(_payoutDistributionHash);
         getReportingWindow().noteReport(market, msg.sender, _payoutDistributionHash);
+        if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
+            market.designatedReport();
+        }
         return true;
     }
 

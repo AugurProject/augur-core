@@ -4,7 +4,7 @@ from reporting_utils import proceedToLimitedReporting, initializeReportingFixtur
 
 ONE = 10 ** 18
 
-@mark.parametrize('numInvalid, targetInvalidPerHundred, previousBond, expectedValue', [
+@mark.parametrize('numWithCondition, targetWithConditionPerHundred, previousAmount, expectedValue', [
     # No change
     (1, 1, ONE, ONE),
     (5, 5, ONE, ONE),
@@ -34,11 +34,11 @@ ONE = 10 ** 18
     (80, 50, 10 * ONE, 16 * ONE),
     (90, 50, 10 * ONE, 18 * ONE),
 ])
-def test_validity_bond_calculation(numInvalid, targetInvalidPerHundred, previousBond, expectedValue, contractsFixture):
+def test_floating_amount_calculation(numWithCondition, targetWithConditionPerHundred, previousAmount, expectedValue, contractsFixture):
     feeCalculator = contractsFixture.contracts["MarketFeeCalculator"]
-    targetInvalidDivisor = 100 / targetInvalidPerHundred
-    newBond = feeCalculator.calculateValidityBond(numInvalid, 100, targetInvalidDivisor, previousBond)
-    assert newBond == expectedValue
+    targetDivisor = 100 / targetWithConditionPerHundred
+    newAmount = feeCalculator.calculateFloatingValue(numWithCondition, 100, targetDivisor, previousAmount, contractsFixture.constants.DEFAULT_VALIDITY_BOND())
+    assert newAmount == expectedValue
 
 def test_default_target_reporter_gas_costs(contractsFixture):
     # The target reporter gas cost is an attempt to charge the market creator for the estimated cost of reporting that may occur for their market. With no previous reporting window to base costs off of it assumes basic default values

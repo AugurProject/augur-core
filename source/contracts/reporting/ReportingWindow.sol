@@ -37,6 +37,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set.Data private limitedReporterMarkets;
     Set.Data private allReporterMarkets;
     uint256 private invalidMarketCount;
+    uint256 private incorrectMarketCount;
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
@@ -120,6 +121,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
             if (!_market.isValid()) {
                 invalidMarketCount++;
             }
+            if (_market.getFinalPayoutDistributionHash() != _market.getDesignatedReportPayoutHash()) {
+                incorrectMarketCount++;
+            }
             marketReports.record(numberOfReportsByMarket[_market]);
             uint256 _totalWinningReportingTokens = _market.getFinalWinningReportingToken().totalSupply();
             totalWinningReportingTokens = totalWinningReportingTokens.add(_totalWinningReportingTokens);
@@ -132,9 +136,14 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         require(markets.contains(_market));
         require(_market.getReportingTokenOrZeroByPayoutDistributionHash(_payoutDistributionHash) == msg.sender);
         IMarket.ReportingState _state = _market.getReportingState();
-        require(_state == IMarket.ReportingState.ALL_REPORTING || _state == IMarket.ReportingState.LIMITED_REPORTING);
+        bool _validReportingState = _state == IMarket.ReportingState.ALL_REPORTING;
+        _validReportingState = _validReportingState || (_state == IMarket.ReportingState.LIMITED_REPORTING);
+        _validReportingState = _validReportingState || (_state == IMarket.ReportingState.DESIGNATED_REPORTING);
+        require(_validReportingState);
         if (_state == IMarket.ReportingState.ALL_REPORTING) {
             // always give credit for events in all-reporters phase
+            privateNoteReport(_market, _reporter);
+        } else if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             privateNoteReport(_market, _reporter);
         } else if (numberOfReportsByMarket[_market] < getMaxReportsPerLimitedReporterMarket()) {
             // only give credit for limited reporter markets up to the max reporters for that market
@@ -182,6 +191,10 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function getNumInvalidMarkets() public afterInitialized constant returns (uint256) {
         return invalidMarketCount;
+    }
+
+    function getNumIncorrectMarkets() public constant returns (uint256) {
+        return incorrectMarketCount;
     }
 
     function getReportingStartTime() public afterInitialized constant returns (uint256) {

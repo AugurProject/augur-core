@@ -13,10 +13,12 @@ contract MarketFeeCalculator {
     mapping (address => uint256) private shareSettlementPerEthFee;
     mapping (address => uint256) private validityBondInAttoeth;
     mapping (address => uint256) private targetReporterGasCosts;
+    mapping (address => uint256) private designatedReportCostInAttoRep;
 
-    uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
-    uint256 private constant TARGET_INVALID_MARKETS_DIVISOR = 100; // 1% of markets
+    uint256 private constant TARGET_INVALID_MARKETS_DIVISOR = 100; // 1% of markets are expected to be invalid
     uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
+
+    uint256 private constant TARGET_INCORRECT_MARKETS_DIVISOR = 100; // 1% of markets are expected to have an incorrect designate report
 
     function getValidityBond(IReportingWindow _reportingWindow) public returns (uint256) {
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
@@ -28,41 +30,56 @@ contract MarketFeeCalculator {
         uint256 _invalidMarketsInPreviousWindow = _reportingWindow.getNumInvalidMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
 
-        _currentValidityBondInAttoeth = calculateValidityBond(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INVALID_MARKETS_DIVISOR, _previousValidityBondInAttoeth);
+        _currentValidityBondInAttoeth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INVALID_MARKETS_DIVISOR, _previousValidityBondInAttoeth, Reporting.defaultValidityBond());
         validityBondInAttoeth[_reportingWindow] = _currentValidityBondInAttoeth;
         return _currentValidityBondInAttoeth;
     }
 
-    function calculateValidityBond(uint256 _invalidMarkets, uint256 _totalMarkets, uint256 _targetInvalidMarketsDivisor, uint256 _previousValidityBondInAttoeth) constant public returns (uint256) {
-        if (_totalMarkets == 0) {
-            return DEFAULT_VALIDITY_BOND;
+    function getDesignatedReportCost(IReportingWindow _reportingWindow) public returns (uint256) {
+        uint256 _currentDesignatedReportCostInAttoRep = designatedReportCostInAttoRep[_reportingWindow];
+        if (_currentDesignatedReportCostInAttoRep != 0) {
+            return _currentDesignatedReportCostInAttoRep;
         }
-        if (_previousValidityBondInAttoeth == 0) {
-            _previousValidityBondInAttoeth = DEFAULT_VALIDITY_BOND;
+        IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
+        uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
+        uint256 _incorrectMarketsInPreviousWindow = _reportingWindow.getNumIncorrectMarkets();
+        uint256 _previousDesignatedReportCostInAttoRep = designatedReportCostInAttoRep[_previousReportingWindow];
+
+        _currentDesignatedReportCostInAttoRep = calculateFloatingValue(_incorrectMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INCORRECT_MARKETS_DIVISOR, _previousDesignatedReportCostInAttoRep, Reporting.defaultDesignatedReportCost());
+        designatedReportCostInAttoRep[_reportingWindow] = _currentDesignatedReportCostInAttoRep;
+        return _currentDesignatedReportCostInAttoRep;
+    }
+
+    function calculateFloatingValue(uint256 _invalidMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) constant public returns (uint256 _newValue) {
+        if (_totalMarkets == 0) {
+            return _defaultValue;
+        }
+        if (_previousValue == 0) {
+            _previousValue = _defaultValue;
         }
         
-        uint256 _targetInvalidMarkets = _totalMarkets.div(_targetInvalidMarketsDivisor);
-
-        // Modify the validity bond based on the previous amount and the number of invalid markets. We want the bond to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets being invalid results in 2x and 0 invalid results in 0.5x.
-        if (_invalidMarkets <= _targetInvalidMarkets) {
-            // FXP formula: previous_bond * percent_invalid / (2 * target_percent_invalid) + 0.5;
-            return _invalidMarkets
-                .mul(_previousValidityBondInAttoeth)
-                .mul(_targetInvalidMarketsDivisor)
+        // Modify the amount based on the previous amount and the number of markets fitting the failure criteria. We want the amount to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets with the condition results in 2x and 0 results in 0.5x.
+        if (_invalidMarkets <= _totalMarkets.div(_targetDivisor)) {
+            // FXP formula: previous_amount * actual_percent / (2 * target_percent) + 0.5;
+            _newValue = _invalidMarkets
+                .mul(_previousValue)
+                .mul(_targetDivisor)
                 .div(_totalMarkets)
                 .div(2)
-                .add(_previousValidityBondInAttoeth.div(2))
+                .add(_previousValue.div(2))
             ; // FIXME: This is here due to a solium bug
         } else {
-            // FXP formula: previous_bond * (1/(1 - target_percent_invalid)) * (percent_invalid - target_percent_invalid) + 1;
-            return _targetInvalidMarketsDivisor
-                .mul(_previousValidityBondInAttoeth.mul(_invalidMarkets)
+            // FXP formula: previous_amount * (1/(1 - target_percent)) * (actual_percent - target_percent) + 1;
+            _newValue = _targetDivisor
+                .mul(_previousValue.mul(_invalidMarkets)
                 .div(_totalMarkets)
-                .sub(_previousValidityBondInAttoeth.div(_targetInvalidMarketsDivisor)))
-                .div(_targetInvalidMarketsDivisor - 1)
-                .add(_previousValidityBondInAttoeth)
+                .sub(_previousValue.div(_targetDivisor)))
+                .div(_targetDivisor - 1)
+                .add(_previousValue)
             ; // FIXME: This is here due to a solium bug
         }
+
+        return _newValue;
     }
 
     function getTargetReporterGasCosts(IReportingWindow _reportingWindow) constant public returns (uint256) {

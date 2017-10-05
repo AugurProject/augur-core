@@ -13,7 +13,7 @@ def test_designatedReportingNoReport(registrationTokenRedemptionFixture):
     proceedToDesignatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report
-    assert market.designatedReport([0,10**18], sender=tester.k0)
+    assert registrationTokenRedemptionFixture.designatedReport(market, [0,10**18], tester.k0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
     assert market.getReportingState() == registrationTokenRedemptionFixture.constants.DESIGNATED_DISPUTE()
@@ -35,7 +35,7 @@ def test_checkInReporting(registrationTokenRedemptionFixture):
     proceedToDesignatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report
-    assert market.designatedReport([0,10**18], sender=tester.k0)
+    assert registrationTokenRedemptionFixture.designatedReport(market, [0,10**18], tester.k0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
     assert market.getReportingState() == registrationTokenRedemptionFixture.constants.DESIGNATED_DISPUTE()
