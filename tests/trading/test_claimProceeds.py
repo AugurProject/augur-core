@@ -93,7 +93,7 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     # get NO shares with a2
     acquireShortShareSet(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,10**18])
+    finalizeMarket(fundedRepFixture, market, [0,10**18])
 
     # redeem shares with a1
     initialLongHolderETH = fundedRepFixture.utils.getETHBalance(tester.a1)
@@ -131,7 +131,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     # get short shares with a2
     acquireShortShareSet(fundedRepFixture, market, 2, 1, claimProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [0, 0, 3 * 10 ** 17])
+    finalizeMarket(fundedRepFixture, market, [0, 0, 3 * 10 ** 17])
 
     # redeem shares with a1
     initialLongHolderETH = fundedRepFixture.utils.getETHBalance(tester.a1)
@@ -170,7 +170,7 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     # get NO shares with a2
     acquireShortShareSet(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [10**19, 3*10**19])
+    finalizeMarket(fundedRepFixture, market, [10**19, 3*10**19])
 
     # redeem shares with a1
     initialLongHolderETH = fundedRepFixture.utils.getETHBalance(tester.a1)

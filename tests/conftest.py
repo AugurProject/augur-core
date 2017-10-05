@@ -320,8 +320,8 @@ class ContractsFixture:
         registrationToken = self.applySignature('RegistrationToken', reportingToken.getRegistrationToken())
         if registrationToken.balanceOf(market.getDesignatedReporter()) < 1:
             assert registrationToken.register(sender=reporterKey)
-        designatedReportCost = self.contracts['MarketFeeCalculator'].getDesignatedReportCost(market.getReportingWindow())
-        return reportingToken.buy(designatedReportCost, sender=reporterKey)
+        designatedReportStake = self.contracts['MarketFeeCalculator'].getDesignatedReportStake(market.getReportingWindow())
+        return reportingToken.buy(designatedReportStake, sender=reporterKey)
 
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
         payoutDistributionHash = market.derivePayoutDistributionHash(payoutDistribution)

@@ -13,7 +13,7 @@ contract MarketFeeCalculator {
     mapping (address => uint256) private shareSettlementPerEthFee;
     mapping (address => uint256) private validityBondInAttoeth;
     mapping (address => uint256) private targetReporterGasCosts;
-    mapping (address => uint256) private designatedReportCostInAttoRep;
+    mapping (address => uint256) private designatedReportStakeInAttoRep;
 
     uint256 private constant TARGET_INVALID_MARKETS_DIVISOR = 100; // 1% of markets are expected to be invalid
     uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
@@ -35,19 +35,19 @@ contract MarketFeeCalculator {
         return _currentValidityBondInAttoeth;
     }
 
-    function getDesignatedReportCost(IReportingWindow _reportingWindow) public returns (uint256) {
-        uint256 _currentDesignatedReportCostInAttoRep = designatedReportCostInAttoRep[_reportingWindow];
-        if (_currentDesignatedReportCostInAttoRep != 0) {
-            return _currentDesignatedReportCostInAttoRep;
+    function getDesignatedReportStake(IReportingWindow _reportingWindow) public returns (uint256) {
+        uint256 _currentDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_reportingWindow];
+        if (_currentDesignatedReportStakeInAttoRep != 0) {
+            return _currentDesignatedReportStakeInAttoRep;
         }
         IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
         uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
         uint256 _incorrectMarketsInPreviousWindow = _reportingWindow.getNumIncorrectMarkets();
-        uint256 _previousDesignatedReportCostInAttoRep = designatedReportCostInAttoRep[_previousReportingWindow];
+        uint256 _previousDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_previousReportingWindow];
 
-        _currentDesignatedReportCostInAttoRep = calculateFloatingValue(_incorrectMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INCORRECT_MARKETS_DIVISOR, _previousDesignatedReportCostInAttoRep, Reporting.defaultDesignatedReportCost());
-        designatedReportCostInAttoRep[_reportingWindow] = _currentDesignatedReportCostInAttoRep;
-        return _currentDesignatedReportCostInAttoRep;
+        _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INCORRECT_MARKETS_DIVISOR, _previousDesignatedReportStakeInAttoRep, Reporting.defaultDesignatedReportStake());
+        designatedReportStakeInAttoRep[_reportingWindow] = _currentDesignatedReportStakeInAttoRep;
+        return _currentDesignatedReportStakeInAttoRep;
     }
 
     function calculateFloatingValue(uint256 _invalidMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) constant public returns (uint256 _newValue) {
@@ -61,22 +61,10 @@ contract MarketFeeCalculator {
         // Modify the amount based on the previous amount and the number of markets fitting the failure criteria. We want the amount to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets with the condition results in 2x and 0 results in 0.5x.
         if (_invalidMarkets <= _totalMarkets.div(_targetDivisor)) {
             // FXP formula: previous_amount * actual_percent / (2 * target_percent) + 0.5;
-            _newValue = _invalidMarkets
-                .mul(_previousValue)
-                .mul(_targetDivisor)
-                .div(_totalMarkets)
-                .div(2)
-                .add(_previousValue.div(2))
-            ; // FIXME: This is here due to a solium bug
+            _newValue = _invalidMarkets.mul(_previousValue).mul(_targetDivisor).div(_totalMarkets).div(2).add(_previousValue.div(2)); // FIXME: This is on one line due to solium bugs
         } else {
             // FXP formula: previous_amount * (1/(1 - target_percent)) * (actual_percent - target_percent) + 1;
-            _newValue = _targetDivisor
-                .mul(_previousValue.mul(_invalidMarkets)
-                .div(_totalMarkets)
-                .sub(_previousValue.div(_targetDivisor)))
-                .div(_targetDivisor - 1)
-                .add(_previousValue)
-            ; // FIXME: This is here due to a solium bug
+            _newValue = _targetDivisor.mul(_previousValue.mul(_invalidMarkets).div(_totalMarkets).sub(_previousValue.div(_targetDivisor))).div(_targetDivisor - 1).add(_previousValue); // FIXME: This is on one line due to a solium bug
         }
 
         return _newValue;

@@ -10,7 +10,7 @@ library Reporting {
     uint256 private constant REGISTRATION_TOKEN_BOND_AMOUNT = 1 ether;
 
     uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
-    uint256 private constant DEFAULT_DESIGNATED_REPORT_COST = 2 ether;
+    uint256 private constant DEFAULT_DESIGNATED_REPORT_STAKE = 2 ether;
 
     // CONSIDER: figure out approprate values for these
     uint256 private constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
@@ -35,5 +35,5 @@ library Reporting {
     function defaultReportingGasPrice() internal constant returns (uint256) { return DEFAULT_REPORTING_GAS_PRICE; }
     function defaultReportsPerMarket() internal constant returns (uint256) { return DEFAULT_REPORTS_PER_MARKET; }
     function defaultValidityBond() internal constant returns (uint256) { return DEFAULT_VALIDITY_BOND; }
-    function defaultDesignatedReportCost() internal constant returns (uint256) { return DEFAULT_DESIGNATED_REPORT_COST; }
+    function defaultDesignatedReportStake() internal constant returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
 }
