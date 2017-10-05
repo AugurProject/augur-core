@@ -221,9 +221,6 @@ class ContractsFixture:
         self.chain.revert(captured['snapshot'])
         self.contracts = deepcopy(captured['contracts'])
 
-    def pushTimeStamp(self, setTime):
-        self.chain.head_state.timestamp = setTime
-
     ####
     #### Bulk Operations
     ####
