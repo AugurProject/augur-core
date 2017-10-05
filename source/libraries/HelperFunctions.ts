@@ -5,7 +5,7 @@ const DEFAULT_TEST_ACCOUNT_BALANCE = 100000000;
 // Set gas block limit extremely high so new blocks don"t have to be mined while uploading contracts
 const GAS_BLOCK_AMOUNT = Math.pow(2, 32);
 
-interface TestAccount {
+export interface TestAccount {
     privateKey: string;
     publicKey: string;
     address: string;
@@ -39,7 +39,11 @@ export async function generateTestAccounts(secretKeys: string[]): Promise<TestAc
     let testAccounts: Promise<TestAccount>[] = [];
     for (let secretKey in secretKeys) {
         const hexlifiedSecretKey = await padAndHexlify(secretKeys[secretKey], 64);
-        testAccounts.push(await EthAccount.privateToAccount(hexlifiedSecretKey));
+        let testAccount = await EthAccount.privateToAccount(hexlifiedSecretKey);
+        for (let testAccountData in testAccount) {
+            testAccount[testAccountData] = testAccount[testAccountData].toLowerCase();
+        }
+        testAccounts.push(testAccount);
     }
 
     return await Promise.all(testAccounts);
