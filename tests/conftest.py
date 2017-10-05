@@ -211,6 +211,7 @@ class ContractsFixture:
         self.resetToSnapshot(self.captured)
 
     def createSnapshot(self):
+        self.chain.mine(1)
         return  { 'block': self.chain.block, 'head_state': self.chain.head_state, 'snapshot': self.chain.snapshot(), 'contracts': deepcopy(self.contracts) }
 
     def resetToSnapshot(self, captured):
