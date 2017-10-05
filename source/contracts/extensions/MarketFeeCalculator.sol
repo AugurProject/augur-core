@@ -18,7 +18,7 @@ contract MarketFeeCalculator {
     uint256 private constant TARGET_INVALID_MARKETS_DIVISOR = 100; // 1% of markets are expected to be invalid
     uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
 
-    uint256 private constant TARGET_INCORRECT_MARKETS_DIVISOR = 100; // 1% of markets are expected to have an incorrect designate report
+    uint256 private constant TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR = 100; // 1% of markets are expected to have an incorrect designate report
 
     function getValidityBond(IReportingWindow _reportingWindow) public returns (uint256) {
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
@@ -42,10 +42,10 @@ contract MarketFeeCalculator {
         }
         IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
         uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
-        uint256 _incorrectMarketsInPreviousWindow = _reportingWindow.getNumIncorrectMarkets();
+        uint256 _incorrectDesignatedReportMarketsInPreviousWindow = _reportingWindow.getNumIncorrectDesignatedReportMarkets();
         uint256 _previousDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_previousReportingWindow];
 
-        _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INCORRECT_MARKETS_DIVISOR, _previousDesignatedReportStakeInAttoRep, Reporting.defaultDesignatedReportStake());
+        _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectDesignatedReportMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR, _previousDesignatedReportStakeInAttoRep, Reporting.defaultDesignatedReportStake());
         designatedReportStakeInAttoRep[_reportingWindow] = _currentDesignatedReportStakeInAttoRep;
         return _currentDesignatedReportStakeInAttoRep;
     }

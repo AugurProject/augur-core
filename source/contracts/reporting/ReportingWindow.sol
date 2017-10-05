@@ -37,7 +37,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set.Data private limitedReporterMarkets;
     Set.Data private allReporterMarkets;
     uint256 private invalidMarketCount;
-    uint256 private incorrectMarketCount;
+    uint256 private incorrectDesignatedReportMarketCount;
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
@@ -122,7 +122,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
                 invalidMarketCount++;
             }
             if (_market.getFinalPayoutDistributionHash() != _market.getDesignatedReportPayoutHash()) {
-                incorrectMarketCount++;
+                incorrectDesignatedReportMarketCount++;
             }
             marketReports.record(numberOfReportsByMarket[_market]);
             uint256 _totalWinningReportingTokens = _market.getFinalWinningReportingToken().totalSupply();
@@ -193,8 +193,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return invalidMarketCount;
     }
 
-    function getNumIncorrectMarkets() public constant returns (uint256) {
-        return incorrectMarketCount;
+    function getNumIncorrectDesignatedReportMarkets() public constant returns (uint256) {
+        return incorrectDesignatedReportMarketCount;
     }
 
     function getReportingStartTime() public afterInitialized constant returns (uint256) {
