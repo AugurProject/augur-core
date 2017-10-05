@@ -203,7 +203,7 @@ class ContractsFixture:
         self.resetToSnapshot(self.captured)
 
     def createSnapshot(self):
-        return  { 'block': self.chain.block, 'head_state': self.chain.head_state.ephemeral_clone(), 'snapshot': self.chain.snapshot(), 'contracts': deepcopy(self.contracts) }
+        return  { 'block': self.chain.block, 'head_state': self.chain.head_state, 'snapshot': self.chain.snapshot(), 'contracts': deepcopy(self.contracts) }
 
     def resetToSnapshot(self, captured):
         if len(captured) < 4:
