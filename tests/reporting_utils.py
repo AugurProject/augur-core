@@ -36,7 +36,7 @@ def initializeReportingFixture(sessionFixture, market):
         assert firstRegistrationToken.balanceOf(address) == 1
         assert reputationToken.balanceOf(address) == 1 * 10**6 * 10**18 - 10**18
 
-    return sessionFixture.chain.snapshot()
+    return sessionFixture.createSnapshot()
 
 def proceedToDesignatedReporting(testFixture, market, reportOutcomes):
     cash = testFixture.cash
@@ -51,7 +51,7 @@ def proceedToDesignatedReporting(testFixture, market, reportOutcomes):
 
     # Fast forward to the reporting phase time
     reportingWindow = testFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
-    testFixture.chain.head_state.timestamp = market.getEndTime() + 1
+    testFixture.pushTimeStamp(market.getEndTime() + 1)
 
     # This will cause us to be in the DESIGNATED REPORTING phase
     assert market.getReportingState() == testFixture.constants.DESIGNATED_REPORTING()
@@ -66,7 +66,7 @@ def proceedToLimitedReporting(testFixture, market, makeReport, disputer, reportO
         assert market.getReportingState() == testFixture.constants.DESIGNATED_DISPUTE()
         assert market.disputeDesignatedReport(sender=disputer)
     else:
-        testFixture.chain.head_state.timestamp = market.getEndTime() + testFixture.constants.DESIGNATED_REPORTING_DURATION_SECONDS() + 1
+        testFixture.pushTimeStamp(market.getEndTime() + testFixture.constants.DESIGNATED_REPORTING_DURATION_SECONDS() + 1)
 
     # We're in the LIMITED REPORTING phase now
     assert market.getReportingState() == testFixture.constants.LIMITED_REPORTING()
@@ -89,7 +89,7 @@ def proceedToAllReporting(testFixture, market, makeReport, designatedDisputer, l
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == reportingToken.getPayoutDistributionHash()
 
-    testFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    testFixture.pushTimeStamp(reportingWindow.getDisputeStartTime() + 1)
 
     assert market.getReportingState() == testFixture.constants.LIMITED_DISPUTE()
 
@@ -121,7 +121,7 @@ def proceedToForking(testFixture, market, makeReport, designatedDisputer, limite
     assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
 
     # To progress into the ALL DISPUTE phase we move time forward
-    testFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    testFixture.pushTimeStamp(reportingWindow.getDisputeStartTime() + 1)
     assert market.getReportingState() == testFixture.constants.ALL_DISPUTE()
 
     # Making a dispute at this phase will progress the market into FORKING
@@ -171,7 +171,7 @@ def finalizeForkingMarket(reportingFixture, market, finalizeByMigration, yesMigr
         winningTokenAddress = reportingTokenNo.address
     else:
         # Time marches on past the fork end time
-        reportingFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1
+        reportingFixture.pushTimeStamp(universe.getForkEndTime() + 1)
 
     # We can finalize the market now
     assert market.tryFinalize()
