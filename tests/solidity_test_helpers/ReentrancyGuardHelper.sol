@@ -2,6 +2,7 @@ pragma solidity ^0.4.13;
 
 import 'libraries/ReentrancyGuard.sol';
 
+
 contract ReentrancyGuardHelper is ReentrancyGuard {
     function testerNonReentrant() public nonReentrant returns (bool) {
         return true;

@@ -10,4 +10,5 @@ contract IReportingToken is Typed, ERC20 {
     function getMarket() public constant returns (IMarket);
     function getPayoutNumerator(uint8 index) public constant returns (uint256);
     function getPayoutDistributionHash() public constant returns (bytes32);
+    function isValid() public constant returns (bool);
 }

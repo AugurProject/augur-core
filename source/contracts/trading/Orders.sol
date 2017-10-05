@@ -19,7 +19,7 @@ contract Orders is DelegationTarget, IOrders {
 
     event CancelOrder(address indexed market, address indexed sender, uint256 price, uint256 amount, bytes32 orderId, uint8 outcome, Order.TradeTypes orderType, uint256 cashRefund, uint256 sharesRefund);
     event BuyCompleteSets(address indexed sender, address indexed market, uint256 amount, uint256 numOutcomes);
-    event SellCompleteSets(address indexed sender, address indexed market, uint256 amount, uint256 numOutcomes, uint256 marketCreatorFee, uint256 reportingFee);
+    event SellCompleteSets(address indexed sender, address indexed market, uint256 amount, uint256 numOutcomes, uint256 creatorFee, uint256 reportingFee);
     event CreateOrder(address indexed market, address indexed sender, Order.TradeTypes indexed orderType, uint256 price, uint256 amount, uint8 outcome, bytes32 orderId, uint256 moneyEscrowed, uint256 sharesEscrowed, uint256 tradeGroupId);
     event FillOrder(address indexed market, uint8 indexed outcome, Order.TradeTypes indexed orderType, bytes32 orderId, uint256 price, address creator, address filler, uint256 creatorShares, uint256 creatorTokens, uint256 fillerShares, uint256 fillerTokens, uint256 tradeGroupId);
 
@@ -223,8 +223,8 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _amount, uint256 _numOutcomes, uint256 _marketCreatorFee, uint256 _reportingFee) public constant returns (bool) {
-        SellCompleteSets(_sender, _market, _amount, _numOutcomes, _marketCreatorFee, _reportingFee);
+    function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _amount, uint256 _numOutcomes, uint256 _creatorFee, uint256 _reportingFee) public constant returns (bool) {
+        SellCompleteSets(_sender, _market, _amount, _numOutcomes, _creatorFee, _reportingFee);
         return true;
     }
 

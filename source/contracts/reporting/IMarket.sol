@@ -49,4 +49,5 @@ contract IMarket is Typed, IOwnable {
     function isContainerForReportingToken(Typed _shadyTarget) public constant returns (bool);
     function isContainerForDisputeBondToken(Typed _shadyTarget) public constant returns (bool);
     function isContainerForShareToken(Typed _shadyTarget) public constant returns (bool);
+    function isValid() public constant returns (bool);
 }
