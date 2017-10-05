@@ -14,7 +14,7 @@ const CONTRACT_INPUT_DIR_PATH = path.join(__dirname, "../../source/contracts");
 const CONTRACT_OUTPUT_DIR_PATH = path.join(__dirname, "../../output/contracts");
 const COMPILED_CONTRACT_OUTPUT_FILE_NAME = "augurCore";
 const GAS_AMOUNT = 6500000; // Gas required to upload all Augur contracts
-export const TEST_ACCOUNT_SECRET_KEYS = ["Augur0", "Augur1", "Augur2", "Augur3", "Augur4", "Augur5", "Augur6", "Augur7", "Augur8", "Augur9"];
+const TEST_ACCOUNT_SECRET_KEYS = ["Augur0", "Augur1", "Augur2", "Augur3", "Augur4", "Augur5", "Augur6", "Augur7", "Augur8", "Augur9"];
 
 
 export async function compileAndDeployContracts(): Promise<ContractDeployer> {

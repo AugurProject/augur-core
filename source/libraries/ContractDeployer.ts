@@ -234,33 +234,48 @@ console.log("Universe address returned by UniverseFactory: " + universeAddress);
         return universe;
     }
 
-    // public async getReportingToken(market, payoutDistribution): Promise<ContractBlockchainData> {
-    //     const reportingTokenAddress = market.getReportingToken(payoutDistribution);
-    //     assert reportingTokenAddress
-    //     reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ReportingToken']), reportingTokenAddress);
-    //     return reportingToken;
-    // }
+    public async getReportingToken(market, payoutDistribution): Promise<ContractBlockchainData> {
+        const reportingTokenAddress = market.getReportingToken(payoutDistribution);
+        if (!reportingTokenAddress) {
+            throw new Error();
+        }
+        // const reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ReportingToken']), reportingTokenAddress);
+        const signature = this.signatures["ReportingToken"];
+        const bytecode = this.bytecodes["ReportingToken"];
+        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        // const receiptAddress = await contractBuilder.new();
+        const receipt: ContractReceipt = await this.ethQuery.getTransactionReceipt(reportingTokenAddress);
+        const reportingToken = await contractBuilder.at(receipt.contractAddress);
 
-    // private async createBinaryMarket(universe, endTime: number, feePerEthInWei: number, denominationToken, designatedReporterAddress, numTicks: number) {
-    //     return await this.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks);
-    // }
+        return reportingToken;
+    }
 
-    // private async createCategoricalMarket(universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks): Promise<string> {
-    //     const reportingWindowAddress = await universe.getCurrentReportingWindow();
-    //     const marketCreationFee = await this.contracts["MarketFeeCalculator"].getValidityBond(reportingWindowAddress) + this.contracts["MarketFeeCalculator"].getTargetReporterGasCosts(reportingWindowAddress);
-    //     const marketAddress = await this.contracts["MarketCreation"].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, {value: marketCreationFee, startgas: 6.7 * Math.pow(10, 6)});
-    //     if (typeof marketAddress !== "string") {
-    //         throw new Error("Unable to create new market.");
-    //     }
-    //     const market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures["Market"]), marketAddress);
-    //     return marketAddress;
-    // }
+    private async createBinaryMarket(universe, endTime: number, feePerEthInWei: number, denominationToken, designatedReporterAddress, numTicks: number) {
+        return await this.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks);
+    }
 
-    // private async createReasonableBinaryMarket(universe: any, denominationToken: any) {
-    //     const block = await this.ethQuery.getBlockByNumber(0, true);
-    //     const blockDateTime = await this.parseBlockTimestamp(block.timestamp);
-    //     var blockDateTimePlusDay = new Date();
-    //     blockDateTimePlusDay.setDate(blockDateTime.getDate() + 1);
-    //     return await this.createBinaryMarket(universe, blockDateTimePlusDay.getTime()/1000, Math.pow(10, 6), denominationToken, this.testAccounts[0].address, Math.pow(10, 18));
-    // }
+    private async createCategoricalMarket(universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks): Promise<string> {
+        const reportingWindowAddress = await universe.getCurrentReportingWindow();
+        const marketCreationFee = await this.contracts["MarketFeeCalculator"].getValidityBond(reportingWindowAddress) + this.contracts["MarketFeeCalculator"].getTargetReporterGasCosts(reportingWindowAddress);
+        const marketAddress = await this.contracts["MarketCreation"].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, {value: marketCreationFee, startgas: 6.7 * Math.pow(10, 6)});
+        if (typeof marketAddress !== "string") {
+            throw new Error("Unable to create new market.");
+        }
+        // const market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures["Market"]), marketAddress);
+        const signature = this.signatures["Market"];
+        const bytecode = this.bytecodes["Market"];
+        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        // const receiptAddress = await contractBuilder.new();
+        const receipt: ContractReceipt = await this.ethQuery.getTransactionReceipt(marketAddress);
+        const market = await contractBuilder.at(receipt.contractAddress);
+        return market;
+    }
+
+    private async createReasonableBinaryMarket(universe, denominationToken) {
+        const block = await this.ethQuery.getBlockByNumber(0, true);
+        const blockDateTime = await this.parseBlockTimestamp(block.timestamp);
+        const blockDateTimePlusDay = new Date();
+        blockDateTimePlusDay.setDate(blockDateTime.getDate() + 1);
+        return await this.createBinaryMarket(universe, blockDateTimePlusDay.getTime()/1000, Math.pow(10, 6), denominationToken, this.testAccounts[0].address, Math.pow(10, 18));
+    }
 }
