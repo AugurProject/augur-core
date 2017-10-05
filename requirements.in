@@ -1,4 +1,4 @@
-ethereum-augur-temp==2.1.2
+ethereum-augur-temp==2.1.4
 pycryptodome==3.4.6
 numpy==1.13.0
 pytest==3.1.2
