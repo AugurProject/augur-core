@@ -409,5 +409,5 @@ def reportingSnapshot(sessionFixture):
 
 @fixture
 def reportingFixture(sessionFixture, reportingSnapshot):
-    sessionFixture.chain.revert(reportingSnapshot)
+    sessionFixture.resetToSnapshot(reportingSnapshot)
     return sessionFixture

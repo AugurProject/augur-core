@@ -11,11 +11,11 @@ def delegatorSnapshot(sessionFixture):
     sessionFixture.uploadAndAddToController("solidity_test_helpers/DelegatorHelper.sol", targetName, name)
     sessionFixture.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", name, "delegator", constructorArgs=[sessionFixture.controller.address, targetName.ljust(32, '\x00')])
     sessionFixture.contracts[name] = sessionFixture.applySignature(name, sessionFixture.contracts[name].address)
-    return sessionFixture.chain.snapshot()
+    return sessionFixture.createSnapshot()
 
 @fixture
 def delegatorContractsFixture(sessionFixture, delegatorSnapshot):
-    sessionFixture.chain.revert(delegatorSnapshot)
+    sessionFixture.resetToSnapshot(delegatorSnapshot)
     return sessionFixture
 
 
