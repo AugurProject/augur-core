@@ -189,7 +189,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         reportingWindow.updateMarketPhase();
         return true;
 
-        // TODO: create a floating designated report bond and charge it for designated reports  
+        // TODO: create a floating designated report bond and charge it for designated reports
         // TODO: if designated report is wrong, transfer designated report bond to the winning reporting token
         // TODO: if designated report is right, transfer designated report bond to market creator
     }
