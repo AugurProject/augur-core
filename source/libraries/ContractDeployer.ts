@@ -49,7 +49,7 @@ export class ContractDeployer {
         const payoutDistributionHash = await padAndHexlify("", 40);
         this.universe = await this.createUniverse(parentUniverse, payoutDistributionHash);
         this.cash = await this.getSeededCash();
-        // this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
+        this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
 
         return true;
     }
@@ -228,9 +228,8 @@ export class ContractDeployer {
     }
 
     private async createUniverse(parentUniverse, payoutDistributionHash): Promise<ContractBlockchainData> {
-        const universeAddress = await this.contracts['UniverseFactory'].createUniverse(this.controller.address, parentUniverse, payoutDistributionHash);
-console.log("Universe address returned by UniverseFactory: " + universeAddress);
-        const universe = await this.applySignature('Universe', universeAddress);
+        const universeAddress = await this.contracts["UniverseFactory"].createUniverse(this.controller.address, parentUniverse, payoutDistributionHash);
+        const universe = await this.applySignature("Universe", universeAddress[0]);
         return universe;
     }
 
@@ -250,11 +249,11 @@ console.log("Universe address returned by UniverseFactory: " + universeAddress);
         return reportingToken;
     }
 
-    private async createBinaryMarket(universe, endTime: number, feePerEthInWei: number, denominationToken, designatedReporterAddress, numTicks: number) {
+    private async createBinaryMarket(universe, endTime: number, feePerEthInWei: number, denominationToken, designatedReporterAddress, numTicks: number): Promise<ContractBlockchainData> {
         return await this.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks);
     }
 
-    private async createCategoricalMarket(universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks): Promise<string> {
+    private async createCategoricalMarket(universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks): Promise<ContractBlockchainData> {
         const reportingWindowAddress = await universe.getCurrentReportingWindow();
         const marketCreationFee = await this.contracts["MarketFeeCalculator"].getValidityBond(reportingWindowAddress) + this.contracts["MarketFeeCalculator"].getTargetReporterGasCosts(reportingWindowAddress);
         const marketAddress = await this.contracts["MarketCreation"].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, {value: marketCreationFee, startgas: 6.7 * Math.pow(10, 6)});
@@ -271,7 +270,7 @@ console.log("Universe address returned by UniverseFactory: " + universeAddress);
         return market;
     }
 
-    private async createReasonableBinaryMarket(universe, denominationToken) {
+    private async createReasonableBinaryMarket(universe, denominationToken): Promise<ContractBlockchainData> {
         const block = await this.ethQuery.getBlockByNumber(0, true);
         const blockDateTime = await this.parseBlockTimestamp(block.timestamp);
         const blockDateTimePlusDay = new Date();
