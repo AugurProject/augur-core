@@ -2,6 +2,7 @@ pragma solidity ^0.4.13;
 
 import 'IController.sol';
 import 'IControlled.sol';
+import 'libraries/token/ERC20Basic.sol';
 
 
 contract Controller is IController {
@@ -87,8 +88,8 @@ contract Controller is IController {
      * Contract Administration [dev mode can use it]
      */
 
-    function suicideFunds(IControlled _target, address _destination) public devModeOwnerOnly returns(bool) {
-        _target.suicideFunds(_destination);
+    function suicideFunds(IControlled _target, address _destination, ERC20Basic[] _tokens) public devModeOwnerOnly returns(bool) {
+        _target.suicideFunds(_destination, _tokens);
         return true;
     }
 

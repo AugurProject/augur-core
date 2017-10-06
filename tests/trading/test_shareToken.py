@@ -119,4 +119,4 @@ def test_suicideFunds(contractsFixture):
     shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
 
     with raises(TransactionFailed):
-        shareToken.suicideFunds(tester.a0, sender=tester.k0)
+        shareToken.suicideFunds(tester.a0, [], sender=tester.k0)
