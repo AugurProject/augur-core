@@ -28,89 +28,6 @@ SCALAR_OUTCOME_A = [30*10**18, 10*10**18]
 SCALAR_OUTCOME_B = [10*10**18, 30*10**18]
 SCALAR_OUTCOME_C = [20*10**18, 20*10**18]
 
-def printTestAccountBalances(reputationToken, showRepFractions):
-    divisor = REP_DIVISOR
-    if (showRepFractions):
-        divisor = 1
-    for accountNum in xrange(0, 10):
-        print "a" + str(accountNum) + ": " + bytesToHexString(getattr(tester, 'a' + str(accountNum))) + " | " + str(reputationToken.balanceOf(getattr(tester, 'a' + str(accountNum))) / divisor)
-    print ""
-
-def printReportingTokenBalances(reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, showRepFractions):
-    divisor = REP_DIVISOR
-    if (showRepFractions):
-        divisor = 1
-    print "----- REPORTING TOKEN BALANCES -----"
-    print str(reputationToken.balanceOf(reportingTokenA.address) / divisor)
-    print str(reputationToken.balanceOf(reportingTokenB.address) / divisor)
-    print str(reputationToken.balanceOf(reportingTokenC.address) /divisor) + "\n"
-
-def printDisputeBondTokenBalances(reputationToken, designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, showRepFractions):
-    divisor = REP_DIVISOR
-    if (showRepFractions):
-        divisor = 1
-    print "----- DISPUTE BOND TOKEN BALANCES -----"
-    if (designatedReporterDisputeBondToken):
-        print "designatedReporterDisputeBondToken balance: " + str(reputationToken.balanceOf(designatedReporterDisputeBondToken.address) / divisor)
-    if (limitedReportersDisputeBondToken):
-        print "limitedReportersDisputeBondToken balance: " + str(reputationToken.balanceOf(limitedReportersDisputeBondToken.address) / divisor)
-    if (allReportersDisputeBondToken):
-        print "allReportersDisputeBondToken balance: " + str(reputationToken.balanceOf(allReportersDisputeBondToken.address) / divisor)
-    print ""
-
-# Put 1 million REP tokens in tester.a0-tester.a8 and the remainder in tester.a9
-def initializeTestAccountBalances(reputationToken):
-    print "Initializing test account balances"
-    originalAccountBalance = 1 * 10**6 * REP_DIVISOR
-    numOfTesterAccounts = 10
-    for accountNum in xrange(0, numOfTesterAccounts-1):
-        reputationToken.transfer(getattr(tester, 'a' + str(accountNum)), originalAccountBalance)
-    reputationToken.transfer(tester.a9, (REP_TOTAL * REP_DIVISOR) - ((numOfTesterAccounts-1) * originalAccountBalance))
-    print ""
-
-def buyRegistrationTokens(disputeStakes, registrationToken, reputationToken):
-    print "Buying registration tokens"
-    for row in disputeStakes:
-        accountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
-        if registrationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == 1:
-            continue
-        registrationToken.register(sender=getattr(tester, 'k' + str(row[0])))
-        assert registrationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == 1
-        assert reputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalance - (1 * REP_DIVISOR)
-    print ""
-
-def buyReportingTokens(marketType, disputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC):
-    print "Buying reporting tokens"
-    for row in disputeStakes:
-        accountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
-        if (marketType == MARKET_TYPE_CATEGORICAL):
-            if (row[1] == CATEGORICAL_OUTCOME_A):
-                reportingToken = reportingTokenA
-            elif (row[1] == CATEGORICAL_OUTCOME_B):
-                reportingToken = reportingTokenB
-            elif (row[1] == CATEGORICAL_OUTCOME_C):
-                reportingToken = reportingTokenC
-        elif (marketType == MARKET_TYPE_SCALAR):
-            if (row[1] == SCALAR_OUTCOME_A):
-                reportingToken = reportingTokenA
-            elif (row[1] == SCALAR_OUTCOME_B):
-                reportingToken = reportingTokenB
-            elif (row[1] == SCALAR_OUTCOME_C):
-                reportingToken = reportingTokenC
-        accountReportingTokenBalance = reportingToken.balanceOf(getattr(tester, 'a' + str(row[0])))
-        reportingToken.buy(row[2], sender=getattr(tester, 'k' + str(row[0])))
-        assert reportingToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountReportingTokenBalance + row[2]
-        assert reputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalance - row[2]
-    print ""
-
-def calculateTotalLosingDisputeBondTokens(designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, tentativeWinningPayoutDistributionHash):
-    totalLosingDisputeBondTokens = 0
-    if (designatedReporterDisputeBondToken and designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == tentativeWinningPayoutDistributionHash):
-        totalLosingDisputeBondTokens += DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT
-    if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == tentativeWinningPayoutDistributionHash):
-        totalLosingDisputeBondTokens += LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT
-    return totalLosingDisputeBondTokens
-
 @mark.parametrize('marketType,designatedReporterAccountNum,designatedReporterOutcome,designatedReporterDisputerAccountNum,designatedReporterDisputeStakes,limitedReportersDisputerAccountNum,limitedReportersDisputeStakes,allReportersDisputerAccountNum,allReportersDisputeStakes,expectedAccountBalances', [
     # CONSIDER: Create test cases where:
     # - There is no designated reporting (just limited reporters & all reporters)
@@ -200,11 +117,15 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
     universe = contractsFixture.universe
     if (marketType == MARKET_TYPE_CATEGORICAL):
         market = contractsFixture.categoricalMarket
+        otherMarket = contractsFixture.scalarMarket
+        otherOutcome = SCALAR_OUTCOME_A
         OUTCOME_A = CATEGORICAL_OUTCOME_A
         OUTCOME_B = CATEGORICAL_OUTCOME_B
         OUTCOME_C = CATEGORICAL_OUTCOME_C
     elif (marketType == MARKET_TYPE_SCALAR):
         market = contractsFixture.scalarMarket
+        otherMarket = contractsFixture.categoricalMarket
+        otherOutcome = CATEGORICAL_OUTCOME_A
         OUTCOME_A = SCALAR_OUTCOME_A
         OUTCOME_B = SCALAR_OUTCOME_B
         OUTCOME_C = SCALAR_OUTCOME_C
@@ -238,6 +159,10 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
 
     # Fast forward to one second after the next reporting window
     contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
+
+    # Perform designated reports on the other markets so they can finalize and we can redeemWinningTokens later
+    assert otherMarket.designatedReport(otherOutcome)
+    assert contractsFixture.binaryMarket.designatedReport([10**18,0])
 
     # Perform designated report (if there is one)
     if (len(designatedReporterOutcome) > 0):
@@ -375,8 +300,14 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
     totalLosingDisputeBondTokens = calculateTotalLosingDisputeBondTokens(designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, market.getTentativeWinningPayoutDistributionHash())
 
     # Finalize market (i.e., transfer losing dispute bond tokens to winning reporting token)
-    print "\nFinalizing market\n"
-    market.tryFinalize()
+    print "\nFinalizing markets\n"
+    assert market.tryFinalize()
+    if (allReportersDisputerAccountNum):
+        assert otherMarket.migrateThroughOneFork()
+        assert contractsFixture.binaryMarket.migrateThroughOneFork()
+    else:
+        assert otherMarket.tryFinalize()
+        assert contractsFixture.binaryMarket.tryFinalize()
     assert market.getReportingState() == contractsFixture.constants.FINALIZED()
     if (allReportersDisputerAccountNum):
         print "Original universe test accounts"
@@ -613,6 +544,8 @@ def handleReportingTokens(market, designatedReporterAccountNum, allReportersDisp
         print ""
 
         print "Redeeming winning reporting tokens"
+
+
         for key in winningOutcomeStakes:
             accountBalanceBeforeRedemption = reputationToken.balanceOf(getattr(tester, 'a' + str(key)))
             expectedWinnings = reputationToken.balanceOf(winningReportingToken.address) * winningOutcomeStakes[key] / winningReportingToken.totalSupply()
@@ -725,3 +658,86 @@ def withdrawBondsFromDisputeTokens(market, allReportersDisputeStakes, designated
                         assert reputationToken.balanceOf(disputeBondToken.address) == 0
                         assert destinationUniverseReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
                         printTestAccountBalances(destinationUniverseReputationToken, True)
+
+def printTestAccountBalances(reputationToken, showRepFractions):
+    divisor = REP_DIVISOR
+    if (showRepFractions):
+        divisor = 1
+    for accountNum in xrange(0, 10):
+        print "a" + str(accountNum) + ": " + bytesToHexString(getattr(tester, 'a' + str(accountNum))) + " | " + str(reputationToken.balanceOf(getattr(tester, 'a' + str(accountNum))) / divisor)
+    print ""
+
+def printReportingTokenBalances(reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, showRepFractions):
+    divisor = REP_DIVISOR
+    if (showRepFractions):
+        divisor = 1
+    print "----- REPORTING TOKEN BALANCES -----"
+    print str(reputationToken.balanceOf(reportingTokenA.address) / divisor)
+    print str(reputationToken.balanceOf(reportingTokenB.address) / divisor)
+    print str(reputationToken.balanceOf(reportingTokenC.address) /divisor) + "\n"
+
+def printDisputeBondTokenBalances(reputationToken, designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, allReportersDisputeBondToken, showRepFractions):
+    divisor = REP_DIVISOR
+    if (showRepFractions):
+        divisor = 1
+    print "----- DISPUTE BOND TOKEN BALANCES -----"
+    if (designatedReporterDisputeBondToken):
+        print "designatedReporterDisputeBondToken balance: " + str(reputationToken.balanceOf(designatedReporterDisputeBondToken.address) / divisor)
+    if (limitedReportersDisputeBondToken):
+        print "limitedReportersDisputeBondToken balance: " + str(reputationToken.balanceOf(limitedReportersDisputeBondToken.address) / divisor)
+    if (allReportersDisputeBondToken):
+        print "allReportersDisputeBondToken balance: " + str(reputationToken.balanceOf(allReportersDisputeBondToken.address) / divisor)
+    print ""
+
+# Put 1 million REP tokens in tester.a0-tester.a8 and the remainder in tester.a9
+def initializeTestAccountBalances(reputationToken):
+    print "Initializing test account balances"
+    originalAccountBalance = 1 * 10**6 * REP_DIVISOR
+    numOfTesterAccounts = 10
+    for accountNum in xrange(0, numOfTesterAccounts-1):
+        reputationToken.transfer(getattr(tester, 'a' + str(accountNum)), originalAccountBalance)
+    reputationToken.transfer(tester.a9, (REP_TOTAL * REP_DIVISOR) - ((numOfTesterAccounts-1) * originalAccountBalance))
+    print ""
+
+def buyRegistrationTokens(disputeStakes, registrationToken, reputationToken):
+    print "Buying registration tokens"
+    for row in disputeStakes:
+        accountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
+        if registrationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == 1:
+            continue
+        registrationToken.register(sender=getattr(tester, 'k' + str(row[0])))
+        assert registrationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == 1
+        assert reputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalance - (1 * REP_DIVISOR)
+    print ""
+
+def buyReportingTokens(marketType, disputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC):
+    print "Buying reporting tokens"
+    for row in disputeStakes:
+        accountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
+        if (marketType == MARKET_TYPE_CATEGORICAL):
+            if (row[1] == CATEGORICAL_OUTCOME_A):
+                reportingToken = reportingTokenA
+            elif (row[1] == CATEGORICAL_OUTCOME_B):
+                reportingToken = reportingTokenB
+            elif (row[1] == CATEGORICAL_OUTCOME_C):
+                reportingToken = reportingTokenC
+        elif (marketType == MARKET_TYPE_SCALAR):
+            if (row[1] == SCALAR_OUTCOME_A):
+                reportingToken = reportingTokenA
+            elif (row[1] == SCALAR_OUTCOME_B):
+                reportingToken = reportingTokenB
+            elif (row[1] == SCALAR_OUTCOME_C):
+                reportingToken = reportingTokenC
+        accountReportingTokenBalance = reportingToken.balanceOf(getattr(tester, 'a' + str(row[0])))
+        reportingToken.buy(row[2], sender=getattr(tester, 'k' + str(row[0])))
+        assert reportingToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountReportingTokenBalance + row[2]
+        assert reputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalance - row[2]
+    print ""
+
+def calculateTotalLosingDisputeBondTokens(designatedReporterDisputeBondToken, limitedReportersDisputeBondToken, tentativeWinningPayoutDistributionHash):
+    totalLosingDisputeBondTokens = 0
+    if (designatedReporterDisputeBondToken and designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == tentativeWinningPayoutDistributionHash):
+        totalLosingDisputeBondTokens += DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT
+    if (limitedReportersDisputeBondToken and limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == tentativeWinningPayoutDistributionHash):
+        totalLosingDisputeBondTokens += LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT
+    return totalLosingDisputeBondTokens

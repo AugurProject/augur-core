@@ -38,6 +38,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set.Data private allReporterMarkets;
     uint256 private invalidMarketCount;
     uint256 private incorrectDesignatedReportMarketCount;
+    uint256 private finalizedMarketCount;
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
@@ -118,18 +119,22 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         }
 
         if (_state == IMarket.ReportingState.FINALIZED) {
-            if (!_market.isValid()) {
-                invalidMarketCount++;
-            }
-            if (_market.getFinalPayoutDistributionHash() != _market.getDesignatedReportPayoutHash()) {
-                incorrectDesignatedReportMarketCount++;
-            }
-            marketReports.record(numberOfReportsByMarket[_market]);
-            uint256 _totalWinningReportingTokens = _market.getFinalWinningReportingToken().totalSupply();
-            totalWinningReportingTokens = totalWinningReportingTokens.add(_totalWinningReportingTokens);
+            updateFinalizedMarket(_market);
         }
 
         return true;
+    }
+
+    function updateFinalizedMarket(IMarket _market) private returns (bool) {
+        if (!_market.isValid()) {
+            invalidMarketCount++;
+        }
+        if (_market.getFinalPayoutDistributionHash() != _market.getDesignatedReportPayoutHash()) {
+            incorrectDesignatedReportMarketCount++;
+        }
+        marketReports.record(numberOfReportsByMarket[_market]);
+        uint256 _totalWinningReportingTokens = _market.getFinalWinningReportingToken().totalSupply();
+        totalWinningReportingTokens = totalWinningReportingTokens.add(_totalWinningReportingTokens);
     }
 
     function noteReport(IMarket _market, address _reporter, bytes32 _payoutDistributionHash) public afterInitialized returns (bool) {
@@ -222,12 +227,30 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return getUniverse().getReportingWindowByTimestamp(_previousTimestamp);
     }
 
+    function allMarketsFinalized() constant public returns (bool) {
+        return markets.count == finalizedMarketCount;
+    }
+
     function checkIn() public afterInitialized returns (bool) {
         uint256 _totalReportableMarkets = getLimitedReporterMarketsCount() + getAllReporterMarketsCount();
         require(_totalReportableMarkets < 1);
         require(isActive());
         require(getRegistrationToken().balanceOf(msg.sender) > 0);
         reporterStatus[msg.sender].finishedReporting = true;
+        return true;
+    }
+
+    function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens) public returns (bool) {
+        IReportingToken _shadyReportingToken = IReportingToken(msg.sender);
+        require(isContainerForReportingToken(_shadyReportingToken));
+        // NOTE: Will need to handle other denominations when that is implemented
+        ICash _cash = ICash(controller.lookup("Cash"));
+        uint256 _balance = _cash.balanceOf(this);
+        uint256 _feePayoutShare = _balance.mul(_attoReportingTokens).div(totalWinningReportingTokens);
+        if (_feePayoutShare > 0) {
+            _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
+        }
+        totalWinningReportingTokens = totalWinningReportingTokens.sub(_attoReportingTokens);
         return true;
     }
 
@@ -338,6 +361,16 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
             return false;
         }
         return registrationToken == _shadyRegistrationToken;
+    }
+
+    function isContainerForReportingToken(IReportingToken _shadyReportingToken) public afterInitialized constant returns (bool) {
+        if (_shadyReportingToken.getTypeName() != "ReportingToken") {
+            return false;
+        }
+        IMarket _shadyMarket = _shadyReportingToken.getMarket();
+        require(isContainerForMarket(_shadyMarket));
+        IMarket _market = _shadyMarket;
+        return _market.isContainerForReportingToken(_shadyReportingToken);
     }
 
     function isContainerForMarket(IMarket _shadyMarket) public afterInitialized constant returns (bool) {
