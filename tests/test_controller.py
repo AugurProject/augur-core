@@ -32,7 +32,6 @@ def test_registry(controller, decentralizedController):
     with raises(TransactionFailed): decentralizedController.assertOnlySpecifiedCaller(tester.a2, key2, sender = tester.k0)
     with raises(TransactionFailed): controller.assertOnlySpecifiedCaller(tester.a2, key2, sender = tester.k2)
 
-# @mark.skip(reason="This test currently fails b/c code in Controlled.sol is commented out")
 def test_suicideTokens(contractsFixture, controller, decentralizedController, controllerUser):
     legacyRepContract = contractsFixture.contracts['LegacyRepContract']
     legacyRepContract.faucet(0)
