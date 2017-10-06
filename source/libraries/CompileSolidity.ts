@@ -83,6 +83,10 @@ export class SolidityContractCompiler {
         let inputJson: CompilerInput = {
             language: "Solidity",
             settings: {
+                optimizer: {
+                    enabled: true,
+                    runs: 500
+                },
                 outputSelection: {
                     "*": {
                         "*": [ "abi", "evm.bytecode.object" ]
