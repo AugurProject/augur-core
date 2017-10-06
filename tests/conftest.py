@@ -19,6 +19,14 @@ def resolveRelativePath(relativeFilePath):
     return path.abspath(path.join(BASE_PATH, relativeFilePath))
 COMPILATION_CACHE = resolveRelativePath('./compilation_cache')
 
+class bcolors:
+    WARN = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+
+CONTRACT_SIZE_LIMIT = 24576.0
+CONTRACT_SIZE_WARN_LEVEL = CONTRACT_SIZE_LIMIT * 0.75
+
 class ContractsFixture:
     signatures = {}
     compiledCode = {}
@@ -85,6 +93,13 @@ class ContractsFixture:
             print('using cached compilation for ' + name)
         with io_open(compiledOutputPath, mode='rb') as file:
             compiledCode = file.read()
+            contractSize = len(compiledCode)
+            if (contractSize >= CONTRACT_SIZE_LIMIT):
+                print('%sContract %s is OVER the size limit by %d bytes%s' % (bcolors.FAIL, name, contractSize - CONTRACT_SIZE_LIMIT, bcolors.ENDC))
+            elif (contractSize >= CONTRACT_SIZE_WARN_LEVEL):
+                print('%sContract %s is under size limit by only %d bytes%s' % (bcolors.WARN, name, CONTRACT_SIZE_LIMIT - contractSize, bcolors.ENDC))
+            elif (contractSize > 0):
+                print('Size: %i' % contractSize)
             ContractsFixture.compiledCode[name] = compiledCode
             return(compiledCode)
 
