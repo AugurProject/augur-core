@@ -243,13 +243,10 @@ export class ContractDeployer {
         if (!reportingTokenAddress) {
             throw new Error();
         }
-        // const reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ReportingToken']), reportingTokenAddress);
         const signature = this.signatures["ReportingToken"];
         const bytecode = this.bytecodes["ReportingToken"];
         const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
-        // const receiptAddress = await contractBuilder.new();
-        const receipt: ContractReceipt = await this.ethQuery.getTransactionReceipt(reportingTokenAddress);
-        const reportingToken = await contractBuilder.at(receipt.contractAddress);
+        const reportingToken = await contractBuilder.at(reportingTokenAddress);
 
         return reportingToken;
     }
