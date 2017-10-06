@@ -29,8 +29,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     uint256 private numTicks;
     uint256 private feePerEthInAttoeth;
 
-    uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 5 * 10 ** 17;
-    uint256 private constant APPROVAL_AMOUNT = 2 ** 254;
+    uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 1 ether / 2;
+    uint256 private constant APPROVAL_AMOUNT = 2**256-1;
     address private constant NULL_ADDRESS = address(0);
 
     IReportingWindow private reportingWindow;
@@ -265,7 +265,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function doFeePayout(bool _toOwner, uint256 _amount) private returns (bool) {
         if (_toOwner) {
-            getOwner().call.value(_amount)();
+            require(getOwner().call.value(_amount)());
         } else {
             cash.depositEtherFor.value(_amount)(getReportingWindow());
         }
@@ -278,7 +278,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             _sum = _sum.add(_payoutNumerators[i]);
         }
         require(_sum == numTicks);
-        return sha3(_payoutNumerators);
+        return keccak256(_payoutNumerators);
     }
 
     function getReportingTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public constant returns (IReportingToken) {
@@ -421,7 +421,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return MarketExtensions(controller.lookup("MarketExtensions")).getMarketReportingState(this);
     }
 
-    function getWinningPayoutDistributionHashFromFork() private returns (bytes32) {
+    function getWinningPayoutDistributionHashFromFork() private constant returns (bytes32) {
         return MarketExtensions(controller.lookup("MarketExtensions")).getWinningPayoutDistributionHashFromFork(this);
     }
 }
