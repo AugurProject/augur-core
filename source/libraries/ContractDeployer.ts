@@ -47,13 +47,14 @@ export class ContractDeployer {
         await this.whitelistTradingContracts();
         await this.initializeAllContracts();
         await this.approveCentralAuthority();
-        const parentUniverse = await padAndHexlify("0", 40);
-        const payoutDistributionHash = await padAndHexlify("", 40);
-        this.universe = await this.createUniverse(parentUniverse, payoutDistributionHash);
+        // const parentUniverse = await padAndHexlify("0", 40);
+        // const payoutDistributionHash = await padAndHexlify("", 40);
+        // this.universe = await this.createUniverse(parentUniverse, payoutDistributionHash);
+        this.universe = await this.uploadAndAddDelegatedToController("reporting/Universe.sol", "Universe");
         this.cash = await this.getSeededCash();
-        // this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
-        // this.categoricalMarket = this.createReasonableCategoricalMarket(this.universe, 3, this.cash);
-        // this.scalarMarket = this.createReasonableScalarMarket(this.universe, 40, this.cash);
+        this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
+        this.categoricalMarket = this.createReasonableCategoricalMarket(this.universe, 3, this.cash);
+        this.scalarMarket = this.createReasonableScalarMarket(this.universe, 40, this.cash);
 
         return true;
     }
@@ -233,7 +234,7 @@ export class ContractDeployer {
 
     private async createUniverse(parentUniverse, payoutDistributionHash): Promise<ContractBlockchainData> {
         const universeAddress = await this.contracts["UniverseFactory"].createUniverse(this.controller.address, parentUniverse, payoutDistributionHash);
-        const universe = await this.applySignature("Universe", universeAddress[0]);
+        const universe = await this.applySignature("Universe", universeAddress);
         return universe;
     }
 

@@ -27,8 +27,9 @@ describe("BinaryMarketTradeAndReport", () => {
         const market = contractDeployer.getBinaryMarket();
         const tradeGroupId = 42;
 
-        // const orderId = createOrder.publicCreateOrder(BID, 2, fix(0.6), market.address, YES, await padAndHexlify("0", 32), await padAndHexlify("0", 32), tradeGroupId, { sender: testAccounts[1].publicKey, value: fix(2, 0.6)});
-        // console.log(orderId);
+        const orderId = createOrder.publicCreateOrder(BID, 2, fix(0.6), market.address, YES, await padAndHexlify("0", 32), await padAndHexlify("0", 32), tradeGroupId, { sender: testAccounts[1].publicKey, value: fix(2, 0.6)});
+        console.log("ORDER ID");
+        console.log(orderId);
 
         // const universe = contractDeployer.getUniverse();
         // const reputationToken = contractDeployer.applySignature('ReputationToken', universe.getReputationToken());

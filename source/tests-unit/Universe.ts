@@ -16,7 +16,7 @@ describe("Universe", () => {
         expect(contractTypeName).to.equal("Universe");
 
         const universe = contractDeployer.getUniverse();
-        const universeTypeNameHex = await universe.getTypeName();
+        const universeTypeNameHex = (await universe.getTypeName())[0];
         const universeTypeName = binascii.unhexlify(universeTypeNameHex).replace(/\u0000/g, "");
         expect(universeTypeName).to.equal("Universe");
     });
