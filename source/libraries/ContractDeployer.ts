@@ -265,13 +265,10 @@ export class ContractDeployer {
         if (!marketAddress) {
             throw new Error("Unable to create new market.");
         }
-        // const market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures["Market"]), marketAddress);
         const signature = this.signatures["Market"];
         const bytecode = this.bytecodes["Market"];
         const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
-        // const receiptAddress = await contractBuilder.new();
-        const receipt: ContractReceipt = await this.ethQuery.getTransactionReceipt(marketAddress);
-        const market = await contractBuilder.at(receipt.contractAddress);
+        const market = await contractBuilder.at(marketAddress);
         return market;
     }
 
@@ -282,13 +279,10 @@ export class ContractDeployer {
         if (!marketAddress) {
             throw new Error("Unable to create new market.");
         }
-        // const market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         const signature = this.signatures["Market"];
         const bytecode = this.bytecodes["Market"];
         const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
-        // const receiptAddress = await contractBuilder.new();
-        const receipt: ContractReceipt = await this.ethQuery.getTransactionReceipt(marketAddress);
-        const market = await contractBuilder.at(receipt.contractAddress);
+        const market = await contractBuilder.at(marketAddress);
         return market;
     }
 
