@@ -162,62 +162,12 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool) {
-        int256 _tentativeWinningStake = getPayoutDistributionHashStake(tentativeWinningPayoutDistributionHash);
-        int256 _secondPlaceStake = getPayoutDistributionHashStake(bestGuessSecondPlaceTentativeWinningPayoutDistributionHash);
-        int256 _payoutStake = getPayoutDistributionHashStake(_payoutDistributionHash);
+        var (_firstPlaceHash, _secondPlaceHash) = MarketExtensions(controller.lookup("MarketExtensions")).getOrderedWinningPayoutDistributionHashes(this, _payoutDistributionHash);
 
-        if (_tentativeWinningStake >= _secondPlaceStake && _secondPlaceStake >= _payoutStake) {
-            tentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? tentativeWinningPayoutDistributionHash: bytes32(0);
-            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? bestGuessSecondPlaceTentativeWinningPayoutDistributionHash : bytes32(0);
-        } else if (_tentativeWinningStake >= _payoutStake && _payoutStake >= _secondPlaceStake) {
-            tentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? tentativeWinningPayoutDistributionHash: bytes32(0);
-            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash : bytes32(0);
-        } else if (_secondPlaceStake >= _tentativeWinningStake && _tentativeWinningStake >= _payoutStake) {
-            tentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
-            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? tentativeWinningPayoutDistributionHash: bytes32(0);
-        } else if (_secondPlaceStake >= _payoutStake && _payoutStake >= _tentativeWinningStake) {
-            tentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
-            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
-        } else if (_payoutStake >= _tentativeWinningStake && _tentativeWinningStake >= _secondPlaceStake) {
-            tentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
-            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? tentativeWinningPayoutDistributionHash: bytes32(0);
-        } else if (_payoutStake >= _secondPlaceStake && _secondPlaceStake >= _tentativeWinningStake) {
-            tentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
-            bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
-        }
+        tentativeWinningPayoutDistributionHash = _firstPlaceHash;
+        bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = _secondPlaceHash;
 
         return true;
-    }
-
-    function getPayoutDistributionHashStake(bytes32 _payoutDistributionHash) public constant returns (int256) {
-        if (_payoutDistributionHash == bytes32(0)) {
-            return 0;
-        }
-
-        IReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
-        if (address(_reportingToken) == NULL_ADDRESS) {
-            return 0;
-        }
-
-        int256 _payoutStake = int256(_reportingToken.totalSupply());
-
-        if (address(designatedReporterDisputeBondToken) != NULL_ADDRESS) {
-            if (designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.designatedReporterDisputeBondAmount());
-            }
-        }
-        if (address(limitedReportersDisputeBondToken) != NULL_ADDRESS) {
-            if (limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.limitedReportersDisputeBondAmount());
-            }
-        }
-        if (address(allReportersDisputeBondToken) != NULL_ADDRESS) {
-            if (allReportersDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.allReportersDisputeBondAmount());
-            }
-        }
-
-        return _payoutStake;
     }
 
     function tryFinalize() public returns (bool) {
@@ -375,6 +325,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return tentativeWinningPayoutDistributionHash;
     }
 
+    function getBestGuessSecondPlaceTentativeWinningPayoutDistributionHash() public constant returns (bytes32) {
+        return bestGuessSecondPlaceTentativeWinningPayoutDistributionHash;
+    }
+
     function getFinalWinningReportingToken() public constant returns (IReportingToken) {
         return reportingTokens[finalPayoutDistributionHash];
     }
@@ -403,7 +357,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return finalizationTime;
     }
 
-    function getForkingMarket() private constant returns (IMarket _market) {
+    function getForkingMarket() public constant returns (IMarket _market) {
         return getUniverse().getForkingMarket();
     }
 
@@ -455,80 +409,16 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return endTime + Reporting.designatedReportingDurationSeconds();
     }
 
+    function getDesignatedReportReceivedTime() public constant returns (uint256) {
+        return designatedReportReceivedTime;
+    }
+
     function getDesignatedReportDisputeDueTimestamp() public constant returns (uint256) {
         return getDesignatedReportDueTimestamp() + Reporting.designatedReportingDisputeDurationSeconds();
     }
 
     function getReportingState() public constant returns (ReportingState) {
-        // This market has been finalized
-        if (finalPayoutDistributionHash != bytes32(0)) {
-            return ReportingState.FINALIZED;
-        }
-
-        // If there is an active fork we need to migrate
-        IMarket _forkingMarket = getForkingMarket();
-        if (address(_forkingMarket) != NULL_ADDRESS && _forkingMarket != this) {
-            return ReportingState.AWAITING_FORK_MIGRATION;
-        }
-
-        // Before trading in the market is finished
-        if (block.timestamp < endTime) {
-            return ReportingState.PRE_REPORTING;
-        }
-
-        // Designated reporting period has not passed yet
-        if (block.timestamp < getDesignatedReportDueTimestamp()) {
-            return ReportingState.DESIGNATED_REPORTING;
-        }
-
-        bool _designatedReportDisputed = address(designatedReporterDisputeBondToken) != NULL_ADDRESS;
-        bool _limitedReportDisputed = address(limitedReportersDisputeBondToken) != NULL_ADDRESS;
-
-        // If we have a designated report that hasn't been disputed it is either in the dispute window or we can finalize the market
-        if (designatedReportReceivedTime != 0 && !_designatedReportDisputed) {
-            bool _beforeDesignatedDisputeDue = block.timestamp < getDesignatedReportDisputeDueTimestamp();
-            return _beforeDesignatedDisputeDue ? ReportingState.DESIGNATED_DISPUTE : ReportingState.AWAITING_FINALIZATION;
-        }
-
-        // If this market is the one forking we are in the process of migration or we're ready to finalize
-        if (_forkingMarket == this) {
-            if (getWinningPayoutDistributionHashFromFork() != bytes32(0)) {
-                return ReportingState.AWAITING_FINALIZATION;
-            }
-            return ReportingState.FORKING;
-        }
-
-        bool _reportingWindowOver = block.timestamp > reportingWindow.getEndTime();
-
-        if (_reportingWindowOver) {
-            if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
-                return ReportingState.AWAITING_NO_REPORT_MIGRATION;
-            }
-            return ReportingState.AWAITING_FINALIZATION;
-        }
-
-        // If a limited dispute bond has been posted we are in some phase of all reporting depending on time
-        if (_limitedReportDisputed) {
-            if (reportingWindow.isDisputeActive()) {
-                if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
-                    return ReportingState.AWAITING_NO_REPORT_MIGRATION;
-                } else {
-                    return ReportingState.ALL_DISPUTE;
-                }
-            }
-            return ReportingState.ALL_REPORTING;
-        }
-
-        // Either no designated report was made or the designated report was disputed so we are in some phase of limited reporting
-        if (reportingWindow.isDisputeActive()) {
-            if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
-                return ReportingState.AWAITING_NO_REPORT_MIGRATION;
-            } else {
-                return ReportingState.LIMITED_DISPUTE;
-            }
-        }
-
-        return ReportingState.LIMITED_REPORTING;
+        return MarketExtensions(controller.lookup("MarketExtensions")).getMarketReportingState(this);
     }
 
     function getWinningPayoutDistributionHashFromFork() private returns (bytes32) {
