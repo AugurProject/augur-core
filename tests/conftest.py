@@ -188,6 +188,14 @@ class ContractsFixture:
         self.chain.mine(1)
         self.originalContracts = deepcopy(self.contracts)
         self.captured = self.createSnapshot()
+        self.testerAddress = self.generateTesterMap('a')
+        self.testerKey = self.generateTesterMap('k')
+
+    def generateTesterMap(self, ch):
+        testers = {}
+        for i in range(0,9):
+            testers[i] = getattr(tester, ch + "%d" % i)
+        return testers
 
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
