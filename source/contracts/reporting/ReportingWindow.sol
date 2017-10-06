@@ -121,7 +121,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
                 invalidMarketCount++;
             }
             marketReports.record(numberOfReportsByMarket[_market]);
-            totalWinningReportingTokens = totalWinningReportingTokens.add(_market.getFinalWinningReportingToken().totalSupply());
+            uint256 _totalWinningReportingTokens = _market.getFinalWinningReportingToken().totalSupply();
+            totalWinningReportingTokens = totalWinningReportingTokens.add(_totalWinningReportingTokens);
         }
 
         return true;

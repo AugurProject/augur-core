@@ -265,7 +265,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function doFeePayout(bool _toOwner, uint256 _amount) private returns (bool) {
         if (_toOwner) {
-            require(getOwner().call.value(_amount)());
+            bool _success = getOwner().call.value(_amount)();
+            require(_success);
         } else {
             cash.depositEtherFor.value(_amount)(getReportingWindow());
         }

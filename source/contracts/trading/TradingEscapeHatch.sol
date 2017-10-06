@@ -68,8 +68,9 @@ contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, ITradingEsca
         if (_numberOfMissingBids > 0) {
             uint256 _fauxBidPrice = (_market.getNumTicks() - _sumOfBids) / _numberOfMissingBids;
             // to avoid any oddities, every share is worth _something_, even if it is just 1 attotoken
-            if (_fauxBidPrice == 0)
+            if (_fauxBidPrice == 0) {
                 _fauxBidPrice = 1;
+            }
             for (_tempOutcome = 0; _tempOutcome < _numOutcomes; ++_tempOutcome) {
                 if (_shiftedPrices[_tempOutcome] == 0) {
                     _shiftedPrices[_tempOutcome] = _fauxBidPrice;
