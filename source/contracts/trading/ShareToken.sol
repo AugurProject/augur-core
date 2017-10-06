@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import 'trading/IShareToken.sol';
 import 'libraries/DelegationTarget.sol';

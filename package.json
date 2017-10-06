@@ -18,7 +18,7 @@
         "mocha": "^3.5.3",
         "path": "^0.12.7",
         "recursive-readdir": "^2.2.1",
-        "solc": "^0.4.15",
+        "solc": "^0.4.17",
         "solium": "github:AugurProject/solium",
         "ts-node": "^3.3.0",
         "typescript": "^2.5.3"
