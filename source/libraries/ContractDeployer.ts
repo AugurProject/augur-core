@@ -49,7 +49,7 @@ export class ContractDeployer {
         const payoutDistributionHash = await padAndHexlify("", 40);
         this.universe = await this.createUniverse(parentUniverse, payoutDistributionHash);
         this.cash = await this.getSeededCash();
-        this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
+        // this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
 
         return true;
     }
