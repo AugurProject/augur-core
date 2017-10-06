@@ -56,7 +56,7 @@ contract Controller is IController {
         return true;
     }
 
-    function assertIsWhitelisted(address _target) constant returns(bool) {
+    function assertIsWhitelisted(address _target) public constant returns(bool) {
         require(whitelist[_target]);
         return true;
     }
@@ -75,11 +75,11 @@ contract Controller is IController {
         return true;
     }
 
-    function lookup(bytes32 _key) constant returns(address) {
+    function lookup(bytes32 _key) public constant returns(address) {
         return registry[_key];
     }
 
-    function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) constant returns(bool) {
+    function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) public constant returns(bool) {
         require(registry[_allowedCaller] == _caller || (msg.sender == owner && whitelist[owner]));
         return true;
     }
@@ -102,7 +102,7 @@ contract Controller is IController {
      * Controller Administration [dev can transfer ownership anytime, mode can only switched from dev mode -> decentralized]
      */
 
-    function transferOwnership(address _newOwner) onlyOwnerCaller returns(bool) {
+    function transferOwnership(address _newOwner) public onlyOwnerCaller returns(bool) {
         // if in dev mode, blacklist old owner and whitelist new owner
         if (whitelist[owner]) {
             whitelist[owner] = false;
@@ -131,11 +131,11 @@ contract Controller is IController {
         return true;
     }
 
-    function stopInEmergency() constant onlyInGoodTimes returns(bool) {
+    function stopInEmergency() public constant onlyInGoodTimes returns(bool) {
         return true;
     }
 
-    function onlyInEmergency() constant onlyInBadTimes returns(bool) {
+    function onlyInEmergency() public constant onlyInBadTimes returns(bool) {
         return true;
     }
 }
