@@ -136,10 +136,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         require(markets.contains(_market));
         require(_market.getReportingTokenOrZeroByPayoutDistributionHash(_payoutDistributionHash) == msg.sender);
         IMarket.ReportingState _state = _market.getReportingState();
-        bool _validReportingState = _state == IMarket.ReportingState.ALL_REPORTING;
-        _validReportingState = _validReportingState || (_state == IMarket.ReportingState.LIMITED_REPORTING);
-        _validReportingState = _validReportingState || (_state == IMarket.ReportingState.DESIGNATED_REPORTING);
-        require(_validReportingState);
+        require(_state == IMarket.ReportingState.ALL_REPORTING
+            || _state == IMarket.ReportingState.LIMITED_REPORTING
+            || _state == IMarket.ReportingState.DESIGNATED_REPORTING);
         if (_state == IMarket.ReportingState.ALL_REPORTING) {
             // always give credit for events in all-reporters phase
             privateNoteReport(_market, _reporter);

@@ -67,10 +67,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         require(2 <= _numOutcomes && _numOutcomes <= 8);
         require((_numTicks.isMultipleOf(_numOutcomes)));
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
-        // TODO: require(_creator != NULL_ADDRESS);
-        // TODO: require(_cash.getTypeName() == "Cash");
+        require(_creator != NULL_ADDRESS);
+        require(_cash.getTypeName() == "Cash");
         reportingWindow = _reportingWindow;
-        // TODO: require(address(getForkingMarket()) == NULL_ADDRESS);
+        require(address(getForkingMarket()) == NULL_ADDRESS);
         MarketFeeCalculator _marketFeeCaluclator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
         reporterGasCostsFeeAttoeth = _marketFeeCaluclator.getTargetReporterGasCosts(_reportingWindow);
         validityBondAttoeth = _marketFeeCaluclator.getValidityBond(_reportingWindow);
@@ -86,7 +86,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
-        // TODO: Refund msg.value - (reporterGasCostsFeeAttoeth + validityBondAttoeth)
+        // If the value was not at least equal to these this will throw
+        uint256 _refund = msg.value.sub(reporterGasCostsFeeAttoeth.add(validityBondAttoeth));
+        owner.call.value(_refund)();
         return true;
     }
 
@@ -112,9 +114,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function designatedReport() public returns (bool) {
-        // Intentionally does not migrate the market as designated report markets won't actually migrate unless a dispute bond has been placed or the designated report doesn't occur
-        // CONSIDER: We are currently implicitly trusting the rporting token to call this at the appropriate state. We may want to add more validation here when the Market contract can afford the extra lines
+    function designatedReport() public triggersMigration returns (bool) {
+        require(getReportingState() == ReportingState.DESIGNATED_REPORTING);
         IReportingToken _shadyReportingToken = IReportingToken(msg.sender);
         require(isContainerForReportingToken(_shadyReportingToken));
         IReportingToken _reportingToken = _shadyReportingToken;
