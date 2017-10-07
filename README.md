@@ -11,6 +11,8 @@ You should already have a system-wide installation of Python and it should be Py
 First install the dependencies, which include PyEthereum (the tool used to test Ethereum smart contracts from Python scripts) and the Solidity smart contract programming language:
 
 ```
+npm install npx
+npm install
 npm install -g solc
 
 sudo pip install -r requirements.txt
