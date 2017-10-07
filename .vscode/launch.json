@@ -8,8 +8,7 @@
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "cwd": "${workspaceRoot}",
             "args": [
-                "-r", "ts-node/register",
-                "source/tests-unit/**/*.ts",
+                "output/tests-unit/**/*.js",
                 "--no-timeouts"
             ],
             "protocol": "inspector",

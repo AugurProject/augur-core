@@ -7,11 +7,12 @@ import * as EthjsQuery from "ethjs-query";
 // TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
 import { generateTestAccounts, padAndHexlify } from "./HelperFunctions";
+import { parseAbiIntoMethods } from './AbiParser';
 
 
 export class ContractDeployer {
-    private ethjsQuery;
-    private ethjsContract;
+    private ethjsQuery: EthjsQuery;
+    private ethjsContract: EthjsContract;
     private compiledContracts;
     private signatures;
     private bytecodes;
@@ -28,7 +29,7 @@ export class ContractDeployer {
 
     public constructor(ethjsQuery: EthjsQuery, contractJson: string, gasAmount: number, secretKeys: string[]) {
         this.ethjsQuery = ethjsQuery;
-        this.ethjsContract = new EthjsContract(this.ethjsQuery);
+        this.ethjsContract = new EthjsContract(ethjsQuery);
         this.compiledContracts = JSON.parse(contractJson);
         this.signatures = [];
         this.bytecodes = [];
@@ -130,7 +131,7 @@ export class ContractDeployer {
             this.bytecodes[signatureKey] = bytecode;
         }
         const signature = this.signatures[signatureKey];
-        const contractBuilder = new this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
         let receiptAddress: string;
         if (constructorArgs.length > 0) {
             receiptAddress = await contractBuilder.new(constructorArgs[0], constructorArgs[1]);
@@ -238,7 +239,6 @@ export class ContractDeployer {
         const receipt = await this.ethjsQuery.getTransactionReceipt(receiptAddress);
         const universe = await universeBuilder.at(receipt.contractAddress);
         await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
-
         return universe;
     }
 
@@ -260,8 +260,14 @@ export class ContractDeployer {
     }
 
     private async createCategoricalMarket(universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks): Promise<ContractBlockchainData> {
-        const reportingWindowAddress = await universe.getCurrentReportingWindow();
-        const marketCreationFee = await this.contracts["MarketFeeCalculator"].getValidityBond(reportingWindowAddress) + this.contracts["MarketFeeCalculator"].getTargetReporterGasCosts(reportingWindowAddress);
+        const myUniverse = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Universe"], { to: universe.address, from: this.testAccounts[0].address, gas: '0x5b8d80' });
+        const marketFeeCalculator = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketFeeCalculator"], { to: this.contracts["MarketFeeCalculator"].address });
+        await myUniverse.getCurrentReportingWindow.bind({gas: 3*10**6})();
+        const reportingWindowAddress = await myUniverse.getCurrentReportingWindow.bind({ constant: true })();
+        // FIXME: the following two functions are not constant, so we can't call them and get a return value
+        const validityBond = await marketFeeCalculator.getValidityBond.bind({ constant: true })(reportingWindowAddress);
+        const targetReporterGasCosts = await marketFeeCalculator.getTargetReporterGasCosts.bind({ constant: true })(reportingWindowAddress);
+        const marketCreationFee = validityBond.add(targetReporterGasCosts);
         const marketAddress = await this.contracts["MarketCreation"].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, {value: marketCreationFee, startgas: 6.7 * Math.pow(10, 6)});
         if (!marketAddress) {
             throw new Error("Unable to create new market.");

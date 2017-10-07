@@ -27,8 +27,21 @@ declare module 'solc' {
         formattedMessage?: string;
     }
     interface CompilerOutputContractAbi {
+        type: "function"|"constructor"|"fallback"|"event";
+        name: string;
         constant: boolean;
-        inputs: {name: string, type: string}[];
+        inputs: { name: string, type: string }[];
+    }
+    interface CompilerOutputContractAbiFunction extends CompilerOutputContractAbi {
+        type: "function"|"constructor"|"fallback";
+        outputs?: { name: string, type: string }[];
+        payable: boolean;
+        stateMutability: "pure"|"view"|"nonpayable"|"payable";
+        constant: boolean;
+    }
+    interface CompilerOutputContractAbiEvent extends CompilerOutputContractAbi {
+        type: "event";
+        anonymous: boolean;
     }
     interface CompilerOutputEvmBytecode {
         object: string;
@@ -51,7 +64,7 @@ declare module 'solc' {
         };
         contracts: {
             [globalName: string]: {
-                abi: CompilerOutputContractAbi[];
+                abi: (CompilerOutputContractAbiFunction|CompilerOutputContractAbiEvent)[];
                 metadata: string;
                 userdoc: any;
                 devdoc: any;
