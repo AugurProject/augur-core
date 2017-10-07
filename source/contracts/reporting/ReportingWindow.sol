@@ -1,6 +1,6 @@
 // Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import 'reporting/IReportingWindow.sol';
 import 'libraries/DelegationTarget.sol';
@@ -121,7 +121,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
                 invalidMarketCount++;
             }
             marketReports.record(numberOfReportsByMarket[_market]);
-            totalWinningReportingTokens = totalWinningReportingTokens.add(_market.getFinalWinningReportingToken().totalSupply());
+            uint256 _totalWinningReportingTokens = _market.getFinalWinningReportingToken().totalSupply();
+            totalWinningReportingTokens = totalWinningReportingTokens.add(_totalWinningReportingTokens);
         }
 
         return true;

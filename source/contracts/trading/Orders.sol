@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import 'trading/IOrders.sol';
 import 'libraries/DelegationTarget.sol';
@@ -194,7 +194,8 @@ contract Orders is DelegationTarget, IOrders {
         if (_order.tradeType == Order.TradeTypes.Bid) {
             _fill = _sharesFilled + _tokensFilled.div(_order.price);
         } else if (_order.tradeType == Order.TradeTypes.Ask) {
-            _fill = _sharesFilled + _tokensFilled.div(_order.market.getNumTicks().sub(_order.price));
+            uint256 _fillPrice = _order.market.getNumTicks().sub(_order.price);
+            _fill = _sharesFilled + _tokensFilled.div(_fillPrice);
         }
         require(_fill <= _order.amount);
         _order.amount -= _fill;

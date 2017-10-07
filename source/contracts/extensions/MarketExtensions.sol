@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';

@@ -10,7 +10,7 @@ coincurve==6.0.0          # via ethereum-augur-temp
 ethereum-augur-temp==2.1.4
 numpy==1.13.0
 py-ecc==1.1.1             # via ethereum-augur-temp
-py-solc==1.2.1
+py-solc==1.4.0
 py==1.4.34                # via pytest
 pycparser==2.18           # via cffi
 pycryptodome==3.4.6
