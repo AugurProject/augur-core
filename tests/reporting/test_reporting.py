@@ -138,7 +138,7 @@ def test_designatedReportingHappyPath(reportingFixture):
     proceedToDesignatedReporting(reportingFixture, market, [0,10**18])
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report
-    assert market.designatedReport([0,10**18], sender=tester.k0)
+    assert reportingFixture.designatedReport(market, [0,10**18], tester.k0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
     assert market.getReportingState() == reportingFixture.constants.DESIGNATED_DISPUTE()
@@ -376,7 +376,7 @@ def test_invalid_designated_report(reportingFixture):
     proceedToDesignatedReporting(reportingFixture, market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report of invalid
-    assert market.designatedReport([long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], sender=tester.k0)
+    assert reportingFixture.designatedReport(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], tester.k0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
     assert market.getReportingState() == reportingFixture.constants.DESIGNATED_DISPUTE()

@@ -86,7 +86,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
-        // TODO: Refund msg.value - (reporterGasCostsFeeAttoeth + validityBondAttoeth)
+        // If the value was not at least equal to these this will throw
+        uint256 _refund = msg.value.sub(reporterGasCostsFeeAttoeth.add(validityBondAttoeth));
+        owner.call.value(_refund)();
         return true;
     }
 
@@ -94,7 +96,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return ShareTokenFactory(controller.lookup("ShareTokenFactory")).createShareToken(controller, this, _outcome);
     }
 
-    // this will need to be called manually for each open market if a spender contract is updated
+    // This will need to be called manually for each open market if a spender contract is updated
     function approveSpenders() private returns (bool) {
         bytes32[5] memory _names = [bytes32("CancelOrder"), bytes32("CompleteSets"), bytes32("FillOrder"), bytes32("TradingEscapeHatch"), bytes32("ClaimProceeds")];
         for (uint8 i = 0; i < _names.length; i++) {
@@ -112,14 +114,13 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function designatedReport(uint256[] _payoutNumerators) public returns (bool) {
-        // intentionally does not migrate the market as designated report markets won't actually migrate unless a dispute bond has been placed or the designated report doesn't occur
-        require(msg.sender == designatedReporterAddress);
+    function designatedReport() public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.DESIGNATED_REPORTING);
-        // we have to create the reporting token so the rest of the system works (winning reporting token must exist)
-        getReportingToken(_payoutNumerators);
+        IReportingToken _shadyReportingToken = IReportingToken(msg.sender);
+        require(isContainerForReportingToken(_shadyReportingToken));
+        IReportingToken _reportingToken = _shadyReportingToken;
         designatedReportReceivedTime = block.timestamp;
-        tentativeWinningPayoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
+        tentativeWinningPayoutDistributionHash = _reportingToken.getPayoutDistributionHash();
         designatedReportPayoutHash = tentativeWinningPayoutDistributionHash;
         reportingWindow.updateMarketPhase();
         return true;
@@ -301,6 +302,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return reportingWindow.getUniverse();
     }
 
+    function getDesignatedReporter() public constant returns (address) {
+        return designatedReporterAddress;
+    }
+
     function getDesignatedReporterDisputeBondToken() public constant returns (IDisputeBond) {
         return designatedReporterDisputeBondToken;
     }
@@ -339,6 +344,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function getFinalPayoutDistributionHash() public constant returns (bytes32) {
         return finalPayoutDistributionHash;
+    }
+
+    function getDesignatedReportPayoutHash() public constant returns (bytes32) {
+        return designatedReportPayoutHash;
     }
 
     function getNumTicks() public constant returns (uint256) {
