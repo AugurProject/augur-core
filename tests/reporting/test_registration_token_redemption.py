@@ -3,6 +3,17 @@ from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, raises
 from reporting_utils import proceedToDesignatedReporting, proceedToLimitedReporting, initializeReportingFixture
 
+def test_designated_reporter_reporting_non_option(registrationTokenRedemptionFixture):
+    market = registrationTokenRedemptionFixture.market1
+    reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    reputationToken = registrationTokenRedemptionFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
+    registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
+    
+    # Proceed to the DESIGNATED REPORTING phase
+    proceedToDesignatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
+    with raises(TransactionFailed, message="Not the correct Designated Reporter, should not be able to report"):
+        registrationTokenRedemptionFixture.designatedReport(market, [0,0,10**18], tester.k0)
+
 def test_non_designated_reporter_reporting(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
     reportingWindow = registrationTokenRedemptionFixture.applySignature('ReportingWindow', market.getReportingWindow())
@@ -12,7 +23,7 @@ def test_non_designated_reporter_reporting(registrationTokenRedemptionFixture):
     # Proceed to the DESIGNATED REPORTING phase
     proceedToDesignatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
     with raises(TransactionFailed, message="Not the correct Designated Reporter, should not be able to report"):
-        market.designatedReport([0,10**18], sender=tester.k1)
+        registrationTokenRedemptionFixture.designatedReport(market, [0,10**18], tester.k1)
 
 def test_premature_designated_reporting(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
@@ -21,7 +32,7 @@ def test_premature_designated_reporting(registrationTokenRedemptionFixture):
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
     
     with raises(TransactionFailed, message="Designated Reporter should not be able to report before end of window"):
-        market.designatedReport([0,10**18], sender=tester.k0)
+        registrationTokenRedemptionFixture.designatedReport(market, [0,10**18], tester.k0)
 
 def test_designated_reporting_incorrect_report_sum(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
@@ -31,7 +42,7 @@ def test_designated_reporting_incorrect_report_sum(registrationTokenRedemptionFi
     
     proceedToDesignatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
     with raises(TransactionFailed, message="Designated Reporter should same sum as market initialization"):
-        market.designatedReport([10**1,10**17], sender=tester.k0)
+        registrationTokenRedemptionFixture.designatedReport(market, [10**1,10**17], tester.k0)
 
 def test_designated_reporting_split_report_sum(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
@@ -40,7 +51,7 @@ def test_designated_reporting_split_report_sum(registrationTokenRedemptionFixtur
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
     
     proceedToDesignatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
-    assert market.designatedReport([10**18/2,10**18/2], sender=tester.k0)
+    assert registrationTokenRedemptionFixture.designatedReport(market, [10**18/2,10**18/2], tester.k0)
 
 def test_designated_reporting_proper_time_valid_report(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
@@ -49,7 +60,7 @@ def test_designated_reporting_proper_time_valid_report(registrationTokenRedempti
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
     
     proceedToDesignatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
-    assert market.designatedReport([0,10**18], sender=tester.k0)
+    assert registrationTokenRedemptionFixture.designatedReport(market, [0,10**18], tester.k0)
 
 def test_designatedReportingNoReport(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
