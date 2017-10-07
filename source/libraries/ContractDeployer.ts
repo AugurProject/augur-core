@@ -47,9 +47,7 @@ export class ContractDeployer {
         await this.whitelistTradingContracts();
         await this.initializeAllContracts();
         await this.approveCentralAuthority();
-        const parentUniverse = await padAndHexlify("0", 40);
-        const payoutDistributionHash = await padAndHexlify("", 40);
-        this.universe = await this.createUniverse(parentUniverse, payoutDistributionHash);
+        await this.createGenesisUniverse();
         this.cash = await this.getSeededCash();
         this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
         // this.categoricalMarket = this.createReasonableCategoricalMarket(this.universe, 3, this.cash);
@@ -231,13 +229,20 @@ export class ContractDeployer {
         return true;
     }
 
+    private async createGenesisUniverse(): Promise<boolean> {
+        const delegationTargetName = "UniverseTarget";
+        const hexlifiedDelegationTargetName = "0x" + binascii.hexlify(delegationTargetName);
+        this.universe = await this.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", "Universe", "Delegator", [this.controller.address, hexlifiedDelegationTargetName]);
+        this.universe.initialize(0,0);
+
+        return true;
+    }
+
     private async createUniverse(parentUniverse, payoutDistributionHash): Promise<ContractBlockchainData> {
         const contractBuilder = new EthContract(this.ethQuery)(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0].address, gas: this.gasAmount });
         const receiptAddress = await contractBuilder.new(parentUniverse, payoutDistributionHash);
         const receipt = await this.ethQuery.getTransactionReceipt(receiptAddress);
         const contract = await contractBuilder.at(receipt.contractAddress);
-        const hexlifiedLookupKey = "0x" + binascii.hexlify("GenesisUniverse");
-        await this.controller.setValue(hexlifiedLookupKey, contract.address);
         return contract;
     }
 
