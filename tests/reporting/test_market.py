@@ -14,9 +14,10 @@ def test_market_creation(contractsFixture):
     shadyReportingToken = contractsFixture.upload('../source/contracts/reporting/ReportingToken.sol', 'shadyReportingToken')
     shadyReportingToken.initialize(market.address, [0,10**18])
 
-    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
-    with raises(TransactionFailed, message="Markets can only use Cash as their denomination token"):
-        contractsFixture.createReasonableBinaryMarket(universe, shareToken)
+    # TODO: When require is re-enabled uncomment this test
+    #shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
+    #with raises(TransactionFailed, message="Markets can only use Cash as their denomination token"):
+    #    contractsFixture.createReasonableBinaryMarket(universe, shareToken)
 
     assert market.getUniverse() == universe.address
     assert market.getNumberOfOutcomes() == 2

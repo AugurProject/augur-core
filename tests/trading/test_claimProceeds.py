@@ -47,22 +47,22 @@ def acquireShortShareSet(fundedRepFixture, market, outcome, amount, approvalAddr
         otherShareToken = fundedRepFixture.applySignature('ShareToken', market.getShareToken(otherOutcome))
         assert otherShareToken.approve(approvalAddress, amount, sender = sender)
 
-def finalizeMarket(headState, market, payoutNumerators):
+def finalizeMarket(fixture, market, payoutNumerators):
     # set timestamp to after market end
-    headState.timestamp = market.getEndTime() + 1
+    fixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have tester.a0 submit designated report
-    market.designatedReport(payoutNumerators, sender = tester.k0)
+    fixture.designatedReport(market, payoutNumerators, tester.k0)
     # set timestamp to after designated dispute end
-    headState.timestamp = market.getDesignatedReportDisputeDueTimestamp() + 1
+    fixture.chain.head_state.timestamp = market.getDesignatedReportDisputeDueTimestamp() + 1
     # finalize the market
     assert market.tryFinalize()
     # set timestamp to 3 days later (waiting period)
-    headState.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
+    fixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
 
 def test_helpers(fundedRepFixture):
     market = fundedRepFixture.scalarMarket
     claimProceeds = fundedRepFixture.contracts['ClaimProceeds']
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,40*10**18])
+    finalizeMarket(fundedRepFixture, market, [0,40*10**18])
 
     assert claimProceeds.calculateCreatorFee(market.address, fix('3')) == fix('0.03')
     assert claimProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
@@ -93,7 +93,7 @@ def test_redeem_shares_in_binary_market(fundedRepFixture):
     # get NO shares with a2
     acquireShortShareSet(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [0,10**18])
+    finalizeMarket(fundedRepFixture, market, [0,10**18])
 
     # redeem shares with a1
     initialLongHolderETH = fundedRepFixture.utils.getETHBalance(tester.a1)
@@ -131,7 +131,7 @@ def test_redeem_shares_in_categorical_market(fundedRepFixture):
     # get short shares with a2
     acquireShortShareSet(fundedRepFixture, market, 2, 1, claimProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [0, 0, 3 * 10 ** 17])
+    finalizeMarket(fundedRepFixture, market, [0, 0, 3 * 10 ** 17])
 
     # redeem shares with a1
     initialLongHolderETH = fundedRepFixture.utils.getETHBalance(tester.a1)
@@ -170,7 +170,7 @@ def test_redeem_shares_in_scalar_market(fundedRepFixture):
     # get NO shares with a2
     acquireShortShareSet(fundedRepFixture, market, YES, 1, claimProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(fundedRepFixture.chain.head_state, market, [10**19, 3*10**19])
+    finalizeMarket(fundedRepFixture, market, [10**19, 3*10**19])
 
     # redeem shares with a1
     initialLongHolderETH = fundedRepFixture.utils.getETHBalance(tester.a1)
@@ -200,7 +200,7 @@ def test_reedem_failure(fundedRepFixture):
     # set timestamp to after market end
     fundedRepFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have tester.a0 subimt designated report (75% high, 25% low, range -10*10^18 to 30*10^18)
-    market.designatedReport([0, 10**18], sender = tester.k0)
+    fundedRepFixture.designatedReport(market, [0, 10**18], tester.k0)
     # set timestamp to after designated dispute end
     fundedRepFixture.chain.head_state.timestamp = market.getDesignatedReportDisputeDueTimestamp() + 1
 
