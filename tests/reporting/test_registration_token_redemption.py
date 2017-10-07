@@ -40,8 +40,7 @@ def test_designated_reporting_split_report_sum(registrationTokenRedemptionFixtur
     registrationToken = registrationTokenRedemptionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
     
     proceedToDesignatedReporting(registrationTokenRedemptionFixture, market, [0,10**18])
-    with raises(TransactionFailed, message="Designated Reporter should choose market outcome"):
-        market.designatedReport([10**9,10**9], sender=tester.k0)
+    assert market.designatedReport([10**18/2,10**18/2], sender=tester.k0)
 
 def test_designated_reporting_proper_time_valid_report(registrationTokenRedemptionFixture):
     market = registrationTokenRedemptionFixture.market1
