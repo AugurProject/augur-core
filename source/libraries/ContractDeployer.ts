@@ -2,15 +2,16 @@
 
 import * as binascii from "binascii";
 import * as path from "path";
-import * as EthContract from "ethjs-contract";
-import * as EthQuery from "ethjs-query";
+import * as EthjsContract from "ethjs-contract";
+import * as EthjsQuery from "ethjs-query";
 // TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
 import { generateTestAccounts, padAndHexlify } from "./HelperFunctions";
 
 
 export class ContractDeployer {
-    private ethQuery;
+    private ethjsQuery;
+    private ethjsContract;
     private compiledContracts;
     private signatures;
     private bytecodes;
@@ -25,8 +26,9 @@ export class ContractDeployer {
     private categoricalMarket;
     private scalarMarket;
 
-    public constructor(ethQuery: EthQuery, contractJson: string, gasAmount: number, secretKeys: string[]) {
-        this.ethQuery = ethQuery;
+    public constructor(ethjsQuery: EthjsQuery, contractJson: string, gasAmount: number, secretKeys: string[]) {
+        this.ethjsQuery = ethjsQuery;
+        this.ethjsContract = new EthjsContract(this.ethjsQuery);
         this.compiledContracts = JSON.parse(contractJson);
         this.signatures = [];
         this.bytecodes = [];
@@ -47,9 +49,9 @@ export class ContractDeployer {
         await this.whitelistTradingContracts();
         await this.initializeAllContracts();
         await this.approveCentralAuthority();
-        await this.createGenesisUniverse();
+        this.universe = await this.createGenesisUniverse();
         this.cash = await this.getSeededCash();
-        this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
+        // this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
         // this.categoricalMarket = this.createReasonableCategoricalMarket(this.universe, 3, this.cash);
         // this.scalarMarket = this.createReasonableScalarMarket(this.universe, 40, this.cash);
 
@@ -128,14 +130,14 @@ export class ContractDeployer {
             this.bytecodes[signatureKey] = bytecode;
         }
         const signature = this.signatures[signatureKey];
-        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const contractBuilder = new this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
         let receiptAddress: string;
         if (constructorArgs.length > 0) {
             receiptAddress = await contractBuilder.new(constructorArgs[0], constructorArgs[1]);
         } else {
             receiptAddress = await contractBuilder.new();
         }
-        const receipt: ContractReceipt = await this.ethQuery.getTransactionReceipt(receiptAddress);
+        const receipt: ContractReceipt = await this.ethjsQuery.getTransactionReceipt(receiptAddress);
         this.contracts[lookupKey] = await contractBuilder.at(receipt.contractAddress);
 
         return this.contracts[lookupKey];
@@ -152,7 +154,7 @@ export class ContractDeployer {
 
         const signature = this.signatures[signatureName];
         const bytecode = this.bytecodes[signatureName];
-        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
         const contract = await contractBuilder.at(address);
         return contract;
     }
@@ -229,21 +231,15 @@ export class ContractDeployer {
         return true;
     }
 
-    private async createGenesisUniverse(): Promise<boolean> {
-        const delegationTargetName = "UniverseTarget";
-        const hexlifiedDelegationTargetName = "0x" + binascii.hexlify(delegationTargetName);
-        this.universe = await this.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", "Universe", "Delegator", [this.controller.address, hexlifiedDelegationTargetName]);
-        this.universe.initialize(0,0);
+    private async createGenesisUniverse(): Promise<ContractBlockchainData> {
+        const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const receiptAddress = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify('Universe')}`);
+        const receipt = await this.ethjsQuery.getTransactionReceipt(receiptAddress);
+        const universe = await universeBuilder.at(receipt.contractAddress);
+        await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
 
-        return true;
-    }
-
-    private async createUniverse(parentUniverse, payoutDistributionHash): Promise<ContractBlockchainData> {
-        const contractBuilder = new EthContract(this.ethQuery)(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0].address, gas: this.gasAmount });
-        const receiptAddress = await contractBuilder.new(parentUniverse, payoutDistributionHash);
-        const receipt = await this.ethQuery.getTransactionReceipt(receiptAddress);
-        const contract = await contractBuilder.at(receipt.contractAddress);
-        return contract;
+        return universe;
     }
 
     public async getReportingToken(market, payoutDistribution): Promise<ContractBlockchainData> {
@@ -253,7 +249,7 @@ export class ContractDeployer {
         }
         const signature = this.signatures["ReportingToken"];
         const bytecode = this.bytecodes["ReportingToken"];
-        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
         const reportingToken = await contractBuilder.at(reportingTokenAddress);
 
         return reportingToken;
@@ -272,7 +268,7 @@ export class ContractDeployer {
         }
         const signature = this.signatures["Market"];
         const bytecode = this.bytecodes["Market"];
-        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
         const market = await contractBuilder.at(marketAddress);
         return market;
     }
@@ -286,13 +282,13 @@ export class ContractDeployer {
         }
         const signature = this.signatures["Market"];
         const bytecode = this.bytecodes["Market"];
-        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
         const market = await contractBuilder.at(marketAddress);
         return market;
     }
 
     private async createReasonableBinaryMarket(universe, denominationToken): Promise<ContractBlockchainData> {
-        const block = await this.ethQuery.getBlockByNumber(0, true);
+        const block = await this.ethjsQuery.getBlockByNumber(0, true);
         const blockDateTime = await this.parseBlockTimestamp(block.timestamp);
         const blockDateTimePlusDay = new Date();
         blockDateTimePlusDay.setDate(blockDateTime.getDate() + 1);
@@ -300,7 +296,7 @@ export class ContractDeployer {
     }
 
     private async createReasonableCategoricalMarket(universe, numOutcomes, denominationToken): Promise<ContractBlockchainData> {
-        const block = await this.ethQuery.getBlockByNumber(0, true);
+        const block = await this.ethjsQuery.getBlockByNumber(0, true);
         const blockDateTime = await this.parseBlockTimestamp(block.timestamp);
         const blockDateTimePlusDay = new Date();
         blockDateTimePlusDay.setDate(blockDateTime.getDate() + 1);
@@ -308,7 +304,7 @@ export class ContractDeployer {
     }
 
     private async createReasonableScalarMarket(universe, priceRange, denominationToken): Promise<ContractBlockchainData> {
-        const block = await this.ethQuery.getBlockByNumber(0, true);
+        const block = await this.ethjsQuery.getBlockByNumber(0, true);
         const blockDateTime = await this.parseBlockTimestamp(block.timestamp);
         const blockDateTimePlusDay = new Date();
         blockDateTimePlusDay.setDate(blockDateTime.getDate() + 1);

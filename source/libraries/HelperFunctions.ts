@@ -1,5 +1,5 @@
 import * as binascii from "binascii";
-import * as EthAccount from "ethjs-account";
+import * as EthjsAccount from "ethjs-account";
 
 const DEFAULT_TEST_ACCOUNT_BALANCE = 100000000;
 // Set gas block limit extremely high so new blocks don"t have to be mined while uploading contracts
@@ -39,7 +39,7 @@ export async function generateTestAccounts(secretKeys: string[]): Promise<TestAc
     let testAccounts: Promise<TestAccount>[] = [];
     for (let secretKey in secretKeys) {
         const hexlifiedSecretKey = await padAndHexlify(secretKeys[secretKey], 64);
-        let testAccount = await EthAccount.privateToAccount(hexlifiedSecretKey);
+        let testAccount = await EthjsAccount.privateToAccount(hexlifiedSecretKey);
         for (let testAccountData in testAccount) {
             testAccount[testAccountData] = testAccount[testAccountData].toLowerCase();
         }
