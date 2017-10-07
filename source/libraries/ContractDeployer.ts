@@ -2,15 +2,18 @@
 
 import * as binascii from "binascii";
 import * as path from "path";
-import * as EthContract from "ethjs-contract";
-import * as EthQuery from "ethjs-query";
+import * as EthjsContract from "ethjs-contract";
+import * as EthjsQuery from "ethjs-query";
 // TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
 import { generateTestAccounts, padAndHexlify } from "./HelperFunctions";
+import { parseAbiIntoMethods } from './AbiParser';
 
 
 export class ContractDeployer {
-    private ethQuery;
+    private ethQuery: EthjsQuery;
+    private ethjsContract: EthjsContract;
+
     private compiledContracts;
     private signatures;
     private bytecodes;
@@ -25,8 +28,9 @@ export class ContractDeployer {
     private categoricalMarket;
     private scalarMarket;
 
-    public constructor(ethQuery: EthQuery, contractJson: string, gasAmount: number, secretKeys: string[]) {
-        this.ethQuery = ethQuery;
+    public constructor(ethjsQuery: EthjsQuery, contractJson: string, gasAmount: number, secretKeys: string[]) {
+        this.ethQuery = ethjsQuery;
+        this.ethjsContract = new EthjsContract(ethjsQuery);
         this.compiledContracts = JSON.parse(contractJson);
         this.signatures = [];
         this.bytecodes = [];
@@ -47,7 +51,7 @@ export class ContractDeployer {
         await this.whitelistTradingContracts();
         await this.initializeAllContracts();
         await this.approveCentralAuthority();
-        await this.createGenesisUniverse();
+        this.universe = await this.createGenesisUniverse();
         this.cash = await this.getSeededCash();
         this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
         // this.categoricalMarket = this.createReasonableCategoricalMarket(this.universe, 3, this.cash);
@@ -128,7 +132,7 @@ export class ContractDeployer {
             this.bytecodes[signatureKey] = bytecode;
         }
         const signature = this.signatures[signatureKey];
-        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
         let receiptAddress: string;
         if (constructorArgs.length > 0) {
             receiptAddress = await contractBuilder.new(constructorArgs[0], constructorArgs[1]);
@@ -152,7 +156,7 @@ export class ContractDeployer {
 
         const signature = this.signatures[signatureName];
         const bytecode = this.bytecodes[signatureName];
-        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
         const contract = await contractBuilder.at(address);
         return contract;
     }
@@ -229,21 +233,14 @@ export class ContractDeployer {
         return true;
     }
 
-    private async createGenesisUniverse(): Promise<boolean> {
-        const delegationTargetName = "UniverseTarget";
-        const hexlifiedDelegationTargetName = "0x" + binascii.hexlify(delegationTargetName);
-        this.universe = await this.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", "Universe", "Delegator", [this.controller.address, hexlifiedDelegationTargetName]);
-        this.universe.initialize(0,0);
-
-        return true;
-    }
-
-    private async createUniverse(parentUniverse, payoutDistributionHash): Promise<ContractBlockchainData> {
-        const contractBuilder = new EthContract(this.ethQuery)(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0].address, gas: this.gasAmount });
-        const receiptAddress = await contractBuilder.new(parentUniverse, payoutDistributionHash);
+    private async createGenesisUniverse(): Promise<ContractBlockchainData> {
+        const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const receiptAddress = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify('Universe')}`);
         const receipt = await this.ethQuery.getTransactionReceipt(receiptAddress);
-        const contract = await contractBuilder.at(receipt.contractAddress);
-        return contract;
+        const universe = await universeBuilder.at(receipt.contractAddress);
+        await universe.initialize('0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000');
+        return universe;
     }
 
     public async getReportingToken(market, payoutDistribution): Promise<ContractBlockchainData> {
@@ -253,7 +250,7 @@ export class ContractDeployer {
         }
         const signature = this.signatures["ReportingToken"];
         const bytecode = this.bytecodes["ReportingToken"];
-        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
         const reportingToken = await contractBuilder.at(reportingTokenAddress);
 
         return reportingToken;
@@ -264,15 +261,21 @@ export class ContractDeployer {
     }
 
     private async createCategoricalMarket(universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks): Promise<ContractBlockchainData> {
-        const reportingWindowAddress = await universe.getCurrentReportingWindow();
-        const marketCreationFee = await this.contracts["MarketFeeCalculator"].getValidityBond(reportingWindowAddress) + this.contracts["MarketFeeCalculator"].getTargetReporterGasCosts(reportingWindowAddress);
+        const myUniverse = await parseAbiIntoMethods(this.ethQuery, this.signatures["Universe"], { to: universe.address, from: this.testAccounts[0].address, gas: '0x5b8d80' });
+        const marketFeeCalculator = await parseAbiIntoMethods(this.ethQuery, this.signatures["MarketFeeCalculator"], { to: this.contracts["MarketFeeCalculator"].address });
+        await myUniverse.getCurrentReportingWindow.bind({gas: 3*10**6})();
+        const reportingWindowAddress = await myUniverse.getCurrentReportingWindow.bind({ constant: true })();
+        // FIXME: the following two functions are not constant, so we can't call them and get a return value
+        const validityBond = await marketFeeCalculator.getValidityBond.bind({ constant: true })(reportingWindowAddress);
+        const targetReporterGasCosts = await marketFeeCalculator.getTargetReporterGasCosts.bind({ constant: true })(reportingWindowAddress);
+        const marketCreationFee = validityBond.add(targetReporterGasCosts);
         const marketAddress = await this.contracts["MarketCreation"].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, {value: marketCreationFee, startgas: 6.7 * Math.pow(10, 6)});
         if (!marketAddress) {
             throw new Error("Unable to create new market.");
         }
         const signature = this.signatures["Market"];
         const bytecode = this.bytecodes["Market"];
-        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
         const market = await contractBuilder.at(marketAddress);
         return market;
     }
@@ -286,7 +289,7 @@ export class ContractDeployer {
         }
         const signature = this.signatures["Market"];
         const bytecode = this.bytecodes["Market"];
-        const contractBuilder = new EthContract(this.ethQuery)(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0].address, gas: this.gasAmount });
         const market = await contractBuilder.at(marketAddress);
         return market;
     }
