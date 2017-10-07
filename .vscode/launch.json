@@ -9,7 +9,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "-r", "ts-node/register",
-                "source/tests-integration/**/*.ts",
+                "source/tests-unit/**/*.ts",
                 "--no-timeouts"
             ],
             "protocol": "inspector",

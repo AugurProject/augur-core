@@ -47,14 +47,13 @@ export class ContractDeployer {
         await this.whitelistTradingContracts();
         await this.initializeAllContracts();
         await this.approveCentralAuthority();
-        // const parentUniverse = await padAndHexlify("0", 40);
-        // const payoutDistributionHash = await padAndHexlify("", 40);
-        // this.universe = await this.createUniverse(parentUniverse, payoutDistributionHash);
-        this.universe = await this.uploadAndAddDelegatedToController("reporting/Universe.sol", "Universe");
+        const parentUniverse = await padAndHexlify("0", 40);
+        const payoutDistributionHash = await padAndHexlify("", 40);
+        this.universe = await this.createUniverse(parentUniverse, payoutDistributionHash);
         this.cash = await this.getSeededCash();
         this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
-        this.categoricalMarket = this.createReasonableCategoricalMarket(this.universe, 3, this.cash);
-        this.scalarMarket = this.createReasonableScalarMarket(this.universe, 40, this.cash);
+        // this.categoricalMarket = this.createReasonableCategoricalMarket(this.universe, 3, this.cash);
+        // this.scalarMarket = this.createReasonableScalarMarket(this.universe, 40, this.cash);
 
         return true;
     }
@@ -216,7 +215,7 @@ export class ContractDeployer {
 
     private async getSeededCash(): Promise<ContractBlockchainData> {
         const cash = this.contracts['Cash'];
-        cash.depositEther({value: 1, sender: this.testAccounts[9].address});
+        cash.depositEther({ value: 1, sender: this.testAccounts[9].address });
         return cash;
     }
 
@@ -225,7 +224,7 @@ export class ContractDeployer {
         const contractsToApprove = ["Cash"];
         for (let testAccount in this.testAccounts) {
             for (let contractName of contractsToApprove) {
-                this.contracts[contractName].approve(authority.address, Math.pow(2, 256), {from: this.testAccounts[testAccount].address});
+                this.contracts[contractName].approve(authority.address, Math.pow(2, 256), { from: this.testAccounts[testAccount].address });
             }
         }
 
@@ -233,9 +232,11 @@ export class ContractDeployer {
     }
 
     private async createUniverse(parentUniverse, payoutDistributionHash): Promise<ContractBlockchainData> {
-        const universeAddress = await this.contracts["UniverseFactory"].createUniverse(this.controller.address, parentUniverse, payoutDistributionHash);
-        const universe = await this.applySignature("Universe", universeAddress);
-        return universe;
+        const contractBuilder = new EthContract(this.ethQuery)(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0].address, gas: this.gasAmount });
+        const receiptAddress = await contractBuilder.new(parentUniverse, payoutDistributionHash);
+        const receipt = await this.ethQuery.getTransactionReceipt(receiptAddress);
+        const contract = await contractBuilder.at(receipt.contractAddress);
+        return contract;
     }
 
     public async getReportingToken(market, payoutDistribution): Promise<ContractBlockchainData> {
