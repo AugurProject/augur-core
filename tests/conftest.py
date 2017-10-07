@@ -119,6 +119,10 @@ class ContractsFixture:
             'settings': {
                 # TODO: Remove 'remappings' line below and update 'sources' line above
                 'remappings': [ '=%s/' % resolveRelativePath("../source/contracts") ],
+                'optimizer': {
+                    'enabled': True,
+                    'runs': 500
+                },
                 'outputSelection': {
                     '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
                 }
