@@ -32,6 +32,10 @@ contract Controlled is IControlled {
         controller = IController(msg.sender);
     }
 
+    function getController() public constant returns(IController) {
+        return controller;
+    }
+
     function setController(IController _controller) public onlyControllerCaller returns(bool) {
         controller = _controller;
         return true;
