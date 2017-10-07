@@ -236,7 +236,7 @@ export class ContractDeployer {
         const receiptAddress = await contractBuilder.new(parentUniverse, payoutDistributionHash);
         const receipt = await this.ethQuery.getTransactionReceipt(receiptAddress);
         const contract = await contractBuilder.at(receipt.contractAddress);
-        const hexlifiedLookupKey = "0x" + binascii.hexlify("Universe");
+        const hexlifiedLookupKey = "0x" + binascii.hexlify("GenesisUniverse");
         await this.controller.setValue(hexlifiedLookupKey, contract.address);
         return contract;
     }
