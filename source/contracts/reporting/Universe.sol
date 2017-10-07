@@ -220,7 +220,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return childUniverses[_parentPayoutDistributionHash] == _shadyChild;
     }
 
-    function getReportingWindowForForkEndTime() public constant returns (IReportingWindow) {
+    function getReportingWindowForForkEndTime() public returns (IReportingWindow) {
         return getReportingWindowByTimestamp(getForkEndTime());
     }
 
