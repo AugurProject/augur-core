@@ -2,7 +2,9 @@
  * Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
  */
 
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+pragma experimental ABIEncoderV2;
+pragma experimental "v0.5.0";
 
 import 'trading/IOrdersFetcher.sol';
 import 'Controlled.sol';
@@ -81,7 +83,7 @@ contract OrdersFetcher is Controlled, IOrdersFetcher {
         return (_betterOrderId, _worseOrderId);
     }
 
-    function findBoundingOrders(Order.TradeTypes _type, uint256 _price, bytes32 _bestOrderId, bytes32 _worstOrderId, bytes32 _betterOrderId, bytes32 _worseOrderId) public constant returns (bytes32, bytes32) {
+    function findBoundingOrders(Order.TradeTypes _type, uint256 _price, bytes32 _bestOrderId, bytes32 _worstOrderId, bytes32 _betterOrderId, bytes32 _worseOrderId) public returns (bytes32, bytes32) {
         IOrders _orders = IOrders(controller.lookup("Orders"));
         if (_bestOrderId == _worstOrderId) {
             if (_bestOrderId == bytes32(0)) {

@@ -1,6 +1,8 @@
 // Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+pragma experimental ABIEncoderV2;
+pragma experimental "v0.5.0";
 
 import 'reporting/IReportingWindow.sol';
 import 'libraries/DelegationTarget.sol';
@@ -152,11 +154,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function getAvgReportingGasCost() public constant returns (uint256) {
+    function getAvgReportingGasCost() public returns (uint256) {
         return reportingGasPrice.currentAverage();
     }
 
-    function getAvgReportsPerMarket() public constant returns (uint256) {
+    function getAvgReportsPerMarket() public returns (uint256) {
         return marketReports.currentAverage();
     }
 
@@ -212,12 +214,12 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
     }
 
-    function getNextReportingWindow() constant public returns (IReportingWindow) {
+    function getNextReportingWindow() public returns (IReportingWindow) {
         uint256 _nextTimestamp = getEndTime() + 1;
         return getUniverse().getReportingWindowByTimestamp(_nextTimestamp);
     }
 
-    function getPreviousReportingWindow() constant public returns (IReportingWindow) {
+    function getPreviousReportingWindow() public returns (IReportingWindow) {
         uint256 _previousTimestamp = getStartTime() - 1;
         return getUniverse().getReportingWindowByTimestamp(_previousTimestamp);
     }
@@ -340,7 +342,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return registrationToken == _shadyRegistrationToken;
     }
 
-    function isContainerForMarket(IMarket _shadyMarket) public afterInitialized constant returns (bool) {
+    function isContainerForMarket(IMarket _shadyMarket) public afterInitialized returns (bool) {
         if (_shadyMarket.getTypeName() != "Market") {
             return false;
         }

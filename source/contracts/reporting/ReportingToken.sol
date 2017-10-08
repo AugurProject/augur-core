@@ -1,4 +1,6 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+pragma experimental ABIEncoderV2;
+pragma experimental "v0.5.0";
 
 import 'reporting/IReportingToken.sol';
 import 'libraries/DelegationTarget.sol';

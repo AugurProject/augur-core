@@ -1,4 +1,6 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+pragma experimental ABIEncoderV2;
+pragma experimental "v0.5.0";
 
 import 'libraries/Typed.sol';
 import 'reporting/IUniverse.sol';
@@ -25,15 +27,15 @@ contract IReportingWindow is Typed {
     function getNumInvalidMarkets() public constant returns (uint256);
     function getNumIncorrectDesignatedReportMarkets() public constant returns (uint256);
     function getMaxReportsPerLimitedReporterMarket() public constant returns (uint256);
-    function getAvgReportingGasCost() public constant returns (uint256);
-    function getAvgReportsPerMarket() public constant returns (uint256);
-    function getNextReportingWindow() constant public returns (IReportingWindow);
-    function getPreviousReportingWindow() constant public returns (IReportingWindow);
+    function getAvgReportingGasCost() public returns (uint256);
+    function getAvgReportsPerMarket() public returns (uint256);
+    function getNextReportingWindow() public returns (IReportingWindow);
+    function getPreviousReportingWindow() public returns (IReportingWindow);
     function checkIn() public returns (bool);
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
     function migrateFeesDueToFork() public returns (bool);
     function isContainerForRegistrationToken(IRegistrationToken _shadyRegistrationToken) public constant returns (bool);
-    function isContainerForMarket(IMarket _shadyMarket) public constant returns (bool);
+    function isContainerForMarket(IMarket _shadyMarket) public returns (bool);
     function isDoneReporting(address _reporter) public constant returns (bool);
     function isForkingMarketFinalized() public constant returns (bool);
     function isDisputeActive() public constant returns (bool);

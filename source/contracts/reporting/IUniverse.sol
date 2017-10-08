@@ -1,4 +1,6 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+pragma experimental ABIEncoderV2;
+pragma experimental "v0.5.0";
 
 import 'libraries/Typed.sol';
 import 'reporting/IReputationToken.sol';
@@ -27,9 +29,9 @@ contract IUniverse is Typed {
     function isParentOf(IUniverse _shadyChild) public constant returns (bool);
     function isContainerForReportingWindow(Typed _shadyTarget) public constant returns (bool);
     function isContainerForRegistrationToken(Typed _shadyTarget) public constant returns (bool);
-    function isContainerForMarket(Typed _shadyTarget) public constant returns (bool);
-    function isContainerForReportingToken(Typed _shadyTarget) public constant returns (bool);
-    function isContainerForShareToken(Typed _shadyTarget) public constant returns (bool);
+    function isContainerForMarket(Typed _shadyTarget) public returns (bool);
+    function isContainerForReportingToken(Typed _shadyTarget) public returns (bool);
+    function isContainerForShareToken(Typed _shadyTarget) public returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);
     function incrementOpenInterest(uint256 _amount) public returns (bool);
 }

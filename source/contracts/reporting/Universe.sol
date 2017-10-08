@@ -1,4 +1,6 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+pragma experimental ABIEncoderV2;
+pragma experimental "v0.5.0";
 
 import 'reporting/IUniverse.sol';
 import 'libraries/DelegationTarget.sol';
@@ -135,7 +137,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _shadyReportingWindow == _legitReportingWindow;
     }
 
-    function isContainerForDisputeBondToken(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForDisputeBondToken(Typed _shadyTarget) public returns (bool) {
         if (_shadyTarget.getTypeName() != "DisputeBondToken") {
             return false;
         }
@@ -167,7 +169,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitReportingWindow.isContainerForRegistrationToken(_shadyRegistrationToken);
     }
 
-    function isContainerForMarket(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForMarket(Typed _shadyTarget) public returns (bool) {
         if (_shadyTarget.getTypeName() != "Market") {
             return false;
         }
@@ -183,7 +185,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitReportingWindow.isContainerForMarket(_shadyMarket);
     }
 
-    function isContainerForReportingToken(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForReportingToken(Typed _shadyTarget) public returns (bool) {
         if (_shadyTarget.getTypeName() != "ReportingToken") {
             return false;
         }
@@ -199,7 +201,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitMarket.isContainerForReportingToken(_shadyReportingToken);
     }
 
-    function isContainerForShareToken(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForShareToken(Typed _shadyTarget) public returns (bool) {
         if (_shadyTarget.getTypeName() != "ShareToken") {
             return false;
         }

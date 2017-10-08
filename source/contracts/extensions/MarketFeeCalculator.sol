@@ -1,4 +1,6 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+pragma experimental ABIEncoderV2;
+pragma experimental "v0.5.0";
 
 import 'reporting/IReputationToken.sol';
 import 'reporting/IUniverse.sol';
@@ -70,7 +72,7 @@ contract MarketFeeCalculator {
         return _newValue;
     }
 
-    function getTargetReporterGasCosts(IReportingWindow _reportingWindow) constant public returns (uint256) {
+    function getTargetReporterGasCosts(IReportingWindow _reportingWindow) public returns (uint256) {
         uint256 _gasToReport = targetReporterGasCosts[_reportingWindow];
         if (_gasToReport != 0) {
             return _gasToReport;
@@ -119,7 +121,7 @@ contract MarketFeeCalculator {
         return _universe.getOpenInterestInAttoEth() * TARGET_REP_MARKET_CAP_MULTIPLIER;
     }
 
-    function getMarketCreationCost(IReportingWindow _reportingWindow) constant public returns (uint256) {
+    function getMarketCreationCost(IReportingWindow _reportingWindow) public returns (uint256) {
         return getValidityBond(_reportingWindow) + getTargetReporterGasCosts(_reportingWindow);
     }
 }

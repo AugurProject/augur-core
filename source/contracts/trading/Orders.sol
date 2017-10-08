@@ -1,4 +1,6 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+pragma experimental ABIEncoderV2;
+pragma experimental "v0.5.0";
 
 import 'trading/IOrders.sol';
 import 'libraries/DelegationTarget.sol';
@@ -213,23 +215,23 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    function fillOrderLog(bytes32 _orderId, address _filler, uint256 _creatorSharesFilled, uint256 _creatorTokensFilled, uint256 _fillerSharesFilled, uint256 _fillerTokensFilled, uint256 _tradeGroupId) public constant returns (bool) {
+    function fillOrderLog(bytes32 _orderId, address _filler, uint256 _creatorSharesFilled, uint256 _creatorTokensFilled, uint256 _fillerSharesFilled, uint256 _fillerTokensFilled, uint256 _tradeGroupId) public returns (bool) {
         Order.Data storage _order = orders[_orderId];
         FillOrder(_order.market, _order.outcome, _order.tradeType, _orderId, _order.price, _order.creator, _filler, _creatorSharesFilled, _creatorTokensFilled, _fillerSharesFilled, _fillerTokensFilled, _tradeGroupId);
         return true;
     }
 
-    function buyCompleteSetsLog(address _sender, IMarket _market, uint256 _amount, uint256 _numOutcomes) public constant returns (bool) {
+    function buyCompleteSetsLog(address _sender, IMarket _market, uint256 _amount, uint256 _numOutcomes) public returns (bool) {
         BuyCompleteSets(_sender, _market, _amount, _numOutcomes);
         return true;
     }
 
-    function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _amount, uint256 _numOutcomes, uint256 _creatorFee, uint256 _reportingFee) public constant returns (bool) {
+    function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _amount, uint256 _numOutcomes, uint256 _creatorFee, uint256 _reportingFee) public returns (bool) {
         SellCompleteSets(_sender, _market, _amount, _numOutcomes, _creatorFee, _reportingFee);
         return true;
     }
 
-    function cancelOrderLog(bytes32 _orderId) public constant returns (bool) {
+    function cancelOrderLog(bytes32 _orderId) public returns (bool) {
         Order.Data storage _order = orders[_orderId];
         CancelOrder(_order.market, _order.creator, _order.price, _order.amount, _orderId, _order.outcome, _order.tradeType, _order.moneyEscrowed, _order.sharesEscrowed);
         return true;
