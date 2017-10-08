@@ -5,6 +5,7 @@ import { ContractBlockchainData } from "contract-deployment";
 import { BID, ASK, LONG, SHORT, YES, NO } from "./constants";
 import { fix } from "./utils";
 import { compileAndDeployContracts } from "../deployment/deployContracts";
+import { parseAbiIntoMethods } from '../libraries/AbiParser';
 import { ContractDeployer } from "../libraries/ContractDeployer";
 import { TestAccount, generateTestAccounts, padAndHexlify } from "../libraries/HelperFunctions";
 
@@ -16,10 +17,13 @@ describe("BinaryMarketTradeAndReport", () => {
     });
     it("#tradeAndReport", async () => {
         const testAccounts = contractDeployer.getTestAccounts();
-        const contracts = await contractDeployer.getContracts();
+        const signatures = contractDeployer.getSignatures();
+        const contracts = contractDeployer.getContracts();
 
+        const universe = contractDeployer.getUniverse();
         const cash = contractDeployer.getCash();
-        const createOrder = contracts["CreateOrder"];
+        //const createOrder = contracts["CreateOrder"];
+        const createOrder = await parseAbiIntoMethods(contractDeployer.getEthjsQuery(), signatures["CreateOrder"], { to: contracts["CreateOrder"] });
         const trade = contracts["Trade"];
         const fillOrder = contracts["FillOrder"];
         const orders = contracts["Orders"];
@@ -27,11 +31,20 @@ describe("BinaryMarketTradeAndReport", () => {
         const market = contractDeployer.getBinaryMarket();
         const tradeGroupId = 42;
 
-        const orderId = createOrder.publicCreateOrder(BID, 2, fix(0.6), market.address, YES, await padAndHexlify("0", 32), await padAndHexlify("0", 32), tradeGroupId, { sender: testAccounts[1].publicKey, value: fix(2, 0.6)});
-        console.log("ORDER ID");
-        console.log(orderId);
+        const orderId = await padAndHexlify("0", 40);
+        const orderTxHash = await createOrder.publicCreateOrder.bind({ from: testAccounts[1].address, value: fix(2, 0.6)})(BID, 2, fix(0.6), market.address, YES, orderId, orderId, tradeGroupId);
 
-        // const universe = contractDeployer.getUniverse();
+        // let receiptLogs = await contractDeployer.getReceiptLogs(orderTxHash, "CreateOrder");
+        // const order = await this.getContractFromAddress(receiptLogs[0].order, "Orders", this.testAccounts[0].address, this.gasAmount);
+        // console.log(order);
+
+        // const fillOrderId = trade.publicSell(market.address, YES, 2, fix(0.6), tradeGroupId, {sender: testAccounts[2].publicKey, value: fix(2, 0.4)});
+        // console.log(fillOrderId);
+
+        // assert ordersFetcher.getOrder(orderId) == [0L, 0L, longToHexString(0), 0L, 0L, longTo32Bytes(0), longTo32Bytes(0), 0L];
+        // assert fillOrderId == longTo32Bytes(1);
+
+
         // const reputationToken = contractDeployer.applySignature('ReputationToken', universe.getReputationToken());
         // const reportingTokenNo = contractDeployer.getReportingToken(market, [Math.pow(10, 18),0]);
         // const reportingTokenYes = contractDeployer.getReportingToken(market, [0,Math.pow(10, 18)]);
