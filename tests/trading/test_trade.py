@@ -5,14 +5,12 @@ from utils import longTo32Bytes, longToHexString, bytesToHexString, fix, capture
 from constants import BID, ASK, YES, NO
 
 
-def test_one_bid_on_books_buy_full_order(contractsFixture):
-    cash = contractsFixture.cash
+def test_one_bid_on_books_buy_full_order(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     tradeGroupID = 42L
     logs = []
 
@@ -53,14 +51,12 @@ def test_one_bid_on_books_buy_full_order(contractsFixture):
     assert fillOrderID == longTo32Bytes(1)
 
 
-def test_one_bid_on_books_buy_partial_order(contractsFixture):
-    cash = contractsFixture.cash
+def test_one_bid_on_books_buy_partial_order(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     tradeGroupID = 42L
     logs = []
 
@@ -100,14 +96,12 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture):
     assert fillOrderID == longTo32Bytes(1)
 
 
-def test_one_bid_on_books_buy_excess_order(contractsFixture):
-    cash = contractsFixture.cash
+def test_one_bid_on_books_buy_excess_order(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     tradeGroupID = 42L
     logs = []
 
@@ -159,15 +153,13 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture):
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert ordersFetcher.getOrder(fillOrderID) == [1, fix('0.6'), bytesToHexString(tester.a2), fix('1', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
 
-def test_two_bids_on_books_buy_both(contractsFixture):
-    cash = contractsFixture.cash
+def test_two_bids_on_books_buy_both(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     logs = []
 
     # create order 1
@@ -230,15 +222,13 @@ def test_two_bids_on_books_buy_both(contractsFixture):
     assert ordersFetcher.getOrder(orderID2) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
-def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
-    cash = contractsFixture.cash
+def test_two_bids_on_books_buy_full_and_partial(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     logs = []
 
     # create order 1
@@ -302,15 +292,13 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture):
     assert ordersFetcher.getOrder(orderID2) == [4, fix('0.6'), bytesToHexString(tester.a3), fix('4', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
-def test_two_bids_on_books_buy_one_full_then_create(contractsFixture):
-    cash = contractsFixture.cash
+def test_two_bids_on_books_buy_one_full_then_create(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     logs = []
 
     # create order 1
@@ -364,8 +352,7 @@ def test_two_bids_on_books_buy_one_full_then_create(contractsFixture):
     assert ordersFetcher.getOrder(orderID2) == [7, fix('0.5'), bytesToHexString(tester.a3), fix('7', '0.5'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert ordersFetcher.getOrder(fillOrderID) == [3, fix('0.6'), bytesToHexString(tester.a2), fix('3', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
 
-def test_one_ask_on_books_buy_full_order(contractsFixture):
-    cash = contractsFixture.cash
+def test_one_ask_on_books_buy_full_order(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
@@ -373,7 +360,6 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     logs = []
 
     # create order
@@ -412,15 +398,13 @@ def test_one_ask_on_books_buy_full_order(contractsFixture):
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
-def test_one_ask_on_books_buy_partial_order(contractsFixture):
-    cash = contractsFixture.cash
+def test_one_ask_on_books_buy_partial_order(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     logs = []
 
     # create order
@@ -460,15 +444,13 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture):
     assert ordersFetcher.getOrder(orderID) == [5, fix('0.6'), bytesToHexString(tester.a1), fix('5', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
-def test_one_ask_on_books_buy_excess_order(contractsFixture):
-    cash = contractsFixture.cash
+def test_one_ask_on_books_buy_excess_order(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     logs = []
 
     # create order
@@ -519,15 +501,13 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture):
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert ordersFetcher.getOrder(fillOrderID) == [3, fix('0.6'), bytesToHexString(tester.a2), fix('3', '0.6'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
 
-def test_two_asks_on_books_buy_both(contractsFixture):
-    cash = contractsFixture.cash
+def test_two_asks_on_books_buy_both(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     logs = []
 
     # create order 1
@@ -591,15 +571,13 @@ def test_two_asks_on_books_buy_both(contractsFixture):
     assert ordersFetcher.getOrder(orderID2) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
-def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
-    cash = contractsFixture.cash
+def test_two_asks_on_books_buy_full_and_partial(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     logs = []
 
     # create order 1
@@ -663,15 +641,13 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture):
     assert ordersFetcher.getOrder(orderID2) == [4, fix('0.6'), bytesToHexString(tester.a3), fix('4', '0.4'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == longTo32Bytes(1)
 
-def test_two_asks_on_books_buy_one_full_then_create(contractsFixture):
-    cash = contractsFixture.cash
+def test_two_asks_on_books_buy_one_full_then_create(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     tradeGroupID = 42L
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     logs = []
 
     # create order 1

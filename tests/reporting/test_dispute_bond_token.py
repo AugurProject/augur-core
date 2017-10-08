@@ -113,18 +113,17 @@ SCALAR_OUTCOME_C = [20*10**18, 20*10**18]
     (MARKET_TYPE_SCALAR, 0, SCALAR_OUTCOME_A, 1, [[2, SCALAR_OUTCOME_B, 105 * REP_DIVISOR]], 0, SCALAR_OUTCOME_A, [[3, SCALAR_OUTCOME_B, 11050 * REP_DIVISOR]], 4, [[0, SCALAR_OUTCOME_A], [1, SCALAR_OUTCOME_B], [2, SCALAR_OUTCOME_B], [3, SCALAR_OUTCOME_B], [4, SCALAR_OUTCOME_A], [5, SCALAR_OUTCOME_B], [6, SCALAR_OUTCOME_B]], [[0, None, 0], [1, None, 0], [2, None, 0], [3, None, 0], [4, None, 0], [5, None, 0], [6, None, 0], [0, SCALAR_OUTCOME_A, 998901999999999999999999], [1, SCALAR_OUTCOME_A, 0], [2, SCALAR_OUTCOME_A, 0], [3, SCALAR_OUTCOME_A, 0], [4, SCALAR_OUTCOME_A, 1000000000000000000000000], [5, SCALAR_OUTCOME_A, 0], [6, SCALAR_OUTCOME_A, 0], [0, SCALAR_OUTCOME_B, 0], [1, SCALAR_OUTCOME_B, 999999999999999999999999], [2, SCALAR_OUTCOME_B, 1000000000000000000000000], [3, SCALAR_OUTCOME_B, 1000000000000000000000000], [4, SCALAR_OUTCOME_B, 0], [5, SCALAR_OUTCOME_B, 1000000000000000000000000], [6, SCALAR_OUTCOME_B, 1000000000000000000000000], [0, SCALAR_OUTCOME_C, 0], [1, SCALAR_OUTCOME_C, 0], [2, SCALAR_OUTCOME_C, 0], [3, SCALAR_OUTCOME_C, 0], [4, SCALAR_OUTCOME_C, 0], [5, SCALAR_OUTCOME_C, 0], [6, SCALAR_OUTCOME_C, 0]]),
     # ----- End scalar market test cases -----
 ])
-def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designatedReporterOutcome, designatedReporterDisputerAccountNum, designatedReporterDisputeStakes, round1ReportersDisputerAccountNum, round1ReporterDisputeOutcome, round1ReportersDisputeStakes, round2ReportersDisputerAccountNum, round2ReportersDisputeStakes, expectedAccountBalances, contractsFixture):
-    universe = contractsFixture.universe
+def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designatedReporterOutcome, designatedReporterDisputerAccountNum, designatedReporterDisputeStakes, round1ReportersDisputerAccountNum, round1ReporterDisputeOutcome, round1ReportersDisputeStakes, round2ReportersDisputerAccountNum, round2ReportersDisputeStakes, expectedAccountBalances, contractsFixture, universe, binaryMarket, categoricalMarket, scalarMarket):
     if (marketType == MARKET_TYPE_CATEGORICAL):
-        market = contractsFixture.categoricalMarket
-        otherMarket = contractsFixture.scalarMarket
+        market = categoricalMarket
+        otherMarket = scalarMarket
         otherOutcome = SCALAR_OUTCOME_A
         OUTCOME_A = CATEGORICAL_OUTCOME_A
         OUTCOME_B = CATEGORICAL_OUTCOME_B
         OUTCOME_C = CATEGORICAL_OUTCOME_C
     elif (marketType == MARKET_TYPE_SCALAR):
-        market = contractsFixture.scalarMarket
-        otherMarket = contractsFixture.categoricalMarket
+        market = scalarMarket
+        otherMarket = categoricalMarket
         otherOutcome = CATEGORICAL_OUTCOME_A
         OUTCOME_A = SCALAR_OUTCOME_A
         OUTCOME_B = SCALAR_OUTCOME_B
@@ -163,7 +162,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
 
     # Perform designated reports on the other markets so they can finalize and we can redeemWinningTokens later
     assert contractsFixture.designatedReport(otherMarket, otherOutcome, tester.k0)
-    assert contractsFixture.designatedReport(contractsFixture.binaryMarket, [10**18,0], tester.k0)
+    assert contractsFixture.designatedReport(binaryMarket, [10**18,0], tester.k0)
 
     # Perform designated report (if there is one)
     if (len(designatedReporterOutcome) > 0):
@@ -307,11 +306,11 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
     assert market.tryFinalize()
     if (round2ReportersDisputerAccountNum == None):
         assert otherMarket.tryFinalize()
-        assert contractsFixture.binaryMarket.tryFinalize()
-        assert otherMarket.getReportingState() == contractsFixture.constants.FINALIZED()
-        assert contractsFixture.binaryMarket.getReportingState() == contractsFixture.constants.FINALIZED()
+        assert binaryMarket.tryFinalize()
+        assert otherMarket.getReportingState() == contractsFixture.contracts['Constants'].FINALIZED()
+        assert binaryMarket.getReportingState() == contractsFixture.contracts['Constants'].FINALIZED()
 
-    assert market.getReportingState() == contractsFixture.constants.FINALIZED()
+    assert market.getReportingState() == contractsFixture.contracts['Constants'].FINALIZED()
     if (round2ReportersDisputerAccountNum):
         print "Original universe test accounts"
         printTestAccountBalances(reputationToken, False)

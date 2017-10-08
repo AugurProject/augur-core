@@ -1,6 +1,5 @@
-ethereum-augur-temp==2.1.4
+ethereum-augur-temp==2.1.10
 pycryptodome==3.4.6
 numpy==1.13.0
 pytest==3.1.2
-pytest-lazy-fixture==0.3.0
 py-solc==1.4.0

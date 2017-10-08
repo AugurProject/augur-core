@@ -5,24 +5,25 @@ from pytest import fixture, raises
 from utils import stringToBytes
 
 @fixture(scope="session")
-def delegatorSnapshot(sessionFixture):
+def localSnapshot(fixture, controllerSnapshot):
+    fixture.resetToSnapshot(controllerSnapshot)
     name = "DelegatorHelper"
     targetName = "DelegatorHelperTarget"
-    sessionFixture.uploadAndAddToController("solidity_test_helpers/DelegatorHelper.sol", targetName, name)
-    sessionFixture.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", name, "delegator", constructorArgs=[sessionFixture.controller.address, targetName.ljust(32, '\x00')])
-    sessionFixture.contracts[name] = sessionFixture.applySignature(name, sessionFixture.contracts[name].address)
-    return sessionFixture.createSnapshot()
+    fixture.uploadAndAddToController("solidity_test_helpers/DelegatorHelper.sol", targetName, name)
+    fixture.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", name, "delegator", constructorArgs=[fixture.contracts['Controller'].address, stringToBytes(targetName)])
+    fixture.contracts[name] = fixture.applySignature(name, fixture.contracts[name].address)
+    return fixture.createSnapshot()
 
 @fixture
-def delegatorContractsFixture(sessionFixture, delegatorSnapshot):
-    sessionFixture.resetToSnapshot(delegatorSnapshot)
-    return sessionFixture
+def localFixture(fixture, localSnapshot):
+    fixture.resetToSnapshot(localSnapshot)
+    return fixture
 
 
-def test_delegationTargetInitialMemberValues(delegatorContractsFixture):
+def test_delegationTargetInitialMemberValues(localFixture):
 
-    delegatorHelperTarget = delegatorContractsFixture.contracts['DelegatorHelperTarget']
-    delegatorHelper = delegatorContractsFixture.contracts['DelegatorHelper']
+    delegatorHelperTarget = localFixture.contracts['DelegatorHelperTarget']
+    delegatorHelper = localFixture.contracts['DelegatorHelper']
 
     # Members set at declaration time on the delegation target are not set/retreivable on the delegator unless declared constant
     assert delegatorHelperTarget.intValue() == -42
@@ -57,9 +58,9 @@ def test_delegationTargetInitialMemberValues(delegatorContractsFixture):
     assert delegatorHelper.intValue() != delegatorHelperTarget.intValue()
 
 
-def test_delegationMapStorage(delegatorContractsFixture):
+def test_delegationMapStorage(localFixture):
 
-    delegatorHelper = delegatorContractsFixture.contracts['DelegatorHelper']
+    delegatorHelper = localFixture.contracts['DelegatorHelper']
 
     # We can store maps and access them in a delegator
     assert delegatorHelper.getMapValue(1) == 0
@@ -67,9 +68,9 @@ def test_delegationMapStorage(delegatorContractsFixture):
     assert delegatorHelper.getMapValue(1) == 42
 
 
-def test_delegationArrayStorage(delegatorContractsFixture):
+def test_delegationArrayStorage(localFixture):
 
-    delegatorHelper = delegatorContractsFixture.contracts['DelegatorHelper']
+    delegatorHelper = localFixture.contracts['DelegatorHelper']
 
     # We can store arrays and access them in a delegator
     assert delegatorHelper.getArraySize() == 0
@@ -82,10 +83,10 @@ def test_delegationArrayStorage(delegatorContractsFixture):
     assert delegatorHelper.getArrayValue(0) == 42
 
 
-def test_delegationExternalContractCalls(delegatorContractsFixture):
+def test_delegationExternalContractCalls(localFixture):
 
-    delegatorHelperTarget = delegatorContractsFixture.contracts['DelegatorHelperTarget']
-    delegatorHelper = delegatorContractsFixture.contracts['DelegatorHelper']
+    delegatorHelperTarget = localFixture.contracts['DelegatorHelperTarget']
+    delegatorHelper = localFixture.contracts['DelegatorHelper']
 
     # We can make external calls in a function of a delegated contract and recieve back values correctly
     assert delegatorHelper.setOtherContract(delegatorHelperTarget.address)
@@ -95,9 +96,9 @@ def test_delegationExternalContractCalls(delegatorContractsFixture):
     assert delegatorHelper.getOtherMapValue(1) == 2
 
 
-def test_delegationInputsAndOutputs(delegatorContractsFixture):
+def test_delegationInputsAndOutputs(localFixture):
 
-    delegatorHelper = delegatorContractsFixture.contracts['DelegatorHelper']
+    delegatorHelper = localFixture.contracts['DelegatorHelper']
 
     # The size of our input data and output data are constrained only in the same way as all other functions by the evm.
     assert delegatorHelper.noInputReturn() == 1

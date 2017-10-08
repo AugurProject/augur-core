@@ -2,19 +2,17 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import raises, mark, lazy_fixture
+from pytest import raises, mark
 from utils import longTo32Bytes, fix
 from constants import BID, ASK, YES, NO
 
 tester.STARTGAS = long(6.7 * 10**6)
 
 
-def test_create_ask_with_shares_fill_with_shares(contractsFixture):
+def test_create_ask_with_shares_fill_with_shares(contractsFixture, cash, market):
     completeSets = contractsFixture.contracts['CompleteSets']
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
 
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
@@ -37,8 +35,8 @@ def test_create_ask_with_shares_fill_with_shares(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == 12
 
     # 3. fill ASK order for YES with NO shares
-    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
     assert noShareToken.approve(fillOrder.address, 12, sender = tester.k2)
     fxpAmountRemaining = fillOrder.publicFillOrder(askOrderID, 12, sender = tester.k2)
     creatorFee = completeSetFees * 0.6
@@ -46,19 +44,17 @@ def test_create_ask_with_shares_fill_with_shares(contractsFixture):
     assert fxpAmountRemaining == 0
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.6') - long(creatorFee)
-    assert contractsFixture.utils.getETHBalance(tester.a2) == initialFillerETH + fix('12', '0.4') - long(fillerFee)
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.6') - long(creatorFee)
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH + fix('12', '0.4') - long(fillerFee)
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 12
     assert noShareToken.balanceOf(tester.a1) == 12
     assert noShareToken.balanceOf(tester.a2) == 0
 
-def test_create_ask_with_shares_fill_with_cash(contractsFixture):
+def test_create_ask_with_shares_fill_with_cash(contractsFixture, cash, market):
     completeSets = contractsFixture.contracts['CompleteSets']
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
 
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
@@ -78,25 +74,23 @@ def test_create_ask_with_shares_fill_with_cash(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == 12
 
     # 3. fill ASK order for YES with cash
-    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
     fxpAmountRemaining = fillOrder.publicFillOrder(askOrderID, 12, sender = tester.k2, value=fix('12', '0.6'))
     assert fxpAmountRemaining == 0
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.6')
-    assert contractsFixture.utils.getETHBalance(tester.a2) == initialFillerETH - fix('12', '0.6')
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.6')
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH - fix('12', '0.6')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 12
     assert noShareToken.balanceOf(tester.a1) == 12
     assert noShareToken.balanceOf(tester.a2) == 0
 
-def test_create_ask_with_cash_fill_with_shares(contractsFixture):
+def test_create_ask_with_cash_fill_with_shares(contractsFixture, cash, market):
     completeSets = contractsFixture.contracts['CompleteSets']
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
 
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
@@ -115,26 +109,24 @@ def test_create_ask_with_cash_fill_with_shares(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. fill ASK order for YES with shares of NO
-    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
     assert noShareToken.approve(fillOrder.address, 12, sender = tester.k2)
     amountRemaining = fillOrder.publicFillOrder(askOrderID, 12, sender = tester.k2)
     assert amountRemaining == 0, "Amount remaining should be 0"
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH
-    assert contractsFixture.utils.getETHBalance(tester.a2) == initialFillerETH + fix('12', '0.4')
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH + fix('12', '0.4')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 12
     assert noShareToken.balanceOf(tester.a1) == 12
     assert noShareToken.balanceOf(tester.a2) == 0
 
-def test_create_ask_with_cash_fill_with_cash(contractsFixture):
+def test_create_ask_with_cash_fill_with_cash(contractsFixture, cash, market):
     completeSets = contractsFixture.contracts['CompleteSets']
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
 
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
@@ -156,12 +148,10 @@ def test_create_ask_with_cash_fill_with_cash(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == 12
     assert noShareToken.balanceOf(tester.a2) == 0
 
-def test_create_bid_with_shares_fill_with_shares(contractsFixture):
+def test_create_bid_with_shares_fill_with_shares(contractsFixture, cash, market):
     completeSets = contractsFixture.contracts['CompleteSets']
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
 
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
@@ -186,8 +176,8 @@ def test_create_bid_with_shares_fill_with_shares(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. fill BID order for YES with shares of YES
-    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
     assert yesShareToken.approve(fillOrder.address, 12, sender = tester.k2)
     leftoverInOrder = fillOrder.publicFillOrder(orderID, 12, sender = tester.k2)
     creatorFee = completeSetFees * 0.4
@@ -197,19 +187,17 @@ def test_create_bid_with_shares_fill_with_shares(contractsFixture):
     fillerPayment = fix('12', '0.6') - fillerFee
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH + long(creatorPayment)
-    assert contractsFixture.utils.getETHBalance(tester.a2) == initialFillerETH + long(fillerPayment)
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH + long(creatorPayment)
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH + long(fillerPayment)
     assert yesShareToken.balanceOf(tester.a1) == 12
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a2) == 12
 
-def test_create_bid_with_shares_fill_with_cash(contractsFixture):
+def test_create_bid_with_shares_fill_with_cash(contractsFixture, cash, market):
     completeSets = contractsFixture.contracts['CompleteSets']
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
 
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
@@ -229,25 +217,23 @@ def test_create_bid_with_shares_fill_with_cash(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. fill BID order for YES with cash
-    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
     leftoverInOrder = fillOrder.publicFillOrder(orderID, 12, sender = tester.k2, value=fix('12', '0.4'))
     assert leftoverInOrder == 0
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.4')
-    assert contractsFixture.utils.getETHBalance(tester.a2) == initialFillerETH - fix('12', '0.4')
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.4')
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH - fix('12', '0.4')
     assert yesShareToken.balanceOf(tester.a1) == 12
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a2) == 12
 
-def test_create_bid_with_cash_fill_with_shares(contractsFixture):
+def test_create_bid_with_cash_fill_with_shares(contractsFixture, cash, market):
     completeSets = contractsFixture.contracts['CompleteSets']
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
 
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
@@ -266,26 +252,24 @@ def test_create_bid_with_cash_fill_with_shares(contractsFixture):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. fill BID order for YES with shares of YES
-    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
     assert yesShareToken.approve(fillOrder.address, 12, sender = tester.k2)
     leftoverInOrder = fillOrder.publicFillOrder(orderID, 12, sender = tester.k2)
     assert leftoverInOrder == 0
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH
-    assert contractsFixture.utils.getETHBalance(tester.a2) == initialFillerETH + fix('12', '0.6')
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH + fix('12', '0.6')
     assert yesShareToken.balanceOf(tester.a1) == 12
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a2) == 12
 
-def test_create_bid_with_cash_fill_with_cash(contractsFixture):
+def test_create_bid_with_cash_fill_with_cash(contractsFixture, cash, market):
     completeSets = contractsFixture.contracts['CompleteSets']
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
 
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
@@ -312,39 +296,40 @@ import contextlib
 def placeholder_context():
     yield None
 
-@mark.parametrize('type,outcome,displayPrice,orderSize,creatorYesShares,creatorNoShares,creatorCost,fillSize,fillerYesShares,fillerNoShares,fillerCost,expectMakeRaise,expectedMakerYesShares,expectedMakerNoShares,expectedMakerPayout,expectTakeRaise,expectedFillerYesShares,expectedFillerNoShares,expectedFillerPayout,fixture', [
+@mark.parametrize('type,outcome,displayPrice,orderSize,creatorYesShares,creatorNoShares,creatorCost,fillSize,fillerYesShares,fillerNoShares,fillerCost,expectMakeRaise,expectedMakerYesShares,expectedMakerNoShares,expectedMakerPayout,expectTakeRaise,expectedFillerYesShares,expectedFillerNoShares,expectedFillerPayout', [
     # | ------ ORDER ------ |   | ------ CREATOR START ------ |   | ------ FILLER START ------ |  | ------- CREATOR FINISH -------  |    | ------- FILLER FINISH -------  |
     #   type,outcome,  price,   size,    yes,     no,   cost,   size,    yes,     no,   cost,  raise,    yes,     no,      pay,    raise,    yes,     no,      pay,
-    (    BID,    YES,  '0.6',  '12',    '0',    '0', '7.2',  '12',  '12',    '0',    '0',  False,  '12',    '0',       '0',    False,    '0',    '0',    '7.2', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '12',    '0',  '12',    '0',  '12',  '12',    '0',    '0',  False,    '0',    '0','4.75152',    False,    '0',    '0','7.12728', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '12',    '0',    '0', '7.2',  '12',    '0',    '0', '4.8',  False,  '12',    '0',       '0',    False,    '0',  '12',       '0', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '12',    '0',  '12',    '0',  '12',    '0',    '0', '4.8',  False,    '0',    '0',    '4.8',    False,    '0',  '12',       '0', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '12',    '0',    '0', '7.2',  '12',  '12',    '0',    '0',  False,  '12',    '0',       '0',    False,    '0',    '0',    '7.2'),
+    (    BID,    YES,  '0.6',  '12',    '0',  '12',    '0',  '12',  '12',    '0',    '0',  False,    '0',    '0','4.75152',    False,    '0',    '0','7.12728'),
+    (    BID,    YES,  '0.6',  '12',    '0',    '0', '7.2',  '12',    '0',    '0', '4.8',  False,  '12',    '0',       '0',    False,    '0',  '12',       '0'),
+    (    BID,    YES,  '0.6',  '12',    '0',  '12',    '0',  '12',    '0',    '0', '4.8',  False,    '0',    '0',    '4.8',    False,    '0',  '12',       '0'),
 
-    (    BID,    YES,  '0.6',  '24',    '0',  '12', '7.2',  '24',  '24',    '0',    '0',  False,  '12',    '0','4.75152',    False,    '0',    '0','14.32728', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '24',    '0',  '12', '7.2',  '24',    '0',    '0', '9.6',  False,  '12',    '0',    '4.8',    False,    '0',  '24',       '0', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '24',    '0',    '0', '14.4',  '24',  '12',    '0', '4.8',  False,  '24',    '0',       '0',    False,    '0',  '12',    '7.2', lazy_fixture('contractsFixture')),
-    (    BID,    YES,  '0.6',  '24',    '0',  '24',    '0',  '24',  '12',    '0', '4.8',  False,    '0',    '0','9.55152',    False,    '0',  '12','7.12728', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '24',    '0',  '12', '7.2',  '24',  '24',    '0',    '0',  False,  '12',    '0','4.75152',    False,    '0',    '0','14.32728'),
+    (    BID,    YES,  '0.6',  '24',    '0',  '12', '7.2',  '24',    '0',    '0', '9.6',  False,  '12',    '0',    '4.8',    False,    '0',  '24',       '0'),
+    (    BID,    YES,  '0.6',  '24',    '0',    '0', '14.4',  '24',  '12',    '0', '4.8',  False,  '24',    '0',       '0',    False,    '0',  '12',    '7.2'),
+    (    BID,    YES,  '0.6',  '24',    '0',  '24',    '0',  '24',  '12',    '0', '4.8',  False,    '0',    '0','9.55152',    False,    '0',  '12','7.12728'),
 
-    (    BID,    YES,  '0.6',  '24',    '0',  '12', '7.2',  '24',  '12',    '0', '4.8',  False,  '12',    '0','4.75152',    False,    '0',  '12','7.12728', lazy_fixture('contractsFixture')),
+    (    BID,    YES,  '0.6',  '24',    '0',  '12', '7.2',  '24',  '12',    '0', '4.8',  False,  '12',    '0','4.75152',    False,    '0',  '12','7.12728'),
 
-    (    BID,     NO,  '0.6',  '12',    '0',    '0', '7.2',  '12',    '0',  '12',    '0',  False,    '0',  '12',       '0',    False,    '0',    '0',    '7.2', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',  '12',    '0',  False,    '0',    '0','4.75152',    False,    '0',    '0','7.12728', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '12',    '0',    '0', '7.2',  '12',    '0',    '0', '4.8',  False,    '0',  '12',       '0',    False,  '12',    '0',       '0', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',    '0', '4.8',  False,    '0',    '0',    '4.8',    False,  '12',    '0',       '0', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '12',    '0',    '0', '7.2',  '12',    '0',  '12',    '0',  False,    '0',  '12',       '0',    False,    '0',    '0',    '7.2'),
+    (    BID,     NO,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',  '12',    '0',  False,    '0',    '0','4.75152',    False,    '0',    '0','7.12728'),
+    (    BID,     NO,  '0.6',  '12',    '0',    '0', '7.2',  '12',    '0',    '0', '4.8',  False,    '0',  '12',       '0',    False,  '12',    '0',       '0'),
+    (    BID,     NO,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',    '0', '4.8',  False,    '0',    '0',    '4.8',    False,  '12',    '0',       '0'),
 
-    (    BID,     NO,  '0.6',  '24',  '12',    '0', '7.2',  '24',    '0',  '24',    '0',  False,    '0',  '12','4.75152',    False,    '0',    '0','14.32728', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '24',  '12',    '0', '7.2',  '24',    '0',    '0', '9.6',  False,    '0',  '12',    '4.8',    False,  '24',    '0',       '0', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '24',    '0',    '0', '14.4',  '24',    '0',  '12', '4.8',  False,    '0',  '24',       '0',    False,  '12',    '0',    '7.2', lazy_fixture('contractsFixture')),
-    (    BID,     NO,  '0.6',  '24',  '24',    '0',    '0',  '24',    '0',  '12', '4.8',  False,    '0',    '0','9.55152',    False,  '12',    '0','7.12728', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '24',  '12',    '0', '7.2',  '24',    '0',  '24',    '0',  False,    '0',  '12','4.75152',    False,    '0',    '0','14.32728'),
+    (    BID,     NO,  '0.6',  '24',  '12',    '0', '7.2',  '24',    '0',    '0', '9.6',  False,    '0',  '12',    '4.8',    False,  '24',    '0',       '0'),
+    (    BID,     NO,  '0.6',  '24',    '0',    '0', '14.4',  '24',    '0',  '12', '4.8',  False,    '0',  '24',       '0',    False,  '12',    '0',    '7.2'),
+    (    BID,     NO,  '0.6',  '24',  '24',    '0',    '0',  '24',    '0',  '12', '4.8',  False,    '0',    '0','9.55152',    False,  '12',    '0','7.12728'),
 
-    (    BID,     NO,  '0.6',  '24',  '12',    '0', '7.2',  '24',    '0',  '12', '4.8',  False,    '0',  '12','4.75152',    False,  '12',    '0','7.12728', lazy_fixture('contractsFixture')),
+    (    BID,     NO,  '0.6',  '24',  '12',    '0', '7.2',  '24',    '0',  '12', '4.8',  False,    '0',  '12','4.75152',    False,  '12',    '0','7.12728'),
 
-    (    ASK,    YES,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',    '0', '7.2',  False,    '0',    '0',    '7.2',    False,  '12',    '0',       '0', lazy_fixture('contractsFixture')),
-    (    ASK,    YES,  '0.6',  '12',    '0',    '0', '4.8',  '12',    '0',    '0', '7.2',  False,    '0',  '12',       '0',    False,  '12',    '0',       '0', lazy_fixture('contractsFixture')),
-    (    ASK,    YES,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',  '12',    '0',  False,    '0',    '0','7.12728',    False,    '0',    '0','4.75152', lazy_fixture('contractsFixture')),
-    (    ASK,    YES,  '0.6',  '12',    '0',    '0', '4.8',  '12',    '0',  '12',    '0',  False,    '0',  '12',       '0',    False,    '0',    '0',    '4.8', lazy_fixture('contractsFixture')),
+    (    ASK,    YES,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',    '0', '7.2',  False,    '0',    '0',    '7.2',    False,  '12',    '0',       '0'),
+    (    ASK,    YES,  '0.6',  '12',    '0',    '0', '4.8',  '12',    '0',    '0', '7.2',  False,    '0',  '12',       '0',    False,  '12',    '0',       '0'),
+    (    ASK,    YES,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',  '12',    '0',  False,    '0',    '0','7.12728',    False,    '0',    '0','4.75152'),
+    (    ASK,    YES,  '0.6',  '12',    '0',    '0', '4.8',  '12',    '0',  '12',    '0',  False,    '0',  '12',       '0',    False,    '0',    '0',    '4.8'),
 ])
-def test_parametrized(type, outcome, displayPrice, orderSize, creatorYesShares, creatorNoShares, creatorCost, fillSize, fillerYesShares, fillerNoShares, fillerCost, expectMakeRaise, expectedMakerYesShares, expectedMakerNoShares, expectedMakerPayout, expectTakeRaise, expectedFillerYesShares, expectedFillerNoShares, expectedFillerPayout, fixture):
+def test_parametrized(type, outcome, displayPrice, orderSize, creatorYesShares, creatorNoShares, creatorCost, fillSize, fillerYesShares, fillerNoShares, fillerCost, expectMakeRaise, expectedMakerYesShares, expectedMakerNoShares, expectedMakerPayout, expectTakeRaise, expectedFillerYesShares, expectedFillerNoShares, expectedFillerPayout, contractsFixture, cash, market):
+    fixture = contractsFixture
     # TODO: add support for wider range markets
     displayPrice = fix(displayPrice)
     assert displayPrice < 10**18
@@ -373,8 +358,6 @@ def test_parametrized(type, outcome, displayPrice, orderSize, creatorYesShares, 
     fillerAddress = tester.a2
     fillerKey = tester.k2
 
-    cash = fixture.cash
-    market = fixture.binaryMarket
     completeSets = fixture.contracts['CompleteSets']
     createOrder = fixture.contracts['CreateOrder']
     fillOrder = fixture.contracts['FillOrder']
@@ -400,16 +383,16 @@ def test_parametrized(type, outcome, displayPrice, orderSize, creatorYesShares, 
     # fill order
     acquireShares(YES, fillerYesShares, fillOrder.address, sender = fillerKey)
     acquireShares(NO, fillerNoShares, fillOrder.address, sender = fillerKey)
-    initialMakerETH = fixture.utils.getETHBalance(creatorAddress)
-    initialFillerETH = fixture.utils.getETHBalance(fillerAddress)
+    initialMakerETH = fixture.contracts['Utils'].getETHBalance(creatorAddress)
+    initialFillerETH = fixture.contracts['Utils'].getETHBalance(fillerAddress)
     with raises(TransactionFailed) if expectTakeRaise else placeholder_context():
         fillOrder.publicFillOrder(orderID, fillSize, sender = fillerKey, value = fillerCost)
 
     # assert final state
     assert cash.balanceOf(creatorAddress) == 0
     assert cash.balanceOf(fillerAddress) == 0
-    assert fixture.utils.getETHBalance(creatorAddress) == initialMakerETH + expectedMakerPayout
-    assert fixture.utils.getETHBalance(fillerAddress) == initialFillerETH + expectedFillerPayout - fillerCost
+    assert fixture.contracts['Utils'].getETHBalance(creatorAddress) == initialMakerETH + expectedMakerPayout
+    assert fixture.contracts['Utils'].getETHBalance(fillerAddress) == initialFillerETH + expectedFillerPayout - fillerCost
     assert yesShareToken.balanceOf(creatorAddress) == expectedMakerYesShares
     assert yesShareToken.balanceOf(fillerAddress) == expectedFillerYesShares
     assert noShareToken.balanceOf(creatorAddress) == expectedMakerNoShares

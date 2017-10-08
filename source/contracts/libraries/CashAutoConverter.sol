@@ -16,7 +16,7 @@ contract CashAutoConverter is Controlled {
     modifier convertToAndFromCash() {
         ethToCash();
         _;
-        cashToETH();
+        cashToEth();
     }
 
     function ethToCash() private returns (bool) {
@@ -26,11 +26,12 @@ contract CashAutoConverter is Controlled {
         return true;
     }
 
-    function cashToETH() private returns (bool) {
+    function cashToEth() private returns (bool) {
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _tokenBalance = _cash.balanceOf(msg.sender);
         if (_tokenBalance > 0) {
-            Augur(controller.lookup("Augur")).trustedTransfer(_cash, msg.sender, this, _tokenBalance);
+            Augur augur = Augur(controller.lookup("Augur"));
+            augur.trustedTransfer(_cash, msg.sender, this, _tokenBalance);
             _cash.withdrawEtherTo(msg.sender, _tokenBalance);
         }
         return true;
