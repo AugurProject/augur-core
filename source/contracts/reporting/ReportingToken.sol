@@ -95,12 +95,11 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         uint256 _reputationSupply = _reputationToken.balanceOf(this);
         uint256 _attotokens = balances[msg.sender];
         uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
-        _reportingWindow.collectReportingFees(msg.sender, _attotokens);
         burn(msg.sender, _attotokens);
-        if (_reporterReputationShare == 0) {
-            return true;
+        if (_reporterReputationShare != 0) {
+            _reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
-        _reputationToken.transfer(msg.sender, _reporterReputationShare);
+        _reportingWindow.collectReportingFees(msg.sender, _attotokens);
         return true;
     }
 

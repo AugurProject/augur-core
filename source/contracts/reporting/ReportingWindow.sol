@@ -36,9 +36,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set.Data private markets;
     Set.Data private limitedReporterMarkets;
     Set.Data private allReporterMarkets;
+    Set.Data private finalizedMarkets;
     uint256 private invalidMarketCount;
     uint256 private incorrectDesignatedReportMarketCount;
-    uint256 private finalizedMarketCount;
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
@@ -126,12 +126,15 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function updateFinalizedMarket(IMarket _market) private returns (bool) {
+        require(!finalizedMarkets.contains(_market));
+
         if (!_market.isValid()) {
             invalidMarketCount++;
         }
         if (_market.getFinalPayoutDistributionHash() != _market.getDesignatedReportPayoutHash()) {
             incorrectDesignatedReportMarketCount++;
         }
+        finalizedMarkets.add(_market);
         marketReports.record(numberOfReportsByMarket[_market]);
         uint256 _totalWinningReportingTokens = _market.getFinalWinningReportingToken().totalSupply();
         totalWinningReportingTokens = totalWinningReportingTokens.add(_totalWinningReportingTokens);
@@ -228,7 +231,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function allMarketsFinalized() constant public returns (bool) {
-        return markets.count == finalizedMarketCount;
+        return markets.count == finalizedMarkets.count;
     }
 
     function checkIn() public afterInitialized returns (bool) {
@@ -247,10 +250,10 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _balance = _cash.balanceOf(this);
         uint256 _feePayoutShare = _balance.mul(_attoReportingTokens).div(totalWinningReportingTokens);
+        totalWinningReportingTokens = totalWinningReportingTokens.sub(_attoReportingTokens);
         if (_feePayoutShare > 0) {
             _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
         }
-        totalWinningReportingTokens = totalWinningReportingTokens.sub(_attoReportingTokens);
         return true;
     }
 
@@ -356,27 +359,30 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return allReporterMarkets.count;
     }
 
-    function isContainerForRegistrationToken(IRegistrationToken _shadyRegistrationToken) public afterInitialized constant returns (bool) {
-        if (_shadyRegistrationToken.getTypeName() != "RegistrationToken") {
+    function isContainerForRegistrationToken(Typed _shadyTarget) public afterInitialized constant returns (bool) {
+        if (_shadyTarget.getTypeName() != "RegistrationToken") {
             return false;
         }
+        IRegistrationToken _shadyRegistrationToken = IRegistrationToken(_shadyTarget);
         return registrationToken == _shadyRegistrationToken;
     }
 
-    function isContainerForReportingToken(IReportingToken _shadyReportingToken) public afterInitialized constant returns (bool) {
-        if (_shadyReportingToken.getTypeName() != "ReportingToken") {
+    function isContainerForReportingToken(Typed _shadyTarget) public afterInitialized constant returns (bool) {
+        if (_shadyTarget.getTypeName() != "ReportingToken") {
             return false;
         }
+        IReportingToken _shadyReportingToken = IReportingToken(_shadyTarget);
         IMarket _shadyMarket = _shadyReportingToken.getMarket();
         require(isContainerForMarket(_shadyMarket));
         IMarket _market = _shadyMarket;
         return _market.isContainerForReportingToken(_shadyReportingToken);
     }
 
-    function isContainerForMarket(IMarket _shadyMarket) public afterInitialized constant returns (bool) {
-        if (_shadyMarket.getTypeName() != "Market") {
+    function isContainerForMarket(Typed _shadyTarget) public afterInitialized constant returns (bool) {
+        if (_shadyTarget.getTypeName() != "Market") {
             return false;
         }
+        IMarket _shadyMarket = IMarket(_shadyTarget);
         return markets.contains(_shadyMarket);
     }
 
