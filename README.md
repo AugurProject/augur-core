@@ -25,7 +25,7 @@ Now we can try running some tests to make sure our installation worked:
 
 ```
 cd tests
-python runtests.py
+pytest
 ```
 
 ## Docker
