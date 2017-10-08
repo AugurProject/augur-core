@@ -1,6 +1,5 @@
 pragma solidity 0.4.17;
-pragma experimental ABIEncoderV2;
-pragma experimental "v0.5.0";
+
 
 import 'legacy_reputation/StandardToken.sol';
 import 'legacy_reputation/Pausable.sol';

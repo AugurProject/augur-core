@@ -7,8 +7,7 @@
 // smallest order value is 10**14 WEI
 
 pragma solidity 0.4.17;
-pragma experimental ABIEncoderV2;
-pragma experimental "v0.5.0";
+
 
 import 'Augur.sol';
 import 'IController.sol';
