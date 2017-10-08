@@ -29,7 +29,7 @@ contract Ownable is IOwnable {
     }
 
 
-    function getOwner() public constant returns (address) {
+    function getOwner() public view returns (address) {
         return owner;
     }
 

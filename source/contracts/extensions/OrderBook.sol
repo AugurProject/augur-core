@@ -37,7 +37,7 @@ contract OrderBook is Controlled {
         return _orderBook;
     }
 
-    function getOrderAsArray(IOrders _orders, bytes32 _orderId) private constant returns (uint256[8] _order) {
+    function getOrderAsArray(IOrders _orders, bytes32 _orderId) private view returns (uint256[8] _order) {
         var (_amount, _price, _owner, _sharesEscrowed, _tokensEscrowed, _betterOrderId, _worseOrderId) = _orders.getOrders(_orderId);
         return [uint256(_orderId), uint256(_amount), uint256(_price), uint256(_owner), uint256(_sharesEscrowed), uint256(_tokensEscrowed), uint256(_betterOrderId), uint256(_worseOrderId)];
     }

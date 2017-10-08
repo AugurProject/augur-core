@@ -102,7 +102,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
         return true;
     }
 
-    function totalSupply() public constant returns (uint256) {
+    function totalSupply() public view returns (uint256) {
         return 1;
     }
 }

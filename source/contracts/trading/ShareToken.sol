@@ -35,15 +35,15 @@ contract ShareToken is DelegationTarget, Typed, Initializable, VariableSupplyTok
         return true;
     }
 
-    function getTypeName() constant returns(bytes32) {
+    function getTypeName() view returns(bytes32) {
         return "ShareToken";
     }
 
-    function getMarket() external constant returns(IMarket) {
+    function getMarket() external view returns(IMarket) {
         return market;
     }
 
-    function getOutcome() external constant returns(uint8) {
+    function getOutcome() external view returns(uint8) {
         return outcome;
     }
 

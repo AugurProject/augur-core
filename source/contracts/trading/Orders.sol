@@ -36,72 +36,72 @@ contract Orders is DelegationTarget, IOrders {
 
     // Getters
     // this function doesn't work because delegated contracts can't return tuples or dynamic arrays
-    function getOrders(bytes32 _orderId) public constant returns (uint256 _amount, uint256 _displayPrice, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId) {
+    function getOrders(bytes32 _orderId) public view returns (uint256 _amount, uint256 _displayPrice, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId) {
         Order.Data storage _order = orders[_orderId];
         return (_order.amount, _order.price, _order.creator, _order.sharesEscrowed, _order.moneyEscrowed, _order.betterOrderId, _order.worseOrderId);
     }
 
-    function getMarket(bytes32 _orderId) public constant returns (IMarket) {
+    function getMarket(bytes32 _orderId) public view returns (IMarket) {
         return orders[_orderId].market;
     }
 
-    function getTradeType(bytes32 _orderId) public constant returns (Order.TradeTypes) {
+    function getTradeType(bytes32 _orderId) public view returns (Order.TradeTypes) {
         return orders[_orderId].tradeType;
     }
 
-    function getOutcome(bytes32 _orderId) public constant returns (uint8) {
+    function getOutcome(bytes32 _orderId) public view returns (uint8) {
         return orders[_orderId].outcome;
     }
 
-    function getAmount(bytes32 _orderId) public constant returns (uint256) {
+    function getAmount(bytes32 _orderId) public view returns (uint256) {
         return orders[_orderId].amount;
     }
 
-    function getPrice(bytes32 _orderId) public constant returns (uint256) {
+    function getPrice(bytes32 _orderId) public view returns (uint256) {
         return orders[_orderId].price;
     }
 
-    function getOrderCreator(bytes32 _orderId) public constant returns (address) {
+    function getOrderCreator(bytes32 _orderId) public view returns (address) {
         return orders[_orderId].creator;
     }
 
-    function getOrderSharesEscrowed(bytes32 _orderId) public constant returns (uint256) {
+    function getOrderSharesEscrowed(bytes32 _orderId) public view returns (uint256) {
         return orders[_orderId].sharesEscrowed;
     }
 
-    function getOrderMoneyEscrowed(bytes32 _orderId) public constant returns (uint256) {
+    function getOrderMoneyEscrowed(bytes32 _orderId) public view returns (uint256) {
         return orders[_orderId].moneyEscrowed;
     }
 
-    function getVolume(IMarket _market) public constant returns (uint256) {
+    function getVolume(IMarket _market) public view returns (uint256) {
         return marketOrderData[_market].volume;
     }
 
-    function getLastOutcomePrice(IMarket _market, uint8 _outcome) public constant returns (uint256) {
+    function getLastOutcomePrice(IMarket _market, uint8 _outcome) public view returns (uint256) {
         return marketOrderData[_market].prices[_outcome];
     }
 
-    function getBetterOrderId(bytes32 _orderId) public constant returns (bytes32) {
+    function getBetterOrderId(bytes32 _orderId) public view returns (bytes32) {
         return orders[_orderId].betterOrderId;
     }
 
-    function getWorseOrderId(bytes32 _orderId) public constant returns (bytes32) {
+    function getWorseOrderId(bytes32 _orderId) public view returns (bytes32) {
         return orders[_orderId].worseOrderId;
     }
 
-    function getBestOrderId(Order.TradeTypes _type, IMarket _market, uint8 _outcome) public constant returns (bytes32) {
+    function getBestOrderId(Order.TradeTypes _type, IMarket _market, uint8 _outcome) public view returns (bytes32) {
         return bestOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)];
     }
 
-    function getWorstOrderId(Order.TradeTypes _type, IMarket _market, uint8 _outcome) public constant returns (bytes32) {
+    function getWorstOrderId(Order.TradeTypes _type, IMarket _market, uint8 _outcome) public view returns (bytes32) {
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)];
     }
 
-    function getOrderId(Order.TradeTypes _type, IMarket _market, uint256 _amount, uint256 _price, address _sender, uint256 _blockNumber, uint8 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed) public constant returns (bytes32) {
+    function getOrderId(Order.TradeTypes _type, IMarket _market, uint256 _amount, uint256 _price, address _sender, uint256 _blockNumber, uint8 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed) public view returns (bytes32) {
         return sha256(_type, _market, _amount, _price, _sender, _blockNumber, _outcome, _moneyEscrowed, _sharesEscrowed);
     }
 
-    function isBetterPrice(Order.TradeTypes _type, uint256 _price, bytes32 _orderId) public constant returns (bool) {
+    function isBetterPrice(Order.TradeTypes _type, uint256 _price, bytes32 _orderId) public view returns (bool) {
         require(_type == Order.TradeTypes.Bid || _type == Order.TradeTypes.Ask);
         if (_type == Order.TradeTypes.Bid) {
             return (_price > orders[_orderId].price);
@@ -110,7 +110,7 @@ contract Orders is DelegationTarget, IOrders {
         }
     }
 
-    function isWorsePrice(Order.TradeTypes _type, uint256 _price, bytes32 _orderId) public constant returns (bool) {
+    function isWorsePrice(Order.TradeTypes _type, uint256 _price, bytes32 _orderId) public view returns (bool) {
         if (_type == Order.TradeTypes.Bid) {
             return (_price < orders[_orderId].price);
         } else {
@@ -118,7 +118,7 @@ contract Orders is DelegationTarget, IOrders {
         }
     }
 
-    function assertIsNotBetterPrice(Order.TradeTypes _type, uint256 _price, bytes32 _betterOrderId) public constant returns (bool) {
+    function assertIsNotBetterPrice(Order.TradeTypes _type, uint256 _price, bytes32 _betterOrderId) public view returns (bool) {
         require(!isBetterPrice(_type, _price, _betterOrderId));
         return true;
     }
@@ -308,7 +308,7 @@ contract Orders is DelegationTarget, IOrders {
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Ask)];
     }
 
-    function getBestOrderWorstOrderHash(IMarket _market, uint8 _outcome, Order.TradeTypes _type) private constant returns (bytes32) {
+    function getBestOrderWorstOrderHash(IMarket _market, uint8 _outcome, Order.TradeTypes _type) private view returns (bytes32) {
         return sha256(_market, _outcome, _type);
     }
 }

@@ -12,7 +12,7 @@ import 'reporting/Reporting.sol';
  * @dev functions moved from the market contract into a library to reduce the size of the market contract under the EVM limit
  */
 contract MarketExtensions {
-    function getWinningPayoutDistributionHashFromFork(IMarket _market) public constant returns (bytes32) {
+    function getWinningPayoutDistributionHashFromFork(IMarket _market) public view returns (bytes32) {
         IReportingWindow _reportingWindow = _market.getReportingWindow();
         if (_reportingWindow.getUniverse().getForkingMarket() != _market) {
             return 0;
@@ -58,7 +58,7 @@ contract MarketExtensions {
         return (_tentativeWinningPayoutDistributionHash, _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash);
     }
 
-    function getPayoutDistributionHashStake(IMarket _market, bytes32 _payoutDistributionHash) public constant returns (int256) {
+    function getPayoutDistributionHashStake(IMarket _market, bytes32 _payoutDistributionHash) public view returns (int256) {
         if (_payoutDistributionHash == bytes32(0)) {
             return 0;
         }
@@ -93,7 +93,7 @@ contract MarketExtensions {
         return _payoutStake;
     }
 
-    function getMarketReportingState(IMarket _market) public constant returns (IMarket.ReportingState) {
+    function getMarketReportingState(IMarket _market) public view returns (IMarket.ReportingState) {
         // This market has been finalized
         if (_market.getFinalPayoutDistributionHash() != bytes32(0)) {
             return IMarket.ReportingState.FINALIZED;

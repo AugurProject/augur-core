@@ -42,7 +42,7 @@ contract Cash is Controlled, Typed, VariableSupplyToken, ICash {
         return true;
     }
 
-    function getTypeName() public constant returns (bytes32) {
+    function getTypeName() public view returns (bytes32) {
         return "Cash";
     }
 }

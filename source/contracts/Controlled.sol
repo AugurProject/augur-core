@@ -33,7 +33,7 @@ contract Controlled is IControlled {
         controller = IController(msg.sender);
     }
 
-    function getController() public constant returns(IController) {
+    function getController() public view returns(IController) {
         return controller;
     }
 

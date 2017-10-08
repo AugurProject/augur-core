@@ -8,6 +8,6 @@ import 'reporting/IReportingWindow.sol';
 
 contract IRegistrationToken is Typed, ERC20 {
     function initialize(IReportingWindow _reportingWindow) public returns (bool);
-    function getReportingWindow() public constant returns (IReportingWindow);
-    function getPeakSupply() public constant returns (uint256);
+    function getReportingWindow() public view returns (IReportingWindow);
+    function getPeakSupply() public view returns (uint256);
 }

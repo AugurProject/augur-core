@@ -57,7 +57,7 @@ contract Controller is IController {
         return true;
     }
 
-    function assertIsWhitelisted(address _target) public constant returns(bool) {
+    function assertIsWhitelisted(address _target) public view returns(bool) {
         require(whitelist[_target]);
         return true;
     }
@@ -76,11 +76,11 @@ contract Controller is IController {
         return true;
     }
 
-    function lookup(bytes32 _key) public constant returns(address) {
+    function lookup(bytes32 _key) public view returns(address) {
         return registry[_key];
     }
 
-    function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) public constant returns(bool) {
+    function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) public view returns(bool) {
         require(registry[_allowedCaller] == _caller || (msg.sender == owner && whitelist[owner]));
         return true;
     }

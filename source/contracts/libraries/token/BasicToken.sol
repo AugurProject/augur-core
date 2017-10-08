@@ -32,15 +32,15 @@ contract BasicToken is ERC20Basic {
     * @param _owner The address to query the the balance of.
     * @return An uint256 representing the amount owned by the passed address.
     */
-    function balanceOf(address _owner) public constant returns (uint256 balance) {
+    function balanceOf(address _owner) public view returns (uint256 balance) {
         return balances[_owner];
     }
 
-    function getBalance(address _address) public constant returns (uint256) {
+    function getBalance(address _address) public view returns (uint256) {
         return balances[_address];
     }
 
-    function totalSupply() public constant returns (uint256) {
+    function totalSupply() public view returns (uint256) {
         return supply;
     }
 }

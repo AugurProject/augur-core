@@ -65,7 +65,7 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
         return (_proceeds, _shareHolderShare, _creatorShare, _reporterShare);
     }
 
-    function calculateProceeds(IReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) public constant returns (uint256) {
+    function calculateProceeds(IReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) public view returns (uint256) {
         uint256 _payoutNumerator = _winningReportingToken.getPayoutNumerator(_outcome);
         return _numberOfShares.mul(_payoutNumerator);
     }
@@ -77,7 +77,7 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
         return _amount.mul(_reportingFeeAttoethPerEth).div(1 ether);
     }
 
-    function calculateCreatorFee(IMarket _market, uint256 _amount) public constant returns (uint256) {
+    function calculateCreatorFee(IMarket _market, uint256 _amount) public view returns (uint256) {
         uint256 _creatorFeeAttoEthPerEth = _market.getMarketCreatorSettlementFeeInAttoethPerEth();
         return _amount.mul(_creatorFeeAttoEthPerEth).div(1 ether);
     }

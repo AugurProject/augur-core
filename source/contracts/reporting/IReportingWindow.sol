@@ -17,15 +17,15 @@ contract IReportingWindow is Typed {
     function removeMarket() public returns (bool);
     function noteReport(IMarket _market, address _reporter, bytes32 _payoutDistributionHash) public returns (bool);
     function updateMarketPhase() public returns (bool);
-    function getUniverse() public constant returns (IUniverse);
-    function getReputationToken() public constant returns (IReputationToken);
-    function getRegistrationToken() public constant returns (IRegistrationToken);
-    function getStartTime() public constant returns (uint256);
-    function getEndTime() public constant returns (uint256);
-    function getNumMarkets() public constant returns (uint256);
-    function getNumInvalidMarkets() public constant returns (uint256);
-    function getNumIncorrectDesignatedReportMarkets() public constant returns (uint256);
-    function getMaxReportsPerLimitedReporterMarket() public constant returns (uint256);
+    function getUniverse() public view returns (IUniverse);
+    function getReputationToken() public view returns (IReputationToken);
+    function getRegistrationToken() public view returns (IRegistrationToken);
+    function getStartTime() public view returns (uint256);
+    function getEndTime() public view returns (uint256);
+    function getNumMarkets() public view returns (uint256);
+    function getNumInvalidMarkets() public view returns (uint256);
+    function getNumIncorrectDesignatedReportMarkets() public view returns (uint256);
+    function getMaxReportsPerLimitedReporterMarket() public view returns (uint256);
     function getAvgReportingGasCost() public returns (uint256);
     function getAvgReportsPerMarket() public returns (uint256);
     function getNextReportingWindow() public returns (IReportingWindow);
@@ -33,9 +33,9 @@ contract IReportingWindow is Typed {
     function checkIn() public returns (bool);
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
     function migrateFeesDueToFork() public returns (bool);
-    function isContainerForRegistrationToken(IRegistrationToken _shadyRegistrationToken) public constant returns (bool);
+    function isContainerForRegistrationToken(IRegistrationToken _shadyRegistrationToken) public view returns (bool);
     function isContainerForMarket(IMarket _shadyMarket) public returns (bool);
-    function isDoneReporting(address _reporter) public constant returns (bool);
-    function isForkingMarketFinalized() public constant returns (bool);
-    function isDisputeActive() public constant returns (bool);
+    function isDoneReporting(address _reporter) public view returns (bool);
+    function isForkingMarketFinalized() public view returns (bool);
+    function isDisputeActive() public view returns (bool);
 }

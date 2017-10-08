@@ -48,23 +48,23 @@ contract RegistrationToken is DelegationTarget, Typed, Initializable, StandardTo
         return true;
     }
 
-    function getTypeName() public constant returns (bytes32) {
+    function getTypeName() public view returns (bytes32) {
         return "RegistrationToken";
     }
 
-    function getReportingWindow() public constant returns (IReportingWindow) {
+    function getReportingWindow() public view returns (IReportingWindow) {
         return reportingWindow;
     }
 
-    function getUniverse() public constant returns (IUniverse) {
+    function getUniverse() public view returns (IUniverse) {
         return reportingWindow.getUniverse();
     }
 
-    function getReputationToken() public constant returns (IReputationToken) {
+    function getReputationToken() public view returns (IReputationToken) {
         return reportingWindow.getReputationToken();
     }
 
-    function getPeakSupply() public constant returns (uint256) {
+    function getPeakSupply() public view returns (uint256) {
         return peakSupply;
     }
 }
