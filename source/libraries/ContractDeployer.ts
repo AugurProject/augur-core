@@ -301,10 +301,10 @@ export class ContractDeployer {
 
         // console.log(reportingWindowAddress);
 
-        const factory = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["FruitFactory"], { to: this.contracts["FruitFactory"].address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
-        const fruitAddress = await factory.createFruit.bind({ to: this.contracts["FruitFactory"].address, from: this.testAccounts[0].address, gas: "0x5b8d80", constant: true })();
-        await factory.createFruit();
-        console.log("Fruit address: " + fruitAddress);
+        // const factory = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["FruitFactory"], { to: this.contracts["FruitFactory"].address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
+        // const fruitAddress = await factory.createFruit.bind({ to: this.contracts["FruitFactory"].address, from: this.testAccounts[0].address, gas: "0x5b8d80", constant: true })();
+        // await factory.createFruit();
+        // console.log("Fruit address: " + fruitAddress);
 
         // FIXME: the following two functions are not constant, so we can't call them and get a return value
         const validityBond = await marketFeeCalculator.getValidityBond.bind({ constant: true })(reportingWindowAddress);
@@ -312,15 +312,15 @@ export class ContractDeployer {
         const marketCreationFee = await validityBond.add(targetReporterGasCosts);
         // const transactionHash = await this.contracts["MarketCreation"].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, { value: marketCreationFee, startgas: 6.7 * 10 ** 6 });
         const marketCreation = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketCreation"], { to: this.contracts["MarketCreation"].address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
-        console.log("!!!!!!!!!!!!!!");
-        console.log(universe.address);
-        console.log(endTime);
-        console.log( numOutcomes);
-        console.log(feePerEthInWei);
-        console.log(denominationToken.address);
-        console.log(numTicks);
-        console.log(designatedReporterAddress);
-        console.log("!!!!!!!!!!!!!!");
+        // console.log("!!!!!!!!!!!!!!");
+        // console.log(universe.address);
+        // console.log(endTime);
+        // console.log( numOutcomes);
+        // console.log(feePerEthInWei);
+        // console.log(denominationToken.address);
+        // console.log(numTicks);
+        // console.log(designatedReporterAddress);
+        // console.log("!!!!!!!!!!!!!!");
 
         const marketAddress = await marketCreation.createMarket.bind({ to: this.contracts["MarketCreation"].address, from: this.testAccounts[0].address, gas: "0x5b8d80", value: marketCreationFee, constant: true })(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
         await marketCreation.createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
