@@ -24,16 +24,18 @@ describe("BinaryMarketTradeAndReport", () => {
 
         const universe = contractDeployer.getUniverse();
         const cash = contractDeployer.getCash();
-        const createOrder = await parseAbiIntoMethods(contractDeployer.getEthjsQuery(), signatures["CreateOrder"], { to: contracts["CreateOrder"].address });
+        const createOrder = contracts["CreateOrder"];
         const trade = contracts["Trade"];
         const fillOrder = contracts["FillOrder"];
         const orders = contracts["Orders"];
         const ordersFetcher = contracts["OrdersFetcher"];
-        const market = contractDeployer.getBinaryMarket();
+        const marketAddress = contractDeployer.getBinaryMarket();
         const tradeGroupId = 42;
 
         const orderId = await padAndHexlify("", 40);
 
-        // TODO: Finish creating/filling an order and reporting on the market
+        // TODO: Finish creating/filling an order and reporting on the market.  The line below is causing an rpc error.
+        // const order = await createOrder.publicCreateOrder(BID, 2, fix(0.6), marketAddress, YES, orderId, orderId, tradeGroupId, { sender: testAccounts[1].address, value: fix(2, 0.6) });
+        // console.log(order);
     });
 });
