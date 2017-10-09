@@ -70,6 +70,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(_cash.getTypeName() == "Cash");
+        require(designatedReporterAddress != NULL_ADDRESS);
         reportingWindow = _reportingWindow;
         require(address(getForkingMarket()) == NULL_ADDRESS);
         MarketFeeCalculator _marketFeeCaluclator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
@@ -225,7 +226,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         bytes32 _winningForkPayoutDistributionHash = _currentUniverse.getForkingMarket().getFinalPayoutDistributionHash();
         IUniverse _destinationUniverse = _currentUniverse.getOrCreateChildUniverse(_winningForkPayoutDistributionHash);
         endTime = block.timestamp;
-        IReportingWindow _newReportingWindow = _destinationUniverse.getReportingWindowByMarketEndTime(endTime, designatedReporterAddress != NULL_ADDRESS);
+        IReportingWindow _newReportingWindow = _destinationUniverse.getReportingWindowByMarketEndTime(endTime);
         _newReportingWindow.migrateMarketInFromNibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;

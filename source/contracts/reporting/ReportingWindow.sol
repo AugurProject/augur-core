@@ -56,7 +56,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
-        require(universe.getReportingWindowByMarketEndTime(_endTime, _designatedReporterAddress != 0).getTypeName() == "ReportingWindow");
+        require(universe.getReportingWindowByMarketEndTime(_endTime,).getTypeName() == "ReportingWindow");
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _designatedReporterAddress);
         markets.add(_newMarket);
