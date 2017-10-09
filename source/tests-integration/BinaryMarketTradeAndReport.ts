@@ -19,6 +19,8 @@ describe("BinaryMarketTradeAndReport", () => {
         const testAccounts = contractDeployer.getTestAccounts();
         const signatures = contractDeployer.getSignatures();
         const contracts = contractDeployer.getContracts();
+        const compiledContracts = contractDeployer.getCompiledContracts();
+        const ethjsQuery = await contractDeployer.getEthjsQuery();
 
         const universe = contractDeployer.getUniverse();
         const cash = contractDeployer.getCash();
@@ -43,8 +45,18 @@ describe("BinaryMarketTradeAndReport", () => {
         // console.log(testAccounts[1].address);
         // console.log(fix(2, 0.6));
 
-        const orderTxHash = await createOrder.publicCreateOrder.bind({ sender: testAccounts[1].address, from: testAccounts[1].address, value: fix(2, 0.6)})(BID, 2, fix(0.6), market.address, YES, orderId, orderId, tradeGroupId);
-        console.log(orderTxHash);
+        for (let testAccount in testAccounts) {
+            console.log(testAccounts[testAccount].address);
+            console.log("Wei balance: ");
+            console.log(await ethjsQuery.getBalance(testAccounts[testAccount].address, 16));
+            console.log("Cash balance:");
+            const cashBalance = await cash.balanceOf(testAccounts[testAccount].address);
+            console.log(JSON.stringify(cashBalance.balance));
+        }
+
+// console.log(fix(2, 0.6));
+//        const orderTxHash = await createOrder.newPublicCreateOrder.bind({ from: testAccounts[1].address, sender: testAccounts[1].address, value: fix(2, 0.6), constant: true })(BID, 2, fix(0.6), market.address, YES, orderId, orderId, tradeGroupId);
+//        console.log(orderTxHash);
         // let receiptLogs = await contractDeployer.getReceiptLogs(orderTxHash, "CreateOrder");
         // const order = await this.getContractFromAddress(receiptLogs[0].order, "Orders", this.testAccounts[0].address, this.gasAmount);
         // console.log(order);

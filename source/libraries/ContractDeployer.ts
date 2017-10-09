@@ -15,9 +15,11 @@ export class ContractDeployer {
     private ethjsQuery: EthjsQuery;
     private ethjsContract: EthjsContract;
     private compiledContracts;
+    private contracts;
     private signatures;
     private bytecodes;
-    private contracts;
+    private utils;
+    private constants;
     private gasAmount;
     private testAccountSecretKeys;
     private testAccounts;
@@ -53,9 +55,11 @@ export class ContractDeployer {
         await this.approveCentralAuthority();
         this.universe = await this.createGenesisUniverse();
         this.cash = await this.getSeededCash();
+        // this.utils = await this.upload("../tests/solidity_test_helpers/Utils.sol");
         this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
         // this.categoricalMarket = this.createReasonableCategoricalMarket(this.universe, 3, this.cash);
         // this.scalarMarket = this.createReasonableScalarMarket(this.universe, 40, this.cash);
+        // this.constants = await this.upload("../tests/solidity_test_helpers/Constants.sol");
 
         return true;
     }
@@ -75,6 +79,10 @@ export class ContractDeployer {
 
     public getSignatures() {
         return this.signatures;
+    }
+
+    public getCompiledContracts() {
+        return this.compiledContracts;
     }
 
     public getContracts() {
@@ -110,11 +118,11 @@ export class ContractDeployer {
         return await this.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", contractName, "Delegator", delegatorConstructorArgs);
     }
 
-    private async uploadAndAddToController(relativeFilePath: string, lookupKey: string = "", signatureKey: string = "", constructorArgs: any = []): Promise<ContractBlockchainData> {
+    private async uploadAndAddToController(relativeFilePath: string, lookupKey: string = "", signatureKey: string = "", constructorArgs: any = []): Promise<ContractBlockchainData|undefined> {
         lookupKey = (lookupKey === "") ? path.basename(relativeFilePath).split(".")[0] : lookupKey;
         const contract = await this.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs);
         if (typeof contract === "undefined") {
-            throw new Error("Unable to upload " + signatureKey + " contract.");
+            return undefined;
         }
         // TODO: Add padding to hexlifiedLookupKey to make it the right length?  It seems to work without padding.
         const hexlifiedLookupKey = "0x" + binascii.hexlify(lookupKey);
@@ -123,7 +131,7 @@ export class ContractDeployer {
         return contract;
     }
 
-    private async upload(relativeFilePath: string, lookupKey: string = "", signatureKey: string = "", constructorArgs: string[] = []): Promise<ContractBlockchainData> {
+    private async upload(relativeFilePath: string, lookupKey: string = "", signatureKey: string = "", constructorArgs: string[] = []): Promise<ContractBlockchainData|undefined> {
         lookupKey = (lookupKey === "") ? path.basename(relativeFilePath).split(".")[0] : lookupKey;
         signatureKey = (signatureKey === "") ? lookupKey : signatureKey;
         if (this.contracts[lookupKey]) {
@@ -133,7 +141,7 @@ export class ContractDeployer {
         const bytecode = this.compiledContracts[relativeFilePath][signatureKey].evm.bytecode.object;
         // abstract contracts have a 0-length array for bytecode
         if (bytecode.length === 0) {
-            throw new Error("Bytecode is not set for " + signatureKey + ".");
+            return undefined;
         }
         if (!this.signatures[signatureKey]) {
             this.signatures[signatureKey] = this.compiledContracts[relativeFilePath][signatureKey].abi;
@@ -185,6 +193,7 @@ export class ContractDeployer {
                 }
                 if (contractsToDelegate[contractName] === true) {
                     uploadedContractPromises.push(this.uploadAndAddDelegatedToController(contractFileName, contractName));
+                    // this.contracts[contractName] = this.applySignature(contractName, this.contracts[contractName].address)
                 } else {
                     uploadedContractPromises.push(this.uploadAndAddToController(contractFileName));
                 }
@@ -225,7 +234,8 @@ export class ContractDeployer {
 
     private async getSeededCash(): Promise<ContractBlockchainData> {
         const cash = this.contracts['Cash'];
-        cash.depositEther({ value: 1, sender: this.testAccounts[9].address });
+        cash.depositEther({ value: 1, from: this.testAccounts[9].address });
+//        cash.depositEther({ value: 9200000000000000001, from: this.testAccounts[1].address });
         return cash;
     }
 
@@ -288,18 +298,35 @@ export class ContractDeployer {
         const marketFeeCalculator = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketFeeCalculator"], { to: this.contracts["MarketFeeCalculator"].address });
         await myUniverse.getCurrentReportingWindow.bind({ gas: 3*10**6 })();
         const reportingWindowAddress = await myUniverse.getCurrentReportingWindow.bind({ constant: true })();
+
+        // console.log(reportingWindowAddress);
+
+        const factory = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["FruitFactory"], { to: this.contracts["FruitFactory"].address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
+        const fruitAddress = await factory.createFruit.bind({ to: this.contracts["FruitFactory"].address, from: this.testAccounts[0].address, gas: "0x5b8d80", constant: true })();
+        await factory.createFruit();
+        console.log("Fruit address: " + fruitAddress);
+
         // FIXME: the following two functions are not constant, so we can't call them and get a return value
         const validityBond = await marketFeeCalculator.getValidityBond.bind({ constant: true })(reportingWindowAddress);
         const targetReporterGasCosts = await marketFeeCalculator.getTargetReporterGasCosts.bind({ constant: true })(reportingWindowAddress);
-        // const marketCreationFee = await validityBond.add(targetReporterGasCosts);
-        const marketCreationFee = 10000; // FIXME: Replace hard-coded value with lines above
-        const transactionHash = await this.contracts["MarketCreation"].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, { value: marketCreationFee, startgas: 6.7 * 10 ** 6 });
-        if (!transactionHash) {
-            throw new Error("Unable to create new market.");
-        }
-        const receiptLogs = await this.getReceiptLogs(transactionHash, "MarketCreation");
-        const market = await this.getContractFromAddress(receiptLogs[0].market, "Market", this.testAccounts[0].address, this.gasAmount);
-        return market;
+        const marketCreationFee = await validityBond.add(targetReporterGasCosts);
+        // const transactionHash = await this.contracts["MarketCreation"].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, { value: marketCreationFee, startgas: 6.7 * 10 ** 6 });
+        const marketCreation = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketCreation"], { to: this.contracts["MarketCreation"].address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
+        console.log("!!!!!!!!!!!!!!");
+        console.log(universe.address);
+        console.log(endTime);
+        console.log( numOutcomes);
+        console.log(feePerEthInWei);
+        console.log(denominationToken.address);
+        console.log(numTicks);
+        console.log(designatedReporterAddress);
+        console.log("!!!!!!!!!!!!!!");
+
+        const marketAddress = await marketCreation.createMarket.bind({ to: this.contracts["MarketCreation"].address, from: this.testAccounts[0].address, gas: "0x5b8d80", value: marketCreationFee, constant: true })(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
+        await marketCreation.createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
+
+console.log(marketAddress);
+        return marketAddress;
     }
 
     private async createScalarMarket(universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress): Promise<ContractBlockchainData> {

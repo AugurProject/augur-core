@@ -1,7 +1,7 @@
 import * as binascii from "binascii";
 import * as EthjsAccount from "ethjs-account";
 
-const DEFAULT_TEST_ACCOUNT_BALANCE = 100000000;
+const DEFAULT_TEST_ACCOUNT_BALANCE = 1 * 10 ** 20; // Denominated in wei
 // Set gas block limit extremely high so new blocks don"t have to be mined while uploading contracts
 const GAS_BLOCK_AMOUNT = Math.pow(2, 32);
 
