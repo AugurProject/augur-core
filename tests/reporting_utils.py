@@ -47,7 +47,7 @@ def proceedToDesignatedReporting(testFixture, market, reportOutcomes):
     # We can't yet do a designated report on the market as it's in the pre reporting phase
     if (market.getReportingState() == testFixture.constants.PRE_REPORTING()):
         with raises(TransactionFailed, message="Reporting cannot be done in the PRE REPORTING state"):
-            market.designatedReport(reportOutcomes, sender=tester.k0)
+            testFixture.designatedReport(market, reportOutcomes, tester.k0)
 
     # Fast forward to the reporting phase time
     reportingWindow = testFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
@@ -62,7 +62,7 @@ def proceedToLimitedReporting(testFixture, market, makeReport, disputer, reportO
 
     # To proceed to limited reporting we will either dispute a designated report or not make a designated report within the alotted time window for doing so
     if (makeReport):
-        assert market.designatedReport(reportOutcomes, sender=tester.k0)
+        assert testFixture.designatedReport(market, reportOutcomes, tester.k0)
         assert market.getReportingState() == testFixture.constants.DESIGNATED_DISPUTE()
         assert market.disputeDesignatedReport(sender=disputer)
     else:

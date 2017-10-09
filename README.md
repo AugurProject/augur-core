@@ -6,11 +6,13 @@ Ethereum contracts for a decentralized prediction market platform.
 
 ## Installation
 
-You should already have a system-wide installation of Python and it should be Python 2.7.
+You should already have a system-wide installation of Python and it should be Python 2.7.6 or greater.
 
 First install the dependencies, which include PyEthereum (the tool used to test Ethereum smart contracts from Python scripts) and the Solidity smart contract programming language:
 
 ```
+npm install npx
+npm install
 npm install -g solc
 
 sudo pip install -r requirements.txt
@@ -23,7 +25,7 @@ Now we can try running some tests to make sure our installation worked:
 
 ```
 cd tests
-python runtests.py
+pytest
 ```
 
 ## Docker

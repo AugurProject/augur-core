@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 
 library Reporting {
@@ -8,6 +8,9 @@ library Reporting {
     uint256 private constant REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     uint256 private constant CLAIM_PROCEEDS_WAIT_TIME = 3 days;
     uint256 private constant REGISTRATION_TOKEN_BOND_AMOUNT = 1 ether;
+
+    uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
+    uint256 private constant DEFAULT_DESIGNATED_REPORT_STAKE = 2 ether;
 
     // CONSIDER: figure out approprate values for these
     uint256 private constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
@@ -31,4 +34,6 @@ library Reporting {
     function gasToReport() internal constant returns (uint256) { return GAS_TO_REPORT; }
     function defaultReportingGasPrice() internal constant returns (uint256) { return DEFAULT_REPORTING_GAS_PRICE; }
     function defaultReportsPerMarket() internal constant returns (uint256) { return DEFAULT_REPORTS_PER_MARKET; }
+    function defaultValidityBond() internal constant returns (uint256) { return DEFAULT_VALIDITY_BOND; }
+    function defaultDesignatedReportStake() internal constant returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
 }

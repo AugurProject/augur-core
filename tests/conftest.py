@@ -119,6 +119,10 @@ class ContractsFixture:
             'settings': {
                 # TODO: Remove 'remappings' line below and update 'sources' line above
                 'remappings': [ '=%s/' % resolveRelativePath("../source/contracts") ],
+                'optimizer': {
+                    'enabled': True,
+                    'runs': 500
+                },
                 'outputSelection': {
                     '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
                 }
@@ -184,6 +188,14 @@ class ContractsFixture:
         self.chain.mine(1)
         self.originalContracts = deepcopy(self.contracts)
         self.captured = self.createSnapshot()
+        self.testerAddress = self.generateTesterMap('a')
+        self.testerKey = self.generateTesterMap('k')
+
+    def generateTesterMap(self, ch):
+        testers = {}
+        for i in range(0,9):
+            testers[i] = getattr(tester, ch + "%d" % i)
+        return testers
 
     def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
@@ -310,6 +322,14 @@ class ContractsFixture:
         assert reportingTokenAddress
         reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ReportingToken']), reportingTokenAddress)
         return reportingToken
+
+    def designatedReport(self, market, payoutDistribution, reporterKey):
+        reportingToken = self.getReportingToken(market, payoutDistribution)
+        registrationToken = self.applySignature('RegistrationToken', reportingToken.getRegistrationToken())
+        if registrationToken.balanceOf(market.getDesignatedReporter()) < 1:
+            assert registrationToken.register(sender=reporterKey)
+        designatedReportStake = self.contracts['MarketFeeCalculator'].getDesignatedReportStake(market.getReportingWindow())
+        return reportingToken.buy(designatedReportStake, sender=reporterKey)
 
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
         payoutDistributionHash = market.derivePayoutDistributionHash(payoutDistribution)

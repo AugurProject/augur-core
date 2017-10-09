@@ -2,7 +2,7 @@
  * Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
  */
 
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import 'trading/IOrdersFetcher.sol';
 import 'Controlled.sol';
@@ -17,28 +17,6 @@ import 'trading/IOrders.sol';
  */
 contract OrdersFetcher is Controlled, IOrdersFetcher {
     using Bytes32Arrays for bytes32[];
-
-    /**
-     * @dev Get orders for a particular market, type, and outcome (chunked)
-     */
-    function getOrderIds(Order.TradeTypes _type, IMarket _market, uint8 _outcome, bytes32 _startingOrderId, uint256 _numOrdersToLoad) external constant returns (bytes32[] _orderIds) {
-        require(_type == Order.TradeTypes.Bid || _type == Order.TradeTypes.Ask);
-        require(_outcome < _market.getNumberOfOutcomes());
-        require(_numOrdersToLoad <= 100);
-        IOrders _orders = IOrders(controller.lookup("Orders"));
-        if (_startingOrderId == bytes32(0)) {
-            _orderIds[0] = _orders.getBestOrderId(_type, _market, _outcome);
-        } else {
-            _orderIds[0] = _startingOrderId;
-        }
-        for (uint256 _i = 0; _i < _numOrdersToLoad; _i++) {
-            if (_orders.getWorseOrderId(_orderIds[_i]) != 0) {
-                break;
-            }
-            _orderIds[_i + 1] = _orders.getWorseOrderId(_orderIds[_i]);
-        }
-        return (_orderIds.slice(0, _i));
-    }
 
     function getOrder(bytes32 _orderId) public constant returns (uint256 _attoshares, uint256 _displayPrice, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _gasPrice) {
         IOrders _orders = IOrders(controller.lookup("Orders"));

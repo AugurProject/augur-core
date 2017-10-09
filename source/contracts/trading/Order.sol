@@ -6,7 +6,7 @@
 // price is the exact price you want to buy/sell at [which may not be the cost, for example to short a binary market it'll cost 1-price, to go long it'll cost price]
 // smallest order value is 10**14 WEI
 
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import 'Augur.sol';
 import 'IController.sol';

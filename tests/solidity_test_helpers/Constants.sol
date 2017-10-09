@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import 'reporting/IMarket.sol';
 import 'reporting/Reporting.sol';
@@ -31,6 +31,9 @@ contract Constants {
     uint256 public constant GAS_TO_REPORT = Reporting.gasToReport();
     uint256 public constant DEFAULT_REPORTING_GAS_PRICE = Reporting.defaultReportingGasPrice();
     uint256 public constant DEFAULT_REPORTS_PER_MARKET = Reporting.defaultReportsPerMarket();
+
+    uint256 public constant DEFAULT_VALIDITY_BOND = Reporting.defaultValidityBond();
+    uint256 public constant DEFAULT_DESIGNATED_REPORT_STAKE = Reporting.defaultDesignatedReportStake();
 
     uint8 public constant BID = uint8(Order.TradeTypes.Bid);
     uint8 public constant ASK = uint8(Order.TradeTypes.Ask);

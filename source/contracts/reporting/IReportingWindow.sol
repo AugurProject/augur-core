@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import 'libraries/Typed.sol';
 import 'reporting/IUniverse.sol';
@@ -23,16 +23,19 @@ contract IReportingWindow is Typed {
     function getEndTime() public constant returns (uint256);
     function getNumMarkets() public constant returns (uint256);
     function getNumInvalidMarkets() public constant returns (uint256);
+    function getNumIncorrectDesignatedReportMarkets() public constant returns (uint256);
     function getMaxReportsPerLimitedReporterMarket() public constant returns (uint256);
     function getAvgReportingGasCost() public constant returns (uint256);
     function getAvgReportsPerMarket() public constant returns (uint256);
     function getNextReportingWindow() public returns (IReportingWindow);
     function getPreviousReportingWindow() public returns (IReportingWindow);
+    function allMarketsFinalized() constant public returns (bool);
     function checkIn() public returns (bool);
+    function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens) public returns (bool);
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
     function migrateFeesDueToFork() public returns (bool);
-    function isContainerForRegistrationToken(IRegistrationToken _shadyRegistrationToken) public constant returns (bool);
-    function isContainerForMarket(IMarket _shadyMarket) public constant returns (bool);
+    function isContainerForRegistrationToken(Typed _shadyTarget) public constant returns (bool);
+    function isContainerForMarket(Typed _shadyTarget) public constant returns (bool);
     function isDoneReporting(address _reporter) public constant returns (bool);
     function isForkingMarketFinalized() public constant returns (bool);
     function isDisputeActive() public constant returns (bool);
