@@ -51,14 +51,14 @@ contract MarketFeeCalculator {
         return _currentDesignatedReportStakeInAttoRep;
     }
 
-    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) constant public returns (uint256 _newValue) {
+    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) public pure returns (uint256 _newValue) {
         if (_totalMarkets == 0) {
             return _defaultValue;
         }
         if (_previousValue == 0) {
             _previousValue = _defaultValue;
         }
-        
+
         // Modify the amount based on the previous amount and the number of markets fitting the failure criteria. We want the amount to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets with the condition results in 2x and 0 results in 0.5x.
         if (_badMarkets <= _totalMarkets.div(_targetDivisor)) {
             // FXP formula: previous_amount * actual_percent / (2 * target_percent) + 0.5;

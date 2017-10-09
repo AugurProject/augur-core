@@ -20,7 +20,7 @@ contract Initializable {
         return true;
     }
 
-    function getInitialized() view returns (bool) {
+    function getInitialized() public view returns (bool) {
         return initialized;
     }
 }

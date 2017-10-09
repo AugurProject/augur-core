@@ -74,7 +74,7 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         return true;
     }
 
-    function assertReputationTokenIsLegit(IReputationToken _shadyReputationToken) private returns (bool) {
+    function assertReputationTokenIsLegit(IReputationToken _shadyReputationToken) private view returns (bool) {
         var _shadyUniverse = _shadyReputationToken.getUniverse();
         require(universe.isParentOf(_shadyUniverse));
         var _legitUniverse = _shadyUniverse;
@@ -82,15 +82,15 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         return true;
     }
 
-    function getTypeName() view returns (bytes32) {
+    function getTypeName() public view returns (bytes32) {
         return "ReputationToken";
     }
 
-    function getUniverse() view returns (IUniverse) {
+    function getUniverse() public view returns (IUniverse) {
         return universe;
     }
 
-    function getTopMigrationDestination() view returns (IReputationToken) {
+    function getTopMigrationDestination() public view returns (IReputationToken) {
         return topMigrationDestination;
     }
 }

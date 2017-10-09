@@ -13,7 +13,7 @@ contract LegacyRepContract is VariableSupplyToken {
     string public constant symbol = "REP";
     uint256 public constant decimals = 18;
 
-    function LegacyRepContract() {
+    function LegacyRepContract() public {
         // This is to confirm we are not on foundation network
         address _foundationRepAddress = address(0xE94327D07Fc17907b4DB788E5aDf2ed424adDff6);
         uint256 size;

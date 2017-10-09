@@ -53,7 +53,7 @@ library Order {
     // Constructor
     //
 
-    function create(IController _controller, address _creator, uint8 _outcome, Order.TradeTypes _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal returns (Data) {
+    function create(IController _controller, address _creator, uint8 _outcome, Order.TradeTypes _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal view returns (Data) {
         require(_market.getTypeName() == "Market");
         require(_outcome < _market.getNumberOfOutcomes());
         require(_price < _market.getNumTicks());
@@ -91,11 +91,11 @@ library Order {
         return _orderData.id;
      }
 
-    function getOrderTradingTypeFromMakerDirection(Order.TradeDirections _creatorDirection) internal view returns (Order.TradeTypes) {
+    function getOrderTradingTypeFromMakerDirection(Order.TradeDirections _creatorDirection) internal pure returns (Order.TradeTypes) {
         return (_creatorDirection == Order.TradeDirections.Long) ? Order.TradeTypes.Bid : Order.TradeTypes.Ask;
     }
 
-    function getOrderTradingTypeFromFillerDirection(Order.TradeDirections _fillerDirection) internal view returns (Order.TradeTypes) {
+    function getOrderTradingTypeFromFillerDirection(Order.TradeDirections _fillerDirection) internal pure returns (Order.TradeTypes) {
         return (_fillerDirection == Order.TradeDirections.Long) ? Order.TradeTypes.Ask : Order.TradeTypes.Bid;
     }
 

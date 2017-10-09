@@ -8,7 +8,7 @@ import 'reporting/IReportingWindow.sol';
 
 
 contract ReportingWindowFactory {
-    function createReportingWindow(IController _controller, IUniverse _universe, uint256 _reportingWindowId) returns (IReportingWindow) {
+    function createReportingWindow(IController _controller, IUniverse _universe, uint256 _reportingWindowId) public returns (IReportingWindow) {
         Delegator _delegator = new Delegator(_controller, "ReportingWindow");
         IReportingWindow _reportingWindow = IReportingWindow(_delegator);
         _reportingWindow.initialize(_universe, _reportingWindowId);

@@ -38,7 +38,7 @@ contract Controller is IController {
         _;
     }
 
-    function Controller() {
+    function Controller() public {
         owner = msg.sender;
         whitelist[owner] = true;
     }

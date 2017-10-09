@@ -29,7 +29,7 @@ contract Controlled is IControlled {
         _;
     }
 
-    function Controlled() {
+    function Controlled() public {
         controller = IController(msg.sender);
     }
 

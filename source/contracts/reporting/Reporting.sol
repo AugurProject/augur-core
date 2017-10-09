@@ -23,18 +23,18 @@ library Reporting {
     uint256 private constant DEFAULT_REPORTING_GAS_PRICE = 5;
     uint256 private constant DEFAULT_REPORTS_PER_MARKET = 10;
 
-    function designatedReportingDurationSeconds() internal view returns (uint256) { return DESIGNATED_REPORTING_DURATION_SECONDS; }
-    function designatedReportingDisputeDurationSeconds() internal view returns (uint256) { return DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS; }
-    function reportingDurationSeconds() internal view returns (uint256) { return REPORTING_DURATION_SECONDS; }
-    function reportingDisputeDurationSeconds() internal view returns (uint256) { return REPORTING_DISPUTE_DURATION_SECONDS; }
-    function claimProceedsWaitTime() internal view returns (uint256) { return CLAIM_PROCEEDS_WAIT_TIME; }
-    function getRegistrationTokenBondAmount() internal view returns (uint256) { return REGISTRATION_TOKEN_BOND_AMOUNT; }
-    function designatedReporterDisputeBondAmount() internal view returns (uint256) { return DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT; }
-    function limitedReportersDisputeBondAmount() internal view returns (uint256) { return LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT; }
-    function allReportersDisputeBondAmount() internal view returns (uint256) { return ALL_REPORTERS_DISPUTE_BOND_AMOUNT; }
-    function gasToReport() internal view returns (uint256) { return GAS_TO_REPORT; }
-    function defaultReportingGasPrice() internal view returns (uint256) { return DEFAULT_REPORTING_GAS_PRICE; }
-    function defaultReportsPerMarket() internal view returns (uint256) { return DEFAULT_REPORTS_PER_MARKET; }
-    function defaultValidityBond() internal view returns (uint256) { return DEFAULT_VALIDITY_BOND; }
-    function defaultDesignatedReportStake() internal view returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
+    function designatedReportingDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DURATION_SECONDS; }
+    function designatedReportingDisputeDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS; }
+    function reportingDurationSeconds() internal pure returns (uint256) { return REPORTING_DURATION_SECONDS; }
+    function reportingDisputeDurationSeconds() internal pure returns (uint256) { return REPORTING_DISPUTE_DURATION_SECONDS; }
+    function claimProceedsWaitTime() internal pure returns (uint256) { return CLAIM_PROCEEDS_WAIT_TIME; }
+    function getRegistrationTokenBondAmount() internal pure returns (uint256) { return REGISTRATION_TOKEN_BOND_AMOUNT; }
+    function designatedReporterDisputeBondAmount() internal pure returns (uint256) { return DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT; }
+    function limitedReportersDisputeBondAmount() internal pure returns (uint256) { return LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT; }
+    function allReportersDisputeBondAmount() internal pure returns (uint256) { return ALL_REPORTERS_DISPUTE_BOND_AMOUNT; }
+    function gasToReport() internal pure returns (uint256) { return GAS_TO_REPORT; }
+    function defaultReportingGasPrice() internal pure returns (uint256) { return DEFAULT_REPORTING_GAS_PRICE; }
+    function defaultReportsPerMarket() internal pure returns (uint256) { return DEFAULT_REPORTS_PER_MARKET; }
+    function defaultValidityBond() internal pure returns (uint256) { return DEFAULT_VALIDITY_BOND; }
+    function defaultDesignatedReportStake() internal pure returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
 }

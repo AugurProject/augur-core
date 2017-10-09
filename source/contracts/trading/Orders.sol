@@ -308,7 +308,7 @@ contract Orders is DelegationTarget, IOrders {
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.TradeTypes.Ask)];
     }
 
-    function getBestOrderWorstOrderHash(IMarket _market, uint8 _outcome, Order.TradeTypes _type) private view returns (bytes32) {
+    function getBestOrderWorstOrderHash(IMarket _market, uint8 _outcome, Order.TradeTypes _type) private pure returns (bytes32) {
         return sha256(_market, _outcome, _type);
     }
 }

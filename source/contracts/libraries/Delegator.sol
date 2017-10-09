@@ -6,7 +6,7 @@ import 'libraries/DelegationTarget.sol';
 
 
 contract Delegator is DelegationTarget {
-    function Delegator(IController _controller, bytes32 _controllerLookupName) {
+    function Delegator(IController _controller, bytes32 _controllerLookupName) public {
         controller = _controller;
         controllerLookupName = _controllerLookupName;
     }
