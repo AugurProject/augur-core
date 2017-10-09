@@ -59,9 +59,9 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     function redeemDisavowedTokens(address _reporter) public afterInitialized returns (bool) {
         require(!market.isContainerForReportingToken(this));
-        var _reputationSupply = getReputationToken().balanceOf(this);
-        var _attotokens = balances[_reporter];
-        var _reporterReputationShare = _reputationSupply * _attotokens / supply;
+        uint256 _reputationSupply = getReputationToken().balanceOf(this);
+        uint256 _attotokens = balances[_reporter];
+        uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(_reporter, _attotokens);
         getReputationToken().transfer(_reporter, _reporterReputationShare);
         return true;
@@ -71,34 +71,35 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     function redeemForkedTokens() public afterInitialized returns (bool) {
         require(market.isContainerForReportingToken(this));
         require(getUniverse().getForkingMarket() == market);
-        var _sourceReputationToken = getReputationToken();
-        var _reputationSupply = _sourceReputationToken.balanceOf(this);
-        var _attotokens = balances[msg.sender];
-        var _reporterReputationShare = _reputationSupply * _attotokens / supply;
+        IReputationToken _sourceReputationToken = getReputationToken();
+        uint256 _reputationSupply = _sourceReputationToken.balanceOf(this);
+        uint256 _attotokens = balances[msg.sender];
+        uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(msg.sender, _attotokens);
-        var _destinationReputationToken = getUniverse().getOrCreateChildUniverse(getPayoutDistributionHash()).getReputationToken();
+        IReputationToken _destinationReputationToken = getUniverse().getOrCreateChildUniverse(getPayoutDistributionHash()).getReputationToken();
         _sourceReputationToken.migrateOut(_destinationReputationToken, this, _attotokens);
         _destinationReputationToken.transfer(msg.sender, _reporterReputationShare);
         return true;
     }
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
-    // TODO: prevent calling this until all markets on the reporting window are finalized.
-    // TODO: add reporting fee distribution to this.
+    // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
     function redeemWinningTokens() public afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
         require(getUniverse().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() == this);
-        var _reputationToken = getReputationToken();
-        var _reputationSupply = _reputationToken.balanceOf(this);
-        var _attotokens = balances[msg.sender];
-        var _reporterReputationShare = _reputationSupply * _attotokens / supply;
+        IReportingWindow _reportingWindow = market.getReportingWindow();
+        require(_reportingWindow.allMarketsFinalized());
+        IReputationToken _reputationToken = getReputationToken();
+        uint256 _reputationSupply = _reputationToken.balanceOf(this);
+        uint256 _attotokens = balances[msg.sender];
+        uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(msg.sender, _attotokens);
-        if (_reporterReputationShare == 0) {
-            return true;
+        if (_reporterReputationShare != 0) {
+            _reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
-        _reputationToken.transfer(msg.sender, _reporterReputationShare);
+        _reportingWindow.collectReportingFees(msg.sender, _attotokens);
         return true;
     }
 
@@ -120,9 +121,9 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         if (_disputeBondToken.getDisputedPayoutDistributionHash() == market.getFinalPayoutDistributionHash()) {
             return true;
         }
-        var _reputationToken = getReputationToken();
-        var _amountNeeded = _disputeBondToken.getBondRemainingToBePaidOut() - _reputationToken.balanceOf(_disputeBondToken);
-        var _amountToTransfer = _amountNeeded.min(_reputationToken.balanceOf(this));
+        IReputationToken _reputationToken = getReputationToken();
+        uint256 _amountNeeded = _disputeBondToken.getBondRemainingToBePaidOut() - _reputationToken.balanceOf(_disputeBondToken);
+        uint256 _amountToTransfer = _amountNeeded.min(_reputationToken.balanceOf(this));
         if (_amountToTransfer == 0) {
             return true;
         }
@@ -131,8 +132,8 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function migrateLosingTokenRepToWinningToken() private returns (bool) {
-        var _reputationToken = getReputationToken();
-        var _balance = _reputationToken.balanceOf(this);
+        IReputationToken _reputationToken = getReputationToken();
+        uint256 _balance = _reputationToken.balanceOf(this);
         if (_balance == 0) {
             return true;
         }
