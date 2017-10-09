@@ -70,7 +70,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(_cash.getTypeName() == "Cash");
-        require(designatedReporterAddress != NULL_ADDRESS);
+        require(_designatedReporterAddress != NULL_ADDRESS);
         reportingWindow = _reportingWindow;
         require(address(getForkingMarket()) == NULL_ADDRESS);
         MarketFeeCalculator _marketFeeCaluclator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));

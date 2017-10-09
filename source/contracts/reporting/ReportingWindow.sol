@@ -41,7 +41,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
     RunningAverage.Data private reportingGasPrice;
-    RunningAverage.Data private marketReports;
     uint256 private totalWinningReportingTokens;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
@@ -50,7 +49,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         // Initialize these to some reasonable value to handle the first market ever created without branching code 
         reportingGasPrice.record(Reporting.defaultReportingGasPrice());
-        marketReports.record(Reporting.defaultReportsPerMarket());
         return true;
     }
 
@@ -132,7 +130,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
             incorrectDesignatedReportMarketCount++;
         }
         finalizedMarkets.add(_market);
-        marketReports.record(numberOfReportsByMarket[_market]);
         uint256 _totalWinningReportingTokens = _market.getFinalWinningReportingToken().totalSupply();
         totalWinningReportingTokens = totalWinningReportingTokens.add(_totalWinningReportingTokens);
     }
@@ -157,11 +154,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function getAvgReportingGasCost() public returns (uint256) {
+    function getAvgReportingGasCost() public view returns (uint256) {
         return reportingGasPrice.currentAverage();
     }
 
-    function getAvgReportsPerMarket() public returns (uint256) {
+    function getAvgReportsPerMarket() public view returns (uint256) {
         return marketReports.currentAverage();
     }
 

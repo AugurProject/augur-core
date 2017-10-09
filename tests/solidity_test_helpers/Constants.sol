@@ -31,7 +31,6 @@ contract Constants {
 
     uint256 public constant GAS_TO_REPORT = Reporting.gasToReport();
     uint256 public constant DEFAULT_REPORTING_GAS_PRICE = Reporting.defaultReportingGasPrice();
-    uint256 public constant DEFAULT_REPORTS_PER_MARKET = Reporting.defaultReportsPerMarket();
 
     uint256 public constant DEFAULT_VALIDITY_BOND = Reporting.defaultValidityBond();
     uint256 public constant DEFAULT_DESIGNATED_REPORT_STAKE = Reporting.defaultDesignatedReportStake();

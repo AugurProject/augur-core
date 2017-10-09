@@ -78,11 +78,10 @@ contract MarketFeeCalculator {
         }
 
         IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
-        uint256 _estimatedReportsPerMarket = _previousReportingWindow.getAvgReportsPerMarket();
-        uint256 _avgGasCost = _previousReportingWindow.getAvgReportingGasCost();
+        uint256 _avgGasPrice = _previousReportingWindow.getAvgReportingGasPrice();
         _gasToReport = Reporting.gasToReport();
         // we double it to try and ensure we have more than enough rather than not enough
-        targetReporterGasCosts[_reportingWindow] = _gasToReport * _estimatedReportsPerMarket * _avgGasCost * 2;
+        targetReporterGasCosts[_reportingWindow] = _gasToReport * _avgGasPrice * 2;
         return targetReporterGasCosts[_reportingWindow];
     }
 

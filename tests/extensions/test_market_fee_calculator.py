@@ -48,7 +48,6 @@ def test_default_target_reporter_gas_costs(contractsFixture):
     targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(market.getReportingWindow())
     expectedTargetReporterGasCost = contractsFixture.constants.GAS_TO_REPORT()
     expectedTargetReporterGasCost *= contractsFixture.constants.DEFAULT_REPORTING_GAS_PRICE()
-    expectedTargetReporterGasCost *= contractsFixture.constants.DEFAULT_REPORTS_PER_MARKET()
     expectedTargetReporterGasCost *= 2
     assert targetReporterGasCosts == expectedTargetReporterGasCost
 
@@ -79,18 +78,13 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture):
     reportingFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
     assert market.tryFinalize()
 
-    actualAvgReportsPerMarket = reportingWindow.getAvgReportsPerMarket()
-    expectedAvgReportsPerMarket = (reportingFixture.constants.DEFAULT_REPORTS_PER_MARKET() + numReports) / 2
-    assert actualAvgReportsPerMarket == expectedAvgReportsPerMarket
-
-    actualAvgGasPrice = reportingWindow.getAvgReportingGasCost()
+    actualAvgGasPrice = reportingWindow.getAvgReportingGasPrice()
     expectedAvgReportingGasCost = (reportingFixture.constants.DEFAULT_REPORTING_GAS_PRICE() + gasPrice * numReports) / (numReports + 1)
     assert actualAvgGasPrice == expectedAvgReportingGasCost
 
     # Confirm our estimated gas cost is caluclated as expected
     expectedTargetReporterGasCost = reportingFixture.constants.GAS_TO_REPORT()
     expectedTargetReporterGasCost *= expectedAvgReportingGasCost
-    expectedTargetReporterGasCost *= expectedAvgReportsPerMarket
     expectedTargetReporterGasCost *= 2
     targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(universe.getCurrentReportingWindow())
     assert targetReporterGasCosts == expectedTargetReporterGasCost 

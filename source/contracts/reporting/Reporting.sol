@@ -21,7 +21,6 @@ library Reporting {
     // NOTE: We need to maintain this cost to roughly match the gas cost of reporting. This was last updated 10/02/2017
     uint256 private constant GAS_TO_REPORT = 600000;
     uint256 private constant DEFAULT_REPORTING_GAS_PRICE = 5;
-    uint256 private constant DEFAULT_REPORTS_PER_MARKET = 10;
 
     function designatedReportingDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DURATION_SECONDS; }
     function designatedReportingDisputeDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS; }
@@ -33,7 +32,6 @@ library Reporting {
     function lastReportersDisputeBondAmount() internal pure returns (uint256) { return LAST_REPORTERS_DISPUTE_BOND_AMOUNT; }
     function gasToReport() internal pure returns (uint256) { return GAS_TO_REPORT; }
     function defaultReportingGasPrice() internal pure returns (uint256) { return DEFAULT_REPORTING_GAS_PRICE; }
-    function defaultReportsPerMarket() internal pure returns (uint256) { return DEFAULT_REPORTS_PER_MARKET; }
     function defaultValidityBond() internal pure returns (uint256) { return DEFAULT_VALIDITY_BOND; }
     function defaultDesignatedReportStake() internal pure returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
 }
