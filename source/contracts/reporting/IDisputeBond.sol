@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'libraries/Typed.sol';
 import 'reporting/IMarket.sol';

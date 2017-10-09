@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'reporting/IReputationToken.sol';
 import 'libraries/DelegationTarget.sol';
@@ -81,15 +82,15 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         return true;
     }
 
-    function getTypeName() constant returns (bytes32) {
+    function getTypeName() view returns (bytes32) {
         return "ReputationToken";
     }
 
-    function getUniverse() constant returns (IUniverse) {
+    function getUniverse() view returns (IUniverse) {
         return universe;
     }
 
-    function getTopMigrationDestination() constant returns (IReputationToken) {
+    function getTopMigrationDestination() view returns (IReputationToken) {
         return topMigrationDestination;
     }
 }

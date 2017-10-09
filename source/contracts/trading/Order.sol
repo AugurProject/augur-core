@@ -6,7 +6,8 @@
 // price is the exact price you want to buy/sell at [which may not be the cost, for example to short a binary market it'll cost 1-price, to go long it'll cost price]
 // smallest order value is 10**14 WEI
 
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'Augur.sol';
 import 'IController.sol';
@@ -81,7 +82,7 @@ library Order {
     // "public" functions
     //
 
-    function getOrderId(Order.Data _orderData) internal constant returns (bytes32) {
+    function getOrderId(Order.Data _orderData) internal view returns (bytes32) {
         if (_orderData.id == bytes32(0)) {
             bytes32 _orderId = _orderData.orders.getOrderId(_orderData.tradeType, _orderData.market, _orderData.amount, _orderData.price, _orderData.creator, block.number, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed);
             require(_orderData.orders.getAmount(_orderId) == 0);
@@ -90,11 +91,11 @@ library Order {
         return _orderData.id;
      }
 
-    function getOrderTradingTypeFromMakerDirection(Order.TradeDirections _creatorDirection) internal constant returns (Order.TradeTypes) {
+    function getOrderTradingTypeFromMakerDirection(Order.TradeDirections _creatorDirection) internal view returns (Order.TradeTypes) {
         return (_creatorDirection == Order.TradeDirections.Long) ? Order.TradeTypes.Bid : Order.TradeTypes.Ask;
     }
 
-    function getOrderTradingTypeFromFillerDirection(Order.TradeDirections _fillerDirection) internal constant returns (Order.TradeTypes) {
+    function getOrderTradingTypeFromFillerDirection(Order.TradeDirections _fillerDirection) internal view returns (Order.TradeTypes) {
         return (_fillerDirection == Order.TradeDirections.Long) ? Order.TradeTypes.Ask : Order.TradeTypes.Bid;
     }
 

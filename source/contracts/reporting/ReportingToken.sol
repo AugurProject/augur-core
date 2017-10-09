@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'reporting/IReportingToken.sol';
 import 'libraries/DelegationTarget.sol';
@@ -141,40 +142,40 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         return true;
     }
 
-    function getTypeName() public constant returns (bytes32) {
+    function getTypeName() public view returns (bytes32) {
         return "ReportingToken";
     }
 
-    function getUniverse() public constant returns (IUniverse) {
+    function getUniverse() public view returns (IUniverse) {
         return market.getUniverse();
     }
 
-    function getReputationToken() public constant returns (IReputationToken) {
+    function getReputationToken() public view returns (IReputationToken) {
         return market.getReportingWindow().getReputationToken();
     }
 
-    function getReportingWindow() public constant returns (IReportingWindow) {
+    function getReportingWindow() public view returns (IReportingWindow) {
         return market.getReportingWindow();
     }
 
-    function getRegistrationToken() public constant returns (IRegistrationToken) {
+    function getRegistrationToken() public view returns (IRegistrationToken) {
         return getReportingWindow().getRegistrationToken();
     }
 
-    function getMarket() public constant returns (IMarket) {
+    function getMarket() public view returns (IMarket) {
         return market;
     }
 
-    function getPayoutDistributionHash() public constant returns (bytes32) {
+    function getPayoutDistributionHash() public view returns (bytes32) {
         return market.derivePayoutDistributionHash(payoutNumerators);
     }
 
-    function getPayoutNumerator(uint8 index) public constant returns (uint256) {
+    function getPayoutNumerator(uint8 index) public view returns (uint256) {
         require(index < market.getNumberOfOutcomes());
         return payoutNumerators[index];
     }
 
-    function isValid() public constant returns (bool) {
+    function isValid() public view returns (bool) {
         for (uint8 i = 1; i < payoutNumerators.length; i++) {
             if (payoutNumerators[0] != payoutNumerators[i]) {
                 return true;

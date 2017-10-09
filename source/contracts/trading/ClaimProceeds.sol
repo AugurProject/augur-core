@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'trading/IClaimProceeds.sol';
 import 'Controlled.sol';
@@ -56,7 +57,7 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
         return true;
     }
 
-    function divideUpWinnings(IMarket _market, IReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) public constant returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
+    function divideUpWinnings(IMarket _market, IReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
         _proceeds = calculateProceeds(_winningReportingToken, _outcome, _numberOfShares);
         _creatorShare = calculateCreatorFee(_market, _proceeds);
         _reporterShare = calculateReportingFee(_market, _proceeds);
@@ -64,19 +65,19 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
         return (_proceeds, _shareHolderShare, _creatorShare, _reporterShare);
     }
 
-    function calculateProceeds(IReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) public constant returns (uint256) {
+    function calculateProceeds(IReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) public view returns (uint256) {
         uint256 _payoutNumerator = _winningReportingToken.getPayoutNumerator(_outcome);
         return _numberOfShares.mul(_payoutNumerator);
     }
 
-    function calculateReportingFee(IMarket _market, uint256 _amount) public constant returns (uint256) {
+    function calculateReportingFee(IMarket _market, uint256 _amount) public returns (uint256) {
         MarketFeeCalculator _marketFeeCalculator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
         IReportingWindow _reportingWindow = _market.getReportingWindow();
         uint256 _reportingFeeAttoethPerEth = _marketFeeCalculator.getReportingFeeInAttoethPerEth(_reportingWindow);
         return _amount.mul(_reportingFeeAttoethPerEth).div(1 ether);
     }
 
-    function calculateCreatorFee(IMarket _market, uint256 _amount) public constant returns (uint256) {
+    function calculateCreatorFee(IMarket _market, uint256 _amount) public view returns (uint256) {
         uint256 _creatorFeeAttoEthPerEth = _market.getMarketCreatorSettlementFeeInAttoethPerEth();
         return _amount.mul(_creatorFeeAttoEthPerEth).div(1 ether);
     }

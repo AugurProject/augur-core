@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 
 /**
@@ -9,7 +10,7 @@ pragma solidity ^0.4.17;
 contract ERC20Basic {
     event Transfer(address indexed from, address indexed to, uint256 value);
 
-    function balanceOf(address _who) public constant returns (uint256);
+    function balanceOf(address _who) public view returns (uint256);
     function transfer(address _to, uint256 _value) public returns (bool);
-    function totalSupply() public constant returns (uint256);
+    function totalSupply() public view returns (uint256);
 }

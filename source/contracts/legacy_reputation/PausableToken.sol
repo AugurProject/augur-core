@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'legacy_reputation/StandardToken.sol';
 import 'legacy_reputation/Pausable.sol';

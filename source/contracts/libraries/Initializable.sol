@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 
 contract Initializable {
@@ -19,7 +20,7 @@ contract Initializable {
         return true;
     }
 
-    function getInitialized() constant returns (bool) {
+    function getInitialized() view returns (bool) {
         return initialized;
     }
 }

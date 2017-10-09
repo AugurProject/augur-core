@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'IControlled.sol';
 import 'IController.sol';
@@ -32,7 +33,7 @@ contract Controlled is IControlled {
         controller = IController(msg.sender);
     }
 
-    function getController() public constant returns(IController) {
+    function getController() public view returns(IController) {
         return controller;
     }
 

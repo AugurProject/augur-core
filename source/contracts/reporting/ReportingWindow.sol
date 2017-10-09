@@ -1,6 +1,7 @@
 // Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'reporting/IReportingWindow.sol';
 import 'libraries/DelegationTarget.sol';
@@ -160,72 +161,72 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function getAvgReportingGasCost() public constant returns (uint256) {
+    function getAvgReportingGasCost() public returns (uint256) {
         return reportingGasPrice.currentAverage();
     }
 
-    function getAvgReportsPerMarket() public constant returns (uint256) {
+    function getAvgReportsPerMarket() public returns (uint256) {
         return marketReports.currentAverage();
     }
 
-    function getTypeName() public afterInitialized constant returns (bytes32) {
+    function getTypeName() public afterInitialized view returns (bytes32) {
         return "ReportingWindow";
     }
 
-    function getUniverse() public afterInitialized constant returns (IUniverse) {
+    function getUniverse() public afterInitialized view returns (IUniverse) {
         return universe;
     }
 
-    function getRegistrationToken() public afterInitialized constant returns (IRegistrationToken) {
+    function getRegistrationToken() public afterInitialized view returns (IRegistrationToken) {
         return registrationToken;
     }
 
-    function getReputationToken() public afterInitialized constant returns (IReputationToken) {
+    function getReputationToken() public afterInitialized view returns (IReputationToken) {
         return universe.getReputationToken();
     }
 
-    function getStartTime() public afterInitialized constant returns (uint256) {
+    function getStartTime() public afterInitialized view returns (uint256) {
         return startTime;
     }
 
-    function getEndTime() public afterInitialized constant returns (uint256) {
+    function getEndTime() public afterInitialized view returns (uint256) {
         return getDisputeEndTime();
     }
 
-    function getNumMarkets() public afterInitialized constant returns (uint256) {
+    function getNumMarkets() public afterInitialized view returns (uint256) {
         return markets.count;
     }
 
-    function getNumInvalidMarkets() public afterInitialized constant returns (uint256) {
+    function getNumInvalidMarkets() public afterInitialized view returns (uint256) {
         return invalidMarketCount;
     }
 
-    function getNumIncorrectDesignatedReportMarkets() public constant returns (uint256) {
+    function getNumIncorrectDesignatedReportMarkets() public view returns (uint256) {
         return incorrectDesignatedReportMarketCount;
     }
 
-    function getReportingStartTime() public afterInitialized constant returns (uint256) {
+    function getReportingStartTime() public afterInitialized view returns (uint256) {
         return getStartTime();
     }
 
-    function getReportingEndTime() public afterInitialized constant returns (uint256) {
+    function getReportingEndTime() public afterInitialized view returns (uint256) {
         return getStartTime() + Reporting.reportingDurationSeconds();
     }
 
-    function getDisputeStartTime() public afterInitialized constant returns (uint256) {
+    function getDisputeStartTime() public afterInitialized view returns (uint256) {
         return getReportingEndTime();
     }
 
-    function getDisputeEndTime() public afterInitialized constant returns (uint256) {
+    function getDisputeEndTime() public afterInitialized view returns (uint256) {
         return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
     }
 
-    function getNextReportingWindow() constant public returns (IReportingWindow) {
+    function getNextReportingWindow() public returns (IReportingWindow) {
         uint256 _nextTimestamp = getEndTime() + 1;
         return getUniverse().getReportingWindowByTimestamp(_nextTimestamp);
     }
 
-    function getPreviousReportingWindow() constant public returns (IReportingWindow) {
+    function getPreviousReportingWindow() public returns (IReportingWindow) {
         uint256 _previousTimestamp = getStartTime() - 1;
         return getUniverse().getReportingWindowByTimestamp(_previousTimestamp);
     }
@@ -283,7 +284,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function isActive() public afterInitialized constant returns (bool) {
+    function isActive() public afterInitialized view returns (bool) {
         if (block.timestamp <= getStartTime()) {
             return false;
         }
@@ -293,7 +294,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function isReportingActive() public afterInitialized constant returns (bool) {
+    function isReportingActive() public afterInitialized view returns (bool) {
         if (block.timestamp <= getStartTime()) {
             return false;
         }
@@ -303,7 +304,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function isDisputeActive() public afterInitialized constant returns (bool) {
+    function isDisputeActive() public afterInitialized view returns (bool) {
         if (block.timestamp <= getDisputeStartTime()) {
             return false;
         }
@@ -313,7 +314,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function getTargetReportsPerLimitedReporterMarket() public afterInitialized constant returns (uint256) {
+    function getTargetReportsPerLimitedReporterMarket() public afterInitialized view returns (uint256) {
         uint256 _limitedReporterMarketCount = limitedReporterMarkets.count;
         if (_limitedReporterMarketCount == 0) {
             return 0;
@@ -331,35 +332,35 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return _minimumReportsPerMarket;
     }
 
-    function getMaxReportsPerLimitedReporterMarket() public afterInitialized constant returns (uint256) {
+    function getMaxReportsPerLimitedReporterMarket() public afterInitialized view returns (uint256) {
         return getTargetReportsPerLimitedReporterMarket() + 2;
     }
 
-    function getRequiredReportsPerReporterForlimitedReporterMarkets() public afterInitialized constant returns (uint256) {
+    function getRequiredReportsPerReporterForlimitedReporterMarkets() public afterInitialized view returns (uint256) {
         uint256 _numLimitedReporterMarkets = limitedReporterMarkets.count;
         uint256 _requiredReports = getTargetReportsPerLimitedReporterMarket() * _numLimitedReporterMarkets / registrationToken.totalSupply();
         // We shouldn't require more reporting than is possible.
         return _requiredReports.min(_numLimitedReporterMarkets);
     }
 
-    function getTargetReportsPerReporter() public afterInitialized constant returns (uint256) {
+    function getTargetReportsPerReporter() public afterInitialized view returns (uint256) {
         uint256 _limitedMarketReportsPerReporter = getRequiredReportsPerReporterForlimitedReporterMarkets();
         return allReporterMarkets.count + _limitedMarketReportsPerReporter;
     }
 
-    function getMarketsCount() public afterInitialized constant returns (uint256) {
+    function getMarketsCount() public afterInitialized view returns (uint256) {
         return markets.count;
     }
 
-    function getLimitedReporterMarketsCount() public afterInitialized constant returns (uint256) {
+    function getLimitedReporterMarketsCount() public afterInitialized view returns (uint256) {
         return limitedReporterMarkets.count;
     }
 
-    function getAllReporterMarketsCount() public afterInitialized constant returns (uint256) {
+    function getAllReporterMarketsCount() public afterInitialized view returns (uint256) {
         return allReporterMarkets.count;
     }
 
-    function isContainerForRegistrationToken(Typed _shadyTarget) public afterInitialized constant returns (bool) {
+    function isContainerForRegistrationToken(Typed _shadyTarget) public afterInitialized view returns (bool) {
         if (_shadyTarget.getTypeName() != "RegistrationToken") {
             return false;
         }
@@ -367,7 +368,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return registrationToken == _shadyRegistrationToken;
     }
 
-    function isContainerForReportingToken(Typed _shadyTarget) public afterInitialized constant returns (bool) {
+    function isContainerForReportingToken(Typed _shadyTarget) public afterInitialized view returns (bool) {
         if (_shadyTarget.getTypeName() != "ReportingToken") {
             return false;
         }
@@ -378,7 +379,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return _market.isContainerForReportingToken(_shadyReportingToken);
     }
 
-    function isContainerForMarket(Typed _shadyTarget) public afterInitialized constant returns (bool) {
+    function isContainerForMarket(Typed _shadyTarget) public afterInitialized view returns (bool) {
         if (_shadyTarget.getTypeName() != "Market") {
             return false;
         }
@@ -386,7 +387,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return markets.contains(_shadyMarket);
     }
 
-    function isDoneReporting(address _reporter) public afterInitialized constant returns (bool) {
+    function isDoneReporting(address _reporter) public afterInitialized view returns (bool) {
         return reporterStatus[_reporter].finishedReporting;
     }
 
@@ -411,7 +412,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function isForkingMarketFinalized() public afterInitialized constant returns (bool) {
+    function isForkingMarketFinalized() public afterInitialized view returns (bool) {
         return getUniverse().getForkingMarket().getReportingState() == IMarket.ReportingState.FINALIZED;
     }
 }

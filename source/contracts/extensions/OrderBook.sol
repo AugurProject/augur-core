@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 // NOTE: We're using uint256[100] to get back orderIds from the orderFetcher as Solidity currently lacks the ability to receive dynamic arrays from external contract calls. Really we should not be returning arbitrary size arrays from internal contracts anywhere. The list gets shrunk to the desired size before returning
 
@@ -36,7 +37,7 @@ contract OrderBook is Controlled {
         return _orderBook;
     }
 
-    function getOrderAsArray(IOrders _orders, bytes32 _orderId) private constant returns (uint256[8] _order) {
+    function getOrderAsArray(IOrders _orders, bytes32 _orderId) private view returns (uint256[8] _order) {
         var (_amount, _price, _owner, _sharesEscrowed, _tokensEscrowed, _betterOrderId, _worseOrderId) = _orders.getOrders(_orderId);
         return [uint256(_orderId), uint256(_amount), uint256(_price), uint256(_owner), uint256(_sharesEscrowed), uint256(_tokensEscrowed), uint256(_betterOrderId), uint256(_worseOrderId)];
     }
