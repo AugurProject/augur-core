@@ -312,7 +312,7 @@ export class ContractDeployer {
         const marketCreationFee = await validityBond.add(targetReporterGasCosts);
         // const transactionHash = await this.contracts["MarketCreation"].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, { value: marketCreationFee, startgas: 6.7 * 10 ** 6 });
         const marketCreation = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketCreation"], { to: this.contracts["MarketCreation"].address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
-        // console.log("!!!!!!!!!!!!!!");
+
         // console.log(universe.address);
         // console.log(endTime);
         // console.log( numOutcomes);
@@ -320,12 +320,23 @@ export class ContractDeployer {
         // console.log(denominationToken.address);
         // console.log(numTicks);
         // console.log(designatedReporterAddress);
-        // console.log("!!!!!!!!!!!!!!");
 
         const marketAddress = await marketCreation.createMarket.bind({ to: this.contracts["MarketCreation"].address, from: this.testAccounts[0].address, gas: "0x5b8d80", value: marketCreationFee, constant: true })(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
-        await marketCreation.createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
+        await marketCreation.newCreateMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
 
-console.log(marketAddress);
+
+
+        // myContract.method.bind({ constant: true })(parameters);
+        // myContract.method(parameters);
+        // if (!transactionHash) {
+        //     throw new Error("Unable to create new market.");
+        // }
+        // const receiptLogs = await this.getReceiptLogs(transactionHash, "MarketCreation");
+        // const market = await this.getContractFromAddress(receiptLogs[0].market, "Market", this.testAccounts[0].address, this.gasAmount);
+
+
+        console.log(marketAddress);
+
         return marketAddress;
     }
 

@@ -50,7 +50,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         RegistrationTokenFactory _registrationTokenFactory = RegistrationTokenFactory(controller.lookup("RegistrationTokenFactory"));
         registrationToken = _registrationTokenFactory.createRegistrationToken(controller, this);
-        // Initialize these to some reasonable value to handle the first market ever created without branching code 
+        // Initialize these to some reasonable value to handle the first market ever created without branching code
         reportingGasPrice.record(Reporting.defaultReportingGasPrice());
         marketReports.record(Reporting.defaultReportsPerMarket());
         return true;
@@ -62,6 +62,15 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         _newMarket = MarketFactory(controller.lookup("MarketFactory")).createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _designatedReporterAddress);
         markets.add(_newMarket);
         limitedReporterMarkets.add(_newMarket);
+        return _newMarket;
+    }
+
+    function newCreateNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
+        // require(block.timestamp < startTime);
+        // require(universe.getReportingWindowByMarketEndTime(_endTime, _designatedReporterAddress != 0).getTypeName() == "ReportingWindow");
+        _newMarket = MarketFactory(controller.lookup("MarketFactory")).newCreateMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _designatedReporterAddress);
+        // markets.add(_newMarket);
+        // limitedReporterMarkets.add(_newMarket);
         return _newMarket;
     }
 
