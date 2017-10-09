@@ -59,18 +59,10 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
         require(universe.getReportingWindowByMarketEndTime(_endTime, _designatedReporterAddress != 0).getTypeName() == "ReportingWindow");
-        _newMarket = MarketFactory(controller.lookup("MarketFactory")).createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _designatedReporterAddress);
+        MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
+        _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _designatedReporterAddress);
         markets.add(_newMarket);
         limitedReporterMarkets.add(_newMarket);
-        return _newMarket;
-    }
-
-    function newCreateNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
-        // require(block.timestamp < startTime);
-        // require(universe.getReportingWindowByMarketEndTime(_endTime, _designatedReporterAddress != 0).getTypeName() == "ReportingWindow");
-        _newMarket = MarketFactory(controller.lookup("MarketFactory")).newCreateMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _designatedReporterAddress);
-        // markets.add(_newMarket);
-        // limitedReporterMarkets.add(_newMarket);
         return _newMarket;
     }
 
@@ -208,12 +200,12 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
     }
 
-    function getNextReportingWindow() constant public returns (IReportingWindow) {
+    function getNextReportingWindow() public returns (IReportingWindow) {
         uint256 _nextTimestamp = getEndTime() + 1;
         return getUniverse().getReportingWindowByTimestamp(_nextTimestamp);
     }
 
-    function getPreviousReportingWindow() constant public returns (IReportingWindow) {
+    function getPreviousReportingWindow() public returns (IReportingWindow) {
         uint256 _previousTimestamp = getStartTime() - 1;
         return getUniverse().getReportingWindowByTimestamp(_previousTimestamp);
     }
