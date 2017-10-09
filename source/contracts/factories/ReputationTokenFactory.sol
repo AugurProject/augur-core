@@ -8,7 +8,7 @@ import 'reporting/IReputationToken.sol';
 
 
 contract ReputationTokenFactory {
-    function createReputationToken(IController _controller, IUniverse _universe) returns (IReputationToken) {
+    function createReputationToken(IController _controller, IUniverse _universe) public returns (IReputationToken) {
         Delegator _delegator = new Delegator(_controller, "ReputationToken");
         IReputationToken _reputationToken = IReputationToken(_delegator);
         _reputationToken.initialize(_universe);

@@ -42,11 +42,11 @@ library Set {
         return remove(_this, bytes32(_value));
     }
 
-    function contains(Data storage _this, bytes32 _value) internal constant returns (bool) {
+    function contains(Data storage _this, bytes32 _value) internal view returns (bool) {
         return _this.items[_value].exists;
     }
 
-    function contains(Data storage _this, address _value) internal constant returns (bool) {
+    function contains(Data storage _this, address _value) internal view returns (bool) {
         return contains(_this, bytes32(_value));
     }
 }

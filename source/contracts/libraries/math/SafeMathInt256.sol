@@ -48,11 +48,11 @@ library SafeMathInt256 {
         }
     }
 
-    function getInt256Min() internal view returns (int256) {
+    function getInt256Min() internal pure returns (int256) {
         return INT256_MIN;
     }
 
-    function getInt256Max() internal view returns (int256) {
+    function getInt256Max() internal pure returns (int256) {
         return INT256_MAX;
     }
 

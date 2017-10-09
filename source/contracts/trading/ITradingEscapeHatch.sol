@@ -5,5 +5,5 @@ import 'reporting/IMarket.sol';
 
 
 contract ITradingEscapeHatch {
-    function claimSharesInUpdate(IMarket) returns(bool);
+    function claimSharesInUpdate(IMarket) public returns(bool);
 }

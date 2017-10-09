@@ -51,7 +51,7 @@ contract MarketFeeCalculator {
         return _currentDesignatedReportStakeInAttoRep;
     }
 
-    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) constant public returns (uint256 _newValue) {
+    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) public pure returns (uint256 _newValue) {
         if (_totalMarkets == 0) {
             return _defaultValue;
         }

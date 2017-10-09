@@ -28,7 +28,7 @@ contract MarketExtensions {
         return _winningDestination.getUniverse().getParentPayoutDistributionHash();
     }
 
-    function getOrderedWinningPayoutDistributionHashes(IMarket _market, bytes32 _payoutDistributionHash) public returns (bytes32, bytes32) {
+    function getOrderedWinningPayoutDistributionHashes(IMarket _market, bytes32 _payoutDistributionHash) public view returns (bytes32, bytes32) {
         bytes32 _tentativeWinningPayoutDistributionHash = _market.getTentativeWinningPayoutDistributionHash();
         bytes32 _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = _market.getBestGuessSecondPlaceTentativeWinningPayoutDistributionHash();
         int256 _tentativeWinningStake = getPayoutDistributionHashStake(_market, _tentativeWinningPayoutDistributionHash);
