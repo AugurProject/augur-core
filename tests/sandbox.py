@@ -16,28 +16,28 @@ library int256Math {
     int256 private constant INT256_MIN = -2**(255);
     int256 private constant INT256_MAX = (2**(255) - 1);
 
-    function mul(int256 a, int256 b) internal constant returns (int256) {
+    function mul(int256 a, int256 b) internal view returns (int256) {
         int256 c = a * b;
         require(a == 0 || c / a == b);
         return c;
     }
 
-    function div(int256 a, int256 b) internal constant returns (int256) {
+    function div(int256 a, int256 b) internal view returns (int256) {
         int256 c = a / b;
         return c;
     }
 
-    function sub(int256 a, int256 b) internal constant returns (int256) {
+    function sub(int256 a, int256 b) internal view returns (int256) {
         require(((a >= 0) && (b >= a - INT256_MAX)) || ((a < 0) && (b <= a - INT256_MIN)));
         return a - b;
     }
 
-    function add(int256 a, int256 b) internal constant returns (int256) {
+    function add(int256 a, int256 b) internal view returns (int256) {
         require(((a >= 0) && (b <= INT256_MAX - a)) || ((a < 0) && (b >= INT256_MIN - a)));
         return a + b;
     }
 
-    function min(int256 a, int256 b) internal constant returns (int256) {
+    function min(int256 a, int256 b) internal view returns (int256) {
         if (a <= b) {
             return a;
         } else {
@@ -45,7 +45,7 @@ library int256Math {
         }
     }
 
-    function max(int256 a, int256 b) internal constant returns (int256) {
+    function max(int256 a, int256 b) internal view returns (int256) {
         if (a >= b) {
             return a;
         } else {
@@ -53,20 +53,20 @@ library int256Math {
         }
     }
 
-    function getInt256Min() internal constant returns (int256) {
+    function getInt256Min() internal view returns (int256) {
         return INT256_MIN;
     }
 
-    function getInt256Max() internal constant returns (int256) {
+    function getInt256Max() internal view returns (int256) {
         return INT256_MAX;
     }
 
     // Float [fixed point] Operations
-    function fxpMul(int256 a, int256 b, int256 base) internal constant returns (int256) {
+    function fxpMul(int256 a, int256 b, int256 base) internal view returns (int256) {
         return div(mul(a, b), base);
     }
 
-    function fxpDiv(int256 a, int256 b, int256 base) internal constant returns (int256) {
+    function fxpDiv(int256 a, int256 b, int256 base) internal view returns (int256) {
         return div(mul(a, base), b);
     }
 }
@@ -74,31 +74,31 @@ library int256Math {
 
 int256 = """
 library uint256Math {
-    function mul(uint256 a, uint256 b) internal constant returns (uint256) {
+    function mul(uint256 a, uint256 b) internal view returns (uint256) {
         uint256 c = a * b;
         require(a == 0 || c / a == b);
         return c;
     }
 
-    function div(uint256 a, uint256 b) internal constant returns (uint256) {
+    function div(uint256 a, uint256 b) internal view returns (uint256) {
         // assert(b > 0); // Solidity automatically throws when dividing by 0
         uint256 c = a / b;
         // assert(a == b * c + a % b); // There is no case in which this doesn't hold
         return c;
     }
 
-    function sub(uint256 a, uint256 b) internal constant returns (uint256) {
+    function sub(uint256 a, uint256 b) internal view returns (uint256) {
         require(b <= a);
         return a - b;
     }
 
-    function add(uint256 a, uint256 b) internal constant returns (uint256) {
+    function add(uint256 a, uint256 b) internal view returns (uint256) {
         uint256 c = a + b;
         require(c >= a);
         return c;
     }
 
-    function min(uint256 a, uint256 b) internal constant returns (uint256) {
+    function min(uint256 a, uint256 b) internal view returns (uint256) {
         if (a <= b) {
             return a;
         } else {
@@ -106,7 +106,7 @@ library uint256Math {
         }
     }
 
-    function max(uint256 a, uint256 b) internal constant returns (uint256) {
+    function max(uint256 a, uint256 b) internal view returns (uint256) {
         if (a >= b) {
             return a;
         } else {
@@ -115,11 +115,11 @@ library uint256Math {
     }
 
     // Float [fixed point] Operations
-    function fxpMul(uint256 a, uint256 b, uint256 base) internal constant returns (uint256) {
+    function fxpMul(uint256 a, uint256 b, uint256 base) internal view returns (uint256) {
         return div(mul(a, b), base);
     }
 
-    function fxpDiv(uint256 a, uint256 b, uint256 base) internal constant returns (uint256) {
+    function fxpDiv(uint256 a, uint256 b, uint256 base) internal view returns (uint256) {
         return div(mul(a, base), b);
     }
 }

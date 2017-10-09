@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'reporting/IUniverse.sol';
 import 'libraries/DelegationTarget.sol';
@@ -46,43 +47,43 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return true;
     }
 
-    function getTypeName() public constant returns (bytes32) {
+    function getTypeName() public view returns (bytes32) {
         return "Universe";
     }
 
-    function getParentUniverse() public constant returns (IUniverse) {
+    function getParentUniverse() public view returns (IUniverse) {
         return parentUniverse;
     }
 
-    function getParentPayoutDistributionHash() public constant returns (bytes32) {
+    function getParentPayoutDistributionHash() public view returns (bytes32) {
         return parentPayoutDistributionHash;
     }
 
-    function getReputationToken() public constant returns (IReputationToken) {
+    function getReputationToken() public view returns (IReputationToken) {
         return reputationToken;
     }
 
-    function getForkingMarket() public constant returns (IMarket) {
+    function getForkingMarket() public view returns (IMarket) {
         return forkingMarket;
     }
 
-    function getForkEndTime() public constant returns (uint256) {
+    function getForkEndTime() public view returns (uint256) {
         return forkEndTime;
     }
 
-    function getReportingWindow(uint256 _reportingWindowId) public constant returns (IReportingWindow) {
+    function getReportingWindow(uint256 _reportingWindowId) public view returns (IReportingWindow) {
         return reportingWindows[_reportingWindowId];
     }
 
-    function getChildUniverse(bytes32 _parentPayoutDistributionHash) public constant returns (IUniverse) {
+    function getChildUniverse(bytes32 _parentPayoutDistributionHash) public view returns (IUniverse) {
         return childUniverses[_parentPayoutDistributionHash];
     }
 
-    function getReportingWindowId(uint256 _timestamp) public constant returns (uint256) {
+    function getReportingWindowId(uint256 _timestamp) public view returns (uint256) {
         return _timestamp / getReportingPeriodDurationInSeconds();
     }
 
-    function getReportingPeriodDurationInSeconds() public constant returns (uint256) {
+    function getReportingPeriodDurationInSeconds() public view returns (uint256) {
         return Reporting.reportingDurationSeconds() + Reporting.reportingDisputeDurationSeconds();
     }
 
@@ -121,7 +122,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return childUniverses[_parentPayoutDistributionHash];
     }
 
-    function isContainerForReportingWindow(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForReportingWindow(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "ReportingWindow") {
             return false;
         }
@@ -135,7 +136,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _shadyReportingWindow == _legitReportingWindow;
     }
 
-    function isContainerForDisputeBondToken(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForDisputeBondToken(Typed _shadyTarget) public returns (bool) {
         if (_shadyTarget.getTypeName() != "DisputeBondToken") {
             return false;
         }
@@ -151,7 +152,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitMarket.isContainerForDisputeBondToken(_shadyDisputeBond);
     }
 
-    function isContainerForRegistrationToken(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForRegistrationToken(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "RegistrationToken") {
             return false;
         }
@@ -167,7 +168,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitReportingWindow.isContainerForRegistrationToken(_shadyRegistrationToken);
     }
 
-    function isContainerForMarket(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForMarket(Typed _shadyTarget) public returns (bool) {
         if (_shadyTarget.getTypeName() != "Market") {
             return false;
         }
@@ -183,7 +184,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitReportingWindow.isContainerForMarket(_shadyMarket);
     }
 
-    function isContainerForReportingToken(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForReportingToken(Typed _shadyTarget) public returns (bool) {
         if (_shadyTarget.getTypeName() != "ReportingToken") {
             return false;
         }
@@ -199,7 +200,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitMarket.isContainerForReportingToken(_shadyReportingToken);
     }
 
-    function isContainerForShareToken(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForShareToken(Typed _shadyTarget) public returns (bool) {
         if (_shadyTarget.getTypeName() != "ShareToken") {
             return false;
         }
@@ -215,7 +216,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitMarket.isContainerForShareToken(_shadyShareToken);
     }
 
-    function isParentOf(IUniverse _shadyChild) public constant returns (bool) {
+    function isParentOf(IUniverse _shadyChild) public view returns (bool) {
         bytes32 _parentPayoutDistributionHash = _shadyChild.getParentPayoutDistributionHash();
         return childUniverses[_parentPayoutDistributionHash] == _shadyChild;
     }
@@ -233,7 +234,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         openInterestInAttoEth = openInterestInAttoEth.add(_amount);
     }
 
-    function getOpenInterestInAttoEth() public constant returns (uint256) {
+    function getOpenInterestInAttoEth() public view returns (uint256) {
         return openInterestInAttoEth;
     }
 }

@@ -24,7 +24,6 @@ describe("BinaryMarketTradeAndReport", () => {
 
         const universe = contractDeployer.getUniverse();
         const cash = contractDeployer.getCash();
-        //const createOrder = contracts["CreateOrder"];
         const createOrder = await parseAbiIntoMethods(contractDeployer.getEthjsQuery(), signatures["CreateOrder"], { to: contracts["CreateOrder"].address });
         const trade = contracts["Trade"];
         const fillOrder = contracts["FillOrder"];
@@ -34,45 +33,7 @@ describe("BinaryMarketTradeAndReport", () => {
         const tradeGroupId = 42;
 
         const orderId = await padAndHexlify("", 40);
-        // console.log(BID);
-        // console.log(2);
-        // console.log(fix('0.6'));
-        // console.log(market.address);
-        // console.log(YES);
-        // console.log(orderId);
-        // console.log(orderId);
-        // console.log(tradeGroupId);
-        // console.log(testAccounts[1].address);
-        // console.log(fix(2, 0.6));
 
-        for (let testAccount in testAccounts) {
-            console.log(testAccounts[testAccount].address);
-            console.log("Wei balance: ");
-            console.log(await ethjsQuery.getBalance(testAccounts[testAccount].address, 16));
-            console.log("Cash balance:");
-            const cashBalance = await cash.balanceOf(testAccounts[testAccount].address);
-            console.log(JSON.stringify(cashBalance.balance));
-        }
-
-// console.log(fix(2, 0.6));
-//        const orderTxHash = await createOrder.newPublicCreateOrder.bind({ from: testAccounts[1].address, sender: testAccounts[1].address, value: fix(2, 0.6), constant: true })(BID, 2, fix(0.6), market.address, YES, orderId, orderId, tradeGroupId);
-//        console.log(orderTxHash);
-        // let receiptLogs = await contractDeployer.getReceiptLogs(orderTxHash, "CreateOrder");
-        // const order = await this.getContractFromAddress(receiptLogs[0].order, "Orders", this.testAccounts[0].address, this.gasAmount);
-        // console.log(order);
-
-        // const fillOrderId = trade.publicSell(market.address, YES, 2, fix(0.6), tradeGroupId, {sender: testAccounts[2].publicKey, value: fix(2, 0.4)});
-        // console.log(fillOrderId);
-
-        // assert ordersFetcher.getOrder(orderId) == [0L, 0L, longToHexString(0), 0L, 0L, longTo32Bytes(0), longTo32Bytes(0), 0L];
-        // assert fillOrderId == longTo32Bytes(1);
-
-
-        // const reputationToken = contractDeployer.applySignature('ReputationToken', universe.getReputationToken());
-        // const reportingTokenNo = contractDeployer.getReportingToken(market, [Math.pow(10, 18),0]);
-        // const reportingTokenYes = contractDeployer.getReportingToken(market, [0,Math.pow(10, 18)]);
-        // const reportingWindow = contractDeployer.applySignature('ReportingWindow', universe.getNextReportingWindow());
-        // const expectedMarketCreatorFeePayout = contracts["MarketFeeCalculator"].getValidityBond(reportingWindow.address);
-        // const expectedReportingWindowFeePayout = contracts["MarketFeeCalculator"].getTargetReporterGasCosts(reportingWindow.address);
+        // TODO: Finish creating/filling an order and reporting on the market
     });
 });

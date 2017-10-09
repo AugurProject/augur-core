@@ -15,7 +15,7 @@ contract DelegatorHelper is DelegationTarget, Typed {
     uint256[] public uint256Array;
     DelegatorHelper private otherContract;
 
-    function getTypeName() constant returns (bytes32) {
+    function getTypeName() view returns (bytes32) {
         return "DelegatorHelper";
     }
 
@@ -59,43 +59,43 @@ contract DelegatorHelper is DelegationTarget, Typed {
         return true;
     }
 
-    function getStringMember() public constant returns (string) {
+    function getStringMember() public view returns (string) {
         return stringMember;
     }
 
-    function getStringConstant() public constant returns (string) {
+    function getStringConstant() public view returns (string) {
         return stringConstant;
     }
 
-    function getName() public constant returns (bytes32) {
+    function getName() public view returns (bytes32) {
         return name;
     }
 
-    function getIntValue() public constant returns (int256) {
+    function getIntValue() public view returns (int256) {
         return intValue;
     }
 
-    function getPrivateName() public constant returns (bytes32) {
+    function getPrivateName() public view returns (bytes32) {
         return privateName;
     }
 
-    function getConstantName() public constant returns (bytes32) {
+    function getConstantName() public view returns (bytes32) {
         return constantName;
     }
 
-    function getMapValue(uint256 _key) public constant returns (uint256) {
+    function getMapValue(uint256 _key) public view returns (uint256) {
         return map[_key];
     }
 
-    function getArrayValue(uint256 _index) public constant returns (uint256) {
+    function getArrayValue(uint256 _index) public view returns (uint256) {
         return uint256Array[_index];
     }
 
-    function getArraySize() public constant returns (uint256) {
+    function getArraySize() public view returns (uint256) {
         return uint256Array.length;
     }
 
-    function getOtherName() public constant returns (bytes32) {
+    function getOtherName() public view returns (bytes32) {
         return otherContract.name();
     }
 

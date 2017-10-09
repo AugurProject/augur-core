@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'trading/ICash.sol';
 import 'Controlled.sol';
@@ -41,7 +42,7 @@ contract Cash is Controlled, Typed, VariableSupplyToken, ICash {
         return true;
     }
 
-    function getTypeName() public constant returns (bytes32) {
+    function getTypeName() public view returns (bytes32) {
         return "Cash";
     }
 }

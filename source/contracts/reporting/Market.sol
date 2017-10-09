@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'reporting/IMarket.sol';
 import 'libraries/DelegationTarget.sol';
@@ -273,7 +274,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function derivePayoutDistributionHash(uint256[] _payoutNumerators) public constant returns (bytes32) {
+    function derivePayoutDistributionHash(uint256[] _payoutNumerators) public view returns (bytes32) {
         uint256 _sum = 0;
         for (uint8 i = 0; i < _payoutNumerators.length; i++) {
             _sum = _sum.add(_payoutNumerators[i]);
@@ -282,7 +283,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return keccak256(_payoutNumerators);
     }
 
-    function getReportingTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public constant returns (IReportingToken) {
+    function getReportingTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public view returns (IReportingToken) {
         return reportingTokens[_payoutDistributionHash];
     }
 
@@ -290,87 +291,87 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     //Getters
     //
 
-    function getTypeName() public constant returns (bytes32) {
+    function getTypeName() public view returns (bytes32) {
         return "Market";
     }
 
-    function getReportingWindow() public constant returns (IReportingWindow) {
+    function getReportingWindow() public view returns (IReportingWindow) {
         return reportingWindow;
     }
 
-    function getUniverse() public constant returns (IUniverse) {
+    function getUniverse() public view returns (IUniverse) {
         return reportingWindow.getUniverse();
     }
 
-    function getDesignatedReporter() public constant returns (address) {
+    function getDesignatedReporter() public view returns (address) {
         return designatedReporterAddress;
     }
 
-    function getDesignatedReporterDisputeBondToken() public constant returns (IDisputeBond) {
+    function getDesignatedReporterDisputeBondToken() public view returns (IDisputeBond) {
         return designatedReporterDisputeBondToken;
     }
 
-    function getLimitedReportersDisputeBondToken() public constant returns (IDisputeBond) {
+    function getLimitedReportersDisputeBondToken() public view returns (IDisputeBond) {
         return limitedReportersDisputeBondToken;
     }
 
-    function getAllReportersDisputeBondToken() public constant returns (IDisputeBond) {
+    function getAllReportersDisputeBondToken() public view returns (IDisputeBond) {
         return allReportersDisputeBondToken;
     }
 
-    function getNumberOfOutcomes() public constant returns (uint8) {
+    function getNumberOfOutcomes() public view returns (uint8) {
         return numOutcomes;
     }
 
-    function getEndTime() public constant returns (uint256) {
+    function getEndTime() public view returns (uint256) {
         return endTime;
     }
 
-    function getTentativeWinningPayoutDistributionHash() public constant returns (bytes32) {
+    function getTentativeWinningPayoutDistributionHash() public view returns (bytes32) {
         return tentativeWinningPayoutDistributionHash;
     }
 
-    function getBestGuessSecondPlaceTentativeWinningPayoutDistributionHash() public constant returns (bytes32) {
+    function getBestGuessSecondPlaceTentativeWinningPayoutDistributionHash() public view returns (bytes32) {
         return bestGuessSecondPlaceTentativeWinningPayoutDistributionHash;
     }
 
-    function getFinalWinningReportingToken() public constant returns (IReportingToken) {
+    function getFinalWinningReportingToken() public view returns (IReportingToken) {
         return reportingTokens[finalPayoutDistributionHash];
     }
 
-    function getShareToken(uint8 _outcome)  public constant returns (IShareToken) {
+    function getShareToken(uint8 _outcome)  public view returns (IShareToken) {
         return shareTokens[_outcome];
     }
 
-    function getFinalPayoutDistributionHash() public constant returns (bytes32) {
+    function getFinalPayoutDistributionHash() public view returns (bytes32) {
         return finalPayoutDistributionHash;
     }
 
-    function getDesignatedReportPayoutHash() public constant returns (bytes32) {
+    function getDesignatedReportPayoutHash() public view returns (bytes32) {
         return designatedReportPayoutHash;
     }
 
-    function getNumTicks() public constant returns (uint256) {
+    function getNumTicks() public view returns (uint256) {
         return numTicks;
     }
 
-    function getDenominationToken() public constant returns (ICash) {
+    function getDenominationToken() public view returns (ICash) {
         return cash;
     }
 
-    function getMarketCreatorSettlementFeeInAttoethPerEth() public constant returns (uint256) {
+    function getMarketCreatorSettlementFeeInAttoethPerEth() public view returns (uint256) {
         return feePerEthInAttoeth;
     }
 
-    function getFinalizationTime() public constant returns (uint256) {
+    function getFinalizationTime() public view returns (uint256) {
         return finalizationTime;
     }
 
-    function getForkingMarket() public constant returns (IMarket _market) {
+    function getForkingMarket() public view returns (IMarket _market) {
         return getUniverse().getForkingMarket();
     }
 
-    function isContainerForReportingToken(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForReportingToken(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "ReportingToken") {
             return false;
         }
@@ -380,7 +381,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return _reportingToken == _shadyReportingToken;
     }
 
-    function isContainerForShareToken(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForShareToken(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "ShareToken") {
             return false;
         }
@@ -388,7 +389,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return getShareToken(_shadyShareToken.getOutcome()) == _shadyShareToken;
     }
 
-    function isContainerForDisputeBondToken(Typed _shadyTarget) public constant returns (bool) {
+    function isContainerForDisputeBondToken(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "DisputeBondToken") {
             return false;
         }
@@ -406,31 +407,31 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     // CONSIDER: Would it be helpful to add modifiers for this contract like "onlyAfterFinalized" that could protect a function such as this?
-    function isValid() public constant returns (bool) {
+    function isValid() public view returns (bool) {
         IReportingToken _winningReportingToken = getFinalWinningReportingToken();
         return _winningReportingToken.isValid();
     }
 
-    function getDesignatedReportDueTimestamp() public constant returns (uint256) {
+    function getDesignatedReportDueTimestamp() public view returns (uint256) {
         if (designatedReportReceivedTime != 0) {
             return designatedReportReceivedTime;
         }
         return endTime + Reporting.designatedReportingDurationSeconds();
     }
 
-    function getDesignatedReportReceivedTime() public constant returns (uint256) {
+    function getDesignatedReportReceivedTime() public view returns (uint256) {
         return designatedReportReceivedTime;
     }
 
-    function getDesignatedReportDisputeDueTimestamp() public constant returns (uint256) {
+    function getDesignatedReportDisputeDueTimestamp() public view returns (uint256) {
         return getDesignatedReportDueTimestamp() + Reporting.designatedReportingDisputeDurationSeconds();
     }
 
-    function getReportingState() public constant returns (ReportingState) {
+    function getReportingState() public view returns (ReportingState) {
         return MarketExtensions(controller.lookup("MarketExtensions")).getMarketReportingState(this);
     }
 
-    function getWinningPayoutDistributionHashFromFork() private constant returns (bytes32) {
+    function getWinningPayoutDistributionHashFromFork() private view returns (bytes32) {
         return MarketExtensions(controller.lookup("MarketExtensions")).getWinningPayoutDistributionHashFromFork(this);
     }
 }

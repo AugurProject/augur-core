@@ -1,4 +1,5 @@
-pragma solidity ^0.4.17;
+pragma solidity 0.4.17;
+
 
 import 'libraries/token/BasicToken.sol';
 import 'libraries/token/ERC20.sol';
@@ -57,7 +58,7 @@ contract StandardToken is ERC20, BasicToken {
     * @param _spender address The address which will spend the funds.
     * @return A uint256 specifing the amount of tokens still avaible for the spender.
     */
-    function allowance(address _owner, address _spender) public constant returns (uint256 remaining) {
+    function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
         return allowed[_owner][_spender];
     }
 }
