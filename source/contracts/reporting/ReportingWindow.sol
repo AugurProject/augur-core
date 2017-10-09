@@ -10,12 +10,10 @@ import 'libraries/Initializable.sol';
 import 'libraries/collections/Set.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
-import 'reporting/IRegistrationToken.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReportingToken.sol';
 import 'trading/ICash.sol';
 import 'factories/MarketFactory.sol';
-import 'factories/RegistrationTokenFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
@@ -33,7 +31,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     IUniverse private universe;
     uint256 private startTime;
-    IRegistrationToken private registrationToken;
     Set.Data private markets;
     Set.Data private limitedReporterMarkets;
     Set.Data private allReporterMarkets;
@@ -51,9 +48,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         endInitialization();
         universe = _universe;
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
-        RegistrationTokenFactory _registrationTokenFactory = RegistrationTokenFactory(controller.lookup("RegistrationTokenFactory"));
-        registrationToken = _registrationTokenFactory.createRegistrationToken(controller, this);
-        // Initialize these to some reasonable value to handle the first market ever created without branching code
+        // Initialize these to some reasonable value to handle the first market ever created without branching code 
         reportingGasPrice.record(Reporting.defaultReportingGasPrice());
         marketReports.record(Reporting.defaultReportsPerMarket());
         return true;
@@ -178,10 +173,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return universe;
     }
 
-    function getRegistrationToken() public afterInitialized view returns (IRegistrationToken) {
-        return registrationToken;
-    }
-
     function getReputationToken() public afterInitialized view returns (IReputationToken) {
         return universe.getReputationToken();
     }
@@ -240,7 +231,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         uint256 _totalReportableMarkets = getLimitedReporterMarketsCount() + getAllReporterMarketsCount();
         require(_totalReportableMarkets < 1);
         require(isActive());
-        require(getRegistrationToken().balanceOf(msg.sender) > 0);
         reporterStatus[msg.sender].finishedReporting = true;
         return true;
     }
@@ -321,7 +311,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
             return 0;
         }
 
-        uint256 _registeredReporters = registrationToken.getPeakSupply();
+        uint256 _registeredReporters = 1;// TODO XXX
         uint256 _minimumReportsPerMarket = BASE_MINIMUM_REPORTERS_PER_MARKET;
         uint256 _totalReportsForAllLimitedReporterMarkets = _minimumReportsPerMarket * _limitedReporterMarketCount;
 
@@ -338,10 +328,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function getRequiredReportsPerReporterForlimitedReporterMarkets() public afterInitialized view returns (uint256) {
-        uint256 _numLimitedReporterMarkets = limitedReporterMarkets.count;
-        uint256 _requiredReports = getTargetReportsPerLimitedReporterMarket() * _numLimitedReporterMarkets / registrationToken.totalSupply();
-        // We shouldn't require more reporting than is possible.
-        return _requiredReports.min(_numLimitedReporterMarkets);
+        return 1;// TODO XXX
     }
 
     function getTargetReportsPerReporter() public afterInitialized view returns (uint256) {
@@ -359,14 +346,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function getAllReporterMarketsCount() public afterInitialized view returns (uint256) {
         return allReporterMarkets.count;
-    }
-
-    function isContainerForRegistrationToken(Typed _shadyTarget) public afterInitialized view returns (bool) {
-        if (_shadyTarget.getTypeName() != "RegistrationToken") {
-            return false;
-        }
-        IRegistrationToken _shadyRegistrationToken = IRegistrationToken(_shadyTarget);
-        return registrationToken == _shadyRegistrationToken;
     }
 
     function isContainerForReportingToken(Typed _shadyTarget) public afterInitialized view returns (bool) {

@@ -27,8 +27,8 @@ contract MarketFeeCalculator {
             return _currentValidityBondInAttoeth;
         }
         IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
-        uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
-        uint256 _invalidMarketsInPreviousWindow = _reportingWindow.getNumInvalidMarkets();
+        uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
+        uint256 _invalidMarketsInPreviousWindow = _previousReportingWindow.getNumInvalidMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
 
         _currentValidityBondInAttoeth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INVALID_MARKETS_DIVISOR, _previousValidityBondInAttoeth, Reporting.defaultValidityBond());
@@ -42,8 +42,8 @@ contract MarketFeeCalculator {
             return _currentDesignatedReportStakeInAttoRep;
         }
         IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
-        uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
-        uint256 _incorrectDesignatedReportMarketsInPreviousWindow = _reportingWindow.getNumIncorrectDesignatedReportMarkets();
+        uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
+        uint256 _incorrectDesignatedReportMarketsInPreviousWindow = _previousReportingWindow.getNumIncorrectDesignatedReportMarkets();
         uint256 _previousDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_previousReportingWindow];
 
         _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectDesignatedReportMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR, _previousDesignatedReportStakeInAttoRep, Reporting.defaultDesignatedReportStake());

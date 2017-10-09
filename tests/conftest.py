@@ -331,9 +331,6 @@ class ContractsFixture:
 
     def designatedReport(self, market, payoutDistribution, reporterKey):
         reportingToken = self.getReportingToken(market, payoutDistribution)
-        registrationToken = self.applySignature('RegistrationToken', reportingToken.getRegistrationToken())
-        if registrationToken.balanceOf(market.getDesignatedReporter()) < 1:
-            assert registrationToken.register(sender=reporterKey)
         designatedReportStake = self.contracts['MarketFeeCalculator'].getDesignatedReportStake(market.getReportingWindow())
         return reportingToken.buy(designatedReportStake, sender=reporterKey)
 

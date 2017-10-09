@@ -193,10 +193,6 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
             # reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
             # assert reportingWindow.isContainerForMarket(market.address)
 
-            # Buy registration tokens
-            registrationToken = contractsFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
-            buyRegistrationTokens(designatedReporterDisputeStakes, registrationToken, reputationToken)
-
             # Fast forward to reporting start time
             contractsFixture.chain.head_state.timestamp = reportingWindow.getReportingStartTime() + 1
 
@@ -227,10 +223,6 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         assert universe.isContainerForDisputeBondToken(limitedReportersDisputeBondToken.address)
         reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
         assert reportingWindow.isContainerForMarket(market.address)
-
-        # Buy registration tokens
-        registrationToken = contractsFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
-        buyRegistrationTokens(limitedReportersDisputeStakes, registrationToken, reputationToken)
 
         # Fast forward to reporting start time
         contractsFixture.chain.head_state.timestamp = reportingWindow.getReportingStartTime() + 1
@@ -695,17 +687,6 @@ def initializeTestAccountBalances(reputationToken):
     for accountNum in xrange(0, numOfTesterAccounts-1):
         reputationToken.transfer(getattr(tester, 'a' + str(accountNum)), originalAccountBalance)
     reputationToken.transfer(tester.a9, (REP_TOTAL * REP_DIVISOR) - ((numOfTesterAccounts-1) * originalAccountBalance))
-    print ""
-
-def buyRegistrationTokens(disputeStakes, registrationToken, reputationToken):
-    print "Buying registration tokens"
-    for row in disputeStakes:
-        accountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
-        if registrationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == 1:
-            continue
-        registrationToken.register(sender=getattr(tester, 'k' + str(row[0])))
-        assert registrationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == 1
-        assert reputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalance - (1 * REP_DIVISOR)
     print ""
 
 def buyReportingTokens(marketType, disputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC):

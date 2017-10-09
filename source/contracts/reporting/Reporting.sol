@@ -28,7 +28,6 @@ library Reporting {
     function reportingDurationSeconds() internal pure returns (uint256) { return REPORTING_DURATION_SECONDS; }
     function reportingDisputeDurationSeconds() internal pure returns (uint256) { return REPORTING_DISPUTE_DURATION_SECONDS; }
     function claimProceedsWaitTime() internal pure returns (uint256) { return CLAIM_PROCEEDS_WAIT_TIME; }
-    function getRegistrationTokenBondAmount() internal pure returns (uint256) { return REGISTRATION_TOKEN_BOND_AMOUNT; }
     function designatedReporterDisputeBondAmount() internal pure returns (uint256) { return DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT; }
     function limitedReportersDisputeBondAmount() internal pure returns (uint256) { return LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT; }
     function allReportersDisputeBondAmount() internal pure returns (uint256) { return ALL_REPORTERS_DISPUTE_BOND_AMOUNT; }

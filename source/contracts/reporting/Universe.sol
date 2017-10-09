@@ -12,7 +12,6 @@ import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingToken.sol';
 import 'reporting/IDisputeBond.sol';
-import 'reporting/IRegistrationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -152,23 +151,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitMarket.isContainerForDisputeBondToken(_shadyDisputeBond);
     }
 
-    function isContainerForRegistrationToken(Typed _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "RegistrationToken") {
-            return false;
-        }
-        IRegistrationToken _shadyRegistrationToken = IRegistrationToken(_shadyTarget);
-        IReportingWindow _shadyReportingWindow = _shadyRegistrationToken.getReportingWindow();
-        if (_shadyReportingWindow == address(0)) {
-            return false;
-        }
-        if (!isContainerForReportingWindow(_shadyReportingWindow)) {
-            return false;
-        }
-        IReportingWindow _legitReportingWindow = _shadyReportingWindow;
-        return _legitReportingWindow.isContainerForRegistrationToken(_shadyRegistrationToken);
-    }
-
-    function isContainerForMarket(Typed _shadyTarget) public returns (bool) {
+    function isContainerForMarket(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "Market") {
             return false;
         }

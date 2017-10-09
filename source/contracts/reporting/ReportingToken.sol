@@ -10,7 +10,6 @@ import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingToken.sol';
 import 'reporting/IDisputeBond.sol';
-import 'reporting/IRegistrationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -40,9 +39,6 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         IMarket.ReportingState _state = market.getReportingState();
         if (_state == IMarket.ReportingState.AWAITING_NO_REPORT_MIGRATION) {
             market.migrateDueToNoReports();
-            if (getRegistrationToken().balanceOf(msg.sender) == 0) {
-                return false;
-            }
         } else if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             require(msg.sender == market.getDesignatedReporter());
             uint256 _designatedDisputeCost = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getDesignatedReportStake(market.getReportingWindow());
@@ -50,7 +46,6 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         } else {
             require(_state == IMarket.ReportingState.LIMITED_REPORTING || _state == IMarket.ReportingState.ALL_REPORTING);
         }
-        require(getRegistrationToken().balanceOf(msg.sender) > 0);
         require(market.isContainerForReportingToken(this));
         getReputationToken().trustedTransfer(msg.sender, this, _attotokens);
         mint(msg.sender, _attotokens);
@@ -161,10 +156,6 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     function getReportingWindow() public view returns (IReportingWindow) {
         return market.getReportingWindow();
-    }
-
-    function getRegistrationToken() public view returns (IRegistrationToken) {
-        return getReportingWindow().getRegistrationToken();
     }
 
     function getMarket() public view returns (IMarket) {

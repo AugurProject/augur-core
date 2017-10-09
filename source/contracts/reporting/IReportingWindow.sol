@@ -4,7 +4,6 @@ pragma solidity 0.4.17;
 import 'libraries/Typed.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IRegistrationToken.sol';
 import 'reporting/IReputationToken.sol';
 import 'trading/ICash.sol';
 
@@ -19,7 +18,6 @@ contract IReportingWindow is Typed {
     function updateMarketPhase() public returns (bool);
     function getUniverse() public view returns (IUniverse);
     function getReputationToken() public view returns (IReputationToken);
-    function getRegistrationToken() public view returns (IRegistrationToken);
     function getStartTime() public view returns (uint256);
     function getEndTime() public view returns (uint256);
     function getNumMarkets() public view returns (uint256);
@@ -35,7 +33,6 @@ contract IReportingWindow is Typed {
     function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens) public returns (bool);
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
     function migrateFeesDueToFork() public returns (bool);
-    function isContainerForRegistrationToken(Typed _shadyTarget) public view returns (bool);
     function isContainerForMarket(Typed _shadyTarget) public view returns (bool);
     function isDoneReporting(address _reporter) public view returns (bool);
     function isForkingMarketFinalized() public view returns (bool);

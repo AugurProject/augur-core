@@ -27,7 +27,6 @@ contract IUniverse is Typed {
     function getOpenInterestInAttoEth() public view returns (uint256);
     function isParentOf(IUniverse _shadyChild) public view returns (bool);
     function isContainerForReportingWindow(Typed _shadyTarget) public view returns (bool);
-    function isContainerForRegistrationToken(Typed _shadyTarget) public view returns (bool);
     function isContainerForMarket(Typed _shadyTarget) public returns (bool);
     function isContainerForReportingToken(Typed _shadyTarget) public returns (bool);
     function isContainerForShareToken(Typed _shadyTarget) public returns (bool);

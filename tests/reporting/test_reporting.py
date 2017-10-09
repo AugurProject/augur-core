@@ -31,10 +31,10 @@ def test_reportingFullHappyPath(reportingFixture):
     # Both reporters report on the outcome. Tester 1 buys 1 more share causing the YES outcome to be the tentative winner
     reportingTokenNo.buy(100, sender=tester.k0)
     assert reportingTokenNo.balanceOf(tester.a0) == 100
-    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10 **18 - 10**18 - 100
+    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10 **18 - 100
     reportingTokenYes.buy(101, sender=tester.k1)
     assert reportingTokenYes.balanceOf(tester.a1) == 101
-    assert reputationToken.balanceOf(tester.a1) == 1 * 10**6 * 10 **18 - 10**18 - 101
+    assert reputationToken.balanceOf(tester.a1) == 1 * 10**6 * 10 **18 - 101
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == reportingTokenYes.getPayoutDistributionHash()
 
@@ -53,19 +53,13 @@ def test_reportingFullHappyPath(reportingFixture):
     assert market.getReportingState() == reportingFixture.constants.ALL_REPORTING()
 
     # Tester 0 has a REP balance less the limited bond amount
-    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10 **18 - 10**18 - 100 - 11 * 10**21
-
-    # Tester 2 now registers as a new reporter for the new reporting window
-    secondRegistrationToken = reportingFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
-    secondRegistrationToken.register(sender=tester.k2)
-    assert secondRegistrationToken.balanceOf(tester.a2) == 1
-    assert reputationToken.balanceOf(tester.a2) == 1 * 10**6 * 10**18 - 2 * 10**18
+    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10 **18 - 100 - 11 * 10**21
 
     # Tester 2 reports for the NO outcome
     reportingFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
     reportingTokenNo.buy(2, sender=tester.k2)
     assert reportingTokenNo.balanceOf(tester.a2) == 2
-    assert reputationToken.balanceOf(tester.a2) == 1 * 10**6 * 10 **18 - 2 * 10**18 - 2
+    assert reputationToken.balanceOf(tester.a2) == 10**6 * 10 **18 - 2
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
 
@@ -97,7 +91,7 @@ def test_reportingFullHappyPath(reportingFixture):
     # Tester 1 moves their ~1 Million REP to the YES universe
     reputationToken.migrateOut(yesUniverseReputationToken.address, tester.a1, reputationToken.balanceOf(tester.a1), sender = tester.k1)
     assert not reputationToken.balanceOf(tester.a1)
-    assert yesUniverseReputationToken.balanceOf(tester.a1) == 1 * 10**6 * 10**18 - 10**18 - 101 - 110000 * 10**18
+    assert yesUniverseReputationToken.balanceOf(tester.a1) == 10**6 * 10**18 - 101 - 110000 * 10**18
 
     # Attempting to finalize the fork now will not succeed as a majority or REP has not yet migrated and fork end time has not been reached
     assert market.tryFinalize() == 0
@@ -105,10 +99,10 @@ def test_reportingFullHappyPath(reportingFixture):
     # Testers 0 and 2 move their combined ~9 million REP to the NO universe
     reputationToken.migrateOut(noUniverseReputationToken.address, tester.a0, reputationToken.balanceOf(tester.a0), sender = tester.k0)
     assert not reputationToken.balanceOf(tester.a0)
-    assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 - 10 ** 18 - 100 - 11000 * 10 ** 18
+    assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 - 100 - 11000 * 10 ** 18
     reputationToken.migrateOut(noUniverseReputationToken.address, tester.a2, reputationToken.balanceOf(tester.a2), sender = tester.k2)
     assert not reputationToken.balanceOf(tester.a2)
-    assert noUniverseReputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18 - 2 * 10 ** 18 - 2
+    assert noUniverseReputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18  - 2
 
     # We can finalize the market now since a mjaority of REP has moved. Alternatively we could "reportingFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1" to move
     initialReportingWindowCashBalance = cash.balanceOf(reportingWindow.address)
@@ -129,7 +123,7 @@ def test_reportingFullHappyPath(reportingFixture):
 
     # We can redeem forked REP on any universe we didn't dispute
     assert reportingTokenNo.redeemForkedTokens(sender = tester.k0)
-    assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 -10 ** 18 - 11000 * 10 ** 18
+    assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 - 11000 * 10 ** 18
 
 def test_designatedReportingHappyPath(reportingFixture):
     market = reportingFixture.binaryMarket
@@ -170,7 +164,7 @@ def test_limitedReportingHappyPath(makeReport, reportingFixture):
     reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
     reportingTokenYes.buy(1, sender=tester.k2)
     assert reportingTokenYes.balanceOf(tester.a2) == 1
-    assert reputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18 - 10 ** 18 - 1
+    assert reputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18 - 1
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     if (makeReport):
         # The tentative winner will be unset since this outcome is still negative from the dispute bond that was placed
@@ -212,11 +206,9 @@ def test_allReportingHappyPath(reportingFixture, makeReport):
 
     # We make one report by Tester 3 for the NO outcome
     reportingTokenNo = reportingFixture.getReportingToken(market, [10**18,0])
-    registrationToken = reportingFixture.applySignature('RegistrationToken', reportingTokenNo.getRegistrationToken())
-    registrationToken.register(sender=tester.k3)
     reportingTokenNo.buy(1, sender=tester.k3)
     assert reportingTokenNo.balanceOf(tester.a3) == 1
-    assert reputationToken.balanceOf(tester.a3) == 1 * 10 ** 6 * 10 ** 18 - 2 * 10 ** 18 - 11 * 10 ** 21 - 1
+    assert reputationToken.balanceOf(tester.a3) == 1 * 10 ** 6 * 10 ** 18 - 11 * 10 ** 21 - 1
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
 
     # Since this outcome is still in the negatives it will not be counted as a winning outcome
@@ -327,10 +319,7 @@ def test_noReports(reportingFixture, pastDisputePhase):
 
     # We can try to report on the market, which will move it to the next reporting window where it will be back in LIMITED REPORTING
     reportingToken = reportingFixture.getReportingToken(market, [0,10**18])
-    registrationToken = reportingFixture.applySignature('RegistrationToken', reportingToken.getRegistrationToken())
-
-    # We get false back from the attempt to report since we aren't registered for the reporting window it migrates to, but the migration still occurs
-    assert reportingToken.buy(1, sender=tester.k2) == False
+    assert reportingToken.buy(1, sender=tester.k2)
 
     assert market.getReportingState() == reportingFixture.constants.LIMITED_REPORTING()
     assert market.getReportingWindow() != reportingWindow.address

@@ -20,22 +20,6 @@ def initializeReportingFixture(sessionFixture, market):
     for testAccount in [tester.a1, tester.a2, tester.a3]:
         reputationToken.transfer(testAccount, 1 * 10**6 * 10**18)
 
-    reportingWindow = sessionFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    firstRegistrationToken = sessionFixture.applySignature('RegistrationToken', reportingWindow.getRegistrationToken())
-    reportingTokenNo = sessionFixture.getReportingToken(market, [10**18,0])
-    reportingTokenYes = sessionFixture.getReportingToken(market, [0,10**18])
-
-    # Tester 0, 1, 2, and 3 will buy registration tokens so they can report on the market
-    firstRegistrationToken.register(sender=tester.k0)
-    assert firstRegistrationToken.balanceOf(tester.a0) == 1
-    # Testers will have their previous REP balance less the registration token bond of 1 REP
-    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10**18 - 10**18
-
-    for (key, address) in [(tester.k1, tester.a1), (tester.k2, tester.a2), (tester.k3, tester.a3)]:
-        firstRegistrationToken.register(sender=key)
-        assert firstRegistrationToken.balanceOf(address) == 1
-        assert reputationToken.balanceOf(address) == 1 * 10**6 * 10**18 - 10**18
-
     return sessionFixture.createSnapshot()
 
 def proceedToDesignatedReporting(testFixture, market, reportOutcomes):
@@ -83,8 +67,6 @@ def proceedToAllReporting(testFixture, market, makeReport, designatedDisputer, l
     reportingToken = testFixture.getReportingToken(market, limitedReportOutcomes)
 
     # We make one report by the limitedReporter
-    registrationToken = testFixture.applySignature('RegistrationToken', reportingToken.getRegistrationToken())
-    #registrationToken.register(sender=limitedReporter)
     assert reportingToken.buy(1, sender=limitedReporter)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == reportingToken.getPayoutDistributionHash()
@@ -111,10 +93,7 @@ def proceedToForking(testFixture, market, makeReport, designatedDisputer, limite
 
     reportingTokenNo = testFixture.getReportingToken(market, allReportOutcomes)
 
-    # We make one report by the reporter
-    registrationToken = testFixture.applySignature('RegistrationToken', reportingTokenNo.getRegistrationToken())
-    registrationToken.register(sender=reporter)
-    # If we buy LIMITED_BOND_AMOUNT that will be sufficient to make the outcome win
+    # We make one report by the reporter. If we buy LIMITED_BOND_AMOUNT that will be sufficient to make the outcome win
     negativeBondBalance = testFixture.constants.LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT()
     reportingTokenNo.buy(negativeBondBalance, sender=reporter)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()

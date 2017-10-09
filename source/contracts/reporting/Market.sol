@@ -89,7 +89,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         approveSpenders();
         // If the value was not at least equal to these this will throw
         uint256 _refund = msg.value.sub(reporterGasCostsFeeAttoeth.add(validityBondAttoeth));
-        require(owner.call.value(_refund)());
+        if (_refund > 0) {
+            require(owner.call.value(_refund)());
+        }
         return true;
     }
 
