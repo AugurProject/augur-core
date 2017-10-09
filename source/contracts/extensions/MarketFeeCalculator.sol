@@ -24,8 +24,8 @@ contract MarketFeeCalculator {
             return _currentValidityBondInAttoeth;
         }
         IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
-        uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
-        uint256 _invalidMarketsInPreviousWindow = _reportingWindow.getNumInvalidMarkets();
+        uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
+        uint256 _invalidMarketsInPreviousWindow = _previousReportingWindow.getNumInvalidMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
 
         _currentValidityBondInAttoeth = calculateValidityBond(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INVALID_MARKETS_DIVISOR, _previousValidityBondInAttoeth);
@@ -33,14 +33,15 @@ contract MarketFeeCalculator {
         return _currentValidityBondInAttoeth;
     }
 
-    function calculateValidityBond(uint256 _invalidMarkets, uint256 _totalMarkets, uint256 _targetInvalidMarketsDivisor, uint256 _previousValidityBondInAttoeth) constant public returns (uint256) {
+    function calculateValidityBond(uint256 _invalidMarkets, uint256 _totalMarkets, uint256 _targetInvalidMarketsDivisor, uint256 _previousValidityBondInAttoeth) public constant returns (uint256) {
         if (_totalMarkets == 0) {
             return DEFAULT_VALIDITY_BOND;
         }
+
         if (_previousValidityBondInAttoeth == 0) {
             _previousValidityBondInAttoeth = DEFAULT_VALIDITY_BOND;
         }
-        
+
         uint256 _targetInvalidMarkets = _totalMarkets.div(_targetInvalidMarketsDivisor);
 
         // Modify the validity bond based on the previous amount and the number of invalid markets. We want the bond to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets being invalid results in 2x and 0 invalid results in 0.5x.
@@ -65,7 +66,7 @@ contract MarketFeeCalculator {
         }
     }
 
-    function getTargetReporterGasCosts(IReportingWindow _reportingWindow) constant public returns (uint256) {
+    function getTargetReporterGasCosts(IReportingWindow _reportingWindow) public returns (uint256) {
         uint256 _gasToReport = targetReporterGasCosts[_reportingWindow];
         if (_gasToReport != 0) {
             return _gasToReport;
@@ -114,7 +115,7 @@ contract MarketFeeCalculator {
         return _universe.getOpenInterestInAttoEth() * TARGET_REP_MARKET_CAP_MULTIPLIER;
     }
 
-    function getMarketCreationCost(IReportingWindow _reportingWindow) constant public returns (uint256) {
+    function getMarketCreationCost(IReportingWindow _reportingWindow) public returns (uint256) {
         return getValidityBond(_reportingWindow) + getTargetReporterGasCosts(_reportingWindow);
     }
 }

@@ -7,7 +7,7 @@ library RunningAverage {
         uint128 count;
     }
 
-    function currentAverage(Data storage _this) internal returns (uint256) {
+    function currentAverage(Data storage _this) internal constant returns (uint256) {
         return _this.sum / _this.count;
     }
 

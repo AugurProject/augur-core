@@ -20,7 +20,7 @@ export async function parseAbiIntoMethods(ethjsQuery: EthjsQuery, abi: (Compiler
     const result: { [methodName: string]: ContractMethod } = {};
     const items = abi.filter(item => item.type === 'function').forEach(item => {
         result[item.name] = async function(this: TransactionOptions, ...vargs: any[]) {
-            const callConvention = (this.constant || item.constant) ? 'call' : 'sendTransaction';
+            const callConvention = (this.constant || defaultTransaction.constant || item.constant) ? 'call' : 'sendTransaction';
             const from = this.from || defaultTransaction.from;
             if (!from && callConvention === 'sendTransaction') throw new Error("Must have a `from`.");
             const to = this.to || defaultTransaction.to;
