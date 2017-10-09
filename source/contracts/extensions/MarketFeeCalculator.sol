@@ -26,8 +26,8 @@ contract MarketFeeCalculator {
             return _currentValidityBondInAttoeth;
         }
         IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
-        uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
-        uint256 _invalidMarketsInPreviousWindow = _previousReportingWindow.getNumInvalidMarkets();
+        uint256 _totalMarketsInPreviousWindow = _reportingWindow.getNumMarkets();
+        uint256 _invalidMarketsInPreviousWindow = _reportingWindow.getNumInvalidMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
 
         _currentValidityBondInAttoeth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INVALID_MARKETS_DIVISOR, _previousValidityBondInAttoeth, Reporting.defaultValidityBond());
@@ -70,7 +70,7 @@ contract MarketFeeCalculator {
         return _newValue;
     }
 
-    function getTargetReporterGasCosts(IReportingWindow _reportingWindow) public returns (uint256) {
+    function getTargetReporterGasCosts(IReportingWindow _reportingWindow) constant public returns (uint256) {
         uint256 _gasToReport = targetReporterGasCosts[_reportingWindow];
         if (_gasToReport != 0) {
             return _gasToReport;
@@ -119,7 +119,7 @@ contract MarketFeeCalculator {
         return _universe.getOpenInterestInAttoEth() * TARGET_REP_MARKET_CAP_MULTIPLIER;
     }
 
-    function getMarketCreationCost(IReportingWindow _reportingWindow) public returns (uint256) {
+    function getMarketCreationCost(IReportingWindow _reportingWindow) constant public returns (uint256) {
         return getValidityBond(_reportingWindow) + getTargetReporterGasCosts(_reportingWindow);
     }
 }
