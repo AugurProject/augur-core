@@ -10,7 +10,7 @@ library Bytes32Arrays {
      * @param size The target number of elements to return in the slice
      * @return A newly allocated slice containing the requested elements
      */
-    function slice(bytes32[] _self, uint256 _start, uint256 _size) internal returns (bytes32[]) {
+    function slice(bytes32[] _self, uint256 _start, uint256 _size) internal pure returns (bytes32[]) {
         uint256 _targetSize = _size;
         if (_start >= _self.length) {
             return new bytes32[](0);

@@ -62,7 +62,7 @@ library Trade {
     // Constructor
     //
 
-    function create(IController _controller, bytes32 _orderId, address _fillerAddress, uint256 _fillerSize) internal returns (Data) {
+    function create(IController _controller, bytes32 _orderId, address _fillerAddress, uint256 _fillerSize) internal view returns (Data) {
         // TODO: data validation
 
         Contracts memory _contracts = getContracts(_controller, _orderId);
@@ -193,62 +193,62 @@ library Trade {
     // Helpers
     //
 
-    function getLongShareBuyerSource(Data _data) internal view returns (address) {
+    function getLongShareBuyerSource(Data _data) internal pure returns (address) {
         return (_data.creator.direction == Direction.Long) ? _data.contracts.market : _data.filler.participantAddress;
     }
 
-    function getShortShareBuyerSource(Data _data) internal view returns (address) {
+    function getShortShareBuyerSource(Data _data) internal pure returns (address) {
         return (_data.creator.direction == Direction.Short) ? _data.contracts.market : _data.filler.participantAddress;
     }
 
-    function getLongShareBuyerDestination(Data _data) internal view returns (address) {
+    function getLongShareBuyerDestination(Data _data) internal pure returns (address) {
         return (_data.creator.direction == Direction.Long) ? _data.creator.participantAddress : _data.filler.participantAddress;
     }
 
-    function getShortShareBuyerDestination(Data _data) internal view returns (address) {
+    function getShortShareBuyerDestination(Data _data) internal pure returns (address) {
         return (_data.creator.direction == Direction.Short) ? _data.creator.participantAddress : _data.filler.participantAddress;
     }
 
-    function getLongShareSellerSource(Data _data) internal view returns (address) {
+    function getLongShareSellerSource(Data _data) internal pure returns (address) {
         return (_data.creator.direction == Direction.Short) ? _data.contracts.market : _data.filler.participantAddress;
     }
 
-    function getShortShareSellerSource(Data _data) internal view returns (address) {
+    function getShortShareSellerSource(Data _data) internal pure returns (address) {
         return (_data.creator.direction == Direction.Long) ? _data.contracts.market : _data.filler.participantAddress;
     }
 
-    function getLongShareSellerDestination(Data _data) internal view returns (address) {
+    function getLongShareSellerDestination(Data _data) internal pure returns (address) {
         return (_data.creator.direction == Direction.Short) ? _data.creator.participantAddress : _data.filler.participantAddress;
     }
 
-    function getShortShareSellerDestination(Data _data) internal view returns (address) {
+    function getShortShareSellerDestination(Data _data) internal pure returns (address) {
         return (_data.creator.direction == Direction.Long) ? _data.creator.participantAddress : _data.filler.participantAddress;
     }
 
-    function getMakerSharesDepleted(Data _data) internal view returns (uint256) {
+    function getMakerSharesDepleted(Data _data) internal pure returns (uint256) {
         return _data.creator.startingSharesToSell.sub(_data.creator.sharesToSell);
     }
 
-    function getFillerSharesDepleted(Data _data) internal view returns (uint256) {
+    function getFillerSharesDepleted(Data _data) internal pure returns (uint256) {
         return _data.filler.startingSharesToSell.sub(_data.filler.sharesToSell);
     }
 
-    function getMakerTokensDepleted(Data _data) internal view returns (uint256) {
+    function getMakerTokensDepleted(Data _data) internal pure returns (uint256) {
         return getTokensDepleted(_data, _data.creator.direction, _data.creator.startingSharesToBuy, _data.creator.sharesToBuy);
     }
 
-    function getFillerTokensDepleted(Data _data) internal view returns (uint256) {
+    function getFillerTokensDepleted(Data _data) internal pure returns (uint256) {
         return getTokensDepleted(_data, _data.filler.direction, _data.filler.startingSharesToBuy, _data.filler.sharesToBuy);
     }
 
-    function getTokensDepleted(Data _data, Direction _direction, uint256 _startingSharesToBuy, uint256 _endingSharesToBuy) internal view returns (uint256) {
+    function getTokensDepleted(Data _data, Direction _direction, uint256 _startingSharesToBuy, uint256 _endingSharesToBuy) internal pure returns (uint256) {
         return _startingSharesToBuy
             .sub(_endingSharesToBuy)
             .mul((_direction == Direction.Long) ? _data.order.sharePriceLong : _data.order.sharePriceShort)
         ; // move semicolon up a line when https://github.com/duaraghav8/Solium/issues/110 is fixed
     }
 
-    function getTokensToCover(Data _data, Direction _direction, uint256 _numShares) internal view returns (uint256) {
+    function getTokensToCover(Data _data, Direction _direction, uint256 _numShares) internal pure returns (uint256) {
         return getTokensToCover(_direction, _data.order.sharePriceLong, _data.order.sharePriceShort, _numShares);
     }
 
@@ -310,7 +310,7 @@ library Trade {
         });
     }
 
-    function getTokensToCover(Direction _direction, uint256 _sharePriceLong, uint256 _sharePriceShort, uint256 _numShares) internal view returns (uint256) {
+    function getTokensToCover(Direction _direction, uint256 _sharePriceLong, uint256 _sharePriceShort, uint256 _numShares) internal pure returns (uint256) {
         return _numShares.mul((_direction == Direction.Long) ? _sharePriceLong : _sharePriceShort);
     }
 
@@ -355,7 +355,7 @@ library Trade {
 
 
 library DirectionExtensions {
-    function toTradeType(Trade.Direction _direction) internal view returns (Order.TradeTypes) {
+    function toTradeType(Trade.Direction _direction) internal pure returns (Order.TradeTypes) {
         if (_direction == Trade.Direction.Long) {
             return Order.TradeTypes.Bid;
         } else {

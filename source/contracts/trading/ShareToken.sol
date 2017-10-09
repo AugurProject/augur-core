@@ -35,7 +35,7 @@ contract ShareToken is DelegationTarget, Typed, Initializable, VariableSupplyTok
         return true;
     }
 
-    function getTypeName() view returns(bytes32) {
+    function getTypeName() public view returns(bytes32) {
         return "ShareToken";
     }
 
@@ -47,7 +47,7 @@ contract ShareToken is DelegationTarget, Typed, Initializable, VariableSupplyTok
         return outcome;
     }
 
-    function isShareToken() constant public returns(bool) {
+    function isShareToken() public pure returns(bool) {
         return true;
     }
 }

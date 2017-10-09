@@ -10,7 +10,7 @@ library Uint256Arrays {
      * @param size The target number of elements to return in the slice
      * @return A newly allocated slice containing the requested elements
      */
-    function slice(uint256[] _self, uint256 _start, uint256 _size) internal returns (uint256[]) {
+    function slice(uint256[] _self, uint256 _start, uint256 _size) internal pure returns (uint256[]) {
         uint256 _targetSize = _size;
         if (_start >= _self.length) {
             return new uint256[](0);
