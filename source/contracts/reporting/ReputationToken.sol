@@ -63,7 +63,10 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         Typed _caller = Typed(msg.sender);
-        require(universe.isContainerForReportingWindow(_caller) || universe.isContainerForRegistrationToken(_caller) || universe.isContainerForMarket(_caller) || universe.isContainerForReportingToken(_caller));
+        require(universe.isContainerForReportingWindow(_caller)
+            || universe.isContainerForRegistrationToken(_caller)
+            || universe.isContainerForMarket(_caller)
+            || universe.isContainerForReportingToken(_caller));
         balances[_source] = balances[_source].sub(_attotokens);
         balances[_destination] = balances[_destination].add(_attotokens);
         supply = supply.add(_attotokens);

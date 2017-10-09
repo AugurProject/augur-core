@@ -30,11 +30,13 @@ contract IReportingWindow is Typed {
     function getAvgReportsPerMarket() public returns (uint256);
     function getNextReportingWindow() public returns (IReportingWindow);
     function getPreviousReportingWindow() public returns (IReportingWindow);
+    function allMarketsFinalized() public view returns (bool);
     function checkIn() public returns (bool);
+    function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens) public returns (bool);
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
     function migrateFeesDueToFork() public returns (bool);
-    function isContainerForRegistrationToken(IRegistrationToken _shadyRegistrationToken) public view returns (bool);
-    function isContainerForMarket(IMarket _shadyMarket) public returns (bool);
+    function isContainerForRegistrationToken(Typed _shadyTarget) public view returns (bool);
+    function isContainerForMarket(Typed _shadyTarget) public view returns (bool);
     function isDoneReporting(address _reporter) public view returns (bool);
     function isForkingMarketFinalized() public view returns (bool);
     function isDisputeActive() public view returns (bool);
