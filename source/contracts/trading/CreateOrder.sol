@@ -12,7 +12,6 @@ import 'libraries/CashAutoConverter.sol';
 contract CreateOrder is CashAutoConverter, ReentrancyGuard {
     using Order for Order.Data;
 
-    // event OrderCreated(bytes32 order);
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
     function publicCreateOrder(Order.TradeTypes _type, uint256 _attoshares, uint256 _displayPrice, IMarket _market, uint8 _outcome, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
         return this.createOrder(msg.sender, _type, _attoshares, _displayPrice, _market, _outcome, _betterOrderId, _worseOrderId, _tradeGroupId);

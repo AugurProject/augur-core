@@ -55,10 +55,13 @@ export class ContractDeployer {
         await this.approveCentralAuthority();
         this.universe = await this.createGenesisUniverse();
         this.cash = await this.getSeededCash();
+        // TODO: Make sure utils is getting uploaded correctly
         // this.utils = await this.upload("../tests/solidity_test_helpers/Utils.sol");
         this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
+        // TODO: Make sure catigorical & scalar markets are getting created correctly
         // this.categoricalMarket = this.createReasonableCategoricalMarket(this.universe, 3, this.cash);
         // this.scalarMarket = this.createReasonableScalarMarket(this.universe, 40, this.cash);
+        // TODO: Make sure constants is getting uploaded correctly
         // this.constants = await this.upload("../tests/solidity_test_helpers/Constants.sol");
 
         return true;
@@ -139,7 +142,7 @@ export class ContractDeployer {
         }
         relativeFilePath = relativeFilePath.replace("../source/contracts/", "");
         const bytecode = this.compiledContracts[relativeFilePath][signatureKey].evm.bytecode.object;
-        // abstract contracts have a 0-length array for bytecode
+        // Abstract contracts have a 0-length array for bytecode
         if (bytecode.length === 0) {
             return undefined;
         }
@@ -234,8 +237,7 @@ export class ContractDeployer {
 
     private async getSeededCash(): Promise<ContractBlockchainData> {
         const cash = this.contracts['Cash'];
-        // cash.depositEther({ value: 1, from: this.testAccounts[9].address });
-        // cash.depositEther({ value: 9200000000000000001, from: this.testAccounts[1].address });
+        cash.depositEther({ value: 1, from: this.testAccounts[9].address });
         return cash;
     }
 
@@ -316,6 +318,7 @@ export class ContractDeployer {
     }
 
     private async createScalarMarket(universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress): Promise<ContractBlockchainData> {
+        // FIXME: This needs to be modified to work like createCategoricalMarket()
         const reportingWindowAddress = universe.getCurrentReportingWindow();
         const marketCreationFee = this.contracts['MarketFeeCalculator'].getValidityBond(reportingWindowAddress) + this.contracts['MarketFeeCalculator'].getTargetReporterGasCosts(reportingWindowAddress);
         const marketAddress = this.contracts['MarketCreation'].createMarket(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, {value: marketCreationFee});
