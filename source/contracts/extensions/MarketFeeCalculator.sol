@@ -71,7 +71,7 @@ contract MarketFeeCalculator {
         return _newValue;
     }
 
-    function getTargetReporterGasCosts(IReportingWindow _reportingWindow) public returns (uint256) {
+    function getTargetReporterGasCosts(IReportingWindow _reportingWindow) public constant returns (uint256) {
         uint256 _gasToReport = targetReporterGasCosts[_reportingWindow];
         if (_gasToReport != 0) {
             return _gasToReport;

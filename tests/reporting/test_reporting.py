@@ -158,7 +158,7 @@ def test_firstReportingHappyPath(makeReport, reportingFixture):
     reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())
 
     # Proceed to the FIRST REPORTING phase
-    proceedToFirstReporting(reportingFixture, market, makeReport, tester.k1, [0,10**18])
+    proceedToFirstReporting(reportingFixture, market, makeReport, tester.k1, [0,10**18], [10**18,0])
 
     # We make one report by Tester 2
     reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
@@ -305,7 +305,7 @@ def test_noReports(reportingFixture, pastDisputePhase):
     market = reportingFixture.binaryMarket
 
     # Proceed to the FIRST REPORTING phase
-    proceedToFirstReporting(reportingFixture, market, False, tester.k1, [0,10**18])
+    proceedToFirstReporting(reportingFixture, market, False, tester.k1, [0,10**18], [10**18,0])
 
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
@@ -333,7 +333,7 @@ def test_invalid_first_report(reportingFixture):
     expectedReportingWindowFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getMarketCreationCost(reportingWindow.address)
 
     # Proceed to the FIRST REPORTING phase
-    proceedToFirstReporting(reportingFixture, market, False, tester.k1, [0,10**18])
+    proceedToFirstReporting(reportingFixture, market, False, tester.k1, [0,10**18], [10**18,0])
 
     # We make an invalid report
     reportingTokenInvalid = reportingFixture.getReportingToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])

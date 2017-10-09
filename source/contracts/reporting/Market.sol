@@ -130,35 +130,41 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function disputeDesignatedReport() public triggersMigration returns (bool) {
+    function disputeDesignatedReport(uint256[] _payoutNumerators, uint256 _attotokens) public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
+        require(derivePayoutDistributionHash(payoutNumerators) != tentativeWinningPayoutDistributionHash);
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.designatedReporterDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, designatedReporterDisputeBondToken, Reporting.designatedReporterDisputeBondAmount());
-        updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
+        IReportingToken _reportingToken = getReportingToken(_payoutNumerators);
+        _reportingToken.trustedBuy(msg.sender, _attotokens);
         reportingWindow.updateMarketPhase();
         return true;
     }
 
-    function disputeFirstReporters() public triggersMigration returns (bool) {
+    function disputeFirstReporters(uint256[] _payoutNumerators, uint256 _attotokens) public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.FIRST_DISPUTE);
+        require(derivePayoutDistributionHash(payoutNumerators) != tentativeWinningPayoutDistributionHash);
         firstReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.firstReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, firstReportersDisputeBondToken, Reporting.firstReportersDisputeBondAmount());
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
+        IReportingToken _reportingToken = getReportingToken(_payoutNumerators);
+        _reportingToken.trustedBuy(msg.sender, _attotokens);
         return migrateReportingWindow(_newReportingWindow);
     }
 
-    function disputeLastReporters() public triggersMigration returns (bool) {
+    function disputeLastReporters(uint256[] _payoutNumerators, uint256 _attotokens) public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.LAST_DISPUTE);
+        require(derivePayoutDistributionHash(payoutNumerators) != tentativeWinningPayoutDistributionHash);
         lastReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.lastReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, lastReportersDisputeBondToken, Reporting.lastReportersDisputeBondAmount());
         reportingWindow.getUniverse().fork();
         IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
+        IReportingToken _reportingToken = getReportingToken(_payoutNumerators);
+        _reportingToken.trustedBuy(msg.sender, _attotokens);
         return migrateReportingWindow(_newReportingWindow);
     }
 
     function migrateReportingWindow(IReportingWindow _newReportingWindow) private afterInitialized returns (bool) {
-        // NOTE: This really belongs out of this function and in the dispute functions. It's only here to save on contract size for now
-        updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         _newReportingWindow.migrateMarketInFromSibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
@@ -169,6 +175,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool) {
         var (_firstPlaceHash, _secondPlaceHash) = MarketExtensions(controller.lookup("MarketExtensions")).getOrderedWinningPayoutDistributionHashes(this, _payoutDistributionHash);
 
+        require(_firstPlaceHash > 0);
         tentativeWinningPayoutDistributionHash = _firstPlaceHash;
         bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = _secondPlaceHash;
 

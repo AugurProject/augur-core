@@ -40,7 +40,7 @@ def proceedToDesignatedReporting(testFixture, market, reportOutcomes):
     # This will cause us to be in the DESIGNATED REPORTING phase
     assert market.getReportingState() == testFixture.constants.DESIGNATED_REPORTING()
 
-def proceedToFirstReporting(testFixture, market, makeReport, disputer, reportOutcomes):
+def proceedToFirstReporting(testFixture, market, makeReport, disputer, reportOutcomes, disputeOutcomes):
     if (market.getReportingState() != testFixture.constants.DESIGNATED_REPORTING()):
         proceedToDesignatedReporting(testFixture, market, reportOutcomes)
 
@@ -48,21 +48,21 @@ def proceedToFirstReporting(testFixture, market, makeReport, disputer, reportOut
     if (makeReport):
         assert testFixture.designatedReport(market, reportOutcomes, tester.k0)
         assert market.getReportingState() == testFixture.constants.DESIGNATED_DISPUTE()
-        assert market.disputeDesignatedReport(sender=disputer)
+        assert market.disputeDesignatedReport(disputeOutcomes, 1, sender=disputer)
     else:
         testFixture.chain.head_state.timestamp = market.getEndTime() + testFixture.constants.DESIGNATED_REPORTING_DURATION_SECONDS() + 1
 
     # We're in the FIRST REPORTING phase now
     assert market.getReportingState() == testFixture.constants.FIRST_REPORTING()
 
-def proceedToLastReporting(testFixture, market, makeReport, designatedDisputer, firstDisputer, reportOutcomes, firstReporter, firstReportOutcomes):
+def proceedToLastReporting(testFixture, market, makeReport, designatedDisputer, firstDisputer, reportOutcomes, disputeOutcomes, firstReporter, firstReportOutcomes):
     cash = testFixture.cash
     universe = testFixture.universe
     reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     if (market.getReportingState() != testFixture.constants.FIRST_REPORTING()):
-        proceedToFirstReporting(testFixture, market, makeReport, designatedDisputer, reportOutcomes)
+        proceedToFirstReporting(testFixture, market, makeReport, designatedDisputer, reportOutcomes, disputeOutcomes)
 
     reportingToken = testFixture.getReportingToken(market, firstReportOutcomes)
 

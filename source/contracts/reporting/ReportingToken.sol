@@ -41,22 +41,33 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
             market.migrateDueToNoReports();
         } else if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             require(msg.sender == market.getDesignatedReporter());
-            uint256 _designatedDisputeCost = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getDesignatedReportStake(market.getReportingWindow());
-            require(_attotokens == _designatedDisputeCost);
+            uint256 _designatedReportCost = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getDesignatedReportStake(market.getReportingWindow());
+            require(_attotokens == _designatedReportCost);
         } else {
             require(_state == IMarket.ReportingState.FIRST_REPORTING || _state == IMarket.ReportingState.LAST_REPORTING);
         }
-        require(market.isContainerForReportingToken(this));
-        getReputationToken().trustedTransfer(msg.sender, this, _attotokens);
-        mint(msg.sender, _attotokens);
-        bytes32 _payoutDistributionHash = getPayoutDistributionHash();
-        market.updateTentativeWinningPayoutDistributionHash(_payoutDistributionHash);
-        getReportingWindow().noteReport(market, msg.sender, _payoutDistributionHash);
+        buyTokens(msg.sender, _attotokens);
         if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             market.designatedReport();
         }
         return true;
     }
+
+    function trustedBuy(address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
+        require(msg.sender == market);
+        IMarket.ReportingState _state = market.getReportingState();
+        require(_state == IMarket.ReportingState.FIRST_REPORTING || _state == IMarket.ReportingState.LAST_REPORTING);
+        buyTokens(_reporter, _attotokens);
+    }
+
+    function buyTokens(address _reporter, uint256 _attotokens) private afterInitialized returns (bool) {
+        require(market.isContainerForReportingToken(this));
+        getReputationToken().trustedTransfer(_reporter, this, _attotokens);
+        mint(_reporter, _attotokens);
+        bytes32 _payoutDistributionHash = getPayoutDistributionHash();
+        market.updateTentativeWinningPayoutDistributionHash(_payoutDistributionHash);
+        getReportingWindow().noteReport(market, _reporter, _payoutDistributionHash);
+    } 
 
     function redeemDisavowedTokens(address _reporter) public afterInitialized returns (bool) {
         require(!market.isContainerForReportingToken(this));

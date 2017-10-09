@@ -51,7 +51,7 @@ def test_reporting_token_redemption(numReports, numCorrect, reportingTokenPayout
     marketFeeCalculator = reportingTokenPayoutFixture.contracts["MarketFeeCalculator"]
 
     # Proceed to FIRST REPORTING
-    proceedToFirstReporting(reportingTokenPayoutFixture, market, False, tester.k1, [0,10**18])
+    proceedToFirstReporting(reportingTokenPayoutFixture, market, False, tester.k1, [0,10**18], [10**18,0])
 
     doReports(reportingTokenPayoutFixture, market, numReports, numCorrect)
 
