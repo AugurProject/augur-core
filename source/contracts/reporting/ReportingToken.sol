@@ -44,7 +44,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
             uint256 _designatedDisputeCost = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getDesignatedReportStake(market.getReportingWindow());
             require(_attotokens == _designatedDisputeCost);
         } else {
-            require(_state == IMarket.ReportingState.LIMITED_REPORTING || _state == IMarket.ReportingState.ALL_REPORTING);
+            require(_state == IMarket.ReportingState.FIRST_REPORTING || _state == IMarket.ReportingState.LAST_REPORTING);
         }
         require(market.isContainerForReportingToken(this));
         getReputationToken().trustedTransfer(msg.sender, this, _attotokens);
@@ -110,7 +110,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         require(getUniverse().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() != this);
         migrateLosingTokenRepToDisputeBond(market.getDesignatedReporterDisputeBondToken());
-        migrateLosingTokenRepToDisputeBond(market.getLimitedReportersDisputeBondToken());
+        migrateLosingTokenRepToDisputeBond(market.getFirstReportersDisputeBondToken());
         migrateLosingTokenRepToWinningToken();
         return true;
     }

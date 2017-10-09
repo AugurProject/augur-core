@@ -71,22 +71,22 @@ contract MarketExtensions {
         int256 _payoutStake = int256(_reportingToken.totalSupply());
 
         IDisputeBond _designatedDisputeBond = _market.getDesignatedReporterDisputeBondToken();
-        IDisputeBond _limitedDisputeBond = _market.getLimitedReportersDisputeBondToken();
-        IDisputeBond _allDisputeBond = _market.getAllReportersDisputeBondToken();
+        IDisputeBond _firstDisputeBond = _market.getFirstReportersDisputeBondToken();
+        IDisputeBond _lastDisputeBond = _market.getLastReportersDisputeBondToken();
 
         if (address(_designatedDisputeBond) != address(0)) {
             if (_designatedDisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
                 _payoutStake -= int256(Reporting.designatedReporterDisputeBondAmount());
             }
         }
-        if (address(_limitedDisputeBond) != address(0)) {
-            if (_limitedDisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.limitedReportersDisputeBondAmount());
+        if (address(_firstDisputeBond) != address(0)) {
+            if (_firstDisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
+                _payoutStake -= int256(Reporting.firstReportersDisputeBondAmount());
             }
         }
-        if (address(_allDisputeBond) != address(0)) {
-            if (_allDisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.allReportersDisputeBondAmount());
+        if (address(_lastDisputeBond) != address(0)) {
+            if (_lastDisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
+                _payoutStake -= int256(Reporting.lastReportersDisputeBondAmount());
             }
         }
 
@@ -116,7 +116,7 @@ contract MarketExtensions {
         }
 
         bool _designatedReportDisputed = address(_market.getDesignatedReporterDisputeBondToken()) != address(0);
-        bool _limitedReportDisputed = address(_market.getLimitedReportersDisputeBondToken()) != address(0);
+        bool _firstReportDisputed = address(_market.getFirstReportersDisputeBondToken()) != address(0);
 
         // If we have a designated report that hasn't been disputed it is either in the dispute window or we can finalize the market
         if (_market.getDesignatedReportReceivedTime() != 0 && !_designatedReportDisputed) {
@@ -142,27 +142,27 @@ contract MarketExtensions {
             return IMarket.ReportingState.AWAITING_FINALIZATION;
         }
 
-        // If a limited dispute bond has been posted we are in some phase of all reporting depending on time
-        if (_limitedReportDisputed) {
+        // If a first dispute bond has been posted we are in some phase of last reporting depending on time
+        if (_firstReportDisputed) {
             if (_reportingWindow.isDisputeActive()) {
                 if (_market.getTentativeWinningPayoutDistributionHash() == bytes32(0)) {
                     return IMarket.ReportingState.AWAITING_NO_REPORT_MIGRATION;
                 } else {
-                    return IMarket.ReportingState.ALL_DISPUTE;
+                    return IMarket.ReportingState.LAST_DISPUTE;
                 }
             }
-            return IMarket.ReportingState.ALL_REPORTING;
+            return IMarket.ReportingState.LAST_REPORTING;
         }
 
-        // Either no designated report was made or the designated report was disputed so we are in some phase of limited reporting
+        // Either no designated report was made or the designated report was disputed so we are in some phase of first reporting
         if (_reportingWindow.isDisputeActive()) {
             if (_market.getTentativeWinningPayoutDistributionHash() == bytes32(0)) {
                 return IMarket.ReportingState.AWAITING_NO_REPORT_MIGRATION;
             } else {
-                return IMarket.ReportingState.LIMITED_DISPUTE;
+                return IMarket.ReportingState.FIRST_DISPUTE;
             }
         }
 
-        return IMarket.ReportingState.LIMITED_REPORTING;
+        return IMarket.ReportingState.FIRST_REPORTING;
     }
 }

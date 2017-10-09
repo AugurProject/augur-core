@@ -40,11 +40,11 @@ def proceedToDesignatedReporting(testFixture, market, reportOutcomes):
     # This will cause us to be in the DESIGNATED REPORTING phase
     assert market.getReportingState() == testFixture.constants.DESIGNATED_REPORTING()
 
-def proceedToLimitedReporting(testFixture, market, makeReport, disputer, reportOutcomes):
+def proceedToFirstReporting(testFixture, market, makeReport, disputer, reportOutcomes):
     if (market.getReportingState() != testFixture.constants.DESIGNATED_REPORTING()):
         proceedToDesignatedReporting(testFixture, market, reportOutcomes)
 
-    # To proceed to limited reporting we will either dispute a designated report or not make a designated report within the alotted time window for doing so
+    # To proceed to first reporting we will either dispute a designated report or not make a designated report within the alotted time window for doing so
     if (makeReport):
         assert testFixture.designatedReport(market, reportOutcomes, tester.k0)
         assert market.getReportingState() == testFixture.constants.DESIGNATED_DISPUTE()
@@ -52,59 +52,59 @@ def proceedToLimitedReporting(testFixture, market, makeReport, disputer, reportO
     else:
         testFixture.chain.head_state.timestamp = market.getEndTime() + testFixture.constants.DESIGNATED_REPORTING_DURATION_SECONDS() + 1
 
-    # We're in the LIMITED REPORTING phase now
-    assert market.getReportingState() == testFixture.constants.LIMITED_REPORTING()
+    # We're in the FIRST REPORTING phase now
+    assert market.getReportingState() == testFixture.constants.FIRST_REPORTING()
 
-def proceedToAllReporting(testFixture, market, makeReport, designatedDisputer, limitedDisputer, reportOutcomes, limitedReporter, limitedReportOutcomes):
+def proceedToLastReporting(testFixture, market, makeReport, designatedDisputer, firstDisputer, reportOutcomes, firstReporter, firstReportOutcomes):
     cash = testFixture.cash
     universe = testFixture.universe
     reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
-    if (market.getReportingState() != testFixture.constants.LIMITED_REPORTING()):
-        proceedToLimitedReporting(testFixture, market, makeReport, designatedDisputer, reportOutcomes)
+    if (market.getReportingState() != testFixture.constants.FIRST_REPORTING()):
+        proceedToFirstReporting(testFixture, market, makeReport, designatedDisputer, reportOutcomes)
 
-    reportingToken = testFixture.getReportingToken(market, limitedReportOutcomes)
+    reportingToken = testFixture.getReportingToken(market, firstReportOutcomes)
 
-    # We make one report by the limitedReporter
-    assert reportingToken.buy(1, sender=limitedReporter)
+    # We make one report by the firstReporter
+    assert reportingToken.buy(1, sender=firstReporter)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == reportingToken.getPayoutDistributionHash()
 
     testFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
-    assert market.getReportingState() == testFixture.constants.LIMITED_DISPUTE()
+    assert market.getReportingState() == testFixture.constants.FIRST_DISPUTE()
 
-    assert market.disputeLimitedReporters(sender=limitedDisputer)
+    assert market.disputeFirstReporters(sender=firstDisputer)
 
-    # We're in the ALL REPORTING phase now
-    assert market.getReportingState() == testFixture.constants.ALL_REPORTING()
+    # We're in the LAST REPORTING phase now
+    assert market.getReportingState() == testFixture.constants.LAST_REPORTING()
 
-def proceedToForking(testFixture, market, makeReport, designatedDisputer, limitedDisputer, reporter, reportOutcomes, limitedReporter, limitedReportOutcomes, allReportOutcomes):
+def proceedToForking(testFixture, market, makeReport, designatedDisputer, firstDisputer, reporter, reportOutcomes, firstReporter, firstReportOutcomes, lastReportOutcomes):
     market = testFixture.binaryMarket
     universe = testFixture.universe
     reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
 
-    # Proceed to the ALL REPORTING phase
-    if (market.getReportingState() != testFixture.constants.ALL_REPORTING()):
-        proceedToAllReporting(testFixture, market, makeReport, designatedDisputer, limitedDisputer, reportOutcomes, limitedReporter, limitedReportOutcomes)
+    # Proceed to the LAST REPORTING phase
+    if (market.getReportingState() != testFixture.constants.LAST_REPORTING()):
+        proceedToLastReporting(testFixture, market, makeReport, designatedDisputer, firstDisputer, reportOutcomes, firstReporter, firstReportOutcomes)
 
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
-    reportingTokenNo = testFixture.getReportingToken(market, allReportOutcomes)
+    reportingTokenNo = testFixture.getReportingToken(market, lastReportOutcomes)
 
     # We make one report by the reporter. If we buy LIMITED_BOND_AMOUNT that will be sufficient to make the outcome win
-    negativeBondBalance = testFixture.constants.LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT()
+    negativeBondBalance = testFixture.constants.FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
     reportingTokenNo.buy(negativeBondBalance, sender=reporter)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
 
     # To progress into the ALL DISPUTE phase we move time forward
     testFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
-    assert market.getReportingState() == testFixture.constants.ALL_DISPUTE()
+    assert market.getReportingState() == testFixture.constants.LAST_DISPUTE()
 
     # Making a dispute at this phase will progress the market into FORKING
-    assert market.disputeAllReporters(sender=tester.k0)
+    assert market.disputeLastReporters(sender=tester.k0)
     assert market.getReportingState() == testFixture.constants.FORKING()
 
 def finalizeForkingMarket(reportingFixture, market, finalizeByMigration, yesMigratorAddress, yesMigratorKey, noMigratorAddress1, noMigratorKey1, noMigratorAddress2, noMigratorKey2, firstReportOutcomes, secondReportOutcomes):

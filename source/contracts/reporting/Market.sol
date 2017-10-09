@@ -50,8 +50,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     bytes32 private bestGuessSecondPlaceTentativeWinningPayoutDistributionHash;
     bytes32 private finalPayoutDistributionHash;
     IDisputeBond private designatedReporterDisputeBondToken;
-    IDisputeBond private limitedReportersDisputeBondToken;
-    IDisputeBond private allReportersDisputeBondToken;
+    IDisputeBond private firstReportersDisputeBondToken;
+    IDisputeBond private lastReportersDisputeBondToken;
     uint256 private validityBondAttoeth;
     uint256 private reporterGasCostsFeeAttoeth;
 
@@ -138,18 +138,18 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function disputeLimitedReporters() public triggersMigration returns (bool) {
-        require(getReportingState() == ReportingState.LIMITED_DISPUTE);
-        limitedReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.limitedReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
-        reportingWindow.getReputationToken().trustedTransfer(msg.sender, limitedReportersDisputeBondToken, Reporting.limitedReportersDisputeBondAmount());
+    function disputeFirstReporters() public triggersMigration returns (bool) {
+        require(getReportingState() == ReportingState.FIRST_DISPUTE);
+        firstReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.firstReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
+        reportingWindow.getReputationToken().trustedTransfer(msg.sender, firstReportersDisputeBondToken, Reporting.firstReportersDisputeBondAmount());
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
         return migrateReportingWindow(_newReportingWindow);
     }
 
-    function disputeAllReporters() public triggersMigration returns (bool) {
-        require(getReportingState() == ReportingState.ALL_DISPUTE);
-        allReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.allReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
-        reportingWindow.getReputationToken().trustedTransfer(msg.sender, allReportersDisputeBondToken, Reporting.allReportersDisputeBondAmount());
+    function disputeLastReporters() public triggersMigration returns (bool) {
+        require(getReportingState() == ReportingState.LAST_DISPUTE);
+        lastReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.lastReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
+        reportingWindow.getReputationToken().trustedTransfer(msg.sender, lastReportersDisputeBondToken, Reporting.lastReportersDisputeBondAmount());
         reportingWindow.getUniverse().fork();
         IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
         return migrateReportingWindow(_newReportingWindow);
@@ -232,8 +232,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         reportingWindow.updateMarketPhase();
         // reset to designated reporting
         designatedReportReceivedTime = 0;
-        limitedReportersDisputeBondToken = IDisputeBond(0);
-        allReportersDisputeBondToken = IDisputeBond(0);
+        firstReportersDisputeBondToken = IDisputeBond(0);
+        lastReportersDisputeBondToken = IDisputeBond(0);
         tentativeWinningPayoutDistributionHash = bytes32(0);
         return true;
     }
@@ -261,8 +261,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         if (address(designatedReporterDisputeBondToken) != NULL_ADDRESS && designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
             _reputationToken.trustedTransfer(designatedReporterDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(designatedReporterDisputeBondToken));
         }
-        if (address(limitedReportersDisputeBondToken) != NULL_ADDRESS && limitedReportersDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
-            _reputationToken.trustedTransfer(limitedReportersDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(limitedReportersDisputeBondToken));
+        if (address(firstReportersDisputeBondToken) != NULL_ADDRESS && firstReportersDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
+            _reputationToken.trustedTransfer(firstReportersDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(firstReportersDisputeBondToken));
         }
         return true;
     }
@@ -313,12 +313,12 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return designatedReporterDisputeBondToken;
     }
 
-    function getLimitedReportersDisputeBondToken() public view returns (IDisputeBond) {
-        return limitedReportersDisputeBondToken;
+    function getFirstReportersDisputeBondToken() public view returns (IDisputeBond) {
+        return firstReportersDisputeBondToken;
     }
 
-    function getAllReportersDisputeBondToken() public view returns (IDisputeBond) {
-        return allReportersDisputeBondToken;
+    function getLastReportersDisputeBondToken() public view returns (IDisputeBond) {
+        return lastReportersDisputeBondToken;
     }
 
     function getNumberOfOutcomes() public view returns (uint8) {
@@ -399,10 +399,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         if (designatedReporterDisputeBondToken == _shadyDisputeBond) {
             return true;
         }
-        if (limitedReportersDisputeBondToken == _shadyDisputeBond) {
+        if (firstReportersDisputeBondToken == _shadyDisputeBond) {
             return true;
         }
-        if (allReportersDisputeBondToken == _shadyDisputeBond) {
+        if (lastReportersDisputeBondToken == _shadyDisputeBond) {
             return true;
         }
         return false;

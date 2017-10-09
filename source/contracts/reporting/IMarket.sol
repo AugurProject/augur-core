@@ -18,11 +18,11 @@ contract IMarket is Typed, IOwnable {
         DESIGNATED_REPORTING,
         DESIGNATED_DISPUTE,
         AWAITING_FORK_MIGRATION,
-        LIMITED_REPORTING,
-        LIMITED_DISPUTE,
+        FIRST_REPORTING,
+        FIRST_DISPUTE,
         AWAITING_NO_REPORT_MIGRATION,
-        ALL_REPORTING,
-        ALL_DISPUTE,
+        LAST_REPORTING,
+        LAST_DISPUTE,
         FORKING,
         AWAITING_FINALIZATION,
         FINALIZED
@@ -40,8 +40,8 @@ contract IMarket is Typed, IOwnable {
     function getShareToken(uint8 _outcome)  public view returns (IShareToken);
     function getDesignatedReporter() public view returns (address);
     function getDesignatedReporterDisputeBondToken() public view returns (IDisputeBond);
-    function getLimitedReportersDisputeBondToken() public view returns (IDisputeBond);
-    function getAllReportersDisputeBondToken() public view returns (IDisputeBond);
+    function getFirstReportersDisputeBondToken() public view returns (IDisputeBond);
+    function getLastReportersDisputeBondToken() public view returns (IDisputeBond);
     function getMarketCreatorSettlementFeeInAttoethPerEth() public view returns (uint256);
     function getReportingState() public view returns (ReportingState);
     function getFinalizationTime() public view returns (uint256);

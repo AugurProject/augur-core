@@ -32,8 +32,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     IUniverse private universe;
     uint256 private startTime;
     Set.Data private markets;
-    Set.Data private limitedReporterMarkets;
-    Set.Data private allReporterMarkets;
+    Set.Data private firstReporterMarkets;
+    Set.Data private lastReporterMarkets;
     Set.Data private finalizedMarkets;
     uint256 private invalidMarketCount;
     uint256 private incorrectDesignatedReportMarketCount;
@@ -60,7 +60,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _designatedReporterAddress);
         markets.add(_newMarket);
-        limitedReporterMarkets.add(_newMarket);
+        firstReporterMarkets.add(_newMarket);
         return _newMarket;
     }
 
@@ -93,8 +93,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         IMarket _market = IMarket(msg.sender);
         require(markets.contains(_market));
         markets.remove(_market);
-        limitedReporterMarkets.remove(_market);
-        allReporterMarkets.remove(_market);
+        firstReporterMarkets.remove(_market);
+        lastReporterMarkets.remove(_market);
         return true;
     }
 
@@ -103,16 +103,16 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         require(markets.contains(_market));
         IMarket.ReportingState _state = _market.getReportingState();
 
-        if (_state == IMarket.ReportingState.ALL_REPORTING) {
-            allReporterMarkets.add(_market);
+        if (_state == IMarket.ReportingState.LAST_REPORTING) {
+            lastReporterMarkets.add(_market);
         } else {
-            allReporterMarkets.remove(_market);
+            lastReporterMarkets.remove(_market);
         }
 
-        if (_state == IMarket.ReportingState.LIMITED_REPORTING) {
-            limitedReporterMarkets.add(_market);
+        if (_state == IMarket.ReportingState.FIRST_REPORTING) {
+            firstReporterMarkets.add(_market);
         } else {
-            limitedReporterMarkets.remove(_market);
+            firstReporterMarkets.remove(_market);
         }
 
         if (_state == IMarket.ReportingState.FINALIZED) {
@@ -141,16 +141,16 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         require(markets.contains(_market));
         require(_market.getReportingTokenOrZeroByPayoutDistributionHash(_payoutDistributionHash) == msg.sender);
         IMarket.ReportingState _state = _market.getReportingState();
-        require(_state == IMarket.ReportingState.ALL_REPORTING
-            || _state == IMarket.ReportingState.LIMITED_REPORTING
+        require(_state == IMarket.ReportingState.LAST_REPORTING
+            || _state == IMarket.ReportingState.FIRST_REPORTING
             || _state == IMarket.ReportingState.DESIGNATED_REPORTING);
-        if (_state == IMarket.ReportingState.ALL_REPORTING) {
+        if (_state == IMarket.ReportingState.LAST_REPORTING) {
             // always give credit for events in all-reporters phase
             privateNoteReport(_market, _reporter);
         } else if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             privateNoteReport(_market, _reporter);
-        } else if (numberOfReportsByMarket[_market] < getMaxReportsPerLimitedReporterMarket()) {
-            // only give credit for limited reporter markets up to the max reporters for that market
+        } else if (numberOfReportsByMarket[_market] < getMaxReportsPerFirstReporterMarket()) {
+            // only give credit for first reporter markets up to the max reporters for that market
             privateNoteReport(_market, _reporter);
         }
         // no credit in all other cases (but user can still report)
@@ -228,7 +228,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     }
 
     function checkIn() public afterInitialized returns (bool) {
-        uint256 _totalReportableMarkets = getLimitedReporterMarketsCount() + getAllReporterMarketsCount();
+        uint256 _totalReportableMarkets = getFirstReporterMarketsCount() + getLastReporterMarketsCount();
         require(_totalReportableMarkets < 1);
         require(isActive());
         reporterStatus[msg.sender].finishedReporting = true;
@@ -305,47 +305,47 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function getTargetReportsPerLimitedReporterMarket() public afterInitialized view returns (uint256) {
-        uint256 _limitedReporterMarketCount = limitedReporterMarkets.count;
-        if (_limitedReporterMarketCount == 0) {
+    function getTargetReportsPerFirstReporterMarket() public afterInitialized view returns (uint256) {
+        uint256 _firstReporterMarketCount = firstReporterMarkets.count;
+        if (_firstReporterMarketCount == 0) {
             return 0;
         }
 
         uint256 _registeredReporters = 1;// TODO XXX
         uint256 _minimumReportsPerMarket = BASE_MINIMUM_REPORTERS_PER_MARKET;
-        uint256 _totalReportsForAllLimitedReporterMarkets = _minimumReportsPerMarket * _limitedReporterMarketCount;
+        uint256 _totalReportsForAllFirstReporterMarkets = _minimumReportsPerMarket * _firstReporterMarketCount;
 
-        if (_registeredReporters > _totalReportsForAllLimitedReporterMarkets) {
-            uint256 _factor = _registeredReporters / _totalReportsForAllLimitedReporterMarkets;
+        if (_registeredReporters > _totalReportsForAllFirstReporterMarkets) {
+            uint256 _factor = _registeredReporters / _totalReportsForAllFirstReporterMarkets;
             _minimumReportsPerMarket = _minimumReportsPerMarket * _factor;
         }
 
         return _minimumReportsPerMarket;
     }
 
-    function getMaxReportsPerLimitedReporterMarket() public afterInitialized view returns (uint256) {
-        return getTargetReportsPerLimitedReporterMarket() + 2;
+    function getMaxReportsPerFirstReporterMarket() public afterInitialized view returns (uint256) {
+        return getTargetReportsPerFirstReporterMarket() + 2;
     }
 
-    function getRequiredReportsPerReporterForlimitedReporterMarkets() public afterInitialized view returns (uint256) {
+    function getRequiredReportsPerReporterForfirstReporterMarkets() public afterInitialized view returns (uint256) {
         return 1;// TODO XXX
     }
 
     function getTargetReportsPerReporter() public afterInitialized view returns (uint256) {
-        uint256 _limitedMarketReportsPerReporter = getRequiredReportsPerReporterForlimitedReporterMarkets();
-        return allReporterMarkets.count + _limitedMarketReportsPerReporter;
+        uint256 _firstMarketReportsPerReporter = getRequiredReportsPerReporterForfirstReporterMarkets();
+        return lastReporterMarkets.count + _firstMarketReportsPerReporter;
     }
 
     function getMarketsCount() public afterInitialized view returns (uint256) {
         return markets.count;
     }
 
-    function getLimitedReporterMarketsCount() public afterInitialized view returns (uint256) {
-        return limitedReporterMarkets.count;
+    function getFirstReporterMarketsCount() public afterInitialized view returns (uint256) {
+        return firstReporterMarkets.count;
     }
 
-    function getAllReporterMarketsCount() public afterInitialized view returns (uint256) {
-        return allReporterMarkets.count;
+    function getLastReporterMarketsCount() public afterInitialized view returns (uint256) {
+        return lastReporterMarkets.count;
     }
 
     function isContainerForReportingToken(Typed _shadyTarget) public afterInitialized view returns (bool) {
@@ -373,8 +373,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {
         require(!markets.contains(_market));
-        require(!limitedReporterMarkets.contains(_market));
-        require(!allReporterMarkets.contains(_market));
+        require(!firstReporterMarkets.contains(_market));
+        require(!lastReporterMarkets.contains(_market));
         markets.add(_market);
         return true;
     }
