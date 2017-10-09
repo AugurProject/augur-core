@@ -276,13 +276,6 @@ export class ContractDeployer {
         return reportingToken;
     }
 
-    public async getReceiptLogs(transactionHash: string, signatureKey: string) {
-        const transactionReceipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
-        const contractCreationAbi = this.signatures["MarketCreation"];
-        const decoder = EthjsAbi.logDecoder(this.signatures["MarketCreation"]);
-        return decoder(transactionReceipt.logs);
-    }
-
     public async getContractFromAddress(address: string, signatureKey: string, fromAddress: string, gasAmount: number): Promise<ContractBlockchainData> {
         const signature = this.signatures[signatureKey];
         const bytecode = this.bytecodes[signatureKey];
