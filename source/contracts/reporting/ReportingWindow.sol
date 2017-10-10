@@ -39,7 +39,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     uint256 private incorrectDesignatedReportMarketCount;
     uint256 private designatedReportNoShows;
     mapping(address => ReportingStatus) private reporterStatus;
-    mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
     RunningAverage.Data private reportingGasPrice;
     uint256 private totalWinningReportingTokens;
@@ -143,16 +142,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         require(_state == IMarket.ReportingState.LAST_REPORTING
             || _state == IMarket.ReportingState.FIRST_REPORTING
             || _state == IMarket.ReportingState.DESIGNATED_REPORTING);
-        if (_state == IMarket.ReportingState.LAST_REPORTING) {
-            // always give credit for events in all-reporters phase
-            privateNoteReport(_market, _reporter);
-        } else if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
-            privateNoteReport(_market, _reporter);
-        } else if (numberOfReportsByMarket[_market] < getMaxReportsPerFirstReporterMarket()) {
-            // only give credit for first reporter markets up to the max reporters for that market
-            privateNoteReport(_market, _reporter);
-        }
-        // no credit in all other cases (but user can still report)
+        reportingGasPrice.record(tx.gasprice);
         return true;
     }
 
@@ -304,37 +294,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function getTargetReportsPerFirstReporterMarket() public afterInitialized view returns (uint256) {
-        uint256 _firstReporterMarketCount = firstReporterMarkets.count;
-        if (_firstReporterMarketCount == 0) {
-            return 0;
-        }
-
-        uint256 _registeredReporters = 1;// TODO XXX
-        uint256 _minimumReportsPerMarket = BASE_MINIMUM_REPORTERS_PER_MARKET;
-        uint256 _totalReportsForAllFirstReporterMarkets = _minimumReportsPerMarket * _firstReporterMarketCount;
-
-        if (_registeredReporters > _totalReportsForAllFirstReporterMarkets) {
-            uint256 _factor = _registeredReporters / _totalReportsForAllFirstReporterMarkets;
-            _minimumReportsPerMarket = _minimumReportsPerMarket * _factor;
-        }
-
-        return _minimumReportsPerMarket;
-    }
-
-    function getMaxReportsPerFirstReporterMarket() public afterInitialized view returns (uint256) {
-        return getTargetReportsPerFirstReporterMarket() + 2;
-    }
-
-    function getRequiredReportsPerReporterForfirstReporterMarkets() public afterInitialized view returns (uint256) {
-        return 1;// TODO XXX
-    }
-
-    function getTargetReportsPerReporter() public afterInitialized view returns (uint256) {
-        uint256 _firstMarketReportsPerReporter = getRequiredReportsPerReporterForfirstReporterMarkets();
-        return lastReporterMarkets.count + _firstMarketReportsPerReporter;
-    }
-
     function getMarketsCount() public afterInitialized view returns (uint256) {
         return markets.count;
     }
@@ -375,19 +334,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         require(!firstReporterMarkets.contains(_market));
         require(!lastReporterMarkets.contains(_market));
         markets.add(_market);
-        return true;
-    }
-
-    function privateNoteReport(IMarket _market, address _reporter) private afterInitialized returns (bool) {
-        Set.Data storage marketsReportedOn = reporterStatus[_reporter].marketsReportedOn;
-        if (!marketsReportedOn.add(_market)) {
-            return true;
-        }
-        if (marketsReportedOn.count >= getTargetReportsPerReporter()) {
-            reporterStatus[_reporter].finishedReporting = true;
-        }
-        numberOfReportsByMarket[_market] += 1;
-        reportingGasPrice.record(tx.gasprice);
         return true;
     }
 

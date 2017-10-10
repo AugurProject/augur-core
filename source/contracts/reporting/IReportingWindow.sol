@@ -23,7 +23,6 @@ contract IReportingWindow is Typed {
     function getNumMarkets() public view returns (uint256);
     function getNumInvalidMarkets() public view returns (uint256);
     function getNumIncorrectDesignatedReportMarkets() public view returns (uint256);
-    function getMaxReportsPerFirstReporterMarket() public view returns (uint256);
     function getAvgReportingGasPrice() public view returns (uint256);
     function getNextReportingWindow() public returns (IReportingWindow);
     function getPreviousReportingWindow() public returns (IReportingWindow);
