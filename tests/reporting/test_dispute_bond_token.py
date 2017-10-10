@@ -230,7 +230,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
 
         assert not reportingWindow.isContainerForMarket(market.address)
         assert universe.isContainerForMarket(market.address)
-        assert universe.isContainerForDisputeBondToken(limitedReportersDisputeBondToken.address)
+        assert universe.isContainerForDisputeBondToken(firstReportersDisputeBondToken.address)
         reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
         assert reportingWindow.isContainerForMarket(market.address)
 

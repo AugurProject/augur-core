@@ -38,8 +38,6 @@ contract MarketExtensions {
         int256 _secondPlaceStake = getPayoutDistributionHashStake(_market, _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash);
         int256 _payoutStake = getPayoutDistributionHashStake(_market, _payoutDistributionHash);
 
-        Debug(_tentativeWinningPayoutDistributionHash, _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash, _payoutDistributionHash, _tentativeWinningStake, _secondPlaceStake, _payoutStake);
-
         if (_tentativeWinningStake >= _secondPlaceStake && _secondPlaceStake >= _payoutStake) {
             _tentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? _tentativeWinningPayoutDistributionHash: bytes32(0);
             _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash : bytes32(0);

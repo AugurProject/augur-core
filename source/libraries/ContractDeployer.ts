@@ -226,7 +226,7 @@ export class ContractDeployer {
         // necessary because it is used as part of market creation fee calculation
         await myUniverse.getPreviousReportingWindow();
         // necessary because createMarket needs its reporting window already created
-        await myUniverse.getReportingWindowByMarketEndTime(endTime, true);
+        await myUniverse.getReportingWindowByMarketEndTime(endTime);
 
         const reportingWindowAddress = await myUniverse.getCurrentReportingWindow.bind(constant)();
         const marketCreationFee = await marketFeeCalculator.getMarketCreationCost.bind(constant)(reportingWindowAddress);

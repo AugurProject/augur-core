@@ -156,12 +156,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function getAvgReportingGasCost() public view returns (uint256) {
+    function getAvgReportingGasPrice() public view returns (uint256) {
         return reportingGasPrice.currentAverage();
-    }
-
-    function getAvgReportsPerMarket() public view returns (uint256) {
-        return marketReports.currentAverage();
     }
 
     function getTypeName() public afterInitialized view returns (bytes32) {

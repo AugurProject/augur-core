@@ -34,7 +34,6 @@ contract MarketFeeCalculator {
         uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
         uint256 _invalidMarketsInPreviousWindow = _previousReportingWindow.getNumInvalidMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
-
         _currentValidityBondInAttoeth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_INVALID_MARKETS_DIVISOR, _previousValidityBondInAttoeth, Reporting.defaultValidityBond());
         validityBondInAttoeth[_reportingWindow] = _currentValidityBondInAttoeth;
         return _currentValidityBondInAttoeth;
@@ -75,7 +74,7 @@ contract MarketFeeCalculator {
         return _currentDesignatedReportNoShowBondInAttoRep;
     }
 
-    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) public view returns (uint256 _newValue) {
+    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) public pure returns (uint256 _newValue) {
         if (_totalMarkets == 0) {
             return _defaultValue;
         }
@@ -95,7 +94,7 @@ contract MarketFeeCalculator {
         return _newValue;
     }
 
-    function getTargetReporterGasCosts(IUniverse _universe) public constant returns (uint256) {
+    function getTargetReporterGasCosts(IUniverse _universe) public returns (uint256) {
         IReportingWindow _reportingWindow = _universe.getCurrentReportingWindow();
         uint256 _gasToReport = targetReporterGasCosts[_reportingWindow];
         if (_gasToReport != 0) {

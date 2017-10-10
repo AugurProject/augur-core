@@ -163,7 +163,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitReportingWindow.isContainerForMarket(_shadyMarket);
     }
 
-    function isContainerForReportingToken(Typed _shadyTarget) public returns (bool) {
+    function isContainerForReportingToken(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "ReportingToken") {
             return false;
         }
@@ -179,7 +179,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitMarket.isContainerForReportingToken(_shadyReportingToken);
     }
 
-    function isContainerForShareToken(Typed _shadyTarget) public returns (bool) {
+    function isContainerForShareToken(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "ShareToken") {
             return false;
         }

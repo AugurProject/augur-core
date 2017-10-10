@@ -36,6 +36,6 @@ library Reporting {
     function defaultReportingGasPrice() internal pure returns (uint256) { return DEFAULT_REPORTING_GAS_PRICE; }
     function defaultValidityBond() internal pure returns (uint256) { return DEFAULT_VALIDITY_BOND; }
     function defaultDesignatedReportStake() internal pure returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
-    function defaultDesignatedReportNoShowBond() internal pure constant returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
-    function designatedReportNoShowBondFloor() internal pure constant returns (uint256) { return DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR; }
+    function defaultDesignatedReportNoShowBond() internal pure returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
+    function designatedReportNoShowBondFloor() internal pure returns (uint256) { return DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR; }
 }
