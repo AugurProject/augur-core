@@ -210,7 +210,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
 
         # Dispute the first reporters result
         disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(firstReportersDisputerAccountNum)))
-        market.disputeFirstReporters(sender=getattr(tester, 'k' + str(firstReportersDisputerAccountNum)))
+        market.disputeFirstReporters([], 0, sender=getattr(tester, 'k' + str(firstReportersDisputerAccountNum)))
         firstReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getFirstReportersDisputeBondToken())
         assert firstReportersDisputeBondToken.getMarket() == market.address
 

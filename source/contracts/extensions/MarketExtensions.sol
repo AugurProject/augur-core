@@ -31,9 +31,14 @@ contract MarketExtensions {
     function getOrderedWinningPayoutDistributionHashes(IMarket _market, bytes32 _payoutDistributionHash) public view returns (bytes32, bytes32) {
         bytes32 _tentativeWinningPayoutDistributionHash = _market.getTentativeWinningPayoutDistributionHash();
         bytes32 _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = _market.getBestGuessSecondPlaceTentativeWinningPayoutDistributionHash();
+        if (_payoutDistributionHash == _tentativeWinningPayoutDistributionHash || _payoutDistributionHash == _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash) {
+            _payoutDistributionHash = bytes32(0);
+        }
         int256 _tentativeWinningStake = getPayoutDistributionHashStake(_market, _tentativeWinningPayoutDistributionHash);
         int256 _secondPlaceStake = getPayoutDistributionHashStake(_market, _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash);
         int256 _payoutStake = getPayoutDistributionHashStake(_market, _payoutDistributionHash);
+
+        Debug(_tentativeWinningPayoutDistributionHash, _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash, _payoutDistributionHash, _tentativeWinningStake, _secondPlaceStake, _payoutStake);
 
         if (_tentativeWinningStake >= _secondPlaceStake && _secondPlaceStake >= _payoutStake) {
             _tentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? _tentativeWinningPayoutDistributionHash: bytes32(0);
@@ -42,14 +47,15 @@ contract MarketExtensions {
             _tentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? _tentativeWinningPayoutDistributionHash: bytes32(0);
             _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash : bytes32(0);
         } else if (_secondPlaceStake >= _tentativeWinningStake && _tentativeWinningStake >= _payoutStake) {
+            _payoutDistributionHash = _tentativeWinningPayoutDistributionHash; // Reusing this as a temp value holder
             _tentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
-            _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? _tentativeWinningPayoutDistributionHash: bytes32(0);
+            _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? _payoutDistributionHash: bytes32(0);
         } else if (_secondPlaceStake >= _payoutStake && _payoutStake >= _tentativeWinningStake) {
             _tentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
             _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
         } else if (_payoutStake >= _tentativeWinningStake && _tentativeWinningStake >= _secondPlaceStake) {
-            _tentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
             _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? _tentativeWinningPayoutDistributionHash: bytes32(0);
+            _tentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
         } else if (_payoutStake >= _secondPlaceStake && _secondPlaceStake >= _tentativeWinningStake) {
             _tentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
             _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);

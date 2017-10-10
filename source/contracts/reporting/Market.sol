@@ -132,39 +132,44 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function disputeDesignatedReport(uint256[] _payoutNumerators, uint256 _attotokens) public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
-        require(derivePayoutDistributionHash(payoutNumerators) != tentativeWinningPayoutDistributionHash);
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.designatedReporterDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, designatedReporterDisputeBondToken, Reporting.designatedReporterDisputeBondAmount());
-        IReportingToken _reportingToken = getReportingToken(_payoutNumerators);
-        _reportingToken.trustedBuy(msg.sender, _attotokens);
+        if (_attotokens > 0) {
+            require(derivePayoutDistributionHash(_payoutNumerators) != tentativeWinningPayoutDistributionHash);
+            IReportingToken _reportingToken = getReportingToken(_payoutNumerators);
+            _reportingToken.trustedBuy(msg.sender, _attotokens);
+        } else {
+            updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
+        }
         reportingWindow.updateMarketPhase();
         return true;
     }
 
     function disputeFirstReporters(uint256[] _payoutNumerators, uint256 _attotokens) public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.FIRST_DISPUTE);
-        require(derivePayoutDistributionHash(payoutNumerators) != tentativeWinningPayoutDistributionHash);
         firstReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.firstReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, firstReportersDisputeBondToken, Reporting.firstReportersDisputeBondAmount());
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
-        IReportingToken _reportingToken = getReportingToken(_payoutNumerators);
-        _reportingToken.trustedBuy(msg.sender, _attotokens);
-        return migrateReportingWindow(_newReportingWindow);
+        _newReportingWindow.migrateMarketInFromSibling();
+        reportingWindow.removeMarket();
+        reportingWindow = _newReportingWindow;
+        if (_attotokens > 0) {
+            require(derivePayoutDistributionHash(_payoutNumerators) != tentativeWinningPayoutDistributionHash);
+            IReportingToken _reportingToken = getReportingToken(_payoutNumerators);
+            _reportingToken.trustedBuy(msg.sender, _attotokens);
+        } else {
+            updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
+        }
+        reportingWindow.updateMarketPhase();
+        return true;
     }
 
-    function disputeLastReporters(uint256[] _payoutNumerators, uint256 _attotokens) public triggersMigration returns (bool) {
+    function disputeLastReporters() public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.LAST_DISPUTE);
-        require(derivePayoutDistributionHash(payoutNumerators) != tentativeWinningPayoutDistributionHash);
         lastReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.lastReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, lastReportersDisputeBondToken, Reporting.lastReportersDisputeBondAmount());
         reportingWindow.getUniverse().fork();
         IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
-        IReportingToken _reportingToken = getReportingToken(_payoutNumerators);
-        _reportingToken.trustedBuy(msg.sender, _attotokens);
-        return migrateReportingWindow(_newReportingWindow);
-    }
-
-    function migrateReportingWindow(IReportingWindow _newReportingWindow) private afterInitialized returns (bool) {
         _newReportingWindow.migrateMarketInFromSibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
@@ -175,7 +180,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool) {
         var (_firstPlaceHash, _secondPlaceHash) = MarketExtensions(controller.lookup("MarketExtensions")).getOrderedWinningPayoutDistributionHashes(this, _payoutDistributionHash);
 
-        require(_firstPlaceHash > 0);
+        require(_firstPlaceHash != bytes32(0));
+        require(_firstPlaceHash != _secondPlaceHash);
         tentativeWinningPayoutDistributionHash = _firstPlaceHash;
         bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = _secondPlaceHash;
 
@@ -200,16 +206,15 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         doFeePayout(finalPayoutDistributionHash == designatedReportPayoutHash, reporterGasCostsFeeAttoeth);
         reportingWindow.updateMarketPhase();
         return true;
-
-        // TODO: create a floating designated report bond and charge it for designated reports
-        // TODO: if designated report is wrong, transfer designated report bond to the winning reporting token
-        // TODO: if designated report is right, transfer designated report bond to market creator
     }
 
     function migrateDueToNoReports() public returns (bool) {
         require(getReportingState() == ReportingState.AWAITING_NO_REPORT_MIGRATION);
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
-        migrateReportingWindow(_newReportingWindow);
+        _newReportingWindow.migrateMarketInFromSibling();
+        reportingWindow.removeMarket();
+        reportingWindow = _newReportingWindow;
+        reportingWindow.updateMarketPhase();
         return false;
     }
 

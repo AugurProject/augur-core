@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes
+from utils import longTo32Bytes, captureFilteredLogs
 from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, proceedToLastReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 tester.STARTGAS = long(6.7 * 10**6)
@@ -38,12 +38,12 @@ def test_reportingFullHappyPath(reportingFixture):
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == reportingTokenYes.getPayoutDistributionHash()
 
-    # Move time forward into the LIMITED DISPUTE phase
+    # Move time forward into the FIRST DISPUTE phase
     reportingFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     assert market.getReportingState() == reportingFixture.constants.FIRST_DISPUTE()
 
     # Contest the results with Tester 0
-    market.disputeFirstReporters(sender=tester.k0)
+    market.disputeFirstReporters([], 0, sender=tester.k0)
     assert not reportingWindow.isContainerForMarket(market.address)
     assert universe.isContainerForMarket(market.address)
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
@@ -63,7 +63,7 @@ def test_reportingFullHappyPath(reportingFixture):
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
 
-    # Move forward in time to put us in the ALL DISPUTE PHASE
+    # Move forward in time to put us in the LAST DISPUTE PHASE
     reportingFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     assert market.getReportingState() == reportingFixture.constants.LAST_DISPUTE()
 
@@ -167,15 +167,16 @@ def test_firstReportingHappyPath(makeReport, reportingFixture):
     assert reputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18 - 1
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     if (makeReport):
-        # The tentative winner will be unset since this outcome is still negative from the dispute bond that was placed
-        assert tentativeWinner == longTo32Bytes(0)
-        # If we buy the full designated bond amount we will have a winner
+        # The tentative winner will be the No outcome at first since we disputed Yes and have to stake on an outcome in that case
+        reportingTokenNo = reportingFixture.getReportingToken(market, [10**18,0])
+        assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
+        # If we buy the full designated bond amount we will be back to the YES outcome winning
         reportingTokenYes.buy(reportingFixture.constants.DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT(), sender=tester.k2)
         tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
 
     assert tentativeWinner == reportingTokenYes.getPayoutDistributionHash()
 
-    # To progress into the LIMITED DISPUTE phase we move time forward
+    # To progress into the FIRST DISPUTE phase we move time forward
     reportingFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     assert market.getReportingState() == reportingFixture.constants.FIRST_DISPUTE()
 
@@ -200,28 +201,28 @@ def test_lastReportingHappyPath(reportingFixture, makeReport):
     reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())
 
     # Proceed to the LAST REPORTING phase
-    proceedToLastReporting(reportingFixture, market, makeReport, tester.k1, tester.k3, [0,10**18], tester.k2, [10**18,0])
+    proceedToLastReporting(reportingFixture, market, makeReport, tester.k1, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18])
 
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
-    # We make one report by Tester 3 for the NO outcome
     reportingTokenNo = reportingFixture.getReportingToken(market, [10**18,0])
-    reportingTokenNo.buy(1, sender=tester.k3)
-    assert reportingTokenNo.balanceOf(tester.a3) == 1
-    assert reputationToken.balanceOf(tester.a3) == 1 * 10 ** 6 * 10 ** 18 - 11 * 10 ** 21 - 1
+    reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
+
+    # When disputing the FIRST REPORT outcome enough was staked on the other outcome that it is now the winner
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
+    assert tentativeWinner == reportingTokenYes.getPayoutDistributionHash()
 
-    # Since this outcome is still in the negatives it will not be counted as a winning outcome
-    assert tentativeWinner == longTo32Bytes(0)
+    # If we buy the delta between outcome stakes that will be sufficient to make the outcome win
+    marketExtensions = reportingFixture.contracts["MarketExtensions"]
+    noStake = marketExtensions.getPayoutDistributionHashStake(market.address, reportingTokenNo.getPayoutDistributionHash())
+    yesStake = marketExtensions.getPayoutDistributionHashStake(market.address, reportingTokenYes.getPayoutDistributionHash())
+    stakeDelta = yesStake - noStake
+    reportingTokenNo.buy(stakeDelta + 1, sender=tester.k3)
 
-    # If we buy LIMITED_BOND_AMOUNT that will be sufficient to make the outcome win
-    negativeBondBalance = reportingFixture.constants.FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
-    reportingTokenNo.buy(negativeBondBalance, sender=tester.k3)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-
     assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
 
-    # To progress into the ALL DISPUTE phase we move time forward
+    # To progress into the LAST DISPUTE phase we move time forward
     reportingFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     assert market.getReportingState() == reportingFixture.constants.LAST_DISPUTE()
 
@@ -245,7 +246,7 @@ def test_lastReportingHappyPath(reportingFixture, makeReport):
 def test_forking(reportingFixture, makeReport, finalizeByMigration):
     market = reportingFixture.binaryMarket
     # Proceed to the FORKING phase
-    proceedToForking(reportingFixture, market, makeReport, tester.k1, tester.k3, tester.k3, [0,10**18], tester.k2, [10**18,0], [10**18,0])
+    proceedToForking(reportingFixture, market, makeReport, tester.k1, tester.k3, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18], [10**18,0])
 
     # Finalize the market
     finalizeForkingMarket(reportingFixture, market, finalizeByMigration, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,10**18], [10**18,0])
@@ -273,7 +274,7 @@ def test_forkMigration(reportingFixture, makeReport, finalizeByMigration):
     assert cash.balanceOf(oldReportingWindowAddress) == fees
 
     # We proceed the standard market to the FORKING state
-    proceedToForking(reportingFixture,  market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], tester.k2, [10**18,0], [10**18,0])
+    proceedToForking(reportingFixture,  market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18], [10**18,0])
 
     # The market we created is now awaiting migration
     assert newMarket.getReportingState() == reportingFixture.constants.AWAITING_FORK_MIGRATION()

@@ -54,7 +54,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function trustedBuy(address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
-        require(msg.sender == market);
+        require(IMarket(msg.sender) == market);
         IMarket.ReportingState _state = market.getReportingState();
         require(_state == IMarket.ReportingState.FIRST_REPORTING || _state == IMarket.ReportingState.LAST_REPORTING);
         buyTokens(_reporter, _attotokens);
