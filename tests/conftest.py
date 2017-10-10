@@ -323,6 +323,12 @@ class ContractsFixture:
         reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ReportingToken']), reportingTokenAddress)
         return reportingToken
 
+    def getShareToken(self, market, outcome):
+        shareTokenAddress = market.getShareToken(outcome)
+        assert shareTokenAddress
+        shareToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ShareToken']), shareTokenAddress)
+        return shareToken
+
     def designatedReport(self, market, payoutDistribution, reporterKey):
         reportingToken = self.getReportingToken(market, payoutDistribution)
         registrationToken = self.applySignature('RegistrationToken', reportingToken.getRegistrationToken())
