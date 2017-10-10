@@ -5,7 +5,6 @@ from pytest import fixture
 def test_universe_creation(universeFixture):
     universe = universeFixture.createUniverse(3, "5")
     reputationToken = universeFixture.applySignature('ReputationToken', universe.getReputationToken())
-
     assert universe.getParentUniverse() == longToHexString(3)
     assert universe.getParentPayoutDistributionHash() == stringToBytes("5")
     assert universe.getForkingMarket() == longToHexString(0)
@@ -54,7 +53,7 @@ def test_get_reporting_window(universeFixture):
     assert universe.getNextReportingWindow() == universe.getReportingWindowByTimestamp(universeFixture.chain.head_state.timestamp + total_dispute_duration)
     
 def test_create_child_universe(universeFixture):
-    universe = universeFixture.createUniverse(2, "15")
+    universe = universeFixture.universe
     assert universe.getChildUniverse("20") == longToHexString(0)
     assert universe.getOrCreateChildUniverse("20") == universe.getChildUniverse("20")
     assert universe.getChildUniverse("20") != longToHexString(0)
@@ -66,7 +65,7 @@ def test_create_child_universe(universeFixture):
     assert universe.isParentOf(other_child) == False
 
 def test_universe_contains_reporting_win(universeFixture):
-    universe = universeFixture.createUniverse(0, "5")
+    universe = universeFixture.universe
     other_universe = universeFixture.createUniverse(1, "15")
     other_curr_reporting_win = other_universe.getCurrentReportingWindow()
     reportingWindow = universeFixture.applySignature('ReportingWindow', universe.getCurrentReportingWindow())
@@ -86,7 +85,7 @@ def test_universe_contains_reporting_win(universeFixture):
     assert universe.isContainerForReportingWindow(zero_window) == False
     
 def test_universe_contains_dispute_bond_token(universeFixture):
-    universe = universeFixture.createUniverse(0, "55")
+    universe = universeFixture.universe
     # Pass in non Dispute Bond Token object address
     nonDisputeBondToken = universeFixture.upload('../source/contracts/reporting/ReportingToken.sol', 'nonReportingWindow')
     assert universe.isContainerForDisputeBondToken(nonDisputeBondToken.address) == False
@@ -118,7 +117,7 @@ def test_universe_contains_market(universeFixture):
     assert universe.isContainerForMarket(uni_market.address)
 
 def test_universe_reporting_token(universeFixture):
-    universe = universeFixture.createUniverse(1, "25")
+    universe = universeFixture.universe
     reporting_token_factory = universeFixture.upload('../source/contracts/factories/ReportingTokenFactory.sol', 'reporting_token_factory')
 
     # Reporting token not associated with this universe market
@@ -134,7 +133,7 @@ def test_universe_reporting_token(universeFixture):
     assert universe.isContainerForReportingToken(good_reporting_token.address)
 
 def test_universe_contains_share_token(universeFixture):
-    universe = universeFixture.createUniverse(1, "25")
+    universe = universeFixture.universe
     share_token_factory = universeFixture.upload('../source/contracts/factories/ShareTokenFactory.sol', 'share_token_factory')
 
     # Share token not associated with this universe market
@@ -148,6 +147,14 @@ def test_universe_contains_share_token(universeFixture):
     good_share_token = universeFixture.getShareToken(uni_market, 1)
     assert universe.isContainerForShareToken(good_share_token.address)
     
+def test_open_interest(universeFixture):
+    universe = universeFixture.universe
+    assert universe.getOpenInterestInAttoEth() == 0
+    universe.incrementOpenInterest(10)
+    assert universe.getOpenInterestInAttoEth() == 10
+    universe.decrementOpenInterest(5)
+    assert universe.getOpenInterestInAttoEth() == 5
+
 @fixture
 def sessionSnapshot(contractsFixture):
     contractsFixture.resetSnapshot()
