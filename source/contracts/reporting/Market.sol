@@ -73,9 +73,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         require(_designatedReporterAddress != NULL_ADDRESS);
         reportingWindow = _reportingWindow;
         require(address(getForkingMarket()) == NULL_ADDRESS);
-        MarketFeeCalculator _marketFeeCaluclator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
-        reporterGasCostsFeeAttoeth = _marketFeeCaluclator.getTargetReporterGasCosts(_reportingWindow);
-        validityBondAttoeth = _marketFeeCaluclator.getValidityBond(_reportingWindow);
+        owner = _creator;
+        assessFees();
         endTime = _endTime;
         numOutcomes = _numOutcomes;
         numTicks = _numTicks;
@@ -83,7 +82,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         marketCreationBlock = block.number;
         designatedReporterAddress = _designatedReporterAddress;
         cash = _cash;
-        owner = _creator;
         for (uint8 _outcome = 0; _outcome < numOutcomes; _outcome++) {
             shareTokens.push(createShareToken(_outcome));
         }
@@ -93,6 +91,14 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         if (_refund > 0) {
             require(owner.call.value(_refund)());
         }
+        return true;
+    }
+
+    function assessFees() private returns (bool) {
+        MarketFeeCalculator _marketFeeCaluclator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
+        reportingWindow.getReputationToken().trustedTransfer(owner, this, _marketFeeCaluclator.getDesignatedReportNoShowBond(reportingWindow));
+        reporterGasCostsFeeAttoeth = _marketFeeCaluclator.getTargetReporterGasCosts(reportingWindow);
+        validityBondAttoeth = _marketFeeCaluclator.getValidityBond(reportingWindow);
         return true;
     }
 

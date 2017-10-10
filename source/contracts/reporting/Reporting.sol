@@ -12,6 +12,8 @@ library Reporting {
 
     uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
     uint256 private constant DEFAULT_DESIGNATED_REPORT_STAKE = 2 ether;
+    uint256 private constant DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND = 10 ether;
+    uint256 private constant DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR = 0.1 ether;
 
     // CONSIDER: figure out approprate values for these
     uint256 private constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
@@ -34,4 +36,6 @@ library Reporting {
     function defaultReportingGasPrice() internal pure returns (uint256) { return DEFAULT_REPORTING_GAS_PRICE; }
     function defaultValidityBond() internal pure returns (uint256) { return DEFAULT_VALIDITY_BOND; }
     function defaultDesignatedReportStake() internal pure returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
+    function defaultDesignatedReportNoShowBond() internal pure constant returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
+    function designatedReportNoShowBondFloor() internal pure constant returns (uint256) { return DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR; }
 }

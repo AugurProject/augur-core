@@ -15,11 +15,14 @@ contract MarketFeeCalculator {
     mapping (address => uint256) private validityBondInAttoeth;
     mapping (address => uint256) private targetReporterGasCosts;
     mapping (address => uint256) private designatedReportStakeInAttoRep;
+    mapping (address => uint256) private designatedReportNoShowBondInAttoRep;
 
     uint256 private constant TARGET_INVALID_MARKETS_DIVISOR = 100; // 1% of markets are expected to be invalid
     uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
 
     uint256 private constant TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR = 100; // 1% of markets are expected to have an incorrect designate report
+
+    uint256 private constant TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR = 100; // 1% of markets are expected to have an incorrect designate report
 
     function getValidityBond(IReportingWindow _reportingWindow) public returns (uint256) {
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
@@ -51,7 +54,25 @@ contract MarketFeeCalculator {
         return _currentDesignatedReportStakeInAttoRep;
     }
 
-    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) public pure returns (uint256 _newValue) {
+    function getDesignatedReportNoShowBond(IReportingWindow _reportingWindow) public returns (uint256) {
+        uint256 _currentDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_reportingWindow];
+        if (_currentDesignatedReportNoShowBondInAttoRep != 0) {
+            return _currentDesignatedReportNoShowBondInAttoRep;
+        }
+        IReportingWindow _previousReportingWindow = _reportingWindow.getPreviousReportingWindow();
+        uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
+        uint256 _designatedReportNoShowsInPreviousWindow = _previousReportingWindow.getNumDesignatedReportNoShows();
+        uint256 _previousDesignatedReportNoShowBondInAttoRep = designatedReportStakeInAttoRep[_previousReportingWindow];
+
+        _currentDesignatedReportNoShowBondInAttoRep = calculateFloatingValue(_designatedReportNoShowsInPreviousWindow, _totalMarketsInPreviousWindow, TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR, _previousDesignatedReportNoShowBondInAttoRep, Reporting.defaultDesignatedReportNoShowBond());
+        if (_currentDesignatedReportNoShowBondInAttoRep < Reporting.designatedReportNoShowBondFloor()) {
+            _currentDesignatedReportNoShowBondInAttoRep = Reporting.designatedReportNoShowBondFloor();
+        }
+        designatedReportStakeInAttoRep[_reportingWindow] = _currentDesignatedReportNoShowBondInAttoRep;
+        return _currentDesignatedReportNoShowBondInAttoRep;
+    }
+
+    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) public view returns (uint256 _newValue) {
         if (_totalMarkets == 0) {
             return _defaultValue;
         }

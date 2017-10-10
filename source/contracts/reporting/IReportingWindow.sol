@@ -27,6 +27,7 @@ contract IReportingWindow is Typed {
     function getAvgReportingGasPrice() public returns (uint256);
     function getNextReportingWindow() public returns (IReportingWindow);
     function getPreviousReportingWindow() public returns (IReportingWindow);
+    function getNumDesignatedReportNoShows() public view returns (uint256);
     function allMarketsFinalized() public view returns (bool);
     function checkIn() public returns (bool);
     function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens) public returns (bool);

@@ -6,17 +6,8 @@ from pytest import fixture, mark, lazy_fixture, raises
 from datetime import timedelta
 
 def initializeReportingFixture(sessionFixture, market):
-    # Seed legacy rep contract
-    legacyRepContract = sessionFixture.contracts['LegacyRepContract']
-    legacyRepContract.faucet(long(11 * 10**6 * 10**18))
-    universe = sessionFixture.universe
-
-    # Get the reputation token for this universe and migrate legacy REP to it
-    reputationToken = sessionFixture.applySignature('ReputationToken', universe.getReputationToken())
-    legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
-    reputationToken.migrateFromLegacyRepContract()
-
     # Give some REP to testers to make things interesting
+    reputationToken = sessionFixture.applySignature('ReputationToken', sessionFixture.universe.getReputationToken())
     for testAccount in [tester.a1, tester.a2, tester.a3]:
         reputationToken.transfer(testAccount, 1 * 10**6 * 10**18)
 

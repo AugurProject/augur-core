@@ -37,6 +37,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     Set.Data private finalizedMarkets;
     uint256 private invalidMarketCount;
     uint256 private incorrectDesignatedReportMarketCount;
+    uint256 private designatedReportNoShows;
     mapping(address => ReportingStatus) private reporterStatus;
     mapping(address => uint256) private numberOfReportsByMarket;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
@@ -54,10 +55,11 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
-        require(universe.getReportingWindowByMarketEndTime(_endTime,).getTypeName() == "ReportingWindow");
-        MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
-        _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _designatedReporterAddress);
+        require(universe.getReportingWindowByMarketEndTime(_endTime).getTypeName() == "ReportingWindow");
+        _newMarket = MarketFactory(controller.lookup("MarketFactory")).createMarket(controller);
         markets.add(_newMarket);
+        // This initialization has to live outside of the factory method as it charges a REP fee during initialization which requires this window be able to validate that the market belongs in its collection
+        _newMarket.initialize.value(msg.value)(this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _designatedReporterAddress);
         firstReporterMarkets.add(_newMarket);
         return _newMarket;
     }
@@ -192,6 +194,10 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function getNumIncorrectDesignatedReportMarkets() public view returns (uint256) {
         return incorrectDesignatedReportMarketCount;
+    }
+
+    function getNumDesignatedReportNoShows() public view returns (uint256) {
+        return designatedReportNoShows;
     }
 
     function getReportingStartTime() public afterInitialized view returns (uint256) {

@@ -28,10 +28,11 @@ def test_reportingFullHappyPath(reportingFixture):
     # This will cause us to be in the first reporting phase
     assert market.getReportingState() == reportingFixture.constants.FIRST_REPORTING()
 
+    noShowBondCosts = 3 * reportingFixture.constants.DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND()
     # Both reporters report on the outcome. Tester 1 buys 1 more share causing the YES outcome to be the tentative winner
     reportingTokenNo.buy(100, sender=tester.k0)
     assert reportingTokenNo.balanceOf(tester.a0) == 100
-    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10 **18 - 100
+    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10 **18 - 100 - noShowBondCosts
     reportingTokenYes.buy(101, sender=tester.k1)
     assert reportingTokenYes.balanceOf(tester.a1) == 101
     assert reputationToken.balanceOf(tester.a1) == 1 * 10**6 * 10 **18 - 101
@@ -53,7 +54,7 @@ def test_reportingFullHappyPath(reportingFixture):
     assert market.getReportingState() == reportingFixture.constants.LAST_REPORTING()
 
     # Tester 0 has a REP balance less the first bond amount
-    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10 **18 - 100 - 11 * 10**21
+    assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10 **18 - 100 - 11 * 10**21 - noShowBondCosts
 
     # Tester 2 reports for the NO outcome
     reportingFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
@@ -99,7 +100,7 @@ def test_reportingFullHappyPath(reportingFixture):
     # Testers 0 and 2 move their combined ~9 million REP to the NO universe
     reputationToken.migrateOut(noUniverseReputationToken.address, tester.a0, reputationToken.balanceOf(tester.a0), sender = tester.k0)
     assert not reputationToken.balanceOf(tester.a0)
-    assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 - 100 - 11000 * 10 ** 18
+    assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 - 100 - 11000 * 10 ** 18 - noShowBondCosts
     reputationToken.migrateOut(noUniverseReputationToken.address, tester.a2, reputationToken.balanceOf(tester.a2), sender = tester.k2)
     assert not reputationToken.balanceOf(tester.a2)
     assert noUniverseReputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18  - 2
@@ -123,7 +124,7 @@ def test_reportingFullHappyPath(reportingFixture):
 
     # We can redeem forked REP on any universe we didn't dispute
     assert reportingTokenNo.redeemForkedTokens(sender = tester.k0)
-    assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 - 11000 * 10 ** 18
+    assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 - 11000 * 10 ** 18 - noShowBondCosts
 
 def test_designatedReportingHappyPath(reportingFixture):
     market = reportingFixture.binaryMarket

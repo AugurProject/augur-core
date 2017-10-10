@@ -179,6 +179,7 @@ class ContractsFixture:
         self.cash = self.getSeededCash()
         self.augur = self.contracts['Augur']
         self.utils = self.upload("solidity_test_helpers/Utils.sol")
+        self.distributeRep()
         self.binaryMarket = self.createReasonableBinaryMarket(self.universe, self.cash)
         startingGas = self.chain.head_state.gas_used
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.universe, 3, self.cash)
@@ -190,6 +191,16 @@ class ContractsFixture:
         self.captured = self.createSnapshot()
         self.testerAddress = self.generateTesterMap('a')
         self.testerKey = self.generateTesterMap('k')
+
+    def distributeRep(self):
+        legacyRepContract = self.contracts['LegacyRepContract']
+        legacyRepContract.faucet(11 * 10**6 * 10**18)
+        universe = self.universe
+
+        # Get the reputation token for this universe and migrate legacy REP to it
+        reputationToken = self.applySignature('ReputationToken', universe.getReputationToken())
+        legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
+        reputationToken.migrateFromLegacyRepContract()
 
     def generateTesterMap(self, ch):
         testers = {}
@@ -396,23 +407,4 @@ def sessionFixture():
 @fixture
 def contractsFixture(sessionFixture):
     sessionFixture.resetSnapshot()
-    return sessionFixture
-
-@fixture(scope="session")
-def fundedRepSnapshot(sessionFixture):
-    sessionFixture.resetSnapshot()
-    legacyRepContract = sessionFixture.contracts['LegacyRepContract']
-    legacyRepContract.faucet(11 * 10**6 * 10**18)
-    universe = sessionFixture.universe
-
-    # Get the reputation token for this universe and migrate legacy REP to it
-    reputationToken = sessionFixture.applySignature('ReputationToken', universe.getReputationToken())
-    legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
-    reputationToken.migrateFromLegacyRepContract()
-
-    return sessionFixture.createSnapshot()
-
-@fixture
-def fundedRepFixture(sessionFixture, fundedRepSnapshot):
-    sessionFixture.resetToSnapshot(fundedRepSnapshot)
     return sessionFixture
