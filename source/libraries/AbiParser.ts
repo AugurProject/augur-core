@@ -12,7 +12,7 @@ interface TransactionOptions {
     constant?: boolean;
 }
 
-type ContractMethod = (...vargs: any[]) => Promise<any>;
+export type ContractMethod = (...vargs: any[]) => Promise<any>;
 
 
 
@@ -46,7 +46,7 @@ export async function parseAbiIntoMethods(ethjsQuery: EthjsQuery, abi: (Compiler
                 return EthjsAbi.decodeMethod(item, result)[0];
             } else {
                 // CONSIDER: return result instead, which is the transaction hash
-                return result;
+                return undefined;
             }
         };
     });

@@ -22,16 +22,21 @@ interface RpcClientOptions {
 }
 
 /**
- * Pads a string with zeros on the left and converts it to hexidecimal format.
+ * Pads a string with zeros (on the left by default) and converts it to hexidecimal format.
  * @param stringToEncode ASCII string to be padded & hexlified
  * @param length Desired length of the returned string (minus the "0x")
  */
-export async function padAndHexlify(stringToEncode: string, length: number): Promise<string> {
+export async function padAndHexlify(stringToEncode: string, length: number, direction: string = "left"): Promise<string> {
     let pad = "";
     for (let i = 0; i < length - (stringToEncode.length * 2); i++) {
         pad += "\x00";
     }
-    const paddedStringToEncode = pad + stringToEncode;
+    let paddedStringToEncode: string;
+    if (direction === "right") {
+        paddedStringToEncode = stringToEncode + pad;
+    } else {
+        paddedStringToEncode = pad + stringToEncode;
+    }
     return "0x" + binascii.hexlify(paddedStringToEncode);
 }
 

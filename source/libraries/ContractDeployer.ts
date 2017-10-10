@@ -7,6 +7,7 @@ import * as EthjsContract from "ethjs-contract";
 import * as EthjsQuery from "ethjs-query";
 // TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
+import { ContractMethod } from "./AbiParser";
 import { generateTestAccounts, padAndHexlify } from "./HelperFunctions";
 import { parseAbiIntoMethods } from './AbiParser';
 
@@ -58,8 +59,8 @@ export class ContractDeployer {
         // TODO: Make sure utils is getting uploaded correctly
         // this.utils = await this.upload("../tests/solidity_test_helpers/Utils.sol");
         this.binaryMarket = await this.createReasonableBinaryMarket(this.universe, this.cash);
-        this.categoricalMarket = this.createReasonableCategoricalMarket(this.universe, 3, this.cash);
-        this.scalarMarket = this.createReasonableScalarMarket(this.universe, 40, this.cash);
+        this.categoricalMarket = await this.createReasonableCategoricalMarket(this.universe, 3, this.cash);
+        this.scalarMarket = await this.createReasonableScalarMarket(this.universe, 40, this.cash);
         // TODO: Make sure constants is getting uploaded correctly
         // this.constants = await this.upload("../tests/solidity_test_helpers/Constants.sol");
 
@@ -291,36 +292,11 @@ export class ContractDeployer {
         return market;
     }
 
-    private async createBinaryMarket(universe, endTime: number, feePerEthInWei: number, denominationToken, designatedReporterAddress, numTicks: number): Promise<ContractBlockchainData> {
+    private async createBinaryMarket(universe, endTime: number, feePerEthInWei: number, denominationToken, designatedReporterAddress, numTicks: number): Promise<{ [methodName: string]: ContractMethod }> {
         return await this.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks);
     }
 
-    private async createCategoricalMarket(universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks): Promise<ContractBlockchainData> {
-        const constant = { constant: true };
-        const myUniverse = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Universe"], { to: universe.address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
-        const marketFeeCalculator = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketFeeCalculator"], { to: this.contracts["MarketFeeCalculator"].address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
-
-        // necessary because it is used part of market creation fee calculation
-        await myUniverse.getCurrentReportingWindow();
-        // necessary because it is used as part of market creation fee calculation
-        await myUniverse.getPreviousReportingWindow();
-        // necessary because createMarket needs its reporting window already created
-        await myUniverse.getReportingWindowByMarketEndTime(endTime, true);
-
-        const reportingWindowAddress = await myUniverse.getCurrentReportingWindow.bind(constant)();
-        const marketCreationFee = await marketFeeCalculator.getMarketCreationCost.bind(constant)(reportingWindowAddress);
-
-        const marketCreation = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketCreation"], { to: this.contracts["MarketCreation"].address, from: this.testAccounts[0].address, gas: "0x5b8d80", value: marketCreationFee });
-        const marketAddress = await marketCreation.createMarket.bind({ to: this.contracts["MarketCreation"].address, from: this.testAccounts[0].address, gas: "0x5b8d80", constant: true })(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
-        if (!marketAddress) {
-            throw new Error("Unable to create new categorical market.");
-        }
-        await marketCreation.createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
-
-        return marketAddress;
-    }
-
-    private async createScalarMarket(universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress): Promise<ContractBlockchainData> {
+    private async createCategoricalMarket(universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks): Promise<{ [methodName: string]: ContractMethod }> {
         const constant = { constant: true };
         const myUniverse = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Universe"], { to: universe.address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
         const marketCreation = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketCreation"], { to: this.contracts["MarketCreation"].address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
@@ -335,16 +311,48 @@ export class ContractDeployer {
 
         const reportingWindowAddress = await myUniverse.getCurrentReportingWindow.bind(constant)();
         const marketCreationFee = await marketFeeCalculator.getMarketCreationCost.bind(constant)(reportingWindowAddress);
-        const marketAddress = await marketCreation.createMarket.bind({ to: this.contracts["MarketCreation"].address, from: this.testAccounts[0].address, gas: "0x5b8d80", value: marketCreationFee, constant: true })(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
+        const marketAddress = await marketCreation.createMarket.bind({ value: marketCreationFee, constant: true })(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
         if (!marketAddress) {
-            throw new Error("Unable to create new categorical market.");
+            throw new Error("Unable to get address for new categorical market.");
         }
-        await marketCreation.createMarket(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
-
-        return marketAddress;
+        await marketCreation.createMarket.bind({ value: marketCreationFee })(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
+        const market = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0].address, gas: "0x5b8d80" });
+        const marketNameHex = await padAndHexlify("Market", 64, "right");
+        if (await market.getTypeName() !== marketNameHex) {
+            throw new Error("Unable to create new categorical market");
+        }
+        return market;
     }
 
-    private async createReasonableBinaryMarket(universe, denominationToken): Promise<ContractBlockchainData> {
+    private async createScalarMarket(universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress): Promise<{ [methodName: string]: ContractMethod }> {
+        const constant = { constant: true };
+        const myUniverse = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Universe"], { to: universe.address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
+        const marketCreation = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketCreation"], { to: this.contracts["MarketCreation"].address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
+        const marketFeeCalculator = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketFeeCalculator"], { to: this.contracts["MarketFeeCalculator"].address, from: this.testAccounts[0].address, gas: "0x5b8d80" });
+
+        // necessary because it is used part of market creation fee calculation
+        await myUniverse.getCurrentReportingWindow();
+        // necessary because it is used as part of market creation fee calculation
+        await myUniverse.getPreviousReportingWindow();
+        // necessary because createMarket needs its reporting window already created
+        await myUniverse.getReportingWindowByMarketEndTime(endTime, true);
+
+        const reportingWindowAddress = await myUniverse.getCurrentReportingWindow.bind(constant)();
+        const marketCreationFee = await marketFeeCalculator.getMarketCreationCost.bind(constant)(reportingWindowAddress);
+        const marketAddress = await marketCreation.createMarket.bind({ value: marketCreationFee, constant: true })(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
+        if (!marketAddress) {
+            throw new Error("Unable to get address for new categorical market.");
+        }
+        await marketCreation.createMarket.bind({ value: marketCreationFee })(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress);
+        const market = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0].address, gas: "0x5b8d80" });
+        const marketNameHex = await padAndHexlify("Market", 64, "right");
+        if (await market.getTypeName() !== marketNameHex) {
+            throw new Error("Unable to create new categorical market");
+        }
+        return market;
+    }
+
+    private async createReasonableBinaryMarket(universe, denominationToken): Promise<{ [methodName: string]: ContractMethod }> {
         const block = await this.ethjsQuery.getBlockByNumber(0, true);
         const blockDateTime = await this.parseBlockTimestamp(block.timestamp);
         const blockDateTimePlusDay = new Date();
@@ -352,19 +360,19 @@ export class ContractDeployer {
         return await this.createBinaryMarket(universe, blockDateTimePlusDay.getTime()/1000, 10 ** 16, denominationToken, this.testAccounts[0].address, 10 ** 18);
     }
 
-    private async createReasonableCategoricalMarket(universe, numOutcomes, denominationToken): Promise<ContractBlockchainData> {
+    private async createReasonableCategoricalMarket(universe, numOutcomes, denominationToken): Promise<{ [methodName: string]: ContractMethod }> {
         const block = await this.ethjsQuery.getBlockByNumber(0, true);
         const blockDateTime = await this.parseBlockTimestamp(block.timestamp);
         const blockDateTimePlusDay = new Date();
         blockDateTimePlusDay.setDate(blockDateTime.getDate() + 1);
-        return this.createCategoricalMarket(universe, numOutcomes, blockDateTimePlusDay.getTime()/1000, 10 ** 16, denominationToken, this.testAccounts[0].address, 3 * 10 ** 17);
+        return await this.createCategoricalMarket(universe, numOutcomes, blockDateTimePlusDay.getTime()/1000, 10 ** 16, denominationToken, this.testAccounts[0].address, 3 * 10 ** 17);
     }
 
-    private async createReasonableScalarMarket(universe, priceRange, denominationToken): Promise<ContractBlockchainData> {
+    private async createReasonableScalarMarket(universe, priceRange, denominationToken): Promise<{ [methodName: string]: ContractMethod }> {
         const block = await this.ethjsQuery.getBlockByNumber(0, true);
         const blockDateTime = await this.parseBlockTimestamp(block.timestamp);
         const blockDateTimePlusDay = new Date();
         blockDateTimePlusDay.setDate(blockDateTime.getDate() + 1);
-        return this.createScalarMarket(universe, blockDateTimePlusDay.getTime()/1000, 10 ** 16, denominationToken, 40 * 10 ** 18, this.testAccounts[0].address);
+        return await this.createScalarMarket(universe, blockDateTimePlusDay.getTime()/1000, 10 ** 16, denominationToken, 40 * 10 ** 18, this.testAccounts[0].address);
     }
 }
