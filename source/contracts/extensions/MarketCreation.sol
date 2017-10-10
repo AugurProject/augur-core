@@ -1,6 +1,5 @@
 pragma solidity 0.4.17;
 
-
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
 import 'trading/ICash.sol';
