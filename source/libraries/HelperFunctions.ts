@@ -21,12 +21,13 @@ interface RpcClientOptions {
     accounts: RpcClientAccountOption[];
 }
 
+// CONSIDER: Change length from representing number of characters to number of bytes
 /**
  * Pads a string with zeros (on the left by default) and converts it to hexidecimal format.
  * @param stringToEncode ASCII string to be padded & hexlified
  * @param length Desired length of the returned string (minus the "0x")
  */
-export async function padAndHexlify(stringToEncode: string, length: number, direction: string = "left"): Promise<string> {
+export function padAndHexlify(stringToEncode: string, length: number, direction: string = "left"): string {
     let pad = "";
     for (let i = 0; i < length - (stringToEncode.length * 2); i++) {
         pad += "\x00";
@@ -40,10 +41,14 @@ export async function padAndHexlify(stringToEncode: string, length: number, dire
     return "0x" + binascii.hexlify(paddedStringToEncode);
 }
 
+export function stringTo32ByteHex(stringToEncode: string): string {
+    return padAndHexlify(stringToEncode, 64, "right");
+}
+
 export async function generateTestAccounts(secretKeys: string[]): Promise<TestAccount[]> {
     let testAccounts: Promise<TestAccount>[] = [];
     for (let secretKey in secretKeys) {
-        const hexlifiedSecretKey = await padAndHexlify(secretKeys[secretKey], 64);
+        const hexlifiedSecretKey = padAndHexlify(secretKeys[secretKey], 64);
         let testAccount = await EthjsAccount.privateToAccount(hexlifiedSecretKey);
         for (let testAccountData in testAccount) {
             testAccount[testAccountData] = testAccount[testAccountData].toLowerCase();

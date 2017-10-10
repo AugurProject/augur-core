@@ -10,14 +10,10 @@ describe("Universe", () => {
         contractDeployer = await compileAndDeployContracts();
     });
     it("#getTypeName()", async () => {
-        const contracts = contractDeployer.getContracts();
-        const contractTypeNameHex = (await contracts["Universe"].getTypeName())[0];
-        const contractTypeName = binascii.unhexlify(contractTypeNameHex).replace(/\u0000/g, "");
-        expect(contractTypeName).to.equal("Universe");
-
-        const universe = contractDeployer.getUniverse();
-        const universeTypeNameHex = (await universe.getTypeName())[0];
-        const universeTypeName = binascii.unhexlify(universeTypeNameHex).replace(/\u0000/g, "");
-        expect(universeTypeName).to.equal("Universe");
+        // TODO: Move this check into ContractDeployer
+        const genesisUniverse = await contractDeployer.getUniverse();
+        const genesisUniverseTypeNameHex = (await genesisUniverse.getTypeName())[0];
+        const genesisUniverseTypeName = binascii.unhexlify(genesisUniverseTypeNameHex).replace(/\u0000/g, "");
+        expect(genesisUniverseTypeName).to.equal("Universe");
     });
 });

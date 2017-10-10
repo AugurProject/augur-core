@@ -12,7 +12,8 @@ interface TransactionOptions {
     constant?: boolean;
 }
 
-export type ContractMethod = (...vargs: any[]) => Promise<any>;
+export type Contract = { [methodName: string]: ContractMethod };
+type ContractMethod = (...vargs: any[]) => Promise<any>;
 
 
 
