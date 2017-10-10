@@ -16,7 +16,7 @@ def test_one_market_one_correct_report(reportingTokenPayoutFixture):
     initialRepBalance = reputationToken.balanceOf(tester.a0)
     assert reportingTokenPayoutFixture.designatedReport(market, [0,10**18], tester.k0)
     # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
-    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + marketFeeCalculator.getDesignatedReportNoShowBond(reportingWindow.address) - marketFeeCalculator.getDesignatedReportStake(reportingWindow.address)
+    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + marketFeeCalculator.getDesignatedReportNoShowBond(market.getUniverse()) - marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
     initialREPBalance = reputationToken.balanceOf(tester.a0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
@@ -30,7 +30,7 @@ def test_one_market_one_correct_report(reportingTokenPayoutFixture):
 
     # The designated reporter may redeem their reporting tokens which were purchased to make the designated report
     reportingToken = reportingTokenPayoutFixture.getReportingToken(market, [0, 10**18])
-    assert reportingToken.balanceOf(tester.a0) == marketFeeCalculator.getDesignatedReportStake(reportingWindow.address)
+    assert reportingToken.balanceOf(tester.a0) == marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
 
     expectedREPBalance = initialREPBalance
 
@@ -86,7 +86,7 @@ def confirmPayouts(fixture, market, numCorrectReporters):
         assert reportingToken.redeemWinningTokens(sender=fixture.testerKey[i])
         expectedRep = initialREPBalance + 10
         if (i == 0):
-            expectedRep += marketFeeCalculator.getDesignatedReportNoShowBond(reportingWindow.address)
+            expectedRep += marketFeeCalculator.getDesignatedReportNoShowBond(market.getUniverse())
         assert reputationToken.balanceOf(testerAddress) == expectedRep
 
 @fixture(scope="session")

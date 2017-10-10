@@ -45,7 +45,7 @@ def test_default_target_reporter_gas_costs(contractsFixture):
     feeCalculator = contractsFixture.contracts["MarketFeeCalculator"]
     market = contractsFixture.binaryMarket
 
-    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(market.getReportingWindow())
+    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(market.getUniverse())
     expectedTargetReporterGasCost = contractsFixture.constants.GAS_TO_REPORT()
     expectedTargetReporterGasCost *= contractsFixture.constants.DEFAULT_REPORTING_GAS_PRICE()
     expectedTargetReporterGasCost *= 2
@@ -86,7 +86,7 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture):
     expectedTargetReporterGasCost = reportingFixture.constants.GAS_TO_REPORT()
     expectedTargetReporterGasCost *= expectedAvgReportingGasCost
     expectedTargetReporterGasCost *= 2
-    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(universe.getCurrentReportingWindow())
+    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(universe.address)
     assert targetReporterGasCosts == expectedTargetReporterGasCost 
 
 @fixture(scope="session")

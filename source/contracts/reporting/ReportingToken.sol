@@ -44,7 +44,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
             market.migrateDueToNoReports();
         } else if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             require(msg.sender == market.getDesignatedReporter());
-            uint256 _designatedReportCost = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getDesignatedReportStake(market.getReportingWindow());
+            uint256 _designatedReportCost = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getDesignatedReportStake(market.getUniverse());
             require(_attotokens == _designatedReportCost);
         } else {
             require(_state == IMarket.ReportingState.FIRST_REPORTING || _state == IMarket.ReportingState.LAST_REPORTING);

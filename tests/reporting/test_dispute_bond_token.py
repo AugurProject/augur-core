@@ -140,7 +140,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
     bUniverse = None
     cUniverse = None
     winningReportingToken = None
-    designatedReporterStake = contractsFixture.contracts["MarketFeeCalculator"].getDesignatedReportStake(market.getReportingWindow())
+    designatedReporterStake = contractsFixture.contracts["MarketFeeCalculator"].getDesignatedReportStake(market.getUniverse())
 
     designatedReporterDisputeBondToken = None
     firstReportersDisputeBondToken = None

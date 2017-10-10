@@ -24,7 +24,8 @@ contract MarketFeeCalculator {
 
     uint256 private constant TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR = 100; // 1% of markets are expected to have an incorrect designate report
 
-    function getValidityBond(IReportingWindow _reportingWindow) public returns (uint256) {
+    function getValidityBond(IUniverse _universe) public returns (uint256) {
+        IReportingWindow _reportingWindow = _universe.getCurrentReportingWindow();
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
         if (_currentValidityBondInAttoeth != 0) {
             return _currentValidityBondInAttoeth;
@@ -39,7 +40,8 @@ contract MarketFeeCalculator {
         return _currentValidityBondInAttoeth;
     }
 
-    function getDesignatedReportStake(IReportingWindow _reportingWindow) public returns (uint256) {
+    function getDesignatedReportStake(IUniverse _universe) public returns (uint256) {
+        IReportingWindow _reportingWindow = _universe.getCurrentReportingWindow();
         uint256 _currentDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_reportingWindow];
         if (_currentDesignatedReportStakeInAttoRep != 0) {
             return _currentDesignatedReportStakeInAttoRep;
@@ -54,7 +56,8 @@ contract MarketFeeCalculator {
         return _currentDesignatedReportStakeInAttoRep;
     }
 
-    function getDesignatedReportNoShowBond(IReportingWindow _reportingWindow) public returns (uint256) {
+    function getDesignatedReportNoShowBond(IUniverse _universe) public returns (uint256) {
+        IReportingWindow _reportingWindow = _universe.getCurrentReportingWindow();
         uint256 _currentDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_reportingWindow];
         if (_currentDesignatedReportNoShowBondInAttoRep != 0) {
             return _currentDesignatedReportNoShowBondInAttoRep;
@@ -92,7 +95,8 @@ contract MarketFeeCalculator {
         return _newValue;
     }
 
-    function getTargetReporterGasCosts(IReportingWindow _reportingWindow) public constant returns (uint256) {
+    function getTargetReporterGasCosts(IUniverse _universe) public constant returns (uint256) {
+        IReportingWindow _reportingWindow = _universe.getCurrentReportingWindow();
         uint256 _gasToReport = targetReporterGasCosts[_reportingWindow];
         if (_gasToReport != 0) {
             return _gasToReport;
@@ -140,7 +144,7 @@ contract MarketFeeCalculator {
         return _universe.getOpenInterestInAttoEth() * TARGET_REP_MARKET_CAP_MULTIPLIER;
     }
 
-    function getMarketCreationCost(IReportingWindow _reportingWindow) public returns (uint256) {
-        return getValidityBond(_reportingWindow) + getTargetReporterGasCosts(_reportingWindow);
+    function getMarketCreationCost(IUniverse _universe) public returns (uint256) {
+        return getValidityBond(_universe) + getTargetReporterGasCosts(_universe);
     }
 }

@@ -96,9 +96,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function assessFees() private returns (bool) {
         MarketFeeCalculator _marketFeeCaluclator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
-        reportingWindow.getReputationToken().trustedTransfer(owner, this, _marketFeeCaluclator.getDesignatedReportNoShowBond(reportingWindow));
-        reporterGasCostsFeeAttoeth = _marketFeeCaluclator.getTargetReporterGasCosts(reportingWindow);
-        validityBondAttoeth = _marketFeeCaluclator.getValidityBond(reportingWindow);
+        IUniverse _universe = getUniverse();
+        reportingWindow.getReputationToken().trustedTransfer(owner, this, _marketFeeCaluclator.getDesignatedReportNoShowBond(_universe));
+        reporterGasCostsFeeAttoeth = _marketFeeCaluclator.getTargetReporterGasCosts(_universe);
+        validityBondAttoeth = _marketFeeCaluclator.getValidityBond(_universe);
         return true;
     }
 
