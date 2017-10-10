@@ -133,6 +133,11 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         tentativeWinningPayoutDistributionHash = _reportingToken.getPayoutDistributionHash();
         designatedReportPayoutHash = tentativeWinningPayoutDistributionHash;
         reportingWindow.updateMarketPhase();
+        IReputationToken _reputationToken = reportingWindow.getReputationToken();
+        // The owner gets the no-show REP bond
+        _reputationToken.transfer(owner, _reputationToken.balanceOf(this));
+        // The owner gets the reporter gas costs
+        require(getOwner().call.value(reporterGasCostsFeeAttoeth)());
         return true;
     }
 
@@ -208,8 +213,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         transferIncorrectDisputeBondsToWinningReportingToken();
         // The validity bond is paid to the owner in any valid outcome and the reporting window otherwise
         doFeePayout(isValid(), validityBondAttoeth);
-        // The reporter gas costs are paid to the owner if the designated report was correct and the reporting window otherwise
-        doFeePayout(finalPayoutDistributionHash == designatedReportPayoutHash, reporterGasCostsFeeAttoeth);
         reportingWindow.updateMarketPhase();
         return true;
     }
@@ -293,6 +296,24 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             cash.depositEtherFor.value(_amount)(getReportingWindow());
         }
         return true;
+    }
+
+    // AUDIT: This is called at the beginning of ReportingToken:buy. Look for reentrancy issues
+    function firstReporterCompensationCheck(address _reporter) public returns (uint256) {
+        require(isContainerForReportingToken(Typed(msg.sender)));
+        if (getReportingState() == ReportingState.DESIGNATED_REPORTING) {
+            return 0;
+        } else if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
+            IReputationToken _reputationToken = reportingWindow.getReputationToken();
+            uint256 _repBalance = _reputationToken.balanceOf(this);
+            // The first reporter gets the no-show REP bond
+            _reputationToken.transfer(_reporter, _repBalance);
+            // The first reporter gets the reporter gas costs
+            require(_reporter.call.value(reporterGasCostsFeeAttoeth)());
+            return _repBalance;
+        } else {
+            return 0;
+        }
     }
 
     function derivePayoutDistributionHash(uint256[] _payoutNumerators) public view returns (bytes32) {

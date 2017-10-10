@@ -37,6 +37,9 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     function buy(uint256 _attotokens) public afterInitialized returns (bool) {
         IMarket.ReportingState _state = market.getReportingState();
+        // If this is the first report and there was no designated reporter we ask the market to compensate them and get back the amount of extra REP to automatically stake against this outcome
+        _attotokens = _attotokens.add(market.firstReporterCompensationCheck(msg.sender));
+        require(_attotokens > 0);
         if (_state == IMarket.ReportingState.AWAITING_NO_REPORT_MIGRATION) {
             market.migrateDueToNoReports();
         } else if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
@@ -55,6 +58,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     function trustedBuy(address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
         require(IMarket(msg.sender) == market);
+        require(_attotokens > 0);
         IMarket.ReportingState _state = market.getReportingState();
         require(_state == IMarket.ReportingState.FIRST_REPORTING || _state == IMarket.ReportingState.LAST_REPORTING);
         buyTokens(_reporter, _attotokens);

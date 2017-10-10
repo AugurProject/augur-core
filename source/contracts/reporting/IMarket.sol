@@ -56,6 +56,7 @@ contract IMarket is Typed, IOwnable {
     function getDesignatedReportDueTimestamp() public view returns (uint256);
     function getDesignatedReportReceivedTime() public view returns (uint256);
     function getDesignatedReportDisputeDueTimestamp() public view returns (uint256);
+    function firstReporterCompensationCheck(address _reporter) public returns (uint256);
     function migrateDueToNoReports() public returns (bool);
     function isContainerForReportingToken(Typed _shadyTarget) public view returns (bool);
     function isContainerForDisputeBondToken(Typed _shadyTarget) public view returns (bool);
