@@ -26,6 +26,9 @@ contract Constants {
     uint256 public constant DESIGNATED_REPORTING_DURATION_SECONDS = Reporting.designatedReportingDurationSeconds();
     uint256 public constant DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS = Reporting.designatedReportingDisputeDurationSeconds();
 
+    uint256 public constant REPORTING_DURATION_SECONDS = Reporting.reportingDurationSeconds();
+    uint256 public constant REPORTING_DISPUTE_DURATION_SECONDS = Reporting.reportingDisputeDurationSeconds();
+
     uint256 public constant REGISTRATION_TOKEN_BOND_AMOUNT = Reporting.getRegistrationTokenBondAmount();
 
     uint256 public constant GAS_TO_REPORT = Reporting.gasToReport();
