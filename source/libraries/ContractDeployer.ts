@@ -69,7 +69,7 @@ export class ContractDeployer {
     // Helper functions
 
     public async parseBlockTimestamp(blockTimestamp): Promise<Date> {
-        const timestampHex = "0x" + JSON.stringify(blockTimestamp).replace(/\"/g, "");
+        const timestampHex = `0x${JSON.stringify(blockTimestamp).replace(/\"/g, "")}`;
         const timestampInt = parseInt(timestampHex, 16) * 1000;
         return new Date(timestampInt);
     }
