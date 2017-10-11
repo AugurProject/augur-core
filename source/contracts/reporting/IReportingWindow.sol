@@ -10,7 +10,7 @@ import 'trading/ICash.sol';
 
 contract IReportingWindow is Typed {
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public returns (bool);
-    function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _designatedReporterAddress) public payable returns (IMarket _newMarket);
+    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public payable returns (IMarket _newMarket);
     function migrateMarketInFromSibling() public returns (bool);
     function migrateMarketInFromNibling() public returns (bool);
     function removeMarket() public returns (bool);
@@ -28,12 +28,10 @@ contract IReportingWindow is Typed {
     function getPreviousReportingWindow() public returns (IReportingWindow);
     function getNumDesignatedReportNoShows() public view returns (uint256);
     function allMarketsFinalized() public view returns (bool);
-    function checkIn() public returns (bool);
     function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens) public returns (bool);
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
     function migrateFeesDueToFork() public returns (bool);
     function isContainerForMarket(Typed _shadyTarget) public view returns (bool);
-    function isDoneReporting(address _reporter) public view returns (bool);
     function isForkingMarketFinalized() public view returns (bool);
     function isDisputeActive() public view returns (bool);
 }

@@ -17,17 +17,13 @@ import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
+import 'extensions/MarketFeeCalculator.sol';
 
 
 contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWindow {
     using SafeMathUint256 for uint256;
     using Set for Set.Data;
     using RunningAverage for RunningAverage.Data;
-
-    struct ReportingStatus {
-        Set.Data marketsReportedOn;
-        bool finishedReporting;
-    }
 
     IUniverse private universe;
     uint256 private startTime;
@@ -38,7 +34,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     uint256 private invalidMarketCount;
     uint256 private incorrectDesignatedReportMarketCount;
     uint256 private designatedReportNoShows;
-    mapping(address => ReportingStatus) private reporterStatus;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
     RunningAverage.Data private reportingGasPrice;
     uint256 private totalWinningReportingTokens;
@@ -52,13 +47,14 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return true;
     }
 
-    function createNewMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
+    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
-        require(universe.getReportingWindowByMarketEndTime(_endTime).getTypeName() == "ReportingWindow");
-        _newMarket = MarketFactory(controller.lookup("MarketFactory")).createMarket(controller);
+        require(universe.getReportingWindowByMarketEndTime(_endTime) == this);
+        MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
+        MarketFeeCalculator _marketFeeCalculator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
+        getReputationToken().trustedTransfer(msg.sender, _marketFactory, _marketFeeCalculator.getDesignatedReportNoShowBond(universe));
+        _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
-        // This initialization has to live outside of the factory method as it charges a REP fee during initialization which requires this window be able to validate that the market belongs in its collection
-        _newMarket.initialize.value(msg.value)(this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _creator, _designatedReporterAddress);
         round1ReporterMarkets.add(_newMarket);
         return _newMarket;
     }
@@ -212,14 +208,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return markets.count == finalizedMarkets.count;
     }
 
-    function checkIn() public afterInitialized returns (bool) {
-        uint256 _totalReportableMarkets = getRound1ReporterMarketsCount() + getRound2ReporterMarketsCount();
-        require(_totalReportableMarkets < 1);
-        require(isActive());
-        reporterStatus[msg.sender].finishedReporting = true;
-        return true;
-    }
-
     function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens) public returns (bool) {
         IReportingToken _shadyReportingToken = IReportingToken(msg.sender);
         require(isContainerForReportingToken(_shadyReportingToken));
@@ -319,10 +307,6 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         }
         IMarket _shadyMarket = IMarket(_shadyTarget);
         return markets.contains(_shadyMarket);
-    }
-
-    function isDoneReporting(address _reporter) public afterInitialized view returns (bool) {
-        return reporterStatus[_reporter].finishedReporting;
     }
 
     function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {

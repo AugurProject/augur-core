@@ -86,7 +86,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
-        // If the value was not at least equal to these this will throw
+        // If the value was not at least equal to the sum of these fees this will throw
         uint256 _refund = msg.value.sub(reporterGasCostsFeeAttoeth.add(validityBondAttoeth));
         if (_refund > 0) {
             require(owner.call.value(_refund)());
@@ -95,11 +95,11 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function assessFees() private returns (bool) {
-        MarketFeeCalculator _marketFeeCaluclator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
+        MarketFeeCalculator _marketFeeCalculator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
         IUniverse _universe = getUniverse();
-        reportingWindow.getReputationToken().trustedTransfer(owner, this, _marketFeeCaluclator.getDesignatedReportNoShowBond(_universe));
-        reporterGasCostsFeeAttoeth = _marketFeeCaluclator.getTargetReporterGasCosts(_universe);
-        validityBondAttoeth = _marketFeeCaluclator.getValidityBond(_universe);
+        require(reportingWindow.getReputationToken().balanceOf(this) == _marketFeeCalculator.getDesignatedReportNoShowBond(_universe));
+        reporterGasCostsFeeAttoeth = _marketFeeCalculator.getTargetReporterGasCosts(_universe);
+        validityBondAttoeth = _marketFeeCalculator.getValidityBond(_universe);
         return true;
     }
 
