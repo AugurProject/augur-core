@@ -22,6 +22,7 @@ export async function compileAndDeployContracts(): Promise<ContractDeployer> {
     const solidityContractCompiler = new SolidityContractCompiler(CONTRACT_INPUT_DIR_PATH, CONTRACT_OUTPUT_DIR_PATH, COMPILED_CONTRACT_OUTPUT_FILE_NAME);
     const compilerResult = await solidityContractCompiler.compileContracts();
 
+    const ethjsHttpProviderHost = (typeof process.env.ETHEREUM_PORT === "undefined") ? "localhost" : process.env.ETHEREUM_HOST;
     const ethjsHttpProviderPort = (typeof process.env.ETHEREUM_PORT === "undefined") ? await getPort() : parseInt(process.env.ETHEREUM_PORT || "0");
     // If no Ethereum host has been specified, use TestRPC.
     if (typeof process.env.ETHEREUM_HOST === "undefined") {
@@ -29,7 +30,7 @@ export async function compileAndDeployContracts(): Promise<ContractDeployer> {
         const rpcClient = new RpcClient();
         await rpcClient.listen(ethjsHttpProviderPort, testRpcOptions);
     }
-    const ethjsHttpProvider = new EthjsHttpProvider("http://localhost:" + ethjsHttpProviderPort);
+    const ethjsHttpProvider = new EthjsHttpProvider(`http://${ethjsHttpProviderHost}:${ethjsHttpProviderPort}`);
     const ethjsQuery = new EthjsQuery(ethjsHttpProvider);
     const contractJson = await fs.readFile(CONTRACT_OUTPUT_DIR_PATH + "/" + COMPILED_CONTRACT_OUTPUT_FILE_NAME, "utf8");
     const contractDeployer = new ContractDeployer(ethjsQuery, contractJson, GAS_AMOUNT, TEST_ACCOUNT_SECRET_KEYS);

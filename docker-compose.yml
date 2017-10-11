@@ -1,0 +1,29 @@
+version: "3"
+services:
+  parity-dev-node:
+    build: ./parity-dev-node
+    ports:
+      - "47622:8545"
+      - "47621:8180"
+  # geth-dev-node:
+  #   build: ./geth-dev-node
+  #   ports:
+  #     - "47624:8545"
+  parity-integration-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile-integration-tests
+    environment:
+      - ETHEREUM_HOST=parity-dev-node
+      - ETHEREUM_PORT=8545
+    links:
+      - parity-dev-node
+  # geth-integration-tests:
+  #   build:
+  #     context: .
+  #     context: Dockerfile-integration-tests
+  #   environment:
+  #     - ETHEREUM_HOST=geth-dev-node
+  #     - ETHEREUM_PORT=8545
+  #   links:
+  #     - geth-dev-node

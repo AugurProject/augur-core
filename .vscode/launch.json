@@ -8,6 +8,7 @@
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "cwd": "${workspaceRoot}",
             "args": [
+                "--require", "source-map-support/register",
                 "output/tests-integration/**/*.js",
                 "--no-timeouts"
             ],

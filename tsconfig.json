@@ -11,7 +11,7 @@
                 "./typings/*"
             ]
         },
-        "watch": true,
+        "watch": false,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "strictNullChecks": true,
