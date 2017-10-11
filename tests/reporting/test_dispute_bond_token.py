@@ -14,8 +14,8 @@ REP_TOTAL = 11 * 10**6 # Total number of REP tokens in existence
 REP_DIVISOR = 10**18 # Amount by which a single REP token can be divided
 
 DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20
-FIRST_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21
-LAST_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22
+ROUND1_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21
+ROUND2_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22
 
 MARKET_TYPE_CATEGORICAL = 0
 MARKET_TYPE_SCALAR = 1
@@ -28,7 +28,7 @@ SCALAR_OUTCOME_A = [30*10**18, 10*10**18]
 SCALAR_OUTCOME_B = [10*10**18, 30*10**18]
 SCALAR_OUTCOME_C = [20*10**18, 20*10**18]
 
-@mark.parametrize('marketType,designatedReporterAccountNum,designatedReporterOutcome,designatedReporterDisputerAccountNum,designatedReporterDisputeStakes,firstReportersDisputerAccountNum,firstReporterDisputeOutcome,firstReportersDisputeStakes,lastReportersDisputerAccountNum,lastReportersDisputeStakes,expectedAccountBalances', [
+@mark.parametrize('marketType,designatedReporterAccountNum,designatedReporterOutcome,designatedReporterDisputerAccountNum,designatedReporterDisputeStakes,round1ReportersDisputerAccountNum,round1ReporterDisputeOutcome,round1ReportersDisputeStakes,round2ReportersDisputerAccountNum,round2ReportersDisputeStakes,expectedAccountBalances', [
     # CONSIDER: Create test cases where:
     # - There is no designated reporting (just first reporters & last reporters)
     # - There is a tie between 2 outcomes
@@ -113,7 +113,7 @@ SCALAR_OUTCOME_C = [20*10**18, 20*10**18]
     (MARKET_TYPE_SCALAR, 0, SCALAR_OUTCOME_A, 1, [[2, SCALAR_OUTCOME_B, 105 * REP_DIVISOR]], 0, SCALAR_OUTCOME_A, [[3, SCALAR_OUTCOME_B, 11050 * REP_DIVISOR]], 4, [[0, SCALAR_OUTCOME_A], [1, SCALAR_OUTCOME_B], [2, SCALAR_OUTCOME_B], [3, SCALAR_OUTCOME_B], [4, SCALAR_OUTCOME_A], [5, SCALAR_OUTCOME_B], [6, SCALAR_OUTCOME_B]], [[0, None, 0], [1, None, 0], [2, None, 0], [3, None, 0], [4, None, 0], [5, None, 0], [6, None, 0], [0, SCALAR_OUTCOME_A, 998901999999999999999999], [1, SCALAR_OUTCOME_A, 0], [2, SCALAR_OUTCOME_A, 0], [3, SCALAR_OUTCOME_A, 0], [4, SCALAR_OUTCOME_A, 1000000000000000000000000], [5, SCALAR_OUTCOME_A, 0], [6, SCALAR_OUTCOME_A, 0], [0, SCALAR_OUTCOME_B, 0], [1, SCALAR_OUTCOME_B, 999999999999999999999999], [2, SCALAR_OUTCOME_B, 1000000000000000000000000], [3, SCALAR_OUTCOME_B, 1000000000000000000000000], [4, SCALAR_OUTCOME_B, 0], [5, SCALAR_OUTCOME_B, 1000000000000000000000000], [6, SCALAR_OUTCOME_B, 1000000000000000000000000], [0, SCALAR_OUTCOME_C, 0], [1, SCALAR_OUTCOME_C, 0], [2, SCALAR_OUTCOME_C, 0], [3, SCALAR_OUTCOME_C, 0], [4, SCALAR_OUTCOME_C, 0], [5, SCALAR_OUTCOME_C, 0], [6, SCALAR_OUTCOME_C, 0]]),
     # ----- End scalar market test cases -----
 ])
-def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designatedReporterOutcome, designatedReporterDisputerAccountNum, designatedReporterDisputeStakes, firstReportersDisputerAccountNum, firstReporterDisputeOutcome, firstReportersDisputeStakes, lastReportersDisputerAccountNum, lastReportersDisputeStakes, expectedAccountBalances, contractsFixture):
+def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designatedReporterOutcome, designatedReporterDisputerAccountNum, designatedReporterDisputeStakes, round1ReportersDisputerAccountNum, round1ReporterDisputeOutcome, round1ReportersDisputeStakes, round2ReportersDisputerAccountNum, round2ReportersDisputeStakes, expectedAccountBalances, contractsFixture):
     universe = contractsFixture.universe
     if (marketType == MARKET_TYPE_CATEGORICAL):
         market = contractsFixture.categoricalMarket
@@ -144,8 +144,8 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
     stakeDelta = 0
 
     designatedReporterDisputeBondToken = None
-    firstReportersDisputeBondToken = None
-    lastReportersDisputeBondToken = None
+    round1ReportersDisputeBondToken = None
+    round2ReportersDisputeBondToken = None
 
     # Seed legacy REP contract with 11 million reputation tokens
     legacyRepContract = contractsFixture.contracts['LegacyRepContract']
@@ -203,34 +203,34 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
             # Fast forward to one second after dispute end time
             contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
 
-    if (firstReportersDisputerAccountNum != None):
+    if (round1ReportersDisputerAccountNum != None):
         # Fast forward to one second after dispute start time
         contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
         print "a" + str(designatedReporterDisputerAccountNum) + " is disputing first reporters outcome"
 
         # Dispute the first reporters result
-        disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(firstReportersDisputerAccountNum)))
-        if (firstReporterDisputeOutcome != None):
-            firstReporterDisputeOutcomePayoutHash = market.derivePayoutDistributionHash(firstReporterDisputeOutcome)
-            stakeDelta = contractsFixture.contracts["MarketExtensions"].getPayoutDistributionHashStake(market.address, firstReporterDisputeOutcomePayoutHash)
+        disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(round1ReportersDisputerAccountNum)))
+        if (round1ReporterDisputeOutcome != None):
+            round1ReporterDisputeOutcomePayoutHash = market.derivePayoutDistributionHash(round1ReporterDisputeOutcome)
+            stakeDelta = contractsFixture.contracts["MarketExtensions"].getPayoutDistributionHashStake(market.address, round1ReporterDisputeOutcomePayoutHash)
             stakeDelta = 1 - stakeDelta
             if stakeDelta < 0:
                 stakeDelta = 0
         else:
-            firstReporterDisputeOutcome = []
+            round1ReporterDisputeOutcome = []
             stakeDelta = 0
-        market.disputeFirstReporters(firstReporterDisputeOutcome, stakeDelta, sender=getattr(tester, 'k' + str(firstReportersDisputerAccountNum)))
-        firstReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getFirstReportersDisputeBondToken())
-        assert firstReportersDisputeBondToken.getMarket() == market.address
+        market.disputeRound1Reporters(round1ReporterDisputeOutcome, stakeDelta, sender=getattr(tester, 'k' + str(round1ReportersDisputerAccountNum)))
+        round1ReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getRound1ReportersDisputeBondToken())
+        assert round1ReportersDisputeBondToken.getMarket() == market.address
 
         # Ensure correct bond amount was sent to dispute bond token
-        assert reputationToken.balanceOf(getattr(tester, 'a' + str(firstReportersDisputerAccountNum))) == disputerAccountBalance - FIRST_REPORTERS_DISPUTE_BOND_AMOUNT - stakeDelta
-        assert reputationToken.balanceOf(firstReportersDisputeBondToken.address) == FIRST_REPORTERS_DISPUTE_BOND_AMOUNT
+        assert reputationToken.balanceOf(getattr(tester, 'a' + str(round1ReportersDisputerAccountNum))) == disputerAccountBalance - ROUND1_REPORTERS_DISPUTE_BOND_AMOUNT - stakeDelta
+        assert reputationToken.balanceOf(round1ReportersDisputeBondToken.address) == ROUND1_REPORTERS_DISPUTE_BOND_AMOUNT
 
         assert not reportingWindow.isContainerForMarket(market.address)
         assert universe.isContainerForMarket(market.address)
-        assert universe.isContainerForDisputeBondToken(firstReportersDisputeBondToken.address)
+        assert universe.isContainerForDisputeBondToken(round1ReportersDisputeBondToken.address)
         reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
         assert reportingWindow.isContainerForMarket(market.address)
 
@@ -238,12 +238,12 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         contractsFixture.chain.head_state.timestamp = reportingWindow.getReportingStartTime() + 1
 
         # Have test accounts report on the outcome
-        buyReportingTokens(marketType, firstReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC)
+        buyReportingTokens(marketType, round1ReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC)
 
         # Fast forward to one second after dispute end time
         contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
 
-    if (lastReportersDisputerAccountNum != None):
+    if (round2ReportersDisputerAccountNum != None):
         # Fast forward to one second after dispute start time
         contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
@@ -251,14 +251,14 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         print "a" + str(designatedReporterDisputerAccountNum) + " is disputing last reporters outcome (and forking)"
 
         # Dispute the last reporters result
-        disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(lastReportersDisputerAccountNum)))
-        market.disputeLastReporters(sender=getattr(tester, 'k' + str(lastReportersDisputerAccountNum)))
-        lastReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getLastReportersDisputeBondToken())
-        assert lastReportersDisputeBondToken.getMarket() == market.address
+        disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(round2ReportersDisputerAccountNum)))
+        market.disputeRound2Reporters(sender=getattr(tester, 'k' + str(round2ReportersDisputerAccountNum)))
+        round2ReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getRound2ReportersDisputeBondToken())
+        assert round2ReportersDisputeBondToken.getMarket() == market.address
 
         # Ensure correct bond amount was sent to dispute bond token
-        assert reputationToken.balanceOf(getattr(tester, 'a' + str(lastReportersDisputerAccountNum))) == disputerAccountBalance - LAST_REPORTERS_DISPUTE_BOND_AMOUNT
-        assert reputationToken.balanceOf(lastReportersDisputeBondToken.address) == LAST_REPORTERS_DISPUTE_BOND_AMOUNT
+        assert reputationToken.balanceOf(getattr(tester, 'a' + str(round2ReportersDisputerAccountNum))) == disputerAccountBalance - ROUND2_REPORTERS_DISPUTE_BOND_AMOUNT
+        assert reputationToken.balanceOf(round2ReportersDisputeBondToken.address) == ROUND2_REPORTERS_DISPUTE_BOND_AMOUNT
 
         assert not reportingWindow.isContainerForMarket(market.address)
         assert universe.isContainerForMarket(market.address)
@@ -279,7 +279,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         assert bUniverse.address != cUniverse.address
 
         # Participate in the fork by moving REP
-        for row in lastReportersDisputeStakes:
+        for row in round2ReportersDisputeStakes:
             if (row[1] == OUTCOME_A):
                 destinationUniverseReputationToken = aUniverseReputationToken
             elif (row[1] == OUTCOME_B):
@@ -294,25 +294,25 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         # Fast forward to one second after dispute end time
         contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
 
-    if (designatedReporterDisputerAccountNum == None and firstReportersDisputerAccountNum == None and lastReportersDisputerAccountNum == None):
+    if (designatedReporterDisputerAccountNum == None and round1ReportersDisputerAccountNum == None and round2ReportersDisputerAccountNum == None):
         contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
 
     tentativeWinningReportingTokenAddress = market.getReportingTokenOrZeroByPayoutDistributionHash(market.getTentativeWinningPayoutDistributionHash())
     tentativeWinningReportingTokenBalance = reputationToken.balanceOf(tentativeWinningReportingTokenAddress)
 
-    totalLosingDisputeBondTokens = calculateTotalLosingDisputeBondTokens(designatedReporterDisputeBondToken, firstReportersDisputeBondToken, market.getTentativeWinningPayoutDistributionHash())
+    totalLosingDisputeBondTokens = calculateTotalLosingDisputeBondTokens(designatedReporterDisputeBondToken, round1ReportersDisputeBondToken, market.getTentativeWinningPayoutDistributionHash())
 
     # Finalize market (i.e., transfer losing dispute bond tokens to winning reporting token)
     print "\nFinalizing markets\n"
     assert market.tryFinalize()
-    if (lastReportersDisputerAccountNum == None):
+    if (round2ReportersDisputerAccountNum == None):
         assert otherMarket.tryFinalize()
         assert contractsFixture.binaryMarket.tryFinalize()
         assert otherMarket.getReportingState() == contractsFixture.constants.FINALIZED()
         assert contractsFixture.binaryMarket.getReportingState() == contractsFixture.constants.FINALIZED()
 
     assert market.getReportingState() == contractsFixture.constants.FINALIZED()
-    if (lastReportersDisputerAccountNum):
+    if (round2ReportersDisputerAccountNum):
         print "Original universe test accounts"
         printTestAccountBalances(reputationToken, False)
         print "A universe test accounts"
@@ -325,17 +325,17 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         printTestAccountBalances(reputationToken, False)
 
     printReportingTokenBalances(reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, False)
-    printDisputeBondTokenBalances(reputationToken, designatedReporterDisputeBondToken, firstReportersDisputeBondToken, lastReportersDisputeBondToken, False)
+    printDisputeBondTokenBalances(reputationToken, designatedReporterDisputeBondToken, round1ReportersDisputeBondToken, round2ReportersDisputeBondToken, False)
 
     # Verify that losing dispute bonds went to the winning reporting token
-    if (lastReportersDisputerAccountNum == None):
+    if (round2ReportersDisputerAccountNum == None):
         winningReportingToken = contractsFixture.applySignature('ReportingToken', market.getFinalWinningReportingToken())
         winningReportingTokenBalance = reputationToken.balanceOf(winningReportingToken.address)
 
         if (designatedReporterDisputeBondToken and designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == market.getTentativeWinningPayoutDistributionHash()):
             assert reputationToken.balanceOf(designatedReporterDisputeBondToken.address) == 0
-        if (firstReportersDisputeBondToken and firstReportersDisputeBondToken.getDisputedPayoutDistributionHash() == market.getTentativeWinningPayoutDistributionHash()):
-            assert reputationToken.balanceOf(firstReportersDisputeBondToken.address) == 0
+        if (round1ReportersDisputeBondToken and round1ReportersDisputeBondToken.getDisputedPayoutDistributionHash() == market.getTentativeWinningPayoutDistributionHash()):
+            assert reputationToken.balanceOf(round1ReportersDisputeBondToken.address) == 0
         assert winningReportingTokenBalance == tentativeWinningReportingTokenBalance + totalLosingDisputeBondTokens
 
         print "-------------------------------------------------------"
@@ -343,9 +343,9 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         print "Total losing dispute bond tokens: " + str(totalLosingDisputeBondTokens / REP_DIVISOR)
         print "Winning reporting token balance after market finalization: " + str(winningReportingTokenBalance / REP_DIVISOR) + "\n"
 
-    if (designatedReporterDisputerAccountNum != None or firstReportersDisputerAccountNum != None):
+    if (designatedReporterDisputerAccountNum != None or round1ReportersDisputerAccountNum != None):
         # Migrate losing reporting tokens (if no fork occurred)
-        if (lastReportersDisputerAccountNum == None):
+        if (round2ReportersDisputerAccountNum == None):
             winningReportingTokenBalanceBeforeMigration = reputationToken.balanceOf(winningReportingToken.address)
 
             # Calculate total losing reporting tokens
@@ -361,23 +361,23 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
                 totalLosingReportingTokens += reputationToken.balanceOf(reportingTokenB.address)
 
             amountSentToDesignatedReporterDisputeBondToken = 0
-            amountSentToFirstReportersDisputeBondToken = 0
-            amountSentToLastReportersDisputeBondToken = 0
+            amountSentToRound1ReportersDisputeBondToken = 0
+            amountSentToRound2ReportersDisputeBondToken = 0
             # Calculate how many losing tokens should be sent to each winning dispute bond token
             if (designatedReporterDisputeBondToken and designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
                 designatedReporterDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(designatedReporterDisputeBondToken.address)
                 amountNeeded = designatedReporterDisputeBondToken.getBondRemainingToBePaidOut() - designatedReporterDisputeBondTokenBalanceBeforeMigration
                 amountSentToDesignatedReporterDisputeBondToken = min(amountNeeded, totalLosingReportingTokens)
-            if (firstReportersDisputeBondToken and firstReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
-                firstReportersDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(firstReportersDisputeBondToken.address)
-                amountNeeded = firstReportersDisputeBondToken.getBondRemainingToBePaidOut() - firstReportersDisputeBondTokenBalanceBeforeMigration
-                amountSentToFirstReportersDisputeBondToken = min(amountNeeded, totalLosingReportingTokens - amountSentToDesignatedReporterDisputeBondToken)
-            if (lastReportersDisputeBondToken and lastReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
-                lastReportersDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(lastReportersDisputeBondToken.address)
-                amountNeeded = lastReportersDisputeBondToken.getBondRemainingToBePaidOut() - lastReportersDisputeBondTokenBalanceBeforeMigration
-                amountSentToLastReportersDisputeBondToken = min(amountNeeded, totalLosingReportingTokens - amountSentToFirstReportersDisputeBondToken - amountSentToDesignatedReporterDisputeBondToken)
+            if (round1ReportersDisputeBondToken and round1ReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+                round1ReportersDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(round1ReportersDisputeBondToken.address)
+                amountNeeded = round1ReportersDisputeBondToken.getBondRemainingToBePaidOut() - round1ReportersDisputeBondTokenBalanceBeforeMigration
+                amountSentToRound1ReportersDisputeBondToken = min(amountNeeded, totalLosingReportingTokens - amountSentToDesignatedReporterDisputeBondToken)
+            if (round2ReportersDisputeBondToken and round2ReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+                round2ReportersDisputeBondTokenBalanceBeforeMigration = reputationToken.balanceOf(round2ReportersDisputeBondToken.address)
+                amountNeeded = round2ReportersDisputeBondToken.getBondRemainingToBePaidOut() - round2ReportersDisputeBondTokenBalanceBeforeMigration
+                amountSentToRound2ReportersDisputeBondToken = min(amountNeeded, totalLosingReportingTokens - amountSentToRound1ReportersDisputeBondToken - amountSentToDesignatedReporterDisputeBondToken)
             # Calculate remaining losing tokens to be sent to winning reporting token
-            amountSentToWinningReportingToken = totalLosingReportingTokens - amountSentToLastReportersDisputeBondToken - amountSentToFirstReportersDisputeBondToken - amountSentToDesignatedReporterDisputeBondToken
+            amountSentToWinningReportingToken = totalLosingReportingTokens - amountSentToRound2ReportersDisputeBondToken - amountSentToRound1ReportersDisputeBondToken - amountSentToDesignatedReporterDisputeBondToken
 
             print "Migrating losing reporting tokens"
             if (market.getFinalPayoutDistributionHash() == reportingTokenA.getPayoutDistributionHash()):
@@ -398,22 +398,22 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
 
             if (designatedReporterDisputeBondToken and designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
                 assert reputationToken.balanceOf(designatedReporterDisputeBondToken.address) == designatedReporterDisputeBondTokenBalanceBeforeMigration + amountSentToDesignatedReporterDisputeBondToken
-            if (firstReportersDisputeBondToken and firstReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
-                assert reputationToken.balanceOf(firstReportersDisputeBondToken.address) == firstReportersDisputeBondTokenBalanceBeforeMigration + amountSentToFirstReportersDisputeBondToken
-            if (lastReportersDisputeBondToken and lastReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
-                assert reputationToken.balanceOf(lastReportersDisputeBondToken.address) == lastReportersDisputeBondTokenBalanceBeforeMigration + amountSentToLastReportersDisputeBondToken
+            if (round1ReportersDisputeBondToken and round1ReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+                assert reputationToken.balanceOf(round1ReportersDisputeBondToken.address) == round1ReportersDisputeBondTokenBalanceBeforeMigration + amountSentToRound1ReportersDisputeBondToken
+            if (round2ReportersDisputeBondToken and round2ReportersDisputeBondToken.getDisputedPayoutDistributionHash() != market.getFinalPayoutDistributionHash()):
+                assert reputationToken.balanceOf(round2ReportersDisputeBondToken.address) == round2ReportersDisputeBondTokenBalanceBeforeMigration + amountSentToRound2ReportersDisputeBondToken
             assert reputationToken.balanceOf(winningReportingToken.address) == winningReportingTokenBalanceBeforeMigration + amountSentToWinningReportingToken
 
             winningReportingTokenBalance = reputationToken.balanceOf(winningReportingToken.address)
 
             print "Total losing reporting tokens: " + str(totalLosingReportingTokens)
             print "Amount sent to designated reporter dispute bond token: " + str(amountSentToDesignatedReporterDisputeBondToken)
-            print "Amount sent to first reporters dispute bond token: " + str(amountSentToFirstReportersDisputeBondToken)
-            print "Amount sent to last reporters dispute bond token: " + str(amountSentToLastReportersDisputeBondToken)
+            print "Amount sent to first reporters dispute bond token: " + str(amountSentToRound1ReportersDisputeBondToken)
+            print "Amount sent to last reporters dispute bond token: " + str(amountSentToRound2ReportersDisputeBondToken)
             print "Amount sent to winning reporting token: : " + str(amountSentToWinningReportingToken)
             print "Winning reporting token balance before migration: " + str(winningReportingTokenBalanceBeforeMigration / REP_DIVISOR)
             print "Winning reporting token balance after migration: " + str(winningReportingTokenBalance / REP_DIVISOR) + "\n"
-            printDisputeBondTokenBalances(reputationToken, designatedReporterDisputeBondToken, firstReportersDisputeBondToken, lastReportersDisputeBondToken, False)
+            printDisputeBondTokenBalances(reputationToken, designatedReporterDisputeBondToken, round1ReportersDisputeBondToken, round2ReportersDisputeBondToken, False)
 
         winningOutcome = OUTCOME_A
         if (market.getFinalPayoutDistributionHash() == reportingTokenB.getPayoutDistributionHash()):
@@ -422,15 +422,15 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
             winningOutcome = OUTCOME_C
 
         # Redeem winning/forked reporting tokens
-        handleReportingTokens(market, designatedReporterAccountNum, designatedReporterDisputerAccountNum, firstReportersDisputerAccountNum, firstReporterDisputeOutcome, stakeDelta, lastReportersDisputerAccountNum, designatedReporterDisputeStakes, firstReportersDisputeStakes, lastReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C, designatedReporterStake, winningOutcome)
+        handleReportingTokens(market, designatedReporterAccountNum, designatedReporterDisputerAccountNum, round1ReportersDisputerAccountNum, round1ReporterDisputeOutcome, stakeDelta, round2ReportersDisputerAccountNum, designatedReporterDisputeStakes, round1ReportersDisputeStakes, round2ReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C, designatedReporterStake, winningOutcome)
 
         contractsFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
         # Have correct dispute bond holders withdraw from dispute token
-        withdrawBondsFromDisputeTokens(market, lastReportersDisputeStakes, designatedReporterDisputerAccountNum, firstReportersDisputerAccountNum, lastReportersDisputerAccountNum, designatedReporterDisputeBondToken, firstReportersDisputeBondToken, lastReportersDisputeBondToken, reputationToken, winningReportingToken, aUniverse, bUniverse, cUniverse, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
+        withdrawBondsFromDisputeTokens(market, round2ReportersDisputeStakes, designatedReporterDisputerAccountNum, round1ReportersDisputerAccountNum, round2ReportersDisputerAccountNum, designatedReporterDisputeBondToken, round1ReportersDisputeBondToken, round2ReportersDisputeBondToken, reputationToken, winningReportingToken, aUniverse, bUniverse, cUniverse, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)
 
     print "Final test account balances"
-    if (lastReportersDisputerAccountNum):
+    if (round2ReportersDisputerAccountNum):
         print "Original universe test accounts"
         printTestAccountBalances(reputationToken, True)
         print "A universe test accounts"
@@ -452,12 +452,12 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         elif (row[1] == None):
             assert row[2] == reputationToken.balanceOf(getattr(tester, 'a' + str(row[0])))
 
-def handleReportingTokens(market, designatedReporterAccountNum, designatedReporterDisputerAccountNum, firstReportersDisputerAccountNum, firstReporterDisputeOutcome, stakeDelta, lastReportersDisputerAccountNum, designatedReporterDisputeStakes, firstReportersDisputeStakes, lastReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C, designatedReportStake, winningOutcome):
-    if (lastReportersDisputerAccountNum):
+def handleReportingTokens(market, designatedReporterAccountNum, designatedReporterDisputerAccountNum, round1ReportersDisputerAccountNum, round1ReporterDisputeOutcome, stakeDelta, round2ReportersDisputerAccountNum, designatedReporterDisputeStakes, round1ReportersDisputeStakes, round2ReportersDisputeStakes, reputationToken, reportingTokenA, reportingTokenB, reportingTokenC, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, winningReportingToken, OUTCOME_A, OUTCOME_B, OUTCOME_C, designatedReportStake, winningOutcome):
+    if (round2ReportersDisputerAccountNum):
         # Reputation staked on a particular outcome must be redeemed only on the universe for that outcome.
         # Reputation held in a dispute bond against a particular outcome must be redeemed on a universe other than the disputed outcome.
         migrators = {}
-        for row in lastReportersDisputeStakes:
+        for row in round2ReportersDisputeStakes:
             migrators[row[0]] = row[1]
 
         print 'Migrators array:'
@@ -484,7 +484,7 @@ def handleReportingTokens(market, designatedReporterAccountNum, designatedReport
                     stake += designatedReportStake
                 if (designatedReporterDisputerAccountNum == row[0] and migrators[row[0]] == OUTCOME_B):
                     stake += 1
-                if (firstReportersDisputerAccountNum == row[0] and migrators[row[0]] == firstReporterDisputeOutcome):
+                if (round1ReportersDisputerAccountNum == row[0] and migrators[row[0]] == round1ReporterDisputeOutcome):
                     stake += stakeDelta
                 expectedWinnings = reputationToken.balanceOf(reportingToken.address) * stake / reportingToken.totalSupply()
                 print "accountBalanceBeforeRedemption: " + str(accountBalanceBeforeRedemption)
@@ -493,7 +493,7 @@ def handleReportingTokens(market, designatedReporterAccountNum, designatedReport
                 assert destinationReputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalanceBeforeRedemption + expectedWinnings
                 print "Transferred " + str(expectedWinnings) + " to account a" + str(row[0]) + "\n"
 
-        for row in firstReportersDisputeStakes:
+        for row in round1ReportersDisputeStakes:
             destinationReputationToken = None
             print row
             if (migrators[row[0]] and migrators[row[0]] == OUTCOME_A):
@@ -515,7 +515,7 @@ def handleReportingTokens(market, designatedReporterAccountNum, designatedReport
                     stake += designatedReportStake
                 if (designatedReporterDisputerAccountNum == row[0] and migrators[row[0]] == OUTCOME_B):
                     stake += 1
-                if (firstReportersDisputerAccountNum == row[0] and migrators[row[0]] == firstReporterDisputeOutcome):
+                if (round1ReportersDisputerAccountNum == row[0] and migrators[row[0]] == round1ReporterDisputeOutcome):
                     stake += stakeDelta
                 expectedWinnings = reputationToken.balanceOf(reportingToken.address) * stake / reportingToken.totalSupply()
                 print "accountBalanceBeforeRedemption: " + str(accountBalanceBeforeRedemption)
@@ -540,10 +540,10 @@ def handleReportingTokens(market, designatedReporterAccountNum, designatedReport
             winningOutcomeStakes[designatedReporterAccountNum] = designatedReportStake
         if (designatedReporterDisputerAccountNum != None and winningOutcome == OUTCOME_B):
             winningOutcomeStakes[designatedReporterDisputerAccountNum] = 1
-        if (firstReportersDisputerAccountNum != None and winningOutcome == firstReporterDisputeOutcome):
-            if (firstReportersDisputerAccountNum not in winningOutcomeStakes):
-                winningOutcomeStakes[firstReportersDisputerAccountNum] = 0
-            winningOutcomeStakes[firstReportersDisputerAccountNum] += stakeDelta
+        if (round1ReportersDisputerAccountNum != None and winningOutcome == round1ReporterDisputeOutcome):
+            if (round1ReportersDisputerAccountNum not in winningOutcomeStakes):
+                winningOutcomeStakes[round1ReportersDisputerAccountNum] = 0
+            winningOutcomeStakes[round1ReportersDisputerAccountNum] += stakeDelta
         for row in designatedReporterDisputeStakes:
             if (market.derivePayoutDistributionHash(row[1]) == winningReportingToken.getPayoutDistributionHash()):
                 totalStakedOnWinningOutcome += row[2]
@@ -551,7 +551,7 @@ def handleReportingTokens(market, designatedReporterAccountNum, designatedReport
                     winningOutcomeStakes[row[0]] += row[2]
                 else:
                     winningOutcomeStakes.update({row[0]: row[2]})
-        for row in firstReportersDisputeStakes:
+        for row in round1ReportersDisputeStakes:
             if (market.derivePayoutDistributionHash(row[1]) == winningReportingToken.getPayoutDistributionHash()):
                 totalStakedOnWinningOutcome += row[2]
                 if (row[0] in winningOutcomeStakes):
@@ -574,8 +574,8 @@ def handleReportingTokens(market, designatedReporterAccountNum, designatedReport
             print "Transferred " + str(expectedWinnings) + " to account a" + str(key)
         printTestAccountBalances(reputationToken, False)
 
-def withdrawBondsFromDisputeTokens(market, lastReportersDisputeStakes, designatedReporterDisputerAccountNum, firstReportersDisputerAccountNum, lastReportersDisputerAccountNum, designatedReporterDisputeBondToken, firstReportersDisputeBondToken, lastReportersDisputeBondToken, reputationToken, winningReportingToken, aUniverse, bUniverse, cUniverse, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
-    if (lastReportersDisputerAccountNum == None):
+def withdrawBondsFromDisputeTokens(market, round2ReportersDisputeStakes, designatedReporterDisputerAccountNum, round1ReportersDisputerAccountNum, round2ReportersDisputerAccountNum, designatedReporterDisputeBondToken, round1ReportersDisputeBondToken, round2ReportersDisputeBondToken, reputationToken, winningReportingToken, aUniverse, bUniverse, cUniverse, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C):
+    if (round2ReportersDisputerAccountNum == None):
         if (designatedReporterDisputeBondToken and market.getFinalPayoutDistributionHash() != designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash()):
             print "Withdrawing designated reporter dispute bond tokens"
             accountBalanceBeforeWithdrawl = reputationToken.balanceOf(designatedReporterDisputeBondToken.getBondHolder())
@@ -583,17 +583,17 @@ def withdrawBondsFromDisputeTokens(market, lastReportersDisputeStakes, designate
             designatedReporterDisputeBondToken.withdraw(sender=getattr(tester, 'k' + str(designatedReporterDisputerAccountNum)))
             assert reputationToken.balanceOf(designatedReporterDisputeBondToken.address) == 0
             assert reputationToken.balanceOf(designatedReporterDisputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
-        if (firstReportersDisputeBondToken and market.getFinalPayoutDistributionHash() != firstReportersDisputeBondToken.getDisputedPayoutDistributionHash()):
+        if (round1ReportersDisputeBondToken and market.getFinalPayoutDistributionHash() != round1ReportersDisputeBondToken.getDisputedPayoutDistributionHash()):
             print "Withdrawing first reporters dispute bond tokens"
-            accountBalanceBeforeWithdrawl = reputationToken.balanceOf(firstReportersDisputeBondToken.getBondHolder())
-            disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(firstReportersDisputeBondToken.address)
-            firstReportersDisputeBondToken.withdraw(sender=getattr(tester, 'k' + str(firstReportersDisputerAccountNum)))
-            assert reputationToken.balanceOf(firstReportersDisputeBondToken.address) == 0
-            assert reputationToken.balanceOf(firstReportersDisputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
+            accountBalanceBeforeWithdrawl = reputationToken.balanceOf(round1ReportersDisputeBondToken.getBondHolder())
+            disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(round1ReportersDisputeBondToken.address)
+            round1ReportersDisputeBondToken.withdraw(sender=getattr(tester, 'k' + str(round1ReportersDisputerAccountNum)))
+            assert reputationToken.balanceOf(round1ReportersDisputeBondToken.address) == 0
+            assert reputationToken.balanceOf(round1ReportersDisputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
     else:
         # Withdraw dispute bond tokens to the universe the disputers migrated to
         print "All reporters dispute stakes:"
-        for row in lastReportersDisputeStakes:
+        for row in round2ReportersDisputeStakes:
             disputeAccountNum = None
             disputeBondToken = None
             print str(row) + "\n"
@@ -624,9 +624,9 @@ def withdrawBondsFromDisputeTokens(market, lastReportersDisputeStakes, designate
                         assert reputationToken.balanceOf(disputeBondToken.address) == 0
                         assert destinationUniverseReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
                         printTestAccountBalances(destinationUniverseReputationToken, True)
-            if (row[0] == firstReportersDisputerAccountNum):
-                disputeAccountNum = firstReportersDisputerAccountNum
-                disputeBondToken = firstReportersDisputeBondToken
+            if (row[0] == round1ReportersDisputerAccountNum):
+                disputeAccountNum = round1ReportersDisputerAccountNum
+                disputeBondToken = round1ReportersDisputeBondToken
                 disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
                 destinationUniverse = None
                 destinationUniverseReputationToken = None
@@ -651,9 +651,9 @@ def withdrawBondsFromDisputeTokens(market, lastReportersDisputeStakes, designate
                         assert reputationToken.balanceOf(disputeBondToken.address) == 0
                         assert destinationUniverseReputationToken.balanceOf(disputeBondToken.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondTokenBalanceBeforeWithdrawl
                         printTestAccountBalances(destinationUniverseReputationToken, True)
-            if (row[0] == lastReportersDisputerAccountNum):
-                disputeAccountNum = lastReportersDisputerAccountNum
-                disputeBondToken = lastReportersDisputeBondToken
+            if (row[0] == round2ReportersDisputerAccountNum):
+                disputeAccountNum = round2ReportersDisputerAccountNum
+                disputeBondToken = round2ReportersDisputeBondToken
                 disputeBondTokenBalanceBeforeWithdrawl = reputationToken.balanceOf(disputeBondToken.address)
                 destinationUniverse = None
                 destinationUniverseReputationToken = None
@@ -696,17 +696,17 @@ def printReportingTokenBalances(reputationToken, reportingTokenA, reportingToken
     print str(reputationToken.balanceOf(reportingTokenB.address) / divisor)
     print str(reputationToken.balanceOf(reportingTokenC.address) /divisor) + "\n"
 
-def printDisputeBondTokenBalances(reputationToken, designatedReporterDisputeBondToken, firstReportersDisputeBondToken, lastReportersDisputeBondToken, showRepFractions):
+def printDisputeBondTokenBalances(reputationToken, designatedReporterDisputeBondToken, round1ReportersDisputeBondToken, round2ReportersDisputeBondToken, showRepFractions):
     divisor = REP_DIVISOR
     if (showRepFractions):
         divisor = 1
     print "----- DISPUTE BOND TOKEN BALANCES -----"
     if (designatedReporterDisputeBondToken):
         print "designatedReporterDisputeBondToken balance: " + str(reputationToken.balanceOf(designatedReporterDisputeBondToken.address) / divisor)
-    if (firstReportersDisputeBondToken):
-        print "firstReportersDisputeBondToken balance: " + str(reputationToken.balanceOf(firstReportersDisputeBondToken.address) / divisor)
-    if (lastReportersDisputeBondToken):
-        print "lastReportersDisputeBondToken balance: " + str(reputationToken.balanceOf(lastReportersDisputeBondToken.address) / divisor)
+    if (round1ReportersDisputeBondToken):
+        print "round1ReportersDisputeBondToken balance: " + str(reputationToken.balanceOf(round1ReportersDisputeBondToken.address) / divisor)
+    if (round2ReportersDisputeBondToken):
+        print "round2ReportersDisputeBondToken balance: " + str(reputationToken.balanceOf(round2ReportersDisputeBondToken.address) / divisor)
     print ""
 
 # Put 1 million REP tokens in tester.a0-tester.a8 and the remainder in tester.a9
@@ -743,10 +743,10 @@ def buyReportingTokens(marketType, disputeStakes, reputationToken, reportingToke
         assert reputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == accountBalance - row[2]
     print ""
 
-def calculateTotalLosingDisputeBondTokens(designatedReporterDisputeBondToken, firstReportersDisputeBondToken, tentativeWinningPayoutDistributionHash):
+def calculateTotalLosingDisputeBondTokens(designatedReporterDisputeBondToken, round1ReportersDisputeBondToken, tentativeWinningPayoutDistributionHash):
     totalLosingDisputeBondTokens = 0
     if (designatedReporterDisputeBondToken and designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == tentativeWinningPayoutDistributionHash):
         totalLosingDisputeBondTokens += DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT
-    if (firstReportersDisputeBondToken and firstReportersDisputeBondToken.getDisputedPayoutDistributionHash() == tentativeWinningPayoutDistributionHash):
-        totalLosingDisputeBondTokens += FIRST_REPORTERS_DISPUTE_BOND_AMOUNT
+    if (round1ReportersDisputeBondToken and round1ReportersDisputeBondToken.getDisputedPayoutDistributionHash() == tentativeWinningPayoutDistributionHash):
+        totalLosingDisputeBondTokens += ROUND1_REPORTERS_DISPUTE_BOND_AMOUNT
     return totalLosingDisputeBondTokens

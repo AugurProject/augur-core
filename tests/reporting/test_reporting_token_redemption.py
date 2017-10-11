@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, raises
-from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, initializeReportingFixture
+from reporting_utils import proceedToDesignatedReporting, proceedToRound1Reporting, initializeReportingFixture
 
 def test_one_market_one_correct_report(reportingTokenPayoutFixture):
     market = reportingTokenPayoutFixture.market1
@@ -51,8 +51,8 @@ def test_reporting_token_redemption(numReports, numCorrect, reportingTokenPayout
     reputationToken = reportingTokenPayoutFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     marketFeeCalculator = reportingTokenPayoutFixture.contracts["MarketFeeCalculator"]
 
-    # Proceed to FIRST REPORTING
-    proceedToFirstReporting(reportingTokenPayoutFixture, market, False, tester.k1, [0,10**18], [10**18,0])
+    # Proceed to ROUND1 REPORTING
+    proceedToRound1Reporting(reportingTokenPayoutFixture, market, False, tester.k1, [0,10**18], [10**18,0])
 
     doReports(reportingTokenPayoutFixture, market, numReports, numCorrect)
 

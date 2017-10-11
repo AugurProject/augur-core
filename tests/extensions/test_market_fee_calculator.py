@@ -1,6 +1,6 @@
 from ethereum.tools import tester
 from pytest import fixture, mark
-from reporting_utils import proceedToFirstReporting, initializeReportingFixture
+from reporting_utils import proceedToRound1Reporting, initializeReportingFixture
 
 ONE = 10 ** 18
 
@@ -68,7 +68,7 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture):
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     # We'll have a market go through basic reporting and then make its reporting window over.
-    proceedToFirstReporting(reportingFixture, market, False, tester.k1, [0,10**18], [10**18,0])
+    proceedToRound1Reporting(reportingFixture, market, False, tester.k1, [0,10**18], [10**18,0])
 
     reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
     for i in range(0,numReports):

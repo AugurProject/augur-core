@@ -17,8 +17,8 @@ library Reporting {
 
     // CONSIDER: figure out approprate values for these
     uint256 private constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
-    uint256 private constant FIRST_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21;
-    uint256 private constant LAST_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22;
+    uint256 private constant ROUND1_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21;
+    uint256 private constant ROUND2_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22;
 
     // NOTE: We need to maintain this cost to roughly match the gas cost of reporting. This was last updated 10/02/2017
     uint256 private constant GAS_TO_REPORT = 600000;
@@ -30,8 +30,8 @@ library Reporting {
     function reportingDisputeDurationSeconds() internal pure returns (uint256) { return REPORTING_DISPUTE_DURATION_SECONDS; }
     function claimProceedsWaitTime() internal pure returns (uint256) { return CLAIM_PROCEEDS_WAIT_TIME; }
     function designatedReporterDisputeBondAmount() internal pure returns (uint256) { return DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT; }
-    function firstReportersDisputeBondAmount() internal pure returns (uint256) { return FIRST_REPORTERS_DISPUTE_BOND_AMOUNT; }
-    function lastReportersDisputeBondAmount() internal pure returns (uint256) { return LAST_REPORTERS_DISPUTE_BOND_AMOUNT; }
+    function round1ReportersDisputeBondAmount() internal pure returns (uint256) { return ROUND1_REPORTERS_DISPUTE_BOND_AMOUNT; }
+    function round2ReportersDisputeBondAmount() internal pure returns (uint256) { return ROUND2_REPORTERS_DISPUTE_BOND_AMOUNT; }
     function gasToReport() internal pure returns (uint256) { return GAS_TO_REPORT; }
     function defaultReportingGasPrice() internal pure returns (uint256) { return DEFAULT_REPORTING_GAS_PRICE; }
     function defaultValidityBond() internal pure returns (uint256) { return DEFAULT_VALIDITY_BOND; }
