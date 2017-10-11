@@ -147,7 +147,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.designatedReporterDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, designatedReporterDisputeBondToken, Reporting.designatedReporterDisputeBondAmount());
         if (_attotokens > 0) {
-            require(derivePayoutDistributionHash(_payoutNumerators) != tentativeWinningPayoutDistributionHash);
             IReportingToken _reportingToken = getReportingToken(_payoutNumerators);
             _reportingToken.trustedBuy(msg.sender, _attotokens);
         } else {
