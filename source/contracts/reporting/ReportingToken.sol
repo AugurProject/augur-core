@@ -70,7 +70,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         mint(_reporter, _attotokens);
         bytes32 _payoutDistributionHash = getPayoutDistributionHash();
         market.updateTentativeWinningPayoutDistributionHash(_payoutDistributionHash);
-        getReportingWindow().noteReport(market, _reporter, _payoutDistributionHash);
+        getReportingWindow().noteReportingGasPrice(market);
     } 
 
     function redeemDisavowedTokens(address _reporter) public afterInitialized returns (bool) {

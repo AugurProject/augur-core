@@ -161,9 +161,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         round1ReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.round1ReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, round1ReportersDisputeBondToken, Reporting.round1ReportersDisputeBondAmount());
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
-        _newReportingWindow.migrateMarketInFromSibling();
-        reportingWindow.removeMarket();
-        reportingWindow = _newReportingWindow;
+        migrateReportingWindow(_newReportingWindow);
         if (_attotokens > 0) {
             require(derivePayoutDistributionHash(_payoutNumerators) != tentativeWinningPayoutDistributionHash);
             IReportingToken _reportingToken = getReportingToken(_payoutNumerators);
@@ -171,7 +169,6 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         }
-        reportingWindow.updateMarketPhase();
         return true;
     }
 
@@ -181,6 +178,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, round2ReportersDisputeBondToken, Reporting.round2ReportersDisputeBondAmount());
         reportingWindow.getUniverse().fork();
         IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
+        return migrateReportingWindow(_newReportingWindow);
+    }
+
+    function migrateReportingWindow(IReportingWindow _newReportingWindow) private afterInitialized returns (bool) {
         _newReportingWindow.migrateMarketInFromSibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;

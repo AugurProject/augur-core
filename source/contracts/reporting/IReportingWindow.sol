@@ -14,7 +14,7 @@ contract IReportingWindow is Typed {
     function migrateMarketInFromSibling() public returns (bool);
     function migrateMarketInFromNibling() public returns (bool);
     function removeMarket() public returns (bool);
-    function noteReport(IMarket _market, address _reporter, bytes32 _payoutDistributionHash) public returns (bool);
+    function noteReportingGasPrice(IMarket _market) public returns (bool);
     function updateMarketPhase() public returns (bool);
     function getUniverse() public view returns (IUniverse);
     function getReputationToken() public view returns (IReputationToken);

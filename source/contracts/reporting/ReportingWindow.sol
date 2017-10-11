@@ -47,7 +47,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         endInitialization();
         universe = _universe;
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
-        // Initialize these to some reasonable value to handle the first market ever created without branching code 
+        // Initialize this to some reasonable value to handle the first market ever created without branching code 
         reportingGasPrice.record(Reporting.defaultReportingGasPrice());
         return true;
     }
@@ -135,13 +135,9 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         totalWinningReportingTokens = totalWinningReportingTokens.add(_totalWinningReportingTokens);
     }
 
-    function noteReport(IMarket _market, address _reporter, bytes32 _payoutDistributionHash) public afterInitialized returns (bool) {
+    function noteReportingGasPrice(IMarket _market) public afterInitialized returns (bool) {
         require(markets.contains(_market));
-        require(_market.getReportingTokenOrZeroByPayoutDistributionHash(_payoutDistributionHash) == msg.sender);
-        IMarket.ReportingState _state = _market.getReportingState();
-        require(_state == IMarket.ReportingState.ROUND2_REPORTING
-            || _state == IMarket.ReportingState.ROUND1_REPORTING
-            || _state == IMarket.ReportingState.DESIGNATED_REPORTING);
+        require(_market.isContainerForReportingToken(Typed(msg.sender)));
         reportingGasPrice.record(tx.gasprice);
         return true;
     }
