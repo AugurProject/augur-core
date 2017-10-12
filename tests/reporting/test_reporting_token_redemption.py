@@ -37,6 +37,53 @@ def test_one_market_one_correct_report(localFixture, universe, market):
     # We can see that the designated reporter's balance of REP has returned to the original value since as the market creator the had to pay these REP fees initially
     assert reputationToken.balanceOf(tester.a0) == expectedREPBalance
 
+    # We'll redeem the winning tokens we have on the market and confirm we get that amount returned in REP
+    assert reportingToken.redeemWinningTokens()
+    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
+
+def test_two_markets_one_correct_report_no_fees(reportingTokenPayoutFixture):
+    market = reportingTokenPayoutFixture.market1
+    market2 = reportingTokenPayoutFixture.createReasonableBinaryMarket(reportingTokenPayoutFixture.universe, reportingTokenPayoutFixture.cash)
+    reportingWindow = reportingTokenPayoutFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    reputationToken = reportingTokenPayoutFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
+    marketFeeCalculator = reportingTokenPayoutFixture.contracts["MarketFeeCalculator"]
+
+    # Proceed to the DESIGNATED REPORTING phase
+    proceedToDesignatedReporting(reportingTokenPayoutFixture, market, [0,10**18])
+
+    # To progress into the DESIGNATED DISPUTE phase we do a designated report
+    initialRepBalance = reputationToken.balanceOf(tester.a0)
+    assert reportingTokenPayoutFixture.designatedReport(market, [0,10**18], tester.k0)
+    # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
+    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + marketFeeCalculator.getDesignatedReportNoShowBond(market.getUniverse()) - marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
+    initialREPBalance = reputationToken.balanceOf(tester.a0)
+
+    # We're now in the DESIGNATED DISPUTE PHASE
+    assert market.getReportingState() == reportingTokenPayoutFixture.constants.DESIGNATED_DISPUTE()
+
+    # Time passes until the end of the reporting window
+    reportingTokenPayoutFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+
+    # Finalize the market
+    market.tryFinalize()
+
+    # The designated reporter may redeem their reporting tokens which were purchased to make the designated report
+    reportingToken = reportingTokenPayoutFixture.getReportingToken(market, [0, 10**18])
+    assert reportingToken.balanceOf(tester.a0) == marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
+
+    expectedREPBalance = initialREPBalance
+
+    # We can see that the designated reporter's balance of REP has returned to the original value since as the market creator the had to pay these REP fees initially
+    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance
+
+    # If we try to redeem tokens and recieve trading fees now we'll get a failure since not all markets are finalized
+    with raises(TransactionFailed):
+        reportingToken.redeemWinningTokens()
+
+    # We'll redeem the winning tokens we have on the market and forgo fees and confirm we get that amount returned in REP
+    assert reportingToken.redeemWinningTokens(True)
+    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
+
 @mark.parametrize('numReports, numCorrect', [
     (1, 1),
     (2, 2),
