@@ -14,13 +14,9 @@ RUN /parity/parity daemon /parity/parity.pid --chain dev --no-ui --no-dapps --no
 	&& echo "" > /parity/password
 
 WORKDIR /
-ENTRYPOINT /parity/parity \
-	--chain dev \
-	--gasprice 2 \
-	--no-discovery \
-	--force-ui --ui-no-validation --ui-interface 0.0.0.0 \
-	--jsonrpc-interface all --jsonrpc-cors "*" --jsonrpc-hosts all --jsonrpc-apis web3,eth,net,personal,parity,parity_set,traces,rpc,parity_accounts \
-	--unlock 0x00a329c0648769a73afac7f9381e08fb43dbea72 --password /parity/password
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+ENTRYPOINT /start.sh
 
 # docker build --tag parity-dev-node .
 # docker run --rm -it -p 8000:8000 -p 8001:8001 -p 8545:8545 -p 8180:8180 parity-dev-node
