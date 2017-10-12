@@ -9,4 +9,4 @@ COPY typings/ /app/typings/
 COPY source/ /app/source/
 RUN npx tsc
 
-ENTRYPOINT [ "node_modules/mocha/bin/_mocha", "output/tests-integration/**/*.js", "--no-timeouts", "--require", "source-map-support/register" ]
+ENTRYPOINT [ "npx", "mocha", "output/tests-integration/**/*.js", "--no-timeouts", "--require", "source-map-support/register" ]

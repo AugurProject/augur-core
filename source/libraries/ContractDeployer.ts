@@ -159,14 +159,15 @@ export class ContractDeployer {
             this.bytecodes[signatureKey] = bytecode;
         }
         const signature = this.signatures[signatureKey];
-        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: this.gasAmount });
-        let receiptAddress: string;
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: this.gasAmount, gasPrice: 10**9 });
+        let transactionHash: string;
+
         if (constructorArgs.length > 0) {
-            receiptAddress = await contractBuilder.new(constructorArgs[0], constructorArgs[1]);
+            transactionHash = await contractBuilder.new(constructorArgs[0], constructorArgs[1]);
         } else {
-            receiptAddress = await contractBuilder.new();
+            transactionHash = await contractBuilder.new();
         }
-        const receipt: ContractReceipt = await this.ethjsQuery.getTransactionReceipt(receiptAddress);
+        const receipt: ContractReceipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
         this.contracts[lookupKey] = await contractBuilder.at(receipt.contractAddress);
 
         return this.contracts[lookupKey];
