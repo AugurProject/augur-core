@@ -26,6 +26,11 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     function initialize(IMarket _market, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
         endInitialization();
         require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
+        uint256 _sum = 0;
+        for (uint8 i = 0; i < _payoutNumerators.length; i++) {
+            _sum = _sum.add(_payoutNumerators[i]);
+        }
+        require(_sum == _market.getNumTicks());
         market = _market;
         payoutNumerators = _payoutNumerators;
         return true;
