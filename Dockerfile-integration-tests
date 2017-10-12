@@ -8,5 +8,6 @@ COPY tsconfig.json /app/tsconfig.json
 COPY typings/ /app/typings/
 COPY source/ /app/source/
 RUN npx tsc
+RUN node ./output/deployment/CompileContracts.js
 
 ENTRYPOINT [ "npx", "mocha", "output/tests-integration/**/*.js", "--no-timeouts", "--require", "source-map-support/register" ]
