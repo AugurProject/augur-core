@@ -38,6 +38,7 @@ export async function compileAndDeployContracts(): Promise<ContractDeployer> {
 
 // If this script is not being imported by another module (i.e., it is being run independently via the command line)
 if (!module.parent) {
+    require('source-map-support').install();
     compileAndDeployContracts().then(() => {
         process.exit();
     }).catch(error => {
