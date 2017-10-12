@@ -9,13 +9,13 @@ import * as EthjsQuery from "ethjs-query";
 import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
 import { Contract, parseAbiIntoMethods } from "./AbiParser";
 import { generateTestAccounts, padAndHexlify, stringTo32ByteHex } from "./HelperFunctions";
-import { CompilerOutput } from "solc";
+import { CompilerOutputContracts } from "solc";
 
 export class ContractDeployer {
     public readonly ethjsQuery: EthjsQuery;
     public readonly ethjsContract: EthjsContract;
-    public readonly compiledContracts;
-    public readonly gasPrice;
+    public readonly compiledContracts: CompilerOutputContracts;
+    public readonly gasPrice: number;
     public readonly contracts = [];
     public readonly signatures = [];
     public readonly bytecodes = [];
@@ -25,11 +25,11 @@ export class ContractDeployer {
     public universe;
     public market;
 
-    public constructor(ethjsQuery: EthjsQuery, compilerOutput: CompilerOutput, gasPrice: number) {
+    public constructor(ethjsQuery: EthjsQuery, compilerOutput: CompilerOutputContracts, gasPrice: number) {
         this.ethjsQuery = ethjsQuery;
         this.ethjsContract = new EthjsContract(ethjsQuery);
         this.gasPrice = gasPrice;
-        this.compiledContracts = compilerOutput.contracts;
+        this.compiledContracts = compilerOutput;
     }
 
     public async deploy(): Promise<void> {
@@ -215,27 +215,37 @@ export class ContractDeployer {
         return reportingToken;
     }
 
-    private async createMarket(universe: string, numOutcomes: number, endTime: number, feePerEthInWei: number, denominationToken: string, designatedReporter: string, numTicks: number): Promise<Contract> {
+    private async createMarket(universeAddress: string, numOutcomes: number, endTime: number, feePerEthInWei: number, denominationToken: string, designatedReporter: string, numTicks: number): Promise<Contract> {
         const constant = { constant: true };
-        const myUniverse = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Universe"], { to: universe, from: this.testAccounts[0], gas: "0x5b8d80", gasPrice: this.gasPrice });
-        const marketCreation = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketCreation"], { to: this.contracts["MarketCreation"].address, from: this.testAccounts[0], gas: "0x5b8d80", gasPrice: this.gasPrice });
-        const marketFeeCalculator = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketFeeCalculator"], { to: this.contracts["MarketFeeCalculator"].address, from: this.testAccounts[0], gas: "0x5b8d80", gasPrice: this.gasPrice });
+        const universe = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Universe"], { to: universeAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
+        const marketFeeCalculator = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketFeeCalculator"], { to: this.contracts["MarketFeeCalculator"].address, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
+        const legacyReputationToken = await parseAbiIntoMethods(this.ethjsQuery, this.signatures['LegacyRepContract'], { to: this.contracts['LegacyRepContract'].address, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
+        const reputationTokenAddress = await universe.getReputationToken();
+        const reputationToken = await parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReputationToken'], { to: reputationTokenAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
+
+        // get some REP
+        await legacyReputationToken.faucet(0);
+        await legacyReputationToken.approve(reputationTokenAddress, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        await reputationToken.migrateFromLegacyRepContract();
 
         // necessary because it is used part of market creation fee calculation
-        await myUniverse.getCurrentReportingWindow();
+        await universe.getCurrentReportingWindow();
         // necessary because it is used as part of market creation fee calculation
-        await myUniverse.getPreviousReportingWindow();
+        await universe.getPreviousReportingWindow();
         // necessary because createMarket needs its reporting window already created
-        await myUniverse.getReportingWindowByMarketEndTime(endTime);
+        await universe.getReportingWindowByMarketEndTime(endTime);
 
-        const reportingWindowAddress = await myUniverse.getCurrentReportingWindow.bind(constant)();
-        const marketCreationFee = await marketFeeCalculator.getMarketCreationCost.bind(constant)(reportingWindowAddress);
-        const marketAddress = await marketCreation.createMarket.bind({ value: marketCreationFee, constant: true })(universe, endTime, numOutcomes, feePerEthInWei, denominationToken, numTicks, designatedReporter);
+        const currentReportingWindowAddress = await universe.getCurrentReportingWindow.bind(constant)();
+        const targetReportingWindowAddress = await universe.getReportingWindowByMarketEndTime.bind(constant)(endTime);
+
+        const targetReportingWindow = await parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReportingWindow'], { to: targetReportingWindowAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
+        const marketCreationFee = await marketFeeCalculator.getMarketCreationCost.bind(constant)(universeAddress);
+        const marketAddress = await targetReportingWindow.createMarket.bind({ value: marketCreationFee, constant: true })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
         if (!marketAddress) {
             throw new Error("Unable to get address for new categorical market.");
         }
-        await marketCreation.createMarket.bind({ value: marketCreationFee })(universe, endTime, numOutcomes, feePerEthInWei, denominationToken, numTicks, designatedReporter);
-        const market = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0], gas: "0x5b8d80" });
+        targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
+        const market = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0], gas: this.gasAmount });
         const marketNameHex = stringTo32ByteHex("Market");
         if (await market.getTypeName() !== marketNameHex) {
             throw new Error("Unable to create new categorical market");

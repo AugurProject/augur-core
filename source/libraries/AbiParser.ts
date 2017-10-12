@@ -6,9 +6,9 @@ interface TransactionOptions {
     to?: string,
     from?: string,
     // TODO: add support for some kind of big number
-    value?: string;
-    gas?: string;
-    gasPrice?: string;
+    value?: number;
+    gas?: number;
+    gasPrice?: number;
     constant?: boolean;
 }
 
@@ -43,6 +43,9 @@ export async function parseAbiIntoMethods(ethjsQuery: EthjsQuery, abi: (Compiler
             );
             const result = await ethjsQuery[callConvention](transaction);
             if (callConvention === 'call') {
+                if (result === '0x') {
+                    throw new Error(`Transaction failed for unknown reasons.\nMethod Name: ${item.name}\n${JSON.stringify(transaction)}`);
+                }
                 // CONSIDER: currently this only supports returning the first output of a function, not all of them
                 return EthjsAbi.decodeMethod(item, result)[0];
             } else {

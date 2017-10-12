@@ -53,50 +53,52 @@ declare module 'solc' {
             };
         };
     }
-    interface CompilerOutput {
-        errors?: CompilerOutputError[];
-        sources: {
-            [globalName: string]: {
-                id: number;
-                ast: any;
-                legacyAST: any;
-            },
-        };
-        contracts: {
-            [globalName: string]: {
-                abi: (CompilerOutputContractAbiFunction|CompilerOutputContractAbiEvent)[];
-                metadata: string;
-                userdoc: any;
-                devdoc: any;
-                ir: string;
-                evm: {
-                    assembly: string;
-                    legacyAssembly: any;
-                    bytecode: CompilerOutputEvmBytecode;
-                    deployedBytecode: CompilerOutputEvmBytecode;
-                    methodIdentifiers: {
-                        [methodName: string]: string;
+    interface CompilerOutputSources {
+        [globalName: string]: {
+            id: number;
+            ast: any;
+            legacyAST: any;
+        },
+    }
+    interface CompilerOutputContracts {
+        [globalName: string]: {
+            abi: (CompilerOutputContractAbiFunction|CompilerOutputContractAbiEvent)[];
+            metadata: string;
+            userdoc: any;
+            devdoc: any;
+            ir: string;
+            evm: {
+                assembly: string;
+                legacyAssembly: any;
+                bytecode: CompilerOutputEvmBytecode;
+                deployedBytecode: CompilerOutputEvmBytecode;
+                methodIdentifiers: {
+                    [methodName: string]: string;
+                };
+                gasEstimates: {
+                    creation: {
+                        codeDepositCost: string;
+                        executionCost: string;
+                        totalCost: string;
                     };
-                    gasEstimates: {
-                        creation: {
-                            codeDepositCost: string;
-                            executionCost: string;
-                            totalCost: string;
-                        };
-                        external: {
-                            [functionSignature: string]: string;
-                        };
-                        internal: {
-                            [functionSignature: string]: string;
-                        };
+                    external: {
+                        [functionSignature: string]: string;
+                    };
+                    internal: {
+                        [functionSignature: string]: string;
                     };
                 };
-                ewasm: {
-                    wast: string;
-                    wasm: string;
-                }
             };
+            ewasm: {
+                wast: string;
+                wasm: string;
+            }
         };
+    }
+    interface CompilerOutput {
+        errors?: CompilerOutputError[];
+        sources: CompilerOutputSources;
+        contracts: CompilerOutputContracts;
     }
     type ReadCallback = (path: string) => { contents?: string, error?: string};
     function compileStandardWrapper(input: string, readCallback?: ReadCallback);

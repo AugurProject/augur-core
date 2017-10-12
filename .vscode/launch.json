@@ -17,7 +17,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Mocha Tests",
+            "name": "Integration Tests",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "cwd": "${workspaceRoot}",
             "args": [
@@ -25,6 +25,11 @@
                 "output/tests-integration/**/*.js",
                 "--no-timeouts"
             ],
+            "env": {
+                "ETHEREUM_HOST": "localhost",
+                "ETHEREUM_PORT": "47622",
+                "ETHEREUM_GAS_PRICE_IN_NANOETH": "1"
+            },
             "protocol": "inspector",
             "sourceMaps": true,
             "outFiles": [

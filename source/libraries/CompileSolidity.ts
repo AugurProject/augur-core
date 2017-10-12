@@ -5,7 +5,7 @@ import * as readFile from "fs-readfile-promise";
 import * as asyncMkdirp from "async-mkdirp";
 import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
-import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
+import { CompilerInput, CompilerOutput, CompilerOutputContracts, compileStandardWrapper } from "solc";
 
 export class SolidityContractCompiler {
     private contractInputDirectoryPath: string;
@@ -24,7 +24,7 @@ export class SolidityContractCompiler {
         this.contractOutputFileName = contractOutputFileName;
     }
 
-    public async compileContracts(): Promise<CompilerOutput> {
+    public async compileContracts(): Promise<CompilerOutputContracts> {
         // Check if all contracts are cached (and thus do not need to be compiled)
         try {
             const contractOutputFilePath = this.contractOutputDirectoryPath + this.contractOutputFileName;
@@ -35,7 +35,7 @@ export class SolidityContractCompiler {
             }
             const uncachedFiles = await recursiveReadDir(this.contractInputDirectoryPath, [ignoreCachedFile]);
             if (uncachedFiles.length === 0) {
-                return await fs.readFile(contractOutputFilePath, "utf8");
+                return JSON.parse(await fs.readFile(contractOutputFilePath, "utf8"));
             }
         } catch (error) {
             // Unable to read compiled contracts output file (likely because it has not been generated)
@@ -60,7 +60,7 @@ export class SolidityContractCompiler {
         const contractOutputFilePath = this.contractOutputDirectoryPath + this.contractOutputFileName;
         await fs.writeFile(contractOutputFilePath, JSON.stringify(compilerOutput.contracts));
 
-        return compilerOutput;
+        return compilerOutput.contracts;
     }
 
     public async generateCompilerInput(): Promise<CompilerInput> {

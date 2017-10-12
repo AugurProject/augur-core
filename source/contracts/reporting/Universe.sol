@@ -131,7 +131,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _shadyReportingWindow == _legitReportingWindow;
     }
 
-    function isContainerForDisputeBondToken(Typed _shadyTarget) public returns (bool) {
+    function isContainerForDisputeBondToken(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "DisputeBondToken") {
             return false;
         }

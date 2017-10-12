@@ -19,9 +19,9 @@ export async function compileAndDeployContracts(): Promise<ContractDeployer> {
     const solidityContractCompiler = new SolidityContractCompiler(CONTRACT_INPUT_DIR_PATH, CONTRACT_OUTPUT_DIR_PATH, COMPILED_CONTRACT_OUTPUT_FILE_NAME);
     const compilerOutput = await solidityContractCompiler.compileContracts();
 
-    const ethjsHttpProviderHost = (typeof process.env.ETHEREUM_PORT === "undefined") ? "localhost" : process.env.ETHEREUM_HOST;
+    const ethjsHttpProviderHost = (typeof process.env.ETHEREUM_HOST === "undefined") ? "localhost" : process.env.ETHEREUM_HOST;
     const ethjsHttpProviderPort = (typeof process.env.ETHEREUM_PORT === "undefined") ? await getPort() : parseInt(process.env.ETHEREUM_PORT || "0");
-    const gasPrice = ((typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? 20 : parseInt(process.env.ETHEREUM_GAS_PRICE || "20")) * 10**9;
+    const gasPrice = ((typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? 20 : parseInt(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH || "20")) * 10**9;
     // If no Ethereum host has been specified, use TestRPC.
     if (typeof process.env.ETHEREUM_HOST === "undefined") {
         const testRpcOptions = await initializeTestRpcClientOptions(ethjsHttpProviderPort, ["Augur0"]);

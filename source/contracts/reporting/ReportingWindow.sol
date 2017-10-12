@@ -42,7 +42,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         endInitialization();
         universe = _universe;
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
-        // Initialize this to some reasonable value to handle the first market ever created without branching code 
+        // Initialize this to some reasonable value to handle the first market ever created without branching code
         reportingGasPrice.record(Reporting.defaultReportingGasPrice());
         return true;
     }
@@ -50,8 +50,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
         require(universe.getReportingWindowByMarketEndTime(_endTime) == this);
-        MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
         MarketFeeCalculator _marketFeeCalculator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
+        MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
         getReputationToken().trustedTransfer(msg.sender, _marketFactory, _marketFeeCalculator.getDesignatedReportNoShowBond(universe));
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
