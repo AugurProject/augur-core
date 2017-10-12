@@ -1,16 +1,11 @@
 #!/usr/bin/env node
 
-import * as fs from "fs";
+import * as fs from "async-file";
 import * as readFile from "fs-readfile-promise";
 import * as asyncMkdirp from "async-mkdirp";
 import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
 import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
-
-interface CompileContractsOutput {
-    errors?: string;
-    output?: string;
-}
 
 export class SolidityContractCompiler {
     private contractInputDirectoryPath: string;
@@ -29,17 +24,18 @@ export class SolidityContractCompiler {
         this.contractOutputFileName = contractOutputFileName;
     }
 
-    public async compileContracts(): Promise<CompileContractsOutput> {
+    public async compileContracts(): Promise<CompilerOutput> {
         // Check if all contracts are cached (and thus do not need to be compiled)
         try {
-            const stats = fs.statSync(this.contractOutputDirectoryPath + this.contractOutputFileName);
+            const contractOutputFilePath = this.contractOutputDirectoryPath + this.contractOutputFileName;
+            const stats = await fs.stat(contractOutputFilePath);
             const lastCompiledTimestamp = stats.mtime;
             const ignoreCachedFile = function(file: string, stats: fs.Stats): boolean {
                 return (stats.isFile() && path.extname(file) !== ".sol") || (stats.isFile() && path.extname(file) === ".sol" && stats.mtime < lastCompiledTimestamp);
             }
             const uncachedFiles = await recursiveReadDir(this.contractInputDirectoryPath, [ignoreCachedFile]);
             if (uncachedFiles.length === 0) {
-                return { output: "Contracts in " + this.contractInputDirectoryPath + " have not been modified since last cache was created" };
+                return await fs.readFile(contractOutputFilePath, "utf8");
             }
         } catch (error) {
             // Unable to read compiled contracts output file (likely because it has not been generated)
@@ -62,15 +58,9 @@ export class SolidityContractCompiler {
 
         // Output contract data to single file
         const contractOutputFilePath = this.contractOutputDirectoryPath + this.contractOutputFileName;
-        const writeFileCallback = function(error: Error): boolean {
-            if (error) {
-                throw error.message;
-            }
-            return true;
-        }
-        await fs.writeFile(contractOutputFilePath, JSON.stringify(compilerOutput.contracts), writeFileCallback);
+        await fs.writeFile(contractOutputFilePath, JSON.stringify(compilerOutput.contracts));
 
-        return { output: "Contracts in " + this.contractInputDirectoryPath + " were successfully compiled by solc and saved to " + contractOutputFilePath};
+        return compilerOutput;
     }
 
     public async generateCompilerInput(): Promise<CompilerInput> {
