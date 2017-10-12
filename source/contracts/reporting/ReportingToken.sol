@@ -13,7 +13,6 @@ import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
-import 'extensions/MarketFeeCalculator.sol';
 
 
 contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IReportingToken {
@@ -47,7 +46,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
             market.migrateDueToNoReports();
         } else if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             require(msg.sender == market.getDesignatedReporter());
-            uint256 _designatedReportCost = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getDesignatedReportStake(market.getUniverse());
+            uint256 _designatedReportCost = market.getUniverse().getDesignatedReportStake();
             require(_attotokens == _designatedReportCost);
         } else {
             require(_state == IMarket.ReportingState.ROUND1_REPORTING || _state == IMarket.ReportingState.ROUND2_REPORTING);

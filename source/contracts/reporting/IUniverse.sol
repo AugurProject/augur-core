@@ -25,6 +25,15 @@ contract IUniverse is Typed {
     function getNextReportingWindow() public returns (IReportingWindow);
     function getReportingWindowForForkEndTime() public returns (IReportingWindow);
     function getOpenInterestInAttoEth() public view returns (uint256);
+    function getRepMarketCapInAttoeth() public view returns (uint256);
+    function getTargetRepMarketCapInAttoeth() public view returns (uint256);
+    function getValidityBond() public returns (uint256);
+    function getDesignatedReportStake() public returns (uint256);
+    function getDesignatedReportNoShowBond() public returns (uint256);
+    function getReportingFeeInAttoethPerEth() public returns (uint256);
+    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) public pure returns (uint256 _newValue);
+    function getTargetReporterGasCosts() public returns (uint256);
+    function getMarketCreationCost() public returns (uint256);
     function isParentOf(IUniverse _shadyChild) public view returns (bool);
     function isContainerForReportingWindow(Typed _shadyTarget) public view returns (bool);
     function isContainerForMarket(Typed _shadyTarget) public view returns (bool);

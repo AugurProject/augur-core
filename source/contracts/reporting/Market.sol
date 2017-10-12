@@ -13,7 +13,6 @@ import 'reporting/IDisputeBond.sol';
 import 'trading/ICash.sol';
 import 'trading/IShareToken.sol';
 import 'extensions/MarketExtensions.sol';
-import 'extensions/MarketFeeCalculator.sol';
 import 'factories/ShareTokenFactory.sol';
 import 'factories/ReportingTokenFactory.sol';
 import 'factories/DisputeBondTokenFactory.sol';
@@ -95,11 +94,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function assessFees() private returns (bool) {
-        MarketFeeCalculator _marketFeeCalculator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
         IUniverse _universe = getUniverse();
-        require(reportingWindow.getReputationToken().balanceOf(this) == _marketFeeCalculator.getDesignatedReportNoShowBond(_universe));
-        reporterGasCostsFeeAttoeth = _marketFeeCalculator.getTargetReporterGasCosts(_universe);
-        validityBondAttoeth = _marketFeeCalculator.getValidityBond(_universe);
+        require(reportingWindow.getReputationToken().balanceOf(this) == _universe.getDesignatedReportNoShowBond());
+        reporterGasCostsFeeAttoeth = _universe.getTargetReporterGasCosts();
+        validityBondAttoeth = _universe.getValidityBond();
         return true;
     }
 
