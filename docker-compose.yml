@@ -13,6 +13,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-integration-tests
+    # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
+    ports:
+      - "9229:9229"
     environment:
       - ETHEREUM_HOST=parity-dev-node
       - ETHEREUM_PORT=8545

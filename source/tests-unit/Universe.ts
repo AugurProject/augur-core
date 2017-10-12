@@ -11,7 +11,7 @@ describe("Universe", () => {
     });
     it("#getTypeName()", async () => {
         // TODO: Move this check into ContractDeployer
-        const genesisUniverse = await contractDeployer.getUniverse();
+        const genesisUniverse = await contractDeployer.universe;
         const genesisUniverseTypeNameHex = (await genesisUniverse.getTypeName())[0];
         const genesisUniverseTypeName = binascii.unhexlify(genesisUniverseTypeNameHex).replace(/\u0000/g, "");
         expect(genesisUniverseTypeName).to.equal("Universe");
