@@ -35,18 +35,11 @@ def test_get_reporting_window(universeFixture):
 
     # Make up end timestamp for testing internal calculations
     end_timestamp = universeFixture.chain.head_state.timestamp + 1
-    end_report_window_des = universe.getReportingWindowByMarketEndTime(end_timestamp, True)
+    end_report_window_des = universe.getReportingWindowByMarketEndTime(end_timestamp)
 
     # Test getting same calculated end reporting window 
     end_timestamp_des_test = end_timestamp + universeFixture.constants.DESIGNATED_REPORTING_DURATION_SECONDS() + universeFixture.constants.DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1 + total_dispute_duration
     assert universe.getReportingWindowByTimestamp(end_timestamp_des_test) == end_report_window_des
-
-    # Test getting same calculation for non designated reporter
-    end_report_window_without_des = universe.getReportingWindowByMarketEndTime(end_timestamp, False)
-
-    # Test getting same calculated end reporting window without des
-    end_timestamp_without_des_test = end_timestamp + total_dispute_duration
-    assert universe.getReportingWindowByTimestamp(end_timestamp_without_des_test) == end_report_window_without_des
 
     assert universe.getPreviousReportingWindow() == universe.getReportingWindowByTimestamp(universeFixture.chain.head_state.timestamp - total_dispute_duration)
     assert universe.getCurrentReportingWindow() == universe.getReportingWindowByTimestamp(universeFixture.chain.head_state.timestamp)
@@ -112,7 +105,16 @@ def test_universe_contains_market(universeFixture):
     # market in different universe
     market = universeFixture.binaryMarket
     assert universe.isContainerForMarket(market.address) == False
-        
+    
+    # Give some REP in this universe to tester0 to pay market creation fee
+    legacyRepContract = universeFixture.contracts['LegacyRepContract']
+    legacyRepContract.faucet(11 * 10**6 * 10**18)
+
+    # Get the reputation token for this universe and migrate legacy REP to it
+    reputationToken = universeFixture.applySignature('ReputationToken', universe.getReputationToken())
+    legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
+    reputationToken.migrateFromLegacyRepContract()
+
     uni_market = universeFixture.createReasonableBinaryMarket(universe, universeFixture.cash)
     assert universe.isContainerForMarket(uni_market.address)
 

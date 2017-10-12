@@ -179,6 +179,7 @@ class ContractsFixture:
         self.cash = self.getSeededCash()
         self.augur = self.contracts['Augur']
         self.utils = self.upload("solidity_test_helpers/Utils.sol")
+        self.distributeRep()
         self.binaryMarket = self.createReasonableBinaryMarket(self.universe, self.cash)
         startingGas = self.chain.head_state.gas_used
         self.categoricalMarket = self.createReasonableCategoricalMarket(self.universe, 3, self.cash)
@@ -190,6 +191,16 @@ class ContractsFixture:
         self.captured = self.createSnapshot()
         self.testerAddress = self.generateTesterMap('a')
         self.testerKey = self.generateTesterMap('k')
+
+    def distributeRep(self):
+        legacyRepContract = self.contracts['LegacyRepContract']
+        legacyRepContract.faucet(11 * 10**6 * 10**18)
+        universe = self.universe
+
+        # Get the reputation token for this universe and migrate legacy REP to it
+        reputationToken = self.applySignature('ReputationToken', universe.getReputationToken())
+        legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
+        reputationToken.migrateFromLegacyRepContract()
 
     def generateTesterMap(self, ch):
         testers = {}
@@ -277,7 +288,7 @@ class ContractsFixture:
             if extension != '.sol': continue
             if not name in self.contracts: continue
             self.controller.addToWhitelist(self.contracts[name].address)
-
+    
     def initializeAllContracts(self):
         contractsToInitialize = ['Augur','Cash','CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimProceeds','OrdersFetcher']
         for contractName in contractsToInitialize:
@@ -331,10 +342,7 @@ class ContractsFixture:
 
     def designatedReport(self, market, payoutDistribution, reporterKey):
         reportingToken = self.getReportingToken(market, payoutDistribution)
-        registrationToken = self.applySignature('RegistrationToken', reportingToken.getRegistrationToken())
-        if registrationToken.balanceOf(market.getDesignatedReporter()) < 1:
-            assert registrationToken.register(sender=reporterKey)
-        designatedReportStake = self.contracts['MarketFeeCalculator'].getDesignatedReportStake(market.getReportingWindow())
+        designatedReportStake = self.contracts['MarketFeeCalculator'].getDesignatedReportStake(market.getUniverse())
         return reportingToken.buy(designatedReportStake, sender=reporterKey)
 
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
@@ -349,17 +357,17 @@ class ContractsFixture:
         return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks)
 
     def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks):
-        reportingWindowAddress = universe.getReportingWindowByMarketEndTime(endTime)
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(reportingWindowAddress) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts(reportingWindowAddress)
-        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, numOutcomes, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
+        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.address) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts(universe.address)
+        reportingWindow = self.applySignature('ReportingWindow', universe.getReportingWindowByMarketEndTime(endTime))
+        marketAddress = reportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
     def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress):
-        reportingWindowAddress = universe.getReportingWindowByMarketEndTime(endTime)
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(reportingWindowAddress) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts(reportingWindowAddress)
-        marketAddress = self.contracts['MarketCreation'].createMarket(universe.address, endTime, 2, feePerEthInWei, denominationToken.address, numTicks, designatedReporterAddress, value = marketCreationFee)
+        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.address) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts(universe.address)
+        reportingWindow = self.applySignature('ReportingWindow', universe.getReportingWindowByMarketEndTime(endTime))
+        marketAddress = reportingWindow.createMarket(endTime, 2, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
@@ -399,23 +407,4 @@ def sessionFixture():
 @fixture
 def contractsFixture(sessionFixture):
     sessionFixture.resetSnapshot()
-    return sessionFixture
-
-@fixture(scope="session")
-def fundedRepSnapshot(sessionFixture):
-    sessionFixture.resetSnapshot()
-    legacyRepContract = sessionFixture.contracts['LegacyRepContract']
-    legacyRepContract.faucet(11 * 10**6 * 10**18)
-    universe = sessionFixture.universe
-
-    # Get the reputation token for this universe and migrate legacy REP to it
-    reputationToken = sessionFixture.applySignature('ReputationToken', universe.getReputationToken())
-    legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
-    reputationToken.migrateFromLegacyRepContract()
-
-    return sessionFixture.createSnapshot()
-
-@fixture
-def fundedRepFixture(sessionFixture, fundedRepSnapshot):
-    sessionFixture.resetToSnapshot(fundedRepSnapshot)
     return sessionFixture

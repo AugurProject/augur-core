@@ -64,7 +64,6 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
     function trustedTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         Typed _caller = Typed(msg.sender);
         require(universe.isContainerForReportingWindow(_caller)
-            || universe.isContainerForRegistrationToken(_caller)
             || universe.isContainerForMarket(_caller)
             || universe.isContainerForReportingToken(_caller));
         balances[_source] = balances[_source].sub(_attotokens);

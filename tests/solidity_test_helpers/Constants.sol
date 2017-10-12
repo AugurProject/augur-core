@@ -10,18 +10,18 @@ contract Constants {
     IMarket.ReportingState public constant DESIGNATED_REPORTING = IMarket.ReportingState.DESIGNATED_REPORTING;
     IMarket.ReportingState public constant DESIGNATED_DISPUTE = IMarket.ReportingState.DESIGNATED_DISPUTE;
     IMarket.ReportingState public constant AWAITING_FORK_MIGRATION = IMarket.ReportingState.AWAITING_FORK_MIGRATION;
-    IMarket.ReportingState public constant LIMITED_REPORTING = IMarket.ReportingState.LIMITED_REPORTING;
-    IMarket.ReportingState public constant LIMITED_DISPUTE = IMarket.ReportingState.LIMITED_DISPUTE;
+    IMarket.ReportingState public constant ROUND1_REPORTING = IMarket.ReportingState.ROUND1_REPORTING;
+    IMarket.ReportingState public constant FIRST_DISPUTE = IMarket.ReportingState.FIRST_DISPUTE;
     IMarket.ReportingState public constant AWAITING_NO_REPORT_MIGRATION = IMarket.ReportingState.AWAITING_NO_REPORT_MIGRATION;
-    IMarket.ReportingState public constant ALL_REPORTING = IMarket.ReportingState.ALL_REPORTING;
-    IMarket.ReportingState public constant ALL_DISPUTE = IMarket.ReportingState.ALL_DISPUTE;
+    IMarket.ReportingState public constant ROUND2_REPORTING = IMarket.ReportingState.ROUND2_REPORTING;
+    IMarket.ReportingState public constant LAST_DISPUTE = IMarket.ReportingState.LAST_DISPUTE;
     IMarket.ReportingState public constant FORKING = IMarket.ReportingState.FORKING;
     IMarket.ReportingState public constant AWAITING_FINALIZATION = IMarket.ReportingState.AWAITING_FINALIZATION;
     IMarket.ReportingState public constant FINALIZED = IMarket.ReportingState.FINALIZED;
 
     uint256 public constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = Reporting.designatedReporterDisputeBondAmount();
-    uint256 public constant LIMITED_REPORTERS_DISPUTE_BOND_AMOUNT = Reporting.limitedReportersDisputeBondAmount();
-    uint256 public constant ALL_REPORTERS_DISPUTE_BOND_AMOUNT = Reporting.allReportersDisputeBondAmount();
+    uint256 public constant ROUND1_REPORTERS_DISPUTE_BOND_AMOUNT = Reporting.round1ReportersDisputeBondAmount();
+    uint256 public constant ROUND2_REPORTERS_DISPUTE_BOND_AMOUNT = Reporting.round2ReportersDisputeBondAmount();
 
     uint256 public constant DESIGNATED_REPORTING_DURATION_SECONDS = Reporting.designatedReportingDurationSeconds();
     uint256 public constant DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS = Reporting.designatedReportingDisputeDurationSeconds();
@@ -29,14 +29,12 @@ contract Constants {
     uint256 public constant REPORTING_DURATION_SECONDS = Reporting.reportingDurationSeconds();
     uint256 public constant REPORTING_DISPUTE_DURATION_SECONDS = Reporting.reportingDisputeDurationSeconds();
 
-    uint256 public constant REGISTRATION_TOKEN_BOND_AMOUNT = Reporting.getRegistrationTokenBondAmount();
-
     uint256 public constant GAS_TO_REPORT = Reporting.gasToReport();
     uint256 public constant DEFAULT_REPORTING_GAS_PRICE = Reporting.defaultReportingGasPrice();
-    uint256 public constant DEFAULT_REPORTS_PER_MARKET = Reporting.defaultReportsPerMarket();
 
     uint256 public constant DEFAULT_VALIDITY_BOND = Reporting.defaultValidityBond();
     uint256 public constant DEFAULT_DESIGNATED_REPORT_STAKE = Reporting.defaultDesignatedReportStake();
+    uint256 public constant DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND = Reporting.defaultDesignatedReportNoShowBond();
 
     uint8 public constant BID = uint8(Order.TradeTypes.Bid);
     uint8 public constant ASK = uint8(Order.TradeTypes.Ask);

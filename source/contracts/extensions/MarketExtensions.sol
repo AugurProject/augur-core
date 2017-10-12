@@ -31,6 +31,9 @@ contract MarketExtensions {
     function getOrderedWinningPayoutDistributionHashes(IMarket _market, bytes32 _payoutDistributionHash) public view returns (bytes32, bytes32) {
         bytes32 _tentativeWinningPayoutDistributionHash = _market.getTentativeWinningPayoutDistributionHash();
         bytes32 _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = _market.getBestGuessSecondPlaceTentativeWinningPayoutDistributionHash();
+        if (_payoutDistributionHash == _tentativeWinningPayoutDistributionHash || _payoutDistributionHash == _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash) {
+            _payoutDistributionHash = bytes32(0);
+        }
         int256 _tentativeWinningStake = getPayoutDistributionHashStake(_market, _tentativeWinningPayoutDistributionHash);
         int256 _secondPlaceStake = getPayoutDistributionHashStake(_market, _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash);
         int256 _payoutStake = getPayoutDistributionHashStake(_market, _payoutDistributionHash);
@@ -42,14 +45,15 @@ contract MarketExtensions {
             _tentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? _tentativeWinningPayoutDistributionHash: bytes32(0);
             _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash : bytes32(0);
         } else if (_secondPlaceStake >= _tentativeWinningStake && _tentativeWinningStake >= _payoutStake) {
+            _payoutDistributionHash = _tentativeWinningPayoutDistributionHash; // Reusing this as a temp value holder
             _tentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
-            _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? _tentativeWinningPayoutDistributionHash: bytes32(0);
+            _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? _payoutDistributionHash: bytes32(0);
         } else if (_secondPlaceStake >= _payoutStake && _payoutStake >= _tentativeWinningStake) {
             _tentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
             _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
         } else if (_payoutStake >= _tentativeWinningStake && _tentativeWinningStake >= _secondPlaceStake) {
-            _tentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
             _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_tentativeWinningStake > 0) ? _tentativeWinningPayoutDistributionHash: bytes32(0);
+            _tentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
         } else if (_payoutStake >= _secondPlaceStake && _secondPlaceStake >= _tentativeWinningStake) {
             _tentativeWinningPayoutDistributionHash = (_payoutStake > 0) ? _payoutDistributionHash: bytes32(0);
             _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash = (_secondPlaceStake > 0) ? _bestGuessSecondPlaceTentativeWinningPayoutDistributionHash: bytes32(0);
@@ -71,22 +75,22 @@ contract MarketExtensions {
         int256 _payoutStake = int256(_reportingToken.totalSupply());
 
         IDisputeBond _designatedDisputeBond = _market.getDesignatedReporterDisputeBondToken();
-        IDisputeBond _limitedDisputeBond = _market.getLimitedReportersDisputeBondToken();
-        IDisputeBond _allDisputeBond = _market.getAllReportersDisputeBondToken();
+        IDisputeBond _round1DisputeBond = _market.getRound1ReportersDisputeBondToken();
+        IDisputeBond _round2DisputeBond = _market.getRound2ReportersDisputeBondToken();
 
         if (address(_designatedDisputeBond) != address(0)) {
             if (_designatedDisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
                 _payoutStake -= int256(Reporting.designatedReporterDisputeBondAmount());
             }
         }
-        if (address(_limitedDisputeBond) != address(0)) {
-            if (_limitedDisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.limitedReportersDisputeBondAmount());
+        if (address(_round1DisputeBond) != address(0)) {
+            if (_round1DisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
+                _payoutStake -= int256(Reporting.round1ReportersDisputeBondAmount());
             }
         }
-        if (address(_allDisputeBond) != address(0)) {
-            if (_allDisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.allReportersDisputeBondAmount());
+        if (address(_round2DisputeBond) != address(0)) {
+            if (_round2DisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
+                _payoutStake -= int256(Reporting.round2ReportersDisputeBondAmount());
             }
         }
 
@@ -116,7 +120,7 @@ contract MarketExtensions {
         }
 
         bool _designatedReportDisputed = address(_market.getDesignatedReporterDisputeBondToken()) != address(0);
-        bool _limitedReportDisputed = address(_market.getLimitedReportersDisputeBondToken()) != address(0);
+        bool _round1ReportDisputed = address(_market.getRound1ReportersDisputeBondToken()) != address(0);
 
         // If we have a designated report that hasn't been disputed it is either in the dispute window or we can finalize the market
         if (_market.getDesignatedReportReceivedTime() != 0 && !_designatedReportDisputed) {
@@ -142,27 +146,27 @@ contract MarketExtensions {
             return IMarket.ReportingState.AWAITING_FINALIZATION;
         }
 
-        // If a limited dispute bond has been posted we are in some phase of all reporting depending on time
-        if (_limitedReportDisputed) {
+        // If a round1 dispute bond has been posted we are in some phase of last reporting depending on time
+        if (_round1ReportDisputed) {
             if (_reportingWindow.isDisputeActive()) {
                 if (_market.getTentativeWinningPayoutDistributionHash() == bytes32(0)) {
                     return IMarket.ReportingState.AWAITING_NO_REPORT_MIGRATION;
                 } else {
-                    return IMarket.ReportingState.ALL_DISPUTE;
+                    return IMarket.ReportingState.LAST_DISPUTE;
                 }
             }
-            return IMarket.ReportingState.ALL_REPORTING;
+            return IMarket.ReportingState.ROUND2_REPORTING;
         }
 
-        // Either no designated report was made or the designated report was disputed so we are in some phase of limited reporting
+        // Either no designated report was made or the designated report was disputed so we are in some phase of first reporting
         if (_reportingWindow.isDisputeActive()) {
             if (_market.getTentativeWinningPayoutDistributionHash() == bytes32(0)) {
                 return IMarket.ReportingState.AWAITING_NO_REPORT_MIGRATION;
             } else {
-                return IMarket.ReportingState.LIMITED_DISPUTE;
+                return IMarket.ReportingState.FIRST_DISPUTE;
             }
         }
 
-        return IMarket.ReportingState.LIMITED_REPORTING;
+        return IMarket.ReportingState.ROUND1_REPORTING;
     }
 }

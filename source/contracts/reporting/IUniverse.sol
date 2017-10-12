@@ -20,17 +20,16 @@ contract IUniverse is Typed {
     function getParentPayoutDistributionHash() public view returns (bytes32);
     function getReportingPeriodDurationInSeconds() public view returns (uint256);
     function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow);
-    function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasDesignatedReporter) public returns (IReportingWindow);
+    function getReportingWindowByMarketEndTime(uint256 _endTime) public returns (IReportingWindow);
     function getCurrentReportingWindow() public returns (IReportingWindow);
     function getNextReportingWindow() public returns (IReportingWindow);
     function getReportingWindowForForkEndTime() public returns (IReportingWindow);
     function getOpenInterestInAttoEth() public view returns (uint256);
     function isParentOf(IUniverse _shadyChild) public view returns (bool);
     function isContainerForReportingWindow(Typed _shadyTarget) public view returns (bool);
-    function isContainerForRegistrationToken(Typed _shadyTarget) public view returns (bool);
-    function isContainerForMarket(Typed _shadyTarget) public returns (bool);
-    function isContainerForReportingToken(Typed _shadyTarget) public returns (bool);
-    function isContainerForShareToken(Typed _shadyTarget) public returns (bool);
+    function isContainerForMarket(Typed _shadyTarget) public view returns (bool);
+    function isContainerForReportingToken(Typed _shadyTarget) public view returns (bool);
+    function isContainerForShareToken(Typed _shadyTarget) public view returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);
     function incrementOpenInterest(uint256 _amount) public returns (bool);
 }

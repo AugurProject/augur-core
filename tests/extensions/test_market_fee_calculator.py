@@ -1,6 +1,6 @@
 from ethereum.tools import tester
 from pytest import fixture, mark
-from reporting_utils import proceedToLimitedReporting, initializeReportingFixture
+from reporting_utils import proceedToRound1Reporting, initializeReportingFixture
 
 ONE = 10 ** 18
 
@@ -45,10 +45,9 @@ def test_default_target_reporter_gas_costs(contractsFixture):
     feeCalculator = contractsFixture.contracts["MarketFeeCalculator"]
     market = contractsFixture.binaryMarket
 
-    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(market.getReportingWindow())
+    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(market.getUniverse())
     expectedTargetReporterGasCost = contractsFixture.constants.GAS_TO_REPORT()
     expectedTargetReporterGasCost *= contractsFixture.constants.DEFAULT_REPORTING_GAS_PRICE()
-    expectedTargetReporterGasCost *= contractsFixture.constants.DEFAULT_REPORTS_PER_MARKET()
     expectedTargetReporterGasCost *= 2
     assert targetReporterGasCosts == expectedTargetReporterGasCost
 
@@ -69,7 +68,7 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture):
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     # We'll have a market go through basic reporting and then make its reporting window over.
-    proceedToLimitedReporting(reportingFixture, market, False, tester.k1, [0,10**18])
+    proceedToRound1Reporting(reportingFixture, market, False, tester.k1, [0,10**18], [10**18,0])
 
     reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
     for i in range(0,numReports):
@@ -79,20 +78,15 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture):
     reportingFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
     assert market.tryFinalize()
 
-    actualAvgReportsPerMarket = reportingWindow.getAvgReportsPerMarket()
-    expectedAvgReportsPerMarket = (reportingFixture.constants.DEFAULT_REPORTS_PER_MARKET() + numReports) / 2
-    assert actualAvgReportsPerMarket == expectedAvgReportsPerMarket
-
-    actualAvgGasPrice = reportingWindow.getAvgReportingGasCost()
+    actualAvgGasPrice = reportingWindow.getAvgReportingGasPrice()
     expectedAvgReportingGasCost = (reportingFixture.constants.DEFAULT_REPORTING_GAS_PRICE() + gasPrice * numReports) / (numReports + 1)
     assert actualAvgGasPrice == expectedAvgReportingGasCost
 
     # Confirm our estimated gas cost is caluclated as expected
     expectedTargetReporterGasCost = reportingFixture.constants.GAS_TO_REPORT()
     expectedTargetReporterGasCost *= expectedAvgReportingGasCost
-    expectedTargetReporterGasCost *= expectedAvgReportsPerMarket
     expectedTargetReporterGasCost *= 2
-    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(universe.getCurrentReportingWindow())
+    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(universe.address)
     assert targetReporterGasCosts == expectedTargetReporterGasCost 
 
 @fixture(scope="session")

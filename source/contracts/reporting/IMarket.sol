@@ -18,11 +18,11 @@ contract IMarket is Typed, IOwnable {
         DESIGNATED_REPORTING,
         DESIGNATED_DISPUTE,
         AWAITING_FORK_MIGRATION,
-        LIMITED_REPORTING,
-        LIMITED_DISPUTE,
+        ROUND1_REPORTING,
+        FIRST_DISPUTE,
         AWAITING_NO_REPORT_MIGRATION,
-        ALL_REPORTING,
-        ALL_DISPUTE,
+        ROUND2_REPORTING,
+        LAST_DISPUTE,
         FORKING,
         AWAITING_FINALIZATION,
         FINALIZED
@@ -40,8 +40,8 @@ contract IMarket is Typed, IOwnable {
     function getShareToken(uint8 _outcome)  public view returns (IShareToken);
     function getDesignatedReporter() public view returns (address);
     function getDesignatedReporterDisputeBondToken() public view returns (IDisputeBond);
-    function getLimitedReportersDisputeBondToken() public view returns (IDisputeBond);
-    function getAllReportersDisputeBondToken() public view returns (IDisputeBond);
+    function getRound1ReportersDisputeBondToken() public view returns (IDisputeBond);
+    function getRound2ReportersDisputeBondToken() public view returns (IDisputeBond);
     function getMarketCreatorSettlementFeeInAttoethPerEth() public view returns (uint256);
     function getReportingState() public view returns (ReportingState);
     function getFinalizationTime() public view returns (uint256);
@@ -56,6 +56,7 @@ contract IMarket is Typed, IOwnable {
     function getDesignatedReportDueTimestamp() public view returns (uint256);
     function getDesignatedReportReceivedTime() public view returns (uint256);
     function getDesignatedReportDisputeDueTimestamp() public view returns (uint256);
+    function round1ReporterCompensationCheck(address _reporter) public returns (uint256);
     function migrateDueToNoReports() public returns (bool);
     function isContainerForReportingToken(Typed _shadyTarget) public view returns (bool);
     function isContainerForDisputeBondToken(Typed _shadyTarget) public view returns (bool);

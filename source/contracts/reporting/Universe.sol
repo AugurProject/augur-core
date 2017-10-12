@@ -12,7 +12,6 @@ import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingToken.sol';
 import 'reporting/IDisputeBond.sol';
-import 'reporting/IRegistrationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -95,12 +94,8 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return reportingWindows[_windowId];
     }
 
-    function getReportingWindowByMarketEndTime(uint256 _endTime, bool _hasDesignatedReporter) public returns (IReportingWindow) {
-        if (_hasDesignatedReporter) {
-            return getReportingWindowByTimestamp(_endTime + Reporting.designatedReportingDurationSeconds() + Reporting.designatedReportingDisputeDurationSeconds() + 1 + getReportingPeriodDurationInSeconds());
-        } else {
-            return getReportingWindowByTimestamp(_endTime + 1 + getReportingPeriodDurationInSeconds());
-        }
+    function getReportingWindowByMarketEndTime(uint256 _endTime) public returns (IReportingWindow) {
+        return getReportingWindowByTimestamp(_endTime + Reporting.designatedReportingDurationSeconds() + Reporting.designatedReportingDisputeDurationSeconds() + 1 + getReportingPeriodDurationInSeconds());
     }
 
     function getPreviousReportingWindow() public returns (IReportingWindow) {
@@ -152,23 +147,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitMarket.isContainerForDisputeBondToken(_shadyDisputeBond);
     }
 
-    function isContainerForRegistrationToken(Typed _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "RegistrationToken") {
-            return false;
-        }
-        IRegistrationToken _shadyRegistrationToken = IRegistrationToken(_shadyTarget);
-        IReportingWindow _shadyReportingWindow = _shadyRegistrationToken.getReportingWindow();
-        if (_shadyReportingWindow == address(0)) {
-            return false;
-        }
-        if (!isContainerForReportingWindow(_shadyReportingWindow)) {
-            return false;
-        }
-        IReportingWindow _legitReportingWindow = _shadyReportingWindow;
-        return _legitReportingWindow.isContainerForRegistrationToken(_shadyRegistrationToken);
-    }
-
-    function isContainerForMarket(Typed _shadyTarget) public returns (bool) {
+    function isContainerForMarket(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "Market") {
             return false;
         }
@@ -184,7 +163,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitReportingWindow.isContainerForMarket(_shadyMarket);
     }
 
-    function isContainerForReportingToken(Typed _shadyTarget) public returns (bool) {
+    function isContainerForReportingToken(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "ReportingToken") {
             return false;
         }
@@ -200,7 +179,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitMarket.isContainerForReportingToken(_shadyReportingToken);
     }
 
-    function isContainerForShareToken(Typed _shadyTarget) public returns (bool) {
+    function isContainerForShareToken(Typed _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "ShareToken") {
             return false;
         }
