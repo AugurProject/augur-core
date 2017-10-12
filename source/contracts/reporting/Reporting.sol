@@ -13,7 +13,9 @@ library Reporting {
     uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
     uint256 private constant DEFAULT_DESIGNATED_REPORT_STAKE = 2 ether;
     uint256 private constant DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND = 10 ether;
-    uint256 private constant DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR = 0.1 ether;
+    uint256 private constant DEFAULT_VALIDITY_BOND_FLOOR = 1 ether / 100;
+    uint256 private constant DESIGNATED_REPORT_STAKE_FLOOR = 2 ether / 100;
+    uint256 private constant DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR = 10 ether / 100;
 
     // CONSIDER: figure out approprate values for these
     uint256 private constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
@@ -43,6 +45,8 @@ library Reporting {
     function defaultValidityBond() internal pure returns (uint256) { return DEFAULT_VALIDITY_BOND; }
     function defaultDesignatedReportStake() internal pure returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
     function defaultDesignatedReportNoShowBond() internal pure returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
+    function defaultValidityBondFloor() internal pure returns (uint256) { return DEFAULT_VALIDITY_BOND_FLOOR; }
+    function designatedReportStakeFloor() internal pure returns (uint256) { return DESIGNATED_REPORT_STAKE_FLOOR; }
     function designatedReportNoShowBondFloor() internal pure returns (uint256) { return DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR; }
     function targetInvalidMarketsDivisor() internal pure returns (uint256) { return TARGET_INVALID_MARKETS_DIVISOR; }
     function targetIncorrectDesignatedReportMarketsDivisor() internal pure returns (uint256) { return TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR; }

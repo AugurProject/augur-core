@@ -31,7 +31,7 @@ contract IUniverse is Typed {
     function getDesignatedReportStake() public returns (uint256);
     function getDesignatedReportNoShowBond() public returns (uint256);
     function getReportingFeeInAttoethPerEth() public returns (uint256);
-    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) public pure returns (uint256 _newValue);
+    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue, uint256 _floor) public pure returns (uint256 _newValue);
     function getTargetReporterGasCosts() public returns (uint256);
     function getMarketCreationCost() public returns (uint256);
     function isParentOf(IUniverse _shadyChild) public view returns (bool);

@@ -244,7 +244,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
         uint256 _invalidMarketsInPreviousWindow = _previousReportingWindow.getNumInvalidMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
-        _currentValidityBondInAttoeth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetInvalidMarketsDivisor(), _previousValidityBondInAttoeth, Reporting.defaultValidityBond());
+        _currentValidityBondInAttoeth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetInvalidMarketsDivisor(), _previousValidityBondInAttoeth, Reporting.defaultValidityBond(), Reporting.defaultValidityBondFloor());
         validityBondInAttoeth[_reportingWindow] = _currentValidityBondInAttoeth;
         return _currentValidityBondInAttoeth;
     }
@@ -260,7 +260,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         uint256 _incorrectDesignatedReportMarketsInPreviousWindow = _previousReportingWindow.getNumIncorrectDesignatedReportMarkets();
         uint256 _previousDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_previousReportingWindow];
 
-        _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectDesignatedReportMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetIncorrectDesignatedReportMarketsDivisor(), _previousDesignatedReportStakeInAttoRep, Reporting.defaultDesignatedReportStake());
+        _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectDesignatedReportMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetIncorrectDesignatedReportMarketsDivisor(), _previousDesignatedReportStakeInAttoRep, Reporting.defaultDesignatedReportStake(), Reporting.designatedReportStakeFloor());
         designatedReportStakeInAttoRep[_reportingWindow] = _currentDesignatedReportStakeInAttoRep;
         return _currentDesignatedReportStakeInAttoRep;
     }
@@ -276,15 +276,12 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         uint256 _designatedReportNoShowsInPreviousWindow = _previousReportingWindow.getNumDesignatedReportNoShows();
         uint256 _previousDesignatedReportNoShowBondInAttoRep = designatedReportStakeInAttoRep[_previousReportingWindow];
 
-        _currentDesignatedReportNoShowBondInAttoRep = calculateFloatingValue(_designatedReportNoShowsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetDesignatedReportNoShowsDivisor(), _previousDesignatedReportNoShowBondInAttoRep, Reporting.defaultDesignatedReportNoShowBond());
-        if (_currentDesignatedReportNoShowBondInAttoRep < Reporting.designatedReportNoShowBondFloor()) {
-            _currentDesignatedReportNoShowBondInAttoRep = Reporting.designatedReportNoShowBondFloor();
-        }
+        _currentDesignatedReportNoShowBondInAttoRep = calculateFloatingValue(_designatedReportNoShowsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetDesignatedReportNoShowsDivisor(), _previousDesignatedReportNoShowBondInAttoRep, Reporting.defaultDesignatedReportNoShowBond(), Reporting.designatedReportNoShowBondFloor());
         designatedReportStakeInAttoRep[_reportingWindow] = _currentDesignatedReportNoShowBondInAttoRep;
         return _currentDesignatedReportNoShowBondInAttoRep;
     }
 
-    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue) public pure returns (uint256 _newValue) {
+    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue, uint256 _floor) public pure returns (uint256 _newValue) {
         if (_totalMarkets == 0) {
             return _defaultValue;
         }
@@ -293,12 +290,16 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         }
 
         // Modify the amount based on the previous amount and the number of markets fitting the failure criteria. We want the amount to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets with the condition results in 2x and 0 results in 0.5x.
-        if (_badMarkets <= _totalMarkets.div(_targetDivisor)) {
+        if (_badMarkets <= _totalMarkets / _targetDivisor) {
             // FXP formula: previous_amount * actual_percent / (2 * target_percent) + 0.5;
-            _newValue = _badMarkets.mul(_previousValue).mul(_targetDivisor).div(_totalMarkets).div(2).add(_previousValue.div(2)); // FIXME: This is on one line due to solium bugs
+            _newValue = _badMarkets.mul(_previousValue).mul(_targetDivisor).div(_totalMarkets).div(2)  + _previousValue / 2; // FIXME: This is on one line due to solium bugs
         } else {
             // FXP formula: previous_amount * (1/(1 - target_percent)) * (actual_percent - target_percent) + 1;
-            _newValue = _targetDivisor.mul(_previousValue.mul(_badMarkets).div(_totalMarkets).sub(_previousValue.div(_targetDivisor))).div(_targetDivisor - 1).add(_previousValue); // FIXME: This is on one line due to a solium bug
+            _newValue = _targetDivisor.mul(_previousValue.mul(_badMarkets).div(_totalMarkets).sub(_previousValue.div(_targetDivisor))).div(_targetDivisor - 1) + _previousValue; // FIXME: This is on one line due to a solium bug
+        }
+
+        if (_newValue < _floor) {
+            _newValue = _floor;
         }
 
         return _newValue;

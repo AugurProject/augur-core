@@ -33,11 +33,14 @@ ONE = 10 ** 18
     (60, 50, 10 * ONE, 12 * ONE),
     (80, 50, 10 * ONE, 16 * ONE),
     (90, 50, 10 * ONE, 18 * ONE),
+
+    #Floor test
+    (0, 1, ONE / 100, ONE / 100),
 ])
 def test_floating_amount_calculation(numWithCondition, targetWithConditionPerHundred, previousAmount, expectedValue, contractsFixture):
     feeCalculator = contractsFixture.universe
     targetDivisor = 100 / targetWithConditionPerHundred
-    newAmount = feeCalculator.calculateFloatingValue(numWithCondition, 100, targetDivisor, previousAmount, contractsFixture.constants.DEFAULT_VALIDITY_BOND())
+    newAmount = feeCalculator.calculateFloatingValue(numWithCondition, 100, targetDivisor, previousAmount, contractsFixture.constants.DEFAULT_VALIDITY_BOND(), ONE / 100)
     assert newAmount == expectedValue
 
 def test_default_target_reporter_gas_costs(contractsFixture):
