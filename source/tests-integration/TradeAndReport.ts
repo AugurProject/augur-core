@@ -10,7 +10,7 @@ import { ContractDeployer } from "../libraries/ContractDeployer";
 import { TestAccount, generateTestAccounts, padAndHexlify, stringTo32ByteHex } from "../libraries/HelperFunctions";
 
 
-describe("BinaryMarketTradeAndReport", () => {
+describe("TradeAndReport", () => {
     var contractDeployer: ContractDeployer;
     beforeEach(async () => {
         contractDeployer = await compileAndDeployContracts();
