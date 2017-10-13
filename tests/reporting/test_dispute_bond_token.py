@@ -129,9 +129,9 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         OUTCOME_A = SCALAR_OUTCOME_A
         OUTCOME_B = SCALAR_OUTCOME_B
         OUTCOME_C = SCALAR_OUTCOME_C
-    reportingTokenA = contractsFixture.getReportingToken(market, OUTCOME_A)
-    reportingTokenB = contractsFixture.getReportingToken(market, OUTCOME_B)
-    reportingTokenC = contractsFixture.getReportingToken(market, OUTCOME_C)
+    reportingTokenA = contractsFixture.getReportingToken(market, OUTCOME_A, False)
+    reportingTokenB = contractsFixture.getReportingToken(market, OUTCOME_B, False)
+    reportingTokenC = contractsFixture.getReportingToken(market, OUTCOME_C, False)
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
     aUniverseReputationToken = None
     bUniverseReputationToken = None
@@ -178,7 +178,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
 
             # Dispute the designated reporter outcome
             disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(designatedReporterDisputerAccountNum)))
-            market.disputeDesignatedReport(OUTCOME_B, 1, sender=getattr(tester, 'k' + str(designatedReporterDisputerAccountNum)))
+            market.disputeDesignatedReport(OUTCOME_B, 1, False, sender=getattr(tester, 'k' + str(designatedReporterDisputerAccountNum)))
             designatedReporterDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getDesignatedReporterDisputeBondToken())
             assert designatedReporterDisputeBondToken.getMarket() == market.address
 
@@ -212,7 +212,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         # Dispute the first reporters result
         disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(round1ReportersDisputerAccountNum)))
         if (round1ReporterDisputeOutcome != None):
-            round1ReporterDisputeOutcomePayoutHash = market.derivePayoutDistributionHash(round1ReporterDisputeOutcome)
+            round1ReporterDisputeOutcomePayoutHash = market.derivePayoutDistributionHash(round1ReporterDisputeOutcome, False)
             stakeDelta = contractsFixture.contracts["MarketExtensions"].getPayoutDistributionHashStake(market.address, round1ReporterDisputeOutcomePayoutHash)
             stakeDelta = 1 - stakeDelta
             if stakeDelta < 0:
@@ -220,7 +220,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         else:
             round1ReporterDisputeOutcome = []
             stakeDelta = 0
-        market.disputeRound1Reporters(round1ReporterDisputeOutcome, stakeDelta, sender=getattr(tester, 'k' + str(round1ReportersDisputerAccountNum)))
+        market.disputeRound1Reporters(round1ReporterDisputeOutcome, stakeDelta, False, sender=getattr(tester, 'k' + str(round1ReportersDisputerAccountNum)))
         round1ReportersDisputeBondToken = contractsFixture.applySignature('DisputeBondToken', market.getRound1ReportersDisputeBondToken())
         assert round1ReportersDisputeBondToken.getMarket() == market.address
 
@@ -545,14 +545,14 @@ def handleReportingTokens(market, designatedReporterAccountNum, designatedReport
                 winningOutcomeStakes[round1ReportersDisputerAccountNum] = 0
             winningOutcomeStakes[round1ReportersDisputerAccountNum] += stakeDelta
         for row in designatedReporterDisputeStakes:
-            if (market.derivePayoutDistributionHash(row[1]) == winningReportingToken.getPayoutDistributionHash()):
+            if (market.derivePayoutDistributionHash(row[1], False) == winningReportingToken.getPayoutDistributionHash()):
                 totalStakedOnWinningOutcome += row[2]
                 if (row[0] in winningOutcomeStakes):
                     winningOutcomeStakes[row[0]] += row[2]
                 else:
                     winningOutcomeStakes.update({row[0]: row[2]})
         for row in round1ReportersDisputeStakes:
-            if (market.derivePayoutDistributionHash(row[1]) == winningReportingToken.getPayoutDistributionHash()):
+            if (market.derivePayoutDistributionHash(row[1], False) == winningReportingToken.getPayoutDistributionHash()):
                 totalStakedOnWinningOutcome += row[2]
                 if (row[0] in winningOutcomeStakes):
                     winningOutcomeStakes[row[0]] += row[2]
@@ -604,8 +604,8 @@ def withdrawBondsFromDisputeTokens(market, round2ReportersDisputeStakes, designa
                 destinationUniverse = None
                 destinationUniverseReputationToken = None
                 #print "disputedPayoutDistributionHash:" + str(disputeBondToken.getDisputedPayoutDistributionHash())
-                #print "market.derivePayoutDistributionHash(row[1]): " + str(market.derivePayoutDistributionHash(row[1]))
-                if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1])):
+                #print "market.derivePayoutDistributionHash(row[1], False): " + str(market.derivePayoutDistributionHash(row[1], False))
+                if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1], False)):
                     if (row[1] == OUTCOME_A):
                         destinationUniverse = aUniverse
                         destinationUniverseReputationToken = aUniverseReputationToken
@@ -658,8 +658,8 @@ def withdrawBondsFromDisputeTokens(market, round2ReportersDisputeStakes, designa
                 destinationUniverse = None
                 destinationUniverseReputationToken = None
                 #print "disputedPayoutDistributionHash:" + str(disputeBondToken.getDisputedPayoutDistributionHash())
-                #print "market.derivePayoutDistributionHash(row[1]): " + str(market.derivePayoutDistributionHash(row[1]))
-                if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1])):
+                #print "market.derivePayoutDistributionHash(row[1], False): " + str(market.derivePayoutDistributionHash(row[1], False))
+                if (disputeBondToken.getDisputedPayoutDistributionHash() != market.derivePayoutDistributionHash(row[1], False)):
                     if (row[1] == OUTCOME_A):
                         destinationUniverse = aUniverse
                         destinationUniverseReputationToken = aUniverseReputationToken

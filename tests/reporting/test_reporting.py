@@ -48,7 +48,7 @@ def test_reportingFullHappyPath(reportingFixture):
     assert market.getReportingState() == reportingFixture.constants.FIRST_DISPUTE()
 
     # Contest the results with Tester 0
-    market.disputeRound1Reporters([], 0, sender=tester.k0)
+    market.disputeRound1Reporters([], 0, False, sender=tester.k0)
     assert not reportingWindow.isContainerForMarket(market.address)
     assert universe.isContainerForMarket(market.address)
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
@@ -343,7 +343,7 @@ def test_invalid_round1_report(reportingFixture):
     proceedToRound1Reporting(reportingFixture, market, False, tester.k1, [0,10**18], [10**18,0])
 
     # We make an invalid report
-    reportingTokenInvalid = reportingFixture.getReportingToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
+    reportingTokenInvalid = reportingFixture.getReportingToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], True)
     reportingTokenInvalid.buy(1, sender=tester.k2)
     assert reportingTokenInvalid.balanceOf(tester.a2) == 1 + reportingFixture.contracts["MarketFeeCalculator"].getDesignatedReportNoShowBond(universe.address)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
@@ -373,7 +373,7 @@ def test_invalid_designated_report(reportingFixture):
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report of invalid
     initialMarketCreatorETHBalance = reportingFixture.utils.getETHBalance(market.getOwner())
-    assert reportingFixture.designatedReport(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], tester.k0)
+    assert reportingFixture.designatedReport(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], tester.k0, True)
 
     # We're now in the DESIGNATED DISPUTE PHASE
     assert market.getReportingState() == reportingFixture.constants.DESIGNATED_DISPUTE()

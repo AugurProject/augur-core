@@ -202,8 +202,8 @@ export class ContractDeployer {
 
     // TODO: move these out of this class. this class is for deploying the contracts, not general purpose Augur interactions.
     // CONSIDER: create a class called Augur or something that deals with the various interactions one may want to participate in
-    public async getReportingToken(market, payoutDistribution): Promise<ContractBlockchainData> {
-        const reportingTokenAddress = market.getReportingToken(payoutDistribution);
+    public async getReportingToken(market, payoutDistribution, invalid): Promise<ContractBlockchainData> {
+        const reportingTokenAddress = market.getReportingToken(payoutDistribution, invalid);
         if (!reportingTokenAddress) {
             throw new Error();
         }

@@ -39,7 +39,7 @@ def proceedToRound1Reporting(testFixture, market, makeReport, disputer, reportOu
     if (makeReport):
         assert testFixture.designatedReport(market, reportOutcomes, tester.k0)
         assert market.getReportingState() == testFixture.constants.DESIGNATED_DISPUTE()
-        assert market.disputeDesignatedReport(designatedDisputeOutcomes, 1, sender=disputer)
+        assert market.disputeDesignatedReport(designatedDisputeOutcomes, 1, False, sender=disputer)
     else:
         testFixture.chain.head_state.timestamp = market.getEndTime() + testFixture.constants.DESIGNATED_REPORTING_DURATION_SECONDS() + 1
 
@@ -67,7 +67,7 @@ def proceedToRound2Reporting(testFixture, market, makeReport, designatedDisputer
     assert market.getReportingState() == testFixture.constants.FIRST_DISPUTE()
 
     disputeRound1ReportOutcomeStake = testFixture.constants.DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
-    assert market.disputeRound1Reporters(round1ReportDisputeOutcomes, disputeRound1ReportOutcomeStake, sender=round1Disputer)
+    assert market.disputeRound1Reporters(round1ReportDisputeOutcomes, disputeRound1ReportOutcomeStake, False, sender=round1Disputer)
 
     # We're in the ROUND2 REPORTING phase now
     assert market.getReportingState() == testFixture.constants.ROUND2_REPORTING()

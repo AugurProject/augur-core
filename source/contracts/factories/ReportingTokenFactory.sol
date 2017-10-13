@@ -8,10 +8,10 @@ import 'IController.sol';
 
 
 contract ReportingTokenFactory {
-    function createReportingToken(IController _controller, IMarket _market, uint256[] _payoutNumerators) public returns (IReportingToken) {
+    function createReportingToken(IController _controller, IMarket _market, uint256[] _payoutNumerators, bool _invalid) public returns (IReportingToken) {
         Delegator _delegator = new Delegator(_controller, "ReportingToken");
         IReportingToken _reportingToken = IReportingToken(_delegator);
-        _reportingToken.initialize(_market, _payoutNumerators);
+        _reportingToken.initialize(_market, _payoutNumerators, _invalid);
         return _reportingToken;
     }
 }

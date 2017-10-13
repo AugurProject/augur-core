@@ -21,8 +21,9 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     IMarket public market;
     uint256[] public payoutNumerators;
+    bool private invalid;
 
-    function initialize(IMarket _market, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
+    function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public beforeInitialized returns (bool) {
         endInitialization();
         require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
         uint256 _sum = 0;
@@ -30,8 +31,10 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
             _sum = _sum.add(_payoutNumerators[i]);
         }
         require(_sum == _market.getNumTicks());
+        require(!invalid || isInvalidOutcome());
         market = _market;
         payoutNumerators = _payoutNumerators;
+        invalid = _invalid;
         return true;
     }
 
@@ -178,7 +181,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function getPayoutDistributionHash() public view returns (bytes32) {
-        return market.derivePayoutDistributionHash(payoutNumerators);
+        return market.derivePayoutDistributionHash(payoutNumerators, invalid);
     }
 
     function getPayoutNumerator(uint8 index) public view returns (uint256) {
@@ -187,11 +190,15 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function isValid() public view returns (bool) {
+        return !invalid;
+    }
+
+    function isInvalidOutcome() private view returns (bool) {
         for (uint8 i = 1; i < payoutNumerators.length; i++) {
             if (payoutNumerators[0] != payoutNumerators[i]) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 }
