@@ -183,7 +183,7 @@ export class ContractDeployer {
         const contractsToApprove = ["Cash"];
         for (let testAccount in this.testAccounts) {
             for (let contractName of contractsToApprove) {
-                this.contracts[contractName].approve(authority.address, 2 ** 256, { from: this.testAccounts[testAccount].address });
+                this.contracts[contractName].approve(authority.address, 2 ** 256, { from: this.testAccounts[testAccount] });
             }
         }
 
