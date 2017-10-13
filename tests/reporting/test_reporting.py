@@ -90,21 +90,28 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
     # Attempting to finalize the fork now will not succeed as no REP has been migrated
     assert market.tryFinalize() == 0
 
-    # Tester 1 moves their ~1 Million REP to the YES universe
+    # Tester 1 moves their ~1 Million REP to the YES universe and gets a fixed percentage bonus for doing so within the FORKING period
+    expectedAmount = reputationToken.balanceOf(tester.a1)
+    bonus = expectedAmount / reportingFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
     reputationToken.migrateOut(yesUniverseReputationToken.address, tester.a1, reputationToken.balanceOf(tester.a1), sender = tester.k1)
     assert not reputationToken.balanceOf(tester.a1)
-    assert yesUniverseReputationToken.balanceOf(tester.a1) == 10**6 * 10**18 - 110000 * 10**18
+    assert yesUniverseReputationToken.balanceOf(tester.a1) == expectedAmount + bonus
 
     # Attempting to finalize the fork now will not succeed as a majority or REP has not yet migrated and fork end time has not been reached
     assert market.tryFinalize() == 0
 
-    # Testers 0 and 2 move their combined ~9 million REP to the NO universe
+    # Testers 0 and 2 move their combined ~9 million REP to the NO universe and receive a bonus since they are within the FORKING period
+    expectedAmount = reputationToken.balanceOf(tester.a0)
+    bonus = expectedAmount / reportingFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
     reputationToken.migrateOut(noUniverseReputationToken.address, tester.a0, reputationToken.balanceOf(tester.a0), sender = tester.k0)
     assert not reputationToken.balanceOf(tester.a0)
-    assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 - 100 - 11000 * 10 ** 18 - noShowBondCosts
+    tester0REPBalance = noUniverseReputationToken.balanceOf(tester.a0)
+    assert tester0REPBalance == expectedAmount + bonus
+    expectedAmount = reputationToken.balanceOf(tester.a2)
+    bonus = expectedAmount / reportingFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
     reputationToken.migrateOut(noUniverseReputationToken.address, tester.a2, reputationToken.balanceOf(tester.a2), sender = tester.k2)
     assert not reputationToken.balanceOf(tester.a2)
-    assert noUniverseReputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18  - 2
+    assert noUniverseReputationToken.balanceOf(tester.a2) == expectedAmount + bonus
 
     # We can finalize the market now since a mjaority of REP has moved. Alternatively we could "localFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1" to move
     initialMarketCreatorETHBalance = localFixture.contracts['Utils'].getETHBalance(market.getOwner())
@@ -119,8 +126,15 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
     assert increaseInMarketCreatorBalance == expectedMarketCreatorFeePayout
 
     # We can redeem forked REP on any universe we didn't dispute
+    stakeTokenBalance = stakeTokenNo.balanceOf(tester.a0)
     assert stakeTokenNo.redeemForkedTokens(sender = tester.k0)
-    assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 - 11000 * 10 ** 18 - noShowBondCosts
+    assert noUniverseReputationToken.balanceOf(tester.a0) == tester0REPBalance + stakeTokenBalance
+
+    # We can also see that a tester who now migrates their REP will also not get the bonus
+    expectedAmount = reputationToken.balanceOf(tester.a3)
+    reputationToken.migrateOut(noUniverseReputationToken.address, tester.a3, reputationToken.balanceOf(tester.a3), sender = tester.k3)
+    assert not reputationToken.balanceOf(tester.a3)
+    assert noUniverseReputationToken.balanceOf(tester.a3) == expectedAmount
 
 def test_designatedReportingHappyPath(localFixture, universe, market):
     # Proceed to the DESIGNATED REPORTING phase

@@ -31,6 +31,10 @@ contract IUniverse is Typed {
     function getDesignatedReportStake() public returns (uint256);
     function getDesignatedReportNoShowBond() public returns (uint256);
     function getReportingFeeInAttoethPerEth() public returns (uint256);
+    function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256);
+    function deductDisputeBondExtraMintAmount(uint256 _maximumToPay, uint256 _totalNeededInUniverse) public returns (uint256);
+    function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool);
+    function deductExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool);
     function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue, uint256 _floor) public pure returns (uint256 _newValue);
     function getTargetReporterGasCosts() public returns (uint256);
     function getMarketCreationCost() public returns (uint256);

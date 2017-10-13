@@ -28,6 +28,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     mapping(uint256 => IReportingWindow) private reportingWindows;
     mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
+    uint256 private extraDisputeBondRemainingToBePaidOut;
 
     mapping (address => uint256) private validityBondInAttoeth;
     mapping (address => uint256) private targetReporterGasCosts;
@@ -121,6 +122,29 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
             childUniverses[_parentPayoutDistributionHash] = UniverseFactory(controller.lookup("UniverseFactory")).createUniverse(controller, this, _parentPayoutDistributionHash);
         }
         return childUniverses[_parentPayoutDistributionHash];
+    }
+
+    function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256) {
+        return extraDisputeBondRemainingToBePaidOut;
+    }
+
+    function deductDisputeBondExtraMintAmount(uint256 _maximumToPay, uint256 _totalNeededInUniverse) public returns (uint256) {
+        // Validate dispute bond
+        // Validate dispute bond is child
+        // maximim paid should be the max( (max/total * extraDisputeBondRemainingToBePaidOut), max)
+        return _maximumToPay;
+    }
+
+    function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
+        // Validate dispute bond
+        // Validate dispute bond is child
+        extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.add(_amount);
+    }
+
+    function deductExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
+        // Validate dispute bond
+        // Validate dispute bond is child
+        extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.sub(_amount);
     }
 
     function isContainerForReportingWindow(Typed _shadyTarget) public view returns (bool) {
