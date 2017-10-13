@@ -12,5 +12,6 @@
         "**/*.pyc": true
     },
     "python.linting.pylintEnabled": false,
+    "solidity.lintOnChange": false,
     "solidity.solidityRoot": "source/contracts"
 }
