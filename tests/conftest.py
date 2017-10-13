@@ -342,7 +342,8 @@ class ContractsFixture:
 
     def designatedReport(self, market, payoutDistribution, reporterKey, invalid=False):
         reportingToken = self.getReportingToken(market, payoutDistribution, invalid)
-        designatedReportStake = self.contracts['MarketFeeCalculator'].getDesignatedReportStake(market.getUniverse())
+        universe = self.applySignature('Universe', market.getUniverse())
+        designatedReportStake = universe.getDesignatedReportStake()
         return reportingToken.buy(designatedReportStake, sender=reporterKey)
 
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
@@ -357,7 +358,7 @@ class ContractsFixture:
         return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks)
 
     def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks):
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.address) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts(universe.address)
+        marketCreationFee = universe.getMarketCreationCost()
         reportingWindow = self.applySignature('ReportingWindow', universe.getReportingWindowByMarketEndTime(endTime))
         marketAddress = reportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress
@@ -365,7 +366,7 @@ class ContractsFixture:
         return market
 
     def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress):
-        marketCreationFee = self.contracts['MarketFeeCalculator'].getValidityBond(universe.address) + self.contracts['MarketFeeCalculator'].getTargetReporterGasCosts(universe.address)
+        marketCreationFee = universe.getMarketCreationCost()
         reportingWindow = self.applySignature('ReportingWindow', universe.getReportingWindowByMarketEndTime(endTime))
         marketAddress = reportingWindow.createMarket(endTime, 2, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
         assert marketAddress

@@ -14,8 +14,8 @@ def test_reportingFullHappyPath(reportingFixture):
     reportingTokenNo = reportingFixture.getReportingToken(market, [10**18,0])
     reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
     reportingWindow = reportingFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
-    expectedMarketCreatorFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getValidityBond(universe.address)
-    reporterGasCosts = reportingFixture.contracts["MarketFeeCalculator"].getTargetReporterGasCosts(universe.address)
+    expectedMarketCreatorFeePayout = universe.getValidityBond()
+    reporterGasCosts = universe.getTargetReporterGasCosts()
 
     # We can't yet report on the market as it's in the pre reporting phase
     assert market.getReportingState() == reportingFixture.constants.PRE_REPORTING()
@@ -166,7 +166,7 @@ def test_round1ReportingHappyPath(makeReport, reportingFixture):
     # If there ws no designated report he first reporter gets the no-show REP bond auto-staked on the outcome they're purchasing
     expectedReportingTokenBalance = 1
     if (not makeReport):
-        expectedReportingTokenBalance += reportingFixture.contracts["MarketFeeCalculator"].getDesignatedReportNoShowBond(universe.address)
+        expectedReportingTokenBalance += universe.getDesignatedReportNoShowBond()
 
     assert reportingTokenYes.balanceOf(tester.a2) == expectedReportingTokenBalance
 
@@ -337,7 +337,7 @@ def test_invalid_round1_report(reportingFixture):
     cash = reportingFixture.cash
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())
-    expectedReportingWindowFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getValidityBond(universe.address)
+    expectedReportingWindowFeePayout = universe.getValidityBond()
 
     # Proceed to the ROUND1 REPORTING phase
     proceedToRound1Reporting(reportingFixture, market, False, tester.k1, [0,10**18], [10**18,0])
@@ -345,7 +345,7 @@ def test_invalid_round1_report(reportingFixture):
     # We make an invalid report
     reportingTokenInvalid = reportingFixture.getReportingToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], True)
     reportingTokenInvalid.buy(1, sender=tester.k2)
-    assert reportingTokenInvalid.balanceOf(tester.a2) == 1 + reportingFixture.contracts["MarketFeeCalculator"].getDesignatedReportNoShowBond(universe.address)
+    assert reportingTokenInvalid.balanceOf(tester.a2) == 1 + universe.getDesignatedReportNoShowBond()
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == reportingTokenInvalid.getPayoutDistributionHash()
     assert not reportingTokenInvalid.isValid()
@@ -365,8 +365,8 @@ def test_invalid_designated_report(reportingFixture):
     market = reportingFixture.binaryMarket
     cash = reportingFixture.cash
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    expectedReportingWindowFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getValidityBond(market.getUniverse())
-    expectedMarketCreatorFeePayout = reportingFixture.contracts["MarketFeeCalculator"].getTargetReporterGasCosts(market.getUniverse())
+    expectedReportingWindowFeePayout = reportingFixture.universe.getValidityBond()
+    expectedMarketCreatorFeePayout = reportingFixture.universe.getTargetReporterGasCosts()
 
     # Proceed to the DESIGNATED REPORTING phase
     proceedToDesignatedReporting(reportingFixture, market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])

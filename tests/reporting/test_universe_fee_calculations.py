@@ -33,19 +33,22 @@ ONE = 10 ** 18
     (60, 50, 10 * ONE, 12 * ONE),
     (80, 50, 10 * ONE, 16 * ONE),
     (90, 50, 10 * ONE, 18 * ONE),
+
+    #Floor test
+    (0, 1, ONE / 100, ONE / 100),
 ])
 def test_floating_amount_calculation(numWithCondition, targetWithConditionPerHundred, previousAmount, expectedValue, contractsFixture):
-    feeCalculator = contractsFixture.contracts["MarketFeeCalculator"]
+    feeCalculator = contractsFixture.universe
     targetDivisor = 100 / targetWithConditionPerHundred
-    newAmount = feeCalculator.calculateFloatingValue(numWithCondition, 100, targetDivisor, previousAmount, contractsFixture.constants.DEFAULT_VALIDITY_BOND())
+    newAmount = feeCalculator.calculateFloatingValue(numWithCondition, 100, targetDivisor, previousAmount, contractsFixture.constants.DEFAULT_VALIDITY_BOND(), ONE / 100)
     assert newAmount == expectedValue
 
 def test_default_target_reporter_gas_costs(contractsFixture):
     # The target reporter gas cost is an attempt to charge the market creator for the estimated cost of reporting that may occur for their market. With no previous reporting window to base costs off of it assumes basic default values
-    feeCalculator = contractsFixture.contracts["MarketFeeCalculator"]
+    feeCalculator = contractsFixture.universe
     market = contractsFixture.binaryMarket
 
-    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(market.getUniverse())
+    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts()
     expectedTargetReporterGasCost = contractsFixture.constants.GAS_TO_REPORT()
     expectedTargetReporterGasCost *= contractsFixture.constants.DEFAULT_REPORTING_GAS_PRICE()
     expectedTargetReporterGasCost *= 2
@@ -62,7 +65,7 @@ def test_default_target_reporter_gas_costs(contractsFixture):
 ])
 def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture):
     # The target reporter gas cost is an attempt to charge the market creator for the estimated cost of reporting that may occur for their market. It will use the previous reporting window's data to estimate costs if it is available
-    feeCalculator = reportingFixture.contracts["MarketFeeCalculator"]
+    feeCalculator = reportingFixture.universe
     market = reportingFixture.binaryMarket
     universe = reportingFixture.universe
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
@@ -86,7 +89,7 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture):
     expectedTargetReporterGasCost = reportingFixture.constants.GAS_TO_REPORT()
     expectedTargetReporterGasCost *= expectedAvgReportingGasCost
     expectedTargetReporterGasCost *= 2
-    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts(universe.address)
+    targetReporterGasCosts = feeCalculator.getTargetReporterGasCosts()
     assert targetReporterGasCosts == expectedTargetReporterGasCost 
 
 @fixture(scope="session")

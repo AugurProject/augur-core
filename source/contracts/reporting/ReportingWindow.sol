@@ -17,7 +17,6 @@ import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
-import 'extensions/MarketFeeCalculator.sol';
 
 
 contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWindow {
@@ -50,9 +49,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
         require(universe.getReportingWindowByMarketEndTime(_endTime) == this);
-        MarketFeeCalculator _marketFeeCalculator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
-        getReputationToken().trustedTransfer(msg.sender, _marketFactory, _marketFeeCalculator.getDesignatedReportNoShowBond(universe));
+        getReputationToken().trustedTransfer(msg.sender, _marketFactory, universe.getDesignatedReportNoShowBond());
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
         round1ReporterMarkets.add(_newMarket);

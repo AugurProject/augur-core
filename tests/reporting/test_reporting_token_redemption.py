@@ -5,9 +5,9 @@ from reporting_utils import proceedToDesignatedReporting, proceedToRound1Reporti
 
 def test_one_market_one_correct_report(reportingTokenPayoutFixture):
     market = reportingTokenPayoutFixture.market1
+    universe = reportingTokenPayoutFixture.applySignature('Universe', market.getUniverse())
     reportingWindow = reportingTokenPayoutFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = reportingTokenPayoutFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
-    marketFeeCalculator = reportingTokenPayoutFixture.contracts["MarketFeeCalculator"]
 
     # Proceed to the DESIGNATED REPORTING phase
     proceedToDesignatedReporting(reportingTokenPayoutFixture, market, [0,10**18])
@@ -16,7 +16,7 @@ def test_one_market_one_correct_report(reportingTokenPayoutFixture):
     initialRepBalance = reputationToken.balanceOf(tester.a0)
     assert reportingTokenPayoutFixture.designatedReport(market, [0,10**18], tester.k0)
     # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
-    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + marketFeeCalculator.getDesignatedReportNoShowBond(market.getUniverse()) - marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
+    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getDesignatedReportNoShowBond() - universe.getDesignatedReportStake()
     initialREPBalance = reputationToken.balanceOf(tester.a0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
@@ -30,7 +30,7 @@ def test_one_market_one_correct_report(reportingTokenPayoutFixture):
 
     # The designated reporter may redeem their reporting tokens which were purchased to make the designated report
     reportingToken = reportingTokenPayoutFixture.getReportingToken(market, [0, 10**18])
-    assert reportingToken.balanceOf(tester.a0) == marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
+    assert reportingToken.balanceOf(tester.a0) == universe.getDesignatedReportStake()
 
     expectedREPBalance = initialREPBalance
 
@@ -49,7 +49,6 @@ def test_reporting_token_redemption(numReports, numCorrect, reportingTokenPayout
     market = reportingTokenPayoutFixture.market1
     reportingWindow = reportingTokenPayoutFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = reportingTokenPayoutFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
-    marketFeeCalculator = reportingTokenPayoutFixture.contracts["MarketFeeCalculator"]
 
     # Proceed to ROUND1 REPORTING
     proceedToRound1Reporting(reportingTokenPayoutFixture, market, False, tester.k1, [0,10**18], [10**18,0])
@@ -77,7 +76,7 @@ def doReports(fixture, market, numReporters, numCorrect):
 def confirmPayouts(fixture, market, numCorrectReporters):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = fixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
-    marketFeeCalculator = fixture.contracts["MarketFeeCalculator"]
+    universe = fixture.applySignature('Universe', market.getUniverse())
     reportingToken = fixture.getReportingToken(market, [0,10**18])
 
     for i in range(0, numCorrectReporters):
@@ -86,7 +85,7 @@ def confirmPayouts(fixture, market, numCorrectReporters):
         assert reportingToken.redeemWinningTokens(sender=fixture.testerKey[i])
         expectedRep = initialREPBalance + 10
         if (i == 0):
-            expectedRep += marketFeeCalculator.getDesignatedReportNoShowBond(market.getUniverse())
+            expectedRep += universe.getDesignatedReportNoShowBond()
         assert reputationToken.balanceOf(testerAddress) == expectedRep
 
 @fixture(scope="session")
