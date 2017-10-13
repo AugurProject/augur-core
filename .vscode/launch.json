@@ -25,11 +25,12 @@
                 "output/tests-integration/**/*.js",
                 "--no-timeouts"
             ],
-            "env": {
-                "ETHEREUM_HOST": "localhost",
-                "ETHEREUM_PORT": "47622",
-                "ETHEREUM_GAS_PRICE_IN_NANOETH": "1"
-            },
+            // uncomment the following and run `docker-compose up --build --force-recreate --abort-on-container-exit parity-dev-node` then you can debug tests against insta-seal chain in VSCode
+            // "env": {
+            //     "ETHEREUM_HOST": "localhost",
+            //     "ETHEREUM_PORT": "47622",
+            //     "ETHEREUM_GAS_PRICE_IN_NANOETH": "1"
+            // },
             "protocol": "inspector",
             "sourceMaps": true,
             "outFiles": [
