@@ -2,7 +2,7 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import fixture, mark, lazy_fixture, raises
+from pytest import fixture, mark, raises
 
 @fixture(scope='session')
 def testerSnapshot(sessionFixture):
@@ -46,7 +46,7 @@ def test_eternal_approval_magic(testStandardTokenFixture):
     assert standardToken.allowance(tester.a0, tester.a1) == 2 ** 256 - 1
     assert standardToken.balanceOf(tester.a0) == 4
     assert standardToken.balanceOf(tester.a1) == 96
-    
+
 def test_create_negative_balance(testStandardTokenFixture):
     standardToken = testStandardTokenFixture.contracts['StandardTokenHelper']
     assert standardToken.totalSupply() == 0
@@ -68,7 +68,7 @@ def test_transfer_then_create_negative_balance(testStandardTokenFixture):
     assert standardToken.balanceOf(tester.a1) == 10
     # approve and allow transfer of more tokens than tester has
     assert standardToken.approve(tester.a1, 11)
-    # try to transfer more than tester has  
+    # try to transfer more than tester has
     with raises(TransactionFailed):
         standardToken.transfer(tester.a1, 11, sender=tester.k1)
 
@@ -133,4 +133,4 @@ def test_transfrom_more_than_total_supply(testStandardTokenFixture):
     assert standardToken.totalSupply() == 20
     with raises(TransactionFailed):
         standardToken.transfer(tester.a1, 21)
-    
+

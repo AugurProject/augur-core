@@ -7,8 +7,9 @@
 asn1crypto==0.23.0        # via coincurve
 cffi==1.11.1              # via coincurve
 coincurve==6.0.0          # via ethereum-augur-temp
-ethereum-augur-temp==2.1.4
+ethereum-augur-temp==2.1.10
 numpy==1.13.0
+pbkdf2==1.3               # via ethereum-augur-temp
 py-ecc==1.1.1             # via ethereum-augur-temp
 py-solc==1.4.0
 py==1.4.34                # via pytest
@@ -16,7 +17,6 @@ pycparser==2.18           # via cffi
 pycryptodome==3.4.6
 pyethash==0.1.27          # via ethereum-augur-temp
 pysha3==1.0.2             # via ethereum-augur-temp
-pytest-lazy-fixture==0.3.0
 pytest==3.1.2
 pyyaml==3.12              # via ethereum-augur-temp
 repoze.lru==0.6           # via ethereum-augur-temp

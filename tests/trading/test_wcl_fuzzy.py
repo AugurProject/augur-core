@@ -22,13 +22,10 @@ GAS_PRICE = 7
 
 # TODO: turn these into 24 parameterized tests rather than 3 tests that each execute 8 sub-tests
 
-def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOutcome, creatorLongShares, creatorShortShares, creatorTokens, fillerLongShares, fillerShortShares, fillerTokens, expectedMakerLongShares, expectedMakerShortShares, expectedMakerTokens, expectedFillerLongShares, expectedFillerShortShares, expectedFillerTokens):
-    contractsFixture.resetSnapshot()
-
+def execute(contractsFixture, universe, cash, market, orderType, orderSize, orderPrice, orderOutcome, creatorLongShares, creatorShortShares, creatorTokens, fillerLongShares, fillerShortShares, fillerTokens, expectedMakerLongShares, expectedMakerShortShares, expectedMakerTokens, expectedFillerLongShares, expectedFillerShortShares, expectedFillerTokens):
     def acquireLongShares(outcome, amount, approvalAddress, sender):
         if amount == 0: return
 
-        cash = contractsFixture.cash
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['CompleteSets']
         createOrder = contractsFixture.contracts['CreateOrder']
@@ -45,7 +42,6 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     def acquireShortShareSet(outcome, amount, approvalAddress, sender):
         if amount == 0: return
 
-        cash = contractsFixture.cash
         shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(outcome))
         completeSets = contractsFixture.contracts['CompleteSets']
         createOrder = contractsFixture.contracts['CreateOrder']
@@ -62,14 +58,12 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
     legacyRepContract = contractsFixture.contracts['LegacyRepContract']
     legacyRepContract.faucet(long(11 * 10**6 * 10**18))
     contractsFixture.chain.head_state.timestamp += 15000
-    universe = contractsFixture.universe
 
     # Get the reputation token for this universe and migrate legacy REP to it
     reputationToken = contractsFixture.applySignature('ReputationToken', universe.getReputationToken())
     legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
     reputationToken.migrateFromLegacyRepContract()
 
-    cash = contractsFixture.cash
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']
@@ -112,7 +106,7 @@ def execute(contractsFixture, market, orderType, orderSize, orderPrice, orderOut
             assert shareToken.balanceOf(creatorAddress) == expectedMakerShortShares
             assert shareToken.balanceOf(fillerAddress) == expectedFillerShortShares
 
-def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
+def execute_bidOrder_tests(contractsFixture, universe, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * fxpPrice / 10**18)
     shortCost = long(fxpAmount * (market.getNumTicks() - fxpPrice) / 10**18)
     completeSetFees = long(fxpAmount * market.getNumTicks() * fix('0.0101') / 10**18 / 10**18)
@@ -122,6 +116,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     print "creator escrows cash, filler pays with cash"
     execute(
         contractsFixture = contractsFixture,
+        universe = universe,
         market = market,
         orderType = BID,
         orderSize = fxpAmount,
@@ -143,6 +138,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     print "creator escrows shares, filler pays with shares"
     execute(
         contractsFixture = contractsFixture,
+        universe = universe,
         market = market,
         orderType = BID,
         orderSize = fxpAmount,
@@ -164,6 +160,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     print "creator escrows cash, filler pays with shares"
     execute(
         contractsFixture = contractsFixture,
+        universe = universe,
         market = market,
         orderType = BID,
         orderSize = fxpAmount,
@@ -185,6 +182,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     print "creator escrows shares, filler pays with cash"
     execute(
         contractsFixture = contractsFixture,
+        universe = universe,
         market = market,
         orderType = BID,
         orderSize = fxpAmount,
@@ -203,7 +201,7 @@ def execute_bidOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         expectedFillerShortShares = fxpAmount,
         expectedFillerTokens = 0)
 
-def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
+def execute_askOrder_tests(contractsFixture, universe, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * fxpPrice / 10**18)
     shortCost = long(fxpAmount * (market.getNumTicks() - fxpPrice) / 10**18)
     completeSetFees = long(fxpAmount * market.getNumTicks() * fix('0.0101') / 10**18 / 10**18)
@@ -213,6 +211,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     print "creator escrows cash, filler pays with cash"
     execute(
         contractsFixture = contractsFixture,
+        universe = universe,
         market = market,
         orderType = ASK,
         orderSize = fxpAmount,
@@ -234,6 +233,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     print "creator escrows shares, filler pays with shares"
     execute(
         contractsFixture = contractsFixture,
+        universe = universe,
         market = market,
         orderType = ASK,
         orderSize = fxpAmount,
@@ -255,6 +255,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     print "creator escrows cash, filler pays with shares"
     execute(
         contractsFixture = contractsFixture,
+        universe = universe,
         market = market,
         orderType = ASK,
         orderSize = fxpAmount,
@@ -276,6 +277,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
     print "creator escrows shares, filler pays with cash"
     execute(
         contractsFixture = contractsFixture,
+        universe = universe,
         market = market,
         orderType = ASK,
         orderSize = fxpAmount,
@@ -294,8 +296,7 @@ def execute_askOrder_tests(contractsFixture, market, fxpAmount, fxpPrice):
         expectedFillerShortShares = 0,
         expectedFillerTokens = 0)
 
-def test_binary(contractsFixture, randomAmount, randomNormalizedPrice):
-    market = contractsFixture.binaryMarket
+def test_binary(contractsFixture, market, randomAmount, randomNormalizedPrice):
     print 'Random amount: ' + str(randomAmount)
     print 'Random price: ' + str(randomNormalizedPrice)
     fxpAmount = fix(randomAmount)

@@ -5,8 +5,7 @@ from ethereum.tools.tester import TransactionFailed
 from pytest import raises
 from utils import fix, bytesToHexString
 
-def test_decrease_trading_fee_success(contractsFixture):
-    market = contractsFixture.binaryMarket
+def test_decrease_trading_fee_success(market):
     originalFee = market.getMarketCreatorSettlementFeeInAttoethPerEth()
     assert market.getOwner() == bytesToHexString(tester.a0)
     newFee = originalFee -1
@@ -16,8 +15,7 @@ def test_decrease_trading_fee_success(contractsFixture):
 
     assert newFee == newFee
 
-def test_decrease_trading_fee_failure(contractsFixture):
-    market = contractsFixture.binaryMarket
+def test_decrease_trading_fee_failure(market):
     originalFee = market.getMarketCreatorSettlementFeeInAttoethPerEth()
 
     with raises(TransactionFailed):

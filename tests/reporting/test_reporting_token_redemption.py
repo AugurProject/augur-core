@@ -1,36 +1,36 @@
 from ethereum.tools import tester
-from ethereum.tools.tester import TransactionFailed
-from pytest import fixture, mark, raises
+from ethereum.tools.tester import ABIContract, TransactionFailed
+from pytest import fixture as pytest_fixture, mark, raises
 from reporting_utils import proceedToDesignatedReporting, proceedToRound1Reporting, initializeReportingFixture
 
-def test_one_market_one_correct_report(reportingTokenPayoutFixture):
-    market = reportingTokenPayoutFixture.market1
-    universe = reportingTokenPayoutFixture.applySignature('Universe', market.getUniverse())
-    reportingWindow = reportingTokenPayoutFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    reputationToken = reportingTokenPayoutFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
+def test_one_market_one_correct_report(localFixture, universe, market):
+    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    reputationToken = localFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
 
     # Proceed to the DESIGNATED REPORTING phase
-    proceedToDesignatedReporting(reportingTokenPayoutFixture, market, [0,10**18])
+    proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report
     initialRepBalance = reputationToken.balanceOf(tester.a0)
-    assert reportingTokenPayoutFixture.designatedReport(market, [0,10**18], tester.k0)
+    assert localFixture.designatedReport(market, [0,10**18], tester.k0)
     # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
     assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getDesignatedReportNoShowBond() - universe.getDesignatedReportStake()
     initialREPBalance = reputationToken.balanceOf(tester.a0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
-    assert market.getReportingState() == reportingTokenPayoutFixture.constants.DESIGNATED_DISPUTE()
+    assert market.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
+
+    expectedReportingTokenBalance = universe.getDesignatedReportStake()
 
     # Time passes until the end of the reporting window
-    reportingTokenPayoutFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
     # Finalize the market
     market.tryFinalize()
 
     # The designated reporter may redeem their reporting tokens which were purchased to make the designated report
-    reportingToken = reportingTokenPayoutFixture.getReportingToken(market, [0, 10**18])
-    assert reportingToken.balanceOf(tester.a0) == universe.getDesignatedReportStake()
+    reportingToken = localFixture.getReportingToken(market, [0, 10**18])
+    assert reportingToken.balanceOf(tester.a0) == expectedReportingTokenBalance
 
     expectedREPBalance = initialREPBalance
 
@@ -45,17 +45,18 @@ def test_one_market_one_correct_report(reportingTokenPayoutFixture):
     (3, 2),
     (3, 1),
 ])
-def test_reporting_token_redemption(numReports, numCorrect, reportingTokenPayoutFixture):
-    market = reportingTokenPayoutFixture.market1
-    reportingWindow = reportingTokenPayoutFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    reputationToken = reportingTokenPayoutFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
+def test_reporting_token_redemption(localFixture, universe, market, numReports, numCorrect):
+    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    reputationToken = localFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
 
     # Proceed to ROUND1 REPORTING
-    proceedToRound1Reporting(reportingTokenPayoutFixture, market, False, tester.k1, [0,10**18], [10**18,0])
+    proceedToRound1Reporting(localFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
 
-    doReports(reportingTokenPayoutFixture, market, numReports, numCorrect)
+    noShowBond = universe.getDesignatedReportNoShowBond()
 
-    confirmPayouts(reportingTokenPayoutFixture, market, numCorrect)
+    doReports(localFixture, market, numReports, numCorrect)
+
+    confirmPayouts(localFixture, market, numCorrect, noShowBond)
 
 def doReports(fixture, market, numReporters, numCorrect):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
@@ -73,7 +74,7 @@ def doReports(fixture, market, numReporters, numCorrect):
     fixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
     assert market.tryFinalize()
 
-def confirmPayouts(fixture, market, numCorrectReporters):
+def confirmPayouts(fixture, market, numCorrectReporters, noShowBond):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = fixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     universe = fixture.applySignature('Universe', market.getUniverse())
@@ -85,19 +86,31 @@ def confirmPayouts(fixture, market, numCorrectReporters):
         assert reportingToken.redeemWinningTokens(sender=fixture.testerKey[i])
         expectedRep = initialREPBalance + 10
         if (i == 0):
-            expectedRep += universe.getDesignatedReportNoShowBond()
+            expectedRep += noShowBond
         assert reputationToken.balanceOf(testerAddress) == expectedRep
 
-@fixture(scope="session")
-def reportingFeePayoutSnapshot(sessionFixture):
-    sessionFixture.resetSnapshot()
-    # Move to the next reporting window for these tests as we want to control market creation and reporting in isolation
-    originalReportingWindow = sessionFixture.applySignature('ReportingWindow', sessionFixture.binaryMarket.getReportingWindow())
-    sessionFixture.chain.head_state.timestamp = originalReportingWindow.getEndTime() + 1
-    market = sessionFixture.market1 = sessionFixture.createReasonableBinaryMarket(sessionFixture.universe, sessionFixture.cash)
-    return initializeReportingFixture(sessionFixture, market)
+@pytest_fixture(scope="session")
+def localSnapshot(fixture, augurInitializedSnapshot):
+    fixture.resetToSnapshot(augurInitializedSnapshot)
+    fixture.upload("solidity_test_helpers/Constants.sol")
+    fixture.upload("solidity_test_helpers/Utils.sol")
+    universe = fixture.createUniverse(0, "")
+    fixture.distributeRep(universe)
+    market = fixture.createReasonableBinaryMarket(universe, fixture.contracts['Cash'])
+    snapshot = initializeReportingFixture(fixture, universe, market)
+    snapshot['universe'] = universe
+    snapshot['market'] = market
+    return snapshot
 
-@fixture
-def reportingTokenPayoutFixture(sessionFixture, reportingFeePayoutSnapshot):
-    sessionFixture.resetToSnapshot(reportingFeePayoutSnapshot)
-    return sessionFixture
+@pytest_fixture
+def localFixture(fixture, localSnapshot):
+    fixture.resetToSnapshot(localSnapshot)
+    return fixture
+
+@pytest_fixture
+def universe(localFixture, localSnapshot):
+    return ABIContract(localFixture.chain, localSnapshot['universe'].translator, localSnapshot['universe'].address)
+
+@pytest_fixture
+def market(localFixture, localSnapshot):
+    return ABIContract(localFixture.chain, localSnapshot['market'].translator, localSnapshot['market'].address)

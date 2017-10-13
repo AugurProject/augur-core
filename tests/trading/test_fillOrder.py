@@ -5,18 +5,16 @@ from utils import fix, bytesToHexString, captureFilteredLogs, longTo32Bytes, lon
 from constants import BID, ASK, YES, NO
 
 
-def test_publicFillOrder_bid(contractsFixture):
-    cash = contractsFixture.cash
+def test_publicFillOrder_bid(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     tradeGroupID = 42
     logs = []
 
-    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
     creatorCost = fix('2', '0.6')
     fillerCost = fix('2', '0.4')
 
@@ -53,23 +51,21 @@ def test_publicFillOrder_bid(contractsFixture):
         },
     ]
 
-    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH - creatorCost
-    assert contractsFixture.utils.getETHBalance(tester.a2) == initialFillerETH - fillerCost
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH - creatorCost
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH - fillerCost
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0
 
-def test_publicFillOrder_ask(contractsFixture):
-    cash = contractsFixture.cash
+def test_publicFillOrder_ask(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
-    market = contractsFixture.binaryMarket
     tradeGroupID = 42
     logs = []
 
-    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
     creatorCost = fix('2', '0.4')
     fillerCost = fix('2', '0.6')
 
@@ -106,24 +102,23 @@ def test_publicFillOrder_ask(contractsFixture):
         },
     ]
 
-    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH - creatorCost
-    assert contractsFixture.utils.getETHBalance(tester.a2) == initialFillerETH - fillerCost
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH - creatorCost
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH - fillerCost
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0
 
-def test_publicFillOrder_bid_scalar(contractsFixture):
-    cash = contractsFixture.cash
+def test_publicFillOrder_bid_scalar(contractsFixture, cash, scalarMarket):
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     # We're testing the scalar market because it has a different numTicks than 10**18 as the other do. In particular it's numTicks is 40*18**18
-    market = contractsFixture.scalarMarket
+    market = scalarMarket
     tradeGroupID = 42
     logs = []
 
-    initialMakerETH = contractsFixture.utils.getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.utils.getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
     creatorCost = fix('2', '0.6')
     fillerCost = fix('2', '39.4')
 
@@ -160,7 +155,7 @@ def test_publicFillOrder_bid_scalar(contractsFixture):
         },
     ]
 
-    assert contractsFixture.utils.getETHBalance(tester.a1) == initialMakerETH - creatorCost
-    assert contractsFixture.utils.getETHBalance(tester.a2) == initialFillerETH - fillerCost
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH - creatorCost
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH - fillerCost
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0

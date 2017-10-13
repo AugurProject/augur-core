@@ -1,19 +1,29 @@
 pragma solidity ^0.4.17;
 
-import 'Controlled.sol';
+import 'IControlled.sol';
+import 'IController.sol';
 import 'libraries/token/ERC20Basic.sol';
 
 
-contract ControllerUser is Controlled {
+contract ControllerUser is IControlled {
     address public updatedController;
+    address public suicideFundsDestination;
+    ERC20Basic[] public suicideFundsTokens;
+
+    function getController() public constant returns (IController) {
+        return IController(0);
+    }
 
     function setController(IController _controller) public returns(bool) {
-        super.setController(_controller);
         updatedController = _controller;
         return true;
     }
 
     function suicideFunds(address _destination, ERC20Basic[] _tokens) public returns (bool) {
-        return super.suicideFunds(_destination, _tokens);
+        suicideFundsDestination = _destination;
+        for (uint256 i; i < _tokens.length; ++i) {
+            suicideFundsTokens.push(_tokens[i]);
+        }
+        return true;
     }
 }
