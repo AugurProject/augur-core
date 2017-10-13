@@ -102,6 +102,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
+    // CONSIDER: If all markets are finalized should we allow forgoing fees?
     function redeemWinningTokens(bool forgoFees) public afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
@@ -119,9 +120,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         if (_reporterReputationShare != 0) {
             _reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
-        if (!forgoFees) {
-            _reportingWindow.collectReportingFees(msg.sender, _attotokens);
-        }
+        _reportingWindow.collectReportingFees(msg.sender, _attotokens, forgoFees);
         return true;
     }
 

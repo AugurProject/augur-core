@@ -39,14 +39,15 @@ def test_one_market_one_correct_report(localFixture, universe, market):
 
     # We'll redeem the winning tokens we have on the market and confirm we get that amount returned in REP
     assert reportingToken.redeemWinningTokens()
-    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
+    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + universe.getDesignatedReportStake()
 
-def test_two_markets_one_correct_report_no_fees(reportingTokenPayoutFixture):
+def test_two_markets_two_correct_reports_one_with_no_fees(reportingTokenPayoutFixture):
     market = reportingTokenPayoutFixture.market1
+    universe = reportingTokenPayoutFixture.applySignature('Universe', market.getUniverse())
+    cash = reportingTokenPayoutFixture.contracts["Cash"]
     market2 = reportingTokenPayoutFixture.createReasonableBinaryMarket(reportingTokenPayoutFixture.universe, reportingTokenPayoutFixture.cash)
     reportingWindow = reportingTokenPayoutFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = reportingTokenPayoutFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
-    marketFeeCalculator = reportingTokenPayoutFixture.contracts["MarketFeeCalculator"]
 
     # Proceed to the DESIGNATED REPORTING phase
     proceedToDesignatedReporting(reportingTokenPayoutFixture, market, [0,10**18])
@@ -55,21 +56,29 @@ def test_two_markets_one_correct_report_no_fees(reportingTokenPayoutFixture):
     initialRepBalance = reputationToken.balanceOf(tester.a0)
     assert reportingTokenPayoutFixture.designatedReport(market, [0,10**18], tester.k0)
     # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
-    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + marketFeeCalculator.getDesignatedReportNoShowBond(market.getUniverse()) - marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
+    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getDesignatedReportNoShowBond() - universe.getDesignatedReportStake()
     initialREPBalance = reputationToken.balanceOf(tester.a0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
     assert market.getReportingState() == reportingTokenPayoutFixture.constants.DESIGNATED_DISPUTE()
 
+    # We'll do the same with the second market
+    initialRepBalance = reputationToken.balanceOf(tester.a0)
+    assert reportingTokenPayoutFixture.designatedReport(market2, [0,10**18], tester.k0)
+    # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
+    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getDesignatedReportNoShowBond() - universe.getDesignatedReportStake()
+    initialREPBalance = reputationToken.balanceOf(tester.a0)
+    assert market2.getReportingState() == reportingTokenPayoutFixture.constants.DESIGNATED_DISPUTE()
+
     # Time passes until the end of the reporting window
     reportingTokenPayoutFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
-    # Finalize the market
+    # Finalize the first market
     market.tryFinalize()
 
-    # The designated reporter may redeem their reporting tokens which were purchased to make the designated report
+    # The market1 designated reporter may redeem their reporting tokens which were purchased to make the designated report
     reportingToken = reportingTokenPayoutFixture.getReportingToken(market, [0, 10**18])
-    assert reportingToken.balanceOf(tester.a0) == marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
+    assert reportingToken.balanceOf(tester.a0) == universe.getDesignatedReportStake()
 
     expectedREPBalance = initialREPBalance
 
@@ -81,8 +90,23 @@ def test_two_markets_one_correct_report_no_fees(reportingTokenPayoutFixture):
         reportingToken.redeemWinningTokens()
 
     # We'll redeem the winning tokens we have on the market and forgo fees and confirm we get that amount returned in REP
+    initialETHBalance = reportingTokenPayoutFixture.utils.getETHBalance(tester.a0)
     assert reportingToken.redeemWinningTokens(True)
-    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + marketFeeCalculator.getDesignatedReportStake(market.getUniverse())
+    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + universe.getDesignatedReportStake()
+    assert reportingTokenPayoutFixture.utils.getETHBalance(tester.a0) == initialETHBalance
+
+    # If we redeem the second tester's tokens they'll get ALL of the fees on the reporting window now and their normal share of REP
+    market2.tryFinalize()
+    reportingToken = reportingTokenPayoutFixture.getReportingToken(market2, [0, 10**18])
+    assert reportingToken.balanceOf(tester.a0) == universe.getDesignatedReportStake()
+
+    initialREPBalance = reputationToken.balanceOf(tester.a0)
+
+    # We'll redeem the winning tokens we have on the market and confirm we get that amount returned in REP and all the fees in the reporting window
+    expectedETHBalance = reportingTokenPayoutFixture.utils.getETHBalance(tester.a0) + cash.balanceOf(reportingWindow.address)
+    assert reportingToken.redeemWinningTokens()
+    assert reputationToken.balanceOf(tester.a0) == initialREPBalance + universe.getDesignatedReportStake()
+    assert reportingTokenPayoutFixture.utils.getETHBalance(tester.a0) == expectedETHBalance
 
 @mark.parametrize('numReports, numCorrect', [
     (1, 1),

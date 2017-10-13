@@ -206,7 +206,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return markets.count == finalizedMarkets.count;
     }
 
-    function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens) public returns (bool) {
+    function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens, bool _forgoFees) public returns (bool) {
         IReportingToken _shadyReportingToken = IReportingToken(msg.sender);
         require(isContainerForReportingToken(_shadyReportingToken));
         // NOTE: Will need to handle other denominations when that is implemented
@@ -214,7 +214,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         uint256 _balance = _cash.balanceOf(this);
         uint256 _feePayoutShare = _balance.mul(_attoReportingTokens).div(totalWinningReportingTokens);
         totalWinningReportingTokens = totalWinningReportingTokens.sub(_attoReportingTokens);
-        if (_feePayoutShare > 0) {
+        if (!_forgoFees && _feePayoutShare > 0) {
             _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
         }
         return true;
