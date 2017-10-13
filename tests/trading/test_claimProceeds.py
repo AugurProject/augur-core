@@ -57,7 +57,8 @@ def finalizeMarket(fixture, market, payoutNumerators):
     # set timestamp to 3 days later (waiting period)
     fixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
 
-def test_helpers(kitchenSinkFixture, market):
+def test_helpers(kitchenSinkFixture, scalarMarket):
+    market = scalarMarket
     claimProceeds = kitchenSinkFixture.contracts['ClaimProceeds']
     finalizeMarket(kitchenSinkFixture, market, [0,40*10**18])
 
@@ -105,7 +106,8 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     assert noShareToken.balanceOf(tester.a2) == 0
     assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks() # The corresponding share for tester2's complete set has not been redeemed
 
-def test_redeem_shares_in_categorical_market(kitchenSinkFixture, universe, cash, market):
+def test_redeem_shares_in_categorical_market(kitchenSinkFixture, universe, cash, categoricalMarket):
+    market = categoricalMarket
     claimProceeds = kitchenSinkFixture.contracts['ClaimProceeds']
     shareToken2 = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(2))
     shareToken1 = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(1))
@@ -142,7 +144,8 @@ def test_redeem_shares_in_categorical_market(kitchenSinkFixture, universe, cash,
     assert shareToken0.balanceOf(tester.a2) == 0
     assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
 
-def test_redeem_shares_in_scalar_market(kitchenSinkFixture, universe, cash, market):
+def test_redeem_shares_in_scalar_market(kitchenSinkFixture, universe, cash, scalarMarket):
+    market = scalarMarket
     claimProceeds = kitchenSinkFixture.contracts['ClaimProceeds']
     yesShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(NO))

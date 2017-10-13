@@ -153,4 +153,9 @@ def test_open_interest(universe):
 def localFixture(fixture, augurInitializedSnapshot):
     fixture.resetToSnapshot(augurInitializedSnapshot)
     fixture.uploadAndAddToController("solidity_test_helpers/Constants.sol")
+    universe = fixture.createUniverse(0, "")
+    cash = fixture.getSeededCash()
+    augur = fixture.contracts['Augur']
+    fixture.distributeRep(universe)
+    binaryMarket = fixture.createReasonableBinaryMarket(universe, cash)
     return fixture

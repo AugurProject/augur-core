@@ -6,7 +6,6 @@ from reporting_utils import proceedToDesignatedReporting, proceedToRound1Reporti
 def test_one_market_one_correct_report(localFixture, universe, market):
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = localFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
-    marketFeeCalculator = localFixture.contracts["MarketFeeCalculator"]
 
     # Proceed to the DESIGNATED REPORTING phase
     proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
@@ -21,6 +20,8 @@ def test_one_market_one_correct_report(localFixture, universe, market):
     # We're now in the DESIGNATED DISPUTE PHASE
     assert market.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
 
+    expectedReportingTokenBalance = universe.getDesignatedReportStake()
+
     # Time passes until the end of the reporting window
     localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
@@ -29,7 +30,7 @@ def test_one_market_one_correct_report(localFixture, universe, market):
 
     # The designated reporter may redeem their reporting tokens which were purchased to make the designated report
     reportingToken = localFixture.getReportingToken(market, [0, 10**18])
-    assert reportingToken.balanceOf(tester.a0) == universe.getDesignatedReportStake()
+    assert reportingToken.balanceOf(tester.a0) == expectedReportingTokenBalance
 
     expectedREPBalance = initialREPBalance
 
@@ -51,9 +52,11 @@ def test_reporting_token_redemption(localFixture, universe, market, numReports, 
     # Proceed to ROUND1 REPORTING
     proceedToRound1Reporting(localFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
 
+    noShowBond = universe.getDesignatedReportNoShowBond()
+
     doReports(localFixture, market, numReports, numCorrect)
 
-    confirmPayouts(localFixture, market, numCorrect)
+    confirmPayouts(localFixture, market, numCorrect, noShowBond)
 
 def doReports(fixture, market, numReporters, numCorrect):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
@@ -71,7 +74,7 @@ def doReports(fixture, market, numReporters, numCorrect):
     fixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
     assert market.tryFinalize()
 
-def confirmPayouts(fixture, market, numCorrectReporters):
+def confirmPayouts(fixture, market, numCorrectReporters, noShowBond):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = fixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     universe = fixture.applySignature('Universe', market.getUniverse())
@@ -83,7 +86,7 @@ def confirmPayouts(fixture, market, numCorrectReporters):
         assert reportingToken.redeemWinningTokens(sender=fixture.testerKey[i])
         expectedRep = initialREPBalance + 10
         if (i == 0):
-            expectedRep += universe.getDesignatedReportNoShowBond()
+            expectedRep += noShowBond
         assert reputationToken.balanceOf(testerAddress) == expectedRep
 
 @pytest_fixture(scope="session")
