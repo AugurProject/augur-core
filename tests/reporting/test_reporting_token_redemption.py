@@ -39,7 +39,7 @@ def test_one_market_one_correct_report(localFixture, universe, market):
 
     # We'll redeem the winning tokens we have on the market and confirm we get that amount returned in REP
     assert reportingToken.redeemWinningTokens()
-    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + universe.getDesignatedReportStake()
+    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + expectedReportingTokenBalance
 
 def test_two_markets_two_correct_reports_one_with_no_fees(reportingTokenPayoutFixture):
     market = reportingTokenPayoutFixture.market1
