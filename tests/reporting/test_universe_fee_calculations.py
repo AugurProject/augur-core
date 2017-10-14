@@ -68,9 +68,9 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture, unive
     # We'll have a market go through basic reporting and then make its reporting window over.
     proceedToRound1Reporting(reportingFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
 
-    reportingTokenYes = reportingFixture.getReportingToken(market, [0,10**18])
+    stakeTokenYes = reportingFixture.getStakeToken(market, [0,10**18])
     for i in range(0,numReports):
-        assert reportingTokenYes.buy(1, sender=getattr(tester, 'k%i' % i), gasprice=gasPrice)
+        assert stakeTokenYes.buy(1, sender=getattr(tester, 'k%i' % i), gasprice=gasPrice)
 
     # Now we'll skip ahead in time and finalzie the market
     reportingFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1

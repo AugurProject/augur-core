@@ -7,7 +7,7 @@ import 'trading/ICash.sol';
 import 'trading/IShareToken.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReportingWindow.sol';
-import 'reporting/IReportingToken.sol';
+import 'reporting/IStakeToken.sol';
 import 'reporting/IDisputeBond.sol';
 import 'trading/IShareToken.sol';
 
@@ -47,8 +47,8 @@ contract IMarket is Typed, IOwnable {
     function getFinalizationTime() public view returns (uint256);
     function getFinalPayoutDistributionHash() public view returns (bytes32);
     function getDesignatedReportPayoutHash() public view returns (bytes32);
-    function getFinalWinningReportingToken() public view returns (IReportingToken);
-    function getReportingTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public view returns (IReportingToken);
+    function getFinalWinningStakeToken() public view returns (IStakeToken);
+    function getStakeTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public view returns (IStakeToken);
     function getTentativeWinningPayoutDistributionHash() public view returns (bytes32);
     function getBestGuessSecondPlaceTentativeWinningPayoutDistributionHash() public view returns (bytes32);
     function getForkingMarket() public view returns (IMarket _market);
@@ -58,7 +58,7 @@ contract IMarket is Typed, IOwnable {
     function getDesignatedReportDisputeDueTimestamp() public view returns (uint256);
     function round1ReporterCompensationCheck(address _reporter) public returns (uint256);
     function migrateDueToNoReports() public returns (bool);
-    function isContainerForReportingToken(Typed _shadyTarget) public view returns (bool);
+    function isContainerForStakeToken(Typed _shadyTarget) public view returns (bool);
     function isContainerForDisputeBondToken(Typed _shadyTarget) public view returns (bool);
     function isContainerForShareToken(Typed _shadyTarget) public view returns (bool);
     function isValid() public view returns (bool);

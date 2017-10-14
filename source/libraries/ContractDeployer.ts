@@ -205,17 +205,17 @@ export class ContractDeployer {
 
     // TODO: move these out of this class. this class is for deploying the contracts, not general purpose Augur interactions.
     // CONSIDER: create a class called Augur or something that deals with the various interactions one may want to participate in
-    public async getReportingToken(market, payoutDistribution, invalid): Promise<ContractBlockchainData> {
-        const reportingTokenAddress = market.getReportingToken(payoutDistribution, invalid);
-        if (!reportingTokenAddress) {
+    public async getStakeToken(market, payoutDistribution, invalid): Promise<ContractBlockchainData> {
+        const stakeTokenAddress = market.getStakeToken(payoutDistribution, invalid);
+        if (!stakeTokenAddress) {
             throw new Error();
         }
-        const signature = this.signatures["ReportingToken"];
-        const bytecode = this.bytecodes["ReportingToken"];
+        const signature = this.signatures["StakeToken"];
+        const bytecode = this.bytecodes["StakeToken"];
         const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: this.gasAmount });
-        const reportingToken = await contractBuilder.at(reportingTokenAddress);
+        const stakeToken = await contractBuilder.at(stakeTokenAddress);
 
-        return reportingToken;
+        return stakeToken;
     }
 
     private async createMarket(universeAddress: string, numOutcomes: number, endTime: number, feePerEthInWei: number, denominationToken: string, designatedReporter: string, numTicks: number): Promise<Contract> {

@@ -65,7 +65,7 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         Typed _caller = Typed(msg.sender);
         require(universe.isContainerForReportingWindow(_caller)
             || universe.isContainerForMarket(_caller)
-            || universe.isContainerForReportingToken(_caller));
+            || universe.isContainerForStakeToken(_caller));
         balances[_source] = balances[_source].sub(_attotokens);
         balances[_destination] = balances[_destination].add(_attotokens);
         supply = supply.add(_attotokens);

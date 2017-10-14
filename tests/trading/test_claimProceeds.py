@@ -64,9 +64,9 @@ def test_helpers(kitchenSinkFixture, scalarMarket):
 
     assert claimProceeds.calculateCreatorFee(market.address, fix('3')) == fix('0.03')
     assert claimProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
-    assert claimProceeds.calculateProceeds(market.getFinalWinningReportingToken(), YES, 7) == 7 * market.getNumTicks()
-    assert claimProceeds.calculateProceeds(market.getFinalWinningReportingToken(), NO, fix('11')) == fix('0')
-    (proceeds, shareholderShare, creatorShare, reporterShare) = claimProceeds.divideUpWinnings(market.address, market.getFinalWinningReportingToken(), YES, 13)
+    assert claimProceeds.calculateProceeds(market.getFinalWinningStakeToken(), YES, 7) == 7 * market.getNumTicks()
+    assert claimProceeds.calculateProceeds(market.getFinalWinningStakeToken(), NO, fix('11')) == fix('0')
+    (proceeds, shareholderShare, creatorShare, reporterShare) = claimProceeds.divideUpWinnings(market.address, market.getFinalWinningStakeToken(), YES, 13)
     assert proceeds == 13.0 * market.getNumTicks()
     assert reporterShare == 13.0 * market.getNumTicks() * 0.0001
     assert creatorShare == 13.0 * market.getNumTicks() * .01
