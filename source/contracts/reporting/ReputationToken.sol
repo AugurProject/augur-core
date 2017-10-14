@@ -49,11 +49,12 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, VariableSupp
         IUniverse _parentUniverse = universe.getParentUniverse();
         require(ReputationToken(msg.sender) == _parentUniverse.getReputationToken());
         balances[_reporter] = balances[_reporter].add(_attotokens);
+        // Only count tokens migrated toward the available to be matched in other universes. The bonus should not be added
+        universe.increaseRepAvailableForExtraBondPayouts(_attotokens);
         if (_parentUniverse.getForkingMarket().getReportingState() != IMarket.ReportingState.FINALIZED) {
             mint(_reporter, _attotokens.div(Reporting.forkMigrationPercentageBonusDivisor()));
         }
         supply = supply.add(_attotokens);
-        universe.increaseRepAvailableForExtraBondPayouts(_attotokens);
         return true;
     }
 

@@ -136,7 +136,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     }
 
     function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
-        require(isContainerForDisputeBondToken(Typed(msg.sender)));
+        require(parentUniverse.isContainerForDisputeBondToken(Typed(msg.sender)));
         repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.sub(_amount);
         return true;
     }
