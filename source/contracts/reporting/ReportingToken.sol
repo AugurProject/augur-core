@@ -13,7 +13,6 @@ import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
-import 'extensions/MarketFeeCalculator.sol';
 
 
 contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IReportingToken {
@@ -21,8 +20,9 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     IMarket public market;
     uint256[] public payoutNumerators;
+    bool private invalid;
 
-    function initialize(IMarket _market, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
+    function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public beforeInitialized returns (bool) {
         endInitialization();
         require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
         uint256 _sum = 0;
@@ -30,8 +30,10 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
             _sum = _sum.add(_payoutNumerators[i]);
         }
         require(_sum == _market.getNumTicks());
+        require(!invalid || isInvalidOutcome());
         market = _market;
         payoutNumerators = _payoutNumerators;
+        invalid = _invalid;
         return true;
     }
 
@@ -44,7 +46,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
             market.migrateDueToNoReports();
         } else if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             require(msg.sender == market.getDesignatedReporter());
-            uint256 _designatedReportCost = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getDesignatedReportStake(market.getUniverse());
+            uint256 _designatedReportCost = market.getUniverse().getDesignatedReportStake();
             require(_attotokens == _designatedReportCost);
         } else {
             require(_state == IMarket.ReportingState.ROUND1_REPORTING || _state == IMarket.ReportingState.ROUND2_REPORTING);
@@ -100,13 +102,16 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
-    function redeemWinningTokens() public afterInitialized returns (bool) {
+    // CONSIDER: If all markets are finalized should we allow forgoing fees?
+    function redeemWinningTokens(bool forgoFees) public afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForReportingToken(this));
         require(getUniverse().getForkingMarket() != market);
         require(market.getFinalWinningReportingToken() == this);
         IReportingWindow _reportingWindow = market.getReportingWindow();
-        require(_reportingWindow.allMarketsFinalized());
+        if (!forgoFees) {
+            require(_reportingWindow.allMarketsFinalized());
+        }
         IReputationToken _reputationToken = getReputationToken();
         uint256 _reputationSupply = _reputationToken.balanceOf(this);
         uint256 _attotokens = balances[msg.sender];
@@ -115,7 +120,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         if (_reporterReputationShare != 0) {
             _reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
-        _reportingWindow.collectReportingFees(msg.sender, _attotokens);
+        _reportingWindow.collectReportingFees(msg.sender, _attotokens, forgoFees);
         return true;
     }
 
@@ -178,7 +183,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function getPayoutDistributionHash() public view returns (bytes32) {
-        return market.derivePayoutDistributionHash(payoutNumerators);
+        return market.derivePayoutDistributionHash(payoutNumerators, invalid);
     }
 
     function getPayoutNumerator(uint8 index) public view returns (uint256) {
@@ -187,11 +192,15 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function isValid() public view returns (bool) {
+        return !invalid;
+    }
+
+    function isInvalidOutcome() private view returns (bool) {
         for (uint8 i = 1; i < payoutNumerators.length; i++) {
             if (payoutNumerators[0] != payoutNumerators[i]) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 }

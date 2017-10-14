@@ -29,6 +29,12 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
 
+    mapping (address => uint256) private validityBondInAttoeth;
+    mapping (address => uint256) private targetReporterGasCosts;
+    mapping (address => uint256) private designatedReportStakeInAttoRep;
+    mapping (address => uint256) private designatedReportNoShowBondInAttoRep;
+    mapping (address => uint256) private shareSettlementPerEthFee;
+
     function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external beforeInitialized returns (bool) {
         endInitialization();
         parentUniverse = _parentUniverse;
@@ -215,5 +221,126 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
 
     function getOpenInterestInAttoEth() public view returns (uint256) {
         return openInterestInAttoEth;
+    }
+
+    function getRepMarketCapInAttoeth() public view returns (uint256) {
+        // TODO: get this from a multi-sig contract that we provide and maintain
+        uint256 _attorepPerEth = 11 * 10 ** 18;
+        uint256 _repMarketCapInAttoeth = getReputationToken().totalSupply() * _attorepPerEth;
+        return _repMarketCapInAttoeth;
+    }
+
+    function getTargetRepMarketCapInAttoeth() public view returns (uint256) {
+        return getOpenInterestInAttoEth() * Reporting.targetRepMarketCapMultiplier();
+    }
+
+    function getValidityBond() public returns (uint256) {
+        IReportingWindow _reportingWindow = getCurrentReportingWindow();
+        uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
+        if (_currentValidityBondInAttoeth != 0) {
+            return _currentValidityBondInAttoeth;
+        }
+        IReportingWindow _previousReportingWindow = getPreviousReportingWindow();
+        uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
+        uint256 _invalidMarketsInPreviousWindow = _previousReportingWindow.getNumInvalidMarkets();
+        uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
+        _currentValidityBondInAttoeth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetInvalidMarketsDivisor(), _previousValidityBondInAttoeth, Reporting.defaultValidityBond(), Reporting.defaultValidityBondFloor());
+        validityBondInAttoeth[_reportingWindow] = _currentValidityBondInAttoeth;
+        return _currentValidityBondInAttoeth;
+    }
+
+    function getDesignatedReportStake() public returns (uint256) {
+        IReportingWindow _reportingWindow = getCurrentReportingWindow();
+        uint256 _currentDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_reportingWindow];
+        if (_currentDesignatedReportStakeInAttoRep != 0) {
+            return _currentDesignatedReportStakeInAttoRep;
+        }
+        IReportingWindow _previousReportingWindow = getPreviousReportingWindow();
+        uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
+        uint256 _incorrectDesignatedReportMarketsInPreviousWindow = _previousReportingWindow.getNumIncorrectDesignatedReportMarkets();
+        uint256 _previousDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_previousReportingWindow];
+
+        _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectDesignatedReportMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetIncorrectDesignatedReportMarketsDivisor(), _previousDesignatedReportStakeInAttoRep, Reporting.defaultDesignatedReportStake(), Reporting.designatedReportStakeFloor());
+        designatedReportStakeInAttoRep[_reportingWindow] = _currentDesignatedReportStakeInAttoRep;
+        return _currentDesignatedReportStakeInAttoRep;
+    }
+
+    function getDesignatedReportNoShowBond() public returns (uint256) {
+        IReportingWindow _reportingWindow = getCurrentReportingWindow();
+        uint256 _currentDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_reportingWindow];
+        if (_currentDesignatedReportNoShowBondInAttoRep != 0) {
+            return _currentDesignatedReportNoShowBondInAttoRep;
+        }
+        IReportingWindow _previousReportingWindow = getPreviousReportingWindow();
+        uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
+        uint256 _designatedReportNoShowsInPreviousWindow = _previousReportingWindow.getNumDesignatedReportNoShows();
+        uint256 _previousDesignatedReportNoShowBondInAttoRep = designatedReportStakeInAttoRep[_previousReportingWindow];
+
+        _currentDesignatedReportNoShowBondInAttoRep = calculateFloatingValue(_designatedReportNoShowsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetDesignatedReportNoShowsDivisor(), _previousDesignatedReportNoShowBondInAttoRep, Reporting.defaultDesignatedReportNoShowBond(), Reporting.designatedReportNoShowBondFloor());
+        designatedReportStakeInAttoRep[_reportingWindow] = _currentDesignatedReportNoShowBondInAttoRep;
+        return _currentDesignatedReportNoShowBondInAttoRep;
+    }
+
+    function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue, uint256 _floor) public pure returns (uint256 _newValue) {
+        if (_totalMarkets == 0) {
+            return _defaultValue;
+        }
+        if (_previousValue == 0) {
+            _previousValue = _defaultValue;
+        }
+
+        // Modify the amount based on the previous amount and the number of markets fitting the failure criteria. We want the amount to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets with the condition results in 2x and 0 results in 0.5x.
+        if (_badMarkets <= _totalMarkets / _targetDivisor) {
+            // FXP formula: previous_amount * actual_percent / (2 * target_percent) + 0.5;
+            _newValue = _badMarkets.mul(_previousValue).mul(_targetDivisor).div(_totalMarkets).div(2)  + _previousValue / 2; // FIXME: This is on one line due to solium bugs
+        } else {
+            // FXP formula: previous_amount * (1/(1 - target_percent)) * (actual_percent - target_percent) + 1;
+            _newValue = _targetDivisor.mul(_previousValue.mul(_badMarkets).div(_totalMarkets).sub(_previousValue.div(_targetDivisor))).div(_targetDivisor - 1) + _previousValue; // FIXME: This is on one line due to a solium bug
+        }
+
+        if (_newValue < _floor) {
+            _newValue = _floor;
+        }
+
+        return _newValue;
+    }
+
+    function getReportingFeeInAttoethPerEth() public returns (uint256) {
+        IReportingWindow _reportingWindow = getCurrentReportingWindow();
+        uint256 _currentPerEthFee = shareSettlementPerEthFee[_reportingWindow];
+        if (_currentPerEthFee != 0) {
+            return _currentPerEthFee;
+        }
+        uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth();
+        uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth();
+        uint256 _previousPerEthFee = shareSettlementPerEthFee[getPreviousReportingWindow()];
+        if (_previousPerEthFee == 0) {
+            _previousPerEthFee = 1 * 10 ** 16;
+        }
+        _currentPerEthFee = _previousPerEthFee * _targetRepMarketCapInAttoeth / _repMarketCapInAttoeth;
+        if (_currentPerEthFee < 1 * 10 ** 14) {
+            _currentPerEthFee = 1 * 10 ** 14;
+        }
+        shareSettlementPerEthFee[_reportingWindow] = _currentPerEthFee;
+        return _currentPerEthFee;
+    }
+
+    function getTargetReporterGasCosts() public returns (uint256) {
+        IReportingWindow _reportingWindow = getCurrentReportingWindow();
+        uint256 _gasToReport = targetReporterGasCosts[_reportingWindow];
+        if (_gasToReport != 0) {
+            return _gasToReport;
+        }
+
+        IReportingWindow _previousReportingWindow = getPreviousReportingWindow();
+        uint256 _avgGasPrice = _previousReportingWindow.getAvgReportingGasPrice();
+        _gasToReport = Reporting.gasToReport();
+        // we double it to try and ensure we have more than enough rather than not enough
+        targetReporterGasCosts[_reportingWindow] = _gasToReport * _avgGasPrice * 2;
+        return targetReporterGasCosts[_reportingWindow];
+    }
+
+    function getMarketCreationCost() public returns (uint256) {
+        return getValidityBond() + getTargetReporterGasCosts();
     }
 }

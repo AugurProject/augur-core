@@ -8,9 +8,7 @@ from constants import BID, ASK, YES, NO
 
 tester.STARTGAS = long(6.7 * 10**6)
 
-def test_cancelBid(contractsFixture):
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_cancelBid(contractsFixture, cash, market):
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
@@ -22,32 +20,29 @@ def test_cancelBid(contractsFixture):
     tradeGroupID = 42
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
-    creatorInitialETH = contractsFixture.utils.getETHBalance(tester.a1)
+    creatorInitialETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
     creatorInitialShares = yesShareToken.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
     marketInitialNoShares = noShareToken.totalSupply()
     orderID = createOrder.publicCreateOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10000'))
-    
+
     assert orderID, "Order ID should be non-zero"
     _,_,owner,_,_,_,_,_ = ordersFetcher.getOrder(orderID)
     assert owner, "Order should have an owner"
 
-    assert contractsFixture.utils.getETHBalance(tester.a1) == creatorInitialETH - fix('0.6'), "ETH should be deducted from the creator balance"
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == creatorInitialETH - fix('0.6'), "ETH should be deducted from the creator balance"
 
     assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
     assert(ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "Canceled order elements should all be zero"
-    assert(creatorInitialETH == contractsFixture.utils.getETHBalance(tester.a1)), "Maker's ETH should be the same as before the order was placed"
+    assert(creatorInitialETH == contractsFixture.contracts['Utils'].getETHBalance(tester.a1)), "Maker's ETH should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(creatorInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
     assert(marketInitialYesShares == yesShareToken.totalSupply()), "Market's yes shares should be unchanged"
     assert marketInitialNoShares == noShareToken.totalSupply(), "Market's no shares should be unchanged"
 
-def test_cancelAsk(contractsFixture):
-    contractsFixture.resetSnapshot()
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_cancelAsk(contractsFixture, cash, market):
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
@@ -59,7 +54,7 @@ def test_cancelAsk(contractsFixture):
     tradeGroupID = 42
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
-    creatorInitialETH = contractsFixture.utils.getETHBalance(tester.a1)
+    creatorInitialETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
     creatorInitialShares = yesShareToken.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
@@ -69,20 +64,18 @@ def test_cancelAsk(contractsFixture):
     _,_,owner,_,_,_,_,_ = ordersFetcher.getOrder(orderID)
     assert owner, "Order should have an owner"
 
-    assert contractsFixture.utils.getETHBalance(tester.a1) == creatorInitialETH - fix('0.4'), "ETH should be deducted from the creator balance"
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == creatorInitialETH - fix('0.4'), "ETH should be deducted from the creator balance"
 
     assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
     assert(ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "Canceled order elements should all be zero"
-    assert(creatorInitialETH == contractsFixture.utils.getETHBalance(tester.a1)), "Maker's ETH should be the same as before the order was placed"
+    assert(creatorInitialETH == contractsFixture.contracts['Utils'].getETHBalance(tester.a1)), "Maker's ETH should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(creatorInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
     assert(marketInitialYesShares == yesShareToken.totalSupply()), "Market's yes shares should be unchanged"
     assert marketInitialNoShares == noShareToken.totalSupply(), "Market's no shares should be unchanged"
 
-def test_exceptions(contractsFixture):
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_exceptions(contractsFixture, cash, market):
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']

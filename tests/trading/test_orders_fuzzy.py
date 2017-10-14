@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 import numpy as np
 from os import getenv
-from pytest import fixture, mark, lazy_fixture
+from pytest import fixture, mark
 from utils import fix
 from constants import BID, ASK
 
@@ -59,10 +59,8 @@ GAS_PRICE = 7
     (BID, 100, True,   1.0),
     (ASK, 100, True,   1.0),
 ])
-def test_randomSorting(orderType, numOrders, withBoundingOrders, deadOrderProbability, contractsFixture):
+def test_randomSorting(market, orderType, numOrders, withBoundingOrders, deadOrderProbability, contractsFixture):
     print("Order sorting tests (orderType=" + str(orderType) + ", numOrders=" + str(numOrders) + ", withBoundingOrders=" + str(withBoundingOrders) + ", deadOrderProbability=" + str(deadOrderProbability) + ")")
-    contractsFixture.resetSnapshot()
-    market = contractsFixture.binaryMarket
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     outcomeID = 1

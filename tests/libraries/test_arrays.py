@@ -5,20 +5,18 @@ from ethereum.tools.tester import TransactionFailed
 from pytest import fixture
 from ethereum.config import config_metropolis
 
-#config_metropolis['BLOCK_GAS_LIMIT'] = 2**128
-
 @fixture(scope="session")
-def arraySnapshot(sessionFixture):
-    arrayHelper = sessionFixture.upload('solidity_test_helpers/ArrayHelper.sol')
-    return sessionFixture.createSnapshot()
+def localSnapshot(fixture, baseSnapshot):
+    fixture.resetToSnapshot(baseSnapshot)
+    fixture.upload('solidity_test_helpers/ArrayHelper.sol')
+    return fixture.createSnapshot()
 
 @fixture
-def arrayContractsFixture(sessionFixture, arraySnapshot):
-    sessionFixture.resetToSnapshot(arraySnapshot)
-    return sessionFixture
+def arrayContractsFixture(fixture, localSnapshot):
+    fixture.resetToSnapshot(localSnapshot)
+    return fixture
 
 def test_arraySlicingOnEmpty(arrayContractsFixture):
-
     arrayHelper = arrayContractsFixture.contracts['ArrayHelper']
 
     assert arrayHelper.getSlice(0, 1) == []
@@ -27,7 +25,6 @@ def test_arraySlicingOnEmpty(arrayContractsFixture):
     assert arrayHelper.getSlice(1, 0) == []
 
 def test_arraySlicing(arrayContractsFixture):
-
     arrayHelper = arrayContractsFixture.contracts['ArrayHelper']
 
     # Set some initial data

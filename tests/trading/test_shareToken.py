@@ -5,16 +5,16 @@ from ethereum.tools.tester import TransactionFailed
 from pytest import raises
 from utils import captureFilteredLogs, bytesToHexString
 
-def test_init(contractsFixture):
-    shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
+def test_init(contractsFixture, market):
+    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
 
     # FIXME: enable after we fix Delegated contract string handling
     # assert shareToken.name() == "Shares", "currency name"
     assert shareToken.decimals() == 0, "number of decimals"
     # assert shareToken.symbol() == "SHARE", "currency symbol"
 
-def test_createShares(contractsFixture):
-    shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
+def test_createShares(contractsFixture, market):
+    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
     initialTotalSupply = shareToken.totalSupply()
     initialBalance = shareToken.balanceOf(tester.a1)
 
@@ -26,8 +26,8 @@ def test_createShares(contractsFixture):
     assert shareToken.totalSupply() - initialTotalSupply == 7, "Total supply increase should equal the number of tokens created"
     assert shareToken.balanceOf(tester.a1) - initialBalance == 7, "Address 1 token balance increase should equal the number of tokens created"
 
-def test_destroyShares(contractsFixture):
-    shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
+def test_destroyShares(contractsFixture, market):
+    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
     shareToken.createShares(tester.a1, 7, sender=tester.k0)
     initialTotalSupply = shareToken.totalSupply()
     initialBalance = shareToken.balanceOf(tester.a1)
@@ -40,8 +40,8 @@ def test_destroyShares(contractsFixture):
     assert initialTotalSupply - shareToken.totalSupply() == 7, "Total supply decrease should equal the number of tokens destroyed"
     assert initialBalance - shareToken.balanceOf(tester.a1) == 7, "Address 1 token balance decrease should equal the number of tokens destroyed"
 
-def test_transfer(contractsFixture):
-    shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
+def test_transfer(contractsFixture, market):
+    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
     shareToken.createShares(tester.a0, 7, sender=tester.k0)
     initialTotalSupply = shareToken.totalSupply()
     initialBalance0 = shareToken.balanceOf(tester.a0)
@@ -72,8 +72,8 @@ def test_transfer(contractsFixture):
     assert(shareToken.totalSupply() == initialTotalSupply), "Total supply should be unchanged"
     assert(retval == 1), "transfer with 0 value should succeed"
 
-def test_approve(contractsFixture):
-    shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
+def test_approve(contractsFixture, market):
+    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
     shareToken.createShares(tester.a0, 7, sender=tester.k0)
     logs = []
 
@@ -99,24 +99,24 @@ def test_approve(contractsFixture):
         },
     ]
 
-def test_transferFrom(contractsFixture):
-    shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
+def test_transferFrom(contractsFixture, market):
+    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
     shareToken.createShares(tester.a1, 7, sender=tester.k0)
 
     with raises(TransactionFailed):
         shareToken.transferFrom(tester.a0, tester.a1, 7, sender=tester.k1)
 
-def test_setController(contractsFixture):
-    shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
+def test_setController(contractsFixture, market):
+    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
     newController = contractsFixture.upload('../source/contracts/Controller.sol', 'newController')
     newController.setValue('shareToken'.ljust(32, '\x00'), shareToken.address)
 
-    contractsFixture.controller.updateController(shareToken.address, newController.address, sender=tester.k0)
+    contractsFixture.contracts['Controller'].updateController(shareToken.address, newController.address, sender=tester.k0)
     with raises(TransactionFailed):
         shareToken.setController(tester.a0, sender=tester.k0)
 
-def test_suicideFunds(contractsFixture):
-    shareToken = contractsFixture.applySignature('ShareToken', contractsFixture.binaryMarket.getShareToken())
+def test_suicideFunds(contractsFixture, market):
+    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
 
     with raises(TransactionFailed):
         shareToken.suicideFunds(tester.a0, [], sender=tester.k0)

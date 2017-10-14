@@ -18,10 +18,8 @@ BETTER_ORDER_ID = 5
 WORSE_ORDER_ID = 6
 GAS_PRICE = 7
 
-def test_publicCreateOrder_bid(contractsFixture):
+def test_publicCreateOrder_bid(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']
 
@@ -37,9 +35,7 @@ def test_publicCreateOrder_bid(contractsFixture):
     assert betterOrderId == bytearray(32)
     assert worseOrderId == bytearray(32)
 
-def test_publicCreateOrder_ask(contractsFixture):
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_publicCreateOrder_ask(contractsFixture, cash, market):
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']
 
@@ -55,9 +51,7 @@ def test_publicCreateOrder_ask(contractsFixture):
     assert worseOrderId == bytearray(32)
     assert cash.balanceOf(market.address) == 10**18 - 10**17
 
-def test_publicCreateOrder_bid2(contractsFixture):
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_publicCreateOrder_bid2(contractsFixture, cash, market):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']
@@ -71,7 +65,7 @@ def test_publicCreateOrder_bid2(contractsFixture):
 
     marketInitialCash = cash.balanceOf(market.address)
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    creatorInitialETH = contractsFixture.utils.getETHBalance(tester.a1)
+    creatorInitialETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
     orderID = createOrder.publicCreateOrder(orderType, amount, fxpPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10'))
     assert orderID != bytearray(32), "Order ID should be non-zero"
 
@@ -82,7 +76,7 @@ def test_publicCreateOrder_bid2(contractsFixture):
     assert tokensEscrowed == 0.6 * 10**18
     assert sharesEscrowed == 0
     assert cash.balanceOf(tester.a1) == 0
-    assert contractsFixture.utils.getETHBalance(tester.a1) == creatorInitialETH - long(0.6 * 10**18)
+    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == creatorInitialETH - long(0.6 * 10**18)
     assert cash.balanceOf(market.address) - marketInitialCash == 0.6 * 10**18
     assert logs == [
         {
@@ -100,10 +94,7 @@ def test_publicCreateOrder_bid2(contractsFixture):
         }
     ]
 
-def test_createOrder_failure(contractsFixture):
-    universe = contractsFixture.universe
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_createOrder_failure(contractsFixture, universe, cash, market):
     orders = contractsFixture.contracts['Orders']
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
@@ -147,10 +138,7 @@ def test_createOrder_failure(contractsFixture):
     with raises(TransactionFailed):
         createOrder.publicCreateOrder(ASK, 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
 
-def test_ask_withPartialShares(contractsFixture):
-    universe = contractsFixture.universe
-    cash = contractsFixture.cash
-    market = contractsFixture.binaryMarket
+def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']

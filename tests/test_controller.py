@@ -2,7 +2,7 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import raises, fixture, mark
+from pytest import raises, fixture
 from utils import longToHexString, bytesToHexString
 
 def test_whitelists(controller):
@@ -32,16 +32,13 @@ def test_registry(controller, decentralizedController):
     with raises(TransactionFailed): decentralizedController.assertOnlySpecifiedCaller(tester.a2, key2, sender = tester.k0)
     with raises(TransactionFailed): controller.assertOnlySpecifiedCaller(tester.a2, key2, sender = tester.k2)
 
-def test_suicideTokens(contractsFixture, controller, decentralizedController, controllerUser):
-    legacyRepContract = contractsFixture.contracts['LegacyRepContract']
-    legacyRepContract.faucet(0)
-    legacyRepContract.transfer(controllerUser.address, 40 * 10**18)
-    with raises(TransactionFailed): controller.suicideFunds(controllerUser.address, tester.a0, [legacyRepContract.address], sender = tester.k2)
+def test_suicide(contractsFixture, controller, decentralizedController, controllerUser):
+    with raises(TransactionFailed): controller.suicideFunds(controllerUser.address, tester.a0, [tester.a2], sender = tester.k2)
     assert decentralizedController.owner() == bytesToHexString(tester.a0)
-    with raises(TransactionFailed): decentralizedController.suicideFunds(controllerUser.address, tester.a0, [legacyRepContract.address], sender = tester.k0)
-    assert controllerUser.setController(controller.address)
-    assert controller.suicideFunds(controllerUser.address, tester.a1, [legacyRepContract.address], sender = tester.k0)
-    assert legacyRepContract.balanceOf(tester.a1) == 40 * 10**18
+    with raises(TransactionFailed): decentralizedController.suicideFunds(controllerUser.address, tester.a0, [tester.a2], sender = tester.k0)
+    assert controller.suicideFunds(controllerUser.address, tester.a1, [tester.a2], sender = tester.k0)
+    assert controllerUser.suicideFundsDestination() == bytesToHexString(tester.a1)
+    assert controllerUser.suicideFundsTokens(0) == bytesToHexString(tester.a2)
 
 def test_updateController(controller, decentralizedController, controllerUser):
     with raises(TransactionFailed): controller.updateController(controllerUser.address, tester.a0, sender = tester.k2)
@@ -79,7 +76,7 @@ def test_switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed_failures(contro
 
 @fixture
 def controller(contractsFixture):
-    return contractsFixture.controller
+    return contractsFixture.contracts['Controller']
 
 @fixture
 def controllerUser(contractsFixture):

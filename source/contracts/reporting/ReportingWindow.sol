@@ -17,7 +17,6 @@ import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
-import 'extensions/MarketFeeCalculator.sol';
 
 
 contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWindow {
@@ -50,9 +49,8 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
         require(universe.getReportingWindowByMarketEndTime(_endTime) == this);
-        MarketFeeCalculator _marketFeeCalculator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
-        getReputationToken().trustedTransfer(msg.sender, _marketFactory, _marketFeeCalculator.getDesignatedReportNoShowBond(universe));
+        getReputationToken().trustedTransfer(msg.sender, _marketFactory, universe.getDesignatedReportNoShowBond());
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
         round1ReporterMarkets.add(_newMarket);
@@ -208,7 +206,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return markets.count == finalizedMarkets.count;
     }
 
-    function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens) public returns (bool) {
+    function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens, bool _forgoFees) public returns (bool) {
         IReportingToken _shadyReportingToken = IReportingToken(msg.sender);
         require(isContainerForReportingToken(_shadyReportingToken));
         // NOTE: Will need to handle other denominations when that is implemented
@@ -216,7 +214,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         uint256 _balance = _cash.balanceOf(this);
         uint256 _feePayoutShare = _balance.mul(_attoReportingTokens).div(totalWinningReportingTokens);
         totalWinningReportingTokens = totalWinningReportingTokens.sub(_attoReportingTokens);
-        if (_feePayoutShare > 0) {
+        if (!_forgoFees && _feePayoutShare > 0) {
             _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
         }
         return true;

@@ -2,7 +2,7 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import mark, lazy_fixture, raises
+from pytest import mark, raises
 from utils import fix, bytesToHexString, longTo32Bytes, longToHexString
 from constants import BID, ASK, YES, NO
 
@@ -17,8 +17,7 @@ BETTER_ORDER_ID = 5
 WORSE_ORDER_ID = 6
 GAS_PRICE = 7
 
-def test_walkOrderList_bids(contractsFixture):
-    market = contractsFixture.binaryMarket
+def test_walkOrderList_bids(contractsFixture, market):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     outcomeID = 1
@@ -117,8 +116,7 @@ def test_walkOrderList_bids(contractsFixture):
     assert(orders.removeOrder(orderId6) == 1), "Remove order 6"
     assert(orders.removeOrder(orderId7) == 1), "Remove order 7"
 
-def test_walkOrderList_asks(contractsFixture):
-    market = contractsFixture.binaryMarket
+def test_walkOrderList_asks(contractsFixture, market):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     outcomeID = 1
@@ -215,25 +213,23 @@ def test_walkOrderList_asks(contractsFixture):
     assert(orders.removeOrder(orderId9) == 1), "Remove order 9"
     assert(orders.removeOrder(orderId10) == 1), "Remove order 10"
 
-@mark.parametrize('where, orderType, hints, fixture', [
-    ('best', BID, True, lazy_fixture('contractsFixture')),
-    ('middle', BID, True, lazy_fixture('contractsFixture')),
-    ('worst', BID, True, lazy_fixture('contractsFixture')),
-    ('best', BID, False, lazy_fixture('contractsFixture')),
-    ('middle', BID, False, lazy_fixture('contractsFixture')),
-    ('worst', BID, False, lazy_fixture('contractsFixture')),
-    ('best', ASK, True, lazy_fixture('contractsFixture')),
-    ('middle', ASK, True, lazy_fixture('contractsFixture')),
-    ('worst', ASK, True, lazy_fixture('contractsFixture')),
-    ('best', ASK, False, lazy_fixture('contractsFixture')),
-    ('middle', ASK, False, lazy_fixture('contractsFixture')),
-    ('worst', ASK, False, lazy_fixture('contractsFixture')),
+@mark.parametrize('where, orderType, hints', [
+    ('best', BID, True),
+    ('middle', BID, True),
+    ('worst', BID, True),
+    ('best', BID, False),
+    ('middle', BID, False),
+    ('worst', BID, False),
+    ('best', ASK, True),
+    ('middle', ASK, True),
+    ('worst', ASK, True),
+    ('best', ASK, False),
+    ('middle', ASK, False),
+    ('worst', ASK, False),
 ])
-def test_orderBidSorting(where, orderType, hints, fixture):
-    print dir(fixture)
-    market = fixture.binaryMarket
-    orders = fixture.contracts['Orders']
-    ordersFetcher = fixture.contracts['OrdersFetcher']
+def test_orderBidSorting(where, orderType, hints, contractsFixture, market):
+    orders = contractsFixture.contracts['Orders']
+    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
     # setup pre-existing orders
     worstPrice = fix('0.60') if orderType == BID else fix('0.66')
@@ -270,8 +266,7 @@ def test_orderBidSorting(where, orderType, hints, fixture):
     assert orders.getBestOrderId(orderType, market.address, YES) == insertedOrder if where == 'best' else bestOrderId
     assert orders.getWorstOrderId(orderType, market.address, YES) == insertedOrder if where == 'worst' else worstOrderId
 
-def test_saveOrder(contractsFixture):
-    market = contractsFixture.binaryMarket
+def test_saveOrder(contractsFixture, market):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
@@ -295,8 +290,7 @@ def test_saveOrder(contractsFixture):
     assert(orders.removeOrder(orderId1) == 1), "Remove order 1"
     assert(orders.removeOrder(orderId2) == 1), "Remove order 2"
 
-def test_fillOrder(contractsFixture):
-    market = contractsFixture.binaryMarket
+def test_fillOrder(contractsFixture, market):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
@@ -324,8 +318,7 @@ def test_fillOrder(contractsFixture):
     assert(orders.fillOrder(orderId2, 0, fix('2')) == 1), "fillOrder wasn't executed successfully"
     assert(ordersFetcher.getOrder(orderId2) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected data array"
 
-def test_removeOrder(contractsFixture):
-    market = contractsFixture.binaryMarket
+def test_removeOrder(contractsFixture, market):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 

@@ -7,7 +7,6 @@ import 'libraries/ReentrancyGuard.sol';
 import 'libraries/CashAutoConverter.sol';
 import 'reporting/IMarket.sol';
 import 'trading/ICash.sol';
-import 'extensions/MarketFeeCalculator.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/Reporting.sol';
 
@@ -71,9 +70,7 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
     }
 
     function calculateReportingFee(IMarket _market, uint256 _amount) public returns (uint256) {
-        MarketFeeCalculator _marketFeeCalculator = MarketFeeCalculator(controller.lookup("MarketFeeCalculator"));
-        IReportingWindow _reportingWindow = _market.getReportingWindow();
-        uint256 _reportingFeeAttoethPerEth = _marketFeeCalculator.getReportingFeeInAttoethPerEth(_reportingWindow);
+        uint256 _reportingFeeAttoethPerEth = _market.getUniverse().getReportingFeeInAttoethPerEth();
         return _amount.mul(_reportingFeeAttoethPerEth).div(1 ether);
     }
 

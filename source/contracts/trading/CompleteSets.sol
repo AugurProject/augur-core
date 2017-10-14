@@ -7,7 +7,6 @@ import 'Controlled.sol';
 import 'libraries/ReentrancyGuard.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'trading/ICash.sol';
-import 'extensions/MarketFeeCalculator.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReportingWindow.sol';
 import 'trading/IOrders.sol';
@@ -58,8 +57,7 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
         uint256 _payout = _amount.mul(_market.getNumTicks());
         _market.getUniverse().decrementOpenInterest(_payout);
         uint256 _creatorFee = _payout.mul(_creatorFeeRate).div(1 ether);
-        IReportingWindow _reportingWindow = _market.getReportingWindow();
-        uint256 _reportingFeeRate = MarketFeeCalculator(controller.lookup("MarketFeeCalculator")).getReportingFeeInAttoethPerEth(_reportingWindow);
+        uint256 _reportingFeeRate = _market.getUniverse().getReportingFeeInAttoethPerEth();
         uint256 _reportingFee = _payout.mul(_reportingFeeRate).div(1 ether);
         _payout = _payout.sub(_creatorFee).sub(_reportingFee);
 
@@ -74,6 +72,7 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
             _denominationToken.withdrawEtherTo(_market.getOwner(), _creatorFee);
         }
         if (_reportingFee != 0) {
+            IReportingWindow _reportingWindow = _market.getReportingWindow();
             require(_denominationToken.transferFrom(_market, _reportingWindow, _reportingFee));
         }
         require(_denominationToken.transferFrom(_market, _sender, _payout));

@@ -7,15 +7,12 @@ from pytest import raises
 
 tester.GASPRICE = 0
 
-def test_init(contractsFixture):
-    cash = contractsFixture.cash
-
+def test_init(cash):
     assert cash.name() == 'Cash'
     assert cash.decimals() == 18
     assert cash.symbol() == 'CASH'
 
-def test_depositEther(contractsFixture):
-    cash = contractsFixture.cash
+def test_depositEther(contractsFixture, cash):
     startingUserEthBalance = contractsFixture.chain.head_state.get_balance(tester.a0)
     startingUserCashBalance = cash.balanceOf(tester.a0)
     startingCashEthBalance = contractsFixture.chain.head_state.get_balance(cash.address)
@@ -28,8 +25,7 @@ def test_depositEther(contractsFixture):
     assert startingCashEthBalance + 7 == contractsFixture.chain.head_state.get_balance(cash.address)
     assert startingCashSupply + 7 == cash.totalSupply()
 
-def test_withdrawEther(contractsFixture):
-    cash = contractsFixture.cash
+def test_withdrawEther(contractsFixture, cash):
     cash.depositEther(value = 7)
     startingUserEthBalance = contractsFixture.chain.head_state.get_balance(tester.a0)
     startingUserCashBalance = cash.balanceOf(tester.a0)
@@ -43,8 +39,7 @@ def test_withdrawEther(contractsFixture):
     assert startingCashEthBalance - 5 == contractsFixture.chain.head_state.get_balance(cash.address)
     assert startingCashSupply - 5 == cash.totalSupply()
 
-def test_withdrawEther_failures(contractsFixture):
-    cash = contractsFixture.cash
+def test_withdrawEther_failures(contractsFixture, cash):
     cash.depositEther(value = 7)
 
     with raises(TransactionFailed):
@@ -58,8 +53,7 @@ def test_withdrawEther_failures(contractsFixture):
     with raises(TransactionFailed):
         cash.withdrawEther(5)
 
-def test_transfer(contractsFixture):
-    cash = contractsFixture.cash
+def test_transfer(contractsFixture, cash):
     cash.depositEther(value = 7, sender = tester.k0)
     startingBalance0 = cash.balanceOf(tester.a0)
     startingBalance1 = cash.balanceOf(tester.a1)
@@ -82,8 +76,7 @@ def test_transfer(contractsFixture):
         { "_event_type": "Transfer", "from": '0x'+tester.a0.encode("hex"), "to": '0x'+tester.a1.encode("hex"), "value": 0L },
     ]
 
-def test_transfer_failures(contractsFixture):
-    cash = contractsFixture.cash
+def test_transfer_failures(contractsFixture, cash):
     cash.depositEther(value = 7, sender = tester.k0)
 
     with raises(TransactionFailed):
@@ -91,8 +84,7 @@ def test_transfer_failures(contractsFixture):
     with raises(TransactionFailed):
         cash.transfer(tester.a1, 5, sender = tester.k2)
 
-def test_approve(contractsFixture):
-    cash = contractsFixture.cash
+def test_approve(contractsFixture, cash):
     cash.depositEther(value = 7, sender = tester.k0)
     logs = []
     contractsFixture.chain.head_state.log_listeners.append(lambda x: logs.append(cash.translator.listen(x)))
@@ -107,8 +99,7 @@ def test_approve(contractsFixture):
         { "_event_type": "Approval", "owner": '0x'+tester.a0.encode("hex"), "spender": '0x'+tester.a1.encode("hex"), "value": 2**256L-1L }
     ]
 
-def test_transferFrom(contractsFixture):
-    cash = contractsFixture.cash
+def test_transferFrom(contractsFixture, cash):
     cash.depositEther(value = 7, sender = tester.k0)
     cash.approve(tester.a1, 10, sender = tester.k0)
     startingBalance0 = cash.balanceOf(tester.a0)
@@ -124,8 +115,7 @@ def test_transferFrom(contractsFixture):
     assert startingSupply == cash.totalSupply()
     assert logs == [ { "_event_type": "Transfer", "from": '0x'+tester.a0.encode("hex"), "to": '0x'+tester.a2.encode("hex"), "value": 5 } ]
 
-def test_transferFrom_failures(contractsFixture):
-    cash = contractsFixture.cash
+def test_transferFrom_failures(contractsFixture, cash):
     cash.depositEther(value = 7, sender = tester.k0)
     cash.approve(tester.a1, 10, sender = tester.k0)
 
@@ -134,14 +124,10 @@ def test_transferFrom_failures(contractsFixture):
     with raises(TransactionFailed):
         cash.transferFrom(tester.a0, tester.a1, 5, sender = tester.k2)
 
-def test_setController_failure(contractsFixture):
-    cash = contractsFixture.cash
-
+def test_setController_failure(contractsFixture, cash):
     with raises(TransactionFailed):
         cash.setController(tester.a1, sender = tester.k1)
 
-def test_suicideFunds_failure(contractsFixture):
-    cash = contractsFixture.cash
-
+def test_suicideFunds_failure(contractsFixture, cash):
     with raises(TransactionFailed):
         cash.suicideFunds(tester.a1, [], sender = tester.k1)
