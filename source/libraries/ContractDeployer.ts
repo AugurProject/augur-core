@@ -8,7 +8,7 @@ import * as EthjsQuery from "ethjs-query";
 // TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
 import { Contract, parseAbiIntoMethods } from "./AbiParser";
-import { generateTestAccounts, padAndHexlify, stringTo32ByteHex } from "./HelperFunctions";
+import { generateTestAccounts, padAndHexlify, stringTo32ByteHex, waitForTransactionToBeSealed } from "./HelperFunctions";
 import { CompilerOutputContracts } from "solc";
 
 export class ContractDeployer {
@@ -95,13 +95,15 @@ export class ContractDeployer {
         const signature = this.signatures[signatureKey];
         const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
         let transactionHash: string;
+        console.log(signatureKey);
 
         if (constructorArgs.length > 0) {
             transactionHash = await contractBuilder.new(constructorArgs[0], constructorArgs[1]);
         } else {
             transactionHash = await contractBuilder.new();
         }
-        const receipt: ContractReceipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
+        await waitForTransactionToBeSealed(this.ethjsQuery, transactionHash);
+        const receipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
         this.contracts[lookupKey] = await contractBuilder.at(receipt.contractAddress);
 
         return this.contracts[lookupKey];
@@ -193,8 +195,9 @@ export class ContractDeployer {
     private async createGenesisUniverse(): Promise<ContractBlockchainData> {
         const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0], gas: this.gasAmount });
         const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gas: this.gasAmount });
-        const receiptAddress = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify("Universe")}`);
-        const receipt = await this.ethjsQuery.getTransactionReceipt(receiptAddress);
+        const transactionHash = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify("Universe")}`);
+        await waitForTransactionToBeSealed(this.ethjsQuery, transactionHash);
+        const receipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
         const universe = await universeBuilder.at(receipt.contractAddress);
         await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
         return universe;
@@ -217,6 +220,7 @@ export class ContractDeployer {
 
     private async createMarket(universeAddress: string, numOutcomes: number, endTime: number, feePerEthInWei: number, denominationToken: string, designatedReporter: string, numTicks: number): Promise<Contract> {
         const constant = { constant: true };
+
         const universe = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Universe"], { to: universeAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
         const legacyReputationToken = await parseAbiIntoMethods(this.ethjsQuery, this.signatures['LegacyRepContract'], { to: this.contracts['LegacyRepContract'].address, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
         const reputationTokenAddress = await universe.getReputationToken();
@@ -246,6 +250,7 @@ export class ContractDeployer {
         targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
         const market = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0], gas: this.gasAmount });
         const marketNameHex = stringTo32ByteHex("Market");
+
         if (await market.getTypeName() !== marketNameHex) {
             throw new Error("Unable to create new categorical market");
         }
