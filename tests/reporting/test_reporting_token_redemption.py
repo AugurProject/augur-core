@@ -37,6 +37,78 @@ def test_one_market_one_correct_report(localFixture, universe, market):
     # We can see that the designated reporter's balance of REP has returned to the original value since as the market creator the had to pay these REP fees initially
     assert reputationToken.balanceOf(tester.a0) == expectedREPBalance
 
+    # We'll redeem the winning tokens we have on the market and confirm we get that amount returned in REP
+    assert reportingToken.redeemWinningTokens()
+    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + expectedReportingTokenBalance
+
+def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe, market):
+    cash = localFixture.contracts["Cash"]
+    market2 = localFixture.createReasonableBinaryMarket(universe, cash)
+    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    reputationToken = localFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
+
+    # Proceed to the DESIGNATED REPORTING phase
+    proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
+
+    # To progress into the DESIGNATED DISPUTE phase we do a designated report
+    initialRepBalance = reputationToken.balanceOf(tester.a0)
+    assert localFixture.designatedReport(market, [0,10**18], tester.k0)
+    # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
+    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getDesignatedReportNoShowBond() - universe.getDesignatedReportStake()
+    initialREPBalance = reputationToken.balanceOf(tester.a0)
+
+    # We're now in the DESIGNATED DISPUTE PHASE
+    assert market.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
+
+    # We'll do the same with the second market
+    proceedToDesignatedReporting(localFixture, universe, market2, [0,10**18])
+    initialRepBalance = reputationToken.balanceOf(tester.a0)
+    assert localFixture.designatedReport(market2, [0,10**18], tester.k0)
+    # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
+    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getDesignatedReportNoShowBond() - universe.getDesignatedReportStake()
+    initialREPBalance = reputationToken.balanceOf(tester.a0)
+    assert market2.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
+
+    designatedReportStake = universe.getDesignatedReportStake()
+
+    # Time passes until the end of the reporting window
+    localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+
+    # Finalize the first market
+    market.tryFinalize()
+
+    # The market1 designated reporter may redeem their reporting tokens which were purchased to make the designated report
+    reportingToken = localFixture.getReportingToken(market, [0, 10**18])
+    assert reportingToken.balanceOf(tester.a0) == designatedReportStake
+
+    expectedREPBalance = initialREPBalance
+
+    # We can see that the designated reporter's balance of REP has returned to the original value since as the market creator the had to pay these REP fees initially
+    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance
+
+    # If we try to redeem tokens and recieve trading fees now we'll get a failure since not all markets are finalized
+    with raises(TransactionFailed):
+        reportingToken.redeemWinningTokens()
+
+    # We'll redeem the winning tokens we have on the market and forgo fees and confirm we get that amount returned in REP
+    initialETHBalance = localFixture.contracts['Utils'].getETHBalance(tester.a0)
+    assert reportingToken.redeemWinningTokens(True)
+    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + designatedReportStake
+    assert localFixture.contracts['Utils'].getETHBalance(tester.a0) == initialETHBalance
+
+    # If we redeem the second tester's tokens they'll get ALL of the fees on the reporting window now and their normal share of REP
+    market2.tryFinalize()
+    reportingToken = localFixture.getReportingToken(market2, [0, 10**18])
+    assert reportingToken.balanceOf(tester.a0) == designatedReportStake
+
+    initialREPBalance = reputationToken.balanceOf(tester.a0)
+
+    # We'll redeem the winning tokens we have on the market and confirm we get that amount returned in REP and all the fees in the reporting window
+    expectedETHBalance = localFixture.contracts['Utils'].getETHBalance(tester.a0) + cash.balanceOf(reportingWindow.address)
+    assert reportingToken.redeemWinningTokens()
+    assert reputationToken.balanceOf(tester.a0) == initialREPBalance + designatedReportStake
+    assert localFixture.contracts['Utils'].getETHBalance(tester.a0) == expectedETHBalance
+
 @mark.parametrize('numReports, numCorrect', [
     (1, 1),
     (2, 2),

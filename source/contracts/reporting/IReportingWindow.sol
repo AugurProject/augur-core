@@ -28,7 +28,7 @@ contract IReportingWindow is Typed {
     function getPreviousReportingWindow() public returns (IReportingWindow);
     function getNumDesignatedReportNoShows() public view returns (uint256);
     function allMarketsFinalized() public view returns (bool);
-    function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens) public returns (bool);
+    function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens, bool _forgoFees) public returns (bool);
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
     function migrateFeesDueToFork() public returns (bool);
     function isContainerForMarket(Typed _shadyTarget) public view returns (bool);
