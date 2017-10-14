@@ -197,7 +197,7 @@ export class ContractDeployer {
         const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gas: this.gasAmount });
         const transactionHash = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify("Universe")}`);
         await waitForTransactionToBeSealed(this.ethjsQuery, transactionHash);
-        const receipt: ContractReceipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
+        const receipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
         const universe = await universeBuilder.at(receipt.contractAddress);
         await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
         return universe;
