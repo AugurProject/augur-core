@@ -252,14 +252,6 @@ export class ContractDeployer {
         const market = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0], gas: this.gasAmount });
         const marketNameHex = stringTo32ByteHex("Market");
 
-        // await this.waitForReceipt("Market");
-        // var receipt = await this.ethjsQuery.getTransactionReceipt(this.transactionReceipts["Market"]);
-
-        // const block = await this.ethjsQuery.getBlockByNumber('latest', true);
-        // console.log(block);
-        const block2 = await this.ethjsQuery.getBlockByHash(this.transactionReceipts["Market"].blockHash, true);
-        // console.log(block2);
-
         if (await market.getTypeName() !== marketNameHex) {
             throw new Error("Unable to create new categorical market");
         }
