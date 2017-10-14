@@ -92,7 +92,7 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
 
     # Tester 1 moves their ~1 Million REP to the YES universe and gets a fixed percentage bonus for doing so within the FORKING period
     expectedAmount = reputationToken.balanceOf(tester.a1)
-    bonus = expectedAmount / reportingFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+    bonus = expectedAmount / localFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
     reputationToken.migrateOut(yesUniverseReputationToken.address, tester.a1, reputationToken.balanceOf(tester.a1), sender = tester.k1)
     assert not reputationToken.balanceOf(tester.a1)
     assert yesUniverseReputationToken.balanceOf(tester.a1) == expectedAmount + bonus
@@ -102,13 +102,13 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
 
     # Testers 0 and 2 move their combined ~9 million REP to the NO universe and receive a bonus since they are within the FORKING period
     expectedAmount = reputationToken.balanceOf(tester.a0)
-    bonus = expectedAmount / reportingFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+    bonus = expectedAmount / localFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
     reputationToken.migrateOut(noUniverseReputationToken.address, tester.a0, reputationToken.balanceOf(tester.a0), sender = tester.k0)
     assert not reputationToken.balanceOf(tester.a0)
     tester0REPBalance = noUniverseReputationToken.balanceOf(tester.a0)
     assert tester0REPBalance == expectedAmount + bonus
     expectedAmount = reputationToken.balanceOf(tester.a2)
-    bonus = expectedAmount / reportingFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+    bonus = expectedAmount / localFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
     reputationToken.migrateOut(noUniverseReputationToken.address, tester.a2, reputationToken.balanceOf(tester.a2), sender = tester.k2)
     assert not reputationToken.balanceOf(tester.a2)
     assert noUniverseReputationToken.balanceOf(tester.a2) == expectedAmount + bonus

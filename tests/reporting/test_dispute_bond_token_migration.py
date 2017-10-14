@@ -1,8 +1,8 @@
 from ethereum.tools import tester
-from ethereum.tools.tester import TransactionFailed
+from ethereum.tools.tester import TransactionFailed, ABIContract
 from pytest import fixture, mark, raises
 from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString
-from reporting_utils import proceedToDesignatedReporting, proceedToRound1Reporting, proceedToRound2Reporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
+from reporting_utils import proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 # Migration data is expressed as [beforeFinalization, targetUniverse]
 @mark.parametrize('invalidRep,yesRep,noRep,designatedMigration,round1Migration,round2Migration', [
@@ -15,12 +15,9 @@ from reporting_utils import proceedToDesignatedReporting, proceedToRound1Reporti
     (0, 10**23, 10**23, [True, 1], [True, 2], [False, 2]),
     (10**23, 10**23, 10**23, [False, 1], [True, 2], [True, 2]),
 ])
-def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigration, round1Migration, round2Migration, reportingFixture):
-    market = reportingFixture.binaryMarket
-    universe = reportingFixture.universe
-    reputationToken = reportingFixture.applySignature("ReputationToken", universe.getReputationToken())
-    cash = reportingFixture.cash
-    completeSets = reportingFixture.contracts['CompleteSets']
+def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigration, round1Migration, round2Migration, localFixture, universe, cash, market):
+    reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
+    completeSets = localFixture.contracts['CompleteSets']
     YES_OUTCOME = [10**18,0]
     NO_OUTCOME = [0,10**18]
     INVALID_OUTCOME = [10**18 / 2,10**18 / 2]
@@ -29,12 +26,12 @@ def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigra
     INVALID_DISTRIBUTION_HASH = market.derivePayoutDistributionHash(INVALID_OUTCOME, True)
 
     # We proceed the standard market to the FORKING state
-    proceedToForking(reportingFixture,  market, True, tester.k1, tester.k2, tester.k3, NO_OUTCOME, YES_OUTCOME, tester.k2, YES_OUTCOME, NO_OUTCOME, YES_OUTCOME)
+    proceedToForking(localFixture, universe, market, True, tester.k1, tester.k2, tester.k3, NO_OUTCOME, YES_OUTCOME, tester.k2, YES_OUTCOME, NO_OUTCOME, YES_OUTCOME)
 
     # We have 3 dispute bonds for the market
-    designatedDisputeBond = reportingFixture.applySignature('DisputeBondToken', market.getDesignatedReporterDisputeBondToken())
-    round1DisputeBond = reportingFixture.applySignature('DisputeBondToken', market.getRound1ReportersDisputeBondToken())
-    round2DisputeBond = reportingFixture.applySignature('DisputeBondToken', market.getRound2ReportersDisputeBondToken())
+    designatedDisputeBond = localFixture.applySignature('DisputeBondToken', market.getDesignatedReporterDisputeBondToken())
+    round1DisputeBond = localFixture.applySignature('DisputeBondToken', market.getRound1ReportersDisputeBondToken())
+    round2DisputeBond = localFixture.applySignature('DisputeBondToken', market.getRound2ReportersDisputeBondToken())
 
     # Validate the owners
     assert designatedDisputeBond.getBondHolder() == bytesToHexString(tester.a1)
@@ -47,9 +44,9 @@ def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigra
     assert round2DisputeBond.getDisputedPayoutDistributionHash() == YES_DISTRIBUTION_HASH
 
     # Get 3 Universe's that may be used as migration targets
-    yesUniverse = reportingFixture.applySignature("Universe", universe.getOrCreateChildUniverse(YES_DISTRIBUTION_HASH))
-    noUniverse = reportingFixture.applySignature("Universe", universe.getOrCreateChildUniverse(NO_DISTRIBUTION_HASH))
-    invalidUniverse = reportingFixture.applySignature("Universe", universe.getOrCreateChildUniverse(INVALID_DISTRIBUTION_HASH))
+    yesUniverse = localFixture.applySignature("Universe", universe.getOrCreateChildUniverse(YES_DISTRIBUTION_HASH))
+    noUniverse = localFixture.applySignature("Universe", universe.getOrCreateChildUniverse(NO_DISTRIBUTION_HASH))
+    invalidUniverse = localFixture.applySignature("Universe", universe.getOrCreateChildUniverse(INVALID_DISTRIBUTION_HASH))
     universeMap = {0: invalidUniverse, 1:yesUniverse, 2:noUniverse}
 
     if (invalidRep > 0):
@@ -61,26 +58,26 @@ def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigra
 
     if (designatedMigration[0]):
         destinationUniverse = universeMap[designatedMigration[1]]
-        doBondWithdraw(reportingFixture, designatedDisputeBond, True, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
+        doBondWithdraw(localFixture, designatedDisputeBond, True, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
     if (round1Migration[0]):
         destinationUniverse = universeMap[round1Migration[1]]
-        doBondWithdraw(reportingFixture, round1DisputeBond, True, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
+        doBondWithdraw(localFixture, round1DisputeBond, True, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
     if (round2Migration[0]):
         destinationUniverse = universeMap[round2Migration[1]]
-        doBondWithdraw(reportingFixture, round2DisputeBond, True, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
+        doBondWithdraw(localFixture, round2DisputeBond, True, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
 
     # We'll finalize the forking market
-    finalizeForkingMarket(reportingFixture, market, False, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, NO_OUTCOME, YES_OUTCOME)
+    finalizeForkingMarket(localFixture, universe, market, False, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, NO_OUTCOME, YES_OUTCOME)
 
     if (not designatedMigration[0]):
         destinationUniverse = universeMap[designatedMigration[1]]
-        doBondWithdraw(reportingFixture, designatedDisputeBond, False, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
+        doBondWithdraw(localFixture, designatedDisputeBond, False, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
     if (not round1Migration[0]):
         destinationUniverse = universeMap[round1Migration[1]]
-        doBondWithdraw(reportingFixture, round1DisputeBond, False, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
+        doBondWithdraw(localFixture, round1DisputeBond, False, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
     if (not round2Migration[0]):
         destinationUniverse = universeMap[round2Migration[1]]
-        doBondWithdraw(reportingFixture, round2DisputeBond, False, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
+        doBondWithdraw(localFixture, round2DisputeBond, False, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
 
 def doBondWithdraw(fixture, bond, bonus, universe, reputationToken, destinationUniverse, testerAddress, testerKey):
     disputeUniverse = fixture.applySignature("Universe", universe.getOrCreateChildUniverse(bond.getDisputedPayoutDistributionHash()))
@@ -109,11 +106,25 @@ def doBondWithdraw(fixture, bond, bonus, universe, reputationToken, destinationU
     assert disputeUniverse.getRepAvailableForExtraBondPayouts() == amountInMigrationPool - expectedAmountPulledFromDestinationPool
 
 @fixture(scope="session")
-def reportingSnapshot(sessionFixture):
-    sessionFixture.resetSnapshot()
-    return initializeReportingFixture(sessionFixture, sessionFixture.binaryMarket)
+def localSnapshot(fixture, kitchenSinkSnapshot):
+    fixture.resetToSnapshot(kitchenSinkSnapshot)
+    universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
+    market = ABIContract(fixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
+    return initializeReportingFixture(fixture, universe, market)
 
 @fixture
-def reportingFixture(sessionFixture, reportingSnapshot):
-    sessionFixture.resetToSnapshot(reportingSnapshot)
-    return sessionFixture
+def localFixture(fixture, localSnapshot):
+    fixture.resetToSnapshot(localSnapshot)
+    return fixture
+
+@fixture
+def universe(localFixture, kitchenSinkSnapshot):
+    return ABIContract(localFixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
+
+@fixture
+def market(localFixture, kitchenSinkSnapshot):
+    return ABIContract(localFixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
+
+@fixture
+def cash(localFixture, kitchenSinkSnapshot):
+    return ABIContract(localFixture.chain, kitchenSinkSnapshot['cash'].translator, kitchenSinkSnapshot['cash'].address)

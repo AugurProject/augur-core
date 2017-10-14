@@ -116,7 +116,7 @@ def finalizeForkingMarket(reportingFixture, universe, market, finalizeByMigratio
 
     # A Tester moves their REP to the YES universe
     balance = reputationToken.balanceOf(yesMigratorAddress)
-    bonus = balance / reportingFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+    bonus = balance / reportingFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
     reputationToken.migrateOut(yesUniverseReputationToken.address, yesMigratorAddress, reputationToken.balanceOf(yesMigratorAddress), sender = yesMigratorKey)
     assert not reputationToken.balanceOf(yesMigratorAddress)
     assert yesUniverseReputationToken.balanceOf(yesMigratorAddress) == balance + bonus
@@ -132,12 +132,12 @@ def finalizeForkingMarket(reportingFixture, universe, market, finalizeByMigratio
     if (finalizeByMigration):
         # 2 Testers move their combined REP to the NO universe
         tester1Balance = reputationToken.balanceOf(noMigratorAddress1)
-        bonus = tester1Balance / reportingFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+        bonus = tester1Balance / reportingFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
         reputationToken.migrateOut(noUniverseReputationToken.address, noMigratorAddress1, reputationToken.balanceOf(noMigratorAddress1), sender = noMigratorKey1)
         assert not reputationToken.balanceOf(noMigratorAddress1)
         assert noUniverseReputationToken.balanceOf(noMigratorAddress1) == tester1Balance + bonus
         tester2Balance = reputationToken.balanceOf(noMigratorAddress2)
-        bonus = tester2Balance / reportingFixture.constants.FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+        bonus = tester2Balance / reportingFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
         reputationToken.migrateOut(noUniverseReputationToken.address, noMigratorAddress2, reputationToken.balanceOf(noMigratorAddress2), sender = noMigratorKey2)
         assert not reputationToken.balanceOf(noMigratorAddress2)
         assert noUniverseReputationToken.balanceOf(noMigratorAddress2) == tester2Balance + bonus
