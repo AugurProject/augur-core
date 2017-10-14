@@ -2,11 +2,11 @@ import * as binascii from "binascii";
 import * as EthjsAccount from "ethjs-account";
 import * as EthjsQuery from 'ethjs-query';
 
-const DEFAULT_ETHEREUM_BLOCK_INTERVAL_MILLISECONDS: number = 1200;
-const ETHEREUM_BLOCK_INTERVAL_MILLISECONDS: number = process.env.ETHEREUM_BLOCK_INTERVAL_MILLSECONDS ? parseInt(process.env.ETHEREUM_BLOCK_INTERVAL_MILLISECONDS!, 10) : DEFAULT_ETHEREUM_BLOCK_INTERVAL_MILLISECONDS;
-const DEFAULT_TEST_ACCOUNT_BALANCE: number = 1 * 10 ** 20; // Denominated in wei
+const DEFAULT_ETHEREUM_BLOCK_INTERVAL_MILLISECONDS = 1200;
+const DEFAULT_TEST_ACCOUNT_BALANCE = 1 * 10 ** 20; // Denominated in wei
 // Set gas block limit extremely high so new blocks don"t have to be mined while uploading contracts
 const GAS_BLOCK_AMOUNT: number = Math.pow(2, 32);
+const ETHEREUM_BLOCK_INTERVAL_MILLISECONDS: number = process.env.ETHEREUM_BLOCK_INTERVAL_MILLSECONDS ? parseInt(process.env.ETHEREUM_BLOCK_INTERVAL_MILLISECONDS!, 10) : DEFAULT_ETHEREUM_BLOCK_INTERVAL_MILLISECONDS;
 
 export interface TestAccount {
     privateKey: string;
