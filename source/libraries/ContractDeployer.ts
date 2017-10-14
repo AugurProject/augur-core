@@ -19,7 +19,6 @@ export class ContractDeployer {
     public readonly contracts = [];
     public readonly signatures = [];
     public readonly bytecodes = [];
-    public readonly transactionReceipts = [];
     public readonly gasAmount = 6*10**6;
     public testAccounts;
     public controller;
@@ -96,6 +95,7 @@ export class ContractDeployer {
         const signature = this.signatures[signatureKey];
         const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
         let transactionHash: string;
+        console.log(signatureKey);
 
         if (constructorArgs.length > 0) {
             transactionHash = await contractBuilder.new(constructorArgs[0], constructorArgs[1]);
@@ -103,8 +103,7 @@ export class ContractDeployer {
             transactionHash = await contractBuilder.new();
         }
         await waitForTransactionToBeSealed(this.ethjsQuery, transactionHash);
-        const receipt: ContractReceipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
-        this.transactionReceipts[signatureKey] = receipt;
+        const receipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
         this.contracts[lookupKey] = await contractBuilder.at(receipt.contractAddress);
 
         return this.contracts[lookupKey];
