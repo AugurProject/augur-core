@@ -29,6 +29,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
     uint256 private extraDisputeBondRemainingToBePaidOut;
+    uint256 private repAvailableForExtraBondPayouts;
 
     mapping (address => uint256) private validityBondInAttoeth;
     mapping (address => uint256) private targetReporterGasCosts;
@@ -124,27 +125,36 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return childUniverses[_parentPayoutDistributionHash];
     }
 
+    function getRepAvailableForExtraBondPayouts() public view returns (uint256) {
+        return repAvailableForExtraBondPayouts;
+    }
+
+    function increaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
+        require(msg.sender == address(reputationToken));
+        repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.add(_amount);
+        return true;
+    }
+
+    function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
+        require(isContainerForDisputeBondToken(Typed(msg.sender)));
+        repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.sub(_amount);
+        return true;
+    }
+
     function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256) {
         return extraDisputeBondRemainingToBePaidOut;
     }
 
-    function deductDisputeBondExtraMintAmount(uint256 _maximumToPay, uint256 _totalNeededInUniverse) public returns (uint256) {
-        // Validate dispute bond
-        // Validate dispute bond is child
-        // maximim paid should be the max( (max/total * extraDisputeBondRemainingToBePaidOut), max)
-        return _maximumToPay;
-    }
-
     function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
-        // Validate dispute bond
-        // Validate dispute bond is child
+        require(isContainerForMarket(Typed(msg.sender)));
         extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.add(_amount);
+        return true;
     }
 
-    function deductExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
-        // Validate dispute bond
-        // Validate dispute bond is child
+    function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
+        require(isContainerForDisputeBondToken(Typed(msg.sender)));
         extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.sub(_amount);
+        return true;
     }
 
     function isContainerForReportingWindow(Typed _shadyTarget) public view returns (bool) {

@@ -146,6 +146,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function disputeDesignatedReport(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.designatedReporterDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
+        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(Reporting.designatedReporterDisputeBondAmount());
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, designatedReporterDisputeBondToken, Reporting.designatedReporterDisputeBondAmount());
         if (_attotokens > 0) {
             IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
@@ -160,6 +161,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function disputeRound1Reporters(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.FIRST_DISPUTE);
         round1ReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.round1ReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
+        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(Reporting.round1ReportersDisputeBondAmount());
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, round1ReportersDisputeBondToken, Reporting.round1ReportersDisputeBondAmount());
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
         migrateReportingWindow(_newReportingWindow);
@@ -176,6 +178,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function disputeRound2Reporters() public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.LAST_DISPUTE);
         round2ReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.round2ReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
+        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(Reporting.round2ReportersDisputeBondAmount());
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, round2ReportersDisputeBondToken, Reporting.round2ReportersDisputeBondAmount());
         reportingWindow.getUniverse().fork();
         IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();

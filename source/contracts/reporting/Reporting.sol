@@ -33,7 +33,6 @@ library Reporting {
 
     uint256 private constant FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR = 20; // 5% bonus to any REP migrated during a fork
 
-
     function designatedReportingDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DURATION_SECONDS; }
     function designatedReportingDisputeDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS; }
     function reportingDurationSeconds() internal pure returns (uint256) { return REPORTING_DURATION_SECONDS; }

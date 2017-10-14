@@ -53,6 +53,7 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, VariableSupp
             mint(_reporter, _attotokens.div(Reporting.forkMigrationPercentageBonusDivisor()));
         }
         supply = supply.add(_attotokens);
+        universe.increaseRepAvailableForExtraBondPayouts(_attotokens);
         return true;
     }
 
@@ -66,8 +67,8 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, VariableSupp
     }
 
     function mintForDisputeBondMigration(uint256 _amount) public afterInitialized returns (bool) {
-        // Validate sender is a dispute bond
-        // Validate sender is a child dispute bond of universe parent
+        IUniverse _parentUniverse = universe.getParentUniverse();
+        require(_parentUniverse.isContainerForDisputeBondToken(Typed(msg.sender)));
         mint(msg.sender, _amount);
     }
 
