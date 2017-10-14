@@ -29,6 +29,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
     uint256 private extraDisputeBondRemainingToBePaidOut;
+    // We increase and decrease this value seperate from the totalSupply as we do not want to count potentional infalitonary bonuses from the migration reward
     uint256 private repAvailableForExtraBondPayouts;
 
     mapping (address => uint256) private validityBondInAttoeth;

@@ -48,7 +48,7 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
         return true;
     }
 
-    // NOTE: The UI should warn users about doing this before REP has migrated fully out of the forking universe in order to get their extra payout, which is sourced from REP migrated to other Universes. They can always call again however and there is no penalty for waiting (In fact they are rewarded for waiting)
+    // NOTE: The UI should warn users about doing this before REP has migrated fully out of the forking universe in order to get their extra payout, which is sourced from REP migrated to other Universes. There is no penalty for waiting (In fact waiting will only ever get them a greater payout)
     function withdrawToUniverse(IUniverse _shadyUniverse) public returns (bool) {
         require(msg.sender == bondHolder);
         IUniverse _universe = getUniverse();
@@ -61,6 +61,8 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
         uint256 _amountToTransfer = _reputationToken.balanceOf(this);
         IReputationToken _destinationReputationToken = _legitUniverse.getReputationToken();
         _reputationToken.migrateOut(_destinationReputationToken, this, _amountToTransfer);
+        // We recalculate the amount since migrating may have earned us a bonus
+        _amountToTransfer = _destinationReputationToken.balanceOf(this);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
         uint256 _amountMinted = mintRepTokensForBondMigration(_destinationReputationToken);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountMinted);
