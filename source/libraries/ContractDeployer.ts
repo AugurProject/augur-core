@@ -8,7 +8,7 @@ import * as EthjsQuery from "ethjs-query";
 // TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
 import { Contract, parseAbiIntoMethods } from "./AbiParser";
-import { generateTestAccounts, padAndHexlify, stringTo32ByteHex } from "./HelperFunctions";
+import { generateTestAccounts, padAndHexlify, stringTo32ByteHex, waitForTransactionToBeSealed } from "./HelperFunctions";
 import { CompilerOutputContracts } from "solc";
 
 export class ContractDeployer {
@@ -102,12 +102,9 @@ export class ContractDeployer {
         } else {
             transactionHash = await contractBuilder.new();
         }
+        await waitForTransactionToBeSealed(this.ethjsQuery, transactionHash);
         const receipt: ContractReceipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
         this.transactionReceipts[signatureKey] = receipt;
-        // if (signatureKey == "Market") {
-        //     console.log(transactionHash);
-        //     console.log(receipt);
-        // }
         this.contracts[lookupKey] = await contractBuilder.at(receipt.contractAddress);
 
         return this.contracts[lookupKey];
@@ -199,8 +196,9 @@ export class ContractDeployer {
     private async createGenesisUniverse(): Promise<ContractBlockchainData> {
         const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0], gas: this.gasAmount });
         const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gas: this.gasAmount });
-        const receiptAddress = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify("Universe")}`);
-        const receipt = await this.ethjsQuery.getTransactionReceipt(receiptAddress);
+        const transactionHash = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify("Universe")}`);
+        await waitForTransactionToBeSealed(this.ethjsQuery, transactionHash);
+        const receipt: ContractReceipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
         const universe = await universeBuilder.at(receipt.contractAddress);
         await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
         return universe;
@@ -223,6 +221,7 @@ export class ContractDeployer {
 
     private async createMarket(universeAddress: string, numOutcomes: number, endTime: number, feePerEthInWei: number, denominationToken: string, designatedReporter: string, numTicks: number): Promise<Contract> {
         const constant = { constant: true };
+
         const universe = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Universe"], { to: universeAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
         const marketFeeCalculator = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["MarketFeeCalculator"], { to: this.contracts["MarketFeeCalculator"].address, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
         const legacyReputationToken = await parseAbiIntoMethods(this.ethjsQuery, this.signatures['LegacyRepContract'], { to: this.contracts['LegacyRepContract'].address, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
