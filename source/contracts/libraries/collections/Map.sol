@@ -6,7 +6,7 @@ import 'libraries/Initializable.sol';
 
 
 contract Map is DelegationTarget ,Ownable, Initializable {
-    mapping(bytes32 => address) private items;
+    mapping(bytes32 => bytes32) private items;
     uint256 private count;
 
     function initialize(address _owner) public beforeInitialized returns (bool) {
@@ -15,13 +15,17 @@ contract Map is DelegationTarget ,Ownable, Initializable {
         return true;
     }
 
-    function add(bytes32 _key, address _value) public onlyOwner returns (bool) {
+    function add(bytes32 _key, bytes32 _value) public onlyOwner returns (bool) {
         if (contains(_key)) {
             return false;
         }
         items[_key] = _value;
         count += 1;
         return true;
+    }
+
+    function addAsAddress(bytes32 _key, address _value) public onlyOwner returns (bool) {
+        return add(_key, bytes32(_value));
     }
 
     function remove(bytes32 _key) public onlyOwner returns (bool) {
@@ -33,18 +37,26 @@ contract Map is DelegationTarget ,Ownable, Initializable {
         return true;
     }
 
-    function getValueOrZero(bytes32 _key) public view returns (address) {
+    function getValueOrZero(bytes32 _key) public view returns (bytes32) {
         return items[_key];
     }
 
-    function get(bytes32 _key) public view returns (address) {
-        address _value = items[_key];
-        require(_value != address(0));
+    function get(bytes32 _key) public view returns (bytes32) {
+        bytes32 _value = items[_key];
+        require(_value != bytes32(0));
         return _value;
     }
 
+    function getAsAddressOrZero(bytes32 _key) public view returns (address) {
+        return address(getValueOrZero(_key));
+    }
+
+    function getAsAddress(bytes32 _key) public view returns (address) {
+        return address(get(_key));
+    }
+
     function contains(bytes32 _key) public view returns (bool) {
-        return items[_key] != address(0);
+        return items[_key] != bytes32(0);
     }
 
     function getCount() public view returns (uint256) {

@@ -12,7 +12,7 @@ contract MapHelper {
         map = MapFactory(_controller.lookup("MapFactory")).createMap(_controller, this);
     }
 
-    function add(bytes32 _key, address _value) public returns (bool) {
+    function add(bytes32 _key, bytes32 _value) public returns (bool) {
         return map.add(_key, _value);
     }
 
@@ -20,11 +20,11 @@ contract MapHelper {
         return map.remove(_key);
     }
 
-    function getValueOrZero(bytes32 _key) public view returns (address) {
+    function getValueOrZero(bytes32 _key) public view returns (bytes32) {
         return map.getValueOrZero(_key);
     }
 
-    function get(bytes32 _key) public view returns (address) {
+    function get(bytes32 _key) public view returns (bytes32) {
         return map.get(_key);
     }
 
@@ -34,5 +34,19 @@ contract MapHelper {
 
     function getCount() public view returns (uint256) {
         return map.getCount();
+    }
+
+    // Address casting
+
+    function addAsAddress(bytes32 _key, address _value) public returns (bool) {
+        return map.addAsAddress(_key, _value);
+    }
+
+    function getAsAddressOrZero(bytes32 _key) public view returns (address) {
+        return map.getAsAddressOrZero(_key);
+    }
+
+    function getAsAddress(bytes32 _key) public view returns (address) {
+        return map.getAsAddress(_key);
     }
 }

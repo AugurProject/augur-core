@@ -278,10 +278,10 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function getStakeToken(uint256[] _payoutNumerators, bool _invalid) public returns (IStakeToken) {
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
-        IStakeToken _stakeToken = IStakeToken(stakeTokens.getValueOrZero(_payoutDistributionHash));
+        IStakeToken _stakeToken = IStakeToken(stakeTokens.getAsAddressOrZero(_payoutDistributionHash));
         if (address(_stakeToken) == NULL_ADDRESS) {
             _stakeToken = StakeTokenFactory(controller.lookup("StakeTokenFactory")).createStakeToken(controller, this, _payoutNumerators, _invalid);
-            stakeTokens.add(_payoutDistributionHash, _stakeToken);
+            stakeTokens.addAsAddress(_payoutDistributionHash, _stakeToken);
         }
         return _stakeToken;
     }
@@ -338,7 +338,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function getStakeTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public view returns (IStakeToken) {
-        return IStakeToken(stakeTokens.getValueOrZero(_payoutDistributionHash));
+        return IStakeToken(stakeTokens.getAsAddressOrZero(_payoutDistributionHash));
     }
 
     //
@@ -390,7 +390,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function getFinalWinningStakeToken() public view returns (IStakeToken) {
-        return IStakeToken(stakeTokens.getValueOrZero(finalPayoutDistributionHash));
+        return IStakeToken(stakeTokens.getAsAddressOrZero(finalPayoutDistributionHash));
     }
 
     function getShareToken(uint8 _outcome)  public view returns (IShareToken) {
@@ -431,7 +431,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         }
         IStakeToken _shadyStakeToken = IStakeToken(_shadyTarget);
         bytes32 _shadyId = _shadyStakeToken.getPayoutDistributionHash();
-        IStakeToken _stakeToken = IStakeToken(stakeTokens.getValueOrZero(_shadyId));
+        IStakeToken _stakeToken = IStakeToken(stakeTokens.getAsAddressOrZero(_shadyId));
         return _stakeToken == _shadyStakeToken;
     }
 
