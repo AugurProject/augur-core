@@ -53,12 +53,12 @@ def proceedToRound2Reporting(testFixture, universe, market, makeReport, designat
     if (market.getReportingState() != testFixture.contracts['Constants'].ROUND1_REPORTING()):
         proceedToRound1Reporting(testFixture, universe, market, makeReport, designatedDisputer, reportOutcomes, designatedDisputeOutcomes)
 
-    reportingToken = testFixture.getReportingToken(market, round1ReportOutcomes)
+    stakeToken = testFixture.getStakeToken(market, round1ReportOutcomes)
 
     # We make one report by the round1Reporter
-    assert reportingToken.buy(1, sender=round1Reporter)
+    assert stakeToken.buy(1, sender=round1Reporter)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-    assert tentativeWinner == reportingToken.getPayoutDistributionHash()
+    assert tentativeWinner == stakeToken.getPayoutDistributionHash()
 
     testFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
@@ -79,17 +79,17 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
 
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
-    reportingTokenNo = testFixture.getReportingToken(market, round2ReportOutcomes)
-    reportingTokenYes = testFixture.getReportingToken(market, round1ReportDisputeOutcomes)
+    stakeTokenNo = testFixture.getStakeToken(market, round2ReportOutcomes)
+    stakeTokenYes = testFixture.getStakeToken(market, round1ReportDisputeOutcomes)
 
     # If we buy the delta between outcome stakes that will be sufficient to make the outcome win
     marketExtensions = testFixture.contracts["MarketExtensions"]
-    noStake = marketExtensions.getPayoutDistributionHashStake(market.address, reportingTokenNo.getPayoutDistributionHash())
-    yesStake = marketExtensions.getPayoutDistributionHashStake(market.address, reportingTokenYes.getPayoutDistributionHash())
+    noStake = marketExtensions.getPayoutDistributionHashStake(market.address, stakeTokenNo.getPayoutDistributionHash())
+    yesStake = marketExtensions.getPayoutDistributionHashStake(market.address, stakeTokenYes.getPayoutDistributionHash())
     stakeDelta = yesStake - noStake
-    reportingTokenNo.buy(stakeDelta + 1, sender=reporter)
+    stakeTokenNo.buy(stakeDelta + 1, sender=reporter)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-    assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
+    assert tentativeWinner == stakeTokenNo.getPayoutDistributionHash()
 
     # To progress into the LAST DISPUTE phase we move time forward
     testFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
@@ -123,10 +123,10 @@ def finalizeForkingMarket(reportingFixture, universe, market, finalizeByMigratio
     # Attempting to finalize the fork now will not succeed as a majority or REP has not yet migrated and fork end time has not been reached
     assert market.tryFinalize() == 0
 
-    reportingTokenNo = reportingFixture.getReportingToken(market, secondReportOutcomes)
-    reportingTokenYes = reportingFixture.getReportingToken(market, round1ReportOutcomes)
+    stakeTokenNo = reportingFixture.getStakeToken(market, secondReportOutcomes)
+    stakeTokenYes = reportingFixture.getStakeToken(market, round1ReportOutcomes)
 
-    winningTokenAddress = reportingTokenYes.address
+    winningTokenAddress = stakeTokenYes.address
 
     if (finalizeByMigration):
         # 2 Testers move their combined REP to the NO universe
@@ -138,7 +138,7 @@ def finalizeForkingMarket(reportingFixture, universe, market, finalizeByMigratio
         reputationToken.migrateOut(noUniverseReputationToken.address, noMigratorAddress2, reputationToken.balanceOf(noMigratorAddress2), sender = noMigratorKey2)
         assert not reputationToken.balanceOf(noMigratorAddress2)
         assert noUniverseReputationToken.balanceOf(noMigratorAddress2) == tester2Balance
-        winningTokenAddress = reportingTokenNo.address
+        winningTokenAddress = stakeTokenNo.address
     else:
         # Time marches on past the fork end time
         reportingFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1
@@ -148,4 +148,4 @@ def finalizeForkingMarket(reportingFixture, universe, market, finalizeByMigratio
 
     # The market is now finalized
     assert market.getReportingState() == reportingFixture.contracts['Constants'].FINALIZED()
-    assert market.getFinalWinningReportingToken() == winningTokenAddress
+    assert market.getFinalWinningStakeToken() == winningTokenAddress

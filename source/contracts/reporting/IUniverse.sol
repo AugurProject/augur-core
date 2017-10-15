@@ -5,7 +5,7 @@ import 'libraries/Typed.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IReportingToken.sol';
+import 'reporting/IStakeToken.sol';
 
 
 contract IUniverse is Typed {
@@ -37,7 +37,7 @@ contract IUniverse is Typed {
     function isParentOf(IUniverse _shadyChild) public view returns (bool);
     function isContainerForReportingWindow(Typed _shadyTarget) public view returns (bool);
     function isContainerForMarket(Typed _shadyTarget) public view returns (bool);
-    function isContainerForReportingToken(Typed _shadyTarget) public view returns (bool);
+    function isContainerForStakeToken(Typed _shadyTarget) public view returns (bool);
     function isContainerForShareToken(Typed _shadyTarget) public view returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);
     function incrementOpenInterest(uint256 _amount) public returns (bool);

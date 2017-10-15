@@ -313,11 +313,11 @@ class ContractsFixture:
         assert universe.getTypeName() == stringToBytes('Universe')
         return universe
 
-    def getReportingToken(self, market, payoutDistribution, invalid=False):
-        reportingTokenAddress = market.getReportingToken(payoutDistribution, invalid)
-        assert reportingTokenAddress
-        reportingToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ReportingToken']), reportingTokenAddress)
-        return reportingToken
+    def getStakeToken(self, market, payoutDistribution, invalid=False):
+        stakeTokenAddress = market.getStakeToken(payoutDistribution, invalid)
+        assert stakeTokenAddress
+        stakeToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['StakeToken']), stakeTokenAddress)
+        return stakeToken
 
     def getShareToken(self, market, outcome):
         shareTokenAddress = market.getShareToken(outcome)
@@ -326,10 +326,10 @@ class ContractsFixture:
         return shareToken
 
     def designatedReport(self, market, payoutDistribution, reporterKey, invalid=False):
-        reportingToken = self.getReportingToken(market, payoutDistribution, invalid)
+        stakeToken = self.getStakeToken(market, payoutDistribution, invalid)
         universe = self.applySignature('Universe', market.getUniverse())
         designatedReportStake = universe.getDesignatedReportStake()
-        return reportingToken.buy(designatedReportStake, sender=reporterKey)
+        return stakeToken.buy(designatedReportStake, sender=reporterKey)
 
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
         payoutDistributionHash = market.derivePayoutDistributionHash(payoutDistribution, False)

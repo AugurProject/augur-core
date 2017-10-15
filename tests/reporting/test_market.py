@@ -8,8 +8,8 @@ tester.STARTGAS = long(6.7 * 10**6)
 
 def test_market_creation(contractsFixture, universe, cash, market):
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    shadyReportingToken = contractsFixture.upload('../source/contracts/reporting/ReportingToken.sol', 'shadyReportingToken')
-    shadyReportingToken.initialize(market.address, [0,10**18])
+    shadyStakeToken = contractsFixture.upload('../source/contracts/reporting/StakeToken.sol', 'shadyStakeToken')
+    shadyStakeToken.initialize(market.address, [0,10**18])
 
     # TODO: When require is re-enabled uncomment this test
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
@@ -22,5 +22,5 @@ def test_market_creation(contractsFixture, universe, cash, market):
     assert reportingWindow.getReputationToken() == universe.getReputationToken()
     assert market.getFinalPayoutDistributionHash() == stringToBytes("")
     assert market.getReportingState() == contractsFixture.contracts['Constants'].PRE_REPORTING()
-    assert market.isContainerForReportingToken(shadyReportingToken.address) == 0
+    assert market.isContainerForStakeToken(shadyStakeToken.address) == 0
     assert market.getDesignatedReportDueTimestamp() == market.getEndTime() + timedelta(days=3).total_seconds()

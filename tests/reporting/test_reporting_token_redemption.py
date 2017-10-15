@@ -20,7 +20,7 @@ def test_one_market_one_correct_report(localFixture, universe, market):
     # We're now in the DESIGNATED DISPUTE PHASE
     assert market.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
 
-    expectedReportingTokenBalance = universe.getDesignatedReportStake()
+    expectedStakeTokenBalance = universe.getDesignatedReportStake()
 
     # Time passes until the end of the reporting window
     localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
@@ -28,9 +28,9 @@ def test_one_market_one_correct_report(localFixture, universe, market):
     # Finalize the market
     market.tryFinalize()
 
-    # The designated reporter may redeem their reporting tokens which were purchased to make the designated report
-    reportingToken = localFixture.getReportingToken(market, [0, 10**18])
-    assert reportingToken.balanceOf(tester.a0) == expectedReportingTokenBalance
+    # The designated reporter may redeem their stake tokens which were purchased to make the designated report
+    stakeToken = localFixture.getStakeToken(market, [0, 10**18])
+    assert stakeToken.balanceOf(tester.a0) == expectedStakeTokenBalance
 
     expectedREPBalance = initialREPBalance
 
@@ -38,8 +38,8 @@ def test_one_market_one_correct_report(localFixture, universe, market):
     assert reputationToken.balanceOf(tester.a0) == expectedREPBalance
 
     # We'll redeem the winning tokens we have on the market and confirm we get that amount returned in REP
-    assert reportingToken.redeemWinningTokens()
-    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + expectedReportingTokenBalance
+    assert stakeToken.redeemWinningTokens()
+    assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + expectedStakeTokenBalance
 
 def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe, market):
     cash = localFixture.contracts["Cash"]
@@ -77,9 +77,9 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     # Finalize the first market
     market.tryFinalize()
 
-    # The market1 designated reporter may redeem their reporting tokens which were purchased to make the designated report
-    reportingToken = localFixture.getReportingToken(market, [0, 10**18])
-    assert reportingToken.balanceOf(tester.a0) == designatedReportStake
+    # The market1 designated reporter may redeem their stake tokens which were purchased to make the designated report
+    stakeToken = localFixture.getStakeToken(market, [0, 10**18])
+    assert stakeToken.balanceOf(tester.a0) == designatedReportStake
 
     expectedREPBalance = initialREPBalance
 
@@ -88,24 +88,24 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
 
     # If we try to redeem tokens and recieve trading fees now we'll get a failure since not all markets are finalized
     with raises(TransactionFailed):
-        reportingToken.redeemWinningTokens()
+        stakeToken.redeemWinningTokens()
 
     # We'll redeem the winning tokens we have on the market and forgo fees and confirm we get that amount returned in REP
     initialETHBalance = localFixture.contracts['Utils'].getETHBalance(tester.a0)
-    assert reportingToken.redeemWinningTokens(True)
+    assert stakeToken.redeemWinningTokens(True)
     assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + designatedReportStake
     assert localFixture.contracts['Utils'].getETHBalance(tester.a0) == initialETHBalance
 
     # If we redeem the second tester's tokens they'll get ALL of the fees on the reporting window now and their normal share of REP
     market2.tryFinalize()
-    reportingToken = localFixture.getReportingToken(market2, [0, 10**18])
-    assert reportingToken.balanceOf(tester.a0) == designatedReportStake
+    stakeToken = localFixture.getStakeToken(market2, [0, 10**18])
+    assert stakeToken.balanceOf(tester.a0) == designatedReportStake
 
     initialREPBalance = reputationToken.balanceOf(tester.a0)
 
     # We'll redeem the winning tokens we have on the market and confirm we get that amount returned in REP and all the fees in the reporting window
     expectedETHBalance = localFixture.contracts['Utils'].getETHBalance(tester.a0) + cash.balanceOf(reportingWindow.address)
-    assert reportingToken.redeemWinningTokens()
+    assert stakeToken.redeemWinningTokens()
     assert reputationToken.balanceOf(tester.a0) == initialREPBalance + designatedReportStake
     assert localFixture.contracts['Utils'].getETHBalance(tester.a0) == expectedETHBalance
 
@@ -117,7 +117,7 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     (3, 2),
     (3, 1),
 ])
-def test_reporting_token_redemption(localFixture, universe, market, numReports, numCorrect):
+def test_stake_token_redemption(localFixture, universe, market, numReports, numCorrect):
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = localFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
 
@@ -132,15 +132,15 @@ def test_reporting_token_redemption(localFixture, universe, market, numReports, 
 
 def doReports(fixture, market, numReporters, numCorrect):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
-    reportingTokenWinner = fixture.getReportingToken(market, [0,10**18])
-    reportingTokenLoser = fixture.getReportingToken(market, [10**18,0])
+    stakeTokenWinner = fixture.getStakeToken(market, [0,10**18])
+    stakeTokenLoser = fixture.getStakeToken(market, [10**18,0])
 
     for i in range(0, numReporters):
         testerKey = fixture.testerKey[i]
         if numCorrect > 0:
-            reportingTokenWinner.buy(10, sender=testerKey)
+            stakeTokenWinner.buy(10, sender=testerKey)
         else:
-            reportingTokenLoser.buy(1, sender=testerKey)
+            stakeTokenLoser.buy(1, sender=testerKey)
         numCorrect -= 1
 
     fixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
@@ -150,12 +150,12 @@ def confirmPayouts(fixture, market, numCorrectReporters, noShowBond):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = fixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     universe = fixture.applySignature('Universe', market.getUniverse())
-    reportingToken = fixture.getReportingToken(market, [0,10**18])
+    stakeToken = fixture.getStakeToken(market, [0,10**18])
 
     for i in range(0, numCorrectReporters):
         testerAddress = fixture.testerAddress[i]
         initialREPBalance = reputationToken.balanceOf(testerAddress)
-        assert reportingToken.redeemWinningTokens(sender=fixture.testerKey[i])
+        assert stakeToken.redeemWinningTokens(sender=fixture.testerKey[i])
         expectedRep = initialREPBalance + 10
         if (i == 0):
             expectedRep += noShowBond

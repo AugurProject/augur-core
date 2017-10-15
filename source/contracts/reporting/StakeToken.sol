@@ -1,21 +1,21 @@
 pragma solidity 0.4.17;
 
 
-import 'reporting/IReportingToken.sol';
+import 'reporting/IStakeToken.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/Typed.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
-import 'reporting/IReportingToken.sol';
+import 'reporting/IStakeToken.sol';
 import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
-contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IReportingToken {
+contract StakeToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IStakeToken {
     using SafeMathUint256 for uint256;
 
     IMarket public market;
@@ -67,7 +67,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     }
 
     function buyTokens(address _reporter, uint256 _attotokens) private afterInitialized returns (bool) {
-        require(market.isContainerForReportingToken(this));
+        require(market.isContainerForStakeToken(this));
         getReputationToken().trustedTransfer(_reporter, this, _attotokens);
         mint(_reporter, _attotokens);
         bytes32 _payoutDistributionHash = getPayoutDistributionHash();
@@ -76,7 +76,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     } 
 
     function redeemDisavowedTokens(address _reporter) public afterInitialized returns (bool) {
-        require(!market.isContainerForReportingToken(this));
+        require(!market.isContainerForStakeToken(this));
         uint256 _reputationSupply = getReputationToken().balanceOf(this);
         uint256 _attotokens = balances[_reporter];
         uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
@@ -87,7 +87,7 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     function redeemForkedTokens() public afterInitialized returns (bool) {
-        require(market.isContainerForReportingToken(this));
+        require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() == market);
         IReputationToken _sourceReputationToken = getReputationToken();
         uint256 _reputationSupply = _sourceReputationToken.balanceOf(this);
@@ -105,9 +105,9 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
     // CONSIDER: If all markets are finalized should we allow forgoing fees?
     function redeemWinningTokens(bool forgoFees) public afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
-        require(market.isContainerForReportingToken(this));
+        require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() != market);
-        require(market.getFinalWinningReportingToken() == this);
+        require(market.getFinalWinningStakeToken() == this);
         IReportingWindow _reportingWindow = market.getReportingWindow();
         if (!forgoFees) {
             require(_reportingWindow.allMarketsFinalized());
@@ -126,9 +126,9 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
 
     function migrateLosingTokens() public afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
-        require(market.isContainerForReportingToken(this));
+        require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() != market);
-        require(market.getFinalWinningReportingToken() != this);
+        require(market.getFinalWinningStakeToken() != this);
         migrateLosingTokenRepToDisputeBond(market.getDesignatedReporterDisputeBondToken());
         migrateLosingTokenRepToDisputeBond(market.getRound1ReportersDisputeBondToken());
         migrateLosingTokenRepToWinningToken();
@@ -158,12 +158,12 @@ contract ReportingToken is DelegationTarget, Typed, Initializable, VariableSuppl
         if (_balance == 0) {
             return true;
         }
-        _reputationToken.transfer(market.getFinalWinningReportingToken(), _balance);
+        _reputationToken.transfer(market.getFinalWinningStakeToken(), _balance);
         return true;
     }
 
     function getTypeName() public view returns (bytes32) {
-        return "ReportingToken";
+        return "StakeToken";
     }
 
     function getUniverse() public view returns (IUniverse) {

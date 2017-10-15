@@ -67,12 +67,12 @@ contract MarketExtensions {
             return 0;
         }
 
-        IReportingToken _reportingToken = _market.getReportingTokenOrZeroByPayoutDistributionHash(_payoutDistributionHash);
-        if (address(_reportingToken) == address(0)) {
+        IStakeToken _stakeToken = _market.getStakeTokenOrZeroByPayoutDistributionHash(_payoutDistributionHash);
+        if (address(_stakeToken) == address(0)) {
             return 0;
         }
 
-        int256 _payoutStake = int256(_reportingToken.totalSupply());
+        int256 _payoutStake = int256(_stakeToken.totalSupply());
 
         IDisputeBond _designatedDisputeBond = _market.getDesignatedReporterDisputeBondToken();
         IDisputeBond _round1DisputeBond = _market.getRound1ReportersDisputeBondToken();
