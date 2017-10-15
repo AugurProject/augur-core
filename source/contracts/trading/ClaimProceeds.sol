@@ -23,12 +23,12 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
         require(_market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(block.timestamp > _market.getFinalizationTime() + Reporting.claimProceedsWaitTime());
 
-        IReportingToken _winningReportingToken = _market.getFinalWinningReportingToken();
+        IStakeToken _winningStakeToken = _market.getFinalWinningStakeToken();
 
         for (uint8 _outcome = 0; _outcome < _market.getNumberOfOutcomes(); ++_outcome) {
             IShareToken _shareToken = _market.getShareToken(_outcome);
             uint256 _numberOfShares = _shareToken.balanceOf(msg.sender);
-            var (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _winningReportingToken, _outcome, _numberOfShares);
+            var (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _winningStakeToken, _outcome, _numberOfShares);
 
             if (_proceeds > 0) {
                 _market.getUniverse().decrementOpenInterest(_proceeds);
@@ -56,16 +56,16 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
         return true;
     }
 
-    function divideUpWinnings(IMarket _market, IReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
-        _proceeds = calculateProceeds(_winningReportingToken, _outcome, _numberOfShares);
+    function divideUpWinnings(IMarket _market, IStakeToken _winningStakeToken, uint8 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
+        _proceeds = calculateProceeds(_winningStakeToken, _outcome, _numberOfShares);
         _creatorShare = calculateCreatorFee(_market, _proceeds);
         _reporterShare = calculateReportingFee(_market, _proceeds);
         _shareHolderShare = _proceeds.sub(_creatorShare).sub(_reporterShare);
         return (_proceeds, _shareHolderShare, _creatorShare, _reporterShare);
     }
 
-    function calculateProceeds(IReportingToken _winningReportingToken, uint8 _outcome, uint256 _numberOfShares) public view returns (uint256) {
-        uint256 _payoutNumerator = _winningReportingToken.getPayoutNumerator(_outcome);
+    function calculateProceeds(IStakeToken _winningStakeToken, uint8 _outcome, uint256 _numberOfShares) public view returns (uint256) {
+        uint256 _payoutNumerator = _winningStakeToken.getPayoutNumerator(_outcome);
         return _numberOfShares.mul(_payoutNumerator);
     }
 

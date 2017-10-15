@@ -67,7 +67,7 @@ def test_universe_contains_reporting_win(localFixture, universe):
     assert universe.isContainerForReportingWindow(other_curr_reporting_win) == False
 
     # Pass in non ReportingWindow object address
-    nonReportingWindow = localFixture.upload('../source/contracts/reporting/ReportingToken.sol', 'nonReportingWindow')
+    nonReportingWindow = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'nonReportingWindow')
     assert universe.isContainerForReportingWindow(nonReportingWindow.address) == False
 
     # create reporting windo with startTime of 0
@@ -77,7 +77,7 @@ def test_universe_contains_reporting_win(localFixture, universe):
 
 def test_universe_contains_dispute_bond_token(localFixture, universe, market):
     # Pass in non Dispute Bond Token object address
-    nonDisputeBondToken = localFixture.upload('../source/contracts/reporting/ReportingToken.sol', 'nonReportingWindow')
+    nonDisputeBondToken = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'nonReportingWindow')
     assert universe.isContainerForDisputeBondToken(nonDisputeBondToken.address) == False
 
     # Create bond for market not in this universe
@@ -91,9 +91,9 @@ def test_universe_contains_dispute_bond_token(localFixture, universe, market):
 
     # TODO Get correct dispute bond token from active market in correct state
 
-    # Since we have non Market/ReportingToken/ShareToken lets test the getTypeName() tests
+    # Since we have non Market/StakeToken/ShareToken lets test the getTypeName() tests
     assert universe.isContainerForMarket(nonDisputeBondToken.address) == False
-    assert universe.isContainerForReportingToken(nonDisputeBondToken.address) == False
+    assert universe.isContainerForStakeToken(nonDisputeBondToken.address) == False
     assert universe.isContainerForShareToken(nonDisputeBondToken.address) == False
 
 def test_universe_contains_market(localFixture, cash, market):
@@ -113,20 +113,20 @@ def test_universe_contains_market(localFixture, cash, market):
     uni_market = localFixture.createReasonableBinaryMarket(universe, cash)
     assert universe.isContainerForMarket(uni_market.address)
 
-def test_universe_reporting_token(localFixture, universe, cash, market):
-    reporting_token_factory = localFixture.upload('../source/contracts/factories/ReportingTokenFactory.sol', 'reporting_token_factory')
+def test_universe_stake_token(localFixture, universe, cash, market):
+    stake_token_factory = localFixture.upload('../source/contracts/factories/StakeTokenFactory.sol', 'stake_token_factory')
 
-    # Reporting token not associated with this universe market
-    different_reporting_token = reporting_token_factory.createReportingToken(localFixture.contracts['Controller'].address, market.address, [0, 10**18])
-    assert universe.isContainerForReportingToken(different_reporting_token) == False
+    # Stake token not associated with this universe market
+    different_stake_token = stake_token_factory.createStakeToken(localFixture.contracts['Controller'].address, market.address, [0, 10**18])
+    assert universe.isContainerForStakeToken(different_stake_token) == False
 
-    # TODO add test for Reporting token associated market address of 0
+    # TODO add test for Stake token associated market address of 0
 
-    # Create market and test it's reporting token
+    # Create market and test it's stake token
     uni_market = localFixture.createReasonableBinaryMarket(universe, cash)
-    good_reporting_token = localFixture.getReportingToken(uni_market, [0,10**18])
+    good_stake_token = localFixture.getStakeToken(uni_market, [0,10**18])
     assert universe.isContainerForMarket(uni_market.address)
-    assert universe.isContainerForReportingToken(good_reporting_token.address)
+    assert universe.isContainerForStakeToken(good_stake_token.address)
 
 def test_universe_contains_share_token(localFixture, universe, cash, market):
     share_token_factory = localFixture.upload('../source/contracts/factories/ShareTokenFactory.sol', 'share_token_factory')
@@ -137,7 +137,7 @@ def test_universe_contains_share_token(localFixture, universe, cash, market):
 
     # TODO add test for Share token associated market address of 0
 
-    # Create market and test it's reporting token
+    # Create market and test it's stake token
     uni_market = localFixture.createReasonableBinaryMarket(universe, cash)
     good_share_token = localFixture.getShareToken(uni_market, 1)
     assert universe.isContainerForShareToken(good_share_token.address)

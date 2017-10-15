@@ -8,8 +8,8 @@ tester.STARTGAS = long(6.7 * 10**6)
 
 def test_reportingFullHappyPath(localFixture, universe, cash, market):
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
-    reportingTokenNo = localFixture.getReportingToken(market, [10**18,0])
-    reportingTokenYes = localFixture.getReportingToken(market, [0,10**18])
+    stakeTokenNo = localFixture.getStakeToken(market, [10**18,0])
+    stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
     reportingWindow = localFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
     expectedMarketCreatorFeePayout = universe.getValidityBond()
     reporterGasCosts = universe.getTargetReporterGasCosts()
@@ -17,7 +17,7 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
     # We can't yet report on the market as it's in the pre reporting phase
     assert market.getReportingState() == localFixture.contracts['Constants'].PRE_REPORTING()
     with raises(TransactionFailed, message="Reporting cannot be done in the PRE REPORTING state"):
-        reportingTokenNo.buy(100, sender=tester.k0)
+        stakeTokenNo.buy(100, sender=tester.k0)
 
     # Fast forward to one second after the next reporting window
     localFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
@@ -28,14 +28,14 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
     noShowBondCosts = 3 * localFixture.contracts['Constants'].DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND()
     # Both reporters report on the outcome. Tester 1 reports first, winning the no-show REP bond and and causing the YES outcome to be the tentative winner
     initialRound1ReporterETH = localFixture.contracts['Utils'].getETHBalance(tester.a1)
-    reportingTokenYes.buy(0, sender=tester.k1)
-    assert reportingTokenYes.balanceOf(tester.a1) == 2 * 10 ** 18
+    stakeTokenYes.buy(0, sender=tester.k1)
+    assert stakeTokenYes.balanceOf(tester.a1) == 2 * 10 ** 18
     assert reputationToken.balanceOf(tester.a1) == 1 * 10**6 * 10 **18
-    reportingTokenNo.buy(100, sender=tester.k0)
-    assert reportingTokenNo.balanceOf(tester.a0) == 100
+    stakeTokenNo.buy(100, sender=tester.k0)
+    assert stakeTokenNo.balanceOf(tester.a0) == 100
     assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10 **18 - 100 - noShowBondCosts
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-    assert tentativeWinner == reportingTokenYes.getPayoutDistributionHash()
+    assert tentativeWinner == stakeTokenYes.getPayoutDistributionHash()
 
     # The first reporter also recieves reporter gas fees
     assert localFixture.contracts['Utils'].getETHBalance(tester.a1) == initialRound1ReporterETH + reporterGasCosts
@@ -59,11 +59,11 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
 
     # Tester 2 reports for the NO outcome
     localFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
-    reportingTokenNo.buy(2, sender=tester.k2)
-    assert reportingTokenNo.balanceOf(tester.a2) == 2
+    stakeTokenNo.buy(2, sender=tester.k2)
+    assert stakeTokenNo.balanceOf(tester.a2) == 2
     assert reputationToken.balanceOf(tester.a2) == 10**6 * 10 **18 - 2
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-    assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
+    assert tentativeWinner == stakeTokenNo.getPayoutDistributionHash()
 
     # Move forward in time to put us in the LAST DISPUTE PHASE
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
@@ -112,14 +112,14 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
 
     # The market is now finalized and the NO outcome is the winner
     assert market.getReportingState() == localFixture.contracts['Constants'].FINALIZED()
-    assert market.getFinalWinningReportingToken() == reportingTokenNo.address
+    assert market.getFinalWinningStakeToken() == stakeTokenNo.address
 
     # Since the designated report was not invalid the market creator gets back the validity bond
     increaseInMarketCreatorBalance = localFixture.contracts['Utils'].getETHBalance(market.getOwner()) - initialMarketCreatorETHBalance
     assert increaseInMarketCreatorBalance == expectedMarketCreatorFeePayout
 
     # We can redeem forked REP on any universe we didn't dispute
-    assert reportingTokenNo.redeemForkedTokens(sender = tester.k0)
+    assert stakeTokenNo.redeemForkedTokens(sender = tester.k0)
     assert noUniverseReputationToken.balanceOf(tester.a0) == 8 * 10 ** 6 * 10 ** 18 - 11000 * 10 ** 18 - noShowBondCosts
 
 def test_designatedReportingHappyPath(localFixture, universe, market):
@@ -154,26 +154,26 @@ def test_round1ReportingHappyPath(makeReport, localFixture, universe, market):
     proceedToRound1Reporting(localFixture, universe, market, makeReport, tester.k1, [0,10**18], [10**18,0])
 
     # We make one report by Tester 2
-    reportingTokenYes = localFixture.getReportingToken(market, [0,10**18])
-    reportingTokenYes.buy(1, sender=tester.k2)
+    stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
+    stakeTokenYes.buy(1, sender=tester.k2)
     # If there ws no designated report he first reporter gets the no-show REP bond auto-staked on the outcome they're purchasing
-    expectedReportingTokenBalance = 1
+    expectedStakeTokenBalance = 1
     if (not makeReport):
-        expectedReportingTokenBalance += universe.getDesignatedReportNoShowBond()
+        expectedStakeTokenBalance += universe.getDesignatedReportNoShowBond()
 
-    assert reportingTokenYes.balanceOf(tester.a2) == expectedReportingTokenBalance
+    assert stakeTokenYes.balanceOf(tester.a2) == expectedStakeTokenBalance
 
     assert reputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18 - 1
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     if (makeReport):
         # The tentative winner will be the No outcome at first since we disputed Yes and have to stake on an outcome in that case
-        reportingTokenNo = localFixture.getReportingToken(market, [10**18,0])
-        assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
+        stakeTokenNo = localFixture.getStakeToken(market, [10**18,0])
+        assert tentativeWinner == stakeTokenNo.getPayoutDistributionHash()
         # If we buy the full designated bond amount we will be back to the YES outcome winning
-        reportingTokenYes.buy(localFixture.contracts['Constants'].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT(), sender=tester.k2)
+        stakeTokenYes.buy(localFixture.contracts['Constants'].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT(), sender=tester.k2)
         tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
 
-    assert tentativeWinner == reportingTokenYes.getPayoutDistributionHash()
+    assert tentativeWinner == stakeTokenYes.getPayoutDistributionHash()
 
     # To progress into the FIRST DISPUTE phase we move time forward
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
@@ -201,22 +201,22 @@ def test_round2ReportingHappyPath(localFixture, makeReport, universe, market):
 
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
-    reportingTokenNo = localFixture.getReportingToken(market, [10**18,0])
-    reportingTokenYes = localFixture.getReportingToken(market, [0,10**18])
+    stakeTokenNo = localFixture.getStakeToken(market, [10**18,0])
+    stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
 
     # When disputing the ROUND1 REPORT outcome enough was staked on the other outcome that it is now the winner
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-    assert tentativeWinner == reportingTokenYes.getPayoutDistributionHash()
+    assert tentativeWinner == stakeTokenYes.getPayoutDistributionHash()
 
     # If we buy the delta between outcome stakes that will be sufficient to make the outcome win
     marketExtensions = localFixture.contracts["MarketExtensions"]
-    noStake = marketExtensions.getPayoutDistributionHashStake(market.address, reportingTokenNo.getPayoutDistributionHash())
-    yesStake = marketExtensions.getPayoutDistributionHashStake(market.address, reportingTokenYes.getPayoutDistributionHash())
+    noStake = marketExtensions.getPayoutDistributionHashStake(market.address, stakeTokenNo.getPayoutDistributionHash())
+    yesStake = marketExtensions.getPayoutDistributionHashStake(market.address, stakeTokenYes.getPayoutDistributionHash())
     stakeDelta = yesStake - noStake
-    reportingTokenNo.buy(stakeDelta + 1, sender=tester.k3)
+    stakeTokenNo.buy(stakeDelta + 1, sender=tester.k3)
 
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-    assert tentativeWinner == reportingTokenNo.getPayoutDistributionHash()
+    assert tentativeWinner == stakeTokenNo.getPayoutDistributionHash()
 
     # To progress into the LAST DISPUTE phase we move time forward
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
@@ -308,8 +308,8 @@ def test_noReports(localFixture, pastDisputePhase, universe, market):
     assert market.getReportingState() == localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION()
 
     # We can try to report on the market, which will move it to the next reporting window where it will be back in ROUND1 REPORTING
-    reportingToken = localFixture.getReportingToken(market, [0,10**18])
-    assert reportingToken.buy(1, sender=tester.k2)
+    stakeToken = localFixture.getStakeToken(market, [0,10**18])
+    assert stakeToken.buy(1, sender=tester.k2)
 
     assert market.getReportingState() == localFixture.contracts['Constants'].ROUND1_REPORTING()
     assert market.getReportingWindow() != reportingWindow.address
@@ -323,12 +323,12 @@ def test_invalid_round1_report(localFixture, universe, cash, market):
     proceedToRound1Reporting(localFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
 
     # We make an invalid report
-    reportingTokenInvalid = localFixture.getReportingToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], True)
-    reportingTokenInvalid.buy(1, sender=tester.k2)
-    assert reportingTokenInvalid.balanceOf(tester.a2) == 1 + universe.getDesignatedReportNoShowBond()
+    stakeTokenInvalid = localFixture.getStakeToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], True)
+    stakeTokenInvalid.buy(1, sender=tester.k2)
+    assert stakeTokenInvalid.balanceOf(tester.a2) == 1 + universe.getDesignatedReportNoShowBond()
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
-    assert tentativeWinner == reportingTokenInvalid.getPayoutDistributionHash()
-    assert not reportingTokenInvalid.isValid()
+    assert tentativeWinner == stakeTokenInvalid.getPayoutDistributionHash()
+    assert not stakeTokenInvalid.isValid()
 
     # If we finalize the market it will be recorded as an invalid result
     initialReportingWindowCashBalance = cash.balanceOf(reportingWindow.address)

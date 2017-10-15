@@ -10,7 +10,7 @@ import 'factories/ReportingWindowFactory.sol';
 import 'factories/UniverseFactory.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
-import 'reporting/IReportingToken.sol';
+import 'reporting/IStakeToken.sol';
 import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
@@ -169,12 +169,12 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitReportingWindow.isContainerForMarket(_shadyMarket);
     }
 
-    function isContainerForReportingToken(Typed _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ReportingToken") {
+    function isContainerForStakeToken(Typed _shadyTarget) public view returns (bool) {
+        if (_shadyTarget.getTypeName() != "StakeToken") {
             return false;
         }
-        IReportingToken _shadyReportingToken = IReportingToken(_shadyTarget);
-        IMarket _shadyMarket = _shadyReportingToken.getMarket();
+        IStakeToken _shadyStakeToken = IStakeToken(_shadyTarget);
+        IMarket _shadyMarket = _shadyStakeToken.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
         }
@@ -182,7 +182,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
             return false;
         }
         IMarket _legitMarket = _shadyMarket;
-        return _legitMarket.isContainerForReportingToken(_shadyReportingToken);
+        return _legitMarket.isContainerForStakeToken(_shadyStakeToken);
     }
 
     function isContainerForShareToken(Typed _shadyTarget) public view returns (bool) {

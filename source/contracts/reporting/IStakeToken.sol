@@ -6,7 +6,7 @@ import 'libraries/token/ERC20.sol';
 import 'reporting/IMarket.sol';
 
 
-contract IReportingToken is Typed, ERC20 {
+contract IStakeToken is Typed, ERC20 {
     function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public returns (bool);
     function getMarket() public view returns (IMarket);
     function getPayoutNumerator(uint8 index) public view returns (uint256);

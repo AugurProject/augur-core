@@ -7,14 +7,14 @@ import 'libraries/Typed.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/Ownable.sol';
 import 'reporting/IUniverse.sol';
-import 'reporting/IReportingToken.sol';
+import 'reporting/IStakeToken.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IDisputeBond.sol';
 import 'trading/ICash.sol';
 import 'trading/IShareToken.sol';
 import 'extensions/MarketExtensions.sol';
 import 'factories/ShareTokenFactory.sol';
-import 'factories/ReportingTokenFactory.sol';
+import 'factories/StakeTokenFactory.sol';
 import 'factories/DisputeBondTokenFactory.sol';
 import 'libraries/token/ERC20Basic.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -38,7 +38,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     uint8 private numOutcomes;
     uint256 private marketCreationBlock;
     address private designatedReporterAddress;
-    mapping(bytes32 => IReportingToken) private reportingTokens;
+    mapping(bytes32 => IStakeToken) private stakeTokens;
     ICash private cash;
     IShareToken[] private shareTokens;
     uint256 private finalizationTime;
@@ -125,11 +125,11 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     function designatedReport() public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.DESIGNATED_REPORTING);
-        IReportingToken _shadyReportingToken = IReportingToken(msg.sender);
-        require(isContainerForReportingToken(_shadyReportingToken));
-        IReportingToken _reportingToken = _shadyReportingToken;
+        IStakeToken _shadyStakeToken = IStakeToken(msg.sender);
+        require(isContainerForStakeToken(_shadyStakeToken));
+        IStakeToken _stakeToken = _shadyStakeToken;
         designatedReportReceivedTime = block.timestamp;
-        tentativeWinningPayoutDistributionHash = _reportingToken.getPayoutDistributionHash();
+        tentativeWinningPayoutDistributionHash = _stakeToken.getPayoutDistributionHash();
         designatedReportPayoutHash = tentativeWinningPayoutDistributionHash;
         reportingWindow.updateMarketPhase();
         IReputationToken _reputationToken = reportingWindow.getReputationToken();
@@ -145,8 +145,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.designatedReporterDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, designatedReporterDisputeBondToken, Reporting.designatedReporterDisputeBondAmount());
         if (_attotokens > 0) {
-            IReportingToken _reportingToken = getReportingToken(_payoutNumerators, _invalid);
-            _reportingToken.trustedBuy(msg.sender, _attotokens);
+            IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
+            _stakeToken.trustedBuy(msg.sender, _attotokens);
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         }
@@ -162,8 +162,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         migrateReportingWindow(_newReportingWindow);
         if (_attotokens > 0) {
             require(derivePayoutDistributionHash(_payoutNumerators, _invalid) != tentativeWinningPayoutDistributionHash);
-            IReportingToken _reportingToken = getReportingToken(_payoutNumerators, _invalid);
-            _reportingToken.trustedBuy(msg.sender, _attotokens);
+            IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
+            _stakeToken.trustedBuy(msg.sender, _attotokens);
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         }
@@ -209,7 +209,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
         finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
         finalizationTime = block.timestamp;
-        transferIncorrectDisputeBondsToWinningReportingToken();
+        transferIncorrectDisputeBondsToWinningStakeToken();
         // The validity bond is paid to the owner in any valid outcome and the reporting window otherwise
         doFeePayout(isValid(), validityBondAttoeth);
         reportingWindow.updateMarketPhase();
@@ -263,27 +263,27 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     // Helpers
     //
 
-    function getReportingToken(uint256[] _payoutNumerators, bool _invalid) public returns (IReportingToken) {
+    function getStakeToken(uint256[] _payoutNumerators, bool _invalid) public returns (IStakeToken) {
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
-        IReportingToken _reportingToken = reportingTokens[_payoutDistributionHash];
-        if (address(_reportingToken) == NULL_ADDRESS) {
-            _reportingToken = ReportingTokenFactory(controller.lookup("ReportingTokenFactory")).createReportingToken(controller, this, _payoutNumerators, _invalid);
-            reportingTokens[_payoutDistributionHash] = _reportingToken;
+        IStakeToken _stakeToken = stakeTokens[_payoutDistributionHash];
+        if (address(_stakeToken) == NULL_ADDRESS) {
+            _stakeToken = StakeTokenFactory(controller.lookup("StakeTokenFactory")).createStakeToken(controller, this, _payoutNumerators, _invalid);
+            stakeTokens[_payoutDistributionHash] = _stakeToken;
         }
-        return _reportingToken;
+        return _stakeToken;
     }
 
-    function transferIncorrectDisputeBondsToWinningReportingToken() private returns (bool) {
+    function transferIncorrectDisputeBondsToWinningStakeToken() private returns (bool) {
         require(getReportingState() == ReportingState.FINALIZED);
         IReputationToken _reputationToken = reportingWindow.getReputationToken();
         if (getForkingMarket() == this) {
             return true;
         }
         if (address(designatedReporterDisputeBondToken) != NULL_ADDRESS && designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
-            _reputationToken.trustedTransfer(designatedReporterDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(designatedReporterDisputeBondToken));
+            _reputationToken.trustedTransfer(designatedReporterDisputeBondToken, getFinalWinningStakeToken(), _reputationToken.balanceOf(designatedReporterDisputeBondToken));
         }
         if (address(round1ReportersDisputeBondToken) != NULL_ADDRESS && round1ReportersDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
-            _reputationToken.trustedTransfer(round1ReportersDisputeBondToken, getFinalWinningReportingToken(), _reputationToken.balanceOf(round1ReportersDisputeBondToken));
+            _reputationToken.trustedTransfer(round1ReportersDisputeBondToken, getFinalWinningStakeToken(), _reputationToken.balanceOf(round1ReportersDisputeBondToken));
         }
         return true;
     }
@@ -297,9 +297,9 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return true;
     }
 
-    // AUDIT: This is called at the beginning of ReportingToken:buy. Look for reentrancy issues
+    // AUDIT: This is called at the beginning of StakeToken:buy. Look for reentrancy issues
     function round1ReporterCompensationCheck(address _reporter) public returns (uint256) {
-        require(isContainerForReportingToken(Typed(msg.sender)));
+        require(isContainerForStakeToken(Typed(msg.sender)));
         if (getReportingState() == ReportingState.DESIGNATED_REPORTING) {
             return 0;
         } else if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
@@ -324,8 +324,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return keccak256(_payoutNumerators, _invalid);
     }
 
-    function getReportingTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public view returns (IReportingToken) {
-        return reportingTokens[_payoutDistributionHash];
+    function getStakeTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public view returns (IStakeToken) {
+        return stakeTokens[_payoutDistributionHash];
     }
 
     //
@@ -376,8 +376,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return bestGuessSecondPlaceTentativeWinningPayoutDistributionHash;
     }
 
-    function getFinalWinningReportingToken() public view returns (IReportingToken) {
-        return reportingTokens[finalPayoutDistributionHash];
+    function getFinalWinningStakeToken() public view returns (IStakeToken) {
+        return stakeTokens[finalPayoutDistributionHash];
     }
 
     function getShareToken(uint8 _outcome)  public view returns (IShareToken) {
@@ -412,14 +412,14 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return getUniverse().getForkingMarket();
     }
 
-    function isContainerForReportingToken(Typed _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ReportingToken") {
+    function isContainerForStakeToken(Typed _shadyTarget) public view returns (bool) {
+        if (_shadyTarget.getTypeName() != "StakeToken") {
             return false;
         }
-        IReportingToken _shadyReportingToken = IReportingToken(_shadyTarget);
-        bytes32 _shadyId = _shadyReportingToken.getPayoutDistributionHash();
-        IReportingToken _reportingToken = reportingTokens[_shadyId];
-        return _reportingToken == _shadyReportingToken;
+        IStakeToken _shadyStakeToken = IStakeToken(_shadyTarget);
+        bytes32 _shadyId = _shadyStakeToken.getPayoutDistributionHash();
+        IStakeToken _stakeToken = stakeTokens[_shadyId];
+        return _stakeToken == _shadyStakeToken;
     }
 
     function isContainerForShareToken(Typed _shadyTarget) public view returns (bool) {
@@ -449,8 +449,8 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     // CONSIDER: Would it be helpful to add modifiers for this contract like "onlyAfterFinalized" that could protect a function such as this?
     function isValid() public view returns (bool) {
-        IReportingToken _winningReportingToken = getFinalWinningReportingToken();
-        return _winningReportingToken.isValid();
+        IStakeToken _winningStakeToken = getFinalWinningStakeToken();
+        return _winningStakeToken.isValid();
     }
 
     function getDesignatedReportDueTimestamp() public view returns (uint256) {

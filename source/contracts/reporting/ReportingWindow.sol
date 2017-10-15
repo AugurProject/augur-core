@@ -11,7 +11,7 @@ import 'libraries/collections/Set.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IReportingToken.sol';
+import 'reporting/IStakeToken.sol';
 import 'trading/ICash.sol';
 import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
@@ -35,7 +35,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
     uint256 private designatedReportNoShows;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
     RunningAverage.Data private reportingGasPrice;
-    uint256 private totalWinningReportingTokens;
+    uint256 private totalWinningStakeTokens;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -125,13 +125,13 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
             incorrectDesignatedReportMarketCount++;
         }
         finalizedMarkets.add(_market);
-        uint256 _totalWinningReportingTokens = _market.getFinalWinningReportingToken().totalSupply();
-        totalWinningReportingTokens = totalWinningReportingTokens.add(_totalWinningReportingTokens);
+        uint256 _totalWinningStakeTokens = _market.getFinalWinningStakeToken().totalSupply();
+        totalWinningStakeTokens = totalWinningStakeTokens.add(_totalWinningStakeTokens);
     }
 
     function noteReportingGasPrice(IMarket _market) public afterInitialized returns (bool) {
         require(markets.contains(_market));
-        require(_market.isContainerForReportingToken(Typed(msg.sender)));
+        require(_market.isContainerForStakeToken(Typed(msg.sender)));
         reportingGasPrice.record(tx.gasprice);
         return true;
     }
@@ -206,14 +206,14 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return markets.count == finalizedMarkets.count;
     }
 
-    function collectReportingFees(address _reporterAddress, uint256 _attoReportingTokens, bool _forgoFees) public returns (bool) {
-        IReportingToken _shadyReportingToken = IReportingToken(msg.sender);
-        require(isContainerForReportingToken(_shadyReportingToken));
+    function collectReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
+        IStakeToken _shadyStakeToken = IStakeToken(msg.sender);
+        require(isContainerForStakeToken(_shadyStakeToken));
         // NOTE: Will need to handle other denominations when that is implemented
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _balance = _cash.balanceOf(this);
-        uint256 _feePayoutShare = _balance.mul(_attoReportingTokens).div(totalWinningReportingTokens);
-        totalWinningReportingTokens = totalWinningReportingTokens.sub(_attoReportingTokens);
+        uint256 _feePayoutShare = _balance.mul(_attoStakeTokens).div(totalWinningStakeTokens);
+        totalWinningStakeTokens = totalWinningStakeTokens.sub(_attoStakeTokens);
         if (!_forgoFees && _feePayoutShare > 0) {
             _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
         }
@@ -288,15 +288,15 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return round2ReporterMarkets.count;
     }
 
-    function isContainerForReportingToken(Typed _shadyTarget) public afterInitialized view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ReportingToken") {
+    function isContainerForStakeToken(Typed _shadyTarget) public afterInitialized view returns (bool) {
+        if (_shadyTarget.getTypeName() != "StakeToken") {
             return false;
         }
-        IReportingToken _shadyReportingToken = IReportingToken(_shadyTarget);
-        IMarket _shadyMarket = _shadyReportingToken.getMarket();
+        IStakeToken _shadyStakeToken = IStakeToken(_shadyTarget);
+        IMarket _shadyMarket = _shadyStakeToken.getMarket();
         require(isContainerForMarket(_shadyMarket));
         IMarket _market = _shadyMarket;
-        return _market.isContainerForReportingToken(_shadyReportingToken);
+        return _market.isContainerForStakeToken(_shadyStakeToken);
     }
 
     function isContainerForMarket(Typed _shadyTarget) public afterInitialized view returns (bool) {
