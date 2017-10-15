@@ -24,7 +24,7 @@ contract Map is DelegationTarget ,Ownable, Initializable {
         return true;
     }
 
-    function addAsAddress(bytes32 _key, address _value) public onlyOwner returns (bool) {
+    function add(bytes32 _key, address _value) public onlyOwner returns (bool) {
         return add(_key, bytes32(_value));
     }
 

@@ -281,7 +281,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         IStakeToken _stakeToken = IStakeToken(stakeTokens.getAsAddressOrZero(_payoutDistributionHash));
         if (address(_stakeToken) == NULL_ADDRESS) {
             _stakeToken = StakeTokenFactory(controller.lookup("StakeTokenFactory")).createStakeToken(controller, this, _payoutNumerators, _invalid);
-            stakeTokens.addAsAddress(_payoutDistributionHash, _stakeToken);
+            stakeTokens.add(_payoutDistributionHash, _stakeToken);
         }
         return _stakeToken;
     }

@@ -39,7 +39,7 @@ contract MapHelper {
     // Address casting
 
     function addAsAddress(bytes32 _key, address _value) public returns (bool) {
-        return map.addAsAddress(_key, _value);
+        return map.add(_key, _value);
     }
 
     function getAsAddressOrZero(bytes32 _key) public view returns (address) {
