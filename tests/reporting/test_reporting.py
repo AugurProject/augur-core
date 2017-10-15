@@ -264,6 +264,11 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     assert fees > 0
     assert cash.balanceOf(oldReportingWindowAddress) == fees
 
+    # We'll do a designated report in the new market based on the makeReport param used for the forking market
+    proceedToDesignatedReporting(localFixture, universe, newMarket, [0,10**18])
+    if (makeReport):
+        localFixture.designatedReport(newMarket, [0,10**18], tester.k0)
+
     # We proceed the standard market to the FORKING state
     proceedToForking(localFixture, universe, market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18], [10**18,0])
 
@@ -283,8 +288,11 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     # We observe that the reporting window no longer has the fees collected
     assert cash.balanceOf(oldReportingWindowAddress) == 0
 
-    # Now that we're on the correct universe we are send back to the DESIGNATED REPORTING phase
-    assert newMarket.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_REPORTING()
+    # Now that we're on the correct universe we are send back to the DESIGNATED DISPUTE phase, which in the case of no designated reporter means the ROUND1 Reporting phase
+    if (makeReport):
+        assert newMarket.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
+    else:
+        assert newMarket.getReportingState() == localFixture.contracts['Constants'].ROUND1_REPORTING()
 
     # We can confirm that migrating the market also triggered a migration of its reporting window's ETH fees to the new reporting window
     assert cash.balanceOf(newMarket.getReportingWindow()) == fees
