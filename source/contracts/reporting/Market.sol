@@ -6,6 +6,7 @@ import 'libraries/DelegationTarget.sol';
 import 'libraries/Typed.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/Ownable.sol';
+import 'libraries/collections/Map.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IStakeToken.sol';
 import 'reporting/IReputationToken.sol';
@@ -16,6 +17,7 @@ import 'extensions/MarketExtensions.sol';
 import 'factories/ShareTokenFactory.sol';
 import 'factories/StakeTokenFactory.sol';
 import 'factories/DisputeBondTokenFactory.sol';
+import 'factories/MapFactory.sol';
 import 'libraries/token/ERC20Basic.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/SafeMathInt256.sol';
@@ -38,7 +40,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     uint8 private numOutcomes;
     uint256 private marketCreationBlock;
     address private designatedReporterAddress;
-    mapping(bytes32 => IStakeToken) private stakeTokens;
+    Map private stakeTokens;
     ICash private cash;
     IShareToken[] private shareTokens;
     uint256 private finalizationTime;
@@ -81,6 +83,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         marketCreationBlock = block.number;
         designatedReporterAddress = _designatedReporterAddress;
         cash = _cash;
+        stakeTokens = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         for (uint8 _outcome = 0; _outcome < numOutcomes; _outcome++) {
             shareTokens.push(createShareToken(_outcome));
         }
@@ -258,6 +261,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         if (designatedReportReceivedTime != 0) {
             designatedReportReceivedTime = block.timestamp - 1;
         }
+        stakeTokens = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         return true;
     }
 
@@ -265,12 +269,19 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     // Helpers
     //
 
+    function disavowTokens() public returns (bool) {
+        require(getReportingState() == ReportingState.AWAITING_FORK_MIGRATION);
+        require(stakeTokens.getCount() > 0);
+        stakeTokens = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
+        return true;
+    }
+
     function getStakeToken(uint256[] _payoutNumerators, bool _invalid) public returns (IStakeToken) {
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
-        IStakeToken _stakeToken = stakeTokens[_payoutDistributionHash];
+        IStakeToken _stakeToken = IStakeToken(stakeTokens.getValueOrZero(_payoutDistributionHash));
         if (address(_stakeToken) == NULL_ADDRESS) {
             _stakeToken = StakeTokenFactory(controller.lookup("StakeTokenFactory")).createStakeToken(controller, this, _payoutNumerators, _invalid);
-            stakeTokens[_payoutDistributionHash] = _stakeToken;
+            stakeTokens.add(_payoutDistributionHash, _stakeToken);
         }
         return _stakeToken;
     }
@@ -327,7 +338,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function getStakeTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public view returns (IStakeToken) {
-        return stakeTokens[_payoutDistributionHash];
+        return IStakeToken(stakeTokens.getValueOrZero(_payoutDistributionHash));
     }
 
     //
@@ -379,7 +390,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     }
 
     function getFinalWinningStakeToken() public view returns (IStakeToken) {
-        return stakeTokens[finalPayoutDistributionHash];
+        return IStakeToken(stakeTokens.getValueOrZero(finalPayoutDistributionHash));
     }
 
     function getShareToken(uint8 _outcome)  public view returns (IShareToken) {
@@ -420,7 +431,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         }
         IStakeToken _shadyStakeToken = IStakeToken(_shadyTarget);
         bytes32 _shadyId = _shadyStakeToken.getPayoutDistributionHash();
-        IStakeToken _stakeToken = stakeTokens[_shadyId];
+        IStakeToken _stakeToken = IStakeToken(stakeTokens.getValueOrZero(_shadyId));
         return _stakeToken == _shadyStakeToken;
     }
 
