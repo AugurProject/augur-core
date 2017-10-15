@@ -220,6 +220,21 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return true;
     }
 
+    // TODO
+    function migrateFeesDueToMarketMigration(IMarket _market) public afterInitialized returns (bool) {
+        IReportingWindow _shadyReportingWindow = IReportingWindow(msg.sender);
+        require(universe.isContainerForReportingWindow(_shadyReportingWindow));
+        IReportingWindow _destinationReportingWindow = _shadyReportingWindow;
+        // NOTE: Will need to figure out a way to transfer other denominations when that is implemented
+        ICash _cash = ICash(controller.lookup("Cash"));
+        uint256 _balance = _cash.balanceOf(this);
+        if (_balance == 0) {
+            return false;
+        }
+        uint256 _amountToTransfer = _balance.mul(TOTAL_MARKET_STAKE).div(TOTAL_WINDOW_STAKE);
+        _cash.transfer(_destinationReportingWindow, _amountToTransfer);
+    }
+
     // This exists as an edge case handler for when a ReportingWindow has no markets but we want to migrate fees to a new universe. If a market exists it should be migrated and that will trigger a fee migration. Otherwise calling this on the desitnation reporting window in the forked universe with the old reporting window as an argument will trigger a fee migration manaully
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public afterInitialized returns (bool) {
         require(_reportingWindow.getNumMarkets() == 0);
