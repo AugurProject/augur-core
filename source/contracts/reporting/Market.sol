@@ -447,17 +447,17 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         uint256 _totalDisputeBondStake = 0;
 
         if (address(designatedReporterDisputeBondToken) != address(0)) {
-            if (designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
+            if (designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != finalPayoutDistributionHash) {
                 _totalDisputeBondStake += Reporting.designatedReporterDisputeBondAmount();
             }
         }
         if (address(round1ReportersDisputeBondToken) != address(0)) {
-            if (round1ReportersDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
+            if (round1ReportersDisputeBondToken.getDisputedPayoutDistributionHash() != finalPayoutDistributionHash) {
                 _totalDisputeBondStake += Reporting.round1ReportersDisputeBondAmount();
             }
         }
         if (address(round2ReportersDisputeBondToken) != address(0)) {
-            if (round2ReportersDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
+            if (round2ReportersDisputeBondToken.getDisputedPayoutDistributionHash() != finalPayoutDistributionHash) {
                 _totalDisputeBondStake += Reporting.round2ReportersDisputeBondAmount();
             }
         }

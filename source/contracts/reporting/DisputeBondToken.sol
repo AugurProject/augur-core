@@ -37,15 +37,11 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         bool _isFinalized = market.getReportingState() == IMarket.ReportingState.FINALIZED;
         require(!market.isContainerForDisputeBondToken(this) || (_isFinalized && market.getFinalPayoutDistributionHash() != disputedPayoutDistributionHash));
         require(getUniverse().getForkingMarket() != market);
-        IReportingWindow _reportingWindow = market.getReportingWindow();
-        if (!forgoFees) {
-            require(_reportingWindow.allMarketsFinalized());
-        }
         IReputationToken _reputationToken = getReputationToken();
         uint256 _amountToTransfer = _reputationToken.balanceOf(this);
         if (bondRemainingToBePaidOut > bondAmount) {
             uint256 _amountToCollectFeesOn = _amountToTransfer.min(bondRemainingToBePaidOut - bondAmount);
-            _reportingWindow.collectReportingFees(bondHolder, _amountToCollectFeesOn, forgoFees);
+            market.getReportingWindow().collectReportingFees(bondHolder, _amountToCollectFeesOn, forgoFees);
         }
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
         if (bondRemainingToBePaidOut < bondAmount) {

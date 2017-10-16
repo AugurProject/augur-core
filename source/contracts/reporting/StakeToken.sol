@@ -105,16 +105,12 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
-    // CONSIDER: If all markets are finalized should we allow forgoing fees?
+    // CONSIDER: If all markets are finalized and the reporting window is over should we allow forgoing fees?
     function redeemWinningTokens(bool forgoFees) public afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() != market);
         require(market.getFinalWinningStakeToken() == this);
-        IReportingWindow _reportingWindow = market.getReportingWindow();
-        if (!forgoFees) {
-            require(_reportingWindow.allMarketsFinalized());
-        }
         IReputationToken _reputationToken = getReputationToken();
         uint256 _reputationSupply = _reputationToken.balanceOf(this);
         uint256 _attotokens = balances[msg.sender];
@@ -123,7 +119,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         if (_reporterReputationShare != 0) {
             _reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
-        _reportingWindow.collectReportingFees(msg.sender, _attotokens, forgoFees);
+        market.getReportingWindow().collectReportingFees(msg.sender, _attotokens, forgoFees);
         return true;
     }
 

@@ -18,6 +18,8 @@ import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
+import 'reporting/IParticipationToken.sol';
+import 'factories/ParticipationTokenFactory.sol';
 
 
 contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingWindow {
@@ -38,6 +40,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     RunningAverage.Data private reportingGasPrice;
     uint256 private totalWinningStake;
     uint256 private totalStake;
+    IParticipationToken private participationToken;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -45,6 +48,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         // Initialize this to some reasonable value to handle the first market ever created without branching code
         reportingGasPrice.record(Reporting.defaultReportingGasPrice());
+        participationToken = ParticipationTokenFactory(controller.lookup("ParticipationTokenFactory")).createParticipationToken(controller, this);
         return true;
     }
 
@@ -211,18 +215,33 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return totalStake;
     }
 
+    function getTotalWinningStake() public view returns (uint256) {
+        return totalWinningStake;
+    }
+
+    function getParticipationToken() public view returns (IParticipationToken) {
+        return participationToken;
+    }
+
     function allMarketsFinalized() constant public returns (bool) {
         return markets.count == finalizedMarkets.count;
     }
 
     function collectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
         Typed _typed = Typed(msg.sender);
-        require(isContainerForStakeToken(_typed) || isContainerForDisputeBond(_typed));
+        require(isContainerForStakeToken(_typed) ||
+                isContainerForDisputeBond(_typed) ||
+                msg.sender == address(participationToken));
+        if (!_forgoFees) {
+            require(isOver());
+            require(allMarketsFinalized());
+        }
         // NOTE: Will need to handle other denominations when that is implemented
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _balance = _cash.balanceOf(this);
         uint256 _feePayoutShare = _balance.mul(_attoStake).div(totalWinningStake);
         totalStake = totalStake.sub(_attoStake);
+        totalWinningStake = totalWinningStake.sub(_attoStake);
         if (!_forgoFees && _feePayoutShare > 0) {
             _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
         }
@@ -278,6 +297,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         totalStake = totalStake.add(_amount);
     }
 
+    function increaseTotalWinningStake(uint256 _amount) public returns (bool) {
+        require(msg.sender == address(participationToken));
+        totalStake = totalStake.add(_amount);
+        totalWinningStake = totalWinningStake.add(_amount);
+    }
+
     function isActive() public afterInitialized view returns (bool) {
         if (block.timestamp <= getStartTime()) {
             return false;
@@ -306,6 +331,10 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
             return false;
         }
         return true;
+    }
+
+    function isOver() public afterInitialized view returns (bool) {
+        return block.timestamp >= getEndTime();
     }
 
     function getMarketsCount() public afterInitialized view returns (uint256) {

@@ -1,7 +1,6 @@
 pragma solidity 0.4.17;
 
 
-
 library Reporting {
     uint256 private constant DESIGNATED_REPORTING_DURATION_SECONDS = 3 days;
     uint256 private constant DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
