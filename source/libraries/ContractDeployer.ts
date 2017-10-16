@@ -95,7 +95,6 @@ export class ContractDeployer {
         const signature = this.signatures[signatureKey];
         const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
         let transactionHash: string;
-        console.log(signatureKey);
 
         if (constructorArgs.length > 0) {
             transactionHash = await contractBuilder.new(constructorArgs[0], constructorArgs[1]);
