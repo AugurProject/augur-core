@@ -51,8 +51,7 @@ export async function parseAbiIntoMethods(ethjsQuery: EthjsQuery, abi: (Compiler
                 return EthjsAbi.decodeMethod(item, result)[0];
             } else {
                 await waitForTransactionToBeSealed(ethjsQuery, result);
-                // CONSIDER: return result instead, which is the transaction hash
-                return undefined;
+                return result;
             }
         };
     });
