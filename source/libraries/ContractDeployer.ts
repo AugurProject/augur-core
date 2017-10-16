@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-// TODO: Add type mappings for array items
+// TODO: Use mapped types for arrays
+// TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import * as binascii from "binascii";
 import * as path from "path";
 import * as EthjsAbi from "ethjs-abi";
 import * as EthjsContract from "ethjs-contract";
 import * as EthjsQuery from "ethjs-query";
-// TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
 import { Contract, parseAbiIntoMethods } from "./AbiParser";
 import { generateTestAccounts, padAndHexlify, stringTo32ByteHex, waitForTransactionToBeSealed } from "./HelperFunctions";
