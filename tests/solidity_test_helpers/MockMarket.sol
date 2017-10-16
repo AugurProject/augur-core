@@ -6,7 +6,7 @@ import 'reporting/IUniverse.sol';
 contract MockMarket is IMarket {
     IUniverse private universe;
     bool private designatedReportValue;
-    bytes32 derivePayoutDistributionHash;
+    bytes32 private derivePayoutDistributionHashValue;
     IReportingWindow private reportingWindow;
     uint8 private numberOfOutcomes;
     uint256 private numTicks;
@@ -36,7 +36,7 @@ contract MockMarket is IMarket {
     bool private isContForDisputeBondToken;
     bool private isContForShareToken;
     bool private isValidValue;
-    
+
     /*
     * setters to feed the getters and impl of IMarket
     */
@@ -47,8 +47,8 @@ contract MockMarket is IMarket {
         designatedReportValue = _designatedReportValue;
     }
     
-    function setDerivePayoutDistributionHash(bytes32 _derivePayoutDistributionHash) public {
-        derivePayoutDistributionHash = _derivePayoutDistributionHash;
+    function setDerivePayoutDistributionHash(bytes32 _derivePayoutDistributionHashValue) public {
+        derivePayoutDistributionHashValue = _derivePayoutDistributionHashValue;
     }
     
     function setReportingWindow(IReportingWindow _reportingWindow) public {
@@ -175,12 +175,12 @@ contract MockMarket is IMarket {
     }
 
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool) { 
-        derivePayoutDistributionHash = _payoutDistributionHash; 
+        derivePayoutDistributionHashValue = _payoutDistributionHash; 
         return true; 
     }
 
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {
-        return derivePayoutDistributionHash;
+        return derivePayoutDistributionHashValue;
     }
 
     function designatedReport() public returns (bool) {
