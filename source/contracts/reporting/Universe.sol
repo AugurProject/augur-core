@@ -28,6 +28,9 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     mapping(uint256 => IReportingWindow) private reportingWindows;
     mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
+    uint256 private extraDisputeBondRemainingToBePaidOut;
+    // We increase and decrease this value seperate from the totalSupply as we do not want to count potentional infalitonary bonuses from the migration reward
+    uint256 private repAvailableForExtraBondPayouts;
 
     mapping (address => uint256) private validityBondInAttoeth;
     mapping (address => uint256) private targetReporterGasCosts;
@@ -121,6 +124,38 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
             childUniverses[_parentPayoutDistributionHash] = UniverseFactory(controller.lookup("UniverseFactory")).createUniverse(controller, this, _parentPayoutDistributionHash);
         }
         return childUniverses[_parentPayoutDistributionHash];
+    }
+
+    function getRepAvailableForExtraBondPayouts() public view returns (uint256) {
+        return repAvailableForExtraBondPayouts;
+    }
+
+    function increaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
+        require(msg.sender == address(reputationToken));
+        repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.add(_amount);
+        return true;
+    }
+
+    function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
+        require(parentUniverse.isContainerForDisputeBondToken(Typed(msg.sender)));
+        repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.sub(_amount);
+        return true;
+    }
+
+    function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256) {
+        return extraDisputeBondRemainingToBePaidOut;
+    }
+
+    function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
+        require(isContainerForMarket(Typed(msg.sender)));
+        extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.add(_amount);
+        return true;
+    }
+
+    function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
+        require(isContainerForDisputeBondToken(Typed(msg.sender)));
+        extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.sub(_amount);
+        return true;
     }
 
     function isContainerForReportingWindow(Typed _shadyTarget) public view returns (bool) {

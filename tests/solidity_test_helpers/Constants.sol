@@ -36,6 +36,8 @@ contract Constants {
     uint256 public constant DEFAULT_DESIGNATED_REPORT_STAKE = Reporting.defaultDesignatedReportStake();
     uint256 public constant DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND = Reporting.defaultDesignatedReportNoShowBond();
 
+    uint256 public constant FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR = Reporting.forkMigrationPercentageBonusDivisor();
+
     uint8 public constant BID = uint8(Order.TradeTypes.Bid);
     uint8 public constant ASK = uint8(Order.TradeTypes.Ask);
     uint8 public constant LONG = uint8(Order.TradeDirections.Long);

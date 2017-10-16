@@ -20,12 +20,14 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
     address private bondHolder;
     bytes32 private disputedPayoutDistributionHash;
     uint256 private bondRemainingToBePaidOut;
+    uint256 private bondAmount;
 
     function initialize(IMarket _market, address _bondHolder, uint256 _bondAmount, bytes32 _payoutDistributionHash) public beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
         bondHolder = _bondHolder;
         disputedPayoutDistributionHash = _payoutDistributionHash;
+        bondAmount = _bondAmount;
         bondRemainingToBePaidOut = _bondAmount * 2;
         return true;
     }
@@ -38,14 +40,19 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
         IReputationToken _reputationToken = getReputationToken();
         uint256 _amountToTransfer = _reputationToken.balanceOf(this);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
+        if (bondRemainingToBePaidOut < bondAmount) {
+            uint256 _amountToDeductFromExtraPayout = _amountToTransfer.min(bondAmount - bondRemainingToBePaidOut);
+            getUniverse().decreaseExtraDisputeBondRemainingToBePaidOut(_amountToDeductFromExtraPayout); 
+        }
         _reputationToken.transfer(bondHolder, _amountToTransfer);
         return true;
     }
 
-    // FIXME: We should be minting coins in this scenario in order to achieve 2x target payout for bond holders during a fork.  Ideally, the amount minted is capped at the amount of tokens redeemed on other universes, so we may have to require the user to supply universes to deduct from with their call to this.
+    // NOTE: The UI should warn users about doing this before REP has migrated fully out of the forking universe in order to get their extra payout, which is sourced from REP migrated to other Universes. There is no penalty for waiting (In fact waiting will only ever get them a greater payout)
     function withdrawToUniverse(IUniverse _shadyUniverse) public returns (bool) {
         require(msg.sender == bondHolder);
-        require(!market.isContainerForDisputeBondToken(this) || getUniverse().getForkingMarket() == market);
+        IUniverse _universe = getUniverse();
+        require(!market.isContainerForDisputeBondToken(this) || _universe.getForkingMarket() == market);
         bool _isChildOfMarketUniverse = market.getReportingWindow().getUniverse().isParentOf(_shadyUniverse);
         require(_isChildOfMarketUniverse);
         IUniverse _legitUniverse = _shadyUniverse;
@@ -54,9 +61,34 @@ contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic,
         uint256 _amountToTransfer = _reputationToken.balanceOf(this);
         IReputationToken _destinationReputationToken = _legitUniverse.getReputationToken();
         _reputationToken.migrateOut(_destinationReputationToken, this, _amountToTransfer);
+        // We recalculate the amount since migrating may have earned us a bonus
+        _amountToTransfer = _destinationReputationToken.balanceOf(this);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
+        uint256 _amountMinted = mintRepTokensForBondMigration(_destinationReputationToken);
+        bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountMinted);
+        _amountToTransfer = _amountToTransfer.add(_amountMinted);
+        if (bondRemainingToBePaidOut < bondAmount) {
+            uint256 _amountToDeductFromExtraPayout = _amountToTransfer.min(bondAmount - bondRemainingToBePaidOut);
+            getUniverse().decreaseExtraDisputeBondRemainingToBePaidOut(_amountToDeductFromExtraPayout); 
+        }
         _destinationReputationToken.transfer(bondHolder, _amountToTransfer);
         return true;
+    }
+
+    function mintRepTokensForBondMigration(IReputationToken _destinationReputationToken) private returns (uint256) {
+        IUniverse _universe = market.getUniverse();
+        IUniverse _disputeUniverse = _universe.getOrCreateChildUniverse(disputedPayoutDistributionHash);
+
+        uint256 _amountToMint = bondRemainingToBePaidOut;
+        uint256 _amountNeededByUniverse = _universe.getExtraDisputeBondRemainingToBePaidOut();
+        uint256 _amountAvailableToMatch = _disputeUniverse.getRepAvailableForExtraBondPayouts();
+
+        uint256 _maximumAmountMintable = _amountAvailableToMatch.mul(_amountToMint).div(_amountNeededByUniverse);
+        _amountToMint = _amountToMint.min(_maximumAmountMintable);
+
+        _disputeUniverse.decreaseRepAvailableForExtraBondPayouts(_amountToMint);
+        _destinationReputationToken.mintForDisputeBondMigration(_amountToMint);
+        return _amountToMint;
     }
 
     function getTypeName() constant public returns (bytes32) {
