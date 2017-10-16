@@ -286,6 +286,9 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     # We proceed the standard market to the FORKING state
     proceedToForking(localFixture, universe, market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18], [10**18,0])
 
+    # We can confirm that disputing the market also triggered a migration of its reporting window's ETH fees to its new reporting window
+    assert cash.balanceOf(market.getReportingWindow()) == fees
+
     # The market we created is now awaiting migration
     assert newMarket.getReportingState() == localFixture.contracts['Constants'].AWAITING_FORK_MIGRATION()
 
@@ -308,8 +311,7 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     else:
         assert newMarket.getReportingState() == localFixture.contracts['Constants'].ROUND1_REPORTING()
 
-    # We can confirm that migrating the market also triggered a migration of its reporting window's ETH fees to the new reporting window
-    assert cash.balanceOf(newMarket.getReportingWindow()) == fees
+    # TODO: Migrate a market in the forking market's reporting window to confirm it moves to the forked universe's equivalent window
 
 @mark.parametrize('pastDisputePhase', [
     True,

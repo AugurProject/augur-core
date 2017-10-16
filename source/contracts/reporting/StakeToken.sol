@@ -72,6 +72,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         getReputationToken().trustedTransfer(_reporter, this, _attotokens);
         mint(_reporter, _attotokens);
         bytes32 _payoutDistributionHash = getPayoutDistributionHash();
+        market.increaseTotalStake(_attotokens);
         market.updateTentativeWinningPayoutDistributionHash(_payoutDistributionHash);
         getReportingWindow().noteReportingGasPrice(market);
         return true;

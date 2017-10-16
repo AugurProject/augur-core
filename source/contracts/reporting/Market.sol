@@ -55,6 +55,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     IDisputeBond private round2ReportersDisputeBondToken;
     uint256 private validityBondAttoeth;
     uint256 private reporterGasCostsFeeAttoeth;
+    uint256 private totalStake;
 
     /**
      * @dev Makes the function trigger a migration before execution
@@ -185,14 +186,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return migrateReportingWindow(_newReportingWindow);
     }
 
-    function migrateReportingWindow(IReportingWindow _newReportingWindow) private afterInitialized returns (bool) {
-        _newReportingWindow.migrateMarketInFromSibling();
-        reportingWindow.removeMarket();
-        reportingWindow = _newReportingWindow;
-        reportingWindow.updateMarketPhase();
-        return true;
-    }
-
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool) {
         var (_firstPlaceHash, _secondPlaceHash) = MarketExtensions(controller.lookup("MarketExtensions")).getOrderedWinningPayoutDistributionHashes(this, _payoutDistributionHash);
 
@@ -222,13 +215,18 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function migrateDueToNoReports() public returns (bool) {
-        require(getReportingState() == ReportingState.AWAITING_NO_REPORT_MIGRATION);
-        IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
+    function migrateReportingWindow(IReportingWindow _newReportingWindow) private afterInitialized returns (bool) {
         _newReportingWindow.migrateMarketInFromSibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
         reportingWindow.updateMarketPhase();
+        return true;
+    }
+
+    function migrateDueToNoReports() public returns (bool) {
+        require(getReportingState() == ReportingState.AWAITING_NO_REPORT_MIGRATION);
+        IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
+        migrateReportingWindow(_newReportingWindow);
         return false;
     }
 
@@ -331,6 +329,12 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         }
     }
 
+    function increaseTotalStake(uint256 _amount) public returns (bool) {
+        require(isContainerForStakeToken(Typed(msg.sender)));
+        totalStake = totalStake.add(_amount);
+        reportingWindow.increaseTotalStake(_amount);
+    }
+
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {
         uint256 _sum = 0;
         for (uint8 i = 0; i < _payoutNumerators.length; i++) {
@@ -426,6 +430,10 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function getForkingMarket() public view returns (IMarket _market) {
         return getUniverse().getForkingMarket();
+    }
+
+    function getTotalStake() public view returns (uint256) {
+        return totalStake;
     }
 
     function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool) {

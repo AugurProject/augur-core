@@ -35,7 +35,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     uint256 private designatedReportNoShows;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
     RunningAverage.Data private reportingGasPrice;
-    uint256 private totalWinningStakeTokens;
+    uint256 private totalWinningStake;
+    uint256 private totalStake;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -63,6 +64,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(universe.isContainerForReportingWindow(_shadyReportingWindow));
         IReportingWindow _originalReportingWindow = _shadyReportingWindow;
         require(_originalReportingWindow.isContainerForMarket(_market));
+        _originalReportingWindow.migrateFeesDueToMarketMigration(_market);
         privateAddMarket(_market);
         return true;
     }
@@ -85,6 +87,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     function removeMarket() public afterInitialized returns (bool) {
         IMarket _market = IMarket(msg.sender);
         require(markets.contains(_market));
+        totalStake = totalStake.sub(_market.getTotalStake());
         markets.remove(_market);
         round1ReporterMarkets.remove(_market);
         round2ReporterMarkets.remove(_market);
@@ -125,8 +128,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
             incorrectDesignatedReportMarketCount++;
         }
         finalizedMarkets.add(_market);
-        uint256 _totalWinningStakeTokens = _market.getFinalWinningStakeToken().totalSupply();
-        totalWinningStakeTokens = totalWinningStakeTokens.add(_totalWinningStakeTokens);
+        uint256 _totalWinningStake = _market.getFinalWinningStakeToken().totalSupply();
+        totalWinningStake = totalWinningStake.add(_totalWinningStake);
     }
 
     function noteReportingGasPrice(IMarket _market) public afterInitialized returns (bool) {
@@ -212,27 +215,30 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         // NOTE: Will need to handle other denominations when that is implemented
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _balance = _cash.balanceOf(this);
-        uint256 _feePayoutShare = _balance.mul(_attoStakeTokens).div(totalWinningStakeTokens);
-        totalWinningStakeTokens = totalWinningStakeTokens.sub(_attoStakeTokens);
+        uint256 _feePayoutShare = _balance.mul(_attoStakeTokens).div(totalWinningStake);
+        totalWinningStake = totalWinningStake.sub(_attoStakeTokens);
         if (!_forgoFees && _feePayoutShare > 0) {
             _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
         }
         return true;
     }
 
-    // TODO
     function migrateFeesDueToMarketMigration(IMarket _market) public afterInitialized returns (bool) {
+        if (totalStake == 0) {
+            return false;
+        }
         IReportingWindow _shadyReportingWindow = IReportingWindow(msg.sender);
         require(universe.isContainerForReportingWindow(_shadyReportingWindow));
         IReportingWindow _destinationReportingWindow = _shadyReportingWindow;
         // NOTE: Will need to figure out a way to transfer other denominations when that is implemented
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _balance = _cash.balanceOf(this);
-        if (_balance == 0) {
+        uint256 _amountToTransfer = _balance.mul(_market.getTotalStake()).div(totalStake);
+        if (_amountToTransfer == 0) {
             return false;
         }
-        uint256 _amountToTransfer = _balance.mul(TOTAL_MARKET_STAKE).div(TOTAL_WINDOW_STAKE);
         _cash.transfer(_destinationReportingWindow, _amountToTransfer);
+        return true;
     }
 
     // This exists as an edge case handler for when a ReportingWindow has no markets but we want to migrate fees to a new universe. If a market exists it should be migrated and that will trigger a fee migration. Otherwise calling this on the desitnation reporting window in the forked universe with the old reporting window as an argument will trigger a fee migration manaully
@@ -259,6 +265,11 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(_destinationUniverse == universe.getChildUniverse(_winningForkPayoutDistributionHash));
         _cash.transfer(_destinationReportingWindow, _balance);
         return true;
+    }
+
+    function increaseTotalStake(uint256 _amount) public returns (bool) {
+        require(isContainerForMarket(Typed(msg.sender)));
+        totalStake = totalStake.add(_amount);
     }
 
     function isActive() public afterInitialized view returns (bool) {
@@ -326,6 +337,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(!markets.contains(_market));
         require(!round1ReporterMarkets.contains(_market));
         require(!round2ReporterMarkets.contains(_market));
+        totalStake = totalStake.add(_market.getTotalStake());
         markets.add(_market);
         return true;
     }
