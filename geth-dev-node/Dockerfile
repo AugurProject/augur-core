@@ -5,11 +5,9 @@ RUN mkdir /home/\.ethereum/keystore
 RUN mkdir /home/\.ethash
 
 COPY genesis.json /home/genesis.json
-RUN printf "\n\n" > /home/password.txt
-# Sealing account
+RUN printf "\n" > /home/password.txt
+# Sealing account (pre-funded with a large balance)
 COPY UTC--2017-10-16T19-13-42.464934000Z--c5ed899b0878656feb06467e2e9ede3ae73cbcb7 /home/\.ethereum/keystore/UTC--2017-10-16T19-13-42.464934000Z--c5ed899b0878656feb06467e2e9ede3ae73cbcb7
-# Prefunded account
-COPY UTC--2017-10-16T19-14-03.632603000Z--f8002f7f3ff80b0f2fccbfcc2998d0cda44804e0 /home/\.ethereum/keystore/UTC--2017-10-16T19-14-03.632603000Z--f8002f7f3ff80b0f2fccbfcc2998d0cda44804e0
 
 WORKDIR /
 COPY start.sh /start.sh
