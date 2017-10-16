@@ -3,16 +3,17 @@ pragma solidity 0.4.17;
 
 import 'reporting/IReputationToken.sol';
 import 'libraries/DelegationTarget.sol';
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
-import 'libraries/token/StandardToken.sol';
+import 'libraries/token/VariableSupplyToken.sol';
 import 'libraries/token/ERC20.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
+import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
-contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToken, IReputationToken {
+contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IReputationToken {
     using SafeMathUint256 for uint256;
 
     //FIXME: Delegated contracts cannot currently use string values, so we will need to find a workaround if this hasn't been fixed before we release
@@ -45,8 +46,14 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
     }
 
     function migrateIn(address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
-        require(ReputationToken(msg.sender) == universe.getParentUniverse().getReputationToken());
+        IUniverse _parentUniverse = universe.getParentUniverse();
+        require(ReputationToken(msg.sender) == _parentUniverse.getReputationToken());
         balances[_reporter] = balances[_reporter].add(_attotokens);
+        // Only count tokens migrated toward the available to be matched in other universes. The bonus should not be added
+        universe.increaseRepAvailableForExtraBondPayouts(_attotokens);
+        if (_parentUniverse.getForkingMarket().getReportingState() != IMarket.ReportingState.FINALIZED) {
+            mint(_reporter, _attotokens.div(Reporting.forkMigrationPercentageBonusDivisor()));
+        }
         supply = supply.add(_attotokens);
         return true;
     }
@@ -60,9 +67,15 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, StandardToke
         return true;
     }
 
+    function mintForDisputeBondMigration(uint256 _amount) public afterInitialized returns (bool) {
+        IUniverse _parentUniverse = universe.getParentUniverse();
+        require(_parentUniverse.isContainerForDisputeBondToken(ITyped(msg.sender)));
+        mint(msg.sender, _amount);
+    }
+
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
-        Typed _caller = Typed(msg.sender);
+        ITyped _caller = ITyped(msg.sender);
         require(universe.isContainerForReportingWindow(_caller)
             || universe.isContainerForMarket(_caller)
             || universe.isContainerForStakeToken(_caller));

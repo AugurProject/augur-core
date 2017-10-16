@@ -3,7 +3,7 @@ pragma solidity 0.4.17;
 
 import 'reporting/IStakeToken.sol';
 import 'libraries/DelegationTarget.sol';
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/IUniverse.sol';
@@ -15,7 +15,7 @@ import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
-contract StakeToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IStakeToken {
+contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IStakeToken {
     using SafeMathUint256 for uint256;
 
     IMarket public market;

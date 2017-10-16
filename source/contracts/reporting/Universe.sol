@@ -3,7 +3,7 @@ pragma solidity 0.4.17;
 
 import 'reporting/IUniverse.sol';
 import 'libraries/DelegationTarget.sol';
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'factories/ReputationTokenFactory.sol';
 import 'factories/ReportingWindowFactory.sol';
@@ -17,7 +17,7 @@ import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
-contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
+contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     using SafeMathUint256 for uint256;
 
     IUniverse private parentUniverse;
@@ -28,6 +28,9 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
     mapping(uint256 => IReportingWindow) private reportingWindows;
     mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
+    uint256 private extraDisputeBondRemainingToBePaidOut;
+    // We increase and decrease this value seperate from the totalSupply as we do not want to count potentional infalitonary bonuses from the migration reward
+    uint256 private repAvailableForExtraBondPayouts;
 
     mapping (address => uint256) private validityBondInAttoeth;
     mapping (address => uint256) private targetReporterGasCosts;
@@ -46,7 +49,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
 
     function fork() public afterInitialized returns (bool) {
         require(forkingMarket == address(0));
-        require(isContainerForMarket(Typed(msg.sender)));
+        require(isContainerForMarket(ITyped(msg.sender)));
         forkingMarket = IMarket(msg.sender);
         forkEndTime = block.timestamp + 60 days;
         return true;
@@ -123,7 +126,39 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return childUniverses[_parentPayoutDistributionHash];
     }
 
-    function isContainerForReportingWindow(Typed _shadyTarget) public view returns (bool) {
+    function getRepAvailableForExtraBondPayouts() public view returns (uint256) {
+        return repAvailableForExtraBondPayouts;
+    }
+
+    function increaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
+        require(msg.sender == address(reputationToken));
+        repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.add(_amount);
+        return true;
+    }
+
+    function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
+        require(parentUniverse.isContainerForDisputeBondToken(ITyped(msg.sender)));
+        repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.sub(_amount);
+        return true;
+    }
+
+    function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256) {
+        return extraDisputeBondRemainingToBePaidOut;
+    }
+
+    function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
+        require(isContainerForMarket(ITyped(msg.sender)));
+        extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.add(_amount);
+        return true;
+    }
+
+    function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
+        require(isContainerForDisputeBondToken(ITyped(msg.sender)));
+        extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.sub(_amount);
+        return true;
+    }
+
+    function isContainerForReportingWindow(ITyped _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "ReportingWindow") {
             return false;
         }
@@ -137,7 +172,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _shadyReportingWindow == _legitReportingWindow;
     }
 
-    function isContainerForDisputeBondToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "DisputeBondToken") {
             return false;
         }
@@ -153,7 +188,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitMarket.isContainerForDisputeBondToken(_shadyDisputeBond);
     }
 
-    function isContainerForMarket(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForMarket(ITyped _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "Market") {
             return false;
         }
@@ -169,7 +204,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitReportingWindow.isContainerForMarket(_shadyMarket);
     }
 
-    function isContainerForStakeToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "StakeToken") {
             return false;
         }
@@ -185,7 +220,7 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         return _legitMarket.isContainerForStakeToken(_shadyStakeToken);
     }
 
-    function isContainerForShareToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "ShareToken") {
             return false;
         }
