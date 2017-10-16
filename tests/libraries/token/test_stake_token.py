@@ -246,8 +246,21 @@ def test_stake_token_verify_trusted_buy(tokenFixture, universe):
     mockMarket.setNumberOfOutcomes(2)
     mockMarket.setNumTicks(numTicks)
     mockMarket.setUniverse(universe.address)
+    reportingWindow = tokenFixture.applySignature('ReportingWindow', universe.getCurrentReportingWindow())
+    reputationToken = tokenFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
+    assert reputationToken.balanceOf(tester.a1) > 0
+    reputationToken.transfer(mockMarket.address, 100)
+
+    mockMarket.setReportingWindow(reportingWindow.address)
+    mockMarketReportingWindow = tokenFixture.applySignature('ReportingWindow', mockMarket.getReportingWindow())
+    assert mockMarketReportingWindow.isContainerForMarket(mockMarket.address)
+    assert universe.isContainerForReportingWindow(mockMarketReportingWindow.address)
+    assert universe.isContainerForMarket(mockMarket.address)
+
     stakeToken = tokenFixture.upload('../source/contracts/reporting/StakeToken.sol', 'stakeToken')
     assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)       
+    assert universe.isContainerForStakeToken(stakeToken.address)
+    
     mockMarket.setReportingState(tokenFixture.contracts['Constants'].PRE_REPORTING()) 
     
     with raises(Exception, message="market can't call trust buy unless market state is round 1 or round 2"):
