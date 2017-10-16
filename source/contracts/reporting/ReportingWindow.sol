@@ -205,6 +205,10 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return getUniverse().getReportingWindowByTimestamp(_previousTimestamp);
     }
 
+    function getTotalStake() public view returns (uint256) {
+        return totalStake;
+    }
+
     function allMarketsFinalized() constant public returns (bool) {
         return markets.count == finalizedMarkets.count;
     }

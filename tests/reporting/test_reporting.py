@@ -282,6 +282,8 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     proceedToDesignatedReporting(localFixture, universe, newMarket, [0,10**18])
     if (makeReport):
         localFixture.designatedReport(newMarket, [0,10**18], tester.k0)
+        # Since both markets have stake from the designated report the fees will be split during migration
+        fees = fees / 2
 
     # We proceed the standard market to the FORKING state
     proceedToForking(localFixture, universe, market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18], [10**18,0])
