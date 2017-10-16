@@ -4,12 +4,12 @@ pragma solidity 0.4.17;
 import 'trading/IShareToken.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/token/VariableSupplyToken.sol';
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'reporting/IMarket.sol';
 
 
-contract ShareToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IShareToken {
+contract ShareToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IShareToken {
 
     //FIXME: Delegated contracts cannot currently use string values, so we will need to find a workaround if this hasn't been fixed before we release
     string constant public name = "Shares";

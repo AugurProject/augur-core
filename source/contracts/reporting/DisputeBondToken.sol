@@ -3,7 +3,7 @@ pragma solidity 0.4.17;
 
 import 'reporting/IDisputeBond.sol';
 import 'libraries/DelegationTarget.sol';
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/ERC20Basic.sol';
 import 'reporting/IUniverse.sol';
@@ -13,7 +13,7 @@ import 'libraries/math/SafeMathUint256.sol';
 
 
 // CONSIDER: This could probably just be made Ownable instead if implementing ERC20Basic
-contract DisputeBondToken is DelegationTarget, Typed, Initializable, ERC20Basic, IDisputeBond {
+contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic, IDisputeBond {
     using SafeMathUint256 for uint256;
 
     IMarket private market;

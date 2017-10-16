@@ -1,7 +1,7 @@
 pragma solidity 0.4.17;
 
 
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'libraries/IOwnable.sol';
 import 'trading/ICash.sol';
 import 'trading/IShareToken.sol';
@@ -12,7 +12,7 @@ import 'reporting/IDisputeBond.sol';
 import 'trading/IShareToken.sol';
 
 
-contract IMarket is Typed, IOwnable {
+contract IMarket is ITyped, IOwnable {
     enum ReportingState {
         PRE_REPORTING,
         DESIGNATED_REPORTING,
@@ -58,8 +58,8 @@ contract IMarket is Typed, IOwnable {
     function getDesignatedReportDisputeDueTimestamp() public view returns (uint256);
     function round1ReporterCompensationCheck(address _reporter) public returns (uint256);
     function migrateDueToNoReports() public returns (bool);
-    function isContainerForStakeToken(Typed _shadyTarget) public view returns (bool);
-    function isContainerForDisputeBondToken(Typed _shadyTarget) public view returns (bool);
-    function isContainerForShareToken(Typed _shadyTarget) public view returns (bool);
+    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool);
     function isValid() public view returns (bool);
 }

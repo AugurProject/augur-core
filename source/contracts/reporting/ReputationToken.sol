@@ -3,7 +3,7 @@ pragma solidity 0.4.17;
 
 import 'reporting/IReputationToken.sol';
 import 'libraries/DelegationTarget.sol';
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'libraries/token/ERC20.sol';
@@ -13,7 +13,7 @@ import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
-contract ReputationToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IReputationToken {
+contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IReputationToken {
     using SafeMathUint256 for uint256;
 
     //FIXME: Delegated contracts cannot currently use string values, so we will need to find a workaround if this hasn't been fixed before we release
@@ -69,13 +69,13 @@ contract ReputationToken is DelegationTarget, Typed, Initializable, VariableSupp
 
     function mintForDisputeBondMigration(uint256 _amount) public afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
-        require(_parentUniverse.isContainerForDisputeBondToken(Typed(msg.sender)));
+        require(_parentUniverse.isContainerForDisputeBondToken(ITyped(msg.sender)));
         mint(msg.sender, _amount);
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
-        Typed _caller = Typed(msg.sender);
+        ITyped _caller = ITyped(msg.sender);
         require(universe.isContainerForReportingWindow(_caller)
             || universe.isContainerForMarket(_caller)
             || universe.isContainerForStakeToken(_caller));
