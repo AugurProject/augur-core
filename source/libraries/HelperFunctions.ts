@@ -2,11 +2,10 @@ import * as binascii from "binascii";
 import * as EthjsAccount from "ethjs-account";
 import * as EthjsQuery from 'ethjs-query';
 
-const DEFAULT_ETHEREUM_BLOCK_INTERVAL_MILLISECONDS = 1200;
 const DEFAULT_TEST_ACCOUNT_BALANCE = 1 * 10 ** 20; // Denominated in wei
 // Set gas block limit extremely high so new blocks don"t have to be mined while uploading contracts
-const GAS_BLOCK_AMOUNT: number = Math.pow(2, 32);
-const ETHEREUM_BLOCK_INTERVAL_MILLISECONDS: number = process.env.ETHEREUM_BLOCK_INTERVAL_MILLSECONDS ? parseInt(process.env.ETHEREUM_BLOCK_INTERVAL_MILLISECONDS!, 10) : DEFAULT_ETHEREUM_BLOCK_INTERVAL_MILLISECONDS;
+const GAS_BLOCK_AMOUNT = Math.pow(2, 32);
+const ETHEREUM_POLLING_INTERVAL_MILLISECONDS = process.env.ETHEREUM_POLLING_INTERVAL_MILLISECONDS ? parseInt(process.env.ETHEREUM_POLLING_INTERVAL_MILLISECONDS!, 10) : 1200;
 
 export interface TestAccount {
     privateKey: string;
@@ -82,7 +81,7 @@ async function sleep(milliseconds: number): Promise<object> {
 export async function waitForTransactionToBeSealed(ethjsQuery: EthjsQuery, transactionHash: string): Promise<void> {
     let transaction = await ethjsQuery.getTransactionByHash(transactionHash);
     while (transaction.blockNumber == null) {
-        await sleep(ETHEREUM_BLOCK_INTERVAL_MILLISECONDS);
+        await sleep(ETHEREUM_POLLING_INTERVAL_MILLISECONDS);
         transaction = await ethjsQuery.getTransactionByHash(transactionHash);
     }
 }

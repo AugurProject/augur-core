@@ -5,7 +5,7 @@ pragma solidity 0.4.17;
 
 import 'reporting/IReportingWindow.sol';
 import 'libraries/DelegationTarget.sol';
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/collections/Set.sol';
 import 'reporting/IUniverse.sol';
@@ -19,7 +19,7 @@ import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
 
 
-contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWindow {
+contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingWindow {
     using SafeMathUint256 for uint256;
     using Set for Set.Data;
     using RunningAverage for RunningAverage.Data;
@@ -131,7 +131,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
 
     function noteReportingGasPrice(IMarket _market) public afterInitialized returns (bool) {
         require(markets.contains(_market));
-        require(_market.isContainerForStakeToken(Typed(msg.sender)));
+        require(_market.isContainerForStakeToken(ITyped(msg.sender)));
         reportingGasPrice.record(tx.gasprice);
         return true;
     }
@@ -288,7 +288,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return round2ReporterMarkets.count;
     }
 
-    function isContainerForStakeToken(Typed _shadyTarget) public afterInitialized view returns (bool) {
+    function isContainerForStakeToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
         if (_shadyTarget.getTypeName() != "StakeToken") {
             return false;
         }
@@ -299,7 +299,7 @@ contract ReportingWindow is DelegationTarget, Typed, Initializable, IReportingWi
         return _market.isContainerForStakeToken(_shadyStakeToken);
     }
 
-    function isContainerForMarket(Typed _shadyTarget) public afterInitialized view returns (bool) {
+    function isContainerForMarket(ITyped _shadyTarget) public afterInitialized view returns (bool) {
         if (_shadyTarget.getTypeName() != "Market") {
             return false;
         }

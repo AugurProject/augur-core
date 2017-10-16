@@ -3,7 +3,7 @@ pragma solidity 0.4.17;
 
 import 'reporting/IMarket.sol';
 import 'libraries/DelegationTarget.sol';
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/Ownable.sol';
 import 'libraries/collections/Map.sol';
@@ -24,7 +24,7 @@ import 'libraries/math/SafeMathInt256.sol';
 import 'reporting/Reporting.sol';
 
 
-contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
+contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     using SafeMathUint256 for uint256;
     using SafeMathInt256 for int256;
 
@@ -146,6 +146,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function disputeDesignatedReport(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.designatedReporterDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
+        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(Reporting.designatedReporterDisputeBondAmount());
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, designatedReporterDisputeBondToken, Reporting.designatedReporterDisputeBondAmount());
         if (_attotokens > 0) {
             IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
@@ -160,6 +161,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function disputeRound1Reporters(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.FIRST_DISPUTE);
         round1ReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.round1ReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
+        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(Reporting.round1ReportersDisputeBondAmount());
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, round1ReportersDisputeBondToken, Reporting.round1ReportersDisputeBondAmount());
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
         migrateReportingWindow(_newReportingWindow);
@@ -176,6 +178,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
     function disputeRound2Reporters() public triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.LAST_DISPUTE);
         round2ReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, Reporting.round2ReportersDisputeBondAmount(), tentativeWinningPayoutDistributionHash);
+        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(Reporting.round2ReportersDisputeBondAmount());
         reportingWindow.getReputationToken().trustedTransfer(msg.sender, round2ReportersDisputeBondToken, Reporting.round2ReportersDisputeBondAmount());
         reportingWindow.getUniverse().fork();
         IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
@@ -312,7 +315,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     // AUDIT: This is called at the beginning of StakeToken:buy. Look for reentrancy issues
     function round1ReporterCompensationCheck(address _reporter) public returns (uint256) {
-        require(isContainerForStakeToken(Typed(msg.sender)));
+        require(isContainerForStakeToken(ITyped(msg.sender)));
         if (getReportingState() == ReportingState.DESIGNATED_REPORTING) {
             return 0;
         } else if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
@@ -425,7 +428,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return getUniverse().getForkingMarket();
     }
 
-    function isContainerForStakeToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "StakeToken") {
             return false;
         }
@@ -435,7 +438,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return _stakeToken == _shadyStakeToken;
     }
 
-    function isContainerForShareToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "ShareToken") {
             return false;
         }
@@ -443,7 +446,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return getShareToken(_shadyShareToken.getOutcome()) == _shadyShareToken;
     }
 
-    function isContainerForDisputeBondToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "DisputeBondToken") {
             return false;
         }
