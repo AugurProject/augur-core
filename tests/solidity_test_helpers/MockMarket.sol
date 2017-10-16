@@ -170,6 +170,10 @@ contract MockMarket is IMarket {
     /*
     * IMarket methods
     */
+    function getTypeName() public view returns (bytes32) {
+        return "Market";
+    }
+    
     function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable returns (bool _success) {
         return true;
     }
