@@ -1,14 +1,14 @@
 pragma solidity 0.4.17;
 
 
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IStakeToken.sol';
 
 
-contract IUniverse is Typed {
+contract IUniverse is ITyped {
     function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external returns (bool);
     function fork() public returns (bool);
     function getParentUniverse() public view returns (IUniverse);
@@ -41,11 +41,11 @@ contract IUniverse is Typed {
     function getTargetReporterGasCosts() public returns (uint256);
     function getMarketCreationCost() public returns (uint256);
     function isParentOf(IUniverse _shadyChild) public view returns (bool);
-    function isContainerForReportingWindow(Typed _shadyTarget) public view returns (bool);
-    function isContainerForDisputeBondToken(Typed _shadyTarget) public view returns (bool);
-    function isContainerForMarket(Typed _shadyTarget) public view returns (bool);
-    function isContainerForStakeToken(Typed _shadyTarget) public view returns (bool);
-    function isContainerForShareToken(Typed _shadyTarget) public view returns (bool);
+    function isContainerForReportingWindow(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForMarket(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);
     function incrementOpenInterest(uint256 _amount) public returns (bool);
 }

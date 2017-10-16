@@ -3,7 +3,7 @@ pragma solidity 0.4.17;
 
 import 'reporting/IMarket.sol';
 import 'libraries/DelegationTarget.sol';
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/Ownable.sol';
 import 'libraries/collections/Map.sol';
@@ -24,7 +24,7 @@ import 'libraries/math/SafeMathInt256.sol';
 import 'reporting/Reporting.sol';
 
 
-contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
+contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     using SafeMathUint256 for uint256;
     using SafeMathInt256 for int256;
 
@@ -315,7 +315,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
 
     // AUDIT: This is called at the beginning of StakeToken:buy. Look for reentrancy issues
     function round1ReporterCompensationCheck(address _reporter) public returns (uint256) {
-        require(isContainerForStakeToken(Typed(msg.sender)));
+        require(isContainerForStakeToken(ITyped(msg.sender)));
         if (getReportingState() == ReportingState.DESIGNATED_REPORTING) {
             return 0;
         } else if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
@@ -428,7 +428,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return getUniverse().getForkingMarket();
     }
 
-    function isContainerForStakeToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "StakeToken") {
             return false;
         }
@@ -438,7 +438,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return _stakeToken == _shadyStakeToken;
     }
 
-    function isContainerForShareToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "ShareToken") {
             return false;
         }
@@ -446,7 +446,7 @@ contract Market is DelegationTarget, Typed, Initializable, Ownable, IMarket {
         return getShareToken(_shadyShareToken.getOutcome()) == _shadyShareToken;
     }
 
-    function isContainerForDisputeBondToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool) {
         if (_shadyTarget.getTypeName() != "DisputeBondToken") {
             return false;
         }

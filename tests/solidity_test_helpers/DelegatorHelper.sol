@@ -1,10 +1,10 @@
 pragma solidity ^0.4.17;
 
 import 'libraries/DelegationTarget.sol';
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 
 
-contract DelegatorHelper is DelegationTarget, Typed {
+contract DelegatorHelper is DelegationTarget, ITyped {
     string public stringMember = "StringMember";
     string public stringConstant = "StringConstant";
     int256 public intValue = -42;
