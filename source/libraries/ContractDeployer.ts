@@ -200,7 +200,6 @@ export class ContractDeployer {
         const receipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
         const universe = await universeBuilder.at(receipt.contractAddress);
         await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
-
         return universe;
     }
 
@@ -226,13 +225,12 @@ export class ContractDeployer {
         const legacyReputationToken = await parseAbiIntoMethods(this.ethjsQuery, this.signatures['LegacyRepContract'], { to: this.contracts['LegacyRepContract'].address, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
         const reputationTokenAddress = await universe.getReputationToken();
         const reputationToken = await parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReputationToken'], { to: reputationTokenAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
-        console.log("reputationTokenAddress: " + reputationTokenAddress);
-        console.log("reputationToken: ");
-        console.log(reputationToken);
+
         // get some REP
         await legacyReputationToken.faucet(0);
         await legacyReputationToken.approve(reputationTokenAddress, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         await reputationToken.migrateFromLegacyRepContract();
+
         // necessary because it is used part of market creation fee calculation
         await universe.getCurrentReportingWindow();
         // necessary because it is used as part of market creation fee calculation
@@ -243,9 +241,9 @@ export class ContractDeployer {
 
         const currentReportingWindowAddress = await universe.getCurrentReportingWindow.bind(constant)();
         const targetReportingWindowAddress = await universe.getReportingWindowByMarketEndTime.bind(constant)(endTime);
+
         const targetReportingWindow = await parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReportingWindow'], { to: targetReportingWindowAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
         const marketCreationFee = await universe.getMarketCreationCost.bind(constant)();
-
         const marketAddress = await targetReportingWindow.createMarket.bind({ value: marketCreationFee, constant: true })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
         if (!marketAddress) {
             throw new Error("Unable to get address for new categorical market.");
