@@ -5,7 +5,6 @@ from pytest import fixture, raises
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from reporting_utils import proceedToDesignatedReporting, proceedToRound1Reporting, proceedToRound2Reporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
-
 def test_stake_token_creation_binary(tokenFixture, binaryMarket):
     bin_market = binaryMarket
     numTicks = 10 ** 18
@@ -65,6 +64,8 @@ def test_stake_token_valid_checks(tokenFixture, universe, cash):
     numTicks = 3 * 10 ** 17
     assert stakeToken.initialize(market.address, [numTicks/5, numTicks/5, numTicks/5, numTicks/5, numTicks/5], False)
     assert stakeToken.isValid()
+    with raises(AttributeError, message="method not reachable because it's private"):
+        stakeToken.isInvalidOutcome()
 
     with raises(TransactionFailed, message="Stake Token can not be initialized invalid"):
         stakeToken.initialize(market.address, [numTicks/5, numTicks/5, numTicks/5, numTicks/5, numTicks/5], True)
@@ -101,10 +102,8 @@ def test_stake_token_buy_get_more(tokenFixture, universe, cash):
     assert market.getReportingState() == tokenFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION()
     stakeToken.buy(1)
     assert market.getReportingState() == tokenFixture.contracts['Constants'].ROUND1_REPORTING()
-
-    #with raises(TransactionFailed, message="Can not buy when market is in AWAITING_NO_REPORT_MIGRATION"):
-    #    stakeToken.buy(1)
-
+    stakeToken.buy(1)
+    assert market.getReportingState() == tokenFixture.contracts['Constants'].ROUND1_REPORTING()
 
 def test_stake_token_buy_designated_reporter_state(tokenFixture, categoricalMarket, universe):    
     market = categoricalMarket
@@ -174,7 +173,7 @@ def test_stake_token_redeem(tokenFixture, universe, cash):
     proceedToForking(tokenFixture, universe, market_forking, True, tester.k1, tester.k3, tester.k4, [0,numTicks], [numTicks,0], tester.k2, [numTicks,0], [numTicks,0], [0,numTicks])
     assert market_forking.getReportingState() == tokenFixture.contracts['Constants'].FORKING()
 
-    # durring a fork non-forking markets should be in limbo and allow users to redeemDisavowedTokens
+    # during a fork non-forking markets should be in limbo and allow users to redeemDisavowedTokens
     assert market_other.getReportingState() == tokenFixture.contracts['Constants'].AWAITING_FORK_MIGRATION()
     stakeToken_non_forking = tokenFixture.applySignature('StakeToken', market_other.getStakeToken([0, numTicks]))
     assert market_other.isContainerForStakeToken(stakeToken_non_forking.address) == True
@@ -184,29 +183,75 @@ def test_stake_token_redeem(tokenFixture, universe, cash):
     #market_forking.getReportingState() == tokenFixture.contracts['Constants'].FINALIZED()
 
     # users of non-forking unresolved markets should get tokens back
-    assert stakeToken_non_forking.redeemDisavowedTokens(tester.a9)
-    assert stakeToken_non_forking.balanceOf(tester.a9) == original_a9
+    #assert stakeToken_non_forking.redeemDisavowedTokens(tester.a9)
+    #assert stakeToken_non_forking.balanceOf(tester.a9) == original_a9
 
     # progress to next reporting window
-    reportingWindow = tokenFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
-    tokenFixture.chain.head_state.timestamp = market_forking.getEndTime() + 1
+    #reportingWindow = tokenFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
+    #tokenFixture.chain.head_state.timestamp = market_forking.getEndTime() + 1
 
     # how does a stake token not be associated with market
-    assert market_other.isContainerForStakeToken(stakeToken_other.address) == False
-    assert stakeToken_other.redeemDisavowedTokens(tester.a8)
-    assert stakeToken_other.balanceOf(tester.a8) == original_dr_other + designatedReporterStake
+    #assert market_other.isContainerForStakeToken(stakeToken_other.address) == False
+    #assert stakeToken_other.redeemDisavowedTokens(tester.a8)
+    #assert stakeToken_other.balanceOf(tester.a8) == original_dr_other + designatedReporterStake
 
-    assert stakeToken_other.redeemDisavowedTokens(tester.a9)
-    assert stakeToken_other.balanceOf(tester.a8) == original_market_creator_other + designatedReporterStake
+    #assert stakeToken_other.redeemDisavowedTokens(tester.a9)
+    #assert stakeToken_other.balanceOf(tester.a8) == original_market_creator_other + designatedReporterStake
 
     # (Direction) When a market needs to be reset (reporting wise), 
     # all associated dispute bonds and tokens become "disavowed".  
     # This means that anyone who holds the token/bond can redeem it at face value.  
     # No loss, no gain.
 
+def test_stake_token_verify_designated_reporter_stake(tokenFixture, binaryMarket):
+    numTicks = 10 ** 18
+
+    market = binaryMarket
+    universe = tokenFixture.applySignature('Universe', market.getUniverse())
+    reportingWindow = tokenFixture.applySignature('ReportingWindow', market.getReportingWindow())
+
+    stakeToken = tokenFixture.getStakeToken(market, [0, numTicks])
+    original = stakeToken.balanceOf(tester.a0)
+
+    # Go to designated reporting time window
+    tokenFixture.chain.head_state.timestamp = market.getEndTime() + 1    
+    designatedReporterStake = universe.getDesignatedReportStake()
+    tokenFixture.designatedReport(market, [0, numTicks], tester.k0)
+
+    tokenFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    endBalance = stakeToken.balanceOf(tester.a0)
+    assert endBalance == designatedReporterStake
+
+def test_stake_token_trusted_buy_fails(tokenFixture, binaryMarket):
+    numTicks = 10 ** 18
+    market = binaryMarket
+    universe = tokenFixture.applySignature('Universe', market.getUniverse())
+    stakeToken = tokenFixture.getStakeToken(market, [0, numTicks])
+    reportingWindow = tokenFixture.applySignature('ReportingWindow', market.getReportingWindow())
+
+    with raises(TransactionFailed, message="only market can call this method"):
+        stakeToken.trustedBuy(tester.a2, 1)
+
+    proceedToRound1Reporting(tokenFixture, universe, market, False, tester.a1, [numTicks, 0], [numTicks/2, numTicks/2])
+    assert market.getReportingState() == tokenFixture.contracts['Constants'].ROUND1_REPORTING()
+    with raises(TransactionFailed, message="trusted buy can only occur buy trusted contract"):
+        stakeToken.trustedBuy(tester.a2, 1)
+
+    with raises(Exception, message="address isn't in format that can be used as Market"):
+        stakeToken.trustedBuy(tester.a2, 1, sender=market.address)
+
+def test_stake_token_verify_trusted_buy(tokenFixture, universe):
+    mockMarket = tokenFixture.contracts['MockMarket']
+    assert mockMarket
+    mockMarket.setUniverse(universe.address)
+    stakeToken = tokenFixture.upload('../source/contracts/reporting/StakeToken.sol', 'stakeToken')
+    assert stakeToken_bin.initialize(mockMarket.address, [0, numTicks], False)       
+
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
+    fixture.upload('solidity_test_helpers/MockMarket.sol')
+    assert fixture.contracts['MockMarket']
     universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
     market = ABIContract(fixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
     return initializeReportingFixture(fixture, universe, market)
