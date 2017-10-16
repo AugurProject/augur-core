@@ -241,16 +241,26 @@ def test_stake_token_trusted_buy_fails(tokenFixture, binaryMarket):
         stakeToken.trustedBuy(tester.a2, 1, sender=market.address)
 
 def test_stake_token_verify_trusted_buy(tokenFixture, universe):
+    numTicks = 10 ** 18
     mockMarket = tokenFixture.contracts['MockMarket']
-    assert mockMarket
+    mockMarket.setNumberOfOutcomes(2)
+    mockMarket.setNumTicks(numTicks)
     mockMarket.setUniverse(universe.address)
     stakeToken = tokenFixture.upload('../source/contracts/reporting/StakeToken.sol', 'stakeToken')
-    assert stakeToken_bin.initialize(mockMarket.address, [0, numTicks], False)       
+    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)       
+    mockMarket.setReportingState(tokenFixture.contracts['Constants'].PRE_REPORTING()) 
+    
+    with raises(Exception, message="market can't call trust buy unless market state is round 1 or round 2"):
+        mockMarket.callStakeTokenTrustedBuy(stakeToken, tester.a1, 1)
+
+    mockMarket.setReportingState(tokenFixture.contracts['Constants'].ROUND1_REPORTING()) 
+    mockMarket.setIsContainerForStakeToken(True)
+    assert mockMarket.callStakeTokenTrustedBuy(stakeToken.address, tester.a1, 1)
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
-    fixture.upload('solidity_test_helpers/MockMarket.sol')
+    fixture.uploadAndAddToController('solidity_test_helpers/MockMarket.sol')
     assert fixture.contracts['MockMarket']
     universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
     market = ABIContract(fixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)

@@ -36,6 +36,8 @@ contract MockMarket is IMarket {
     bool private isContForDisputeBondToken;
     bool private isContForShareToken;
     bool private isValidValue;
+    address private owner;
+    bool private transferOwner;
 
     /*
     * setters to feed the getters and impl of IMarket
@@ -167,13 +169,34 @@ contract MockMarket is IMarket {
         isValidValue = _isValidValue;
     }
 
+    function setOwner(address _owner) public {
+        owner = _owner;
+    }
+
+    function setTransferOwnership(bool _transferOwner) public {
+        transferOwner = _transferOwner;
+    }
+
+    function callStakeTokenTrustedBuy(IStakeToken _stakeToken, address _reporter, uint256 _attotokens) public returns (bool) {
+        return _stakeToken.trustedBuy(_reporter, _attotokens); 
+    }
+    
     /*
     * IMarket methods
     */
+
+    function getOwner() public view returns (address) { 
+        return owner;
+    }
+
+    function transferOwnership(address newOwner) public returns (bool) {
+        return transferOwner;
+    }
+
     function getTypeName() public view returns (bytes32) {
         return "Market";
     }
-    
+
     function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable returns (bool _success) {
         return true;
     }
