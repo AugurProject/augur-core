@@ -39,9 +39,15 @@ contract Universe is DelegationTarget, Typed, Initializable, IUniverse {
         endInitialization();
         parentUniverse = _parentUniverse;
         parentPayoutDistributionHash = _parentPayoutDistributionHash;
-        reputationToken = ReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this);
-        require(reputationToken != address(0));
+        // reputationToken = ReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this);
+        // require(reputationToken != address(0));
         return true;
+    }
+
+    function setReputationToken(IReputationToken _reputationToken) external returns (IReputationToken) {
+        reputationToken = _reputationToken;
+        require(reputationToken != address(0));
+        return reputationToken;
     }
 
     function fork() public afterInitialized returns (bool) {
