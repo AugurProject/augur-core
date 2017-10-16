@@ -57,6 +57,7 @@ contract IMarket is ITyped, IOwnable {
     function getDesignatedReportReceivedTime() public view returns (uint256);
     function getDesignatedReportDisputeDueTimestamp() public view returns (uint256);
     function getTotalStake() public view returns (uint256);
+    function getTotalWinningDisputeBondStake() public view returns (uint256);
     function round1ReporterCompensationCheck(address _reporter) public returns (uint256);
     function increaseTotalStake(uint256 _amount) public returns (bool);
     function migrateDueToNoReports() public returns (bool);

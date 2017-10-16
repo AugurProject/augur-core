@@ -12,6 +12,7 @@ import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IStakeToken.sol';
+import 'reporting/IDisputeBond.sol';
 import 'trading/ICash.sol';
 import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
@@ -129,6 +130,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         }
         finalizedMarkets.add(_market);
         uint256 _totalWinningStake = _market.getFinalWinningStakeToken().totalSupply();
+        _totalWinningStake = _totalWinningStake.add(_market.getTotalWinningDisputeBondStake());
         totalWinningStake = totalWinningStake.add(_totalWinningStake);
     }
 
@@ -213,14 +215,14 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.count == finalizedMarkets.count;
     }
 
-    function collectReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
-        IStakeToken _shadyStakeToken = IStakeToken(msg.sender);
-        require(isContainerForStakeToken(_shadyStakeToken));
+    function collectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+        Typed _typed = Typed(msg.sender);
+        require(isContainerForStakeToken(_typed) || isContainerForDisputeBond(_typed));
         // NOTE: Will need to handle other denominations when that is implemented
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _balance = _cash.balanceOf(this);
-        uint256 _feePayoutShare = _balance.mul(_attoStakeTokens).div(totalWinningStake);
-        totalWinningStake = totalWinningStake.sub(_attoStakeTokens);
+        uint256 _feePayoutShare = _balance.mul(_attoStake).div(totalWinningStake);
+        totalStake = totalStake.sub(_attoStake);
         if (!_forgoFees && _feePayoutShare > 0) {
             _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
         }
@@ -327,6 +329,17 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(isContainerForMarket(_shadyMarket));
         IMarket _market = _shadyMarket;
         return _market.isContainerForStakeToken(_shadyStakeToken);
+    }
+
+    function isContainerForDisputeBond(ITyped _shadyTarget) public afterInitialized view returns (bool) {
+        if (_shadyTarget.getTypeName() != "DisputeBondToken") {
+            return false;
+        }
+        IDisputeBond _shadyDisbuteBondToken = IDisputeBond(_shadyTarget);
+        IMarket _shadyMarket = _shadyDisbuteBondToken.getMarket();
+        require(isContainerForMarket(_shadyMarket));
+        IMarket _market = _shadyMarket;
+        return _market.isContainerForDisputeBondToken(_shadyDisbuteBondToken);
     }
 
     function isContainerForMarket(ITyped _shadyTarget) public afterInitialized view returns (bool) {

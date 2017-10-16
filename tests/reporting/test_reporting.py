@@ -269,27 +269,13 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     newMarket = localFixture.createReasonableBinaryMarket(universe, cash)
     completeSets = localFixture.contracts['CompleteSets']
 
-    # We'll do some transactions that cause fee collection here so we can test that fees are properly migrated automatically when a market migrates from a fork
-    cost = 10 * newMarket.getNumTicks()
-    completeSets.publicBuyCompleteSets(newMarket.address, 10, sender = tester.k1, value = cost)
-    completeSets.publicSellCompleteSets(newMarket.address, 10, sender=tester.k1)
-    oldReportingWindowAddress = newMarket.getReportingWindow()
-    fees = cash.balanceOf(oldReportingWindowAddress)
-    assert fees > 0
-    assert cash.balanceOf(oldReportingWindowAddress) == fees
-
     # We'll do a designated report in the new market based on the makeReport param used for the forking market
     proceedToDesignatedReporting(localFixture, universe, newMarket, [0,10**18])
     if (makeReport):
         localFixture.designatedReport(newMarket, [0,10**18], tester.k0)
-        # Since both markets have stake from the designated report the fees will be split during migration
-        fees = fees / 2
 
     # We proceed the standard market to the FORKING state
     proceedToForking(localFixture, universe, market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18], [10**18,0])
-
-    # We can confirm that disputing the market also triggered a migration of its reporting window's ETH fees to its new reporting window
-    assert cash.balanceOf(market.getReportingWindow()) == fees
 
     # The market we created is now awaiting migration
     assert newMarket.getReportingState() == localFixture.contracts['Constants'].AWAITING_FORK_MIGRATION()
@@ -304,16 +290,11 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     # Now we can migrate the market to the winning universe
     assert newMarket.migrateThroughOneFork()
 
-    # We observe that the reporting window no longer has the fees collected
-    assert cash.balanceOf(oldReportingWindowAddress) == 0
-
     # Now that we're on the correct universe we are send back to the DESIGNATED DISPUTE phase, which in the case of no designated reporter means the ROUND1 Reporting phase
     if (makeReport):
         assert newMarket.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
     else:
         assert newMarket.getReportingState() == localFixture.contracts['Constants'].ROUND1_REPORTING()
-
-    # TODO: Migrate a market in the forking market's reporting window to confirm it moves to the forked universe's equivalent window
 
 @mark.parametrize('pastDisputePhase', [
     True,
