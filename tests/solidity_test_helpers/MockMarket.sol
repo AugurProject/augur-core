@@ -2,6 +2,7 @@ pragma solidity ^0.4.17;
 
 import 'reporting/IMarket.sol';
 import 'reporting/IUniverse.sol';
+import 'libraries/ITyped.sol';
 
 contract MockMarket is IMarket {
     IUniverse private universe;
@@ -318,15 +319,15 @@ contract MockMarket is IMarket {
         return migrateDueToNoRep;
     }
     
-    function isContainerForStakeToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool) {
         return isContForStakeToken;
     }
     
-    function isContainerForDisputeBondToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool) {
         return isContForDisputeBondToken;
     }
     
-    function isContainerForShareToken(Typed _shadyTarget) public view returns (bool) {
+    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool) {
         return isContForShareToken;
     }
     
