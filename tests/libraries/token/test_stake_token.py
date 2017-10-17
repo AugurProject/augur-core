@@ -268,13 +268,15 @@ def test_stake_token_verify_trusted_buy(tokenFixture, universe):
 
     mockMarket.setReportingState(tokenFixture.contracts['Constants'].ROUND1_REPORTING()) 
     mockMarket.setIsContainerForStakeToken(True)
-    assert mockMarket.callStakeTokenTrustedBuy(stakeToken.address, tester.a1, 1)
+    # market isn't in reporting windows
+    assert mockMarket.callStakeTokenTrustedBuy(stakeToken.address, tester.a1, 1) == False
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
     fixture.uploadAndAddToController('solidity_test_helpers/MockMarket.sol')
-    assert fixture.contracts['MockMarket']
+    fixture.uploadAndAddToController('solidity_test_helpers/MockReportingWindow.sol')
+    assert fixture.contracts['MockReportingWindow']
     universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
     market = ABIContract(fixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
     return initializeReportingFixture(fixture, universe, market)

@@ -46,6 +46,7 @@ contract MockMarket is IMarket {
     function setUniverse(IUniverse _universe) public { 
         universe = _universe; 
     }
+    
     function setDesignatedReport(bool _designatedReportValue) public {
         designatedReportValue = _designatedReportValue;
     }
