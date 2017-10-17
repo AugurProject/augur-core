@@ -2,6 +2,8 @@ version: "3"
 services:
   parity-dev-node:
     build: ./parity-dev-node
+    # uncomment following line to run with fixed block times instead of instant seal (parameter is seconds between blocks)
+    # command: [ "1" ]
     ports:
       - "47622:8545"
       - "47621:8180"
