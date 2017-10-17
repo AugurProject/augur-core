@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-// TODO: Add type mappings for array items
+// TODO: Use mapped types for arrays
+// TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import * as binascii from "binascii";
 import * as path from "path";
 import EthjsAbi = require("ethjs-abi");
