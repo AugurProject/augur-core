@@ -178,6 +178,7 @@ def test_stake_token_redeem(tokenFixture, universe, cash):
     stakeToken_non_forking = tokenFixture.applySignature('StakeToken', market_other.getStakeToken([0, numTicks]))
     assert market_other.isContainerForStakeToken(stakeToken_non_forking.address) == True
 
+    # // :TODO Finish up test when redeem has been fixed
     # Finalize the market
     #finalizeForkingMarket(tokenFixture, universe, market_forking, True, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,numTicks], [numTicks,0])
     #market_forking.getReportingState() == tokenFixture.contracts['Constants'].FINALIZED()
