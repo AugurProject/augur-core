@@ -79,7 +79,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         require(universe.isContainerForReportingWindow(_caller)
             || universe.isContainerForMarket(_caller)
             || universe.isContainerForStakeToken(_caller)
-            || universe.isContainerForParticipationToken(_caller));
+            || universe.isContainerForWindowParticipationToken(_caller));
         balances[_source] = balances[_source].sub(_attotokens);
         balances[_destination] = balances[_destination].add(_attotokens);
         supply = supply.add(_attotokens);

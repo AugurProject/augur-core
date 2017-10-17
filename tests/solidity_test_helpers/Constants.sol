@@ -28,6 +28,7 @@ contract Constants {
 
     uint256 public constant REPORTING_DURATION_SECONDS = Reporting.reportingDurationSeconds();
     uint256 public constant REPORTING_DISPUTE_DURATION_SECONDS = Reporting.reportingDisputeDurationSeconds();
+    uint256 public constant FORK_DURATION_SECONDS = Reporting.forkDurationSeconds();
 
     uint256 public constant GAS_TO_REPORT = Reporting.gasToReport();
     uint256 public constant DEFAULT_REPORTING_GAS_PRICE = Reporting.defaultReportingGasPrice();

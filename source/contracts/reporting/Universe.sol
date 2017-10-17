@@ -14,11 +14,8 @@ import 'reporting/IStakeToken.sol';
 import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
-<<<<<<< 31dba17969fbe702c054438d0538174ccb92716a
 import 'reporting/IRepPriceOracle.sol';
-=======
-import 'reporting/IParticipationToken.sol';
->>>>>>> Writing tests and fixing bugs
+import 'reporting/IWindowParticipationToken.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
@@ -56,7 +53,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         require(forkingMarket == address(0));
         require(isContainerForMarket(ITyped(msg.sender)));
         forkingMarket = IMarket(msg.sender);
-        forkEndTime = block.timestamp + 60 days;
+        forkEndTime = block.timestamp + Reporting.forkDurationSeconds();
         return true;
     }
 
@@ -241,12 +238,12 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _legitMarket.isContainerForShareToken(_shadyShareToken);
     }
 
-    function isContainerForParticipationToken(Typed _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ParticipationToken") {
+    function isContainerForWindowParticipationToken(Typed _shadyTarget) public view returns (bool) {
+        if (_shadyTarget.getTypeName() != "WindowParticipationToken") {
             return false;
         }
-        IParticipationToken _shadyParticipationToken = IParticipationToken(_shadyTarget);
-        IReportingWindow _shadyReportingWindow = _shadyParticipationToken.getReportingWindow();
+        IWindowParticipationToken _shadyWindowParticipationToken = IWindowParticipationToken(_shadyTarget);
+        IReportingWindow _shadyReportingWindow = _shadyWindowParticipationToken.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
         }
@@ -254,7 +251,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
             return false;
         }
         IReportingWindow _legitReportingWindow = _shadyReportingWindow;
-        return _legitReportingWindow.isContainerForParticipationToken(Typed(_shadyParticipationToken));
+        return _legitReportingWindow.isContainerForWindowParticipationToken(Typed(_shadyWindowParticipationToken));
     }
 
     function isParentOf(IUniverse _shadyChild) public view returns (bool) {

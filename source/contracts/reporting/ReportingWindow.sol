@@ -18,8 +18,8 @@ import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
-import 'reporting/IParticipationToken.sol';
-import 'factories/ParticipationTokenFactory.sol';
+import 'reporting/IWindowParticipationToken.sol';
+import 'factories/WindowParticipationTokenFactory.sol';
 
 
 contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingWindow {
@@ -40,7 +40,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     RunningAverage.Data private reportingGasPrice;
     uint256 private totalWinningStake;
     uint256 private totalStake;
-    IParticipationToken private participationToken;
+    IWindowParticipationToken private participationToken;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -48,7 +48,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         // Initialize this to some reasonable value to handle the first market ever created without branching code
         reportingGasPrice.record(Reporting.defaultReportingGasPrice());
-        participationToken = ParticipationTokenFactory(controller.lookup("ParticipationTokenFactory")).createParticipationToken(controller, this);
+        participationToken = WindowParticipationTokenFactory(controller.lookup("WindowParticipationTokenFactory")).createWindowParticipationToken(controller, this);
         return true;
     }
 
@@ -219,7 +219,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return totalWinningStake;
     }
 
-    function getParticipationToken() public view returns (IParticipationToken) {
+    function getWindowParticipationToken() public view returns (IWindowParticipationToken) {
         return participationToken;
     }
 
@@ -379,12 +379,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.contains(_shadyMarket);
     }
 
-    function isContainerForParticipationToken(Typed _shadyTarget) public afterInitialized view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ParticipationToken") {
+    function isContainerForWindowParticipationToken(Typed _shadyTarget) public afterInitialized view returns (bool) {
+        if (_shadyTarget.getTypeName() != "WindowParticipationToken") {
             return false;
         }
-        IParticipationToken _shadyParticipationToken = IParticipationToken(_shadyTarget);
-        return participationToken == _shadyParticipationToken;
+        IWindowParticipationToken _shadyWindowParticipationToken = IWindowParticipationToken(_shadyTarget);
+        return participationToken == _shadyWindowParticipationToken;
     }
 
     function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {
