@@ -1,6 +1,7 @@
 import * as binascii from "binascii";
-import * as EthjsAccount from "ethjs-account";
-import * as EthjsQuery from 'ethjs-query';
+import EthjsAccount = require("ethjs-account");
+import EthjsQuery = require('ethjs-query');
+import { TransactionReceipt } from 'ethjs-shared';
 
 const DEFAULT_TEST_ACCOUNT_BALANCE = 1 * 10 ** 20; // Denominated in wei
 // Set gas block limit extremely high so new blocks don"t have to be mined while uploading contracts
@@ -74,14 +75,15 @@ export async function initializeTestRpcClientOptions(ethHttpProviderPort: number
     return { gasLimit: GAS_BLOCK_AMOUNT, accounts: accountOptions };
 }
 
-async function sleep(milliseconds: number): Promise<object> {
-    return new Promise((resolve, reject) => setTimeout(resolve, milliseconds));
+export async function sleep(milliseconds: number): Promise<void> {
+    return new Promise<void>((resolve, reject) => setTimeout(resolve, milliseconds));
 }
 
-export async function waitForTransactionToBeSealed(ethjsQuery: EthjsQuery, transactionHash: string): Promise<void> {
-    let transaction = await ethjsQuery.getTransactionByHash(transactionHash);
-    while (transaction.blockNumber == null) {
+export async function waitForTransactionReceipt(ethjsQuery: EthjsQuery, transactionHash: string): Promise<TransactionReceipt> {
+    let transactionReceipt = await ethjsQuery.getTransactionReceipt(transactionHash);
+    while (!transactionReceipt) {
         await sleep(ETHEREUM_POLLING_INTERVAL_MILLISECONDS);
-        transaction = await ethjsQuery.getTransactionByHash(transactionHash);
+        transactionReceipt = await ethjsQuery.getTransactionReceipt(transactionHash);
     }
+    return transactionReceipt;
 }
