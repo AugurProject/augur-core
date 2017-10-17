@@ -20,7 +20,7 @@ services:
       - ETHEREUM_HOST=parity-dev-node
       - ETHEREUM_PORT=8545
       - ETHEREUM_GAS_PRICE_IN_NANOETH=1
-      - ETHEREUM_BLOCK_INTERVAL_IN_MILLISECONDS=10
+      - ETHEREUM_POLLING_INTERVAL_MILLISECONDS=10
     links:
       - parity-dev-node
   # geth-integration-tests:

@@ -1,22 +1,22 @@
-FROM parity/parity:v1.7.4
+FROM parity/parity:v1.8.0
 
 # install all dependencies
 RUN apt-get update \
 	&& apt-get install --yes --no-install-recommends curl \
 	&& rm -rf /var/lib/apt/lists/*
 
-# create the master account
-RUN /parity/parity daemon /parity/parity.pid --chain dev --no-ui --no-dapps --no-discovery --jsonrpc-apis web3,eth,net,personal,parity,parity_set,traces,rpc,parity_accounts \
-	&& while ! curl --silent --show-error -H "Content-Type: application/json" -X POST --data '{"jsonrpc":"2.0","method":"parity_newAccountFromPhrase","params":["",""],"id": 1}' localhost:8545; do sleep 0.1; done \
-	&& kill -s TERM `cat /parity/parity.pid` \
-	&& while kill -0 `cat /parity/parity.pid`; do sleep 0.01; done \
-	&& rm /parity/parity.pid \
-	&& echo "" > /parity/password
-
 WORKDIR /
+COPY dev-key.json /parity/keys/AuraChain/dev-key.json
+COPY aura-chain-spec.json /parity/aura-chain-spec.json
+COPY aura-config.toml /parity/aura-config.toml
+COPY dev-key.json /parity/keys/InstantSealChain/dev-key.json
+COPY instant-seal-chain-spec.json /parity/instant-seal-chain-spec.json
+COPY instant-seal-config.toml /parity/instant-seal-config.toml
 COPY start.sh /start.sh
+RUN echo "" > /parity/password
 RUN chmod +x /start.sh
+
 ENTRYPOINT /start.sh
 
-# docker build --tag parity-dev-node .
-# docker run --rm -it -p 8000:8000 -p 8001:8001 -p 8545:8545 -p 8180:8180 parity-dev-node
+# docker image build --tag parity-dev-node .
+# docker container run --rm -it -p 8000:8000 -p 8001:8001 -p 8545:8545 -p 8180:8180 --name parity-dev-node parity-dev-node

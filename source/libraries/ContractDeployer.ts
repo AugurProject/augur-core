@@ -4,12 +4,14 @@
 // TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import * as binascii from "binascii";
 import * as path from "path";
-import * as EthjsAbi from "ethjs-abi";
-import * as EthjsContract from "ethjs-contract";
-import * as EthjsQuery from "ethjs-query";
+import EthjsAbi = require("ethjs-abi");
+import EthjsContract = require("ethjs-contract");
+import EthjsQuery = require("ethjs-query");
+import { TransactionReceipt } from 'ethjs-shared';
+// TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
 import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
 import { Contract, parseAbiIntoMethods } from "./AbiParser";
-import { generateTestAccounts, padAndHexlify, stringTo32ByteHex, waitForTransactionToBeSealed } from "./HelperFunctions";
+import { generateTestAccounts, padAndHexlify, stringTo32ByteHex, waitForTransactionReceipt } from "./HelperFunctions";
 import { CompilerOutputContracts } from "solc";
 
 export class ContractDeployer {
@@ -36,16 +38,23 @@ export class ContractDeployer {
     public async deploy(): Promise<void> {
         this.testAccounts = await this.ethjsQuery.accounts();
 
+        console.log('Uploading controller...');
         this.controller = await this.upload("../source/contracts/Controller.sol");
         const ownerAddress = (await this.controller.owner())[0];
         if (ownerAddress.toLowerCase() !== this.testAccounts[0]) {
             throw new Error("Controller owner does not equal from address");
         }
+        console.log('Uploading contracts...');
         await this.uploadAllContracts();
+        console.log('Whitelisting contracts...');
         await this.whitelistTradingContracts();
+        console.log('Initializing contracts...');
         await this.initializeAllContracts();
+        console.log('Approving central authoritiy...');
         await this.approveCentralAuthority();
+        console.log('Creating genesis universe...');
         this.universe = await this.createGenesisUniverse();
+        console.log('Creating a reasonable market...');
         this.market = await this.createReasonableMarket(this.universe.address, this.contracts['Cash'].address, 2);
     }
 
@@ -94,17 +103,12 @@ export class ContractDeployer {
             this.bytecodes[signatureKey] = bytecode;
         }
         const signature = this.signatures[signatureKey];
-        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
-        let transactionHash: string;
-
-        if (constructorArgs.length > 0) {
-            transactionHash = await contractBuilder.new(constructorArgs[0], constructorArgs[1]);
-        } else {
-            transactionHash = await contractBuilder.new();
-        }
-        await waitForTransactionToBeSealed(this.ethjsQuery, transactionHash);
-        const receipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
-        this.contracts[lookupKey] = await contractBuilder.at(receipt.contractAddress);
+        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const transactionHash = (constructorArgs.length === 2)
+            ? await contractBuilder.new(constructorArgs[0], constructorArgs[1])
+            : await contractBuilder.new();
+        const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash);
+        this.contracts[lookupKey] = contractBuilder.at(receipt.contractAddress);
 
         return this.contracts[lookupKey];
     }
@@ -125,10 +129,10 @@ export class ContractDeployer {
         return contract;
     }
 
-    private async uploadAllContracts(): Promise<boolean> {
+    private async uploadAllContracts(): Promise<void> {
         const contractsToDelegate = {"Orders": true, "TradingEscapeHatch": true};
 
-        let uploadedContractPromises: Promise<ContractBlockchainData|undefined>[] = [];
+        const promises: Promise<ContractBlockchainData|undefined>[] = [];
         for (let contractFileName in this.compiledContracts) {
             if (contractFileName === "Controller.sol" || contractFileName === "libraries/Delegator.sol") {
                 continue;
@@ -140,64 +144,68 @@ export class ContractDeployer {
                     continue;
                 }
                 if (contractsToDelegate[contractName] === true) {
-                    uploadedContractPromises.push(this.uploadAndAddDelegatedToController(contractFileName, contractName));
+                    promises.push(this.uploadAndAddDelegatedToController(contractFileName, contractName));
                     // this.contracts[contractName] = this.applySignature(contractName, this.contracts[contractName].address)
                 } else {
-                    uploadedContractPromises.push(this.uploadAndAddToController(contractFileName));
+                    promises.push(this.uploadAndAddToController(contractFileName));
                 }
             }
         }
 
-        await Promise.all(uploadedContractPromises);
-
-        return true;
+        await Promise.all(promises);
     }
 
-    private async whitelistTradingContracts(): Promise<boolean> {
+    private async whitelistContract(contractName: string): Promise<TransactionReceipt> {
+        const transactionHash = await this.controller.addToWhitelist(this.contracts[contractName].address);
+        return await waitForTransactionReceipt(this.ethjsQuery, transactionHash);
+    }
+
+    private async whitelistTradingContracts(): Promise<void> {
+        const promises: Array<Promise<TransactionReceipt>> = [];
         for (let contractFileName in this.compiledContracts) {
             if (contractFileName.indexOf("trading/") > -1) {
                 const contractName = path.basename(contractFileName, ".sol");
                 if (!this.contracts[contractName]) continue;
-                this.controller.addToWhitelist(this.contracts[contractName].address);
+                promises.push(this.whitelistContract(contractName));
             }
         }
 
-        return true;
+        await Promise.all(promises);
     }
 
-    private async initializeAllContracts(): Promise<boolean> {
+    private async initializeContract(contractName: string): Promise<TransactionReceipt> {
+        const transactionHash = await this.contracts[contractName].setController(this.controller.address);
+        return await waitForTransactionReceipt(this.ethjsQuery, transactionHash);
+    }
+
+    private async initializeAllContracts(): Promise<void> {
         const contractsToInitialize = ["Augur","Cash","CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimProceeds","OrdersFetcher"];
+        const promises: Array<Promise<TransactionReceipt>> = [];
         for (let contractName of contractsToInitialize) {
-            if (this.contracts[contractName]["setController"]) {
-                this.contracts[contractName].setController(this.controller.address);
-            } else if (this.contracts[contractName]["initialize"]) {
-                this.contracts[contractName].initialize(this.controller.address);
-            } else {
-                throw new Error("Contract " + contractName + " has neither \"initialize\" nor \"setController\" method on it.");
-            }
+            promises.push(this.initializeContract(contractName));
         }
 
-        return true;
+        await Promise.all(promises);
     }
 
-    private async approveCentralAuthority(): Promise<boolean> {
+    private async approveCentralAuthority(): Promise<void> {
         const authority = this.contracts["Augur"];
         const contractsToApprove = ["Cash"];
+        const promises: Array<Promise<string>> = [];
         for (let testAccount in this.testAccounts) {
             for (let contractName of contractsToApprove) {
-                this.contracts[contractName].approve(authority.address, 2 ** 256, { from: this.testAccounts[testAccount] });
+                promises.push(this.contracts[contractName].approve(authority.address, 2 ** 256, { from: this.testAccounts[testAccount] }));
             }
         }
 
-        return true;
+        await Promise.all(promises);
     }
 
     private async createGenesisUniverse(): Promise<ContractBlockchainData> {
         const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0], gas: this.gasAmount });
         const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gas: this.gasAmount });
         const transactionHash = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify("Universe")}`);
-        await waitForTransactionToBeSealed(this.ethjsQuery, transactionHash);
-        const receipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
+        const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash);
         const universe = await universeBuilder.at(receipt.contractAddress);
         await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
         return universe;
@@ -237,7 +245,6 @@ export class ContractDeployer {
         await universe.getPreviousReportingWindow();
         // necessary because createMarket needs its reporting window already created
         const reportingWindowTransactionHash = await universe.getReportingWindowByMarketEndTime(endTime);
-        waitForTransactionToBeSealed(this.ethjsQuery, reportingWindowTransactionHash);
 
         const currentReportingWindowAddress = await universe.getCurrentReportingWindow.bind(constant)();
         const targetReportingWindowAddress = await universe.getReportingWindowByMarketEndTime.bind(constant)(endTime);
@@ -249,7 +256,6 @@ export class ContractDeployer {
             throw new Error("Unable to get address for new categorical market.");
         }
         const createMarketHash = await targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
-        waitForTransactionToBeSealed(this.ethjsQuery, createMarketHash);
         const market = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0], gas: this.gasAmount });
         const marketNameHex = stringTo32ByteHex("Market");
 

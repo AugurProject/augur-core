@@ -1,7 +1,6 @@
 import * as EthjsAbi from 'ethjs-abi';
 import * as EthjsQuery from 'ethjs-query';
 import { CompilerOutputContractAbiFunction, CompilerOutputContractAbiEvent } from 'solc';
-import { waitForTransactionToBeSealed } from './HelperFunctions';
 
 interface TransactionOptions {
     to?: string,
@@ -50,7 +49,6 @@ export async function parseAbiIntoMethods(ethjsQuery: EthjsQuery, abi: (Compiler
                 // CONSIDER: currently this only supports returning the first output of a function, not all of them
                 return EthjsAbi.decodeMethod(item, result)[0];
             } else {
-                await waitForTransactionToBeSealed(ethjsQuery, result);
                 return result;
             }
         };

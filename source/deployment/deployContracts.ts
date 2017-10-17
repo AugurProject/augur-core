@@ -3,8 +3,8 @@
 import * as fs from "async-file";
 import * as getPort from "get-port";
 import * as path from "path";
-import * as EthjsHttpProvider from "ethjs-provider-http";
-import * as EthjsQuery from "ethjs-query";
+import EthjsHttpProvider = require('ethjs-provider-http');
+import EthjsQuery = require("ethjs-query");
 import { SolidityContractCompiler } from "../libraries/CompileSolidity";
 import { ContractDeployer } from "../libraries/ContractDeployer";
 import { initializeTestRpcClientOptions } from "../libraries/HelperFunctions";

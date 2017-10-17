@@ -15,6 +15,7 @@
         "ethjs-contract": "0.1.9",
         "ethjs-provider-http": "0.1.6",
         "ethjs-query": "0.2.9",
+        "ethjs-rpc": "0.1.7",
         "fs-readfile-promise": "3.0.0",
         "get-port": "3.2.0",
         "mocha": "3.5.3",
