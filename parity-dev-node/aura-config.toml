@@ -1,0 +1,79 @@
+[parity]
+# Custom Chain
+chain = "/parity/aura-chain-spec.json"
+# Forces Parity to run even if there are known issues regarding consensus. Not recommended.
+no_consensus = true
+# Blockchain and settings will be stored in /parity.
+base_path = "/parity"
+# Parity databases will be stored in /parity/chains.
+db_path = "/parity/chains"
+# Your encrypted private keys will be stored in /parity/keys.
+keys_path = "/parity/keys"
+
+[account]
+# From: [0x913da4198e6be1d5f5e4a40d0667f70c0b5430eb] you'll be able to send tranasactions without password.
+unlock = ["0x913da4198e6be1d5f5e4a40d0667f70c0b5430eb"]
+# File at /parity/password should contain passwords to unlock your accounts. One password per line.
+password = ["/parity/password"]
+
+[network]
+# Enable or disable new peers discovery.
+discovery = false
+# Connect only to reserved nodes.
+reserved_only = true
+
+[rpc]
+#  JSON-RPC will be listening for connections on IP 0.0.0.0.
+interface = "all"
+# Allows Cross-Origin Requests from domain '*'.
+cors = "*"
+# Only selected APIs will be exposed over this interface.
+apis = ["all"]
+# Allow connections only using specified addresses.
+hosts = ["all"]
+
+[websockets]
+#  JSON-RPC will be listening for connections on IP 0.0.0.0.
+interface = "all"
+# Allows connecting from Origin '*'.
+origins = ["all"]
+# Only selected APIs will be exposed over this interface.
+apis = ["all"]
+# Allow connections only using specified addresses.
+hosts = ["all"]
+
+[ipc]
+# You won't be able to use IPC to interact with Parity.
+disable = true
+
+[secretstore]
+# You won't be able to encrypt and decrypt secrets.
+disable = true
+
+[ipfs]
+# You won't be able to hash-query blockchain data.
+disable = true
+
+[dapps]
+# You won't be able to access any web Dapps.
+disable = true
+
+[mining]
+engine_signer = "0x913da4198e6be1d5f5e4a40d0667f70c0b5430eb"
+min_gas_price = 1
+# Targeting 6500000 gas per block when sealing a new block.
+gas_floor_target = "6500000"
+# Gas limit will be raised at most by 6500000 gas.
+gas_cap = "6500000"
+# Parity will reject transactions above 6500000 gas.
+tx_gas_limit = "6500000"
+# Parity will not save local transaction queue to disk.
+no_persistent_txqueue = true
+
+[footprint]
+# Significant speed up but unclean exit is unrecoverable (disables DB WAL).
+fast_and_loose = true
+
+[snapshots]
+# Disables automatic periodic snapshots.
+disable_periodic = true
