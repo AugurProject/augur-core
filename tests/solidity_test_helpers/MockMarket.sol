@@ -8,6 +8,7 @@ contract MockMarket is IMarket {
     IUniverse private universe;
     bool private designatedReportValue;
     bytes32 private derivePayoutDistributionHashValue;
+    bytes32 private updateDerivePayoutDistributionHashValue;
     IReportingWindow private reportingWindow;
     uint8 private numberOfOutcomes;
     uint256 private numTicks;
@@ -39,7 +40,14 @@ contract MockMarket is IMarket {
     bool private isValidValue;
     address private owner;
     bool private transferOwner;
-
+    IReportingWindow private initializeReportingWindowValue;
+    uint256 private initializeEndTime;
+    uint8 private initializeNumOutcomesValue;
+    uint256 private initializeNumTicksValue;
+    uint256 private initializeFeePerEthInAttoethValue;
+    ICash private initializeCashValue;
+    address private initializeCreatorValue;
+    address private initializeDesignatedReporterAddressValue;
     /*
     * setters to feed the getters and impl of IMarket
     */
@@ -183,10 +191,45 @@ contract MockMarket is IMarket {
         return _stakeToken.trustedBuy(_reporter, _attotokens); 
     }
     
+    function getInitializeReportingWindowValue() public view returns (IReportingWindow) {
+        return initializeReportingWindowValue;
+    }
+
+    function getInitializeEndTime() public returns(uint256) {
+        return initializeEndTime;
+    }
+
+    function getInitializeNumOutcomesValue() public returns(uint8) {
+        return initializeNumOutcomesValue;
+    }
+
+    function getInitializeNumTicksValue() public returns(uint256) {
+        return initializeNumTicksValue;
+    }
+
+    function getInitializeFeePerEthInAttoethValue() public returns(uint256) {
+        return initializeFeePerEthInAttoethValue;
+    }
+
+    function getInitializeCashValue() public view returns(ICash) {
+        return initializeCashValue;
+    }
+
+    function getInitializeCreatorValue() public returns(address) {
+        return initializeCreatorValue;
+    }
+
+    function getInitializeDesignatedReporterAddressValue() public returns(address) {
+        return initializeDesignatedReporterAddressValue;
+    }
+
+    function getUpdateDerivePayoutDistributionHashValue() public returns(bytes32) {
+        return updateDerivePayoutDistributionHashValue;
+    }
+
     /*
     * IMarket methods
     */
-
     function getOwner() public view returns (address) { 
         return owner;
     }
@@ -200,11 +243,19 @@ contract MockMarket is IMarket {
     }
 
     function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable returns (bool _success) {
+        initializeReportingWindowValue = _reportingWindow;
+        initializeEndTime = _endTime;
+        initializeNumOutcomesValue = _numOutcomes;
+        initializeNumTicksValue = _numTicks;
+        initializeFeePerEthInAttoethValue = _feePerEthInAttoeth;
+        initializeCashValue = _cash;
+        initializeCreatorValue = _creator;
+        initializeDesignatedReporterAddressValue = _designatedReporterAddress;      
         return true;
     }
 
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool) { 
-        derivePayoutDistributionHashValue = _payoutDistributionHash; 
+        updateDerivePayoutDistributionHashValue = _payoutDistributionHash; 
         return true; 
     }
 

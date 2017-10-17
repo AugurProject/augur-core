@@ -31,8 +31,9 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     bool private setIsContainerForMarketValue;
     bool private setIsForkingMarketFinalizedValue;
     bool private setIsDisputeActiveValue;
-    uint256 private reportingWindowId;
     IMarket private market;
+    IUniverse private initializeUniverseValue;
+    uint256 private initializeReportingWindowIdValue;
     /*
     * setters to feed the getters and impl of IReportingWindow
     */
@@ -110,7 +111,12 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function setCreateMarket(IMarket _market) public {
         market = _market;
     }
-
+    function getInitializeUniverseValue() public view returns(IUniverse) {
+        return initializeUniverseValue;
+    }
+    function getinitializeReportingWindowIdValue() public returns(uint256) {
+        return initializeReportingWindowIdValue;
+    }
     /*
     * Impl of IReportingWindow and ITyped
      */
@@ -120,8 +126,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public returns (bool) {
         endInitialization();
-        universe = _universe;
-        reportingWindowId = _reportingWindowId;
+        initializeUniverseValue = _universe;
+        initializeReportingWindowIdValue = _reportingWindowId;
         return true;
     }
 

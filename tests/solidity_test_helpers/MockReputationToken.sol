@@ -21,6 +21,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, Variabl
     IUniverse private setUniverseValue;
     IReputationToken private setTopMigrationDestinationValue;
     bool private setMigrateFromLegacyRepContractValue;
+    IUniverse private initializeUniverseValue;
     
     /*
     * setters to feed the getters and impl of IUniverse
@@ -46,6 +47,9 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, Variabl
     function setMigrateFromLegacyRepContract(bool _setMigrateFromLegacyRepContractValue) public {
         setMigrateFromLegacyRepContractValue = _setMigrateFromLegacyRepContractValue;
     }
+    function setInitializeUniverseValue() public returns(IUniverse) {
+        return initializeUniverseValue;
+    }
     /*
     * Impl of IReputationToken and ITyped
      */
@@ -54,7 +58,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, Variabl
     }     
     function initialize(IUniverse _universe) public returns (bool) {
         endInitialization();
-        setUniverseValue = _universe;
+        initializeUniverseValue = _universe;
         return true;
     }
     function migrateOut(IReputationToken _destination, address _reporter, uint256 _attotokens) public returns (bool) {

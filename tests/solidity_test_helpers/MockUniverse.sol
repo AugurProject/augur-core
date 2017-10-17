@@ -49,7 +49,8 @@ contract MockUniverse is Initializable, IUniverse {
     bool private setIsContainerForShareTokenValue;
     bool private setDecrementOpenInterestValue;
     bool private setIncrementOpenInterestValue;
-    
+    IUniverse private initializParentUniverseValue;
+    bytes32 private initializeParentPayoutDistributionHashValue;
     /*
     * setters to feed the getters and impl of IUniverse
     */
@@ -167,6 +168,12 @@ contract MockUniverse is Initializable, IUniverse {
     function setIncrementOpenInterest(bool _setIncrementOpenInterestValue) public {
         setIncrementOpenInterestValue = _setIncrementOpenInterestValue;
     }
+    function getInitializParentUniverseValue() public view returns (IUniverse) {
+        return initializParentUniverseValue;
+    }
+    function getInitializeParentPayoutDistributionHashValue() public returns (bytes32) {
+        return initializeParentPayoutDistributionHashValue;
+    }
     /*
     * Impl of IUniverse and ITyped
      */
@@ -174,8 +181,8 @@ contract MockUniverse is Initializable, IUniverse {
         return "Universe";
     }
     function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external returns (bool) {
-        setParentUniverseValue = _parentUniverse;
-        setParentPayoutDistributionHashValue = _parentPayoutDistributionHash;
+        initializParentUniverseValue = _parentUniverse;
+        initializeParentPayoutDistributionHashValue = _parentPayoutDistributionHash;
         return true;
     }
     function fork() public returns (bool) {
