@@ -16,7 +16,7 @@ COPY start.sh /start.sh
 RUN echo "" > /parity/password
 RUN chmod +x /start.sh
 
-ENTRYPOINT /start.sh
+ENTRYPOINT [ "/start.sh" ]
 
 # docker image build --tag parity-dev-node .
 # docker container run --rm -it -p 8000:8000 -p 8001:8001 -p 8545:8545 -p 8180:8180 --name parity-dev-node parity-dev-node
