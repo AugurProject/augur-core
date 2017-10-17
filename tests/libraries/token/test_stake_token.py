@@ -242,41 +242,53 @@ def test_stake_token_trusted_buy_fails(tokenFixture, binaryMarket):
 
 def test_stake_token_verify_trusted_buy(tokenFixture, universe):
     numTicks = 10 ** 18
+    # wire up mock universe
+    mockUniverse = tokenFixture.contracts['MockUniverse']
+    mockUniverse.setIsContainerForReportingWindow(True)
+    mockUniverse.setIsContainerForMarket(True)
+    # wire up mock reputation token
+    mockReputationToken = tokenFixture.contracts['MockReputationToken']
+    mockReputationToken.setTrustedTransfer(True)
+    # wire up mock reporting window    
+    mockReportingWindow = tokenFixture.contracts['MockReportingWindow']
+    mockReportingWindow.setReputationToken(mockReputationToken.address)
+    mockReportingWindow.setUniverse(mockUniverse.address)
+    mockReportingWindow.setIsContainerForMarket(True)
+    mockReportingWindow.setNoteReportingGasPrice(True)
+    # wire up mock market
     mockMarket = tokenFixture.contracts['MockMarket']
     mockMarket.setNumberOfOutcomes(2)
     mockMarket.setNumTicks(numTicks)
-    mockMarket.setUniverse(universe.address)
-    reportingWindow = tokenFixture.applySignature('ReportingWindow', universe.getCurrentReportingWindow())
-    reputationToken = tokenFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
-    assert reputationToken.balanceOf(tester.a1) > 0
-    reputationToken.transfer(mockMarket.address, 100)
-
-    mockMarket.setReportingWindow(reportingWindow.address)
-    mockMarketReportingWindow = tokenFixture.applySignature('ReportingWindow', mockMarket.getReportingWindow())
-    assert mockMarketReportingWindow.isContainerForMarket(mockMarket.address)
-    assert universe.isContainerForReportingWindow(mockMarketReportingWindow.address)
-    assert universe.isContainerForMarket(mockMarket.address)
+    mockMarket.setUniverse(mockUniverse.address)
+    mockMarket.setReportingWindow(mockReportingWindow.address)
+    mockMarket.setIsContainerForStakeToken(True)
+    mockMarket.setDerivePayoutDistributionHash(stringToBytes("1"))
 
     stakeToken = tokenFixture.upload('../source/contracts/reporting/StakeToken.sol', 'stakeToken')
     assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)       
-    assert universe.isContainerForStakeToken(stakeToken.address)
     
     mockMarket.setReportingState(tokenFixture.contracts['Constants'].PRE_REPORTING()) 
-    
     with raises(Exception, message="market can't call trust buy unless market state is round 1 or round 2"):
         mockMarket.callStakeTokenTrustedBuy(stakeToken, tester.a1, 1)
 
+    # call stake token successfully
     mockMarket.setReportingState(tokenFixture.contracts['Constants'].ROUND1_REPORTING()) 
-    mockMarket.setIsContainerForStakeToken(True)
-    # market isn't in reporting windows
-    assert mockMarket.callStakeTokenTrustedBuy(stakeToken.address, tester.a1, 1) == False
+    assert mockMarket.callStakeTokenTrustedBuy(stakeToken.address, tester.a1, 1)
+    mockMarket.setReportingState(tokenFixture.contracts['Constants'].ROUND2_REPORTING()) 
+    assert mockMarket.callStakeTokenTrustedBuy(stakeToken.address, tester.a1, 1)
+
+    mockMarket.setReportingState(tokenFixture.contracts['Constants'].LAST_DISPUTE()) 
+    with raises(Exception, message="market can't call trust buy unless market state is round 1 or round 2"):
+        mockMarket.callStakeTokenTrustedBuy(stakeToken, tester.a1, 1)
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
     fixture.uploadAndAddToController('solidity_test_helpers/MockMarket.sol')
     fixture.uploadAndAddToController('solidity_test_helpers/MockReportingWindow.sol')
-    assert fixture.contracts['MockReportingWindow']
+    fixture.uploadAndAddToController('solidity_test_helpers/MockUniverse.sol')
+    fixture.uploadAndAddToController('solidity_test_helpers/MockReputationToken.sol')
+    assert fixture.contracts['MockReputationToken']
     universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
     market = ABIContract(fixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
     return initializeReportingFixture(fixture, universe, market)
