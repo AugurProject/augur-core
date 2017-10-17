@@ -64,6 +64,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         IMarket.ReportingState _state = market.getReportingState();
         require(_state == IMarket.ReportingState.ROUND1_REPORTING || _state == IMarket.ReportingState.ROUND2_REPORTING);
         buyTokens(_reporter, _attotokens);
+        return true;
     }
 
     function buyTokens(address _reporter, uint256 _attotokens) private afterInitialized returns (bool) {
@@ -73,6 +74,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         bytes32 _payoutDistributionHash = getPayoutDistributionHash();
         market.updateTentativeWinningPayoutDistributionHash(_payoutDistributionHash);
         getReportingWindow().noteReportingGasPrice(market);
+        return true;
     } 
 
     function redeemDisavowedTokens(address _reporter) public afterInitialized returns (bool) {

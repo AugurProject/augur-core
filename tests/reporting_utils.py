@@ -13,7 +13,7 @@ def initializeReportingFixture(sessionFixture, universe, market):
 
     return sessionFixture.createSnapshot()
 
-def proceedToDesignatedReporting(testFixture, universe, market, reportOutcomes):
+def proceedToDesignatedReporting(testFixture, universe, market, reportOutcomes, designatedReporter=tester.k0):
     cash = testFixture.contracts['Cash']
     reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
@@ -21,7 +21,7 @@ def proceedToDesignatedReporting(testFixture, universe, market, reportOutcomes):
     # We can't yet do a designated report on the market as it's in the pre reporting phase
     if (market.getReportingState() == testFixture.contracts['Constants'].PRE_REPORTING()):
         with raises(TransactionFailed, message="Reporting cannot be done in the PRE REPORTING state"):
-            testFixture.designatedReport(market, reportOutcomes, tester.k0)
+            testFixture.designatedReport(market, reportOutcomes, designatedReporter)
 
     # Fast forward to the reporting phase time
     reportingWindow = testFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
