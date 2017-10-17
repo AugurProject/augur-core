@@ -202,8 +202,8 @@ export class ContractDeployer {
     }
 
     private async createGenesisUniverse(): Promise<ContractBlockchainData> {
-        const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0], gas: this.gasAmount });
-        const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gas: this.gasAmount });
+        const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gasPrice: this.gasPrice });
         const transactionHash = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify("Universe")}`);
         const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash);
         const universe = await universeBuilder.at(receipt.contractAddress);
@@ -229,10 +229,10 @@ export class ContractDeployer {
     private async createMarket(universeAddress: string, numOutcomes: number, endTime: number, feePerEthInWei: number, denominationToken: string, designatedReporter: string, numTicks: number): Promise<Contract> {
         const constant = { constant: true };
 
-        const universe = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Universe"], { to: universeAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
-        const legacyReputationToken = await parseAbiIntoMethods(this.ethjsQuery, this.signatures['LegacyRepContract'], { to: this.contracts['LegacyRepContract'].address, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
+        const universe = parseAbiIntoMethods(this.ethjsQuery, this.signatures["Universe"], { to: universeAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const legacyReputationToken = parseAbiIntoMethods(this.ethjsQuery, this.signatures['LegacyRepContract'], { to: this.contracts['LegacyRepContract'].address, from: this.testAccounts[0], gasPrice: this.gasPrice });
         const reputationTokenAddress = await universe.getReputationToken();
-        const reputationToken = await parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReputationToken'], { to: reputationTokenAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
+        const reputationToken = parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReputationToken'], { to: reputationTokenAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
 
         // get some REP
         await legacyReputationToken.faucet(0);
@@ -249,14 +249,14 @@ export class ContractDeployer {
         const currentReportingWindowAddress = await universe.getCurrentReportingWindow.bind(constant)();
         const targetReportingWindowAddress = await universe.getReportingWindowByMarketEndTime.bind(constant)(endTime);
 
-        const targetReportingWindow = await parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReportingWindow'], { to: targetReportingWindowAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
+        const targetReportingWindow = parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReportingWindow'], { to: targetReportingWindowAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
         const marketCreationFee = await universe.getMarketCreationCost.bind(constant)();
         const marketAddress = await targetReportingWindow.createMarket.bind({ value: marketCreationFee, constant: true })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
         if (!marketAddress) {
             throw new Error("Unable to get address for new categorical market.");
         }
         const createMarketHash = await targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
-        const market = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0], gas: this.gasAmount });
+        const market = parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0], gas: this.gasAmount });
         const marketNameHex = stringTo32ByteHex("Market");
 
         if (await market.getTypeName() !== marketNameHex) {
