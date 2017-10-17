@@ -3,9 +3,6 @@ from ethereum.tools.tester import TransactionFailed, ABIContract
 from pytest import fixture, mark, raises
 from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, ETHDelta
 
-# CONSIDER: So I don't forget. Should fees go to the reporting window of the market or the current reporting window at the time of the claim/trade?
-# CONSIDER: Fees are currently stored in fixed point. Should we convert this to be represented as a divisor instead?
-
 def test_token_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
     # We'll progress past the designated dispute phase and finalize all the markets
     localFixture.chain.head_state.timestamp = market.getEndTime() + localFixture.contracts["Constants"].DESIGNATED_REPORTING_DURATION_SECONDS() + 1
@@ -67,7 +64,7 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
     # Fast forward time until the window is over and we can redeem our winning stake and participation tokens and receive fees
     localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
-    reporterFees = universe.getReportingFeeInAttoethPerEth() * 1000
+    reporterFees = 1000 * market.getNumTicks() / universe.getReportingFeeDivisor()
     totalWinningStake = reportingWindow.getTotalWinningStake()
     assert cash.balanceOf(reportingWindow.address) == reporterFees
 
@@ -145,10 +142,12 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
 
     # Generate the fees in our initial reporting window
     cost = 1000 * market.getNumTicks()
+    marketCreatorFees = cost / market.getMarketCreatorSettlementFeeDivisor()
     completeSets.publicBuyCompleteSets(market.address, 1000, sender = tester.k1, value = cost)
-    completeSets.publicSellCompleteSets(market.address, 1000, sender=tester.k1)
+    with ETHDelta(marketCreatorFees, tester.a0, utils, "The market creator didn't get their share of fees from complete set sale"):
+        completeSets.publicSellCompleteSets(market.address, 1000, sender=tester.k1)
     fees = cash.balanceOf(market.getReportingWindow())
-    reporterFees = universe.getReportingFeeInAttoethPerEth() * cost / market.getNumTicks()
+    reporterFees = cost / universe.getReportingFeeDivisor()
     assert fees == reporterFees
 
     # Distribute REP

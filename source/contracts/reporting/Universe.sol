@@ -41,7 +41,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     mapping (address => uint256) private targetReporterGasCosts;
     mapping (address => uint256) private designatedReportStakeInAttoRep;
     mapping (address => uint256) private designatedReportNoShowBondInAttoRep;
-    mapping (address => uint256) private shareSettlementPerEthFee;
+    mapping (address => uint256) private shareSettlementFeeDivisor;
 
     function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external beforeInitialized returns (bool) {
         endInitialization();
@@ -360,24 +360,28 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _newValue;
     }
 
-    function getReportingFeeInAttoethPerEth() public returns (uint256) {
+    function getReportingFeeDivisor() public returns (uint256) {
         IReportingWindow _reportingWindow = getCurrentReportingWindow();
-        uint256 _currentPerEthFee = shareSettlementPerEthFee[_reportingWindow];
-        if (_currentPerEthFee != 0) {
-            return _currentPerEthFee;
+        uint256 _currentFeeDivisor = shareSettlementFeeDivisor[_reportingWindow];
+        if (_currentFeeDivisor != 0) {
+            return _currentFeeDivisor;
         }
         uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth();
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth();
-        uint256 _previousPerEthFee = shareSettlementPerEthFee[getPreviousReportingWindow()];
-        if (_previousPerEthFee == 0) {
-            _previousPerEthFee = 1 * 10 ** 16;
+        uint256 _previousFeeDivisor = shareSettlementFeeDivisor[getPreviousReportingWindow()];
+        if (_previousFeeDivisor == 0) {
+            _previousFeeDivisor = 100;
         }
-        _currentPerEthFee = _previousPerEthFee * _targetRepMarketCapInAttoeth / _repMarketCapInAttoeth;
-        if (_currentPerEthFee < 1 * 10 ** 14) {
-            _currentPerEthFee = 1 * 10 ** 14;
+        if (_targetRepMarketCapInAttoeth == 0) {
+            _currentFeeDivisor = 10000;
+        } else {
+            _currentFeeDivisor = _previousFeeDivisor * _repMarketCapInAttoeth / _targetRepMarketCapInAttoeth;
         }
-        shareSettlementPerEthFee[_reportingWindow] = _currentPerEthFee;
-        return _currentPerEthFee;
+        if (_currentFeeDivisor > 10000) {
+            _currentFeeDivisor = 10000;
+        }
+        shareSettlementFeeDivisor[_reportingWindow] = _currentFeeDivisor;
+        return _currentFeeDivisor;
     }
 
     function getTargetReporterGasCosts() public returns (uint256) {

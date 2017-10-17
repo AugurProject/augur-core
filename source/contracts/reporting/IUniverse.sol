@@ -30,7 +30,7 @@ contract IUniverse is ITyped {
     function getValidityBond() public returns (uint256);
     function getDesignatedReportStake() public returns (uint256);
     function getDesignatedReportNoShowBond() public returns (uint256);
-    function getReportingFeeInAttoethPerEth() public returns (uint256);
+    function getReportingFeeDivisor() public returns (uint256);
     function getRepAvailableForExtraBondPayouts() public view returns (uint256);
     function increaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool);
     function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool);

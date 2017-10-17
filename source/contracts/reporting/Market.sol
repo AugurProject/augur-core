@@ -29,7 +29,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     using SafeMathInt256 for int256;
 
     uint256 private numTicks;
-    uint256 private feePerEthInAttoeth;
+    uint256 private feeDivisor;
 
     uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 1 ether / 2;
     uint256 private constant APPROVAL_AMOUNT = 2**256-1;
@@ -69,7 +69,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         endInitialization();
         require(2 <= _numOutcomes && _numOutcomes <= 8);
         require((_numTicks.isMultipleOf(_numOutcomes)));
-        require(feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
+        require(_feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(_cash.getTypeName() == "Cash");
         require(_designatedReporterAddress != NULL_ADDRESS);
@@ -80,7 +80,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         endTime = _endTime;
         numOutcomes = _numOutcomes;
         numTicks = _numTicks;
-        feePerEthInAttoeth = _feePerEthInAttoeth;
+        feeDivisor = 1 ether / _feePerEthInAttoeth;
         marketCreationBlock = block.number;
         designatedReporterAddress = _designatedReporterAddress;
         cash = _cash;
@@ -122,8 +122,9 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function decreaseMarketCreatorSettlementFeeInAttoethPerEth(uint256 _newFeePerEthInWei) public onlyOwner returns (bool) {
-        require(_newFeePerEthInWei < feePerEthInAttoeth);
-        feePerEthInAttoeth = _newFeePerEthInWei;
+        uint256 _newFeeDivisor = 1 ether / _newFeePerEthInWei;
+        require(_newFeeDivisor > feeDivisor);
+        feeDivisor = _newFeeDivisor;
         return true;
     }
 
@@ -428,8 +429,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return cash;
     }
 
-    function getMarketCreatorSettlementFeeInAttoethPerEth() public view returns (uint256) {
-        return feePerEthInAttoeth;
+    function getMarketCreatorSettlementFeeDivisor() public view returns (uint256) {
+        return feeDivisor;
     }
 
     function getFinalizationTime() public view returns (uint256) {

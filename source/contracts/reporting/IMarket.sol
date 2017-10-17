@@ -28,7 +28,7 @@ contract IMarket is ITyped, IOwnable {
         FINALIZED
     }
 
-    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable returns (bool _success);
+    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feeDivisor, ICash _cash, address _creator, address _designatedReporterAddress) public payable returns (bool _success);
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool);
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32);
     function designatedReport() public returns (bool);
@@ -42,7 +42,7 @@ contract IMarket is ITyped, IOwnable {
     function getDesignatedReporterDisputeBondToken() public view returns (IDisputeBond);
     function getRound1ReportersDisputeBondToken() public view returns (IDisputeBond);
     function getRound2ReportersDisputeBondToken() public view returns (IDisputeBond);
-    function getMarketCreatorSettlementFeeInAttoethPerEth() public view returns (uint256);
+    function getMarketCreatorSettlementFeeDivisor() public view returns (uint256);
     function getReportingState() public view returns (ReportingState);
     function getFinalizationTime() public view returns (uint256);
     function getFinalPayoutDistributionHash() public view returns (bytes32);
