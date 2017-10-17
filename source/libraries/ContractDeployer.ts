@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// TODO: Add type mappings for array items
 import * as binascii from "binascii";
 import * as path from "path";
 import * as EthjsAbi from "ethjs-abi";
@@ -235,7 +236,8 @@ export class ContractDeployer {
         // necessary because it is used as part of market creation fee calculation
         await universe.getPreviousReportingWindow();
         // necessary because createMarket needs its reporting window already created
-        await universe.getReportingWindowByMarketEndTime(endTime);
+        const reportingWindowTransactionHash = await universe.getReportingWindowByMarketEndTime(endTime);
+        waitForTransactionToBeSealed(this.ethjsQuery, reportingWindowTransactionHash);
 
         const currentReportingWindowAddress = await universe.getCurrentReportingWindow.bind(constant)();
         const targetReportingWindowAddress = await universe.getReportingWindowByMarketEndTime.bind(constant)(endTime);
@@ -246,7 +248,8 @@ export class ContractDeployer {
         if (!marketAddress) {
             throw new Error("Unable to get address for new categorical market.");
         }
-        targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
+        const createMarketHash = await targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
+        waitForTransactionToBeSealed(this.ethjsQuery, createMarketHash);
         const market = await parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0], gas: this.gasAmount });
         const marketNameHex = stringTo32ByteHex("Market");
 
