@@ -379,6 +379,14 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.contains(_shadyMarket);
     }
 
+    function isContainerForParticipationToken(Typed _shadyTarget) public afterInitialized view returns (bool) {
+        if (_shadyTarget.getTypeName() != "ParticipationToken") {
+            return false;
+        }
+        IParticipationToken _shadyParticipationToken = IParticipationToken(_shadyTarget);
+        return participationToken == _shadyParticipationToken;
+    }
+
     function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {
         require(!markets.contains(_market));
         require(!round1ReporterMarkets.contains(_market));

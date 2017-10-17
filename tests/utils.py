@@ -32,3 +32,43 @@ def captureFilteredLogs(state, contract, logs):
         if not translated: return
         logs.append(translated)
     state.log_listeners.append(lambda x: captureLog(contract, logs, x))
+
+class TokenDelta():
+    
+    def __init__(self, token, delta, account, err=""):
+        self.account = account
+        self.token = token
+        self.delta = delta
+        self.err = err
+
+    def __enter__(self):
+        self.originalBalance = self.token.balanceOf(self.account)
+    
+    def __exit__(self, *args):
+        if args[1]:
+            raise args[1]
+        originalBalance = self.originalBalance
+        newBalance = self.token.balanceOf(self.account)
+        delta = self.delta
+        resultDelta = newBalance - originalBalance
+        assert resultDelta == delta, self.err
+
+class ETHDelta():
+    
+    def __init__(self, delta, account, utils, err=""):
+        self.account = account
+        self.utils = utils
+        self.delta = delta
+        self.err = err
+
+    def __enter__(self):
+        self.originalBalance = self.utils.getETHBalance(self.account)
+    
+    def __exit__(self, *args):
+        if args[1]:
+            raise args[1]
+        originalBalance = self.originalBalance
+        newBalance = self.utils.getETHBalance(self.account)
+        delta = self.delta
+        resultDelta = newBalance - originalBalance
+        assert resultDelta == delta, self.err

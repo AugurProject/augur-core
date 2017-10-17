@@ -257,6 +257,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         IUniverse _destinationUniverse = _currentUniverse.getOrCreateChildUniverse(_winningForkPayoutDistributionHash);
         // This will put us in the designated dispute phase
         endTime = block.timestamp - Reporting.designatedReportingDurationSeconds();
+        totalStake = 0;
         IReportingWindow _newReportingWindow = _destinationUniverse.getReportingWindowByMarketEndTime(endTime);
         _newReportingWindow.migrateMarketInFromNibling();
         reportingWindow.removeMarket();

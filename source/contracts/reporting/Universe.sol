@@ -14,7 +14,11 @@ import 'reporting/IStakeToken.sol';
 import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
+<<<<<<< 31dba17969fbe702c054438d0538174ccb92716a
 import 'reporting/IRepPriceOracle.sol';
+=======
+import 'reporting/IParticipationToken.sol';
+>>>>>>> Writing tests and fixing bugs
 import 'libraries/math/SafeMathUint256.sol';
 
 
@@ -235,6 +239,22 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         }
         IMarket _legitMarket = _shadyMarket;
         return _legitMarket.isContainerForShareToken(_shadyShareToken);
+    }
+
+    function isContainerForParticipationToken(Typed _shadyTarget) public view returns (bool) {
+        if (_shadyTarget.getTypeName() != "ParticipationToken") {
+            return false;
+        }
+        IParticipationToken _shadyParticipationToken = IParticipationToken(_shadyTarget);
+        IReportingWindow _shadyReportingWindow = _shadyParticipationToken.getReportingWindow();
+        if (_shadyReportingWindow == address(0)) {
+            return false;
+        }
+        if (!isContainerForReportingWindow(_shadyReportingWindow)) {
+            return false;
+        }
+        IReportingWindow _legitReportingWindow = _shadyReportingWindow;
+        return _legitReportingWindow.isContainerForParticipationToken(Typed(_shadyParticipationToken));
     }
 
     function isParentOf(IUniverse _shadyChild) public view returns (bool) {

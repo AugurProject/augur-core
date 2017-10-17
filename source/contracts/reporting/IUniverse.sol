@@ -46,6 +46,7 @@ contract IUniverse is ITyped {
     function isContainerForMarket(ITyped _shadyTarget) public view returns (bool);
     function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool);
     function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForParticipationToken(ITyped _shadyTarget) public view returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);
     function incrementOpenInterest(uint256 _amount) public returns (bool);
 }
