@@ -81,7 +81,7 @@ export async function sleep(milliseconds: number): Promise<void> {
 
 export async function waitForTransactionReceipt(ethjsQuery: EthjsQuery, transactionHash: string): Promise<TransactionReceipt> {
     let transactionReceipt = await ethjsQuery.getTransactionReceipt(transactionHash);
-    while (!transactionReceipt) {
+    while (!transactionReceipt || !transactionReceipt.blockHash) {
         await sleep(ETHEREUM_POLLING_INTERVAL_MILLISECONDS);
         transactionReceipt = await ethjsQuery.getTransactionReceipt(transactionHash);
     }
