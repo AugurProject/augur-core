@@ -79,11 +79,14 @@ export async function sleep(milliseconds: number): Promise<void> {
     return new Promise<void>((resolve, reject) => setTimeout(resolve, milliseconds));
 }
 
-export async function waitForTransactionReceipt(ethjsQuery: EthjsQuery, transactionHash: string): Promise<TransactionReceipt> {
-    let transactionReceipt = await ethjsQuery.getTransactionReceipt(transactionHash);
-    while (!transactionReceipt || !transactionReceipt.blockHash) {
+export async function waitForTransactionReceipt(ethjsQuery: EthjsQuery, transactionHash: string, failureDetails: string): Promise<TransactionReceipt> {
+    let receipt = await ethjsQuery.getTransactionReceipt(transactionHash);
+    while (!receipt || !receipt.blockHash) {
         await sleep(ETHEREUM_POLLING_INTERVAL_MILLISECONDS);
-        transactionReceipt = await ethjsQuery.getTransactionReceipt(transactionHash);
+        receipt = await ethjsQuery.getTransactionReceipt(transactionHash);
     }
-    return transactionReceipt;
+    if (!receipt.status) {
+        throw new Error(`Transaction failed.  ${failureDetails}}`);
+    }
+    return receipt;
 }
