@@ -6,7 +6,7 @@ import 'reporting/IRepPriceOracle.sol';
 
 contract RepPriceOracle is Ownable, IRepPriceOracle {
     
-    uint256 private repPriceInAttoEth = 11 * 10 ** 18;
+    uint256 private repPriceInAttoEth = 6 * 10 ** 16;
     
     function setRepPriceInAttoEth(uint256 _repPriceInAttoEth) external onlyOwner returns (uint256) {
         repPriceInAttoEth = _repPriceInAttoEth;
