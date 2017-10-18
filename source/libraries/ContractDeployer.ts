@@ -103,7 +103,8 @@ export class ContractDeployer {
             this.bytecodes[signatureKey] = bytecode;
         }
         const signature = this.signatures[signatureKey];
-        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const gasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: bytecode }));
+        const contractBuilder = await this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: gasEstimate, gasPrice: this.gasPrice });
         const transactionHash = (constructorArgs.length === 2)
             ? await contractBuilder.new(constructorArgs[0], constructorArgs[1])
             : await contractBuilder.new();
@@ -111,22 +112,6 @@ export class ContractDeployer {
         this.contracts[lookupKey] = contractBuilder.at(receipt.contractAddress);
 
         return this.contracts[lookupKey];
-    }
-
-    public async applySignature(signatureName: string, address: string): Promise<ContractBlockchainData> {
-        if (!address) {
-            throw new Error ("Address not set.");
-        }
-        // TODO: Add format check of address
-        // if () {
-        //    address = padAndHexlify(address, 40);
-        // }
-
-        const signature = this.signatures[signatureName];
-        const bytecode = this.bytecodes[signatureName];
-        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: this.gasAmount });
-        const contract = await contractBuilder.at(address);
-        return contract;
     }
 
     private async uploadAllContracts(): Promise<void> {
@@ -145,7 +130,6 @@ export class ContractDeployer {
                 }
                 if (contractsToDelegate[contractName] === true) {
                     promises.push(this.uploadAndAddDelegatedToController(contractFileName, contractName));
-                    // this.contracts[contractName] = this.applySignature(contractName, this.contracts[contractName].address)
                 } else {
                     promises.push(this.uploadAndAddToController(contractFileName));
                 }
@@ -220,7 +204,8 @@ export class ContractDeployer {
         }
         const signature = this.signatures["StakeToken"];
         const bytecode = this.bytecodes["StakeToken"];
-        const contractBuilder = this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: this.gasAmount });
+        const gasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: bytecode }));
+        const contractBuilder = await this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: gasEstimate });
         const stakeToken = await contractBuilder.at(stakeTokenAddress);
 
         return stakeToken;
