@@ -14,6 +14,7 @@ import 'reporting/IStakeToken.sol';
 import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
+import 'reporting/IRepPriceOracle.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
@@ -259,8 +260,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function getRepMarketCapInAttoeth() public view returns (uint256) {
-        // TODO: get this from a multi-sig contract that we provide and maintain
-        uint256 _attorepPerEth = 11 * 10 ** 18;
+        uint256 _attorepPerEth = IRepPriceOracle(controller.lookup("RepPriceOracle")).getRepPriceInAttoEth();
         uint256 _repMarketCapInAttoeth = getReputationToken().totalSupply() * _attorepPerEth;
         return _repMarketCapInAttoeth;
     }
@@ -327,7 +327,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         // Modify the amount based on the previous amount and the number of markets fitting the failure criteria. We want the amount to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets with the condition results in 2x and 0 results in 0.5x.
         if (_badMarkets <= _totalMarkets / _targetDivisor) {
             // FXP formula: previous_amount * actual_percent / (2 * target_percent) + 0.5;
-            _newValue = _badMarkets.mul(_previousValue).mul(_targetDivisor).div(_totalMarkets).div(2)  + _previousValue / 2; // FIXME: This is on one line due to solium bugs
+            _newValue = _badMarkets.mul(_previousValue).mul(_targetDivisor).div(_totalMarkets).div(2) + _previousValue / 2; // FIXME: This is on one line due to solium bugs
         } else {
             // FXP formula: previous_amount * (1/(1 - target_percent)) * (actual_percent - target_percent) + 1;
             _newValue = _targetDivisor.mul(_previousValue.mul(_badMarkets).div(_totalMarkets).sub(_previousValue.div(_targetDivisor))).div(_targetDivisor - 1) + _previousValue; // FIXME: This is on one line due to a solium bug
