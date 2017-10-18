@@ -17,7 +17,7 @@ type ContractMethod = (...vargs: any[]) => Promise<any>;
 
 
 
-export async function parseAbiIntoMethods(ethjsQuery: EthjsQuery, abi: (CompilerOutputContractAbiFunction)[], defaultTransaction: TransactionOptions = {}): Promise<{ [methodName: string]: ContractMethod }> {
+export function parseAbiIntoMethods(ethjsQuery: EthjsQuery, abi: (CompilerOutputContractAbiFunction)[], defaultTransaction: TransactionOptions = {}): { [methodName: string]: ContractMethod } {
     const result: { [methodName: string]: ContractMethod } = {};
     const items = abi.filter(item => item.type === 'function').forEach(item => {
         result[item.name] = async function(this: TransactionOptions, ...vargs: any[]) {
