@@ -60,10 +60,6 @@ disable = true
 
 [mining]
 reseal_min_period = 0
-reseal_max_period = 0
-reseal_on_txs = "all"
-force_sealing = false
-
 min_gas_price = 1
 # Targeting 6500000 gas per block when sealing a new block.
 gas_floor_target = "6500000"
