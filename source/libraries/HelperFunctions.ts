@@ -86,7 +86,7 @@ export async function waitForTransactionReceipt(ethjsQuery: EthjsQuery, transact
         receipt = await ethjsQuery.getTransactionReceipt(transactionHash);
     }
     if (!receipt.status) {
-        throw new Error(`Transaction failed.  ${failureDetails}}`);
+        throw new Error(`Transaction failed.  ${failureDetails}`);
     }
     return receipt;
 }
