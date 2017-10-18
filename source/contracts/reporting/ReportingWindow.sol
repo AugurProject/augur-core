@@ -228,9 +228,9 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     function collectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
-        Typed _typed = Typed(msg.sender);
-        require(isContainerForStakeToken(_typed) ||
-                isContainerForDisputeBond(_typed) ||
+        ITyped _shadyCaller = ITyped(msg.sender);
+        require(isContainerForStakeToken(_shadyCaller) ||
+                isContainerForDisputeBond(_shadyCaller) ||
                 msg.sender == address(participationToken));
         if (!_forgoFees) {
             require(isOver());
@@ -293,7 +293,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     function increaseTotalStake(uint256 _amount) public returns (bool) {
-        require(isContainerForMarket(Typed(msg.sender)));
+        require(isContainerForMarket(ITyped(msg.sender)));
         totalStake = totalStake.add(_amount);
     }
 
@@ -379,7 +379,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.contains(_shadyMarket);
     }
 
-    function isContainerForWindowParticipationToken(Typed _shadyTarget) public afterInitialized view returns (bool) {
+    function isContainerForWindowParticipationToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
         if (_shadyTarget.getTypeName() != "WindowParticipationToken") {
             return false;
         }

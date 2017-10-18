@@ -20,7 +20,7 @@ contract MockMarket is IMarket {
     IDisputeBond private disputeBond;
     IDisputeBond private round1DisputeBond;
     IDisputeBond private round2DisputeBond;
-    uint256 private marketCreatorSettlementFeeInAttoethPerEth;
+    uint256 private marketCreatorSettlementFeeDivisor;
     ReportingState private reportingState;
     uint256 private finalizationTime;
     bytes32 private finalPayoutDistributionHash;
@@ -50,6 +50,9 @@ contract MockMarket is IMarket {
     ICash private initializeCashValue;
     address private initializeCreatorValue;
     address private initializeDesignatedReporterAddressValue;
+    bool private increaseTotalStakeValue;
+    uint256 private getTotalWinningDisputeBondStakeValue;
+    uint256 private getTotalStakeValue;
     /*
     * setters to feed the getters and impl of IMarket
     */
@@ -101,8 +104,8 @@ contract MockMarket is IMarket {
         round2DisputeBond = _round2DisputeBond;
     }
 
-    function setMarketCreatorSettlementFeeInAttoethPerEth(uint256 _marketCreatorSettlementFeeInAttoethPerEth) public {
-        marketCreatorSettlementFeeInAttoethPerEth = _marketCreatorSettlementFeeInAttoethPerEth;
+    function setMarketCreatorSettlementFeeDivisor(uint256 _marketCreatorSettlementFeeDivisor) public {
+        marketCreatorSettlementFeeDivisor = _marketCreatorSettlementFeeDivisor;
     }
 
     function setReportingState(ReportingState _reportingState) public {
@@ -183,6 +186,18 @@ contract MockMarket is IMarket {
 
     function setOwner(address _owner) public {
         owner = _owner;
+    }
+
+    function setIncreaseTotalStakeValue(bool _value) public {
+        increaseTotalStakeValue = _value;
+    }
+
+    function setGetTotalWinningDisputeBondStakeValue(uint256 _value) public {
+        getTotalWinningDisputeBondStakeValue = _value;
+    }
+
+    function setGetTotalStakeValue(uint256 _value) public {
+        getTotalStakeValue = _value;
     }
 
     function setTransferOwnership(bool _transferOwner) public {
@@ -313,8 +328,8 @@ contract MockMarket is IMarket {
         return round2DisputeBond;
     }
     
-    function getMarketCreatorSettlementFeeInAttoethPerEth() public view returns (uint256) {
-        return marketCreatorSettlementFeeInAttoethPerEth;
+    function getMarketCreatorSettlementFeeDivisor() public view returns (uint256) {
+        return marketCreatorSettlementFeeDivisor;
     }
 
     function getReportingState() public view returns (ReportingState) {
@@ -393,5 +408,17 @@ contract MockMarket is IMarket {
     
     function isValid() public view returns (bool) {
         return isValidValue;
+    }
+
+    function increaseTotalStake(uint256 _amount) public returns (bool) {
+        return increaseTotalStakeValue;
+    }
+
+    function getTotalWinningDisputeBondStake() public view returns (uint256) {
+        return getTotalWinningDisputeBondStakeValue;
+    }
+
+    function getTotalStake() public view returns (uint256) {
+        return getTotalStakeValue;
     }
 }

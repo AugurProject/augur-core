@@ -32,7 +32,7 @@ contract MockUniverse is Initializable, IUniverse {
     uint256 private setValidityBondValue;
     uint256 private setDesignatedReportStakeValue;
     uint256 private setDesignatedReportNoShowBondValue;
-    uint256 private setReportingFeeInAttoethPerEthValue;
+    uint256 private setReportingFeeDivisorValue;
     uint256 private setRepAvailableForExtraBondPayoutsValue;
     bool private setIncreaseRepAvailableForExtraBondPayoutsValue;
     bool private setDecreaseRepAvailableForExtraBondPayoutsValue;
@@ -48,6 +48,7 @@ contract MockUniverse is Initializable, IUniverse {
     bool private setIsContainerForMarketValue;
     bool private setIsContainerForStakeTokenValue;
     bool private setIsContainerForShareTokenValue;
+    bool private setIsContainerForWindowParticipationTokenValue;
     bool private setDecrementOpenInterestValue;
     bool private setIncrementOpenInterestValue;
     IUniverse private initializParentUniverseValue;
@@ -135,8 +136,8 @@ contract MockUniverse is Initializable, IUniverse {
         setDesignatedReportNoShowBondValue = _setDesignatedReportNoShowBondValue;
     }
     
-    function setReportingFeeInAttoethPerEth(uint256 _setReportingFeeInAttoethPerEthValue) public {
-        setReportingFeeInAttoethPerEthValue = _setReportingFeeInAttoethPerEthValue;
+    function setReportingFeeDivisor(uint256 _setReportingFeeDivisorValue) public {
+        setReportingFeeDivisorValue = _setReportingFeeDivisorValue;
     }
     
     function setRepAvailableForExtraBondPayouts(uint256 _setRepAvailableForExtraBondPayoutsValue) public {
@@ -199,6 +200,10 @@ contract MockUniverse is Initializable, IUniverse {
         setIsContainerForShareTokenValue = _setIsContainerForShareTokenValue;
     }
     
+    function setIsContainerForWindowParticipationToken(bool _setIsContainerForWindowParticipationTokenValue) public {
+        setIsContainerForWindowParticipationTokenValue = _setIsContainerForWindowParticipationTokenValue;
+    }
+
     function setDecrementOpenInterest(bool _setDecrementOpenInterestValue) public {
         setDecrementOpenInterestValue = _setDecrementOpenInterestValue;
     }
@@ -307,9 +312,8 @@ contract MockUniverse is Initializable, IUniverse {
     function getDesignatedReportNoShowBond() public returns (uint256) {
         return setDesignatedReportNoShowBondValue;
     }
-    
-    function getReportingFeeInAttoethPerEth() public returns (uint256) {
-        return setReportingFeeInAttoethPerEthValue;
+    function getReportingFeeDivisor() public returns (uint256) {
+        return setReportingFeeDivisorValue;
     }
     
     function getRepAvailableForExtraBondPayouts() public view returns (uint256) {
@@ -390,6 +394,10 @@ contract MockUniverse is Initializable, IUniverse {
     
     function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool) {
         return setIsContainerForShareTokenValue;
+    }
+
+    function isContainerForWindowParticipationToken(ITyped _shadyTarget) public view returns (bool) {
+        return setIsContainerForWindowParticipationTokenValue;
     }
     
     function decrementOpenInterest(uint256 _amount) public returns (bool) {

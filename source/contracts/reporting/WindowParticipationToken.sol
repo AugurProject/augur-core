@@ -3,7 +3,7 @@ pragma solidity 0.4.17;
 
 import 'reporting/IWindowParticipationToken.sol';
 import 'libraries/DelegationTarget.sol';
-import 'libraries/Typed.sol';
+import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/IReputationToken.sol';
@@ -11,7 +11,7 @@ import 'reporting/IReportingWindow.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
-contract WindowParticipationToken is DelegationTarget, Typed, Initializable, VariableSupplyToken, IWindowParticipationToken {
+contract WindowParticipationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IWindowParticipationToken {
     using SafeMathUint256 for uint256;
 
     IReportingWindow private reportingWindow;
