@@ -175,13 +175,13 @@ class ContractsFixture:
         self.testerKey = self.generateTesterMap('k')
 
     def distributeRep(self, universe):
-        legacyRepContract = self.contracts['LegacyRepContract']
-        legacyRepContract.faucet(11 * 10**6 * 10**18)
+        legacyReputationToken = self.contracts['LegacyReputationToken']
+        legacyReputationToken.faucet(11 * 10**6 * 10**18)
 
         # Get the reputation token for this universe and migrate legacy REP to it
         reputationToken = self.applySignature('ReputationToken', universe.getReputationToken())
-        legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
-        reputationToken.migrateFromLegacyRepContract()
+        legacyReputationToken.approve(reputationToken.address, 11 * 10**6 * 10**18)
+        reputationToken.migrateFromLegacyReputationToken()
 
     def generateTesterMap(self, ch):
         testers = {}

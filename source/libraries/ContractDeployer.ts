@@ -45,10 +45,11 @@ export class ContractDeployer {
         await this.whitelistTradingContracts();
         console.log('Initializing contracts...');
         await this.initializeAllContracts();
-        console.log('Approving central authoritiy...');
-        await this.approveCentralAuthority();
         console.log('Creating genesis universe...');
         this.universe = await this.createGenesisUniverse();
+        // FIXME: the rest of this shouldn't be part of the deploy script, it should be part of an integration test
+        console.log('Approving central authoritiy...');
+        await this.approveCentralAuthority();
         console.log('Creating a reasonable market...');
         this.market = await this.createReasonableMarket(this.universe.address, this.contracts['Cash'].address, 2);
     }
@@ -134,7 +135,7 @@ export class ContractDeployer {
 
         const promises: Promise<ContractBlockchainData|undefined>[] = [];
         for (let contractFileName in this.compiledContracts) {
-            if (contractFileName === "Controller.sol" || contractFileName === "libraries/Delegator.sol") {
+            if (contractFileName === "Controller.sol" || contractFileName === "libraries/Delegator.sol" || contractFileName.startsWith('legacy_reputation/')) {
                 continue;
             }
 
@@ -187,6 +188,18 @@ export class ContractDeployer {
         await Promise.all(promises);
     }
 
+    private async createGenesisUniverse(): Promise<ContractBlockchainData> {
+        const delegator = await this.construct("libraries/Delegator.sol", "Delegator", [ this.controller.address, stringTo32ByteHex('Universe') ], `Instantiating genesis universe.`);
+        const universeBuilder = this.ethjsContract(this.abis.get("Universe")!, this.bytecodes.get("Universe")!, { from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const universe = universeBuilder.at(delegator.address);
+        const transactionHash = await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
+        await waitForTransactionReceipt(this.ethjsQuery, transactionHash, `Initializing universe.`);
+        console.log(`Genesis universe address: ${universe.address}`);
+        return universe;
+    }
+
+    // TODO: move these out of this class. this class is for deploying the contracts, not general purpose Augur interactions.
+    // CONSIDER: create a class called Augur or something that deals with the various interactions one may want to participate in
     private async approveCentralAuthority(): Promise<void> {
         const authority = this.contracts["Augur"];
         const contractsToApprove = ["Cash"];
@@ -200,16 +213,6 @@ export class ContractDeployer {
         await Promise.all(promises);
     }
 
-    private async createGenesisUniverse(): Promise<ContractBlockchainData> {
-        const delegator = await this.construct("libraries/Delegator.sol", "Delegator", [ this.controller.address, stringTo32ByteHex('Universe') ], `Instantiating genesis universe.`);
-        const universeBuilder = this.ethjsContract(this.abis.get("Universe")!, this.bytecodes.get("Universe")!, { from: this.testAccounts[0], gasPrice: this.gasPrice });
-        const universe = universeBuilder.at(delegator.address);
-        await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
-        return universe;
-    }
-
-    // TODO: move these out of this class. this class is for deploying the contracts, not general purpose Augur interactions.
-    // CONSIDER: create a class called Augur or something that deals with the various interactions one may want to participate in
     public async getStakeToken(market, payoutDistribution, invalid): Promise<ContractBlockchainData> {
         const stakeTokenAddress = market.getStakeToken(payoutDistribution, invalid);
         if (!stakeTokenAddress) {
@@ -228,21 +231,23 @@ export class ContractDeployer {
         const constant = { constant: true };
 
         const universe = parseAbiIntoMethods(this.ethjsQuery, this.abis.get("Universe")!, { to: universeAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
-        const legacyReputationToken = parseAbiIntoMethods(this.ethjsQuery, this.abis.get('LegacyRepContract')!, { to: this.contracts['LegacyRepContract'].address, from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const legacyReputationToken = parseAbiIntoMethods(this.ethjsQuery, this.abis.get('LegacyReputationToken')!, { to: this.contracts['LegacyReputationToken'].address, from: this.testAccounts[0], gasPrice: this.gasPrice });
         const reputationTokenAddress = await universe.getReputationToken();
         const reputationToken = parseAbiIntoMethods(this.ethjsQuery, this.abis.get('ReputationToken')!, { to: reputationTokenAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
 
         // get some REP
-        await legacyReputationToken.faucet(0);
-        await legacyReputationToken.approve(reputationTokenAddress, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        await reputationToken.migrateFromLegacyRepContract();
-
+        const repFaucetTransactionHash = await legacyReputationToken.faucet(0);
+        const repApprovalTransactionHash = await legacyReputationToken.approve(reputationTokenAddress, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        await waitForTransactionReceipt(this.ethjsQuery, repFaucetTransactionHash, `Using legacy reputation faucet.`);
+        await waitForTransactionReceipt(this.ethjsQuery, repApprovalTransactionHash, `Approving legacy reputation.`);
+        const repMigrationTransactionHash = await reputationToken.migrateFromLegacyReputationToken();
         // necessary because it is used part of market creation fee calculation
         const currentReportingWindowTransactionHash = await universe.getCurrentReportingWindow();
         // necessary because it is used as part of market creation fee calculation
         const previousReportingWindowTransactionHash = await universe.getPreviousReportingWindow();
         // necessary because createMarket needs its reporting window already created
         const marketReportingWindowTransactionHash = await universe.getReportingWindowByMarketEndTime(endTime);
+        await waitForTransactionReceipt(this.ethjsQuery, repMigrationTransactionHash, `Migrating reputation.`);
         await waitForTransactionReceipt(this.ethjsQuery, currentReportingWindowTransactionHash, `Instantiating current reporting window.`);
         await waitForTransactionReceipt(this.ethjsQuery, previousReportingWindowTransactionHash, `Instantiating previous reporting window.`);
         await waitForTransactionReceipt(this.ethjsQuery, marketReportingWindowTransactionHash, `Instantiating market reporting window.`);
@@ -255,7 +260,8 @@ export class ContractDeployer {
         if (!marketAddress) {
             throw new Error("Unable to get address for new categorical market.");
         }
-        const createMarketHash = await targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
+        const createMarketTransactionHash = await targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
+        await waitForTransactionReceipt(this.ethjsQuery, createMarketTransactionHash, `Creating market.`);
         const market = parseAbiIntoMethods(this.ethjsQuery, this.abis.get("Market")!, { to: marketAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
         const marketNameHex = stringTo32ByteHex("Market");
 

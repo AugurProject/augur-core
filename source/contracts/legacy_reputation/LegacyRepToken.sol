@@ -11,7 +11,7 @@ import 'legacy_reputation/ERC20Basic.sol';
  * @dev REP2 Mintable Token with migration from legacy contract
  */
 contract LegacyRepToken is Initializable, PausableToken {
-    ERC20Basic public legacyRepContract;
+    ERC20Basic public legacyReputationToken;
     uint256 public targetSupply;
 
     string public constant name = "Reputation";
@@ -22,12 +22,12 @@ contract LegacyRepToken is Initializable, PausableToken {
 
     /**
      * @dev Creates a new RepToken instance
-     * @param _legacyRepContract Address of the legacy ERC20Basic REP contract to migrate balances from
+     * @param _legacyReputationToken Address of the legacy ERC20Basic REP contract to migrate balances from
      */
-    function LegacyRepToken(address _legacyRepContract, uint256 _amountUsedToFreeze, address _accountToSendFrozenRepTo) {
-        require(_legacyRepContract != 0);
-        legacyRepContract = ERC20Basic(_legacyRepContract);
-        targetSupply = legacyRepContract.totalSupply();
+    function LegacyRepToken(address _legacyReputationToken, uint256 _amountUsedToFreeze, address _accountToSendFrozenRepTo) {
+        require(_legacyReputationToken != 0);
+        legacyReputationToken = ERC20Basic(_legacyReputationToken);
+        targetSupply = legacyReputationToken.totalSupply();
         balances[_accountToSendFrozenRepTo] = _amountUsedToFreeze;
         totalSupply = _amountUsedToFreeze;
         pause();
@@ -55,7 +55,7 @@ contract LegacyRepToken is Initializable, PausableToken {
             return false; // Already copied, move on
         }
 
-        uint256 amount = legacyRepContract.balanceOf(_holder);
+        uint256 amount = legacyReputationToken.balanceOf(_holder);
         if (amount == 0) {
             return false; // Has no balance in legacy contract, move on
         }
