@@ -55,14 +55,14 @@ def execute(contractsFixture, universe, cash, market, orderType, orderSize, orde
             otherShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(otherOutcome))
             assert otherShareToken.approve(approvalAddress, amount, sender = sender)
 
-    legacyRepContract = contractsFixture.contracts['LegacyRepContract']
-    legacyRepContract.faucet(long(11 * 10**6 * 10**18))
+    legacyReputationToken = contractsFixture.contracts['LegacyReputationToken']
+    legacyReputationToken.faucet(long(11 * 10**6 * 10**18))
     contractsFixture.chain.head_state.timestamp += 15000
 
     # Get the reputation token for this universe and migrate legacy REP to it
     reputationToken = contractsFixture.applySignature('ReputationToken', universe.getReputationToken())
-    legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
-    reputationToken.migrateFromLegacyRepContract()
+    legacyReputationToken.approve(reputationToken.address, 11 * 10**6 * 10**18)
+    reputationToken.migrateFromLegacyReputationToken()
 
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']

@@ -109,39 +109,39 @@ def test_stake_token_buy_check_state(localFixture, mockMarket, mockReportingWind
     assert stakeToken.buy(1)
     
     mockMarket.setReportingState(localFixture.contracts['Constants'].PRE_REPORTING())
-    with raises(TransactionFailed, message="market not incorrect state, PRE_REPORTING"):
+    with raises(TransactionFailed, message="market not in correct state, PRE_REPORTING"):
         stakeToken.buy(1)
 
     mockMarket.setReportingState(localFixture.contracts['Constants'].DESIGNATED_REPORTING())
-    with raises(TransactionFailed, message="market not incorrect state, DESIGNATED_REPORTING"):
+    with raises(TransactionFailed, message="market not in correct state, DESIGNATED_REPORTING"):
         stakeToken.buy(1)
 
     mockMarket.setReportingState(localFixture.contracts['Constants'].DESIGNATED_DISPUTE())
-    with raises(TransactionFailed, message="market not incorrect state, DESIGNATED_DISPUTE"):
+    with raises(TransactionFailed, message="market not in correct state, DESIGNATED_DISPUTE"):
         stakeToken.buy(1)
 
     mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_FORK_MIGRATION())
-    with raises(TransactionFailed, message="market not incorrect state, AWAITING_FORK_MIGRATION"):
+    with raises(TransactionFailed, message="market not in correct state, AWAITING_FORK_MIGRATION"):
         stakeToken.buy(1)
 
     mockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_DISPUTE())
-    with raises(TransactionFailed, message="market not incorrect state, FIRST_DISPUTE"):
+    with raises(TransactionFailed, message="market not in correct state, FIRST_DISPUTE"):
         stakeToken.buy(1)
 
     mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_DISPUTE()) 
-    with raises(TransactionFailed, message="market not incorrect state, LAST_DISPUTE"):
+    with raises(TransactionFailed, message="market not in correct state, LAST_DISPUTE"):
         stakeToken.buy(1)
 
     mockMarket.setReportingState(localFixture.contracts['Constants'].FORKING()) 
-    with raises(TransactionFailed, message="market not incorrect state, FORKING"):
+    with raises(TransactionFailed, message="market not in correct state, FORKING"):
         stakeToken.buy(1)
 
     mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_FINALIZATION()) 
-    with raises(TransactionFailed, message="market not incorrect state, AWAITING_FINALIZATION"):
+    with raises(TransactionFailed, message="market not in correct state, AWAITING_FINALIZATION"):
         stakeToken.buy(1)
 
     mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
-    with raises(TransactionFailed, message="market not incorrect state, FINALIZED"):
+    with raises(TransactionFailed, message="market not in correct state, FINALIZED"):
         stakeToken.buy(1)
 
 def test_stake_token_buy_designated_reporter_state(localFixture, mockMarket, mockUniverse, mockReputationToken, mockReportingWindow):    
