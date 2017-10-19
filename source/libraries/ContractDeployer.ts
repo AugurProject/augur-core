@@ -105,11 +105,11 @@ export class ContractDeployer {
             this.bytecodes[signatureKey] = bytecode;
         }
         const signature = this.signatures[signatureKey];
+        const contractBuilder = await this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gasPrice: this.gasPrice });
         const gasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: bytecode }));
-        const contractBuilder = await this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: gasEstimate, gasPrice: this.gasPrice });
         const transactionHash = (constructorArgs.length === 2)
-            ? await contractBuilder.new(constructorArgs[0], constructorArgs[1])
-            : await contractBuilder.new();
+            ? await contractBuilder.new(constructorArgs[0], constructorArgs[1], { gas: gasEstimate })
+            : await contractBuilder.new({ gas: gasEstimate });
         const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash, `Uploading ${signatureKey}`);
         this.contracts[lookupKey] = contractBuilder.at(receipt.contractAddress);
 
