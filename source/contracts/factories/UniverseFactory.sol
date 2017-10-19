@@ -3,7 +3,6 @@ pragma solidity 0.4.17;
 
 import 'libraries/Delegator.sol';
 import 'IController.sol';
-import 'Augur.sol';
 import 'reporting/IUniverse.sol';
 
 
