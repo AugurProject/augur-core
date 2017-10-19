@@ -8,6 +8,7 @@ import 'reporting/IReputationToken.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
+
 contract MockUniverse is Initializable, IUniverse {
     using SafeMathUint256 for uint256;
 
@@ -57,215 +58,284 @@ contract MockUniverse is Initializable, IUniverse {
     function setFork(bool _setforkValue) public {
         setforkValue = _setforkValue;
     }
+
     function setParentUniverse(IUniverse _setParentUniverseValue) public {
         setParentUniverseValue = _setParentUniverseValue;
     }
+    
     function setOrCreateChildUniverse(IUniverse _setOrCreateChildUniverseValue) public {
         setOrCreateChildUniverseValue = _setOrCreateChildUniverseValue;
     }
+    
     function setChildUniverse(IUniverse _setChildUniverseValue) public {
         setChildUniverseValue = _setChildUniverseValue;
     }
+    
     function setReputationToken(IReputationToken _setReputationTokenValue) public {
         setReputationTokenValue = _setReputationTokenValue;
     }
+    
     function setForkingMarket(IMarket _setForkingMarketValue) public {
         setForkingMarketValue = _setForkingMarketValue;
     }
+    
     function setForkEndTime(uint256 _setForkEndTimeValue) public {
         setForkEndTimeValue = _setForkEndTimeValue;
     }
+    
     function setParentPayoutDistributionHash(bytes32 _setParentPayoutDistributionHashValue) public {
         setParentPayoutDistributionHashValue = _setParentPayoutDistributionHashValue;
     }
+    
     function setReportingPeriodDurationInSeconds(uint256 _setReportingPeriodDurationInSecondsValue) public {
         setReportingPeriodDurationInSecondsValue = _setReportingPeriodDurationInSecondsValue;
     }
+    
     function setReportingWindowByTimestamp(IReportingWindow _setReportingWindowByTimestampValue) public {
         setReportingWindowByTimestampValue = _setReportingWindowByTimestampValue;
     }
+    
     function setReportingWindowByMarketEndTime(IReportingWindow _setReportingWindowByMarketEndTimeValue) public {
         setReportingWindowByMarketEndTimeValue = _setReportingWindowByMarketEndTimeValue;
     }
+    
     function setCurrentReportingWindow(IReportingWindow _setCurrentReportingWindowValue) public {
         setCurrentReportingWindowValue = _setCurrentReportingWindowValue;
     }
+    
     function setNextReportingWindow(IReportingWindow _setNextReportingWindowValue) public {
         setNextReportingWindowValue = _setNextReportingWindowValue;
     }
+    
     function setReportingWindowForForkEndTime(IReportingWindow _setReportingWindowForForkEndTimeValue) public {
         setReportingWindowForForkEndTimeValue = _setReportingWindowForForkEndTimeValue;
     }
+    
     function setOpenInterestInAttoEth(uint256 _setOpenInterestInAttoEthValue) public {
         setOpenInterestInAttoEthValue = _setOpenInterestInAttoEthValue;
     }
+    
     function setRepMarketCapInAttoeth(uint256 _setRepMarketCapInAttoethValue) public {
         setRepMarketCapInAttoethValue = _setRepMarketCapInAttoethValue;
     }
+    
     function setTargetRepMarketCapInAttoeth(uint256 _setTargetRepMarketCapInAttoethValue) public {
         setTargetRepMarketCapInAttoethValue = _setTargetRepMarketCapInAttoethValue;
     }
+    
     function setValidityBond(uint256 _setValidityBondValue) public {
         setValidityBondValue = _setValidityBondValue;
     }
+    
     function setDesignatedReportStake(uint256 _setDesignatedReportStakeValue) public {
         setDesignatedReportStakeValue = _setDesignatedReportStakeValue;
     }
+    
     function setDesignatedReportNoShowBond(uint256 _setDesignatedReportNoShowBondValue) public {
         setDesignatedReportNoShowBondValue = _setDesignatedReportNoShowBondValue;
     }
+    
     function setReportingFeeInAttoethPerEth(uint256 _setReportingFeeInAttoethPerEthValue) public {
         setReportingFeeInAttoethPerEthValue = _setReportingFeeInAttoethPerEthValue;
     }
+    
     function setRepAvailableForExtraBondPayouts(uint256 _setRepAvailableForExtraBondPayoutsValue) public {
         setRepAvailableForExtraBondPayoutsValue = _setRepAvailableForExtraBondPayoutsValue;
     }
+    
     function setIncreaseRepAvailableForExtraBondPayouts(bool _setIncreaseRepAvailableForExtraBondPayoutsValue) public {
         setIncreaseRepAvailableForExtraBondPayoutsValue = _setIncreaseRepAvailableForExtraBondPayoutsValue;
     }
+    
     function setDecreaseRepAvailableForExtraBondPayouts(bool _setDecreaseRepAvailableForExtraBondPayoutsValue) public {
         setDecreaseRepAvailableForExtraBondPayoutsValue = _setDecreaseRepAvailableForExtraBondPayoutsValue;
     }
+    
     function setExtraDisputeBondRemainingToBePaidOut(uint256 _setExtraDisputeBondRemainingToBePaidOutValue) public {
         setExtraDisputeBondRemainingToBePaidOutValue = _setExtraDisputeBondRemainingToBePaidOutValue;
     }
+    
     function setIncreaseExtraDisputeBondRemainingToBePaidOut(bool _setIncreaseExtraDisputeBondRemainingToBePaidOutValue) public {
         setIncreaseExtraDisputeBondRemainingToBePaidOutValue = _setIncreaseExtraDisputeBondRemainingToBePaidOutValue;
     }
+    
     function setDecreaseExtraDisputeBondRemainingToBePaidOut(bool _setDecreaseExtraDisputeBondRemainingToBePaidOutValue) public {
         setDecreaseExtraDisputeBondRemainingToBePaidOutValue = _setDecreaseExtraDisputeBondRemainingToBePaidOutValue;
     }
+    
     function setCalculateFloatingValue(uint256 _setCalculateFloatingValueValue) public {
         setCalculateFloatingValueValue = _setCalculateFloatingValueValue;
     }
+    
     function setTargetReporterGasCosts(uint256 _setTargetReporterGasCostsValue) public {
         setTargetReporterGasCostsValue = _setTargetReporterGasCostsValue;
     }
+    
     function setMarketCreationCost(uint256 _setMarketCreationCostValue) public {
         setMarketCreationCostValue = _setMarketCreationCostValue;
     }
+    
     function setIsParentOf(bool _setIsParentOfValue) public {
         setIsParentOfValue = _setIsParentOfValue;
     }
+    
     function setIsContainerForReportingWindow(bool _setIsContainerForReportingWindowValue) public {
         setIsContainerForReportingWindowValue = _setIsContainerForReportingWindowValue;
     }
+    
     function setIsContainerForDisputeBondToken(bool _setIisContainerForDisputeBondTokenValue) public {
         setIisContainerForDisputeBondTokenValue = _setIisContainerForDisputeBondTokenValue;
     }
+    
     function setIsContainerForMarket(bool _setIsContainerForMarketValue) public {
         setIsContainerForMarketValue = _setIsContainerForMarketValue;
     }
+    
     function setIsContainerForStakeToken(bool _setIsContainerForStakeTokenValue) public {
         setIsContainerForStakeTokenValue = _setIsContainerForStakeTokenValue;
     }
+    
     function setIsContainerForShareToken(bool _setIsContainerForShareTokenValue) public {
         setIsContainerForShareTokenValue = _setIsContainerForShareTokenValue;
     }
+    
     function setDecrementOpenInterest(bool _setDecrementOpenInterestValue) public {
         setDecrementOpenInterestValue = _setDecrementOpenInterestValue;
     }
+    
     function setIncrementOpenInterest(bool _setIncrementOpenInterestValue) public {
         setIncrementOpenInterestValue = _setIncrementOpenInterestValue;
     }
+    
     function getInitializParentUniverseValue() public view returns (IUniverse) {
         return initializParentUniverseValue;
     }
+    
     function getInitializeParentPayoutDistributionHashValue() public returns (bytes32) {
         return initializeParentPayoutDistributionHashValue;
     }
+
     /*
     * Impl of IUniverse and ITyped
      */
     function getTypeName() public view returns (bytes32) {
         return "Universe";
     }
+    
     function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external returns (bool) {
         initializParentUniverseValue = _parentUniverse;
         initializeParentPayoutDistributionHashValue = _parentPayoutDistributionHash;
         return true;
     }
+    
     function fork() public returns (bool) {
         return setforkValue;
     }
+    
     function getParentUniverse() public view returns (IUniverse) {
         return setParentUniverseValue;
     }
+    
     function getOrCreateChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
         return setOrCreateChildUniverseValue;
     }
+    
     function getChildUniverse(bytes32 _parentPayoutDistributionHash) public view returns (IUniverse) {
         return setChildUniverseValue;
     }
+    
     function getReputationToken() public view returns (IReputationToken) {
         return setReputationTokenValue;
     }
+    
     function getForkingMarket() public view returns (IMarket) {
         return setForkingMarketValue;
     }
+    
     function getForkEndTime() public view returns (uint256) {
         return setForkEndTimeValue;
     }
+    
     function getParentPayoutDistributionHash() public view returns (bytes32) {
         return setParentPayoutDistributionHashValue;
     }
+    
     function getReportingPeriodDurationInSeconds() public view returns (uint256) {
         return setReportingPeriodDurationInSecondsValue;
     }
+    
     function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow) {
         return setReportingWindowByTimestampValue;
     }
+    
     function getReportingWindowByMarketEndTime(uint256 _endTime) public returns (IReportingWindow) {
         return setReportingWindowByMarketEndTimeValue;
     }
+    
     function getCurrentReportingWindow() public returns (IReportingWindow) {
         return setCurrentReportingWindowValue;
     }
+    
     function getNextReportingWindow() public returns (IReportingWindow) {
         return setNextReportingWindowValue;
     }
+    
     function getReportingWindowForForkEndTime() public returns (IReportingWindow) {
         return setReportingWindowForForkEndTimeValue;
     }
+    
     function getOpenInterestInAttoEth() public view returns (uint256) {
         return setOpenInterestInAttoEthValue;
     }
+    
     function getRepMarketCapInAttoeth() public view returns (uint256) {
         return setRepMarketCapInAttoethValue;
     }
+    
     function getTargetRepMarketCapInAttoeth() public view returns (uint256) {
         return setTargetRepMarketCapInAttoethValue;
     }
+    
     function getValidityBond() public returns (uint256) {
         return setValidityBondValue;
     }
+    
     function getDesignatedReportStake() public returns (uint256) {
         return setDesignatedReportStakeValue;
     }
+    
     function getDesignatedReportNoShowBond() public returns (uint256) {
         return setDesignatedReportNoShowBondValue;
     }
+    
     function getReportingFeeInAttoethPerEth() public returns (uint256) {
         return setReportingFeeInAttoethPerEthValue;
     }
+    
     function getRepAvailableForExtraBondPayouts() public view returns (uint256) {
         return setRepAvailableForExtraBondPayoutsValue;
     }
+    
     function increaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
         return setIncreaseRepAvailableForExtraBondPayoutsValue;
     }
+    
     function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
         return setDecreaseRepAvailableForExtraBondPayoutsValue;
     }
+    
     function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256) {
         return setExtraDisputeBondRemainingToBePaidOutValue;
     }
+    
     function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
         return setIncreaseExtraDisputeBondRemainingToBePaidOutValue;
     }
+    
     function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
         return setDecreaseExtraDisputeBondRemainingToBePaidOutValue;
     }
+    
     function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue, uint256 _floor) public pure returns (uint256 _newValue) {
         if (_totalMarkets == 0) {
             return _defaultValue;
@@ -289,33 +359,43 @@ contract MockUniverse is Initializable, IUniverse {
 
         return _newValue;
     }
+    
     function getTargetReporterGasCosts() public returns (uint256) {
         return setTargetReporterGasCostsValue;
     }
+    
     function getMarketCreationCost() public returns (uint256) {
         return setMarketCreationCostValue;
     }
+    
     function isParentOf(IUniverse _shadyChild) public view returns (bool) {
         return setIsParentOfValue;
     }
+    
     function isContainerForReportingWindow(ITyped _shadyTarget) public view returns (bool) {
         return setIsContainerForReportingWindowValue;
     }
+    
     function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool) {
         return setIisContainerForDisputeBondTokenValue;
     }
+    
     function isContainerForMarket(ITyped _shadyTarget) public view returns (bool) {
         return setIsContainerForMarketValue;
     }
+    
     function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool) {
         return setIsContainerForStakeTokenValue;
     }
+    
     function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool) {
         return setIsContainerForShareTokenValue;
     }
+    
     function decrementOpenInterest(uint256 _amount) public returns (bool) {
         return setDecrementOpenInterestValue;
     }
+    
     function incrementOpenInterest(uint256 _amount) public returns (bool) {
         return setIncrementOpenInterestValue;
     }

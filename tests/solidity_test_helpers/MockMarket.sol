@@ -4,12 +4,14 @@ import 'reporting/IMarket.sol';
 import 'reporting/IUniverse.sol';
 import 'libraries/ITyped.sol';
 
+
 contract MockMarket is IMarket {
     IUniverse private universe;
     bool private designatedReportValue;
     bytes32 private derivePayoutDistributionHashValue;
     bytes32 private updateDerivePayoutDistributionHashValue;
     IReportingWindow private reportingWindow;
+    IReportingWindow private setMigrateDueToNoReportsNextStateValue;
     uint8 private numberOfOutcomes;
     uint256 private numTicks;
     ICash private denominationToken;
@@ -227,6 +229,10 @@ contract MockMarket is IMarket {
         return updateDerivePayoutDistributionHashValue;
     }
 
+    function setMigrateDueToNoReportsNextState(IReportingWindow _reportingWindow) public {
+        setMigrateDueToNoReportsNextStateValue = _reportingWindow;
+    }
+    
     /*
     * IMarket methods
     */
@@ -368,6 +374,8 @@ contract MockMarket is IMarket {
     }
     
     function migrateDueToNoReports() public returns (bool) {
+        // :TODO, some reason this doesn't work. figure out how to move state
+        // setReportingWindow(setMigrateDueToNoReportsNextStateValue);
         return migrateDueToNoRep;
     }
     
