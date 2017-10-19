@@ -1,13 +1,15 @@
 pragma solidity 0.4.17;
 
-
+import 'libraries/ContractExists.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 
 
 contract LegacyRepContract is VariableSupplyToken {
+    using ContractExists for address;
     event FundedAccount(address indexed _universe, address indexed _sender, uint256 _repBalance, uint256 _timestamp);
 
     uint256 private constant DEFAULT_FAUCET_AMOUNT = 47 ether;
+    address private constant FOUNDATION_REP_ADDRESS = address(0xE94327D07Fc17907b4DB788E5aDf2ed424adDff6);
 
     string public constant name = "Reputation";
     string public constant symbol = "REP";
@@ -15,10 +17,7 @@ contract LegacyRepContract is VariableSupplyToken {
 
     function LegacyRepContract() public {
         // This is to confirm we are not on foundation network
-        address _foundationRepAddress = address(0xE94327D07Fc17907b4DB788E5aDf2ed424adDff6);
-        uint256 size;
-        assembly { size := extcodesize(_foundationRepAddress) }
-        require(size == 0);
+        require(!FOUNDATION_REP_ADDRESS.exists());
     }
 
     function faucet(uint256 _amount) public returns (bool) {

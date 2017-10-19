@@ -1,5 +1,4 @@
 // Create market, make a trade on it, designated reporter reports, market is finalized, traders settle shares, reporters redeem tokens.
-import * as binascii from "binascii";
 import { expect } from "chai";
 import { ContractBlockchainData } from "contract-deployment";
 import { BID, ASK, LONG, SHORT, YES, NO } from "./constants";
