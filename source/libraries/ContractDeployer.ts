@@ -19,9 +19,9 @@ export class ContractDeployer {
     public readonly ethjsContract: EthjsContract;
     public readonly compiledContracts: CompilerOutputContracts;
     public readonly gasPrice: number;
-    public readonly contracts = [];
-    public readonly signatures = [];
-    public readonly bytecodes = [];
+    public readonly contracts = {};
+    public readonly signatures = {};
+    public readonly bytecodes = {};
     public readonly gasAmount = 6*10**6;
     public testAccounts;
     public controller;
@@ -39,11 +39,7 @@ export class ContractDeployer {
         this.testAccounts = await this.ethjsQuery.accounts();
 
         console.log('Uploading controller...');
-        this.controller = await this.upload("../source/contracts/Controller.sol");
-        const ownerAddress = (await this.controller.owner())[0];
-        if (ownerAddress.toLowerCase() !== this.testAccounts[0]) {
-            throw new Error("Controller owner does not equal from address");
-        }
+        await this.uploadController();
         console.log('Uploading contracts...');
         await this.uploadAllContracts();
         console.log('Whitelisting contracts...');
@@ -58,6 +54,14 @@ export class ContractDeployer {
         this.market = await this.createReasonableMarket(this.universe.address, this.contracts['Cash'].address, 2);
     }
 
+    public async uploadController(): Promise<void> {
+        this.controller = await this.upload("Controller.sol");
+        const ownerAddress = (await this.controller.owner())[0];
+        if (ownerAddress.toLowerCase() !== this.testAccounts[0]) {
+            throw new Error("Controller owner does not equal from address");
+        }
+    }
+
     public async parseBlockTimestamp(blockTimestamp): Promise<Date> {
         const timestampHex = `0x${JSON.stringify(blockTimestamp).replace(/\"/g, "")}`;
         const timestampInt = parseInt(timestampHex, 16) * 1000;
@@ -70,7 +74,7 @@ export class ContractDeployer {
         const delegatorConstructorArgs = [this.controller.address, hexlifiedDelegationTargetName];
 
         await this.uploadAndAddToController(contractFileName, delegationTargetName, contractName);
-        return await this.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", contractName, "Delegator", delegatorConstructorArgs);
+        return await this.uploadAndAddToController("libraries/Delegator.sol", contractName, "Delegator", delegatorConstructorArgs);
     }
 
     private async uploadAndAddToController(relativeFilePath: string, lookupKey: string = "", signatureKey: string = "", constructorArgs: any = []): Promise<ContractBlockchainData|undefined> {
@@ -92,7 +96,6 @@ export class ContractDeployer {
         if (this.contracts[lookupKey]) {
             return(this.contracts[lookupKey]);
         }
-        relativeFilePath = relativeFilePath.replace("../source/contracts/", "");
         const bytecode = this.compiledContracts[relativeFilePath][signatureKey].evm.bytecode.object;
         // Abstract contracts have a 0-length array for bytecode
         if (bytecode.length === 0) {
@@ -108,7 +111,7 @@ export class ContractDeployer {
         const transactionHash = (constructorArgs.length === 2)
             ? await contractBuilder.new(constructorArgs[0], constructorArgs[1])
             : await contractBuilder.new();
-        const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash);
+        const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash, `Uploading ${signatureKey}`);
         this.contracts[lookupKey] = contractBuilder.at(receipt.contractAddress);
 
         return this.contracts[lookupKey];
@@ -141,7 +144,7 @@ export class ContractDeployer {
 
     private async whitelistContract(contractName: string): Promise<TransactionReceipt> {
         const transactionHash = await this.controller.addToWhitelist(this.contracts[contractName].address);
-        return await waitForTransactionReceipt(this.ethjsQuery, transactionHash);
+        return await waitForTransactionReceipt(this.ethjsQuery, transactionHash, `Whitelisting ${contractName}`);
     }
 
     private async whitelistTradingContracts(): Promise<void> {
@@ -159,7 +162,7 @@ export class ContractDeployer {
 
     private async initializeContract(contractName: string): Promise<TransactionReceipt> {
         const transactionHash = await this.contracts[contractName].setController(this.controller.address);
-        return await waitForTransactionReceipt(this.ethjsQuery, transactionHash);
+        return await waitForTransactionReceipt(this.ethjsQuery, transactionHash, `Initializing ${contractName}`);
     }
 
     private async initializeAllContracts(): Promise<void> {
@@ -191,7 +194,7 @@ export class ContractDeployer {
         const universeGasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: this.bytecodes["Universe"] }));
         const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gas: universeGasEstimate, gasPrice: this.gasPrice });
         const transactionHash = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify("Universe")}`);
-        const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash);
+        const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash, `Instatiating genesis universe.`);
         const universe = await universeBuilder.at(receipt.contractAddress);
         await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
         return universe;
@@ -227,23 +230,25 @@ export class ContractDeployer {
         await reputationToken.migrateFromLegacyRepContract();
 
         // necessary because it is used part of market creation fee calculation
-        await universe.getCurrentReportingWindow();
+        const currentReportingWindowTransactionHash = await universe.getCurrentReportingWindow();
         // necessary because it is used as part of market creation fee calculation
-        await universe.getPreviousReportingWindow();
+        const previousReportingWindowTransactionHash = await universe.getPreviousReportingWindow();
         // necessary because createMarket needs its reporting window already created
-        const reportingWindowTransactionHash = await universe.getReportingWindowByMarketEndTime(endTime);
+        const marketReportingWindowTransactionHash = await universe.getReportingWindowByMarketEndTime(endTime);
+        await waitForTransactionReceipt(this.ethjsQuery, currentReportingWindowTransactionHash, `Instantiating current reporting window.`);
+        await waitForTransactionReceipt(this.ethjsQuery, previousReportingWindowTransactionHash, `Instantiating previous reporting window.`);
+        await waitForTransactionReceipt(this.ethjsQuery, marketReportingWindowTransactionHash, `Instantiating market reporting window.`);
 
-        const currentReportingWindowAddress = await universe.getCurrentReportingWindow.bind(constant)();
         const targetReportingWindowAddress = await universe.getReportingWindowByMarketEndTime.bind(constant)(endTime);
 
-        const targetReportingWindow = parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReportingWindow'], { to: targetReportingWindowAddress, from: this.testAccounts[0], gas: this.gasAmount, gasPrice: this.gasPrice });
+        const targetReportingWindow = parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReportingWindow'], { to: targetReportingWindowAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
         const marketCreationFee = await universe.getMarketCreationCost.bind(constant)();
         const marketAddress = await targetReportingWindow.createMarket.bind({ value: marketCreationFee, constant: true })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
         if (!marketAddress) {
             throw new Error("Unable to get address for new categorical market.");
         }
         const createMarketHash = await targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
-        const market = parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0], gas: this.gasAmount });
+        const market = parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
         const marketNameHex = stringTo32ByteHex("Market");
 
         if (await market.getTypeName() !== marketNameHex) {

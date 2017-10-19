@@ -10,9 +10,23 @@
     },
     "params": {
         "gasLimitBoundDivisor": "0x400",
+        "accountStartNonce": "0x0",
         "maximumExtraDataSize": "0x20",
         "minGasLimit": "0x1",
-        "networkID" : "0x2323"
+        "networkID" : "0x2323",
+        "eip150Transition": "0x0",
+        "eip160Transition": "0x0",
+        "eip161abcTransition": "0x0",
+        "eip161dTransition": "0x0",
+        "eip649Reward": "0x29A2241AF62C0000",
+        "eip100bTransition": "0x0",
+        "eip649Transition": "0x0",
+        "eip98Transition": "0xffffffffffffffff",
+        "eip140Transition": "0x0",
+        "eip211Transition": "0x0",
+        "eip214Transition": "0x0",
+        "eip155Transition": "0x0",
+        "eip658Transition": "0x0"
     },
     "genesis": {
         "seal": {
