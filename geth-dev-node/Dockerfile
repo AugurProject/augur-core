@@ -2,8 +2,6 @@ FROM ethereum/client-go:latest
 
 COPY genesis.json /geth/genesis.json
 RUN printf "\n" > /geth/password.txt
-# Sealing account (pre-funded with a large balance)
-# COPY UTC--2017-10-16T19-13-42.464934000Z--c5ed899b0878656feb06467e2e9ede3ae73cbcb7 /geth/keys/UTC--2017-10-16T19-13-42.464934000Z--c5ed899b0878656feb06467e2e9ede3ae73cbcb7
 COPY dev-key.json /geth/keys/dev-key.json
 RUN geth --datadir /geth init /geth/genesis.json
 
