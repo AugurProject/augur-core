@@ -147,13 +147,13 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
     round2ReportersDisputeBondToken = None
 
     # Seed legacy REP contract with 11 million reputation tokens
-    legacyRepContract = contractsFixture.contracts['LegacyRepContract']
-    legacyRepContract.faucet(long(REP_TOTAL * REP_DIVISOR))
+    legacyReputationToken = contractsFixture.contracts['LegacyReputationToken']
+    legacyReputationToken.faucet(long(REP_TOTAL * REP_DIVISOR))
 
     # Get the reputation token for this universe and migrate legacy REP to it
     reputationToken = contractsFixture.applySignature('ReputationToken', universe.getReputationToken())
-    legacyRepContract.approve(reputationToken.address, REP_TOTAL * REP_DIVISOR)
-    reputationToken.migrateFromLegacyRepContract()
+    legacyReputationToken.approve(reputationToken.address, REP_TOTAL * REP_DIVISOR)
+    reputationToken.migrateFromLegacyReputationToken()
 
     initializeTestAccountBalances(reputationToken)
 

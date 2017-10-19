@@ -102,13 +102,13 @@ def test_universe_contains_market(localFixture, cash, market):
     assert universe.isContainerForMarket(market.address) == False
 
     # Give some REP in this universe to tester0 to pay market creation fee
-    legacyRepContract = localFixture.contracts['LegacyRepContract']
-    legacyRepContract.faucet(11 * 10**6 * 10**18)
+    legacyReputationToken = localFixture.contracts['LegacyReputationToken']
+    legacyReputationToken.faucet(11 * 10**6 * 10**18)
 
     # Get the reputation token for this universe and migrate legacy REP to it
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
-    legacyRepContract.approve(reputationToken.address, 11 * 10**6 * 10**18)
-    reputationToken.migrateFromLegacyRepContract()
+    legacyReputationToken.approve(reputationToken.address, 11 * 10**6 * 10**18)
+    reputationToken.migrateFromLegacyReputationToken()
 
     uni_market = localFixture.createReasonableBinaryMarket(universe, cash)
     assert universe.isContainerForMarket(uni_market.address)

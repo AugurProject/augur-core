@@ -4,7 +4,7 @@ import 'libraries/ContractExists.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 
 
-contract LegacyRepContract is VariableSupplyToken {
+contract LegacyReputationToken is VariableSupplyToken {
     using ContractExists for address;
     event FundedAccount(address indexed _universe, address indexed _sender, uint256 _repBalance, uint256 _timestamp);
 
@@ -15,7 +15,7 @@ contract LegacyRepContract is VariableSupplyToken {
     string public constant symbol = "REP";
     uint256 public constant decimals = 18;
 
-    function LegacyRepContract() public {
+    function LegacyReputationToken() public {
         // This is to confirm we are not on foundation network
         require(!FOUNDATION_REP_ADDRESS.exists());
     }

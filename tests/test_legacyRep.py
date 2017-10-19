@@ -2,7 +2,7 @@ from ethereum.tools import tester
 
 ''' TODO: When we get finer grained test fixture/setup in place make this use a more base fixture without the rep distributed, as without that there is nothing here to test
 def test_legacyRepFaucet(contractsFixture):
-    legacyRep = contractsFixture.contracts['LegacyRepContract']
+    legacyRep = contractsFixture.contracts['LegacyReputationToken']
     assert legacyRep.decimals() == 18
     assert legacyRep.totalSupply() == 0
 

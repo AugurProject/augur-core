@@ -20,7 +20,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, Variabl
     bool private setTrustedTransferValue;
     IUniverse private setUniverseValue;
     IReputationToken private setTopMigrationDestinationValue;
-    bool private setMigrateFromLegacyRepContractValue;
+    bool private setMigrateFromLegacyReputationTokenValue;
     IUniverse private initializeUniverseValue;
     
     /*
@@ -44,8 +44,8 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, Variabl
     function setTopMigrationDestination(IReputationToken _setTopMigrationDestinationValue) public {
         setTopMigrationDestinationValue = _setTopMigrationDestinationValue;
     }
-    function setMigrateFromLegacyRepContract(bool _setMigrateFromLegacyRepContractValue) public {
-        setMigrateFromLegacyRepContractValue = _setMigrateFromLegacyRepContractValue;
+    function setMigrateFromLegacyReputationToken(bool _setMigrateFromLegacyReputationTokenValue) public {
+        setMigrateFromLegacyReputationTokenValue = _setMigrateFromLegacyReputationTokenValue;
     }
     function setInitializeUniverseValue() public returns(IUniverse) {
         return initializeUniverseValue;
@@ -79,7 +79,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, Variabl
     function getTopMigrationDestination() public view returns (IReputationToken) {
         return setTopMigrationDestinationValue;
     }
-    function migrateFromLegacyRepContract() public afterInitialized returns (bool) {
-        return setMigrateFromLegacyRepContractValue;
+    function migrateFromLegacyReputationToken() public afterInitialized returns (bool) {
+        return setMigrateFromLegacyReputationTokenValue;
     }
 }

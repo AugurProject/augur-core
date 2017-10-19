@@ -58,9 +58,9 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function migrateFromLegacyRepContract() public afterInitialized returns (bool) {
-        var _legacyRepToken = ERC20(controller.lookup("LegacyRepContract"));
-        var _legacyBalance = _legacyRepToken.balanceOf(msg.sender);
+    function migrateFromLegacyReputationToken() public afterInitialized returns (bool) {
+        var _legacyRepToken = ERC20(controller.lookup("LegacyReputationToken"));
+        uint256 _legacyBalance = _legacyRepToken.balanceOf(msg.sender);
         _legacyRepToken.transferFrom(msg.sender, address(0), _legacyBalance);
         balances[msg.sender] = balances[msg.sender].add(_legacyBalance);
         supply = supply.add(_legacyBalance);
