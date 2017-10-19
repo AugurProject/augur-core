@@ -186,8 +186,10 @@ export class ContractDeployer {
     }
 
     private async createGenesisUniverse(): Promise<ContractBlockchainData> {
-        const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0], gasPrice: this.gasPrice });
-        const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const delgatorGasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: this.bytecodes["Delegator"] }));
+        const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0], gas: delgatorGasEstimate, gasPrice: this.gasPrice });
+        const universeGasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: this.bytecodes["Universe"] }));
+        const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gas: universeGasEstimate, gasPrice: this.gasPrice });
         const transactionHash = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify("Universe")}`);
         const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash);
         const universe = await universeBuilder.at(receipt.contractAddress);
