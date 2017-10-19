@@ -7,10 +7,14 @@ import { compileAndDeployContracts } from "../deployment/deployContracts";
 import { parseAbiIntoMethods } from '../libraries/AbiParser';
 import { ContractDeployer } from "../libraries/ContractDeployer";
 import { TestAccount, generateTestAccounts, padAndHexlify, stringTo32ByteHex } from "../libraries/HelperFunctions";
-
+import { Connector } from '../libraries/Connector';
 
 describe("TradeAndReport", () => {
     var contractDeployer: ContractDeployer;
+    before(async () => {
+        const connector = new Connector();
+        const ethjsQuery = await connector.waitUntilConnected();
+    });
     beforeEach(async () => {
         contractDeployer = await compileAndDeployContracts();
     });

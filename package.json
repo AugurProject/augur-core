@@ -2,6 +2,7 @@
     "devDependencies": {
         "@types/chai": "4.0.4",
         "@types/chai-as-promised": "7.1.0",
+        "@types/get-port": "^3.2.0",
         "@types/mkdirp": "0.5.1",
         "@types/mocha": "2.2.43",
         "async-file": "2.0.2",
