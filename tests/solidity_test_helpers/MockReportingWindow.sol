@@ -7,6 +7,7 @@ import 'libraries/ITyped.sol';
 import 'reporting/IReputationToken.sol';
 import 'libraries/Initializable.sol';
 
+
 contract MockReportingWindow is Initializable, IReportingWindow {
     bool private setMigrateMarketInFromSiblingValue;
     bool private setMigrateMarketInFromNiblingValue;
@@ -34,6 +35,10 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     IMarket private market;
     IUniverse private initializeUniverseValue;
     uint256 private initializeReportingWindowIdValue;
+    address private collectReporterAddress;
+    uint256 private collectAttoStakeTokens;
+    bool private collectForgoFees;
+
     /*
     * setters to feed the getters and impl of IReportingWindow
     */
@@ -48,75 +53,111 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function setRemoveMarket(bool _setRemoveMarketValue) public {
         setRemoveMarketValue = _setRemoveMarketValue;
     }
+    
     function setNoteReportingGasPrice(bool _setNoteReportingGasPriceValue) public {
         setNoteReportingGasPriceValue = _setNoteReportingGasPriceValue;
     }
+    
     function setUpdateMarketPhase(bool _setUpdateMarketPhaseValue) public {
         setUpdateMarketPhaseValue = _setUpdateMarketPhaseValue;
     }
+    
     function setUniverse(IUniverse _universe) public {
         universe = _universe;
     }
+    
     function setReputationToken(IReputationToken _setReputationTokenValue) public {
         setReputationTokenValue = _setReputationTokenValue;
     }
+    
     function setStartTime(uint256 _setStartTimeValue) public {
         setStartTimeValue = _setStartTimeValue;
     }
+    
     function setEndTime(uint256 _setEndTimeValue) public {
         setEndTimeValue = _setEndTimeValue;
     }
+
     function setNumMarkets(uint256 _setNumMarketsValue) public {
         setNumMarketsValue = _setNumMarketsValue;
     }
+
     function setNumInvalidMarkets(uint256 _setNumInvalidMarketsValue) public {
         setNumInvalidMarketsValue = _setNumInvalidMarketsValue;
     }
+
     function setNumIncorrectDesignatedReportMarkets(uint256 _setNumIncorrectDesignatedReportMarketsValue) public {
         setNumIncorrectDesignatedReportMarketsValue = _setNumIncorrectDesignatedReportMarketsValue;
     }
+
     function setAvgReportingGasPrice(uint256 _setAvgReportingGasPriceValue) public {
         setAvgReportingGasPriceValue = _setAvgReportingGasPriceValue;
     }
+
     function setNextReportingWindow(IReportingWindow _setNextReportingWindowValue) public {
         setNextReportingWindowValue = _setNextReportingWindowValue;
     }
+
     function setPreviousReportingWindow(IReportingWindow _setPreviousReportingWindowValue) public {
         setPreviousReportingWindowValue = _setPreviousReportingWindowValue;
     }
+
     function setNumDesignatedReportNoShows(uint256 _setNumDesignatedReportNoShowsValue) public {
         setNumDesignatedReportNoShowsValue = _setNumDesignatedReportNoShowsValue;
     }
+
     function setAllMarketsFinalized(bool _setAllMarketsFinalizedValue) public {
         setAllMarketsFinalizedValue = _setAllMarketsFinalizedValue;
     }
+
     function setCollectReportingFees(bool _setCollectReportingFeesValue) public {
         setCollectReportingFeesValue = _setCollectReportingFeesValue;
     }
+
     function setTriggerMigrateFeesDueToFork(bool _setTriggerMigrateFeesDueToForkValue) public {
         setTriggerMigrateFeesDueToForkValue = _setTriggerMigrateFeesDueToForkValue;
     }
+
     function setMigrateFeesDueToFork(bool _setMigrateFeesDueToForkValue) public {
         setMigrateFeesDueToForkValue = _setMigrateFeesDueToForkValue;
     }
+
     function setIsContainerForMarket(bool _setIsContainerForMarketValue) public {
         setIsContainerForMarketValue = _setIsContainerForMarketValue;
     }
+
     function setIsForkingMarketFinalized(bool _setIsForkingMarketFinalizedValue) public {
         setIsForkingMarketFinalizedValue = _setIsForkingMarketFinalizedValue;
     }
+
     function setIsDisputeActive(bool _setIsDisputeActiveValue) public {
         setIsDisputeActiveValue = _setIsDisputeActiveValue;
     }
+
     function setCreateMarket(IMarket _market) public {
         market = _market;
     }
+
     function getInitializeUniverseValue() public view returns(IUniverse) {
         return initializeUniverseValue;
     }
+
     function getinitializeReportingWindowIdValue() public returns(uint256) {
         return initializeReportingWindowIdValue;
     }
+
+    function getCollectReporterAddress() public returns(address) {
+        return collectReporterAddress;
+    }
+
+    function getCollectAttoStakeTokens() public returns(uint256) {
+        return collectAttoStakeTokens;
+    }
+
+    function getCollectForgoFees() public returns(bool) {
+        return collectForgoFees;
+    }
+    
     /*
     * Impl of IReportingWindow and ITyped
      */
@@ -134,74 +175,99 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public payable returns (IMarket _newMarket) {
         return market;
     }
+
     function migrateMarketInFromSibling() public returns (bool) {
         return setMigrateMarketInFromSiblingValue;
     }
+
     function migrateMarketInFromNibling() public returns (bool) {
         return setMigrateMarketInFromNiblingValue;
     }
+
     function removeMarket() public returns (bool) {
         return setRemoveMarketValue;
     }
+
     function noteReportingGasPrice(IMarket _market) public returns (bool) {
         return setNoteReportingGasPriceValue;
     }
+
     function updateMarketPhase() public returns (bool) {
         return setUpdateMarketPhaseValue;
     }    
+
     function getUniverse() public view returns (IUniverse) {
         return universe;
     }
+
     function getReputationToken() public view returns (IReputationToken) {
         return setReputationTokenValue;
     }
+    
     function getStartTime() public view returns (uint256) {
         return setStartTimeValue;
     }
+
     function getEndTime() public view returns (uint256) {
         return setEndTimeValue;
     }
+    
     function getNumMarkets() public view returns (uint256) {
         return setNumMarketsValue;
     }
+    
     function getNumInvalidMarkets() public view returns (uint256) {
         return setNumInvalidMarketsValue;
     }
+    
     function getNumIncorrectDesignatedReportMarkets() public view returns (uint256) {
         return setNumIncorrectDesignatedReportMarketsValue;
     }
+    
     function getAvgReportingGasPrice() public view returns (uint256) {
         return setAvgReportingGasPriceValue;
     }
+    
     function getNextReportingWindow() public returns (IReportingWindow) {
         return setNextReportingWindowValue;
     }
+    
     function getPreviousReportingWindow() public returns (IReportingWindow) {
         return setPreviousReportingWindowValue;
     }
+    
     function getNumDesignatedReportNoShows() public view returns (uint256) {
         return setNumDesignatedReportNoShowsValue;
     }
+    
     function allMarketsFinalized() public view returns (bool) {
         return setAllMarketsFinalizedValue;
     }
+    
     function collectReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
-        return setCollectReportingFeesValue;
+        collectReporterAddress = _reporterAddress;
+        collectAttoStakeTokens = _attoStakeTokens;
+        collectForgoFees = _forgoFees;
+        return true;
     }
+    
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool) {
         return setTriggerMigrateFeesDueToForkValue;
     }
+    
     function migrateFeesDueToFork() public returns (bool) {
         return setMigrateFeesDueToForkValue;
     }
+    
     function isContainerForMarket(ITyped _shadyTarget) public view returns (bool) {
         return setIsContainerForMarketValue;
     }
+    
     function isForkingMarketFinalized() public view returns (bool) {
         return setIsForkingMarketFinalizedValue;
     }
+    
     function isDisputeActive() public view returns (bool) {
         return setIsDisputeActiveValue;
     }
-
 }
