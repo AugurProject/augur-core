@@ -2,7 +2,6 @@
 
 // TODO: Use mapped types for arrays
 // TODO: Update TS type definition for ContractBlockchainData to allow for empty object (e.g. upload() & uploadAndAddToController())?
-import * as binascii from "binascii";
 import * as path from "path";
 import EthjsAbi = require("ethjs-abi");
 import EthjsContract = require("ethjs-contract");
@@ -70,7 +69,7 @@ export class ContractDeployer {
 
     private async uploadAndAddDelegatedToController(contractFileName: string, contractName: string): Promise<ContractBlockchainData|undefined> {
         const delegationTargetName = contractName + "Target";
-        const hexlifiedDelegationTargetName = "0x" + binascii.hexlify(delegationTargetName);
+        const hexlifiedDelegationTargetName = stringTo32ByteHex(delegationTargetName);
         const delegatorConstructorArgs = [this.controller.address, hexlifiedDelegationTargetName];
 
         await this.uploadAndAddToController(contractFileName, delegationTargetName, contractName);
@@ -84,7 +83,7 @@ export class ContractDeployer {
             return undefined;
         }
         // TODO: Add padding to hexlifiedLookupKey to make it the right length?  It seems to work without padding.
-        const hexlifiedLookupKey = "0x" + binascii.hexlify(lookupKey);
+        const hexlifiedLookupKey = stringTo32ByteHex(lookupKey);
         await this.controller.setValue(hexlifiedLookupKey, contract.address);
 
         return contract;
@@ -189,11 +188,10 @@ export class ContractDeployer {
     }
 
     private async createGenesisUniverse(): Promise<ContractBlockchainData> {
+        const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gasPrice: this.gasPrice });
         const delgatorGasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: this.bytecodes["Delegator"] }));
-        const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0], gas: delgatorGasEstimate, gasPrice: this.gasPrice });
-        const universeGasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: this.bytecodes["Universe"] }));
-        const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gas: universeGasEstimate, gasPrice: this.gasPrice });
-        const transactionHash = await delegatorBuilder.new(this.controller.address, `0x${binascii.hexlify("Universe")}`);
+        const transactionHash = await delegatorBuilder.new(this.controller.address, stringTo32ByteHex('Universe'), { gas: delgatorGasEstimate });
         const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash, `Instatiating genesis universe.`);
         const universe = await universeBuilder.at(receipt.contractAddress);
         await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
@@ -209,9 +207,9 @@ export class ContractDeployer {
         }
         const signature = this.signatures["StakeToken"];
         const bytecode = this.bytecodes["StakeToken"];
+        const contractBuilder = await this.ethjsContract(signature, bytecode, { from: this.testAccounts[0] });
         const gasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: bytecode }));
-        const contractBuilder = await this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gas: gasEstimate });
-        const stakeToken = await contractBuilder.at(stakeTokenAddress);
+        const stakeToken = await contractBuilder.at(stakeTokenAddress, { gas: gasEstimate });
 
         return stakeToken;
     }
