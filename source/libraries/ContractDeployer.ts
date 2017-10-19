@@ -11,7 +11,7 @@ import { TransactionReceipt } from 'ethjs-shared';
 import { ContractBlockchainData, ContractReceipt } from "contract-deployment";
 import { Contract, parseAbiIntoMethods } from "./AbiParser";
 import { generateTestAccounts, padAndHexlify, stringTo32ByteHex, waitForTransactionReceipt } from "./HelperFunctions";
-import { CompilerOutputContracts } from "solc";
+import { CompilerOutputContracts, CompilerOutputAbi } from "solc";
 
 export class ContractDeployer {
     public readonly ethjsQuery: EthjsQuery;
@@ -19,8 +19,8 @@ export class ContractDeployer {
     public readonly compiledContracts: CompilerOutputContracts;
     public readonly gasPrice: number;
     public readonly contracts = {};
-    public readonly signatures = {};
-    public readonly bytecodes = {};
+    public readonly abis = new Map<string, Array<CompilerOutputAbi>>();
+    public readonly bytecodes = new Map<string, string>();
     public readonly gasAmount = 6*10**6;
     public testAccounts;
     public controller;
@@ -89,30 +89,43 @@ export class ContractDeployer {
         return contract;
     }
 
-    private async upload(relativeFilePath: string, lookupKey: string = "", signatureKey: string = "", constructorArgs: string[] = []): Promise<ContractBlockchainData|undefined> {
-        lookupKey = (lookupKey === "") ? path.basename(relativeFilePath).split(".")[0] : lookupKey;
-        signatureKey = (signatureKey === "") ? lookupKey : signatureKey;
+    private getEncodedConstructData(abi: Array<CompilerOutputAbi>, bytecode: string, constructorArgs: Array<string>): string {
+        if (constructorArgs.length === 0) {
+            return bytecode;
+        }
+        const constructorSignature = abi.find(signature => signature.type === 'constructor')!;
+        const constructorInputTypes = constructorSignature.inputs.map(x => x.type);
+        const encodedConstructorParameters = EthjsAbi.encodeParams(constructorInputTypes, constructorArgs).substring(2);
+        return `${bytecode}${encodedConstructorParameters}`
+    }
+
+    private async construct(contractLookupKey: string, contractName: string, constructorArgs: Array<string>, failureDetails: string) {
+        const abi = this.compiledContracts[contractLookupKey][contractName]!.abi;
+        const bytecode = this.compiledContracts[contractLookupKey][contractName]!.evm.bytecode.object;
+        const builder = this.ethjsContract(abi, bytecode, { from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const data = this.getEncodedConstructData(abi, bytecode, constructorArgs);
+        const gasEstimate = await this.ethjsQuery.estimateGas({ from: this.testAccounts[0], data: data })
+        const transactionHash = await builder.new(...constructorArgs, { gas: gasEstimate });
+        const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash, failureDetails);
+        return builder.at(receipt.contractAddress);
+    }
+
+    private async upload(contractLookupKey: string, lookupKey: string = "", contractName: string = "", constructorArgs: Array<string> = []): Promise<ContractBlockchainData|undefined> {
+        lookupKey = (lookupKey === "") ? path.basename(contractLookupKey).split(".")[0] : lookupKey;
+        contractName = (contractName === "") ? lookupKey : contractName;
         if (this.contracts[lookupKey]) {
             return(this.contracts[lookupKey]);
         }
-        const bytecode = this.compiledContracts[relativeFilePath][signatureKey].evm.bytecode.object;
+        const bytecode = this.compiledContracts[contractLookupKey][contractName].evm.bytecode.object;
         // Abstract contracts have a 0-length array for bytecode
         if (bytecode.length === 0) {
             return undefined;
         }
-        if (!this.signatures[signatureKey]) {
-            this.signatures[signatureKey] = this.compiledContracts[relativeFilePath][signatureKey].abi;
-            this.bytecodes[signatureKey] = bytecode;
+        if (!this.abis.has(contractName)) {
+            this.abis.set(contractName, this.compiledContracts[contractLookupKey][contractName].abi);
+            this.bytecodes.set(contractName, bytecode);
         }
-        const signature = this.signatures[signatureKey];
-        const contractBuilder = await this.ethjsContract(signature, bytecode, { from: this.testAccounts[0], gasPrice: this.gasPrice });
-        const gasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: bytecode }));
-        const transactionHash = (constructorArgs.length === 2)
-            ? await contractBuilder.new(constructorArgs[0], constructorArgs[1], { gas: gasEstimate })
-            : await contractBuilder.new({ gas: gasEstimate });
-        const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash, `Uploading ${signatureKey}`);
-        this.contracts[lookupKey] = contractBuilder.at(receipt.contractAddress);
-
+        this.contracts[lookupKey] = await this.construct(contractLookupKey, contractName, constructorArgs, `Uploading ${contractName}`);
         return this.contracts[lookupKey];
     }
 
@@ -188,12 +201,9 @@ export class ContractDeployer {
     }
 
     private async createGenesisUniverse(): Promise<ContractBlockchainData> {
-        const delegatorBuilder = this.ethjsContract(this.signatures["Delegator"], this.bytecodes["Delegator"], { from: this.testAccounts[0], gasPrice: this.gasPrice });
-        const universeBuilder = this.ethjsContract(this.signatures["Universe"], this.bytecodes["Universe"], { from: this.testAccounts[0], gasPrice: this.gasPrice });
-        const delgatorGasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: this.bytecodes["Delegator"] }));
-        const transactionHash = await delegatorBuilder.new(this.controller.address, stringTo32ByteHex('Universe'), { gas: delgatorGasEstimate });
-        const receipt = await waitForTransactionReceipt(this.ethjsQuery, transactionHash, `Instatiating genesis universe.`);
-        const universe = await universeBuilder.at(receipt.contractAddress);
+        const delegator = await this.construct("libraries/Delegator.sol", "Delegator", [ this.controller.address, stringTo32ByteHex('Universe') ], `Instantiating genesis universe.`);
+        const universeBuilder = this.ethjsContract(this.abis.get("Universe")!, this.bytecodes.get("Universe")!, { from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const universe = universeBuilder.at(delegator.address);
         await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
         return universe;
     }
@@ -205,10 +215,10 @@ export class ContractDeployer {
         if (!stakeTokenAddress) {
             throw new Error();
         }
-        const signature = this.signatures["StakeToken"];
-        const bytecode = this.bytecodes["StakeToken"];
+        const signature = this.abis.get("StakeToken");
+        const bytecode = this.bytecodes.get("StakeToken")!;
         const contractBuilder = await this.ethjsContract(signature, bytecode, { from: this.testAccounts[0] });
-        const gasEstimate = await this.ethjsQuery.estimateGas(Object.assign({ from: this.testAccounts[0], data: bytecode }));
+        const gasEstimate = await this.ethjsQuery.estimateGas({ from: this.testAccounts[0], data: bytecode });
         const stakeToken = await contractBuilder.at(stakeTokenAddress, { gas: gasEstimate });
 
         return stakeToken;
@@ -217,10 +227,10 @@ export class ContractDeployer {
     private async createMarket(universeAddress: string, numOutcomes: number, endTime: number, feePerEthInWei: number, denominationToken: string, designatedReporter: string, numTicks: number): Promise<Contract> {
         const constant = { constant: true };
 
-        const universe = parseAbiIntoMethods(this.ethjsQuery, this.signatures["Universe"], { to: universeAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
-        const legacyReputationToken = parseAbiIntoMethods(this.ethjsQuery, this.signatures['LegacyRepContract'], { to: this.contracts['LegacyRepContract'].address, from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const universe = parseAbiIntoMethods(this.ethjsQuery, this.abis.get("Universe")!, { to: universeAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const legacyReputationToken = parseAbiIntoMethods(this.ethjsQuery, this.abis.get('LegacyRepContract')!, { to: this.contracts['LegacyRepContract'].address, from: this.testAccounts[0], gasPrice: this.gasPrice });
         const reputationTokenAddress = await universe.getReputationToken();
-        const reputationToken = parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReputationToken'], { to: reputationTokenAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const reputationToken = parseAbiIntoMethods(this.ethjsQuery, this.abis.get('ReputationToken')!, { to: reputationTokenAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
 
         // get some REP
         await legacyReputationToken.faucet(0);
@@ -239,14 +249,14 @@ export class ContractDeployer {
 
         const targetReportingWindowAddress = await universe.getReportingWindowByMarketEndTime.bind(constant)(endTime);
 
-        const targetReportingWindow = parseAbiIntoMethods(this.ethjsQuery, this.signatures['ReportingWindow'], { to: targetReportingWindowAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const targetReportingWindow = parseAbiIntoMethods(this.ethjsQuery, this.abis.get('ReportingWindow')!, { to: targetReportingWindowAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
         const marketCreationFee = await universe.getMarketCreationCost.bind(constant)();
         const marketAddress = await targetReportingWindow.createMarket.bind({ value: marketCreationFee, constant: true })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
         if (!marketAddress) {
             throw new Error("Unable to get address for new categorical market.");
         }
         const createMarketHash = await targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
-        const market = parseAbiIntoMethods(this.ethjsQuery, this.signatures["Market"], { to: marketAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
+        const market = parseAbiIntoMethods(this.ethjsQuery, this.abis.get("Market")!, { to: marketAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
         const marketNameHex = stringTo32ByteHex("Market");
 
         if (await market.getTypeName() !== marketNameHex) {

@@ -60,38 +60,41 @@ declare module 'solc' {
             legacyAST: any;
         },
     }
+    type CompilerOutputAbi = CompilerOutputContractAbiFunction|CompilerOutputContractAbiEvent;
     interface CompilerOutputContracts {
         [globalName: string]: {
-            abi: (CompilerOutputContractAbiFunction|CompilerOutputContractAbiEvent)[];
-            metadata: string;
-            userdoc: any;
-            devdoc: any;
-            ir: string;
-            evm: {
-                assembly: string;
-                legacyAssembly: any;
-                bytecode: CompilerOutputEvmBytecode;
-                deployedBytecode: CompilerOutputEvmBytecode;
-                methodIdentifiers: {
-                    [methodName: string]: string;
+            [contractName: string]: {
+                abi: (CompilerOutputAbi)[];
+                metadata: string;
+                userdoc: any;
+                devdoc: any;
+                ir: string;
+                evm: {
+                    assembly: string;
+                    legacyAssembly: any;
+                    bytecode: CompilerOutputEvmBytecode;
+                    deployedBytecode: CompilerOutputEvmBytecode;
+                    methodIdentifiers: {
+                        [methodName: string]: string;
+                    };
+                    gasEstimates: {
+                        creation: {
+                            codeDepositCost: string;
+                            executionCost: string;
+                            totalCost: string;
+                        };
+                        external: {
+                            [functionSignature: string]: string;
+                        };
+                        internal: {
+                            [functionSignature: string]: string;
+                        };
+                    };
                 };
-                gasEstimates: {
-                    creation: {
-                        codeDepositCost: string;
-                        executionCost: string;
-                        totalCost: string;
-                    };
-                    external: {
-                        [functionSignature: string]: string;
-                    };
-                    internal: {
-                        [functionSignature: string]: string;
-                    };
-                };
-            };
-            ewasm: {
-                wast: string;
-                wasm: string;
+                ewasm: {
+                    wast: string;
+                    wasm: string;
+                }
             }
         };
     }

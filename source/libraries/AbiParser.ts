@@ -1,6 +1,6 @@
 import * as EthjsAbi from 'ethjs-abi';
 import * as EthjsQuery from 'ethjs-query';
-import { CompilerOutputContractAbiFunction, CompilerOutputContractAbiEvent } from 'solc';
+import { CompilerOutputContractAbi } from 'solc';
 
 interface TransactionOptions {
     to?: string,
@@ -17,7 +17,7 @@ type ContractMethod = (...vargs: any[]) => Promise<any>;
 
 
 
-export function parseAbiIntoMethods(ethjsQuery: EthjsQuery, abi: (CompilerOutputContractAbiFunction)[], defaultTransaction: TransactionOptions = {}): { [methodName: string]: ContractMethod } {
+export function parseAbiIntoMethods(ethjsQuery: EthjsQuery, abi: (CompilerOutputContractAbi)[], defaultTransaction: TransactionOptions = {}): { [methodName: string]: ContractMethod } {
     const result: { [methodName: string]: ContractMethod } = {};
     const items = abi.filter(item => item.type === 'function').forEach(item => {
         result[item.name] = async function(this: TransactionOptions, ...vargs: any[]) {

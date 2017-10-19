@@ -49,7 +49,7 @@ declare module 'ethjs-shared' {
     }
 
     export interface TransactionForCall {
-        to: string;
+        to?: string;
         from?: string;
         gas?: BN|number;
         gasPrice?: BN|number;
