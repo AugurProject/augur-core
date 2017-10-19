@@ -3,6 +3,7 @@ pragma solidity 0.4.17;
 
 import 'libraries/Delegator.sol';
 import 'IController.sol';
+import 'Augur.sol';
 import 'reporting/IUniverse.sol';
 
 
@@ -11,6 +12,7 @@ contract UniverseFactory {
         Delegator _delegator = new Delegator(_controller, "Universe");
         IUniverse _universe = IUniverse(_delegator);
         _universe.initialize(_parentUniverse, _parentPayoutDistributionHash);
+        Augur(_controller.lookup("Augur")).logUniverseCreated(_universe, _parentUniverse, _parentPayoutDistributionHash);
         return _universe;
     }
 }
