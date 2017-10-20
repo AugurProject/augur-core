@@ -12,11 +12,14 @@ import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IStakeToken.sol';
+import 'reporting/IDisputeBond.sol';
 import 'trading/ICash.sol';
 import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
+import 'reporting/IReportingAttendanceToken.sol';
+import 'factories/ReportingAttendanceTokenFactory.sol';
 
 
 contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingWindow {
@@ -35,7 +38,9 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     uint256 private designatedReportNoShows;
     uint256 private constant BASE_MINIMUM_REPORTERS_PER_MARKET = 7;
     RunningAverage.Data private reportingGasPrice;
-    uint256 private totalWinningStakeTokens;
+    uint256 private totalWinningStake;
+    uint256 private totalStake;
+    IReportingAttendanceToken private reportingAttendanceToken;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -43,6 +48,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         // Initialize this to some reasonable value to handle the first market ever created without branching code
         reportingGasPrice.record(Reporting.defaultReportingGasPrice());
+        reportingAttendanceToken = ReportingAttendanceTokenFactory(controller.lookup("ReportingAttendanceTokenFactory")).createReportingAttendanceToken(controller, this);
         return true;
     }
 
@@ -63,6 +69,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(universe.isContainerForReportingWindow(_shadyReportingWindow));
         IReportingWindow _originalReportingWindow = _shadyReportingWindow;
         require(_originalReportingWindow.isContainerForMarket(_market));
+        _originalReportingWindow.migrateFeesDueToMarketMigration(_market);
         privateAddMarket(_market);
         return true;
     }
@@ -85,6 +92,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     function removeMarket() public afterInitialized returns (bool) {
         IMarket _market = IMarket(msg.sender);
         require(markets.contains(_market));
+        totalStake = totalStake.sub(_market.getTotalStake());
         markets.remove(_market);
         round1ReporterMarkets.remove(_market);
         round2ReporterMarkets.remove(_market);
@@ -125,8 +133,9 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
             incorrectDesignatedReportMarketCount++;
         }
         finalizedMarkets.add(_market);
-        uint256 _totalWinningStakeTokens = _market.getFinalWinningStakeToken().totalSupply();
-        totalWinningStakeTokens = totalWinningStakeTokens.add(_totalWinningStakeTokens);
+        uint256 _totalWinningStake = _market.getFinalWinningStakeToken().totalSupply();
+        _totalWinningStake = _totalWinningStake.add(_market.getTotalWinningDisputeBondStake());
+        totalWinningStake = totalWinningStake.add(_totalWinningStake);
     }
 
     function noteReportingGasPrice(IMarket _market) public afterInitialized returns (bool) {
@@ -202,21 +211,60 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return getUniverse().getReportingWindowByTimestamp(_previousTimestamp);
     }
 
+    function getTotalStake() public view returns (uint256) {
+        return totalStake;
+    }
+
+    function getTotalWinningStake() public view returns (uint256) {
+        return totalWinningStake;
+    }
+
+    function getReportingAttendanceToken() public view returns (IReportingAttendanceToken) {
+        return reportingAttendanceToken;
+    }
+
     function allMarketsFinalized() constant public returns (bool) {
         return markets.count == finalizedMarkets.count;
     }
 
-    function collectReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
-        IStakeToken _shadyStakeToken = IStakeToken(msg.sender);
-        require(isContainerForStakeToken(_shadyStakeToken));
+    function collectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+        ITyped _shadyCaller = ITyped(msg.sender);
+        require(isContainerForStakeToken(_shadyCaller) ||
+                isContainerForDisputeBond(_shadyCaller) ||
+                msg.sender == address(reportingAttendanceToken));
+        bool _eligibleForFees = isOver() && allMarketsFinalized();
+        if (!_forgoFees) {
+            require(_eligibleForFees);
+        } else {
+            require(!_eligibleForFees);
+        }
         // NOTE: Will need to handle other denominations when that is implemented
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _balance = _cash.balanceOf(this);
-        uint256 _feePayoutShare = _balance.mul(_attoStakeTokens).div(totalWinningStakeTokens);
-        totalWinningStakeTokens = totalWinningStakeTokens.sub(_attoStakeTokens);
+        uint256 _feePayoutShare = _balance.mul(_attoStake).div(totalWinningStake);
+        totalStake = totalStake.sub(_attoStake);
+        totalWinningStake = totalWinningStake.sub(_attoStake);
         if (!_forgoFees && _feePayoutShare > 0) {
             _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
         }
+        return true;
+    }
+
+    function migrateFeesDueToMarketMigration(IMarket _market) public afterInitialized returns (bool) {
+        if (totalStake == 0) {
+            return false;
+        }
+        IReportingWindow _shadyReportingWindow = IReportingWindow(msg.sender);
+        require(universe.isContainerForReportingWindow(_shadyReportingWindow));
+        IReportingWindow _destinationReportingWindow = _shadyReportingWindow;
+        // NOTE: Will need to figure out a way to transfer other denominations when that is implemented
+        ICash _cash = ICash(controller.lookup("Cash"));
+        uint256 _balance = _cash.balanceOf(this);
+        uint256 _amountToTransfer = _balance.mul(_market.getTotalStake()).div(totalStake);
+        if (_amountToTransfer == 0) {
+            return false;
+        }
+        _cash.transfer(_destinationReportingWindow, _amountToTransfer);
         return true;
     }
 
@@ -244,6 +292,17 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(_destinationUniverse == universe.getChildUniverse(_winningForkPayoutDistributionHash));
         _cash.transfer(_destinationReportingWindow, _balance);
         return true;
+    }
+
+    function increaseTotalStake(uint256 _amount) public returns (bool) {
+        require(isContainerForMarket(ITyped(msg.sender)));
+        totalStake = totalStake.add(_amount);
+    }
+
+    function increaseTotalWinningStake(uint256 _amount) public returns (bool) {
+        require(msg.sender == address(reportingAttendanceToken));
+        totalStake = totalStake.add(_amount);
+        totalWinningStake = totalWinningStake.add(_amount);
     }
 
     function isActive() public afterInitialized view returns (bool) {
@@ -276,6 +335,10 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return true;
     }
 
+    function isOver() public afterInitialized view returns (bool) {
+        return block.timestamp >= getEndTime();
+    }
+
     function getMarketsCount() public afterInitialized view returns (uint256) {
         return markets.count;
     }
@@ -299,6 +362,17 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return _market.isContainerForStakeToken(_shadyStakeToken);
     }
 
+    function isContainerForDisputeBond(ITyped _shadyTarget) public afterInitialized view returns (bool) {
+        if (_shadyTarget.getTypeName() != "DisputeBondToken") {
+            return false;
+        }
+        IDisputeBond _shadyDisbuteBondToken = IDisputeBond(_shadyTarget);
+        IMarket _shadyMarket = _shadyDisbuteBondToken.getMarket();
+        require(isContainerForMarket(_shadyMarket));
+        IMarket _market = _shadyMarket;
+        return _market.isContainerForDisputeBondToken(_shadyDisbuteBondToken);
+    }
+
     function isContainerForMarket(ITyped _shadyTarget) public afterInitialized view returns (bool) {
         if (_shadyTarget.getTypeName() != "Market") {
             return false;
@@ -307,10 +381,19 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.contains(_shadyMarket);
     }
 
+    function isContainerForReportingAttendanceToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
+        if (_shadyTarget.getTypeName() != "ReportingAttendanceToken") {
+            return false;
+        }
+        IReportingAttendanceToken _shadyReportingAttendanceToken = IReportingAttendanceToken(_shadyTarget);
+        return reportingAttendanceToken == _shadyReportingAttendanceToken;
+    }
+
     function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {
         require(!markets.contains(_market));
         require(!round1ReporterMarkets.contains(_market));
         require(!round2ReporterMarkets.contains(_market));
+        totalStake = totalStake.add(_market.getTotalStake());
         markets.add(_market);
         return true;
     }
