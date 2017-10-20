@@ -15,9 +15,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-integration-tests
+    # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
-    ports:
-      - "9229:9229"
+    # ports:
+    #   - "9229:9229"
     environment:
       - ETHEREUM_HOST=parity-dev-node
       - ETHEREUM_PORT=8545
@@ -29,6 +30,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-integration-tests
+    # uncomment the following 3 lines to enable debugging the tests
+    # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
+    # ports:
+    #   - "9229:9229"
     environment:
       - ETHEREUM_HOST=geth-dev-node
       - ETHEREUM_PORT=8545
