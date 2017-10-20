@@ -48,7 +48,7 @@ contract MockUniverse is Initializable, IUniverse {
     bool private setIsContainerForMarketValue;
     bool private setIsContainerForStakeTokenValue;
     bool private setIsContainerForShareTokenValue;
-    bool private setIsContainerForWindowParticipationTokenValue;
+    bool private setIsContainerForReportingAttendanceTokenValue;
     bool private setDecrementOpenInterestValue;
     bool private setIncrementOpenInterestValue;
     IUniverse private initializParentUniverseValue;
@@ -200,8 +200,8 @@ contract MockUniverse is Initializable, IUniverse {
         setIsContainerForShareTokenValue = _setIsContainerForShareTokenValue;
     }
     
-    function setIsContainerForWindowParticipationToken(bool _setIsContainerForWindowParticipationTokenValue) public {
-        setIsContainerForWindowParticipationTokenValue = _setIsContainerForWindowParticipationTokenValue;
+    function setIsContainerForReportingAttendanceToken(bool _setIsContainerForReportingAttendanceTokenValue) public {
+        setIsContainerForReportingAttendanceTokenValue = _setIsContainerForReportingAttendanceTokenValue;
     }
 
     function setDecrementOpenInterest(bool _setDecrementOpenInterestValue) public {
@@ -396,8 +396,8 @@ contract MockUniverse is Initializable, IUniverse {
         return setIsContainerForShareTokenValue;
     }
 
-    function isContainerForWindowParticipationToken(ITyped _shadyTarget) public view returns (bool) {
-        return setIsContainerForWindowParticipationTokenValue;
+    function isContainerForReportingAttendanceToken(ITyped _shadyTarget) public view returns (bool) {
+        return setIsContainerForReportingAttendanceTokenValue;
     }
     
     function decrementOpenInterest(uint256 _amount) public returns (bool) {
