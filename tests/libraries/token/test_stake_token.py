@@ -539,11 +539,6 @@ def binaryMarket(localFixture, chain, kitchenSinkSnapshot):
     return market
 
 @fixture
-def cash(localFixture, chain, kitchenSinkSnapshot):
-    cash = ABIContract(chain, kitchenSinkSnapshot['cash'].translator, kitchenSinkSnapshot['cash'].address)
-    return cash
-
-@fixture
 def categoricalMarket(localFixture, chain, kitchenSinkSnapshot):
     market = ABIContract(chain, kitchenSinkSnapshot['categoricalMarket'].translator, kitchenSinkSnapshot['categoricalMarket'].address)
     return market
