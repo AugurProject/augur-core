@@ -232,9 +232,11 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(isContainerForStakeToken(_shadyCaller) ||
                 isContainerForDisputeBond(_shadyCaller) ||
                 msg.sender == address(participationToken));
+        bool _eligibleForFees = isOver() && allMarketsFinalized();
         if (!_forgoFees) {
-            require(isOver());
-            require(allMarketsFinalized());
+            require(_eligibleForFees);
+        } else {
+            require(!_eligibleForFees);
         }
         // NOTE: Will need to handle other denominations when that is implemented
         ICash _cash = ICash(controller.lookup("Cash"));
