@@ -85,7 +85,8 @@ export async function waitForTransactionReceipt(ethjsQuery: EthjsQuery, transact
         await sleep(ETHEREUM_POLLING_INTERVAL_MILLISECONDS);
         receipt = await ethjsQuery.getTransactionReceipt(transactionHash);
     }
-    if (!parseInt(receipt.status.toString(), 16)) {
+    const status = (typeof receipt.status === 'number') ? receipt.status : parseInt(receipt.status, 16);
+    if (!status) {
         throw new Error(`Transaction failed.  ${failureDetails}`);
     }
     return receipt;
