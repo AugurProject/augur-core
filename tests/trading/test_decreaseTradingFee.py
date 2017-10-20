@@ -6,19 +6,20 @@ from pytest import raises
 from utils import fix, bytesToHexString
 
 def test_decrease_trading_fee_success(market):
-    originalFee = market.getMarketCreatorSettlementFeeInAttoethPerEth()
+    originalFee = market.getMarketCreatorSettlementFeeDivisor()
     assert market.getOwner() == bytesToHexString(tester.a0)
-    newFee = originalFee -1
+    newFeeInput = (10 ** 18 / originalFee) - 10 ** 15
 
-    assert market.decreaseMarketCreatorSettlementFeeInAttoethPerEth(newFee, sender = tester.k0)
-    newFee = market.getMarketCreatorSettlementFeeInAttoethPerEth()
+    assert market.decreaseMarketCreatorSettlementFeeInAttoethPerEth(newFeeInput, sender = tester.k0)
+    newFee = market.getMarketCreatorSettlementFeeDivisor()
 
-    assert newFee == newFee
+    assert newFee == 10 ** 18 / newFeeInput
 
 def test_decrease_trading_fee_failure(market):
-    originalFee = market.getMarketCreatorSettlementFeeInAttoethPerEth()
+    originalFee = market.getMarketCreatorSettlementFeeDivisor()
 
     with raises(TransactionFailed):
         market.decreaseMarketCreatorSettlementFeeInAttoethPerEth(0, sender = tester.k1)
     with raises(TransactionFailed):
-        market.decreaseMarketCreatorSettlementFeeInAttoethPerEth(originalFee * 2)
+        newFeeInput = 2 * 10 ** 18 / originalFee
+        market.decreaseMarketCreatorSettlementFeeInAttoethPerEth(newFeeInput)

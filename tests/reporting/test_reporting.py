@@ -269,15 +269,6 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     newMarket = localFixture.createReasonableBinaryMarket(universe, cash)
     completeSets = localFixture.contracts['CompleteSets']
 
-    # We'll do some transactions that cause fee collection here so we can test that fees are properly migrated automatically when a market migrates from a fork
-    cost = 10 * newMarket.getNumTicks()
-    completeSets.publicBuyCompleteSets(newMarket.address, 10, sender = tester.k1, value = cost)
-    completeSets.publicSellCompleteSets(newMarket.address, 10, sender=tester.k1)
-    oldReportingWindowAddress = newMarket.getReportingWindow()
-    fees = cash.balanceOf(oldReportingWindowAddress)
-    assert fees > 0
-    assert cash.balanceOf(oldReportingWindowAddress) == fees
-
     # We'll do a designated report in the new market based on the makeReport param used for the forking market
     proceedToDesignatedReporting(localFixture, universe, newMarket, [0,10**18])
     if (makeReport):
@@ -299,17 +290,11 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     # Now we can migrate the market to the winning universe
     assert newMarket.migrateThroughOneFork()
 
-    # We observe that the reporting window no longer has the fees collected
-    assert cash.balanceOf(oldReportingWindowAddress) == 0
-
     # Now that we're on the correct universe we are send back to the DESIGNATED DISPUTE phase, which in the case of no designated reporter means the ROUND1 Reporting phase
     if (makeReport):
         assert newMarket.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
     else:
         assert newMarket.getReportingState() == localFixture.contracts['Constants'].ROUND1_REPORTING()
-
-    # We can confirm that migrating the market also triggered a migration of its reporting window's ETH fees to the new reporting window
-    assert cash.balanceOf(newMarket.getReportingWindow()) == fees
 
 @mark.parametrize('pastDisputePhase', [
     True,

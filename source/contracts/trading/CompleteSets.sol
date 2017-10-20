@@ -53,12 +53,12 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _denominationToken = _market.getDenominationToken();
-        uint256 _creatorFeeRate = _market.getMarketCreatorSettlementFeeInAttoethPerEth();
+        uint256 _creatorFeeDivisor = _market.getMarketCreatorSettlementFeeDivisor();
         uint256 _payout = _amount.mul(_market.getNumTicks());
         _market.getUniverse().decrementOpenInterest(_payout);
-        uint256 _creatorFee = _payout.mul(_creatorFeeRate).div(1 ether);
-        uint256 _reportingFeeRate = _market.getUniverse().getReportingFeeInAttoethPerEth();
-        uint256 _reportingFee = _payout.mul(_reportingFeeRate).div(1 ether);
+        uint256 _creatorFee = _payout.div(_creatorFeeDivisor);
+        uint256 _reportingFeeDivisor = _market.getUniverse().getReportingFeeDivisor();
+        uint256 _reportingFee = _payout.div(_reportingFeeDivisor);
         _payout = _payout.sub(_creatorFee).sub(_reportingFee);
 
         // Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
@@ -72,7 +72,7 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
             _denominationToken.withdrawEtherTo(_market.getOwner(), _creatorFee);
         }
         if (_reportingFee != 0) {
-            IReportingWindow _reportingWindow = _market.getReportingWindow();
+            IReportingWindow _reportingWindow = _market.getUniverse().getNextReportingWindow();
             require(_denominationToken.transferFrom(_market, _reportingWindow, _reportingFee));
         }
         require(_denominationToken.transferFrom(_market, _sender, _payout));

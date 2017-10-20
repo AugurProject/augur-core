@@ -10,7 +10,7 @@ import 'trading/ICash.sol';
 
 contract IReportingWindow is ITyped {
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public returns (bool);
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public payable returns (IMarket _newMarket);
+    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feeDivisor, ICash _denominationToken, address _designatedReporterAddress) public payable returns (IMarket _newMarket);
     function migrateMarketInFromSibling() public returns (bool);
     function migrateMarketInFromNibling() public returns (bool);
     function removeMarket() public returns (bool);
@@ -30,8 +30,15 @@ contract IReportingWindow is ITyped {
     function allMarketsFinalized() public view returns (bool);
     function collectReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool);
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
+    function migrateFeesDueToMarketMigration(IMarket _market) public returns (bool);
     function migrateFeesDueToFork() public returns (bool);
+    function increaseTotalStake(uint256 _amount) public returns (bool);
+    function increaseTotalWinningStake(uint256 _amount) public returns (bool);
     function isContainerForMarket(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForReportingAttendanceToken(ITyped _shadyTarget) public view returns (bool);
     function isForkingMarketFinalized() public view returns (bool);
+    function isReportingActive() public view returns (bool);
     function isDisputeActive() public view returns (bool);
+    function isActive() public view returns (bool);
+    function isOver() public view returns (bool);
 }
