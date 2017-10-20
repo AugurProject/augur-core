@@ -45,7 +45,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     }
 
     // AUDIT: check for reentrancy issues here, _destination will be called as contracts during validation
-    function internalMigrateOut(IReputationToken _destination, address _sender, address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) private returns (bool) {
+    function internalMigrateOut(IReputationToken _destination, address _sender, address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) private onlyInGoodTimes returns (bool) {
         assertReputationTokenIsLegit(_destination);
         if (_sender != _reporter) {
             allowed[_reporter][_sender] = allowed[_reporter][_sender].sub(_attotokens);

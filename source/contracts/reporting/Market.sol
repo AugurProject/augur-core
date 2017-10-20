@@ -65,7 +65,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         _;
     }
 
-    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable beforeInitialized returns (bool _success) {
+    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public onlyInGoodTimes payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(2 <= _numOutcomes && _numOutcomes <= 8);
         require((_numTicks.isMultipleOf(_numOutcomes)));
@@ -121,7 +121,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function decreaseMarketCreatorSettlementFeeInAttoethPerEth(uint256 _newFeePerEthInWei) public onlyOwner returns (bool) {
+    function decreaseMarketCreatorSettlementFeeInAttoethPerEth(uint256 _newFeePerEthInWei) public onlyInGoodTimes onlyOwner returns (bool) {
         uint256 _newFeeDivisor = 1 ether / _newFeePerEthInWei;
         require(_newFeeDivisor > feeDivisor);
         feeDivisor = _newFeeDivisor;
@@ -146,7 +146,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function disputeDesignatedReport(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public triggersMigration returns (bool) {
+    function disputeDesignatedReport(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
         uint256 _bondAmount = Reporting.designatedReporterDisputeBondAmount();
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
@@ -164,7 +164,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function disputeFirstReporters(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public triggersMigration returns (bool) {
+    function disputeFirstReporters(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.FIRST_DISPUTE);
         uint256 _bondAmount = Reporting.firstReportersDisputeBondAmount();
         firstReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
@@ -184,7 +184,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function disputeLastReporters() public triggersMigration returns (bool) {
+    function disputeLastReporters() public onlyInGoodTimes triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.LAST_DISPUTE);
         uint256 _bondAmount = Reporting.lastReportersDisputeBondAmount();
         lastReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
@@ -197,7 +197,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return migrateReportingWindow(_newReportingWindow);
     }
 
-    function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool) {
+    function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public onlyInGoodTimes returns (bool) {
         if (_payoutDistributionHash == tentativeWinningPayoutDistributionHash || _payoutDistributionHash == bestGuessSecondPlaceTentativeWinningPayoutDistributionHash) {
             _payoutDistributionHash = bytes32(0);
         }
@@ -263,7 +263,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return _payoutStake;
     }
 
-    function tryFinalize() public returns (bool) {
+    function tryFinalize() public onlyInGoodTimes returns (bool) {
         if (getReportingState() != ReportingState.AWAITING_FINALIZATION) {
             return false;
         }
@@ -290,14 +290,14 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function migrateDueToNoReports() public returns (bool) {
+    function migrateDueToNoReports() public onlyInGoodTimes returns (bool) {
         require(getReportingState() == ReportingState.AWAITING_NO_REPORT_MIGRATION);
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
         migrateReportingWindow(_newReportingWindow);
         return false;
     }
 
-    function migrateThroughAllForks() public returns (bool) {
+    function migrateThroughAllForks() public onlyInGoodTimes returns (bool) {
         // this will loop until we run out of gas, follow forks until there are no more, or have reached an active fork (which will throw)
         while (migrateThroughOneFork()) {
             continue;
@@ -306,7 +306,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     // returns 0 if no move occurs, 1 if move occurred, throws if a fork not yet resolved
-    function migrateThroughOneFork() public returns (bool) {
+    function migrateThroughOneFork() public onlyInGoodTimes returns (bool) {
         if (getReportingState() != ReportingState.AWAITING_FORK_MIGRATION) {
             return false;
         }
@@ -338,7 +338,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     // Helpers
     //
 
-    function disavowTokens() public returns (bool) {
+    function disavowTokens() public onlyInGoodTimes returns (bool) {
         require(getReportingState() == ReportingState.AWAITING_FORK_MIGRATION);
         require(stakeTokens.getCount() > 0);
         stakeTokens = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);

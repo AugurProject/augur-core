@@ -23,7 +23,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
     uint256[] public payoutNumerators;
     bool private invalid;
 
-    function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public beforeInitialized returns (bool) {
+    function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
         uint256 _sum = 0;
@@ -38,7 +38,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function buy(uint256 _attotokens) public afterInitialized returns (bool) {
+    function buy(uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         IMarket.ReportingState _state = market.getReportingState();
         // If this is the first report and there was no designated reporter we ask the market to compensate them and get back the amount of extra REP to automatically stake against this outcome
         _attotokens = _attotokens.add(market.firstReporterCompensationCheck(msg.sender));
@@ -92,7 +92,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
     }
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
-    function redeemForkedTokens() public afterInitialized returns (bool) {
+    function redeemForkedTokens() public onlyInGoodTimes afterInitialized returns (bool) {
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() == market);
         IReputationToken _sourceReputationToken = getReputationToken();
@@ -108,7 +108,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
-    function redeemWinningTokens(bool forgoFees) public afterInitialized returns (bool) {
+    function redeemWinningTokens(bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() != market);
@@ -126,7 +126,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function migrateLosingTokens() public afterInitialized returns (bool) {
+    function migrateLosingTokens() public onlyInGoodTimes afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() != market);

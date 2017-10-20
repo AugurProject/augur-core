@@ -16,13 +16,13 @@ contract ParticipationToken is DelegationTarget, ITyped, Initializable, Variable
 
     IReportingWindow private reportingWindow;
 
-    function initialize(IReportingWindow _reportingWindow) public beforeInitialized returns (bool) {
+    function initialize(IReportingWindow _reportingWindow) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         reportingWindow = _reportingWindow;
         return true;
     }
 
-    function buy(uint256 _attotokens) public afterInitialized returns (bool) {
+    function buy(uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(_attotokens > 0);
         require(reportingWindow.isReportingActive());
         require(reportingWindow.allMarketsFinalized());
@@ -33,7 +33,7 @@ contract ParticipationToken is DelegationTarget, ITyped, Initializable, Variable
     }
 
     // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
-    function redeem(bool forgoFees) public afterInitialized returns (bool) {
+    function redeem(bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
         uint256 _attotokens = balances[msg.sender];
         if (_attotokens != 0) {
             burn(msg.sender, _attotokens);

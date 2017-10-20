@@ -42,7 +42,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     uint256 private totalStake;
     IParticipationToken private participationToken;
 
-    function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
+    function initialize(IUniverse _universe, uint256 _reportingWindowId) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         universe = _universe;
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
@@ -52,7 +52,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return true;
     }
 
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, string _extraInfo) public afterInitialized payable returns (IMarket _newMarket) {
+    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
         require(universe.getReportingWindowByMarketEndTime(_endTime) == this);
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
@@ -288,7 +288,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     // This exists as an edge case handler for when a ReportingWindow has no markets but we want to migrate fees to a new universe. If a market exists it should be migrated and that will trigger a fee migration. Otherwise calling this on the desitnation reporting window in the forked universe with the old reporting window as an argument will trigger a fee migration manaully
-    function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public afterInitialized returns (bool) {
+    function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public onlyInGoodTimes afterInitialized returns (bool) {
         require(_reportingWindow.getNumMarkets() == 0);
         _reportingWindow.migrateFeesDueToFork();
     }
