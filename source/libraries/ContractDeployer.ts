@@ -118,13 +118,13 @@ export class ContractDeployer {
             return(this.contracts[lookupKey]);
         }
         const bytecode = this.compiledContracts[contractLookupKey][contractName].evm.bytecode.object;
-        // Abstract contracts have a 0-length array for bytecode
-        if (bytecode.length === 0) {
-            return undefined;
-        }
         if (!this.abis.has(contractName)) {
             this.abis.set(contractName, this.compiledContracts[contractLookupKey][contractName].abi);
             this.bytecodes.set(contractName, bytecode);
+        }
+        // Abstract contracts have a 0-length array for bytecode
+        if (bytecode.length === 0) {
+            return undefined;
         }
         this.contracts[lookupKey] = await this.construct(contractLookupKey, contractName, constructorArgs, `Uploading ${contractName}`);
         return this.contracts[lookupKey];
