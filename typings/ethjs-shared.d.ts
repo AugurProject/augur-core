@@ -66,7 +66,7 @@ declare module 'ethjs-shared' {
         gasUsed: BN;
         contractAddress: string;
         logs: Array<Log>;
-        status: number;
+        status: number|string;
     }
 
     export interface Log {
