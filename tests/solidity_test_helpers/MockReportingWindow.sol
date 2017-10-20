@@ -38,7 +38,13 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     address private collectReporterAddress;
     uint256 private collectAttoStakeTokens;
     bool private collectForgoFees;
-
+    bool private setIsReportingActiveValue;
+    bool private setIsActiveValue;
+    bool private setIsOverValue;
+    bool private setIsContainerForReportingAttendanceTokenValue;
+    bool private setIncreaseTotalStakeValue;
+    bool private setIncreaseTotalWinningStakeValue;
+    bool private setMigrateFeesDueToMarketMigrationValue;
     /*
     * setters to feed the getters and impl of IReportingWindow
     */
@@ -138,6 +144,34 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         market = _market;
     }
 
+    function setIsOver(bool _isOver) public {
+        setIsOverValue = _isOver;
+    }
+
+    function setIsReportingActive(bool _isReportingActive) public {
+        setIsReportingActiveValue = _isReportingActive;
+    }
+
+    function setIsActive(bool _isActive) public {
+        setIsActiveValue = _isActive;
+    }
+
+    function setIsContainerForReportingAttendanceToken(bool _isContainerForReportingAttendanceToken) public {
+        setIsContainerForReportingAttendanceTokenValue = _isContainerForReportingAttendanceToken;
+    }
+
+    function setIncreaseTotalStake(bool _setIncreaseTotalStakeValue) public {
+        setIncreaseTotalStakeValue = _setIncreaseTotalStakeValue;
+    }
+
+    function setIncreaseTotalWinningStake(bool _setIncreaseTotalWinningStakeValue) public {
+        setIncreaseTotalWinningStakeValue = _setIncreaseTotalWinningStakeValue;
+    }
+
+    function setMigrateFeesDueToMarketMigration(bool _setMigrateFeesDueToMarketMigration) public {
+        setMigrateFeesDueToMarketMigrationValue = _setMigrateFeesDueToMarketMigration;
+    }
+    
     function getInitializeUniverseValue() public view returns(IUniverse) {
         return initializeUniverseValue;
     }
@@ -258,6 +292,10 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function migrateFeesDueToFork() public returns (bool) {
         return setMigrateFeesDueToForkValue;
     }
+
+    function migrateFeesDueToMarketMigration(IMarket _market) public returns (bool) {
+        return setMigrateFeesDueToMarketMigrationValue;
+    }
     
     function isContainerForMarket(ITyped _shadyTarget) public view returns (bool) {
         return setIsContainerForMarketValue;
@@ -269,5 +307,29 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     
     function isDisputeActive() public view returns (bool) {
         return setIsDisputeActiveValue;
+    }
+
+    function isReportingActive() public view returns (bool) {
+        return setIsReportingActiveValue;
+    }
+
+    function isActive() public view returns (bool) {
+        return setIsActiveValue;
+    }
+
+    function isOver() public view returns (bool) {
+        return setIsOverValue;        
+    }
+
+    function isContainerForReportingAttendanceToken(ITyped _shadyTarget) public view returns (bool) {
+        return setIsContainerForReportingAttendanceTokenValue;
+    }
+
+    function increaseTotalStake(uint256 _amount) public returns (bool) {
+        return setIncreaseTotalStakeValue;
+    }
+    
+    function increaseTotalWinningStake(uint256 _amount) public returns (bool) {
+        return setIncreaseTotalWinningStakeValue;
     }
 }

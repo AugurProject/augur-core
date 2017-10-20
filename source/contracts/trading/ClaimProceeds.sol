@@ -49,7 +49,7 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
                 _denominationToken.withdrawEtherTo(_market.getOwner(), _creatorShare);
             }
             if (_reporterShare > 0) {
-                require(_denominationToken.transferFrom(_market, _market.getReportingWindow(), _reporterShare));
+                require(_denominationToken.transferFrom(_market, _market.getUniverse().getNextReportingWindow(), _reporterShare));
             }
         }
 
@@ -70,12 +70,12 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
     }
 
     function calculateReportingFee(IMarket _market, uint256 _amount) public returns (uint256) {
-        uint256 _reportingFeeAttoethPerEth = _market.getUniverse().getReportingFeeInAttoethPerEth();
-        return _amount.mul(_reportingFeeAttoethPerEth).div(1 ether);
+        uint256 _reportingFeeDivisor = _market.getUniverse().getReportingFeeDivisor();
+        return _amount.div(_reportingFeeDivisor);
     }
 
     function calculateCreatorFee(IMarket _market, uint256 _amount) public view returns (uint256) {
-        uint256 _creatorFeeAttoEthPerEth = _market.getMarketCreatorSettlementFeeInAttoethPerEth();
-        return _amount.mul(_creatorFeeAttoEthPerEth).div(1 ether);
+        uint256 _creatorFeeDivisor = _market.getMarketCreatorSettlementFeeDivisor();
+        return _amount.div(_creatorFeeDivisor);
     }
 }

@@ -1,7 +1,6 @@
 pragma solidity 0.4.17;
 
 
-
 library Reporting {
     uint256 private constant DESIGNATED_REPORTING_DURATION_SECONDS = 3 days;
     uint256 private constant DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
@@ -9,6 +8,7 @@ library Reporting {
     uint256 private constant REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     uint256 private constant CLAIM_PROCEEDS_WAIT_TIME = 3 days;
     uint256 private constant REGISTRATION_TOKEN_BOND_AMOUNT = 1 ether;
+    uint256 private constant FORK_DURATION_SECONDS = 60 days;
 
     uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
     uint256 private constant DEFAULT_DESIGNATED_REPORT_STAKE = 2 ether;
@@ -38,6 +38,7 @@ library Reporting {
     function reportingDurationSeconds() internal pure returns (uint256) { return REPORTING_DURATION_SECONDS; }
     function reportingDisputeDurationSeconds() internal pure returns (uint256) { return REPORTING_DISPUTE_DURATION_SECONDS; }
     function claimProceedsWaitTime() internal pure returns (uint256) { return CLAIM_PROCEEDS_WAIT_TIME; }
+    function forkDurationSeconds() internal pure returns (uint256) { return FORK_DURATION_SECONDS; }
     function designatedReporterDisputeBondAmount() internal pure returns (uint256) { return DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT; }
     function round1ReportersDisputeBondAmount() internal pure returns (uint256) { return ROUND1_REPORTERS_DISPUTE_BOND_AMOUNT; }
     function round2ReportersDisputeBondAmount() internal pure returns (uint256) { return ROUND2_REPORTERS_DISPUTE_BOND_AMOUNT; }

@@ -15,6 +15,7 @@ import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IRepPriceOracle.sol';
+import 'reporting/IReportingAttendanceToken.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
@@ -37,7 +38,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     mapping (address => uint256) private targetReporterGasCosts;
     mapping (address => uint256) private designatedReportStakeInAttoRep;
     mapping (address => uint256) private designatedReportNoShowBondInAttoRep;
-    mapping (address => uint256) private shareSettlementPerEthFee;
+    mapping (address => uint256) private shareSettlementFeeDivisor;
 
     function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external beforeInitialized returns (bool) {
         endInitialization();
@@ -52,7 +53,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         require(forkingMarket == address(0));
         require(isContainerForMarket(ITyped(msg.sender)));
         forkingMarket = IMarket(msg.sender);
-        forkEndTime = block.timestamp + 60 days;
+        forkEndTime = block.timestamp + Reporting.forkDurationSeconds();
         return true;
     }
 
@@ -237,6 +238,22 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _legitMarket.isContainerForShareToken(_shadyShareToken);
     }
 
+    function isContainerForReportingAttendanceToken(ITyped _shadyTarget) public view returns (bool) {
+        if (_shadyTarget.getTypeName() != "ReportingAttendanceToken") {
+            return false;
+        }
+        IReportingAttendanceToken _shadyReportingAttendanceToken = IReportingAttendanceToken(_shadyTarget);
+        IReportingWindow _shadyReportingWindow = _shadyReportingAttendanceToken.getReportingWindow();
+        if (_shadyReportingWindow == address(0)) {
+            return false;
+        }
+        if (!isContainerForReportingWindow(_shadyReportingWindow)) {
+            return false;
+        }
+        IReportingWindow _legitReportingWindow = _shadyReportingWindow;
+        return _legitReportingWindow.isContainerForReportingAttendanceToken(ITyped(_shadyReportingAttendanceToken));
+    }
+
     function isParentOf(IUniverse _shadyChild) public view returns (bool) {
         bytes32 _parentPayoutDistributionHash = _shadyChild.getParentPayoutDistributionHash();
         return childUniverses[_parentPayoutDistributionHash] == _shadyChild;
@@ -340,24 +357,28 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _newValue;
     }
 
-    function getReportingFeeInAttoethPerEth() public returns (uint256) {
+    function getReportingFeeDivisor() public returns (uint256) {
         IReportingWindow _reportingWindow = getCurrentReportingWindow();
-        uint256 _currentPerEthFee = shareSettlementPerEthFee[_reportingWindow];
-        if (_currentPerEthFee != 0) {
-            return _currentPerEthFee;
+        uint256 _currentFeeDivisor = shareSettlementFeeDivisor[_reportingWindow];
+        if (_currentFeeDivisor != 0) {
+            return _currentFeeDivisor;
         }
         uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth();
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth();
-        uint256 _previousPerEthFee = shareSettlementPerEthFee[getPreviousReportingWindow()];
-        if (_previousPerEthFee == 0) {
-            _previousPerEthFee = 1 * 10 ** 16;
+        uint256 _previousFeeDivisor = shareSettlementFeeDivisor[getPreviousReportingWindow()];
+        if (_previousFeeDivisor == 0) {
+            _previousFeeDivisor = 100;
         }
-        _currentPerEthFee = _previousPerEthFee * _targetRepMarketCapInAttoeth / _repMarketCapInAttoeth;
-        if (_currentPerEthFee < 1 * 10 ** 14) {
-            _currentPerEthFee = 1 * 10 ** 14;
+        if (_targetRepMarketCapInAttoeth == 0) {
+            _currentFeeDivisor = 10000;
+        } else {
+            _currentFeeDivisor = _previousFeeDivisor * _repMarketCapInAttoeth / _targetRepMarketCapInAttoeth;
         }
-        shareSettlementPerEthFee[_reportingWindow] = _currentPerEthFee;
-        return _currentPerEthFee;
+        if (_currentFeeDivisor > 10000) {
+            _currentFeeDivisor = 10000;
+        }
+        shareSettlementFeeDivisor[_reportingWindow] = _currentFeeDivisor;
+        return _currentFeeDivisor;
     }
 
     function getTargetReporterGasCosts() public returns (uint256) {
