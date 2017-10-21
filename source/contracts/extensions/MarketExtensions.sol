@@ -75,22 +75,22 @@ contract MarketExtensions {
         int256 _payoutStake = int256(_stakeToken.totalSupply());
 
         IDisputeBond _designatedDisputeBond = _market.getDesignatedReporterDisputeBondToken();
-        IDisputeBond _round1DisputeBond = _market.getRound1ReportersDisputeBondToken();
-        IDisputeBond _round2DisputeBond = _market.getRound2ReportersDisputeBondToken();
+        IDisputeBond _firstDisputeBond = _market.getFirstReportersDisputeBondToken();
+        IDisputeBond _lastDisputeBond = _market.getLastReportersDisputeBondToken();
 
         if (address(_designatedDisputeBond) != address(0)) {
             if (_designatedDisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
                 _payoutStake -= int256(Reporting.designatedReporterDisputeBondAmount());
             }
         }
-        if (address(_round1DisputeBond) != address(0)) {
-            if (_round1DisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.round1ReportersDisputeBondAmount());
+        if (address(_firstDisputeBond) != address(0)) {
+            if (_firstDisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
+                _payoutStake -= int256(Reporting.firstReportersDisputeBondAmount());
             }
         }
-        if (address(_round2DisputeBond) != address(0)) {
-            if (_round2DisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.round2ReportersDisputeBondAmount());
+        if (address(_lastDisputeBond) != address(0)) {
+            if (_lastDisputeBond.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
+                _payoutStake -= int256(Reporting.lastReportersDisputeBondAmount());
             }
         }
 
@@ -120,7 +120,7 @@ contract MarketExtensions {
         }
 
         bool _designatedReportDisputed = address(_market.getDesignatedReporterDisputeBondToken()) != address(0);
-        bool _round1ReportDisputed = address(_market.getRound1ReportersDisputeBondToken()) != address(0);
+        bool _firstReportDisputed = address(_market.getFirstReportersDisputeBondToken()) != address(0);
 
         // If we have a designated report that hasn't been disputed it is either in the dispute window or we can finalize the market
         if (_market.getDesignatedReportReceivedTime() != 0 && !_designatedReportDisputed) {
@@ -146,8 +146,8 @@ contract MarketExtensions {
             return IMarket.ReportingState.AWAITING_FINALIZATION;
         }
 
-        // If a round1 dispute bond has been posted we are in some phase of last reporting depending on time
-        if (_round1ReportDisputed) {
+        // If a first dispute bond has been posted we are in some phase of last reporting depending on time
+        if (_firstReportDisputed) {
             if (_reportingWindow.isDisputeActive()) {
                 if (_market.getTentativeWinningPayoutDistributionHash() == bytes32(0)) {
                     return IMarket.ReportingState.AWAITING_NO_REPORT_MIGRATION;
@@ -155,7 +155,7 @@ contract MarketExtensions {
                     return IMarket.ReportingState.LAST_DISPUTE;
                 }
             }
-            return IMarket.ReportingState.ROUND2_REPORTING;
+            return IMarket.ReportingState.LAST_REPORTING;
         }
 
         // Either no designated report was made or the designated report was disputed so we are in some phase of first reporting
@@ -167,6 +167,6 @@ contract MarketExtensions {
             }
         }
 
-        return IMarket.ReportingState.ROUND1_REPORTING;
+        return IMarket.ReportingState.FIRST_REPORTING;
     }
 }

@@ -30,8 +30,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     IUniverse private universe;
     uint256 private startTime;
     Set.Data private markets;
-    Set.Data private round1ReporterMarkets;
-    Set.Data private round2ReporterMarkets;
+    Set.Data private firstReporterMarkets;
+    Set.Data private lastReporterMarkets;
     Set.Data private finalizedMarkets;
     uint256 private invalidMarketCount;
     uint256 private incorrectDesignatedReportMarketCount;
@@ -59,7 +59,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         getReputationToken().trustedTransfer(msg.sender, _marketFactory, universe.getDesignatedReportNoShowBond());
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
-        round1ReporterMarkets.add(_newMarket);
+        firstReporterMarkets.add(_newMarket);
         return _newMarket;
     }
 
@@ -94,8 +94,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(markets.contains(_market));
         totalStake = totalStake.sub(_market.getTotalStake());
         markets.remove(_market);
-        round1ReporterMarkets.remove(_market);
-        round2ReporterMarkets.remove(_market);
+        firstReporterMarkets.remove(_market);
+        lastReporterMarkets.remove(_market);
         return true;
     }
 
@@ -104,16 +104,16 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(markets.contains(_market));
         IMarket.ReportingState _state = _market.getReportingState();
 
-        if (_state == IMarket.ReportingState.ROUND2_REPORTING) {
-            round2ReporterMarkets.add(_market);
+        if (_state == IMarket.ReportingState.LAST_REPORTING) {
+            lastReporterMarkets.add(_market);
         } else {
-            round2ReporterMarkets.remove(_market);
+            lastReporterMarkets.remove(_market);
         }
 
-        if (_state == IMarket.ReportingState.ROUND1_REPORTING) {
-            round1ReporterMarkets.add(_market);
+        if (_state == IMarket.ReportingState.FIRST_REPORTING) {
+            firstReporterMarkets.add(_market);
         } else {
-            round1ReporterMarkets.remove(_market);
+            firstReporterMarkets.remove(_market);
         }
 
         if (_state == IMarket.ReportingState.FINALIZED) {
@@ -343,12 +343,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.count;
     }
 
-    function getRound1ReporterMarketsCount() public afterInitialized view returns (uint256) {
-        return round1ReporterMarkets.count;
+    function getFirstReporterMarketsCount() public afterInitialized view returns (uint256) {
+        return firstReporterMarkets.count;
     }
 
-    function getRound2ReporterMarketsCount() public afterInitialized view returns (uint256) {
-        return round2ReporterMarkets.count;
+    function getLastReporterMarketsCount() public afterInitialized view returns (uint256) {
+        return lastReporterMarkets.count;
     }
 
     function isContainerForStakeToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
@@ -391,8 +391,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
 
     function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {
         require(!markets.contains(_market));
-        require(!round1ReporterMarkets.contains(_market));
-        require(!round2ReporterMarkets.contains(_market));
+        require(!firstReporterMarkets.contains(_market));
+        require(!lastReporterMarkets.contains(_market));
         totalStake = totalStake.add(_market.getTotalStake());
         markets.add(_market);
         return true;

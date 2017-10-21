@@ -175,16 +175,16 @@ def test_fee_migration(localFixture, universe, market, categoricalMarket, scalar
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     nextReportingWindow = localFixture.applySignature("ReportingWindow", universe.getNextReportingWindow())
     scalarMarketStake = scalarMarket.getTotalStake()
-    round1DisputeCost = localFixture.contracts["Constants"].ROUND1_REPORTERS_DISPUTE_BOND_AMOUNT()
-    scalarMarketStakeDelta = round1DisputeCost + otherOutcomeStake
+    firstDisputeCost = localFixture.contracts["Constants"].FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
+    scalarMarketStakeDelta = firstDisputeCost + otherOutcomeStake
     totalScalarMarketStakeMoved = scalarMarketStake + scalarMarketStakeDelta
-    migratedFees = reporterFees * (scalarMarketStake + round1DisputeCost) / (reportingWindow.getTotalStake() + round1DisputeCost)
+    migratedFees = reporterFees * (scalarMarketStake + firstDisputeCost) / (reportingWindow.getTotalStake() + firstDisputeCost)
 
-    with TokenDelta(cash, -migratedFees, reportingWindow.address, "Disputing in round 1 didn't migrate ETH out correctly"):
-        with TokenDelta(cash, migratedFees, nextReportingWindow.address, "Disputing in round 1 didn't migrate ETH in correctly"):
-            with StakeDelta(scalarMarketStakeDelta, -scalarMarketStake, 0, scalarMarket, reportingWindow, "Disputing in round 1 is not migrating stake out correctly"):
-                with StakeDelta(scalarMarketStakeDelta, totalScalarMarketStakeMoved, 0, scalarMarket, nextReportingWindow, "Disputing in round 1 is not migrating stake in correctly"):
-                    assert scalarMarket.disputeRound1Reporters([scalarMarket.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4)
+    with TokenDelta(cash, -migratedFees, reportingWindow.address, "Disputing in first didn't migrate ETH out correctly"):
+        with TokenDelta(cash, migratedFees, nextReportingWindow.address, "Disputing in first didn't migrate ETH in correctly"):
+            with StakeDelta(scalarMarketStakeDelta, -scalarMarketStake, 0, scalarMarket, reportingWindow, "Disputing in first is not migrating stake out correctly"):
+                with StakeDelta(scalarMarketStakeDelta, totalScalarMarketStakeMoved, 0, scalarMarket, nextReportingWindow, "Disputing in first is not migrating stake in correctly"):
+                    assert scalarMarket.disputeFirstReporters([scalarMarket.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4)
 
 def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):    
     # We'll have testers put up dispute bonds against the designated reports and place stake in other outcomes
@@ -200,26 +200,26 @@ def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket
     # Progress to the Limited dispute phase and dispute one of the markets. This should migrate fees to the reporting window the market migrates to proportional to its stake
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
-    assert market.disputeRound1Reporters([market.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
-    assert categoricalMarket.disputeRound1Reporters([categoricalMarket.getNumTicks() - 1, 1, 0], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
-    assert scalarMarket.disputeRound1Reporters([scalarMarket.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
+    assert market.disputeFirstReporters([market.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
+    assert categoricalMarket.disputeFirstReporters([categoricalMarket.getNumTicks() - 1, 1, 0], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
+    assert scalarMarket.disputeFirstReporters([scalarMarket.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
 
-    # Progress into round 2 dispute and cause a fork
+    # Progress into last dispute and cause a fork
     reportingWindow = localFixture.applySignature("ReportingWindow", market.getReportingWindow())
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
-    forkDuration = round2DisputeCost = localFixture.contracts["Constants"].FORK_DURATION_SECONDS()
+    forkDuration = lastDisputeCost = localFixture.contracts["Constants"].FORK_DURATION_SECONDS()
     nextReportingWindow = localFixture.applySignature("ReportingWindow", universe.getReportingWindowByTimestamp(localFixture.chain.head_state.timestamp + forkDuration))
     scalarMarketStake = scalarMarket.getTotalStake()
-    round2DisputeCost = localFixture.contracts["Constants"].ROUND2_REPORTERS_DISPUTE_BOND_AMOUNT()
-    totalScalarMarketStakeMoved = scalarMarketStake + round2DisputeCost
-    migratedFees = reporterFees * (scalarMarketStake + round2DisputeCost) / (reportingWindow.getTotalStake() + round2DisputeCost)
+    lastDisputeCost = localFixture.contracts["Constants"].LAST_REPORTERS_DISPUTE_BOND_AMOUNT()
+    totalScalarMarketStakeMoved = scalarMarketStake + lastDisputeCost
+    migratedFees = reporterFees * (scalarMarketStake + lastDisputeCost) / (reportingWindow.getTotalStake() + lastDisputeCost)
 
-    with TokenDelta(cash, -migratedFees, reportingWindow.address, "Disputing in round 2 didn't migrate ETH out correctly"):
-        with TokenDelta(cash, migratedFees, nextReportingWindow.address, "Disputing in round 2 didn't migrate ETH in correctly"):
-            with StakeDelta(round2DisputeCost, -scalarMarketStake, 0, scalarMarket, reportingWindow, "Disputing in round 2 is not migrating stake out correctly"):
-                with StakeDelta(round2DisputeCost, totalScalarMarketStakeMoved, 0, scalarMarket, nextReportingWindow, "Disputing in round 2 is not migrating stake in correctly"):
-                    assert scalarMarket.disputeRound2Reporters(sender=tester.k5)
+    with TokenDelta(cash, -migratedFees, reportingWindow.address, "Disputing in last didn't migrate ETH out correctly"):
+        with TokenDelta(cash, migratedFees, nextReportingWindow.address, "Disputing in last didn't migrate ETH in correctly"):
+            with StakeDelta(lastDisputeCost, -scalarMarketStake, 0, scalarMarket, reportingWindow, "Disputing in last is not migrating stake out correctly"):
+                with StakeDelta(lastDisputeCost, totalScalarMarketStakeMoved, 0, scalarMarket, nextReportingWindow, "Disputing in last is not migrating stake in correctly"):
+                    assert scalarMarket.disputeLastReporters(sender=tester.k5)
 
     # We migrate REP to a new universe and finalize the forking market
     newUniverse = localFixture.getOrCreateChildUniverse(universe, scalarMarket, [0, scalarMarket.getNumTicks()])
