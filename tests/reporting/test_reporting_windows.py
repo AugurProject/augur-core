@@ -6,21 +6,28 @@ from ethereum.tools.tester import ABIContract, TransactionFailed
 from reporting_utils import proceedToDesignatedReporting, proceedToRound1Reporting, proceedToRound2Reporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 
-def test_reporting_window_initialize(localFixture, chain, mockUniverse):
+def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockReportingAttendanceToken):
     timestamp = chain.head_state.timestamp
     mockUniverse.setReportingPeriodDurationInSeconds(timestamp)
+    mockReportingAttendanceTokenFactory = localFixture.contracts['MockReportingAttendanceTokenFactory']
+    mockReportingAttendanceTokenFactory.setAttendanceTokenValue(mockReportingAttendanceToken.address)
+
     reportingWindow = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'reportingWindow')
 
     assert reportingWindow.initialize(mockUniverse.address, 2)
     assert reportingWindow.getStartTime() == 2 * timestamp     
     assert reportingWindow.getAvgReportingGasPrice() == localFixture.contracts['Constants'].DEFAULT_REPORTING_GAS_PRICE()
+    assert reportingWindow.getReportingAttendanceToken() == mockReportingAttendanceToken.address
 
-def test_reporting_window_create_market(localFixture, chain, mockUniverse, mockMarket, cash, mockReputationToken):
+def test_reporting_window_create_market(localFixture, chain, mockUniverse, mockMarket, cash, mockReputationToken, mockReportingAttendanceToken):
     mockMarketFactory = localFixture.contracts['MockMarketFactory']
+    mockReportingAttendanceTokenFactory = localFixture.contracts['MockReportingAttendanceTokenFactory']
     mockMarketFactory.setMarket(mockMarket.address)
+    mockReportingAttendanceTokenFactory.setAttendanceTokenValue(mockReportingAttendanceToken.address)
 
     controller = localFixture.contracts['Controller']
     assert controller.lookup("MarketFactory") == mockMarketFactory.address
+    assert controller.lookup("ReportingAttendanceTokenFactory") == mockReportingAttendanceTokenFactory.address
 
     timestamp = chain.head_state.timestamp
     endTimeValue = timestamp + 10
@@ -67,13 +74,16 @@ def test_reporting_window_create_market(localFixture, chain, mockUniverse, mockM
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
+    controller = fixture.contracts['Controller']
     fixture.uploadAndAddToController('solidity_test_helpers/MockMarket.sol')
     fixture.uploadAndAddToController('solidity_test_helpers/MockUniverse.sol')
     fixture.uploadAndAddToController('solidity_test_helpers/MockReputationToken.sol')
     fixture.uploadAndAddToController('solidity_test_helpers/MockDisputeBondToken.sol')
-    mockMarketFactory = fixture.uploadAndAddToController('solidity_test_helpers/MockMarketFactory.sol')
-    controller = fixture.contracts['Controller']
+    fixture.uploadAndAddToController('solidity_test_helpers/MockReportingAttendanceToken.sol')
+    mockReportingAttendanceTokenFactory = fixture.upload('solidity_test_helpers/MockReportingAttendanceTokenFactory.sol')
+    mockMarketFactory = fixture.upload('solidity_test_helpers/MockMarketFactory.sol')
     controller.setValue(stringToBytes('MarketFactory'), mockMarketFactory.address)
+    controller.setValue(stringToBytes('ReportingAttendanceTokenFactory'), mockReportingAttendanceTokenFactory.address)
     universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
     reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
     for testAccount in [tester.a1, tester.a2, tester.a3]:
@@ -111,6 +121,11 @@ def mockReputationToken(localFixture):
     mockReputationToken = localFixture.contracts['MockReputationToken']
     mockReputationToken.setTrustedTransfer(True)
     return mockReputationToken
+
+@fixture
+def mockReportingAttendanceToken(localFixture):
+    mockReportingAttendanceToken = localFixture.contracts['MockReportingAttendanceToken']
+    return mockReportingAttendanceToken
 
 @fixture
 def mockDisputeBondToken(localFixture):
