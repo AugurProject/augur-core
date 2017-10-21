@@ -26,61 +26,61 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
             with StakeDelta(0, -scalarStake, -scalarStake, scalarMarket, reportingWindow, "Forgoing fees incorrectly updated stake accounting"):
                 assert scalarMarketDesignatedStake.redeemWinningTokens(True)
 
-    # We cannot purchase attendance tokens yet since the window isn't active
-    attendanceToken = localFixture.applySignature("ReportingAttendanceToken", reportingWindow.getReportingAttendanceToken())
+    # We cannot purchase participation tokens yet since the window isn't active
+    participationToken = localFixture.applySignature("ParticipationToken", reportingWindow.getParticipationToken())
     with raises(TransactionFailed):
-        attendanceToken.buy(1)
+        participationToken.buy(1)
 
-    # We'll progress to the start of the window and purchase some attendance tokens
+    # We'll progress to the start of the window and purchase some participation tokens
     localFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
-    attendanceTokenAmount = 100
-    with TokenDelta(reputationToken, -attendanceTokenAmount, tester.a0, "Buying attendance tokens didn't deduct REP correctly"):
-        with TokenDelta(attendanceToken, attendanceTokenAmount, tester.a0, "Buying attendance tokens didn't increase attendance token balance correctly"):
-            with StakeDelta(0, attendanceTokenAmount, attendanceTokenAmount, market, reportingWindow, "Buying attendance tokens din't adjust stake accounting correctly"):
-                assert attendanceToken.buy(attendanceTokenAmount)
+    participationTokenAmount = 100
+    with TokenDelta(reputationToken, -participationTokenAmount, tester.a0, "Buying participation tokens didn't deduct REP correctly"):
+        with TokenDelta(participationToken, participationTokenAmount, tester.a0, "Buying participation tokens didn't increase participation token balance correctly"):
+            with StakeDelta(0, participationTokenAmount, participationTokenAmount, market, reportingWindow, "Buying participation tokens din't adjust stake accounting correctly"):
+                assert participationToken.buy(participationTokenAmount)
 
     # As other testers we'll buy some more
-    with StakeDelta(0, attendanceTokenAmount*3, attendanceTokenAmount*3, market, reportingWindow, "Buying attendance tokens din't adjust stake accounting correctly"):
-        with TokenDelta(attendanceToken, attendanceTokenAmount, tester.a1, "Buying attendance tokens didn't increase attendance token balance correctly"):
-            assert attendanceToken.buy(attendanceTokenAmount, sender=tester.k1)
-        with TokenDelta(attendanceToken, attendanceTokenAmount, tester.a2, "Buying attendance tokens didn't increase attendance token balance correctly"):
-            assert attendanceToken.buy(attendanceTokenAmount, sender=tester.k2)
-        with TokenDelta(attendanceToken, attendanceTokenAmount, tester.a3, "Buying attendance tokens didn't increase attendance token balance correctly"):
-            assert attendanceToken.buy(attendanceTokenAmount, sender=tester.k3)
+    with StakeDelta(0, participationTokenAmount*3, participationTokenAmount*3, market, reportingWindow, "Buying participation tokens din't adjust stake accounting correctly"):
+        with TokenDelta(participationToken, participationTokenAmount, tester.a1, "Buying participation tokens didn't increase participation token balance correctly"):
+            assert participationToken.buy(participationTokenAmount, sender=tester.k1)
+        with TokenDelta(participationToken, participationTokenAmount, tester.a2, "Buying participation tokens didn't increase participation token balance correctly"):
+            assert participationToken.buy(participationTokenAmount, sender=tester.k2)
+        with TokenDelta(participationToken, participationTokenAmount, tester.a3, "Buying participation tokens didn't increase participation token balance correctly"):
+            assert participationToken.buy(participationTokenAmount, sender=tester.k3)
 
-    # We can't redeem the attendance tokens for fees yet since the window isn't over
+    # We can't redeem the participation tokens for fees yet since the window isn't over
     with raises(TransactionFailed):
-        attendanceToken.redeem(False)
+        participationToken.redeem(False)
 
     # We can redeem them to just get back REP. We'll have tester 3 do this
-    attendanceValue = attendanceToken.balanceOf(tester.a3)
-    with TokenDelta(reputationToken, attendanceValue, tester.a3, "Forgoing fees resulting in an incorrect REP refund"):
-        with TokenDelta(attendanceToken, -attendanceTokenAmount, tester.a3, "Redeeming attendance tokens didn't decrease attendance token balance correctly"):
+    participationValue = participationToken.balanceOf(tester.a3)
+    with TokenDelta(reputationToken, participationValue, tester.a3, "Forgoing fees resulting in an incorrect REP refund"):
+        with TokenDelta(participationToken, -participationTokenAmount, tester.a3, "Redeeming participation tokens didn't decrease participation token balance correctly"):
             with ETHDelta(0, tester.a0, localFixture.chain, "Forgoing fees gave fees incorrectly"):
-                with StakeDelta(0, -attendanceValue, -attendanceValue, market, reportingWindow, "Forgoing fees incorrectly updated stake accounting"):
-                    assert attendanceToken.redeem(True, sender=tester.k3)
+                with StakeDelta(0, -participationValue, -participationValue, market, reportingWindow, "Forgoing fees incorrectly updated stake accounting"):
+                    assert participationToken.redeem(True, sender=tester.k3)
 
-    # Fast forward time until the window is over and we can redeem our winning stake and attendance tokens and receive fees
+    # Fast forward time until the window is over and we can redeem our winning stake and participation tokens and receive fees
     localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
     reporterFees = 1000 * market.getNumTicks() / universe.getReportingFeeDivisor()
     totalWinningStake = reportingWindow.getTotalWinningStake()
     assert cash.balanceOf(reportingWindow.address) == reporterFees
 
-    expectedAttendanceFees = reporterFees * attendanceTokenAmount / totalWinningStake
+    expectedParticipationFees = reporterFees * participationTokenAmount / totalWinningStake
 
-    # Cashing out Attendance tokens or Stake tokens will awards fees proportional to the total winning stake in the window
-    with TokenDelta(attendanceToken, -attendanceTokenAmount, tester.a0, "Redeeming attendance tokens didn't decrease attendance token balance correctly"):
-        with ETHDelta(expectedAttendanceFees, tester.a0, localFixture.chain, "Redeeming attendance tokens didn't increase ETH correctly"):
-            assert attendanceToken.redeem(False)
+    # Cashing out Participation tokens or Stake tokens will awards fees proportional to the total winning stake in the window
+    with TokenDelta(participationToken, -participationTokenAmount, tester.a0, "Redeeming participation tokens didn't decrease participation token balance correctly"):
+        with ETHDelta(expectedParticipationFees, tester.a0, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
+            assert participationToken.redeem(False)
 
-    with TokenDelta(attendanceToken, -attendanceTokenAmount, tester.a1, "Redeeming attendance tokens didn't decrease attendance token balance correctly"):
-        with ETHDelta(expectedAttendanceFees, tester.a1, localFixture.chain, "Redeeming attendance tokens didn't increase ETH correctly"):
-            assert attendanceToken.redeem(False, sender=tester.k1)
+    with TokenDelta(participationToken, -participationTokenAmount, tester.a1, "Redeeming participation tokens didn't decrease participation token balance correctly"):
+        with ETHDelta(expectedParticipationFees, tester.a1, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
+            assert participationToken.redeem(False, sender=tester.k1)
 
-    with TokenDelta(attendanceToken, -attendanceTokenAmount, tester.a2, "Redeeming attendance tokens didn't decrease attendance token balance correctly"):
-        with ETHDelta(expectedAttendanceFees, tester.a2, localFixture.chain, "Redeeming attendance tokens didn't increase ETH correctly"):
-            assert attendanceToken.redeem(False, sender=tester.k2)
+    with TokenDelta(participationToken, -participationTokenAmount, tester.a2, "Redeeming participation tokens didn't decrease participation token balance correctly"):
+        with ETHDelta(expectedParticipationFees, tester.a2, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
+            assert participationToken.redeem(False, sender=tester.k2)
 
     marketStake = marketDesignatedStake.balanceOf(tester.a0)
     expectedFees = reporterFees * marketStake / totalWinningStake + 1 # Rounding error

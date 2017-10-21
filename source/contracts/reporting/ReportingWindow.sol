@@ -18,8 +18,8 @@ import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
-import 'reporting/IReportingAttendanceToken.sol';
-import 'factories/ReportingAttendanceTokenFactory.sol';
+import 'reporting/IParticipationToken.sol';
+import 'factories/ParticipationTokenFactory.sol';
 
 
 contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingWindow {
@@ -40,7 +40,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     RunningAverage.Data private reportingGasPrice;
     uint256 private totalWinningStake;
     uint256 private totalStake;
-    IReportingAttendanceToken private reportingAttendanceToken;
+    IParticipationToken private participationToken;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -48,7 +48,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         // Initialize this to some reasonable value to handle the first market ever created without branching code
         reportingGasPrice.record(Reporting.defaultReportingGasPrice());
-        reportingAttendanceToken = ReportingAttendanceTokenFactory(controller.lookup("ReportingAttendanceTokenFactory")).createReportingAttendanceToken(controller, this);
+        participationToken = ParticipationTokenFactory(controller.lookup("ParticipationTokenFactory")).createParticipationToken(controller, this);
         return true;
     }
 
@@ -219,8 +219,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return totalWinningStake;
     }
 
-    function getReportingAttendanceToken() public view returns (IReportingAttendanceToken) {
-        return reportingAttendanceToken;
+    function getParticipationToken() public view returns (IParticipationToken) {
+        return participationToken;
     }
 
     function allMarketsFinalized() constant public returns (bool) {
@@ -231,7 +231,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         ITyped _shadyCaller = ITyped(msg.sender);
         require(isContainerForStakeToken(_shadyCaller) ||
                 isContainerForDisputeBond(_shadyCaller) ||
-                msg.sender == address(reportingAttendanceToken));
+                msg.sender == address(participationToken));
         bool _eligibleForFees = isOver() && allMarketsFinalized();
         if (!_forgoFees) {
             require(_eligibleForFees);
@@ -300,7 +300,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     function increaseTotalWinningStake(uint256 _amount) public returns (bool) {
-        require(msg.sender == address(reportingAttendanceToken));
+        require(msg.sender == address(participationToken));
         totalStake = totalStake.add(_amount);
         totalWinningStake = totalWinningStake.add(_amount);
     }
@@ -381,12 +381,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.contains(_shadyMarket);
     }
 
-    function isContainerForReportingAttendanceToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ReportingAttendanceToken") {
+    function isContainerForParticipationToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
+        if (_shadyTarget.getTypeName() != "ParticipationToken") {
             return false;
         }
-        IReportingAttendanceToken _shadyReportingAttendanceToken = IReportingAttendanceToken(_shadyTarget);
-        return reportingAttendanceToken == _shadyReportingAttendanceToken;
+        IParticipationToken _shadyParticipationToken = IParticipationToken(_shadyTarget);
+        return participationToken == _shadyParticipationToken;
     }
 
     function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {
