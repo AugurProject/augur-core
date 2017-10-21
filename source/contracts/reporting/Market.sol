@@ -334,6 +334,16 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
+    function withdrawInEmergency() public onlyInBadTimes onlyOwner returns (bool) {
+        if (this.balance > 0) {
+            require(msg.sender.call.value(this.balance)());
+        }
+        IReputationToken _reputationToken = reportingWindow.getReputationToken();
+        uint256 _repBalance = _reputationToken.balanceOf(this);
+        _reputationToken.transfer(msg.sender, _repBalance);
+        return true;
+    }
+
     //
     // Helpers
     //

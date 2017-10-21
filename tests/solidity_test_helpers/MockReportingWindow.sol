@@ -325,6 +325,10 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         collectForgoFees = _forgoFees;
         return collectAttoStakeTokens;
     }
+
+    function collectReportingFeesInEmergency(address _reporterAddress, uint256 _attoStakeTokens) public returns (bool) {
+        return true;
+    }
     
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool) {
         return setTriggerMigrateFeesDueToForkValue;

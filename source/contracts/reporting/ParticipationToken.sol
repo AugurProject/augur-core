@@ -43,6 +43,16 @@ contract ParticipationToken is DelegationTarget, ITyped, Initializable, Variable
         return true;
     }
 
+    function withdrawInEmergency() public onlyInBadTimes returns (bool) {
+        uint256 _attotokens = balances[msg.sender];
+        if (_attotokens != 0) {
+            burn(msg.sender, _attotokens);
+            reportingWindow.getReputationToken().transfer(msg.sender, _attotokens);
+        }
+        reportingWindow.collectReportingFeesInEmergency(msg.sender, _attotokens);
+        return true;
+    }
+
     function getTypeName() public view returns (bytes32) {
         return "ParticipationToken";
     }

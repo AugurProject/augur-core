@@ -269,6 +269,22 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return _feePayoutShare;
     }
 
+    function collectReportingFeesInEmergency(address _reporterAddress, uint256 _attoStake) public onlyInBadTimes returns (bool) {
+        ITyped _shadyCaller = ITyped(msg.sender);
+        require(isContainerForStakeToken(_shadyCaller) ||
+                isContainerForDisputeBond(_shadyCaller) ||
+                msg.sender == address(reportingAttendanceToken));
+        // NOTE: Will need to handle other denominations when that is implemented
+        ICash _cash = ICash(controller.lookup("Cash"));
+        uint256 _balance = _cash.balanceOf(this);
+        uint256 _feePayoutShare = _balance.mul(_attoStake).div(totalStake);
+        totalStake = totalStake.sub(_attoStake);
+        if (_feePayoutShare > 0) {
+            _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
+        }
+        return true;
+    }
+
     function migrateFeesDueToMarketMigration(IMarket _market) public afterInitialized returns (bool) {
         if (totalStake == 0) {
             return false;

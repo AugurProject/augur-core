@@ -95,6 +95,23 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         return _amountToMint;
     }
 
+    function withdrawInEmergency() public onlyInBadTimes returns (bool) {
+        require(msg.sender == bondHolder);
+        IReputationToken _reputationToken = getReputationToken();
+        uint256 _amountToTransfer = _reputationToken.balanceOf(this);
+        if (bondRemainingToBePaidOut > bondAmount) {
+            uint256 _amountToCollectFeesOn = _amountToTransfer.min(bondRemainingToBePaidOut - bondAmount);
+            market.getReportingWindow().collectReportingFeesInEmergency(bondHolder, _amountToCollectFeesOn);
+        }
+        bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
+        if (bondRemainingToBePaidOut < bondAmount) {
+            uint256 _amountToDeductFromExtraPayout = _amountToTransfer.min(bondAmount - bondRemainingToBePaidOut);
+            getUniverse().decreaseExtraDisputeBondRemainingToBePaidOut(_amountToDeductFromExtraPayout);
+        }
+        _reputationToken.transfer(bondHolder, _amountToTransfer);
+        return true;
+    }
+
     function getTypeName() constant public returns (bytes32) {
         return "DisputeBondToken";
     }

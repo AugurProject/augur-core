@@ -81,7 +81,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function redeemDisavowedTokens(address _reporter) public afterInitialized returns (bool) {
+    function redeemDisavowedTokens(address _reporter) public onlyInGoodTimes afterInitialized returns (bool) {
         require(!market.isContainerForStakeToken(this));
         uint256 _reputationSupply = getReputationToken().balanceOf(this);
         uint256 _attotokens = balances[_reporter];
@@ -161,6 +161,21 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
             return true;
         }
         _reputationToken.transfer(market.getFinalWinningStakeToken(), _balance);
+        return true;
+    }
+
+    function withdrawInEmergency() public onlyInBadTimes returns (bool) {
+        IReputationToken _reputationToken = getReputationToken();
+        uint256 _reputationSupply = _reputationToken.balanceOf(this);
+        uint256 _attotokens = balances[msg.sender];
+        uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
+        burn(msg.sender, _attotokens);
+        if (_reporterReputationShare != 0) {
+            _reputationToken.transfer(msg.sender, _reporterReputationShare);
+        }
+        if (market.isContainerForStakeToken(this)) {
+            market.getReportingWindow().collectReportingFeesInEmergency(msg.sender, _attotokens);
+        }
         return true;
     }
 
