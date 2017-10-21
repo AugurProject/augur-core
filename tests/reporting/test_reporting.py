@@ -27,7 +27,7 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
 
     noShowBondCosts = 3 * localFixture.contracts['Constants'].DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND()
     # Both reporters report on the outcome. Tester 1 reports first, winning the no-show REP bond and and causing the YES outcome to be the tentative winner
-    initialRound1ReporterETH = localFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialRound1ReporterETH = localFixture.chain.head_state.get_balance(tester.a1)
     stakeTokenYes.buy(0, sender=tester.k1)
     assert stakeTokenYes.balanceOf(tester.a1) == 2 * 10 ** 18
     assert reputationToken.balanceOf(tester.a1) == 1 * 10**6 * 10 **18
@@ -38,7 +38,7 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
     assert tentativeWinner == stakeTokenYes.getPayoutDistributionHash()
 
     # The first reporter also recieves reporter gas fees
-    assert localFixture.contracts['Utils'].getETHBalance(tester.a1) == initialRound1ReporterETH + reporterGasCosts
+    assert localFixture.chain.head_state.get_balance(tester.a1) == initialRound1ReporterETH + reporterGasCosts
 
     # Move time forward into the FIRST DISPUTE phase
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
@@ -114,7 +114,7 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
     assert noUniverseReputationToken.balanceOf(tester.a2) == expectedAmount + bonus
 
     # We can finalize the market now since a mjaority of REP has moved. Alternatively we could "localFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1" to move
-    initialMarketCreatorETHBalance = localFixture.contracts['Utils'].getETHBalance(market.getOwner())
+    initialMarketCreatorETHBalance = localFixture.chain.head_state.get_balance(market.getOwner())
     assert market.tryFinalize()
 
     # The market is now finalized and the NO outcome is the winner
@@ -122,7 +122,7 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
     assert market.getFinalWinningStakeToken() == stakeTokenNo.address
 
     # Since the designated report was not invalid the market creator gets back the validity bond
-    increaseInMarketCreatorBalance = localFixture.contracts['Utils'].getETHBalance(market.getOwner()) - initialMarketCreatorETHBalance
+    increaseInMarketCreatorBalance = localFixture.chain.head_state.get_balance(market.getOwner()) - initialMarketCreatorETHBalance
     assert increaseInMarketCreatorBalance == expectedMarketCreatorFeePayout
 
     # We can redeem forked REP on any universe we didn't dispute
@@ -357,7 +357,7 @@ def test_invalid_designated_report(localFixture, universe, cash, market):
     proceedToDesignatedReporting(localFixture, universe, market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report of invalid
-    initialMarketCreatorETHBalance = localFixture.contracts['Utils'].getETHBalance(market.getOwner())
+    initialMarketCreatorETHBalance = localFixture.chain.head_state.get_balance(market.getOwner())
     assert localFixture.designatedReport(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], tester.k0, True)
 
     # We're now in the DESIGNATED DISPUTE PHASE
@@ -380,7 +380,7 @@ def test_invalid_designated_report(localFixture, universe, cash, market):
     assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
 
     # Since the designated reporter showed up the market creator still gets back the reporter gas cost fee
-    increaseInMarketCreatorBalance = localFixture.contracts['Utils'].getETHBalance(market.getOwner()) - initialMarketCreatorETHBalance
+    increaseInMarketCreatorBalance = localFixture.chain.head_state.get_balance(market.getOwner()) - initialMarketCreatorETHBalance
     assert increaseInMarketCreatorBalance == expectedMarketCreatorFeePayout
 
 @fixture(scope="session")

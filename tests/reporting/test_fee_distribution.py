@@ -6,7 +6,6 @@ from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDel
 def test_token_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
     # We'll progress past the designated dispute phase and finalize all the markets
     localFixture.chain.head_state.timestamp = market.getEndTime() + localFixture.contracts["Constants"].DESIGNATED_REPORTING_DURATION_SECONDS() + 1
-    utils = localFixture.contracts["Utils"]
 
     assert market.tryFinalize()
     assert categoricalMarket.tryFinalize()
@@ -23,7 +22,7 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
     # If we forgo fees we can redeem however. We'll do this for the scalar market. Note that the market total stake isn't decreased. Market total stake only decreases once it is finalized at which point it can no longer migrate so the value doesn't matter
     scalarStake = scalarMarketDesignatedStake.balanceOf(tester.a0)
     with TokenDelta(reputationToken, scalarStake, tester.a0, "Forgoing fees resulting in an incorrect REP refund"):
-        with ETHDelta(0, tester.a0, utils, "Forgoing fees gave fees incorrectly"):
+        with ETHDelta(0, tester.a0, localFixture.chain, "Forgoing fees gave fees incorrectly"):
             with StakeDelta(0, -scalarStake, -scalarStake, scalarMarket, reportingWindow, "Forgoing fees incorrectly updated stake accounting"):
                 assert scalarMarketDesignatedStake.redeemWinningTokens(True)
 
@@ -57,7 +56,7 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
     attendanceValue = attendanceToken.balanceOf(tester.a3)
     with TokenDelta(reputationToken, attendanceValue, tester.a3, "Forgoing fees resulting in an incorrect REP refund"):
         with TokenDelta(attendanceToken, -attendanceTokenAmount, tester.a3, "Redeeming attendance tokens didn't decrease attendance token balance correctly"):
-            with ETHDelta(0, tester.a0, utils, "Forgoing fees gave fees incorrectly"):
+            with ETHDelta(0, tester.a0, localFixture.chain, "Forgoing fees gave fees incorrectly"):
                 with StakeDelta(0, -attendanceValue, -attendanceValue, market, reportingWindow, "Forgoing fees incorrectly updated stake accounting"):
                     assert attendanceToken.redeem(True, sender=tester.k3)
 
@@ -72,32 +71,30 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
 
     # Cashing out Attendance tokens or Stake tokens will awards fees proportional to the total winning stake in the window
     with TokenDelta(attendanceToken, -attendanceTokenAmount, tester.a0, "Redeeming attendance tokens didn't decrease attendance token balance correctly"):
-        with ETHDelta(expectedAttendanceFees, tester.a0, utils, "Redeeming attendance tokens didn't increase ETH correctly"):
+        with ETHDelta(expectedAttendanceFees, tester.a0, localFixture.chain, "Redeeming attendance tokens didn't increase ETH correctly"):
             assert attendanceToken.redeem(False)
 
     with TokenDelta(attendanceToken, -attendanceTokenAmount, tester.a1, "Redeeming attendance tokens didn't decrease attendance token balance correctly"):
-        with ETHDelta(expectedAttendanceFees, tester.a1, utils, "Redeeming attendance tokens didn't increase ETH correctly"):
+        with ETHDelta(expectedAttendanceFees, tester.a1, localFixture.chain, "Redeeming attendance tokens didn't increase ETH correctly"):
             assert attendanceToken.redeem(False, sender=tester.k1)
 
     with TokenDelta(attendanceToken, -attendanceTokenAmount, tester.a2, "Redeeming attendance tokens didn't decrease attendance token balance correctly"):
-        with ETHDelta(expectedAttendanceFees, tester.a2, utils, "Redeeming attendance tokens didn't increase ETH correctly"):
+        with ETHDelta(expectedAttendanceFees, tester.a2, localFixture.chain, "Redeeming attendance tokens didn't increase ETH correctly"):
             assert attendanceToken.redeem(False, sender=tester.k2)
 
     marketStake = marketDesignatedStake.balanceOf(tester.a0)
     expectedFees = reporterFees * marketStake / totalWinningStake + 1 # Rounding error
-    with ETHDelta(expectedFees, tester.a0, utils, "Redeeming Stake tokens didn't increase ETH correctly"):
+    with ETHDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
         with TokenDelta(marketDesignatedStake, -marketStake, tester.a0, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
             assert marketDesignatedStake.redeemWinningTokens(False)
 
     categoricalMarketStake = categoricalMarketDesignatedStake.balanceOf(tester.a0)
     expectedFees = reporterFees * categoricalMarketStake / totalWinningStake + 1 # Rounding error
-    with ETHDelta(expectedFees, tester.a0, utils, "Redeeming Stake tokens didn't increase ETH correctly"):
+    with ETHDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
         with TokenDelta(categoricalMarketDesignatedStake, -categoricalMarketStake, tester.a0, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
             assert categoricalMarketDesignatedStake.redeemWinningTokens(False)
 
-def test_dispute_bond_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
-    utils = localFixture.contracts["Utils"]
-    
+def test_dispute_bond_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):    
     # We'll have testers put up dispute bonds against the designated reports and place stake in other outcomes
     disputeStake = localFixture.contracts["Constants"].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
     otherOutcomeStake = 10 ** 18
@@ -131,19 +128,19 @@ def test_dispute_bond_fee_collection(localFixture, universe, market, categorical
     # Tester 0 placed losing designated reports so that stake is worthless. The other testers have both stake and bonds that can be redeemed for a share of fees
     marketStake = marketDesignatedStake.balanceOf(tester.a1)
     expectedFees = reporterFees * marketStake / totalWinningStake
-    with ETHDelta(expectedFees, tester.a1, utils, "Redeeming Stake tokens didn't increase ETH correctly"):
+    with ETHDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
         with TokenDelta(marketDesignatedStake, -marketStake, tester.a1, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
             assert marketDesignatedStake.redeemWinningTokens(False, sender=tester.k1)
 
     categoricalMarketStake = categoricalMarketDesignatedStake.balanceOf(tester.a2)
     expectedFees = reporterFees * categoricalMarketStake / totalWinningStake
-    with ETHDelta(expectedFees, tester.a2, utils, "Redeeming Stake tokens didn't increase ETH correctly"):
+    with ETHDelta(expectedFees, tester.a2, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
         with TokenDelta(categoricalMarketDesignatedStake, -categoricalMarketStake, tester.a2, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
             assert categoricalMarketDesignatedStake.redeemWinningTokens(False, sender=tester.k2)
 
     scalarMarketStake = scalarMarketDesignatedStake.balanceOf(tester.a3)
     expectedFees = reporterFees * scalarMarketStake / totalWinningStake
-    with ETHDelta(expectedFees, tester.a3, utils, "Redeeming Stake tokens didn't increase ETH correctly"):
+    with ETHDelta(expectedFees, tester.a3, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
         with TokenDelta(scalarMarketDesignatedStake, -scalarMarketStake, tester.a3, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
             assert scalarMarketDesignatedStake.redeemWinningTokens(False, sender=tester.k3)
 
@@ -154,18 +151,16 @@ def test_dispute_bond_fee_collection(localFixture, universe, market, categorical
 
     expectedDisputeFees = reporterFees * disputeStake / totalWinningStake
 
-    with ETHDelta(expectedDisputeFees, tester.a1, utils, "Redeeming Dispute Bond token didn't increase ETH correctly"):
+    with ETHDelta(expectedDisputeFees, tester.a1, localFixture.chain, "Redeeming Dispute Bond token didn't increase ETH correctly"):
         assert marketDisputeBond.withdraw(False, sender=tester.k1)
-    with ETHDelta(expectedDisputeFees, tester.a2, utils, "Redeeming Dispute Bond token didn't increase ETH correctly"):
+    with ETHDelta(expectedDisputeFees, tester.a2, localFixture.chain, "Redeeming Dispute Bond token didn't increase ETH correctly"):
         assert categoricalMarketDisputeBond.withdraw(False, sender=tester.k2)
     remainingFees = cash.balanceOf(reportingWindow.address)
-    with ETHDelta(remainingFees, tester.a3, utils, "Redeeming Dispute Bond token didn't increase ETH correctly"):
+    with ETHDelta(remainingFees, tester.a3, localFixture.chain, "Redeeming Dispute Bond token didn't increase ETH correctly"):
         assert scalarMarketDisputeBond.withdraw(False, sender=tester.k3)
 
 
-def test_fee_migration(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
-    utils = localFixture.contracts["Utils"]
-    
+def test_fee_migration(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):    
     # We'll have testers put up dispute bonds against the designated reports and place stake in other outcomes
     otherOutcomeStake = 10 ** 18
     assert market.disputeDesignatedReport([market.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k1)
@@ -191,9 +186,7 @@ def test_fee_migration(localFixture, universe, market, categoricalMarket, scalar
                 with StakeDelta(scalarMarketStakeDelta, totalScalarMarketStakeMoved, 0, scalarMarket, nextReportingWindow, "Disputing in round 1 is not migrating stake in correctly"):
                     assert scalarMarket.disputeRound1Reporters([scalarMarket.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4)
 
-def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
-    utils = localFixture.contracts["Utils"]
-    
+def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):    
     # We'll have testers put up dispute bonds against the designated reports and place stake in other outcomes
     otherOutcomeStake = 10 ** 18
     assert market.disputeDesignatedReport([market.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k1)
@@ -257,13 +250,12 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
     scalarMarket = ABIContract(fixture.chain, kitchenSinkSnapshot['scalarMarket'].translator, kitchenSinkSnapshot['scalarMarket'].address)
     cash = ABIContract(fixture.chain, kitchenSinkSnapshot['cash'].translator, kitchenSinkSnapshot['cash'].address)
     completeSets = fixture.contracts['CompleteSets']
-    utils = fixture.contracts["Utils"]
 
     # Generate the fees in our initial reporting window
     cost = 1000 * market.getNumTicks()
     marketCreatorFees = cost / market.getMarketCreatorSettlementFeeDivisor()
     completeSets.publicBuyCompleteSets(market.address, 1000, sender = tester.k1, value = cost)
-    with ETHDelta(marketCreatorFees, tester.a0, utils, "The market creator didn't get their share of fees from complete set sale"):
+    with ETHDelta(marketCreatorFees, tester.a0, fixture.chain, "The market creator didn't get their share of fees from complete set sale"):
         completeSets.publicSellCompleteSets(market.address, 1000, sender=tester.k1)
     fees = cash.balanceOf(market.getReportingWindow())
     reporterFees = cost / universe.getReportingFeeDivisor()

@@ -91,10 +91,10 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
         stakeToken.redeemWinningTokens()
 
     # We'll redeem the winning tokens we have on the market and forgo fees and confirm we get that amount returned in REP
-    initialETHBalance = localFixture.contracts['Utils'].getETHBalance(tester.a0)
+    initialETHBalance = localFixture.chain.head_state.get_balance(tester.a0)
     assert stakeToken.redeemWinningTokens(True)
     assert reputationToken.balanceOf(tester.a0) == expectedREPBalance + designatedReportStake
-    assert localFixture.contracts['Utils'].getETHBalance(tester.a0) == initialETHBalance
+    assert localFixture.chain.head_state.get_balance(tester.a0) == initialETHBalance
 
     # If we redeem the second tester's tokens they'll get ALL of the fees on the reporting window now and their normal share of REP
     market2.tryFinalize()
@@ -104,10 +104,10 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     initialREPBalance = reputationToken.balanceOf(tester.a0)
 
     # We'll redeem the winning tokens we have on the market and confirm we get that amount returned in REP and all the fees in the reporting window
-    expectedETHBalance = localFixture.contracts['Utils'].getETHBalance(tester.a0) + cash.balanceOf(reportingWindow.address)
+    expectedETHBalance = localFixture.chain.head_state.get_balance(tester.a0) + cash.balanceOf(reportingWindow.address)
     assert stakeToken.redeemWinningTokens()
     assert reputationToken.balanceOf(tester.a0) == initialREPBalance + designatedReportStake
-    assert localFixture.contracts['Utils'].getETHBalance(tester.a0) == expectedETHBalance
+    assert localFixture.chain.head_state.get_balance(tester.a0) == expectedETHBalance
 
 @mark.parametrize('numReports, numCorrect', [
     (1, 1),
@@ -165,7 +165,6 @@ def confirmPayouts(fixture, market, numCorrectReporters, noShowBond):
 def localSnapshot(fixture, augurInitializedSnapshot):
     fixture.resetToSnapshot(augurInitializedSnapshot)
     fixture.upload("solidity_test_helpers/Constants.sol")
-    fixture.upload("solidity_test_helpers/Utils.sol")
     universe = fixture.createUniverse(0, "")
     fixture.distributeRep(universe)
     market = fixture.createReasonableBinaryMarket(universe, fixture.contracts['Cash'])

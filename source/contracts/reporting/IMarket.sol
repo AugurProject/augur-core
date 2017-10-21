@@ -16,8 +16,8 @@ contract IMarket is ITyped, IOwnable {
     enum ReportingState {
         PRE_REPORTING,
         DESIGNATED_REPORTING,
-        DESIGNATED_DISPUTE,
         AWAITING_FORK_MIGRATION,
+        DESIGNATED_DISPUTE,
         ROUND1_REPORTING,
         FIRST_DISPUTE,
         AWAITING_NO_REPORT_MIGRATION,
