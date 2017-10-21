@@ -208,6 +208,10 @@ contract MockMarket is IMarket {
         return _stakeToken.trustedBuy(_reporter, _attotokens); 
     }
     
+    function callReportingWindowMigrateMarketInFromSibling(IReportingWindow _reportingWindow) public returns(bool) {
+        return _reportingWindow.migrateMarketInFromSibling();
+    }
+    
     function getInitializeReportingWindowValue() public view returns (IReportingWindow) {
         return initializeReportingWindowValue;
     }
