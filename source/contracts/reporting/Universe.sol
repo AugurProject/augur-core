@@ -16,6 +16,7 @@ import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IRepPriceOracle.sol';
 import 'reporting/IParticipationToken.sol';
+import 'reporting/IDisputeBond.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
@@ -51,7 +52,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
     function fork() public afterInitialized returns (bool) {
         require(forkingMarket == address(0));
-        require(isContainerForMarket(ITyped(msg.sender)));
+        require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
         forkEndTime = block.timestamp + Reporting.forkDurationSeconds();
         return true;
@@ -139,7 +140,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
-        require(parentUniverse.isContainerForDisputeBondToken(ITyped(msg.sender)));
+        require(parentUniverse.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
         repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.sub(_amount);
         return true;
     }
@@ -149,22 +150,18 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
-        require(isContainerForMarket(ITyped(msg.sender)));
+        require(isContainerForMarket(IMarket(msg.sender)));
         extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.add(_amount);
         return true;
     }
 
     function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
-        require(isContainerForDisputeBondToken(ITyped(msg.sender)));
+        require(isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
         extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.sub(_amount);
         return true;
     }
 
-    function isContainerForReportingWindow(ITyped _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ReportingWindow") {
-            return false;
-        }
-        IReportingWindow _shadyReportingWindow = IReportingWindow(_shadyTarget);
+    function isContainerForReportingWindow(IReportingWindow _shadyReportingWindow) public view returns (bool) {
         uint256 _startTime = _shadyReportingWindow.getStartTime();
         if (_startTime == 0) {
             return false;
@@ -174,11 +171,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _shadyReportingWindow == _legitReportingWindow;
     }
 
-    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "DisputeBondToken") {
-            return false;
-        }
-        IDisputeBond _shadyDisputeBond = IDisputeBond(_shadyTarget);
+    function isContainerForDisputeBondToken(IDisputeBond _shadyDisputeBond) public view returns (bool) {
         IMarket _shadyMarket = _shadyDisputeBond.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
@@ -190,11 +183,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _legitMarket.isContainerForDisputeBondToken(_shadyDisputeBond);
     }
 
-    function isContainerForMarket(ITyped _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "Market") {
-            return false;
-        }
-        IMarket _shadyMarket = IMarket(_shadyTarget);
+    function isContainerForMarket(IMarket _shadyMarket) public view returns (bool) {
         IReportingWindow _shadyReportingWindow = _shadyMarket.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
@@ -206,11 +195,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _legitReportingWindow.isContainerForMarket(_shadyMarket);
     }
 
-    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "StakeToken") {
-            return false;
-        }
-        IStakeToken _shadyStakeToken = IStakeToken(_shadyTarget);
+    function isContainerForStakeToken(IStakeToken _shadyStakeToken) public view returns (bool) {
         IMarket _shadyMarket = _shadyStakeToken.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
@@ -222,11 +207,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _legitMarket.isContainerForStakeToken(_shadyStakeToken);
     }
 
-    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ShareToken") {
-            return false;
-        }
-        IShareToken _shadyShareToken = IShareToken(_shadyTarget);
+    function isContainerForShareToken(IShareToken _shadyShareToken) public view returns (bool) {
         IMarket _shadyMarket = _shadyShareToken.getMarket();
         if (_shadyMarket == address(0)) {
             return false;

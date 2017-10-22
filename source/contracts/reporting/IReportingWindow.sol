@@ -35,8 +35,8 @@ contract IReportingWindow is ITyped {
     function migrateFeesDueToFork() public returns (bool);
     function increaseTotalStake(uint256 _amount) public returns (bool);
     function increaseTotalWinningStake(uint256 _amount) public returns (bool);
-    function isContainerForMarket(ITyped _shadyTarget) public view returns (bool);
-    function isContainerForParticipationToken(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForMarket(IMarket _shadyTarget) public view returns (bool);
+    function isContainerForParticipationToken(IParticipationToken _shadyTarget) public view returns (bool);
     function isForkingMarketFinalized() public view returns (bool);
     function isReportingActive() public view returns (bool);
     function isDisputeActive() public view returns (bool);

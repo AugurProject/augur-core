@@ -152,7 +152,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
         getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
         this.increaseTotalStake(_bondAmount);
-        reportingWindow.getReputationToken().trustedTransfer(msg.sender, designatedReporterDisputeBondToken, _bondAmount);
+        reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, designatedReporterDisputeBondToken, _bondAmount);
         if (_attotokens > 0) {
             IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
             _stakeToken.trustedBuy(msg.sender, _attotokens);
@@ -169,7 +169,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         firstReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
         getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
         this.increaseTotalStake(_bondAmount);
-        reportingWindow.getReputationToken().trustedTransfer(msg.sender, firstReportersDisputeBondToken, _bondAmount);
+        reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, firstReportersDisputeBondToken, _bondAmount);
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
         migrateReportingWindow(_newReportingWindow);
         if (_attotokens > 0) {
@@ -188,7 +188,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         lastReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
         getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
         this.increaseTotalStake(_bondAmount);
-        reportingWindow.getReputationToken().trustedTransfer(msg.sender, lastReportersDisputeBondToken, _bondAmount);
+        reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, lastReportersDisputeBondToken, _bondAmount);
         reportingWindow.getUniverse().fork();
         IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
         return migrateReportingWindow(_newReportingWindow);
@@ -303,10 +303,10 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             return true;
         }
         if (address(designatedReporterDisputeBondToken) != NULL_ADDRESS && designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
-            _reputationToken.trustedTransfer(designatedReporterDisputeBondToken, getFinalWinningStakeToken(), _reputationToken.balanceOf(designatedReporterDisputeBondToken));
+            _reputationToken.trustedMarketTransfer(designatedReporterDisputeBondToken, getFinalWinningStakeToken(), _reputationToken.balanceOf(designatedReporterDisputeBondToken));
         }
         if (address(firstReportersDisputeBondToken) != NULL_ADDRESS && firstReportersDisputeBondToken.getDisputedPayoutDistributionHash() == finalPayoutDistributionHash) {
-            _reputationToken.trustedTransfer(firstReportersDisputeBondToken, getFinalWinningStakeToken(), _reputationToken.balanceOf(firstReportersDisputeBondToken));
+            _reputationToken.trustedMarketTransfer(firstReportersDisputeBondToken, getFinalWinningStakeToken(), _reputationToken.balanceOf(firstReportersDisputeBondToken));
         }
         return true;
     }
@@ -322,7 +322,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     // AUDIT: This is called at the beginning of StakeToken:buy. Look for reentrancy issues
     function firstReporterCompensationCheck(address _reporter) public returns (uint256) {
-        require(isContainerForStakeToken(ITyped(msg.sender)));
+        require(isContainerForStakeToken(IStakeToken(msg.sender)));
         if (getReportingState() == ReportingState.DESIGNATED_REPORTING) {
             return 0;
         } else if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
@@ -468,29 +468,17 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return _totalDisputeBondStake;
     }
 
-    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "StakeToken") {
-            return false;
-        }
-        IStakeToken _shadyStakeToken = IStakeToken(_shadyTarget);
+    function isContainerForStakeToken(IStakeToken _shadyStakeToken) public view returns (bool) {
         bytes32 _shadyId = _shadyStakeToken.getPayoutDistributionHash();
         IStakeToken _stakeToken = IStakeToken(stakeTokens.getAsAddressOrZero(_shadyId));
         return _stakeToken == _shadyStakeToken;
     }
 
-    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ShareToken") {
-            return false;
-        }
-        IShareToken _shadyShareToken = IShareToken(_shadyTarget);
+    function isContainerForShareToken(IShareToken _shadyShareToken) public view returns (bool) {
         return getShareToken(_shadyShareToken.getOutcome()) == _shadyShareToken;
     }
 
-    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "DisputeBondToken") {
-            return false;
-        }
-        IDisputeBond _shadyDisputeBond = IDisputeBond(_shadyTarget);
+    function isContainerForDisputeBondToken(IDisputeBond _shadyDisputeBond) public view returns (bool) {
         if (designatedReporterDisputeBondToken == _shadyDisputeBond) {
             return true;
         }

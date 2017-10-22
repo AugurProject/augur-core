@@ -6,6 +6,8 @@ import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IStakeToken.sol';
+import 'reporting/IDisputeBond.sol';
+import 'trading/IShareToken.sol';
 
 
 contract IUniverse is ITyped {
@@ -41,12 +43,12 @@ contract IUniverse is ITyped {
     function getTargetReporterGasCosts() public returns (uint256);
     function getMarketCreationCost() public returns (uint256);
     function isParentOf(IUniverse _shadyChild) public view returns (bool);
-    function isContainerForReportingWindow(ITyped _shadyTarget) public view returns (bool);
-    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool);
-    function isContainerForMarket(ITyped _shadyTarget) public view returns (bool);
-    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool);
-    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool);
-    function isContainerForParticipationToken(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForReportingWindow(IReportingWindow _shadyTarget) public view returns (bool);
+    function isContainerForDisputeBondToken(IDisputeBond _shadyTarget) public view returns (bool);
+    function isContainerForMarket(IMarket _shadyTarget) public view returns (bool);
+    function isContainerForStakeToken(IStakeToken _shadyTarget) public view returns (bool);
+    function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool);
+    function isContainerForParticipationToken(IParticipationToken _shadyTarget) public view returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);
     function incrementOpenInterest(uint256 _amount) public returns (bool);
 }
