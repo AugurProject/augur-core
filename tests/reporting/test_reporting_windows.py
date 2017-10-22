@@ -97,14 +97,34 @@ def test_reporting_window_migrate_market_in_from_sib(localFixture, chain, mockUn
     mockUniverse.setIsContainerForReportingWindow(False)
     with raises(TransactionFailed, message="market is not in universe"):
         mockMarket.callReportingWindowMigrateMarketInFromSibling(populatedReportingWindow.address)
+    
+    newMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'newMarket')
+    assert populatedReportingWindow.isContainerForMarket(newMarket.address) == False
+    
+    newWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newWindow')    
+    newWindow.setIsContainerForMarket(False)
+    mockUniverse.setIsContainerForReportingWindow(True)
+    with raises(TransactionFailed, message="market reporting window doesn't contain market"):
+        newMarket.callReportingWindowMigrateMarketInFromSibling(populatedReportingWindow.address)
+    
+    newMarket.setReportingWindow(newWindow.address)
+    newMarket.setUniverse(mockUniverse.address)
+    newWindow.setIsContainerForMarket(True)
+    newWindow.setMigrateFeesDueToMarketMigration(True)
+    assert populatedReportingWindow.isContainerForMarket(mockMarket.address)
+    assert newMarket.callReportingWindowMigrateMarketInFromSibling(populatedReportingWindow.address)
+    assert populatedReportingWindow.isContainerForMarket(newMarket.address)
 
-
+#def test_reporting_window_migrate_market_in_from_N_sib(localFixture, chain, mockUniverse, mockMarket, mockReputationToken, populatedReportingWindow):
+    
+    
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
     controller = fixture.contracts['Controller']
     fixture.uploadAndAddToController('solidity_test_helpers/MockMarket.sol')
     fixture.uploadAndAddToController('solidity_test_helpers/MockUniverse.sol')
+    fixture.uploadAndAddToController('solidity_test_helpers/MockReportingWindow.sol')    
     fixture.uploadAndAddToController('solidity_test_helpers/MockReputationToken.sol')
     fixture.uploadAndAddToController('solidity_test_helpers/MockDisputeBondToken.sol')
     fixture.uploadAndAddToController('solidity_test_helpers/MockReportingAttendanceToken.sol')
