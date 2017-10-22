@@ -137,6 +137,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         tentativeWinningPayoutDistributionHash = _stakeToken.getPayoutDistributionHash();
         designatedReportPayoutHash = tentativeWinningPayoutDistributionHash;
         reportingWindow.updateMarketPhase();
+        reportingWindow.noteDesignatedReport();
         IReputationToken _reputationToken = reportingWindow.getReputationToken();
         // The owner gets the no-show REP bond
         _reputationToken.transfer(owner, _reputationToken.balanceOf(this));

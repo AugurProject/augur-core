@@ -15,6 +15,7 @@ contract IReportingWindow is ITyped {
     function migrateMarketInFromNibling() public returns (bool);
     function removeMarket() public returns (bool);
     function noteReportingGasPrice(IMarket _market) public returns (bool);
+    function noteDesignatedReport() public returns (bool);
     function updateMarketPhase() public returns (bool);
     function getUniverse() public view returns (IUniverse);
     function getReputationToken() public view returns (IReputationToken);

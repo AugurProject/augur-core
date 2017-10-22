@@ -140,8 +140,15 @@ def test_designatedReportingHappyPath(localFixture, universe, market):
     # Proceed to the DESIGNATED REPORTING phase
     proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
 
+    reportingWindow = localFixture.applySignature("ReportingWindow", market.getReportingWindow())
+
+    originalNumDesignatedReportNoShows = reportingWindow.getNumDesignatedReportNoShows()
+
     # To progress into the DESIGNATED DISPUTE phase we do a designated report
     assert localFixture.designatedReport(market, [0,10**18], tester.k0)
+
+    # making a designated report also decremented the no show accounting on the reporting window
+    assert reportingWindow.getNumDesignatedReportNoShows() == originalNumDesignatedReportNoShows - 1
 
     # We're now in the DESIGNATED DISPUTE PHASE
     assert market.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()

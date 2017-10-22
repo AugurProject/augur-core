@@ -45,6 +45,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     bool private setIncreaseTotalStakeValue;
     bool private setIncreaseTotalWinningStakeValue;
     bool private setMigrateFeesDueToMarketMigrationValue;
+    bool private setNoteDesignatedReportValue;
     /*
     * setters to feed the getters and impl of IReportingWindow
     */
@@ -66,6 +67,10 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     
     function setUpdateMarketPhase(bool _setUpdateMarketPhaseValue) public {
         setUpdateMarketPhaseValue = _setUpdateMarketPhaseValue;
+    }
+
+    function setNoteDesignatedReportValue(bool _setNoteDesignatedReportValue) public {
+        setNoteDesignatedReportValue = _setNoteDesignatedReportValue;
     }
     
     function setUniverse(IUniverse _universe) public {
@@ -224,6 +229,10 @@ contract MockReportingWindow is Initializable, IReportingWindow {
 
     function noteReportingGasPrice(IMarket _market) public returns (bool) {
         return setNoteReportingGasPriceValue;
+    }
+
+    function noteDesignatedReport() public returns (bool) {
+        return setNoteDesignatedReportValue;
     }
 
     function updateMarketPhase() public returns (bool) {

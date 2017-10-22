@@ -60,6 +60,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
         firstReporterMarkets.add(_newMarket);
+        designatedReportNoShows += 1;
         return _newMarket;
     }
 
@@ -142,6 +143,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(markets.contains(_market));
         require(_market.isContainerForStakeToken(ITyped(msg.sender)));
         reportingGasPrice.record(tx.gasprice);
+        return true;
+    }
+
+    function noteDesignatedReport() public afterInitialized returns (bool) {
+        require(isContainerForMarket(IMarket(msg.sender)));
+        designatedReportNoShows -= 1;
         return true;
     }
 
