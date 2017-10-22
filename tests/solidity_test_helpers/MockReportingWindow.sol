@@ -69,7 +69,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setUpdateMarketPhaseValue = _setUpdateMarketPhaseValue;
     }
 
-    function setNoteDesignatedReportValue(bool _setNoteDesignatedReportValue) public {
+    function setNoteDesignatedReport(bool _setNoteDesignatedReportValue) public {
         setNoteDesignatedReportValue = _setNoteDesignatedReportValue;
     }
     
