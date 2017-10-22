@@ -75,9 +75,10 @@ class ETHDelta():
 
 class PrintGasUsed():
 
-    def __init__(self, fixture, action):
+    def __init__(self, fixture, action, originalGas=0):
         self.fixture = fixture
         self.action = action
+        self.originalGas = originalGas
  
     def __enter__(self):
         self.startingGas = self.fixture.chain.head_state.gas_used
@@ -86,4 +87,7 @@ class PrintGasUsed():
         if args[1]:
             raise args[1]
         gasUsed = self.fixture.chain.head_state.gas_used - self.startingGas
-        print "GAS USED WITH %s : %i" % (self.action, gasUsed)
+        if self.originalGas:
+            print "GAS USED WITH %s : %i. ORIGINAL: %i DELTA: %i" % (self.action, gasUsed, self.originalGas, self.originalGas - gasUsed)
+        else:
+            print "GAS USED WITH %s : %i" % (self.action, gasUsed)
