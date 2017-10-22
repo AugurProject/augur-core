@@ -45,6 +45,10 @@ contract MockDisputeBondToken is ITyped, IDisputeBond {
         setBondRemainingToBePaidOutValue = _setBondRemainingToBePaidOutValue;
     }
 
+    function callCollectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees, IReportingWindow _reportingWindow) public returns(bool) {
+        return _reportingWindow.collectReportingFees(_reporterAddress, _attoStake, _forgoFees);
+    }
+
     /*
     * Impl of IReportingWindow and ITyped
      */

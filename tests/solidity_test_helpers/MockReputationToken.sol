@@ -62,6 +62,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, Variabl
     function setTopMigrationDestination(IReputationToken _setTopMigrationDestinationValue) public {
         setTopMigrationDestinationValue = _setTopMigrationDestinationValue;
     }
+    
     function setMigrateFromLegacyReputationToken(bool _setMigrateFromLegacyReputationTokenValue) public {
         setMigrateFromLegacyReputationTokenValue = _setMigrateFromLegacyReputationTokenValue;
     }

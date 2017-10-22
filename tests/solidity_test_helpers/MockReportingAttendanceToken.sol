@@ -45,6 +45,10 @@ contract MockReportingAttendanceToken is ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
+    function callIncreaseTotalWinningStake(IReportingWindow _reportingWindow, uint256 _attotokens) public returns (bool) {
+        return _reportingWindow.increaseTotalWinningStake(_attotokens);
+    }
+
     function initialize(IReportingWindow _reportingWindow) public returns (bool) {
         endInitialization();
         initializeReportingWindowValue = _reportingWindow;

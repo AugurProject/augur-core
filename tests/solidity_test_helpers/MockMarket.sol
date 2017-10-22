@@ -51,8 +51,8 @@ contract MockMarket is IMarket {
     address private initializeCreatorValue;
     address private initializeDesignatedReporterAddressValue;
     bool private increaseTotalStakeValue;
-    uint256 private getTotalWinningDisputeBondStakeValue;
-    uint256 private getTotalStakeValue;
+    uint256 private setTotalWinningDisputeBondStakeValue;
+    uint256 private setTotalStakeValue;
     /*
     * setters to feed the getters and impl of IMarket
     */
@@ -192,12 +192,12 @@ contract MockMarket is IMarket {
         increaseTotalStakeValue = _value;
     }
 
-    function setGetTotalWinningDisputeBondStakeValue(uint256 _value) public {
-        getTotalWinningDisputeBondStakeValue = _value;
+    function setTotalWinningDisputeBondStake(uint256 _value) public {
+        setTotalWinningDisputeBondStakeValue = _value;
     }
 
-    function setGetTotalStakeValue(uint256 _value) public {
-        getTotalStakeValue = _value;
+    function setTotalStake(uint256 _value) public {
+        setTotalStakeValue = _value;
     }
 
     function setTransferOwnership(bool _transferOwner) public {
@@ -211,7 +211,23 @@ contract MockMarket is IMarket {
     function callReportingWindowMigrateMarketInFromSibling(IReportingWindow _reportingWindow) public returns(bool) {
         return _reportingWindow.migrateMarketInFromSibling();
     }
-    
+
+    function callReportingWindowMigrateMarketInFromNibling(IReportingWindow _reportingWindow) public returns(bool) {
+        return _reportingWindow.migrateMarketInFromNibling();
+    }
+
+    function callReportingWindowRemoveMarket(IReportingWindow _reportingWindow) public returns(bool) {
+        return _reportingWindow.removeMarket();
+    }
+
+    function callReportingWindowUpdateMarketPhase(IReportingWindow _reportingWindow) public returns(bool) {
+        return _reportingWindow.updateMarketPhase();
+    }
+
+    function callIncreaseTotalStake(IReportingWindow _reportingWindow, uint256 _amount) public returns(bool) {
+        return _reportingWindow.increaseTotalStake(_amount);
+    }
+
     function getInitializeReportingWindowValue() public view returns (IReportingWindow) {
         return initializeReportingWindowValue;
     }
@@ -419,10 +435,10 @@ contract MockMarket is IMarket {
     }
 
     function getTotalWinningDisputeBondStake() public view returns (uint256) {
-        return getTotalWinningDisputeBondStakeValue;
+        return setTotalWinningDisputeBondStakeValue;
     }
 
     function getTotalStake() public view returns (uint256) {
-        return getTotalStakeValue;
+        return setTotalStakeValue;
     }
 }
