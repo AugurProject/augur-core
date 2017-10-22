@@ -62,12 +62,6 @@ export class ContractDeployer {
         }
     }
 
-    public async parseBlockTimestamp(blockTimestamp): Promise<Date> {
-        const timestampHex = `0x${JSON.stringify(blockTimestamp).replace(/\"/g, "")}`;
-        const timestampInt = parseInt(timestampHex, 16) * 1000;
-        return new Date(timestampInt);
-    }
-
     private async uploadAndAddDelegatedToController(contractFileName: string, contractName: string): Promise<ContractBlockchainData|undefined> {
         const delegationTargetName = contractName + "Target";
         const hexlifiedDelegationTargetName = stringTo32ByteHex(delegationTargetName);
@@ -236,6 +230,7 @@ export class ContractDeployer {
         const reputationToken = parseAbiIntoMethods(this.ethjsQuery, this.abis.get('ReputationToken')!, { to: reputationTokenAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
 
         // get some REP
+        // TODO: just get enough REP to cover the bonds rather than over-allocating
         const repFaucetTransactionHash = await legacyReputationToken.faucet(0);
         const repApprovalTransactionHash = await legacyReputationToken.approve(reputationTokenAddress, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         await waitForTransactionReceipt(this.ethjsQuery, repFaucetTransactionHash, `Using legacy reputation faucet.`);
@@ -272,10 +267,7 @@ export class ContractDeployer {
     }
 
     private async createReasonableMarket(universe: string, denominationToken: string, numOutcomes: number): Promise<Contract> {
-        const block = await this.ethjsQuery.getBlockByNumber(0, true);
-        const blockDateTime = await this.parseBlockTimestamp(block.timestamp);
-        const blockDateTimePlusDay = new Date();
-        blockDateTimePlusDay.setDate(blockDateTime.getDate() + 1);
-        return await this.createMarket(universe, 2, blockDateTimePlusDay.getTime()/1000, 10 ** 16, denominationToken, this.testAccounts[0], 10 ** 4);
+        const endTime = Math.round(new Date().getTime() / 1000);
+        return await this.createMarket(universe, 2, endTime, 10 ** 16, denominationToken, this.testAccounts[0], 10 ** 4);
     }
 }
