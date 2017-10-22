@@ -61,8 +61,8 @@ contract IMarket is ITyped, IOwnable {
     function firstReporterCompensationCheck(address _reporter) public returns (uint256);
     function increaseTotalStake(uint256 _amount) public returns (bool);
     function migrateDueToNoReports() public returns (bool);
-    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool);
-    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool);
-    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForStakeToken(IStakeToken _shadyTarget) public view returns (bool);
+    function isContainerForDisputeBondToken(IDisputeBond _shadyTarget) public view returns (bool);
+    function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool);
     function isValid() public view returns (bool);
 }

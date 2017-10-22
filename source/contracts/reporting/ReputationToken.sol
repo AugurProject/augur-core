@@ -69,17 +69,29 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
 
     function mintForDisputeBondMigration(uint256 _amount) public afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
-        require(_parentUniverse.isContainerForDisputeBondToken(ITyped(msg.sender)));
+        require(_parentUniverse.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
         mint(msg.sender, _amount);
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
-    function trustedTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
-        ITyped _caller = ITyped(msg.sender);
-        require(universe.isContainerForReportingWindow(_caller)
-            || universe.isContainerForMarket(_caller)
-            || universe.isContainerForStakeToken(_caller)
-            || universe.isContainerForParticipationToken(_caller));
+    function trustedReportingWindowTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
+        require(universe.isContainerForReportingWindow(IReportingWindow(msg.sender)));
+        return internalTrustedTransfer(_source, _destination, _attotokens);
+    }
+
+        // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
+    function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
+        require(universe.isContainerForMarket(IMarket(msg.sender)));
+        return internalTrustedTransfer(_source, _destination, _attotokens);
+    }
+
+        // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
+    function trustedStakeTokenTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
+        require(universe.isContainerForStakeToken(IStakeToken(msg.sender)));
+        return internalTrustedTransfer(_source, _destination, _attotokens);
+    }
+
+    function internalTrustedTransfer(address _source, address _destination, uint256 _attotokens) internal afterInitialized returns (bool) {
         balances[_source] = balances[_source].sub(_attotokens);
         balances[_destination] = balances[_destination].add(_attotokens);
         supply = supply.add(_attotokens);
