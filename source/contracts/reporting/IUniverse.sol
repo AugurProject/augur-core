@@ -55,10 +55,10 @@ contract IUniverse is ITyped {
     // Logging
     function logMarketCreated(address _market, address _marketCreator, uint256 _marketCreationFee, string _extraInfo) public returns (bool);
     function logDesignatedReportSubmitted(address _reporter, address _market, address _reportingToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool);
-    function logReportSubmitted(address _reporter, address _market, address _reportingToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool);
-    
-    function logWinningTokensRedeemed(address _reporter, address _market, address _reportingToken, uint256 _amountRedeemed, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool);
+    function logReportSubmitted(address _reporter, address _market, address _reportingToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool);    
+    function logWinningTokensRedeemed(address _reporter, address _market, address _reportingToken, uint256 _amountRedeemed, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool);    
     function logReportsDisputed(address _disputer, address _market, uint8 _reportingPhase, uint256 _disputeBondAmount) public returns (bool);
+    
     function logMarketFinalized(address _market) public returns (bool);
     function logUniverseForked(address _universe) public returns (bool);
     function logOrderCanceled(address _shareToken, address _sender, bytes32 _orderId, uint8 _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public returns (bool);

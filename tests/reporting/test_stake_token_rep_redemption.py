@@ -123,7 +123,7 @@ def test_stake_token_redemption(localFixture, universe, market, numReports, numC
     reputationToken = localFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
 
     # Proceed to FIRST REPORTING
-    proceedToFirstReporting(localFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
+    proceedToFirstReporting(localFixture, universe, market, False, 1, [0,10**18], [10**18,0])
 
     noShowBond = universe.getDesignatedReportNoShowBond()
 

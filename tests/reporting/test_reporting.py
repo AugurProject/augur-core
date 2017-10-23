@@ -196,7 +196,7 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
 
     # Proceed to the FIRST REPORTING phase
-    proceedToFirstReporting(localFixture, universe, market, makeReport, tester.k1, [0,10**18], [10**18,0])
+    proceedToFirstReporting(localFixture, universe, market, makeReport, 1, [0,10**18], [10**18,0])
 
     # We make one report by Tester 2
     logs = []
@@ -253,7 +253,7 @@ def test_lastReportingHappyPath(localFixture, makeReport, universe, market):
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
 
     # Proceed to the LAST REPORTING phase
-    proceedToLastReporting(localFixture, universe, market, makeReport, tester.k1, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18])
+    proceedToLastReporting(localFixture, universe, market, makeReport, 1, 3, [0,10**18], [10**18,0], 2, [10**18,0], [0,10**18])
 
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
@@ -295,7 +295,7 @@ def test_lastReportingHappyPath(localFixture, makeReport, universe, market):
 ])
 def test_forking(localFixture, makeReport, finalizeByMigration, universe, market):
     # Proceed to the FORKING phase
-    proceedToForking(localFixture, universe, market, makeReport, tester.k1, tester.k3, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18], [10**18,0])
+    proceedToForking(localFixture, universe, market, makeReport, 1, 3, 3, [0,10**18], [10**18,0], 2, [10**18,0], [0,10**18], [10**18,0])
 
     # Finalize the market
     finalizeForkingMarket(localFixture, universe, market, finalizeByMigration, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,10**18], [10**18,0])
@@ -316,7 +316,7 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
         localFixture.designatedReport(newMarket, [0,10**18], tester.k0)
 
     # We proceed the standard market to the FORKING state
-    proceedToForking(localFixture, universe, market, makeReport, tester.k1, tester.k2, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18], [10**18,0])
+    proceedToForking(localFixture, universe, market, makeReport, 1, 2, 3, [0,10**18], [10**18,0], 2, [10**18,0], [0,10**18], [10**18,0])
 
     # The market we created is now awaiting migration
     assert newMarket.getReportingState() == localFixture.contracts['Constants'].AWAITING_FORK_MIGRATION()
@@ -343,7 +343,7 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
 ])
 def test_noReports(localFixture, pastDisputePhase, universe, market):
     # Proceed to the FIRST REPORTING phase
-    proceedToFirstReporting(localFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
+    proceedToFirstReporting(localFixture, universe, market, False, 1, [0,10**18], [10**18,0])
 
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
@@ -368,7 +368,7 @@ def test_invalid_first_report(localFixture, universe, cash, market):
     expectedReportingWindowFeePayout = universe.getValidityBond()
 
     # Proceed to the FIRST REPORTING phase
-    proceedToFirstReporting(localFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
+    proceedToFirstReporting(localFixture, universe, market, False, 1, [0,10**18], [10**18,0])
 
     # We make an invalid report
     stakeTokenInvalid = localFixture.getStakeToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], True)

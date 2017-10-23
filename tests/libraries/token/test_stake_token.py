@@ -225,7 +225,7 @@ def test_stake_token_trusted_buy_fails(localFixture, binaryMarket):
     with raises(TransactionFailed, message="only market can call this method"):
         stakeToken.trustedBuy(tester.a2, 1)
 
-    proceedToFirstReporting(localFixture, universe, market, False, tester.a1, [numTicks, 0], [numTicks/2, numTicks/2])
+    proceedToFirstReporting(localFixture, universe, market, False, 1, [numTicks, 0], [numTicks/2, numTicks/2])
     assert market.getReportingState() == localFixture.contracts['Constants'].FIRST_REPORTING()
 
     with raises(TransactionFailed, message="trusted buy can only occur buy trusted contract"):

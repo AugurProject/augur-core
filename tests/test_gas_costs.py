@@ -101,7 +101,7 @@ def test_designatedReport(localFixture, universe, cash, market):
         assert localFixture.designatedReport(market, [0,10**18], tester.k0)
 
 def test_report(localFixture, universe, cash, market):
-    proceedToFirstReporting(localFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
+    proceedToFirstReporting(localFixture, universe, market, False, 1, [0,10**18], [10**18,0])
 
     stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
     with PrintGasUsed(localFixture, "FIRST StakeToken:buy", FIRST_REPORT):
@@ -119,7 +119,7 @@ def test_disputeDesignated(localFixture, universe, cash, market):
         assert market.disputeDesignatedReport([1, market.getNumTicks()-1], 1, False, sender=tester.k1)
 
 def test_disputeFirst(localFixture, universe, cash, market):
-    proceedToFirstReporting(localFixture, universe, market, True, tester.k1, [0,10**18], [10**18,0])
+    proceedToFirstReporting(localFixture, universe, market, True, 1, [0,10**18], [10**18,0])
 
     reportingWindow = localFixture.applySignature("ReportingWindow", market.getReportingWindow())
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
@@ -128,7 +128,7 @@ def test_disputeFirst(localFixture, universe, cash, market):
         assert market.disputeFirstReporters([1, market.getNumTicks()-1], 1, False, sender=tester.k2)
 
 def test_disputeLast(localFixture, universe, cash, market):
-    proceedToLastReporting(localFixture, universe, market, True, tester.k1, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18])
+    proceedToLastReporting(localFixture, universe, market, True, 1, 3, [0,10**18], [10**18,0], 2, [10**18,0], [0,10**18])
 
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1

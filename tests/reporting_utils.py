@@ -4,6 +4,8 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, raises
 from datetime import timedelta
+from utils import captureFilteredLogs, bytesToHexString
+
 
 def initializeReportingFixture(sessionFixture, universe, market):
     # Give some REP to testers to make things interesting
@@ -38,7 +40,20 @@ def proceedToFirstReporting(testFixture, universe, market, makeReport, disputer,
     if (makeReport):
         assert testFixture.designatedReport(market, reportOutcomes, tester.k0)
         assert market.getReportingState() == testFixture.contracts['Constants'].DESIGNATED_DISPUTE()
-        assert market.disputeDesignatedReport(designatedDisputeOutcomes, 1, False, sender=disputer)
+        
+        logs = []
+        captureFilteredLogs(testFixture.chain.head_state, universe, logs)
+        
+        assert market.disputeDesignatedReport(designatedDisputeOutcomes, 1, False, sender=testFixture.testerKey[disputer])
+
+        # Confirm the designated dispute logging works
+        assert len(logs) == 1
+        assert logs[0]['_event_type'] == 'ReportsDisputed'
+        assert logs[0]['reportingPhase'] == testFixture.contracts['Constants'].DESIGNATED_DISPUTE()
+        assert logs[0]['disputer'] == bytesToHexString(testFixture.testerAddress[disputer])
+        assert logs[0]['disputeBondAmount'] == testFixture.contracts['Constants'].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
+        assert logs[0]['market'] == market.address
+
     else:
         testFixture.chain.head_state.timestamp = market.getEndTime() + testFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS() + 1
 
@@ -56,7 +71,7 @@ def proceedToLastReporting(testFixture, universe, market, makeReport, designated
     stakeToken = testFixture.getStakeToken(market, firstReportOutcomes)
 
     # We make one report by the firstReporter
-    assert stakeToken.buy(1, sender=firstReporter)
+    assert stakeToken.buy(1, sender=testFixture.testerKey[firstReporter])
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == stakeToken.getPayoutDistributionHash()
 
@@ -64,8 +79,19 @@ def proceedToLastReporting(testFixture, universe, market, makeReport, designated
 
     assert market.getReportingState() == testFixture.contracts['Constants'].FIRST_DISPUTE()
 
+    logs = []
+    captureFilteredLogs(testFixture.chain.head_state, universe, logs)
+
     disputeFirstReportOutcomeStake = testFixture.contracts['Constants'].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
-    assert market.disputeFirstReporters(firstReportDisputeOutcomes, disputeFirstReportOutcomeStake, False, sender=firstDisputer)
+    assert market.disputeFirstReporters(firstReportDisputeOutcomes, disputeFirstReportOutcomeStake, False, sender=testFixture.testerKey[firstDisputer])
+
+    # Confirm the first dispute logging works
+    assert len(logs) == 1
+    assert logs[0]['_event_type'] == 'ReportsDisputed'
+    assert logs[0]['reportingPhase'] == testFixture.contracts['Constants'].FIRST_DISPUTE()
+    assert logs[0]['disputer'] == bytesToHexString(testFixture.testerAddress[firstDisputer])
+    assert logs[0]['disputeBondAmount'] == testFixture.contracts['Constants'].FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
+    assert logs[0]['market'] == market.address
 
     # We're in the LAST REPORTING phase now
     assert market.getReportingState() == testFixture.contracts['Constants'].LAST_REPORTING()
@@ -86,7 +112,7 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
     noStake = market.getPayoutDistributionHashStake(stakeTokenNo.getPayoutDistributionHash())
     yesStake = market.getPayoutDistributionHashStake(stakeTokenYes.getPayoutDistributionHash())
     stakeDelta = yesStake - noStake
-    stakeTokenNo.buy(stakeDelta + 1, sender=reporter)
+    stakeTokenNo.buy(stakeDelta + 1, sender=testFixture.testerKey[reporter])
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == stakeTokenNo.getPayoutDistributionHash()
 
@@ -94,9 +120,20 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
     testFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
     assert market.getReportingState() == testFixture.contracts['Constants'].LAST_DISPUTE()
 
+    logs = []
+    captureFilteredLogs(testFixture.chain.head_state, universe, logs)
+
     # Making a dispute at this phase will progress the market into FORKING
     assert market.disputeLastReporters(sender=tester.k0)
     assert market.getReportingState() == testFixture.contracts['Constants'].FORKING()
+
+    # Confirm the last dispute logging works
+    assert len(logs) == 1
+    assert logs[0]['_event_type'] == 'ReportsDisputed'
+    assert logs[0]['reportingPhase'] == testFixture.contracts['Constants'].LAST_DISPUTE()
+    assert logs[0]['disputer'] == bytesToHexString(tester.a0)
+    assert logs[0]['disputeBondAmount'] == testFixture.contracts['Constants'].LAST_REPORTERS_DISPUTE_BOND_AMOUNT()
+    assert logs[0]['market'] == market.address
 
 def finalizeForkingMarket(reportingFixture, universe, market, finalizeByMigration, yesMigratorAddress, yesMigratorKey, noMigratorAddress1, noMigratorKey1, noMigratorAddress2, noMigratorKey2, firstReportOutcomes, secondReportOutcomes):
     reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())

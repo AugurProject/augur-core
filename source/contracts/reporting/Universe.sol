@@ -425,7 +425,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function logReportsDisputed(address _disputer, address _market, uint8 _reportingPhase, uint256 _disputeBondAmount) public returns (bool) {
-        // VALIDATION
+        require(isContainerForMarket(IMarket(msg.sender)));
         ReportsDisputed(_disputer, _market, _reportingPhase, _disputeBondAmount);
         return true;
     }
