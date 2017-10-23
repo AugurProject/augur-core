@@ -41,7 +41,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     bool private setIsReportingActiveValue;
     bool private setIsActiveValue;
     bool private setIsOverValue;
-    bool private setIsContainerForReportingAttendanceTokenValue;
+    bool private setIsContainerForParticipationTokenValue;
     bool private setIncreaseTotalStakeValue;
     bool private setIncreaseTotalWinningStakeValue;
     bool private setMigrateFeesDueToMarketMigrationValue;
@@ -156,8 +156,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setIsActiveValue = _isActive;
     }
 
-    function setIsContainerForReportingAttendanceToken(bool _isContainerForReportingAttendanceToken) public {
-        setIsContainerForReportingAttendanceTokenValue = _isContainerForReportingAttendanceToken;
+    function setIsContainerForParticipationToken(bool _isContainerForParticipationToken) public {
+        setIsContainerForParticipationTokenValue = _isContainerForParticipationToken;
     }
 
     function setIncreaseTotalStake(bool _setIncreaseTotalStakeValue) public {
@@ -321,8 +321,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return setIsOverValue;        
     }
 
-    function isContainerForReportingAttendanceToken(ITyped _shadyTarget) public view returns (bool) {
-        return setIsContainerForReportingAttendanceTokenValue;
+    function isContainerForParticipationToken(ITyped _shadyTarget) public view returns (bool) {
+        return setIsContainerForParticipationTokenValue;
     }
 
     function increaseTotalStake(uint256 _amount) public returns (bool) {
