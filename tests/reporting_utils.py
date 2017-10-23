@@ -83,9 +83,8 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
     stakeTokenYes = testFixture.getStakeToken(market, firstReportDisputeOutcomes)
 
     # If we buy the delta between outcome stakes that will be sufficient to make the outcome win
-    marketExtensions = testFixture.contracts["MarketExtensions"]
-    noStake = marketExtensions.getPayoutDistributionHashStake(market.address, stakeTokenNo.getPayoutDistributionHash())
-    yesStake = marketExtensions.getPayoutDistributionHashStake(market.address, stakeTokenYes.getPayoutDistributionHash())
+    noStake = market.getPayoutDistributionHashStake(market.address, stakeTokenNo.getPayoutDistributionHash())
+    yesStake = market.getPayoutDistributionHashStake(market.address, stakeTokenYes.getPayoutDistributionHash())
     stakeDelta = yesStake - noStake
     stakeTokenNo.buy(stakeDelta + 1, sender=reporter)
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
