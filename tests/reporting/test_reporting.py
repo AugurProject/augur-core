@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs
+from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString
 from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, proceedToLastReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 tester.STARTGAS = long(6.7 * 10**6)
@@ -158,7 +158,18 @@ def test_designatedReportingHappyPath(localFixture, universe, market):
     originalNumDesignatedReportNoShows = reportingWindow.getNumDesignatedReportNoShows()
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report
+    logs = []
+    captureFilteredLogs(localFixture.chain.head_state, universe, logs)
     assert localFixture.designatedReport(market, [0,10**18], tester.k0)
+
+    # Confirm the designated report logging works
+    assert len(logs) == 1
+    assert logs[0]['_event_type'] == 'DesignatedReportSubmitted'
+    assert logs[0]['amountStaked'] == localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE()
+    assert logs[0]['reporter'] == bytesToHexString(tester.a0)
+    assert logs[0]['stakeToken'] == localFixture.getStakeToken(market, [0,10**18]).address
+    assert logs[0]['market'] == market.address
+    assert logs[0]['payoutNumerators'] == [0,10**18]
 
     # making a designated report also decremented the no show accounting on the reporting window
     assert reportingWindow.getNumDesignatedReportNoShows() == originalNumDesignatedReportNoShows - 1
@@ -188,6 +199,8 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
     proceedToFirstReporting(localFixture, universe, market, makeReport, tester.k1, [0,10**18], [10**18,0])
 
     # We make one report by Tester 2
+    logs = []
+    captureFilteredLogs(localFixture.chain.head_state, universe, logs)
     stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
     stakeTokenYes.buy(1, sender=tester.k2)
     # If there ws no designated report he first reporter gets the no-show REP bond auto-staked on the outcome they're purchasing
@@ -196,6 +209,15 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
         expectedStakeTokenBalance += universe.getDesignatedReportNoShowBond()
 
     assert stakeTokenYes.balanceOf(tester.a2) == expectedStakeTokenBalance
+
+    # Confirm the report logging works
+    assert len(logs) == 1
+    assert logs[0]['_event_type'] == 'ReportSubmitted'
+    assert logs[0]['amountStaked'] == expectedStakeTokenBalance
+    assert logs[0]['reporter'] == bytesToHexString(tester.a2)
+    assert logs[0]['stakeToken'] == localFixture.getStakeToken(market, [0,10**18]).address
+    assert logs[0]['market'] == market.address
+    assert logs[0]['payoutNumerators'] == [0,10**18]
 
     assert reputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18 - 1
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()

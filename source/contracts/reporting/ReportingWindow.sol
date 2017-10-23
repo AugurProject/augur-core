@@ -52,7 +52,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return true;
     }
 
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
+    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, string _extraInfo) public afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
         require(universe.getReportingWindowByMarketEndTime(_endTime) == this);
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
@@ -61,6 +61,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         markets.add(_newMarket);
         firstReporterMarkets.add(_newMarket);
         designatedReportNoShows += 1;
+        universe.logMarketCreated(_newMarket, msg.sender, msg.value, _extraInfo);
         return _newMarket;
     }
 

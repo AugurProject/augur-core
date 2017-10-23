@@ -23,6 +23,19 @@ import 'libraries/math/SafeMathUint256.sol';
 contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     using SafeMathUint256 for uint256;
 
+    event TokensTransferred(address indexed token, address indexed from, address indexed to, uint256 value);
+    event MarketCreated(address indexed market, address indexed marketCreator, uint256 marketCreationFee, string extraInfo);
+    event DesignatedReportSubmitted(address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
+    event ReportSubmitted(address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
+    event WinningTokensRedeemed(address indexed reporter, address indexed market, address stakeToken, uint256 amountRedeemed, address reportingFeesReceived, uint256[] payoutNumerators);
+    event ReportsDisputed(address indexed disputer, address indexed market, uint8 reportingPhase, uint256 disputeBondAmount);
+    event MarketFinalized(address indexed market);
+    event UniverseForked(address indexed universe);
+    event OrderCanceled(address indexed shareToken, address indexed sender, bytes32 indexed orderId, uint8 orderType, uint256 tokenRefund, uint256 sharesRefund);
+    event OrderCreated(address indexed shareToken, address indexed creator, bytes32 indexed orderId, uint256 price, uint256 amount, uint256 numTokensEscrowed, uint256 numSharesEscrowed, bytes32 tradeGroupId);
+    event OrderFilled(address indexed shareToken, address indexed creator, address indexed filler, uint256 price, uint256 numCreatorShares, uint256 numCreatorTokens, uint256 numFillerShares, uint256 numFillerTokens, uint256 settlementFees, bytes32 tradeGroupId);
+    event ProceedsClaimed(address indexed sender, address indexed market, uint256 numShares, uint256 numPayoutTokens, uint256 finalTokenBalance);
+
     IUniverse private parentUniverse;
     bytes32 private parentPayoutDistributionHash;
     IReputationToken private reputationToken;
@@ -375,5 +388,81 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
     function getMarketCreationCost() public returns (uint256) {
         return getValidityBond() + getTargetReporterGasCosts();
+    }
+
+    //
+    // Logging
+    //
+
+    function logTokensTransferred(address _token, address _from, address _to, uint256 _value) public returns (bool) {
+        // VALIDATION
+        TokensTransferred(_token, _from, _to, _value);
+        return true;
+    }
+
+    function logMarketCreated(address _market, address _marketCreator, uint256 _marketCreationFee, string _extraInfo) public returns (bool) {
+        require(isContainerForReportingWindow(IReportingWindow(msg.sender)));
+        MarketCreated(_market, _marketCreator, _marketCreationFee, _extraInfo);
+        return true;
+    }
+
+    function logDesignatedReportSubmitted(address _reporter, address _market, address _stakeToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
+        require(isContainerForStakeToken(IStakeToken(msg.sender)));
+        DesignatedReportSubmitted(_reporter, _market, _stakeToken, _amountStaked, _payoutNumerators);
+        return true;
+    }
+
+    function logReportSubmitted(address _reporter, address _market, address _stakeToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
+        require(isContainerForStakeToken(IStakeToken(msg.sender)));
+        ReportSubmitted(_reporter, _market, _stakeToken, _amountStaked, _payoutNumerators);
+        return true;
+    }
+
+    function logWinningTokensRedeemed(address _reporter, address _market, address _stakeToken, uint256 _amountRedeemed, address _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
+        // VALIDATION
+        WinningTokensRedeemed(_reporter, _market, _stakeToken, _amountRedeemed, _reportingFeesReceived, _payoutNumerators);
+        return true;
+    }
+
+    function logReportsDisputed(address _disputer, address _market, uint8 _reportingPhase, uint256 _disputeBondAmount) public returns (bool) {
+        // VALIDATION
+        ReportsDisputed(_disputer, _market, _reportingPhase, _disputeBondAmount);
+        return true;
+    }
+
+    function logMarketFinalized(address _market) public returns (bool) {
+        // VALIDATION
+        MarketFinalized(_market);
+        return true;
+    }
+
+    function logUniverseForked(address _universe) public returns (bool) {
+        // VALIDATION
+        UniverseForked(_universe);
+        return true;
+    }
+
+    function logOrderCanceled(address _shareToken, address _sender, bytes32 _orderId, uint8 _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public returns (bool) {
+        // VALIDATION
+        OrderCanceled(_shareToken, _sender, _orderId, _orderType, _tokenRefund, _sharesRefund);
+        return true;
+    }
+
+    function logOrderCreated(address _shareToken, address _creator, bytes32 _orderId, uint256 _price, uint256 _amount, uint256 _numTokensEscrowed, uint256 _numSharesEscrowed, bytes32 _tradeGroupId) public returns (bool) {
+        // VALIDATION
+        OrderCreated(_shareToken, _creator, _orderId, _price, _amount, _numTokensEscrowed, _numSharesEscrowed, _tradeGroupId);
+        return true;
+    }
+
+    function logOrderFilled(address _shareToken, address _creator, address _filler, uint256 _price, uint256 _numCreatorShares, uint256 _numCreatorTokens, uint256 _numFillerShares, uint256 _numFillerTokens, uint256 _settlementFees, bytes32 _tradeGroupId) public returns (bool) {
+        // VALIDATION
+        OrderFilled(_shareToken, _creator, _filler, _price, _numCreatorShares, _numCreatorTokens, _numFillerShares, _numFillerTokens, _settlementFees, _tradeGroupId);
+        return true;
+    }
+
+    function logProceedsClaimed(address _sender, address _market, uint256 _numShares, uint256 _numPayoutTokens, uint256 _finalTokenBalance) public returns (bool) {
+        // VALIDATION
+        ProceedsClaimed(_sender, _market, _numShares, _numPayoutTokens, _finalTokenBalance);
+        return true;
     }
 }

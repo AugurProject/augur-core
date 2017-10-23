@@ -54,6 +54,9 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         buyTokens(msg.sender, _attotokens);
         if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             market.designatedReport();
+            getUniverse().logDesignatedReportSubmitted(msg.sender, market, this, _attotokens, payoutNumerators);
+        } else {
+            getUniverse().logReportSubmitted(msg.sender, market, this, _attotokens, payoutNumerators);
         }
         return true;
     }
