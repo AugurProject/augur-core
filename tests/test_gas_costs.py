@@ -3,17 +3,73 @@ from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
 from utils import longTo32Bytes, captureFilteredLogs, PrintGasUsed, fix
 from constants import BID, ASK, YES, NO
+from datetime import timedelta
 from trading.test_claimProceeds import acquireLongShares, finalizeMarket
 from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, proceedToLastReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
-tester.STARTGAS = long(6.7 * 10**6)
+# Market Methods
+MARKET_CREATION =           2333038
+MARKET_FINALIZATION =       312474
+DESIGNATED_DISPUTE =        1680957
+FIRST_DISPUTE =             2735270
+LAST_DISPUTE =              1818038
+
+# Reporting
+REPORTING_WINDOW_CREATE =           869533
+DESIGNATED_REPORT =                 743518
+FIRST_REPORT =                      531560
+SECOND_REPORT =                     407253
+STAKE_REDEMPTION =                  189534
+DISPUTE_BOND_REDEMPTION =           160161
+PARTICIPATION_TOKEN_REDEMPTION =    55303
+
+# Trading
+CREATE_ORDER =      432784
+FILL_ORDER =        547527
+CLAIM_PROCEEDS =    408079
 
 pytestmark = mark.skip(reason="Just for testing gas cost")
+
+tester.STARTGAS = long(6.7 * 10**6)
+
+def test_reportingWindowCreation(localFixture, universe, cash):
+    marketCreationFee = universe.getMarketCreationCost()
+
+    endTime = long(localFixture.chain.head_state.timestamp + timedelta(days=365).total_seconds())
+
+    with PrintGasUsed(localFixture, "REPORTING_WINDOW_CREATE", REPORTING_WINDOW_CREATE):
+        universe.getReportingWindowByMarketEndTime(endTime)
+
+def test_marketCreation(localFixture, universe, cash):
+    marketCreationFee = universe.getMarketCreationCost()
+
+    endTime = long(localFixture.chain.head_state.timestamp + timedelta(days=1).total_seconds())
+    feePerEthInWei = 10**16
+    denominationToken = cash
+    designatedReporterAddress = tester.a0
+    numTicks = 10 ** 18
+    numOutcomes = 2
+
+    reportingWindow = localFixture.applySignature('ReportingWindow', universe.getReportingWindowByMarketEndTime(endTime))
+
+    with PrintGasUsed(localFixture, "ReportingWindow:createMarket", MARKET_CREATION):
+        marketAddress = reportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6))
+
+def test_marketFinalization(localFixture, universe, market):
+    proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
+
+    assert localFixture.designatedReport(market, [0,10**18], tester.k0)
+
+    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+
+    with PrintGasUsed(localFixture, "Market:tryFinalize", MARKET_FINALIZATION):
+        assert market.tryFinalize()
 
 def test_orderCreation(localFixture, market):
     createOrder = localFixture.contracts['CreateOrder']
 
-    with PrintGasUsed(localFixture, "CreateOrder:publicCreateOrder", 432784):
+    with PrintGasUsed(localFixture, "CreateOrder:publicCreateOrder", CREATE_ORDER):
         orderID = createOrder.publicCreateOrder(BID, 1, 10**17, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 10**17)
 
 def test_orderFilling(localFixture, market):
@@ -26,7 +82,7 @@ def test_orderFilling(localFixture, market):
 
     orderID = createOrder.publicCreateOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=creatorCost)
 
-    with PrintGasUsed(localFixture, "FillOrder:publicFillOrder", 547527):
+    with PrintGasUsed(localFixture, "FillOrder:publicFillOrder", FILL_ORDER):
         fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
 def test_winningShareRedmption(localFixture, cash, market):
@@ -35,28 +91,31 @@ def test_winningShareRedmption(localFixture, cash, market):
     acquireLongShares(localFixture, cash, market, YES, 1, claimProceeds.address, sender = tester.k1)
     finalizeMarket(localFixture, market, [0,10**18])
 
-    with PrintGasUsed(localFixture, "ClaimProceeds:claimProceeds", 408079):
+    with PrintGasUsed(localFixture, "ClaimProceeds:claimProceeds", CLAIM_PROCEEDS):
         claimProceeds.claimProceeds(market.address, sender = tester.k1)
 
 def test_designatedReport(localFixture, universe, cash, market):
     proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
 
-    with PrintGasUsed(localFixture, "Market:designatedReport", 743518):
+    with PrintGasUsed(localFixture, "Market:designatedReport", DESIGNATED_REPORT):
         assert localFixture.designatedReport(market, [0,10**18], tester.k0)
 
 def test_report(localFixture, universe, cash, market):
     proceedToFirstReporting(localFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
 
     stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
-    with PrintGasUsed(localFixture, "StakeToken:buy", 531560):
+    with PrintGasUsed(localFixture, "FIRST StakeToken:buy", FIRST_REPORT):
         stakeTokenYes.buy(0, sender=tester.k2)
+
+    with PrintGasUsed(localFixture, "SECOND StakeToken:buy", SECOND_REPORT):
+        stakeTokenYes.buy(1, sender=tester.k2)
 
 def test_disputeDesignated(localFixture, universe, cash, market):
     proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
 
     assert localFixture.designatedReport(market, [0,10**18], tester.k0)
 
-    with PrintGasUsed(localFixture, "Market:disputeDesignatedReport", 1680957):
+    with PrintGasUsed(localFixture, "Market:disputeDesignatedReport", DESIGNATED_DISPUTE):
         assert market.disputeDesignatedReport([1, market.getNumTicks()-1], 1, False, sender=tester.k1)
 
 def test_disputeFirst(localFixture, universe, cash, market):
@@ -65,7 +124,7 @@ def test_disputeFirst(localFixture, universe, cash, market):
     reportingWindow = localFixture.applySignature("ReportingWindow", market.getReportingWindow())
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
-    with PrintGasUsed(localFixture, "Market:disputeFirstReporters", 2735270):
+    with PrintGasUsed(localFixture, "Market:disputeFirstReporters", FIRST_DISPUTE):
         assert market.disputeFirstReporters([1, market.getNumTicks()-1], 1, False, sender=tester.k2)
 
 def test_disputeLast(localFixture, universe, cash, market):
@@ -74,7 +133,7 @@ def test_disputeLast(localFixture, universe, cash, market):
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
-    with PrintGasUsed(localFixture, "Market:disputeLastReporters", 1818038):
+    with PrintGasUsed(localFixture, "Market:disputeLastReporters", LAST_DISPUTE):
         assert market.disputeLastReporters()
 
 def test_redeemStake(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
@@ -92,7 +151,7 @@ def test_redeemStake(localFixture, universe, cash, market, categoricalMarket, sc
 
     stakeToken = localFixture.getStakeToken(market, [0,10**18])
 
-    with PrintGasUsed(localFixture, "StakeToken:redeemWinningTokens", 189534):
+    with PrintGasUsed(localFixture, "StakeToken:redeemWinningTokens", STAKE_REDEMPTION):
         stakeToken.redeemWinningTokens(False)
 
 def test_redeemDispute(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
@@ -112,7 +171,7 @@ def test_redeemDispute(localFixture, universe, cash, market, categoricalMarket, 
 
     disputeBond = localFixture.applySignature("DisputeBondToken", market.getDesignatedReporterDisputeBondToken())
 
-    with PrintGasUsed(localFixture, "DisputeBondToken:withdraw", 160161):
+    with PrintGasUsed(localFixture, "DisputeBondToken:withdraw", DISPUTE_BOND_REDEMPTION):
         assert disputeBond.withdraw()
 
 def test_redeemParticipation(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
@@ -139,7 +198,7 @@ def test_redeemParticipation(localFixture, universe, cash, market, categoricalMa
     # Fast forward time until the window is over and we can redeem our winning stake and participation tokens and receive fees
     localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
-    with PrintGasUsed(localFixture, "DisputeBondToken:withdraw", 55303):
+    with PrintGasUsed(localFixture, "DisputeBondToken:withdraw", PARTICIPATION_TOKEN_REDEMPTION):
         assert participationToken.redeem(False)
 
 @fixture(scope="session")

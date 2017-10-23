@@ -230,8 +230,8 @@ def test_lastReportingHappyPath(localFixture, makeReport, universe, market):
     assert tentativeWinner == stakeTokenYes.getPayoutDistributionHash()
 
     # If we buy the delta between outcome stakes that will be sufficient to make the outcome win
-    noStake = market.getPayoutDistributionHashStake(market.address, stakeTokenNo.getPayoutDistributionHash())
-    yesStake = market.getPayoutDistributionHashStake(market.address, stakeTokenYes.getPayoutDistributionHash())
+    noStake = market.getPayoutDistributionHashStake(stakeTokenNo.getPayoutDistributionHash())
+    yesStake = market.getPayoutDistributionHashStake(stakeTokenYes.getPayoutDistributionHash())
     stakeDelta = yesStake - noStake
     stakeTokenNo.buy(stakeDelta + 1, sender=tester.k3)
 
