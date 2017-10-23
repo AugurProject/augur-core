@@ -55,20 +55,20 @@ class TokenDelta():
 
 class ETHDelta():
     
-    def __init__(self, delta, account, utils, err=""):
+    def __init__(self, delta, account, chain, err=""):
         self.account = account
-        self.utils = utils
+        self.chain = chain
         self.delta = delta
         self.err = err
 
     def __enter__(self):
-        self.originalBalance = self.utils.getETHBalance(self.account)
+        self.originalBalance = self.chain.head_state.get_balance(self.account)
     
     def __exit__(self, *args):
         if args[1]:
             raise args[1]
         originalBalance = self.originalBalance
-        newBalance = self.utils.getETHBalance(self.account)
+        newBalance = self.chain.head_state.get_balance(self.account)
         delta = self.delta
         resultDelta = newBalance - originalBalance
         assert resultDelta == delta, self.err + ". Delta EXPECTED: %i ACTUAL: %i DIFF: %i" % (delta, resultDelta, delta - resultDelta)

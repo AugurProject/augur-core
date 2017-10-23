@@ -91,15 +91,15 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     finalizeMarket(kitchenSinkFixture, market, [0,10**18])
 
     # redeem shares with a1
-    initialLongHolderETH = kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # redeem shares with a2
-    initialShortHolderETH = kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a2)
+    initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
-    assert kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout
-    assert kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a2) == initialShortHolderETH
+    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout
+    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a2) == initialShortHolderETH
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
@@ -127,15 +127,15 @@ def test_redeem_shares_in_categorical_market(kitchenSinkFixture, universe, cash,
     finalizeMarket(kitchenSinkFixture, market, [0, 0, 3 * 10 ** 17])
 
     # redeem shares with a1
-    initialLongHolderETH = kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # redeem shares with a2
-    initialShortHolderETH = kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a2)
+    initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
-    assert kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout
-    assert kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a2) == initialShortHolderETH
+    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout
+    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a2) == initialShortHolderETH
     assert shareToken2.balanceOf(tester.a1) == 0
     assert shareToken2.balanceOf(tester.a2) == 0
     assert shareToken1.balanceOf(tester.a1) == 0
@@ -164,15 +164,15 @@ def test_redeem_shares_in_scalar_market(kitchenSinkFixture, universe, cash, scal
     finalizeMarket(kitchenSinkFixture, market, [10**19, 3*10**19])
 
     # redeem shares with a1
-    initialLongHolderETH = kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a1)
+    initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # redeem shares with a2
-    initialShortHolderETH = kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a2)
+    initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
-    assert kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a1) == initialLongHolderETH + expectedPayout * 3 / 4
-    assert kitchenSinkFixture.contracts['Utils'].getETHBalance(tester.a2) == initialShortHolderETH + expectedPayout * 1 / 4
+    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout * 3 / 4
+    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a2) == initialShortHolderETH + expectedPayout * 1 / 4
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0

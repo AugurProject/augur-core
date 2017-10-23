@@ -18,8 +18,8 @@ contract MockMarket is IMarket {
     IShareToken private shareToken;
     address private designatedReporter;
     IDisputeBond private disputeBond;
-    IDisputeBond private round1DisputeBond;
-    IDisputeBond private round2DisputeBond;
+    IDisputeBond private firstDisputeBond;
+    IDisputeBond private lastDisputeBond;
     uint256 private marketCreatorSettlementFeeDivisor;
     ReportingState private reportingState;
     uint256 private finalizationTime;
@@ -34,7 +34,7 @@ contract MockMarket is IMarket {
     uint256 private designatedReportDueTimestamp;
     uint256 private designatedReportReceivedTime;
     uint256 private designatedReportDisputeDueTimestamp;
-    uint256 private round1ReporterCompCheck;
+    uint256 private firstReporterCompCheck;
     bool private migrateDueToNoRep;
     bool private isContForStakeToken;
     bool private isContForDisputeBondToken;
@@ -96,12 +96,12 @@ contract MockMarket is IMarket {
         disputeBond = _disputeBond;
     }
 
-    function setRound1ReportersDisputeBondToken(IDisputeBond _round1DisputeBond) public {
-        round1DisputeBond = _round1DisputeBond;
+    function setFirstReportersDisputeBondToken(IDisputeBond _firstDisputeBond) public {
+        firstDisputeBond = _firstDisputeBond;
     }
 
-    function setRound2ReportersDisputeBondToken(IDisputeBond _round2DisputeBond) public {
-        round2DisputeBond = _round2DisputeBond;
+    function setLastReportersDisputeBondToken(IDisputeBond _lastDisputeBond) public {
+        lastDisputeBond = _lastDisputeBond;
     }
 
     function setMarketCreatorSettlementFeeDivisor(uint256 _marketCreatorSettlementFeeDivisor) public {
@@ -160,8 +160,8 @@ contract MockMarket is IMarket {
         designatedReportDisputeDueTimestamp = _designatedReportDisputeDueTimestamp;
     }
 
-    function setRound1ReporterCompensationCheck(uint256 _round1ReporterCompCheck) public {
-        round1ReporterCompCheck = _round1ReporterCompCheck;
+    function setFirstReporterCompensationCheck(uint256 _firstReporterCompCheck) public {
+        firstReporterCompCheck = _firstReporterCompCheck;
     }
 
     function setMigrateDueToNoReports(bool _migrateDueToNoRep) public {
@@ -340,12 +340,12 @@ contract MockMarket is IMarket {
         return disputeBond;
     }
 
-    function getRound1ReportersDisputeBondToken() public view returns (IDisputeBond) {
-        return round1DisputeBond;
+    function getFirstReportersDisputeBondToken() public view returns (IDisputeBond) {
+        return firstDisputeBond;
     }
     
-    function getRound2ReportersDisputeBondToken() public view returns (IDisputeBond) {
-        return round2DisputeBond;
+    function getLastReportersDisputeBondToken() public view returns (IDisputeBond) {
+        return lastDisputeBond;
     }
     
     function getMarketCreatorSettlementFeeDivisor() public view returns (uint256) {
@@ -404,8 +404,8 @@ contract MockMarket is IMarket {
         return designatedReportDisputeDueTimestamp;
     }
     
-    function round1ReporterCompensationCheck(address _reporter) public returns (uint256) {
-        return round1ReporterCompCheck;
+    function firstReporterCompensationCheck(address _reporter) public returns (uint256) {
+        return firstReporterCompCheck;
     }
     
     function migrateDueToNoReports() public returns (bool) {

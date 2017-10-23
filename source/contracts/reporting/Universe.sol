@@ -15,7 +15,7 @@ import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IRepPriceOracle.sol';
-import 'reporting/IReportingAttendanceToken.sol';
+import 'reporting/IParticipationToken.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
@@ -238,12 +238,12 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _legitMarket.isContainerForShareToken(_shadyShareToken);
     }
 
-    function isContainerForReportingAttendanceToken(ITyped _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ReportingAttendanceToken") {
+    function isContainerForParticipationToken(ITyped _shadyTarget) public view returns (bool) {
+        if (_shadyTarget.getTypeName() != "ParticipationToken") {
             return false;
         }
-        IReportingAttendanceToken _shadyReportingAttendanceToken = IReportingAttendanceToken(_shadyTarget);
-        IReportingWindow _shadyReportingWindow = _shadyReportingAttendanceToken.getReportingWindow();
+        IParticipationToken _shadyParticipationToken = IParticipationToken(_shadyTarget);
+        IReportingWindow _shadyReportingWindow = _shadyParticipationToken.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
         }
@@ -251,7 +251,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
             return false;
         }
         IReportingWindow _legitReportingWindow = _shadyReportingWindow;
-        return _legitReportingWindow.isContainerForReportingAttendanceToken(ITyped(_shadyReportingAttendanceToken));
+        return _legitReportingWindow.isContainerForParticipationToken(ITyped(_shadyParticipationToken));
     }
 
     function isParentOf(IUniverse _shadyChild) public view returns (bool) {

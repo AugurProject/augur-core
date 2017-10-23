@@ -1,7 +1,7 @@
 pragma solidity 0.4.17;
 
 
-import 'reporting/IReportingAttendanceToken.sol';
+import 'reporting/IParticipationToken.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
@@ -11,7 +11,7 @@ import 'reporting/IReportingWindow.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
-contract ReportingAttendanceToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IReportingAttendanceToken {
+contract ParticipationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IParticipationToken {
     using SafeMathUint256 for uint256;
 
     IReportingWindow private reportingWindow;
@@ -44,7 +44,7 @@ contract ReportingAttendanceToken is DelegationTarget, ITyped, Initializable, Va
     }
 
     function getTypeName() public view returns (bytes32) {
-        return "ReportingAttendanceToken";
+        return "ParticipationToken";
     }
 
     function getReportingWindow() public view returns (IReportingWindow) {
