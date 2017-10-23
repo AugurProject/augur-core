@@ -2,7 +2,7 @@ from ethereum.tools import tester
 import numpy as np
 from os import getenv
 from pytest import fixture, mark
-from utils import fix, longTo32Bytes, bytesToLong
+from utils import fix, longTo32Bytes
 from constants import BID, ASK
 
 pytestmark = mark.skipif(not getenv('INCLUDE_FUZZY_TESTS'), reason="take forever to run")
