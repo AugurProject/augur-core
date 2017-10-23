@@ -244,7 +244,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
 
-    function collectAttedanceTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
         require(msg.sender == address(participationToken));
         return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
