@@ -8,7 +8,7 @@ from reporting_utils import proceedToDesignatedReporting, proceedToFirstReportin
 
 tester.STARTGAS = long(6.7 * 10**6)
 
-#pytestmark = mark.skip(reason="Just for testing gas cost")
+pytestmark = mark.skip(reason="Just for testing gas cost")
 
 def test_orderCreation(localFixture, market):
     createOrder = localFixture.contracts['CreateOrder']
