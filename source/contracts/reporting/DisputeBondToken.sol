@@ -41,7 +41,7 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         uint256 _amountToTransfer = _reputationToken.balanceOf(this);
         if (bondRemainingToBePaidOut > bondAmount) {
             uint256 _amountToCollectFeesOn = _amountToTransfer.min(bondRemainingToBePaidOut - bondAmount);
-            market.getReportingWindow().collectReportingFees(bondHolder, _amountToCollectFeesOn, forgoFees);
+            market.getReportingWindow().collectDisputeBondReportingFees(bondHolder, _amountToCollectFeesOn, forgoFees);
         }
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
         if (bondRemainingToBePaidOut < bondAmount) {

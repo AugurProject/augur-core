@@ -339,7 +339,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function increaseTotalStake(uint256 _amount) public returns (bool) {
-        require(msg.sender == address(this) || isContainerForStakeToken(ITyped(msg.sender)));
+        require(msg.sender == address(this) || isContainerForStakeToken(IStakeToken(msg.sender)));
         totalStake = totalStake.add(_amount);
         reportingWindow.increaseTotalStake(_amount);
         return true;

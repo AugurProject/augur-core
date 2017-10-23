@@ -376,27 +376,27 @@ contract MockUniverse is Initializable, IUniverse {
         return setIsParentOfValue;
     }
     
-    function isContainerForReportingWindow(ITyped _shadyTarget) public view returns (bool) {
+    function isContainerForReportingWindow(IReportingWindow _shadyTarget) public view returns (bool) {
         return setIsContainerForReportingWindowValue;
     }
     
-    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool) {
+    function isContainerForDisputeBondToken(IDisputeBond _shadyTarget) public view returns (bool) {
         return setIisContainerForDisputeBondTokenValue;
     }
     
-    function isContainerForMarket(ITyped _shadyTarget) public view returns (bool) {
+    function isContainerForMarket(IMarket _shadyTarget) public view returns (bool) {
         return setIsContainerForMarketValue;
     }
     
-    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool) {
+    function isContainerForStakeToken(IStakeToken _shadyTarget) public view returns (bool) {
         return setIsContainerForStakeTokenValue;
     }
     
-    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool) {
+    function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool) {
         return setIsContainerForShareTokenValue;
     }
 
-    function isContainerForParticipationToken(ITyped _shadyTarget) public view returns (bool) {
+    function isContainerForParticipationToken(IParticipationToken _shadyTarget) public view returns (bool) {
         return setIsContainerForParticipationTokenValue;
     }
     

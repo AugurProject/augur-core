@@ -219,11 +219,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _legitMarket.isContainerForShareToken(_shadyShareToken);
     }
 
-    function isContainerForParticipationToken(ITyped _shadyTarget) public view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ParticipationToken") {
-            return false;
-        }
-        IParticipationToken _shadyParticipationToken = IParticipationToken(_shadyTarget);
+    function isContainerForParticipationToken(IParticipationToken _shadyParticipationToken) public view returns (bool) {
         IReportingWindow _shadyReportingWindow = _shadyParticipationToken.getReportingWindow();
         if (_shadyReportingWindow == address(0)) {
             return false;
@@ -232,7 +228,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
             return false;
         }
         IReportingWindow _legitReportingWindow = _shadyReportingWindow;
-        return _legitReportingWindow.isContainerForParticipationToken(ITyped(_shadyParticipationToken));
+        return _legitReportingWindow.isContainerForParticipationToken(_shadyParticipationToken);
     }
 
     function isParentOf(IUniverse _shadyChild) public view returns (bool) {
