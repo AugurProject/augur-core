@@ -11,7 +11,10 @@ contract IReputationToken is ITyped, ERC20 {
     function migrateOut(IReputationToken _destination, address _reporter, uint256 _attotokens) public returns (bool);
     function migrateIn(address _reporter, uint256 _attotokens) public returns (bool);
     function mintForDisputeBondMigration(uint256 _amount) public returns (bool);
-    function trustedTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
+    function trustedReportingWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
+    function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
+    function trustedStakeTokenTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
+    function trustedParticipationTokenTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
     function getUniverse() public view returns (IUniverse);
     function getTopMigrationDestination() public view returns (IReputationToken);
 }
