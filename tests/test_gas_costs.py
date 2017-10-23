@@ -13,7 +13,7 @@ tester.STARTGAS = long(6.7 * 10**6)
 def test_orderCreation(localFixture, market):
     createOrder = localFixture.contracts['CreateOrder']
 
-    with PrintGasUsed(localFixture, "CreateOrder:publicCreateOrder", 439478):
+    with PrintGasUsed(localFixture, "CreateOrder:publicCreateOrder", 439918):
         orderID = createOrder.publicCreateOrder(BID, 1, 10**17, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 10**17)
 
 def test_orderFilling(localFixture, market):
@@ -26,7 +26,7 @@ def test_orderFilling(localFixture, market):
 
     orderID = createOrder.publicCreateOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=creatorCost)
 
-    with PrintGasUsed(localFixture, "FillOrder:publicFillOrder", 553789):
+    with PrintGasUsed(localFixture, "FillOrder:publicFillOrder", 554867):
         fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
 def test_winningShareRedmption(localFixture, cash, market):
@@ -35,13 +35,13 @@ def test_winningShareRedmption(localFixture, cash, market):
     acquireLongShares(localFixture, cash, market, YES, 1, claimProceeds.address, sender = tester.k1)
     finalizeMarket(localFixture, market, [0,10**18])
 
-    with PrintGasUsed(localFixture, "ClaimProceeds:claimProceeds", 405416):
+    with PrintGasUsed(localFixture, "ClaimProceeds:claimProceeds", 408079):
         claimProceeds.claimProceeds(market.address, sender = tester.k1)
 
 def test_designatedReport(localFixture, universe, cash, market):
     proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
 
-    with PrintGasUsed(localFixture, "Market:designatedReport", 913077):
+    with PrintGasUsed(localFixture, "Market:designatedReport", 743518):
         assert localFixture.designatedReport(market, [0,10**18], tester.k0)
 
 def test_report(localFixture, universe, cash, market):
@@ -56,7 +56,7 @@ def test_disputeDesignated(localFixture, universe, cash, market):
 
     assert localFixture.designatedReport(market, [0,10**18], tester.k0)
 
-    with PrintGasUsed(localFixture, "Market:disputeDesignatedReport", 1945547):
+    with PrintGasUsed(localFixture, "Market:disputeDesignatedReport", 1680957):
         assert market.disputeDesignatedReport([1, market.getNumTicks()-1], 1, False, sender=tester.k1)
 
 def test_disputeFirst(localFixture, universe, cash, market):
@@ -65,7 +65,7 @@ def test_disputeFirst(localFixture, universe, cash, market):
     reportingWindow = localFixture.applySignature("ReportingWindow", market.getReportingWindow())
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
-    with PrintGasUsed(localFixture, "Market:disputeFirstReporters", 2557652):
+    with PrintGasUsed(localFixture, "Market:disputeFirstReporters", 2735270):
         assert market.disputeFirstReporters([1, market.getNumTicks()-1], 1, False, sender=tester.k2)
 
 def test_disputeLast(localFixture, universe, cash, market):
@@ -74,7 +74,7 @@ def test_disputeLast(localFixture, universe, cash, market):
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
-    with PrintGasUsed(localFixture, "Market:disputeLastReporters", 1541875):
+    with PrintGasUsed(localFixture, "Market:disputeLastReporters", 1818038):
         assert market.disputeLastReporters()
 
 def test_redeemStake(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
@@ -92,7 +92,7 @@ def test_redeemStake(localFixture, universe, cash, market, categoricalMarket, sc
 
     stakeToken = localFixture.getStakeToken(market, [0,10**18])
 
-    with PrintGasUsed(localFixture, "StakeToken:redeemWinningTokens", 199893):
+    with PrintGasUsed(localFixture, "StakeToken:redeemWinningTokens", 189534):
         stakeToken.redeemWinningTokens(False)
 
 def test_redeemDispute(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
@@ -102,6 +102,8 @@ def test_redeemDispute(localFixture, universe, cash, market, categoricalMarket, 
     assert localFixture.designatedReport(categoricalMarket, [0,0,categoricalMarket.getNumTicks()], tester.k0)
     assert localFixture.designatedReport(scalarMarket, [0,scalarMarket.getNumTicks()], tester.k0)
 
+    assert market.disputeDesignatedReport([10**18,0], 1, False)
+
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
     localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
     assert market.tryFinalize()
@@ -110,8 +112,8 @@ def test_redeemDispute(localFixture, universe, cash, market, categoricalMarket, 
 
     disputeBond = localFixture.applySignature("DisputeBondToken", market.getDesignatedReporterDisputeBondToken())
 
-    with PrintGasUsed(localFixture, "DisputeBondToken:withdraw", 21272):
-        disputeBond.withdraw()
+    with PrintGasUsed(localFixture, "DisputeBondToken:withdraw", 160161):
+        assert disputeBond.withdraw()
 
 def test_redeemParticipation(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
     proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
