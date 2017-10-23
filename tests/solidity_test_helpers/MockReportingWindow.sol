@@ -28,7 +28,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     bool private setAllMarketsFinalizedValue;
     bool private setCollectStakeTokenReportingFeesValue;
     bool private setCollectDisputeBondReportingFeesValue;
-    bool private setCollectAttedanceTokenReportingFeesValue;
+    bool private setCollectParticipationTokenReportingFeesValue;
     bool private setTriggerMigrateFeesDueToForkValue;
     bool private setMigrateFeesDueToForkValue;
     bool private setIsContainerForMarketValue;
@@ -131,8 +131,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setCollectDisputeBondReportingFeesValue = _setCollectDisputeBondReportingFeesValue;
     }
 
-    function setCollectAttedanceTokenReportingFees(bool _setCollectAttedanceTokenReportingFeesValue) public {
-        setCollectAttedanceTokenReportingFeesValue = _setCollectAttedanceTokenReportingFeesValue;
+    function setCollectParticipationTokenReportingFees(bool _setCollectParticipationTokenReportingFeesValue) public {
+        setCollectParticipationTokenReportingFeesValue = _setCollectParticipationTokenReportingFeesValue;
     }
 
     function setTriggerMigrateFeesDueToFork(bool _setTriggerMigrateFeesDueToForkValue) public {
@@ -311,7 +311,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return true;
     }
 
-    function collectAttedanceTokenReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
+    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
         collectReporterAddress = _reporterAddress;
         collectAttoStakeTokens = _attoStakeTokens;
         collectForgoFees = _forgoFees;
