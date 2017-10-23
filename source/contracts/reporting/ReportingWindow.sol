@@ -56,7 +56,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(block.timestamp < startTime);
         require(universe.getReportingWindowByMarketEndTime(_endTime) == this);
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
-        getReputationToken().trustedTransfer(msg.sender, _marketFactory, universe.getDesignatedReportNoShowBond());
+        getReputationToken().trustedReportingWindowTransfer(msg.sender, _marketFactory, universe.getDesignatedReportNoShowBond());
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
         firstReporterMarkets.add(_newMarket);
@@ -141,7 +141,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
 
     function noteReportingGasPrice(IMarket _market) public afterInitialized returns (bool) {
         require(markets.contains(_market));
-        require(_market.isContainerForStakeToken(ITyped(msg.sender)));
+        require(_market.isContainerForStakeToken(IStakeToken(msg.sender)));
         reportingGasPrice.record(tx.gasprice);
         return true;
     }
@@ -234,11 +234,22 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.count == finalizedMarkets.count;
     }
 
-    function collectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
-        ITyped _shadyCaller = ITyped(msg.sender);
-        require(isContainerForStakeToken(_shadyCaller) ||
-                isContainerForDisputeBond(_shadyCaller) ||
-                msg.sender == address(participationToken));
+    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+        require(isContainerForStakeToken(IStakeToken(msg.sender)));
+        return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
+    }
+
+    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+        require(isContainerForDisputeBond(IDisputeBond(msg.sender)));
+        return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
+    }
+
+    function collectAttedanceTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+        require(msg.sender == address(participationToken));
+        return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
+    }
+
+    function internalCollectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) internal returns (bool) {
         bool _eligibleForFees = isOver() && allMarketsFinalized();
         if (!_forgoFees) {
             require(_eligibleForFees);
@@ -302,7 +313,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     function increaseTotalStake(uint256 _amount) public returns (bool) {
-        require(isContainerForMarket(ITyped(msg.sender)));
+        require(isContainerForMarket(IMarket(msg.sender)));
         totalStake = totalStake.add(_amount);
     }
 
@@ -358,41 +369,25 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return lastReporterMarkets.count;
     }
 
-    function isContainerForStakeToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
-        if (_shadyTarget.getTypeName() != "StakeToken") {
-            return false;
-        }
-        IStakeToken _shadyStakeToken = IStakeToken(_shadyTarget);
+    function isContainerForStakeToken(IStakeToken _shadyStakeToken) public afterInitialized view returns (bool) {
         IMarket _shadyMarket = _shadyStakeToken.getMarket();
         require(isContainerForMarket(_shadyMarket));
         IMarket _market = _shadyMarket;
         return _market.isContainerForStakeToken(_shadyStakeToken);
     }
 
-    function isContainerForDisputeBond(ITyped _shadyTarget) public afterInitialized view returns (bool) {
-        if (_shadyTarget.getTypeName() != "DisputeBondToken") {
-            return false;
-        }
-        IDisputeBond _shadyDisbuteBondToken = IDisputeBond(_shadyTarget);
-        IMarket _shadyMarket = _shadyDisbuteBondToken.getMarket();
+    function isContainerForDisputeBond(IDisputeBond _shadyDisputeBondToken) public afterInitialized view returns (bool) {
+        IMarket _shadyMarket = _shadyDisputeBondToken.getMarket();
         require(isContainerForMarket(_shadyMarket));
         IMarket _market = _shadyMarket;
-        return _market.isContainerForDisputeBondToken(_shadyDisbuteBondToken);
+        return _market.isContainerForDisputeBondToken(_shadyDisputeBondToken);
     }
 
-    function isContainerForMarket(ITyped _shadyTarget) public afterInitialized view returns (bool) {
-        if (_shadyTarget.getTypeName() != "Market") {
-            return false;
-        }
-        IMarket _shadyMarket = IMarket(_shadyTarget);
+    function isContainerForMarket(IMarket _shadyMarket) public afterInitialized view returns (bool) {
         return markets.contains(_shadyMarket);
     }
 
-    function isContainerForParticipationToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ParticipationToken") {
-            return false;
-        }
-        IParticipationToken _shadyParticipationToken = IParticipationToken(_shadyTarget);
+    function isContainerForParticipationToken(IParticipationToken _shadyParticipationToken) public afterInitialized view returns (bool) {
         return participationToken == _shadyParticipationToken;
     }
 

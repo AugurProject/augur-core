@@ -5,6 +5,7 @@ import 'libraries/ITyped.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
+import 'reporting/IParticipationToken.sol';
 import 'trading/ICash.sol';
 
 
@@ -29,14 +30,16 @@ contract IReportingWindow is ITyped {
     function getPreviousReportingWindow() public returns (IReportingWindow);
     function getNumDesignatedReportNoShows() public view returns (uint256);
     function allMarketsFinalized() public view returns (bool);
-    function collectReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool);
+    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool);
+    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool);
+    function collectAttedanceTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool);
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
     function migrateFeesDueToMarketMigration(IMarket _market) public returns (bool);
     function migrateFeesDueToFork() public returns (bool);
     function increaseTotalStake(uint256 _amount) public returns (bool);
     function increaseTotalWinningStake(uint256 _amount) public returns (bool);
-    function isContainerForMarket(ITyped _shadyTarget) public view returns (bool);
-    function isContainerForParticipationToken(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForMarket(IMarket _shadyTarget) public view returns (bool);
+    function isContainerForParticipationToken(IParticipationToken _shadyTarget) public view returns (bool);
     function isForkingMarketFinalized() public view returns (bool);
     function isReportingActive() public view returns (bool);
     function isDisputeActive() public view returns (bool);

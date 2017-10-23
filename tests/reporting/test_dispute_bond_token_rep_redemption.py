@@ -212,7 +212,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         disputerAccountBalance = reputationToken.balanceOf(getattr(tester, 'a' + str(firstReportersDisputerAccountNum)))
         if (firstReporterDisputeOutcome != None):
             firstReporterDisputeOutcomePayoutHash = market.derivePayoutDistributionHash(firstReporterDisputeOutcome, False)
-            stakeDelta = contractsFixture.contracts["MarketExtensions"].getPayoutDistributionHashStake(market.address, firstReporterDisputeOutcomePayoutHash)
+            stakeDelta = market.getPayoutDistributionHashStake(market.address, firstReporterDisputeOutcomePayoutHash)
             stakeDelta = 1 - stakeDelta
             if stakeDelta < 0:
                 stakeDelta = 0
