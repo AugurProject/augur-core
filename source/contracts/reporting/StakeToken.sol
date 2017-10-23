@@ -68,7 +68,6 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
     }
 
     function buyTokens(address _reporter, uint256 _attotokens) private afterInitialized returns (bool) {
-        require(market.isContainerForStakeToken(this));
         getReputationToken().trustedStakeTokenTransfer(_reporter, this, _attotokens);
         mint(_reporter, _attotokens);
         bytes32 _payoutDistributionHash = getPayoutDistributionHash();

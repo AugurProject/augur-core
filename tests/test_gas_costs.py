@@ -48,7 +48,7 @@ def test_report(localFixture, universe, cash, market):
     proceedToFirstReporting(localFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
 
     stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
-    with PrintGasUsed(localFixture, "StakeToken:buy", 646809):
+    with PrintGasUsed(localFixture, "StakeToken:buy", 698635):
         stakeTokenYes.buy(0, sender=tester.k2)
 
 def test_disputeDesignated(localFixture, universe, cash, market):
