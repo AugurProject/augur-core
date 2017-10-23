@@ -26,7 +26,9 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     IReportingWindow private setPreviousReportingWindowValue;
     uint256 private setNumDesignatedReportNoShowsValue;
     bool private setAllMarketsFinalizedValue;
-    bool private setCollectReportingFeesValue;
+    bool private setCollectStakeTokenReportingFeesValue;
+    bool private setCollectDisputeBondReportingFeesValue;
+    bool private setCollectAttedanceTokenReportingFeesValue;
     bool private setTriggerMigrateFeesDueToForkValue;
     bool private setMigrateFeesDueToForkValue;
     bool private setIsContainerForMarketValue;
@@ -121,8 +123,16 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setAllMarketsFinalizedValue = _setAllMarketsFinalizedValue;
     }
 
-    function setCollectReportingFees(bool _setCollectReportingFeesValue) public {
-        setCollectReportingFeesValue = _setCollectReportingFeesValue;
+    function setCollectStakeTokenReportingFees(bool _setCollectStakeTokenReportingFeesValue) public {
+        setCollectStakeTokenReportingFeesValue = _setCollectStakeTokenReportingFeesValue;
+    }
+
+    function setCollectDisputeBondReportingFees(bool _setCollectDisputeBondReportingFeesValue) public {
+        setCollectDisputeBondReportingFeesValue = _setCollectDisputeBondReportingFeesValue;
+    }
+
+    function setCollectAttedanceTokenReportingFees(bool _setCollectAttedanceTokenReportingFeesValue) public {
+        setCollectAttedanceTokenReportingFeesValue = _setCollectAttedanceTokenReportingFeesValue;
     }
 
     function setTriggerMigrateFeesDueToFork(bool _setTriggerMigrateFeesDueToForkValue) public {
@@ -287,7 +297,21 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return setAllMarketsFinalizedValue;
     }
     
-    function collectReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
+    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
+        collectReporterAddress = _reporterAddress;
+        collectAttoStakeTokens = _attoStakeTokens;
+        collectForgoFees = _forgoFees;
+        return true;
+    }
+
+    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
+        collectReporterAddress = _reporterAddress;
+        collectAttoStakeTokens = _attoStakeTokens;
+        collectForgoFees = _forgoFees;
+        return true;
+    }
+
+    function collectAttedanceTokenReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
         collectReporterAddress = _reporterAddress;
         collectAttoStakeTokens = _attoStakeTokens;
         collectForgoFees = _forgoFees;
@@ -306,7 +330,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return setMigrateFeesDueToMarketMigrationValue;
     }
     
-    function isContainerForMarket(ITyped _shadyTarget) public view returns (bool) {
+    function isContainerForMarket(IMarket _shadyTarget) public view returns (bool) {
         return setIsContainerForMarketValue;
     }
     
@@ -330,7 +354,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return setIsOverValue;        
     }
 
-    function isContainerForParticipationToken(ITyped _shadyTarget) public view returns (bool) {
+    function isContainerForParticipationToken(IParticipationToken _shadyTarget) public view returns (bool) {
         return setIsContainerForParticipationTokenValue;
     }
 

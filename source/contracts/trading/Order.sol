@@ -54,7 +54,6 @@ library Order {
     //
 
     function create(IController _controller, address _creator, uint8 _outcome, Order.TradeTypes _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal view returns (Data) {
-        require(_market.getTypeName() == "Market");
         require(_outcome < _market.getNumberOfOutcomes());
         require(_price < _market.getNumTicks());
 
