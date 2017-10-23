@@ -2,6 +2,8 @@ import * as binascii from "binascii";
 import { expect } from "chai";
 import { compileAndDeployContracts } from "../deployment/deployContracts";
 import { ContractDeployer } from "../libraries/ContractDeployer";
+import { parseAbiIntoMethods } from "../libraries/AbiParser";
+import { stringTo32ByteHex } from "../libraries/HelperFunctions";
 
 
 describe("Universe", () => {
@@ -11,9 +13,9 @@ describe("Universe", () => {
     });
     it("#getTypeName()", async () => {
         // TODO: Move this check into ContractDeployer
-        const genesisUniverse = await contractDeployer.universe;
+        const genesisUniverse = parseAbiIntoMethods(contractDeployer.ethjsQuery, contractDeployer.abis.get('Universe')!, { from: contractDeployer.testAccounts[0], to: contractDeployer.universeAddress, gasPrice: contractDeployer.gasPrice });
         const genesisUniverseTypeNameHex = (await genesisUniverse.getTypeName())[0];
-        const genesisUniverseTypeName = binascii.unhexlify(genesisUniverseTypeNameHex).replace(/\u0000/g, "");
+        const genesisUniverseTypeName = stringTo32ByteHex(genesisUniverseTypeNameHex);
         expect(genesisUniverseTypeName).to.equal("Universe");
     });
 });

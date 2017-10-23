@@ -24,7 +24,7 @@ export class ContractDeployer {
     public readonly gasAmount = 6*10**6;
     public testAccounts;
     public controller;
-    public universe;
+    public universeAddress: string;
     public market;
 
     public constructor(ethjsQuery: EthjsQuery, compilerOutput: CompilerOutputContracts, gasPrice: number) {
@@ -46,12 +46,12 @@ export class ContractDeployer {
         console.log('Initializing contracts...');
         await this.initializeAllContracts();
         console.log('Creating genesis universe...');
-        this.universe = await this.createGenesisUniverse();
+        this.universeAddress = await this.createGenesisUniverse();
         // FIXME: the rest of this shouldn't be part of the deploy script, it should be part of an integration test
         console.log('Approving central authoritiy...');
         await this.approveCentralAuthority();
         console.log('Creating a reasonable market...');
-        this.market = await this.createReasonableMarket(this.universe.address, this.contracts['Cash'].address, 2);
+        this.market = await this.createReasonableMarket(this.universeAddress, this.contracts['Cash'].address, 2);
     }
 
     public async uploadController(): Promise<void> {
@@ -182,14 +182,13 @@ export class ContractDeployer {
         await Promise.all(promises);
     }
 
-    private async createGenesisUniverse(): Promise<ContractBlockchainData> {
+    private async createGenesisUniverse(): Promise<string> {
         const delegator = await this.construct("libraries/Delegator.sol", "Delegator", [ this.controller.address, stringTo32ByteHex('Universe') ], `Instantiating genesis universe.`);
-        const universeBuilder = this.ethjsContract(this.abis.get("Universe")!, this.bytecodes.get("Universe")!, { from: this.testAccounts[0], gasPrice: this.gasPrice });
-        const universe = universeBuilder.at(delegator.address);
-        const transactionHash = await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
+        const universe = parseAbiIntoMethods(this.ethjsQuery, this.abis.get('Universe')!, { from: this.testAccounts[0], to: delegator.address, gasPrice: this.gasPrice });
+        const transactionHash = await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000000000000000000000000000");
         await waitForTransactionReceipt(this.ethjsQuery, transactionHash, `Initializing universe.`);
         console.log(`Genesis universe address: ${universe.address}`);
-        return universe;
+        return delegator.address;
     }
 
     // TODO: move these out of this class. this class is for deploying the contracts, not general purpose Augur interactions.
