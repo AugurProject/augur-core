@@ -13,7 +13,7 @@ tester.STARTGAS = long(6.7 * 10**6)
 def test_orderCreation(localFixture, market):
     createOrder = localFixture.contracts['CreateOrder']
 
-    with PrintGasUsed(localFixture, "CreateOrder:publicCreateOrder", 439918):
+    with PrintGasUsed(localFixture, "CreateOrder:publicCreateOrder", 432784):
         orderID = createOrder.publicCreateOrder(BID, 1, 10**17, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 10**17)
 
 def test_orderFilling(localFixture, market):
@@ -26,7 +26,7 @@ def test_orderFilling(localFixture, market):
 
     orderID = createOrder.publicCreateOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=creatorCost)
 
-    with PrintGasUsed(localFixture, "FillOrder:publicFillOrder", 554867):
+    with PrintGasUsed(localFixture, "FillOrder:publicFillOrder", 547527):
         fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
 def test_winningShareRedmption(localFixture, cash, market):
