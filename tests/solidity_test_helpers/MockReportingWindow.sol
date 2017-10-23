@@ -41,10 +41,11 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     bool private setIsReportingActiveValue;
     bool private setIsActiveValue;
     bool private setIsOverValue;
-    bool private setIsContainerForReportingAttendanceTokenValue;
+    bool private setIsContainerForParticipationTokenValue;
     bool private setIncreaseTotalStakeValue;
     bool private setIncreaseTotalWinningStakeValue;
     bool private setMigrateFeesDueToMarketMigrationValue;
+    bool private setNoteDesignatedReportValue;
     /*
     * setters to feed the getters and impl of IReportingWindow
     */
@@ -66,6 +67,10 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     
     function setUpdateMarketPhase(bool _setUpdateMarketPhaseValue) public {
         setUpdateMarketPhaseValue = _setUpdateMarketPhaseValue;
+    }
+
+    function setNoteDesignatedReport(bool _setNoteDesignatedReportValue) public {
+        setNoteDesignatedReportValue = _setNoteDesignatedReportValue;
     }
     
     function setUniverse(IUniverse _universe) public {
@@ -156,8 +161,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setIsActiveValue = _isActive;
     }
 
-    function setIsContainerForReportingAttendanceToken(bool _isContainerForReportingAttendanceToken) public {
-        setIsContainerForReportingAttendanceTokenValue = _isContainerForReportingAttendanceToken;
+    function setIsContainerForParticipationToken(bool _isContainerForParticipationToken) public {
+        setIsContainerForParticipationTokenValue = _isContainerForParticipationToken;
     }
 
     function setIncreaseTotalStake(bool _setIncreaseTotalStakeValue) public {
@@ -224,6 +229,10 @@ contract MockReportingWindow is Initializable, IReportingWindow {
 
     function noteReportingGasPrice(IMarket _market) public returns (bool) {
         return setNoteReportingGasPriceValue;
+    }
+
+    function noteDesignatedReport() public returns (bool) {
+        return setNoteDesignatedReportValue;
     }
 
     function updateMarketPhase() public returns (bool) {
@@ -321,8 +330,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return setIsOverValue;        
     }
 
-    function isContainerForReportingAttendanceToken(ITyped _shadyTarget) public view returns (bool) {
-        return setIsContainerForReportingAttendanceTokenValue;
+    function isContainerForParticipationToken(ITyped _shadyTarget) public view returns (bool) {
+        return setIsContainerForParticipationTokenValue;
     }
 
     function increaseTotalStake(uint256 _amount) public returns (bool) {

@@ -420,7 +420,6 @@ def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
     universe = fixture.createUniverse(0, "")
     cash = fixture.getSeededCash()
     augur = fixture.contracts['Augur']
-    fixture.upload("solidity_test_helpers/Utils.sol")
     fixture.distributeRep(universe)
     binaryMarket = fixture.createReasonableBinaryMarket(universe, cash)
     startingGas = fixture.chain.head_state.gas_used

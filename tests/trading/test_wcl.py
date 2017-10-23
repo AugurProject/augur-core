@@ -35,8 +35,8 @@ def test_create_ask_with_shares_fill_with_shares(contractsFixture, cash, market)
     assert noShareToken.balanceOf(tester.a1) == 12
 
     # 3. fill ASK order for YES with NO shares
-    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.chain.head_state.get_balance(tester.a1)
+    initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
     assert noShareToken.approve(fillOrder.address, 12, sender = tester.k2)
     fxpAmountRemaining = fillOrder.publicFillOrder(askOrderID, 12, sender = tester.k2)
     creatorFee = completeSetFees * 0.6
@@ -44,8 +44,8 @@ def test_create_ask_with_shares_fill_with_shares(contractsFixture, cash, market)
     assert fxpAmountRemaining == 0
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.6') - long(creatorFee)
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH + fix('12', '0.4') - long(fillerFee)
+    assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH + fix('12', '0.6') - long(creatorFee)
+    assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH + fix('12', '0.4') - long(fillerFee)
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 12
     assert noShareToken.balanceOf(tester.a1) == 12
@@ -74,14 +74,14 @@ def test_create_ask_with_shares_fill_with_cash(contractsFixture, cash, market):
     assert noShareToken.balanceOf(tester.a1) == 12
 
     # 3. fill ASK order for YES with cash
-    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.chain.head_state.get_balance(tester.a1)
+    initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
     fxpAmountRemaining = fillOrder.publicFillOrder(askOrderID, 12, sender = tester.k2, value=fix('12', '0.6'))
     assert fxpAmountRemaining == 0
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.6')
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH - fix('12', '0.6')
+    assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH + fix('12', '0.6')
+    assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH - fix('12', '0.6')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 12
     assert noShareToken.balanceOf(tester.a1) == 12
@@ -109,15 +109,15 @@ def test_create_ask_with_cash_fill_with_shares(contractsFixture, cash, market):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. fill ASK order for YES with shares of NO
-    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.chain.head_state.get_balance(tester.a1)
+    initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
     assert noShareToken.approve(fillOrder.address, 12, sender = tester.k2)
     amountRemaining = fillOrder.publicFillOrder(askOrderID, 12, sender = tester.k2)
     assert amountRemaining == 0, "Amount remaining should be 0"
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH + fix('12', '0.4')
+    assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH
+    assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH + fix('12', '0.4')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a2) == 12
     assert noShareToken.balanceOf(tester.a1) == 12
@@ -176,8 +176,8 @@ def test_create_bid_with_shares_fill_with_shares(contractsFixture, cash, market)
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. fill BID order for YES with shares of YES
-    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.chain.head_state.get_balance(tester.a1)
+    initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
     assert yesShareToken.approve(fillOrder.address, 12, sender = tester.k2)
     leftoverInOrder = fillOrder.publicFillOrder(orderID, 12, sender = tester.k2)
     creatorFee = completeSetFees * 0.4
@@ -187,8 +187,8 @@ def test_create_bid_with_shares_fill_with_shares(contractsFixture, cash, market)
     fillerPayment = fix('12', '0.6') - fillerFee
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH + long(creatorPayment)
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH + long(fillerPayment)
+    assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH + long(creatorPayment)
+    assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH + long(fillerPayment)
     assert yesShareToken.balanceOf(tester.a1) == 12
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
@@ -217,14 +217,14 @@ def test_create_bid_with_shares_fill_with_cash(contractsFixture, cash, market):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. fill BID order for YES with cash
-    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.chain.head_state.get_balance(tester.a1)
+    initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
     leftoverInOrder = fillOrder.publicFillOrder(orderID, 12, sender = tester.k2, value=fix('12', '0.4'))
     assert leftoverInOrder == 0
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH + fix('12', '0.4')
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH - fix('12', '0.4')
+    assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH + fix('12', '0.4')
+    assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH - fix('12', '0.4')
     assert yesShareToken.balanceOf(tester.a1) == 12
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
@@ -252,15 +252,15 @@ def test_create_bid_with_cash_fill_with_shares(contractsFixture, cash, market):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 3. fill BID order for YES with shares of YES
-    initialMakerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
-    initialFillerETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a2)
+    initialMakerETH = contractsFixture.chain.head_state.get_balance(tester.a1)
+    initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
     assert yesShareToken.approve(fillOrder.address, 12, sender = tester.k2)
     leftoverInOrder = fillOrder.publicFillOrder(orderID, 12, sender = tester.k2)
     assert leftoverInOrder == 0
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == initialMakerETH
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a2) == initialFillerETH + fix('12', '0.6')
+    assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH
+    assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH + fix('12', '0.6')
     assert yesShareToken.balanceOf(tester.a1) == 12
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
@@ -383,16 +383,16 @@ def test_parametrized(type, outcome, displayPrice, orderSize, creatorYesShares, 
     # fill order
     acquireShares(YES, fillerYesShares, fillOrder.address, sender = fillerKey)
     acquireShares(NO, fillerNoShares, fillOrder.address, sender = fillerKey)
-    initialMakerETH = fixture.contracts['Utils'].getETHBalance(creatorAddress)
-    initialFillerETH = fixture.contracts['Utils'].getETHBalance(fillerAddress)
+    initialMakerETH = fixture.chain.head_state.get_balance(creatorAddress)
+    initialFillerETH = fixture.chain.head_state.get_balance(fillerAddress)
     with raises(TransactionFailed) if expectTakeRaise else placeholder_context():
         fillOrder.publicFillOrder(orderID, fillSize, sender = fillerKey, value = fillerCost)
 
     # assert final state
     assert cash.balanceOf(creatorAddress) == 0
     assert cash.balanceOf(fillerAddress) == 0
-    assert fixture.contracts['Utils'].getETHBalance(creatorAddress) == initialMakerETH + expectedMakerPayout
-    assert fixture.contracts['Utils'].getETHBalance(fillerAddress) == initialFillerETH + expectedFillerPayout - fillerCost
+    assert fixture.chain.head_state.get_balance(creatorAddress) == initialMakerETH + expectedMakerPayout
+    assert fixture.chain.head_state.get_balance(fillerAddress) == initialFillerETH + expectedFillerPayout - fillerCost
     assert yesShareToken.balanceOf(creatorAddress) == expectedMakerYesShares
     assert yesShareToken.balanceOf(fillerAddress) == expectedFillerYesShares
     assert noShareToken.balanceOf(creatorAddress) == expectedMakerNoShares

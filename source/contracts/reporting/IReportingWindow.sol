@@ -15,6 +15,7 @@ contract IReportingWindow is ITyped {
     function migrateMarketInFromNibling() public returns (bool);
     function removeMarket() public returns (bool);
     function noteReportingGasPrice(IMarket _market) public returns (bool);
+    function noteDesignatedReport() public returns (bool);
     function updateMarketPhase() public returns (bool);
     function getUniverse() public view returns (IUniverse);
     function getReputationToken() public view returns (IReputationToken);
@@ -35,7 +36,7 @@ contract IReportingWindow is ITyped {
     function increaseTotalStake(uint256 _amount) public returns (bool);
     function increaseTotalWinningStake(uint256 _amount) public returns (bool);
     function isContainerForMarket(ITyped _shadyTarget) public view returns (bool);
-    function isContainerForReportingAttendanceToken(ITyped _shadyTarget) public view returns (bool);
+    function isContainerForParticipationToken(ITyped _shadyTarget) public view returns (bool);
     function isForkingMarketFinalized() public view returns (bool);
     function isReportingActive() public view returns (bool);
     function isDisputeActive() public view returns (bool);

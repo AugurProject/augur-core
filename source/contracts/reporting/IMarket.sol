@@ -16,12 +16,12 @@ contract IMarket is ITyped, IOwnable {
     enum ReportingState {
         PRE_REPORTING,
         DESIGNATED_REPORTING,
-        DESIGNATED_DISPUTE,
         AWAITING_FORK_MIGRATION,
-        ROUND1_REPORTING,
+        DESIGNATED_DISPUTE,
+        FIRST_REPORTING,
         FIRST_DISPUTE,
         AWAITING_NO_REPORT_MIGRATION,
-        ROUND2_REPORTING,
+        LAST_REPORTING,
         LAST_DISPUTE,
         FORKING,
         AWAITING_FINALIZATION,
@@ -40,8 +40,8 @@ contract IMarket is ITyped, IOwnable {
     function getShareToken(uint8 _outcome)  public view returns (IShareToken);
     function getDesignatedReporter() public view returns (address);
     function getDesignatedReporterDisputeBondToken() public view returns (IDisputeBond);
-    function getRound1ReportersDisputeBondToken() public view returns (IDisputeBond);
-    function getRound2ReportersDisputeBondToken() public view returns (IDisputeBond);
+    function getFirstReportersDisputeBondToken() public view returns (IDisputeBond);
+    function getLastReportersDisputeBondToken() public view returns (IDisputeBond);
     function getMarketCreatorSettlementFeeDivisor() public view returns (uint256);
     function getReportingState() public view returns (ReportingState);
     function getFinalizationTime() public view returns (uint256);
@@ -58,7 +58,7 @@ contract IMarket is ITyped, IOwnable {
     function getDesignatedReportDisputeDueTimestamp() public view returns (uint256);
     function getTotalStake() public view returns (uint256);
     function getTotalWinningDisputeBondStake() public view returns (uint256);
-    function round1ReporterCompensationCheck(address _reporter) public returns (uint256);
+    function firstReporterCompensationCheck(address _reporter) public returns (uint256);
     function increaseTotalStake(uint256 _amount) public returns (bool);
     function migrateDueToNoReports() public returns (bool);
     function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool);

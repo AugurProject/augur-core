@@ -18,8 +18,8 @@ import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
-import 'reporting/IReportingAttendanceToken.sol';
-import 'factories/ReportingAttendanceTokenFactory.sol';
+import 'reporting/IParticipationToken.sol';
+import 'factories/ParticipationTokenFactory.sol';
 
 
 contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingWindow {
@@ -30,8 +30,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     IUniverse private universe;
     uint256 private startTime;
     Set.Data private markets;
-    Set.Data private round1ReporterMarkets;
-    Set.Data private round2ReporterMarkets;
+    Set.Data private firstReporterMarkets;
+    Set.Data private lastReporterMarkets;
     Set.Data private finalizedMarkets;
     uint256 private invalidMarketCount;
     uint256 private incorrectDesignatedReportMarketCount;
@@ -40,7 +40,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     RunningAverage.Data private reportingGasPrice;
     uint256 private totalWinningStake;
     uint256 private totalStake;
-    IReportingAttendanceToken private reportingAttendanceToken;
+    IParticipationToken private participationToken;
 
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
         endInitialization();
@@ -48,7 +48,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         // Initialize this to some reasonable value to handle the first market ever created without branching code
         reportingGasPrice.record(Reporting.defaultReportingGasPrice());
-        reportingAttendanceToken = ReportingAttendanceTokenFactory(controller.lookup("ReportingAttendanceTokenFactory")).createReportingAttendanceToken(controller, this);
+        participationToken = ParticipationTokenFactory(controller.lookup("ParticipationTokenFactory")).createParticipationToken(controller, this);
         return true;
     }
 
@@ -59,7 +59,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         getReputationToken().trustedTransfer(msg.sender, _marketFactory, universe.getDesignatedReportNoShowBond());
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
-        round1ReporterMarkets.add(_newMarket);
+        firstReporterMarkets.add(_newMarket);
+        designatedReportNoShows += 1;
         return _newMarket;
     }
 
@@ -94,8 +95,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(markets.contains(_market));
         totalStake = totalStake.sub(_market.getTotalStake());
         markets.remove(_market);
-        round1ReporterMarkets.remove(_market);
-        round2ReporterMarkets.remove(_market);
+        firstReporterMarkets.remove(_market);
+        lastReporterMarkets.remove(_market);
         return true;
     }
 
@@ -104,16 +105,16 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(markets.contains(_market));
         IMarket.ReportingState _state = _market.getReportingState();
 
-        if (_state == IMarket.ReportingState.ROUND2_REPORTING) {
-            round2ReporterMarkets.add(_market);
+        if (_state == IMarket.ReportingState.LAST_REPORTING) {
+            lastReporterMarkets.add(_market);
         } else {
-            round2ReporterMarkets.remove(_market);
+            lastReporterMarkets.remove(_market);
         }
 
-        if (_state == IMarket.ReportingState.ROUND1_REPORTING) {
-            round1ReporterMarkets.add(_market);
+        if (_state == IMarket.ReportingState.FIRST_REPORTING) {
+            firstReporterMarkets.add(_market);
         } else {
-            round1ReporterMarkets.remove(_market);
+            firstReporterMarkets.remove(_market);
         }
 
         if (_state == IMarket.ReportingState.FINALIZED) {
@@ -142,6 +143,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         require(markets.contains(_market));
         require(_market.isContainerForStakeToken(ITyped(msg.sender)));
         reportingGasPrice.record(tx.gasprice);
+        return true;
+    }
+
+    function noteDesignatedReport() public afterInitialized returns (bool) {
+        require(isContainerForMarket(IMarket(msg.sender)));
+        designatedReportNoShows -= 1;
         return true;
     }
 
@@ -219,8 +226,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return totalWinningStake;
     }
 
-    function getReportingAttendanceToken() public view returns (IReportingAttendanceToken) {
-        return reportingAttendanceToken;
+    function getParticipationToken() public view returns (IParticipationToken) {
+        return participationToken;
     }
 
     function allMarketsFinalized() constant public returns (bool) {
@@ -231,7 +238,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         ITyped _shadyCaller = ITyped(msg.sender);
         require(isContainerForStakeToken(_shadyCaller) ||
                 isContainerForDisputeBond(_shadyCaller) ||
-                msg.sender == address(reportingAttendanceToken));
+                msg.sender == address(participationToken));
         bool _eligibleForFees = isOver() && allMarketsFinalized();
         if (!_forgoFees) {
             require(_eligibleForFees);
@@ -300,7 +307,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     function increaseTotalWinningStake(uint256 _amount) public returns (bool) {
-        require(msg.sender == address(reportingAttendanceToken));
+        require(msg.sender == address(participationToken));
         totalStake = totalStake.add(_amount);
         totalWinningStake = totalWinningStake.add(_amount);
     }
@@ -343,12 +350,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.count;
     }
 
-    function getRound1ReporterMarketsCount() public afterInitialized view returns (uint256) {
-        return round1ReporterMarkets.count;
+    function getFirstReporterMarketsCount() public afterInitialized view returns (uint256) {
+        return firstReporterMarkets.count;
     }
 
-    function getRound2ReporterMarketsCount() public afterInitialized view returns (uint256) {
-        return round2ReporterMarkets.count;
+    function getLastReporterMarketsCount() public afterInitialized view returns (uint256) {
+        return lastReporterMarkets.count;
     }
 
     function isContainerForStakeToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
@@ -381,18 +388,18 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.contains(_shadyMarket);
     }
 
-    function isContainerForReportingAttendanceToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ReportingAttendanceToken") {
+    function isContainerForParticipationToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
+        if (_shadyTarget.getTypeName() != "ParticipationToken") {
             return false;
         }
-        IReportingAttendanceToken _shadyReportingAttendanceToken = IReportingAttendanceToken(_shadyTarget);
-        return reportingAttendanceToken == _shadyReportingAttendanceToken;
+        IParticipationToken _shadyParticipationToken = IParticipationToken(_shadyTarget);
+        return participationToken == _shadyParticipationToken;
     }
 
     function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {
         require(!markets.contains(_market));
-        require(!round1ReporterMarkets.contains(_market));
-        require(!round2ReporterMarkets.contains(_market));
+        require(!firstReporterMarkets.contains(_market));
+        require(!lastReporterMarkets.contains(_market));
         totalStake = totalStake.add(_market.getTotalStake());
         markets.add(_market);
         return true;

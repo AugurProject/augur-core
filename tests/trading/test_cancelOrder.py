@@ -20,7 +20,7 @@ def test_cancelBid(contractsFixture, cash, market):
     tradeGroupID = 42
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
-    creatorInitialETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
+    creatorInitialETH = contractsFixture.chain.head_state.get_balance(tester.a1)
     creatorInitialShares = yesShareToken.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
@@ -31,12 +31,12 @@ def test_cancelBid(contractsFixture, cash, market):
     _,_,owner,_,_,_,_,_ = ordersFetcher.getOrder(orderID)
     assert owner, "Order should have an owner"
 
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == creatorInitialETH - fix('0.6'), "ETH should be deducted from the creator balance"
+    assert contractsFixture.chain.head_state.get_balance(tester.a1) == creatorInitialETH - fix('0.6'), "ETH should be deducted from the creator balance"
 
     assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
     assert(ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "Canceled order elements should all be zero"
-    assert(creatorInitialETH == contractsFixture.contracts['Utils'].getETHBalance(tester.a1)), "Maker's ETH should be the same as before the order was placed"
+    assert(creatorInitialETH == contractsFixture.chain.head_state.get_balance(tester.a1)), "Maker's ETH should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(creatorInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
     assert(marketInitialYesShares == yesShareToken.totalSupply()), "Market's yes shares should be unchanged"
@@ -54,7 +54,7 @@ def test_cancelAsk(contractsFixture, cash, market):
     tradeGroupID = 42
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
-    creatorInitialETH = contractsFixture.contracts['Utils'].getETHBalance(tester.a1)
+    creatorInitialETH = contractsFixture.chain.head_state.get_balance(tester.a1)
     creatorInitialShares = yesShareToken.balanceOf(tester.a1)
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
@@ -64,12 +64,12 @@ def test_cancelAsk(contractsFixture, cash, market):
     _,_,owner,_,_,_,_,_ = ordersFetcher.getOrder(orderID)
     assert owner, "Order should have an owner"
 
-    assert contractsFixture.contracts['Utils'].getETHBalance(tester.a1) == creatorInitialETH - fix('0.4'), "ETH should be deducted from the creator balance"
+    assert contractsFixture.chain.head_state.get_balance(tester.a1) == creatorInitialETH - fix('0.4'), "ETH should be deducted from the creator balance"
 
     assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
     assert(ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "Canceled order elements should all be zero"
-    assert(creatorInitialETH == contractsFixture.contracts['Utils'].getETHBalance(tester.a1)), "Maker's ETH should be the same as before the order was placed"
+    assert(creatorInitialETH == contractsFixture.chain.head_state.get_balance(tester.a1)), "Maker's ETH should be the same as before the order was placed"
     assert(marketInitialCash == cash.balanceOf(market.address)), "Market's cash balance should be the same as before the order was placed"
     assert(creatorInitialShares == yesShareToken.balanceOf(tester.a1)), "Maker's shares should be unchanged"
     assert(marketInitialYesShares == yesShareToken.totalSupply()), "Market's yes shares should be unchanged"

@@ -5,7 +5,7 @@ from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString
 from reporting_utils import proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 # Migration data is expressed as [beforeFinalization, targetUniverse]
-@mark.parametrize('invalidRep,yesRep,noRep,designatedMigration,round1Migration,round2Migration', [
+@mark.parametrize('invalidRep,yesRep,noRep,designatedMigration,firstMigration,lastMigration', [
     (0, 0, 0, [False, 0], [False, 0], [False, 0]),
     (100000, 0, 0, [True, 0], [False, 0], [True, 0]),
     (10 ** 23, 0, 0, [True, 0], [False, 0], [True, 0]),
@@ -15,7 +15,7 @@ from reporting_utils import proceedToForking, finalizeForkingMarket, initializeR
     (0, 10**23, 10**23, [True, 1], [True, 2], [False, 2]),
     (10**23, 10**23, 10**23, [False, 1], [True, 2], [True, 2]),
 ])
-def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigration, round1Migration, round2Migration, localFixture, universe, cash, market):
+def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigration, firstMigration, lastMigration, localFixture, universe, cash, market):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
     completeSets = localFixture.contracts['CompleteSets']
     YES_OUTCOME = [10**18,0]
@@ -30,18 +30,18 @@ def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigra
 
     # We have 3 dispute bonds for the market
     designatedDisputeBond = localFixture.applySignature('DisputeBondToken', market.getDesignatedReporterDisputeBondToken())
-    round1DisputeBond = localFixture.applySignature('DisputeBondToken', market.getRound1ReportersDisputeBondToken())
-    round2DisputeBond = localFixture.applySignature('DisputeBondToken', market.getRound2ReportersDisputeBondToken())
+    firstDisputeBond = localFixture.applySignature('DisputeBondToken', market.getFirstReportersDisputeBondToken())
+    lastDisputeBond = localFixture.applySignature('DisputeBondToken', market.getLastReportersDisputeBondToken())
 
     # Validate the owners
     assert designatedDisputeBond.getBondHolder() == bytesToHexString(tester.a1)
-    assert round1DisputeBond.getBondHolder() == bytesToHexString(tester.a2)
-    assert round2DisputeBond.getBondHolder() == bytesToHexString(tester.a0)
+    assert firstDisputeBond.getBondHolder() == bytesToHexString(tester.a2)
+    assert lastDisputeBond.getBondHolder() == bytesToHexString(tester.a0)
 
     # Validate the disputes outcomes
     assert designatedDisputeBond.getDisputedPayoutDistributionHash() == NO_DISTRIBUTION_HASH
-    assert round1DisputeBond.getDisputedPayoutDistributionHash() == YES_DISTRIBUTION_HASH
-    assert round2DisputeBond.getDisputedPayoutDistributionHash() == YES_DISTRIBUTION_HASH
+    assert firstDisputeBond.getDisputedPayoutDistributionHash() == YES_DISTRIBUTION_HASH
+    assert lastDisputeBond.getDisputedPayoutDistributionHash() == YES_DISTRIBUTION_HASH
 
     # Get 3 Universe's that may be used as migration targets
     yesUniverse = localFixture.applySignature("Universe", universe.getOrCreateChildUniverse(YES_DISTRIBUTION_HASH))
@@ -59,12 +59,12 @@ def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigra
     if (designatedMigration[0]):
         destinationUniverse = universeMap[designatedMigration[1]]
         doBondWithdraw(localFixture, designatedDisputeBond, True, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
-    if (round1Migration[0]):
-        destinationUniverse = universeMap[round1Migration[1]]
-        doBondWithdraw(localFixture, round1DisputeBond, True, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
-    if (round2Migration[0]):
-        destinationUniverse = universeMap[round2Migration[1]]
-        doBondWithdraw(localFixture, round2DisputeBond, True, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
+    if (firstMigration[0]):
+        destinationUniverse = universeMap[firstMigration[1]]
+        doBondWithdraw(localFixture, firstDisputeBond, True, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
+    if (lastMigration[0]):
+        destinationUniverse = universeMap[lastMigration[1]]
+        doBondWithdraw(localFixture, lastDisputeBond, True, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
 
     # We'll finalize the forking market
     finalizeForkingMarket(localFixture, universe, market, False, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, NO_OUTCOME, YES_OUTCOME)
@@ -72,12 +72,12 @@ def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigra
     if (not designatedMigration[0]):
         destinationUniverse = universeMap[designatedMigration[1]]
         doBondWithdraw(localFixture, designatedDisputeBond, False, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
-    if (not round1Migration[0]):
-        destinationUniverse = universeMap[round1Migration[1]]
-        doBondWithdraw(localFixture, round1DisputeBond, False, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
-    if (not round2Migration[0]):
-        destinationUniverse = universeMap[round2Migration[1]]
-        doBondWithdraw(localFixture, round2DisputeBond, False, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
+    if (not firstMigration[0]):
+        destinationUniverse = universeMap[firstMigration[1]]
+        doBondWithdraw(localFixture, firstDisputeBond, False, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
+    if (not lastMigration[0]):
+        destinationUniverse = universeMap[lastMigration[1]]
+        doBondWithdraw(localFixture, lastDisputeBond, False, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
 
 def doBondWithdraw(fixture, bond, bonus, universe, reputationToken, destinationUniverse, testerAddress, testerKey):
     disputeUniverse = fixture.applySignature("Universe", universe.getOrCreateChildUniverse(bond.getDisputedPayoutDistributionHash()))
