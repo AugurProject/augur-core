@@ -161,7 +161,28 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, Variabl
         return setMintForDisputeBondMigrationValue;
     }
     
-    function trustedTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+    function trustedReportingWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        trustedTransferSourceValue = _source;
+        trustedTransferDestinationValue = _destination;
+        trustedTransferAttotokensValue = _attotokens;
+        return setTrustedTransferValue;
+    }
+
+    function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        trustedTransferSourceValue = _source;
+        trustedTransferDestinationValue = _destination;
+        trustedTransferAttotokensValue = _attotokens;
+        return setTrustedTransferValue;
+    }
+
+    function trustedStakeTokenTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        trustedTransferSourceValue = _source;
+        trustedTransferDestinationValue = _destination;
+        trustedTransferAttotokensValue = _attotokens;
+        return setTrustedTransferValue;
+    }
+
+    function trustedReportingAttendanceTokenTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
         trustedTransferSourceValue = _source;
         trustedTransferDestinationValue = _destination;
         trustedTransferAttotokensValue = _attotokens;

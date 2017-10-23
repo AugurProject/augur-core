@@ -26,7 +26,7 @@ contract ParticipationToken is DelegationTarget, ITyped, Initializable, Variable
         require(_attotokens > 0);
         require(reportingWindow.isReportingActive());
         require(reportingWindow.allMarketsFinalized());
-        reportingWindow.getReputationToken().trustedTransfer(msg.sender, this, _attotokens);
+        reportingWindow.getReputationToken().trustedReportingAttendanceTokenTransfer(msg.sender, this, _attotokens);
         mint(msg.sender, _attotokens);
         reportingWindow.increaseTotalWinningStake(_attotokens);
         return true;
@@ -39,7 +39,7 @@ contract ParticipationToken is DelegationTarget, ITyped, Initializable, Variable
             burn(msg.sender, _attotokens);
             reportingWindow.getReputationToken().transfer(msg.sender, _attotokens);
         }
-        reportingWindow.collectReportingFees(msg.sender, _attotokens, forgoFees);
+        reportingWindow.collectAttedanceTokenReportingFees(msg.sender, _attotokens, forgoFees);
         return true;
     }
 

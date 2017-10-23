@@ -1,6 +1,7 @@
 from ethereum.tools import tester
+from ethereum.tools.tester import TransactionFailed
 from utils import longToHexString, stringToBytes
-from pytest import fixture
+from pytest import fixture, raises
 
 def test_universe_creation(localFixture):
     universe = localFixture.createUniverse(3, "5")
@@ -68,7 +69,8 @@ def test_universe_contains_reporting_win(localFixture, universe):
 
     # Pass in non ReportingWindow object address
     nonReportingWindow = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'nonReportingWindow')
-    assert universe.isContainerForReportingWindow(nonReportingWindow.address) == False
+    with raises(TransactionFailed):
+        assert universe.isContainerForReportingWindow(nonReportingWindow.address)
 
     # create reporting windo with startTime of 0
     reporting_window_factory = localFixture.upload('../source/contracts/factories/ReportingWindowFactory.sol', 'reporting_window_factory')
@@ -92,7 +94,8 @@ def test_universe_contains_dispute_bond_token(localFixture, universe, market):
     # TODO Get correct dispute bond token from active market in correct state
 
     # Since we have non Market/StakeToken/ShareToken lets test the getTypeName() tests
-    assert universe.isContainerForMarket(nonDisputeBondToken.address) == False
+    with raises(TransactionFailed):
+        universe.isContainerForMarket(nonDisputeBondToken.address)
     assert universe.isContainerForStakeToken(nonDisputeBondToken.address) == False
     assert universe.isContainerForShareToken(nonDisputeBondToken.address) == False
 

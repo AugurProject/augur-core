@@ -118,7 +118,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         if (_reporterReputationShare != 0) {
             _reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
-        market.getReportingWindow().collectReportingFees(msg.sender, _attotokens, forgoFees);
+        market.getReportingWindow().collectStakeTokenReportingFees(msg.sender, _attotokens, forgoFees);
         return true;
     }
 

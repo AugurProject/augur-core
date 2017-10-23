@@ -7,6 +7,7 @@ import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IStakeToken.sol';
 import 'reporting/IDisputeBond.sol';
+import 'reporting/IReportingAttendanceToken.sol';
 import 'trading/IShareToken.sol';
 
 

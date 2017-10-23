@@ -234,11 +234,22 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.count == finalizedMarkets.count;
     }
 
-    function collectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
-        ITyped _shadyCaller = ITyped(msg.sender);
-        require(isContainerForStakeToken(_shadyCaller) ||
-                isContainerForDisputeBond(_shadyCaller) ||
-                msg.sender == address(participationToken));
+    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+        require(isContainerForStakeToken(IStakeToken(msg.sender)));
+        return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
+    }
+
+    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+        require(isContainerForDisputeBond(IDisputeBond(msg.sender)));
+        return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
+    }
+
+    function collectAttedanceTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+        require(msg.sender == address(ParticipationTokenToken));
+        return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
+    }
+
+    function internalCollectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) internal returns (bool) {
         bool _eligibleForFees = isOver() && allMarketsFinalized();
         if (!_forgoFees) {
             require(_eligibleForFees);
@@ -302,7 +313,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     function increaseTotalStake(uint256 _amount) public returns (bool) {
-        require(isContainerForMarket(ITyped(msg.sender)));
+        require(isContainerForMarket(IMarket(msg.sender)));
         totalStake = totalStake.add(_amount);
     }
 
@@ -376,12 +387,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.contains(_shadyMarket);
     }
 
-    function isContainerForParticipationToken(ITyped _shadyTarget) public afterInitialized view returns (bool) {
-        if (_shadyTarget.getTypeName() != "ParticipationToken") {
-            return false;
-        }
-        IParticipationToken _shadyParticipationToken = IParticipationToken(_shadyTarget);
-        return participationToken == _shadyParticipationToken;
+    function isContainerForParticipationTokenToken(IParticipationTokenToken _shadyParticipationTokenToken) public afterInitialized view returns (bool) {
+        return participationTokenToken == _shadyParticipationTokenToken;
     }
 
     function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {
