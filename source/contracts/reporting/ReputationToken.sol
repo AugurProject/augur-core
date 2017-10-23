@@ -92,8 +92,8 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
-    function trustedReportingAttendanceTokenTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
-        require(universe.isContainerForReportingAttendanceToken(IReportingAttendanceToken(msg.sender)));
+    function trustedParticipationTokenTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
+        require(universe.isContainerForParticipationToken(IParticipationToken(msg.sender)));
         return internalTrustedTransfer(_source, _destination, _attotokens);
     }
 

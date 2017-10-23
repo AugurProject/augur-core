@@ -26,7 +26,7 @@ contract ParticipationToken is DelegationTarget, ITyped, Initializable, Variable
         require(_attotokens > 0);
         require(reportingWindow.isReportingActive());
         require(reportingWindow.allMarketsFinalized());
-        reportingWindow.getReputationToken().trustedReportingAttendanceTokenTransfer(msg.sender, this, _attotokens);
+        reportingWindow.getReputationToken().trustedParticipationTokenTransfer(msg.sender, this, _attotokens);
         mint(msg.sender, _attotokens);
         reportingWindow.increaseTotalWinningStake(_attotokens);
         return true;
