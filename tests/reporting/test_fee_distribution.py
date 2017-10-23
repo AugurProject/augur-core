@@ -82,11 +82,24 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
         with ETHDelta(expectedParticipationFees, tester.a2, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
             assert participationToken.redeem(False, sender=tester.k2)
 
+    logs = []
+    captureFilteredLogs(localFixture.chain.head_state, universe, logs)
+
     marketStake = marketDesignatedStake.balanceOf(tester.a0)
     expectedFees = reporterFees * marketStake / totalWinningStake + 1 # Rounding error
     with ETHDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
         with TokenDelta(marketDesignatedStake, -marketStake, tester.a0, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
             assert marketDesignatedStake.redeemWinningTokens(False)
+
+    # Confirm redeeming stake tokens logs appropriately
+    assert len(logs) == 1
+    assert logs[0]['_event_type'] == 'WinningTokensRedeemed'
+    assert logs[0]['reporter'] == bytesToHexString(tester.a0)
+    assert logs[0]['reportingFeesReceived'] == expectedFees
+    assert logs[0]['stakeToken'] == marketDesignatedStake.address
+    assert logs[0]['market'] == market.address
+    assert logs[0]['amountRedeemed'] == marketStake
+    assert logs[0]['payoutNumerators'] == [0,market.getNumTicks()]
 
     categoricalMarketStake = categoricalMarketDesignatedStake.balanceOf(tester.a0)
     expectedFees = reporterFees * categoricalMarketStake / totalWinningStake + 1 # Rounding error

@@ -27,7 +27,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     event MarketCreated(address indexed market, address indexed marketCreator, uint256 marketCreationFee, string extraInfo);
     event DesignatedReportSubmitted(address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
     event ReportSubmitted(address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
-    event WinningTokensRedeemed(address indexed reporter, address indexed market, address stakeToken, uint256 amountRedeemed, address reportingFeesReceived, uint256[] payoutNumerators);
+    event WinningTokensRedeemed(address indexed reporter, address indexed market, address stakeToken, uint256 amountRedeemed, uint256 reportingFeesReceived, uint256[] payoutNumerators);
     event ReportsDisputed(address indexed disputer, address indexed market, uint8 reportingPhase, uint256 disputeBondAmount);
     event MarketFinalized(address indexed market);
     event UniverseForked(address indexed universe);
@@ -418,8 +418,8 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return true;
     }
 
-    function logWinningTokensRedeemed(address _reporter, address _market, address _stakeToken, uint256 _amountRedeemed, address _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
-        // VALIDATION
+    function logWinningTokensRedeemed(address _reporter, address _market, address _stakeToken, uint256 _amountRedeemed, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
+        require(isContainerForStakeToken(IStakeToken(msg.sender)));
         WinningTokensRedeemed(_reporter, _market, _stakeToken, _amountRedeemed, _reportingFeesReceived, _payoutNumerators);
         return true;
     }

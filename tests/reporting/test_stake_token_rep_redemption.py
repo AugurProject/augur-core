@@ -1,6 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture as pytest_fixture, mark, raises
+from utils import captureFilteredLogs
 from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, initializeReportingFixture
 
 def test_one_market_one_correct_report(localFixture, universe, market):

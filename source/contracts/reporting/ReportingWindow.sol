@@ -235,22 +235,22 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.count == finalizedMarkets.count;
     }
 
-    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (uint256) {
         require(isContainerForStakeToken(IStakeToken(msg.sender)));
         return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
 
-    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (uint256) {
         require(isContainerForDisputeBond(IDisputeBond(msg.sender)));
         return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
 
-    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (uint256) {
         require(msg.sender == address(participationToken));
         return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
 
-    function internalCollectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) internal returns (bool) {
+    function internalCollectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) internal returns (uint256) {
         bool _eligibleForFees = isOver() && allMarketsFinalized();
         if (!_forgoFees) {
             require(_eligibleForFees);
@@ -266,7 +266,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         if (!_forgoFees && _feePayoutShare > 0) {
             _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
         }
-        return true;
+        return _feePayoutShare;
     }
 
     function migrateFeesDueToMarketMigration(IMarket _market) public afterInitialized returns (bool) {
