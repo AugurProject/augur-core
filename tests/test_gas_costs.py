@@ -4,7 +4,7 @@ from pytest import fixture, mark, raises
 from utils import longTo32Bytes, captureFilteredLogs, PrintGasUsed, fix
 from constants import BID, ASK, YES, NO
 from trading.test_claimProceeds import acquireLongShares, finalizeMarket
-from reporting_utils import proceedToDesignatedReporting, proceedToRound1Reporting, proceedToRound2Reporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
+from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, proceedToLastReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 tester.STARTGAS = long(6.7 * 10**6)
 
@@ -45,7 +45,7 @@ def test_designatedReport(localFixture, universe, cash, market):
         assert localFixture.designatedReport(market, [0,10**18], tester.k0)
 
 def test_report(localFixture, universe, cash, market):
-    proceedToRound1Reporting(localFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
+    proceedToFirstReporting(localFixture, universe, market, False, tester.k1, [0,10**18], [10**18,0])
 
     stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
     with PrintGasUsed(localFixture, "StakeToken:buy", 646809):
@@ -59,23 +59,23 @@ def test_disputeDesignated(localFixture, universe, cash, market):
     with PrintGasUsed(localFixture, "Market:disputeDesignatedReport", 1945547):
         assert market.disputeDesignatedReport([1, market.getNumTicks()-1], 1, False, sender=tester.k1)
 
-def test_disputeRound1(localFixture, universe, cash, market):
-    proceedToRound1Reporting(localFixture, universe, market, True, tester.k1, [0,10**18], [10**18,0])
+def test_disputeFirst(localFixture, universe, cash, market):
+    proceedToFirstReporting(localFixture, universe, market, True, tester.k1, [0,10**18], [10**18,0])
 
     reportingWindow = localFixture.applySignature("ReportingWindow", market.getReportingWindow())
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
-    with PrintGasUsed(localFixture, "Market:disputeRound1Reporters", 2557652):
-        assert market.disputeRound1Reporters([1, market.getNumTicks()-1], 1, False, sender=tester.k2)
+    with PrintGasUsed(localFixture, "Market:disputeFirstReporters", 2557652):
+        assert market.disputeFirstReporters([1, market.getNumTicks()-1], 1, False, sender=tester.k2)
 
-def test_disputeRound2(localFixture, universe, cash, market):
-    proceedToRound2Reporting(localFixture, universe, market, True, tester.k1, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18])
+def test_disputeLast(localFixture, universe, cash, market):
+    proceedToLastReporting(localFixture, universe, market, True, tester.k1, tester.k3, [0,10**18], [10**18,0], tester.k2, [10**18,0], [0,10**18])
 
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
-    with PrintGasUsed(localFixture, "Market:disputeRound2Reporters", 1541875):
-        assert market.disputeRound2Reporters()
+    with PrintGasUsed(localFixture, "Market:disputeLastReporters", 1541875):
+        assert market.disputeLastReporters()
 
 def test_redeemStake(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
     proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])

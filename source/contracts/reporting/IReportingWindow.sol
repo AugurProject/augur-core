@@ -5,7 +5,7 @@ import 'libraries/ITyped.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
-import 'reporting/IReportingAttendanceToken.sol';
+import 'reporting/IParticipationToken.sol';
 import 'trading/ICash.sol';
 
 

@@ -245,7 +245,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     function collectAttedanceTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
-        require(msg.sender == address(ParticipationTokenToken));
+        require(msg.sender == address(participationToken));
         return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
 
@@ -387,8 +387,8 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.contains(_shadyMarket);
     }
 
-    function isContainerForParticipationTokenToken(IParticipationTokenToken _shadyParticipationTokenToken) public afterInitialized view returns (bool) {
-        return participationTokenToken == _shadyParticipationTokenToken;
+    function isContainerForParticipationToken(IParticipationToken _shadyParticipationToken) public afterInitialized view returns (bool) {
+        return participationToken == _shadyParticipationToken;
     }
 
     function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {

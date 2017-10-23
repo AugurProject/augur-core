@@ -182,7 +182,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, Variabl
         return setTrustedTransferValue;
     }
 
-    function trustedReportingAttendanceTokenTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+    function trustedParticipationTokenTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
         trustedTransferSourceValue = _source;
         trustedTransferDestinationValue = _destination;
         trustedTransferAttotokensValue = _attotokens;
