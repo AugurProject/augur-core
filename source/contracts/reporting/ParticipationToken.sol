@@ -39,7 +39,7 @@ contract ParticipationToken is DelegationTarget, ITyped, Initializable, Variable
             burn(msg.sender, _attotokens);
             reportingWindow.getReputationToken().transfer(msg.sender, _attotokens);
         }
-        reportingWindow.collectAttedanceTokenReportingFees(msg.sender, _attotokens, forgoFees);
+        reportingWindow.collectParticipationTokenReportingFees(msg.sender, _attotokens, forgoFees);
         return true;
     }
 
