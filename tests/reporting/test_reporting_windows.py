@@ -8,7 +8,8 @@ from reporting_utils import proceedToDesignatedReporting, proceedToRound1Reporti
 
 def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockReportingAttendanceToken, mockReputationToken):
     timestamp = chain.head_state.timestamp
-    mockUniverse.setReportingPeriodDurationInSeconds(timestamp)
+    duration_in_sec = localFixture.contracts['Constants'].REPORTING_DURATION_SECONDS() + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS()
+    mockUniverse.setReportingPeriodDurationInSeconds(duration_in_sec)
     mockUniverse.setReputationToken(mockReputationToken.address)
 
     mockReportingAttendanceTokenFactory = localFixture.contracts['MockReportingAttendanceTokenFactory']
@@ -17,8 +18,8 @@ def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockRepo
     reportingWindow = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'reportingWindow')
     reportingWindow.setController(localFixture.contracts['Controller'].address)
 
-    start_time = 2 * timestamp
-    assert reportingWindow.initialize(mockUniverse.address, 2)
+    start_time = timestamp * mockUniverse.getReportingPeriodDurationInSeconds()
+    assert reportingWindow.initialize(mockUniverse.address, timestamp)
     assert reportingWindow.getUniverse() == mockUniverse.address
     assert reportingWindow.getReputationToken() == mockReputationToken.address
     assert reportingWindow.getTypeName() == stringToBytes("ReportingWindow")
@@ -99,7 +100,7 @@ def test_reporting_window_create_market(localFixture, chain, mockUniverse, mockM
     assert reportingWindow3.getNumMarkets() == 1
 
 def test_reporting_window_migrate_market_in_from_sib(localFixture, mockUniverse, populatedReportingWindow):
-    with raises(TransactionFailed, message="method has be called from Market"):
+    with raises(TransactionFailed, message="migrateMarketInFromSibling method can only be called from Market"):
         populatedReportingWindow.migrateMarketInFromSibling()
     
     newMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'newMarket')
@@ -278,7 +279,7 @@ def test_reporting_window_update_fin_market_calculations(localFixture, mockMarke
     mockMarket.setFinalPayoutDistributionHash(stringToBytes("101"))
     mockMarket.setDesignatedReportPayoutHash(stringToBytes("10"))
     mockMarket.setIsValid(True)
-    finializMarket(localFixture, mockMarket, populatedReportingWindow, 99, 15)
+    finializeMarket(localFixture, mockMarket, populatedReportingWindow, 99, 15)
     # 99 + 15 
     assert populatedReportingWindow.getTotalWinningStake() == 114
     assert populatedReportingWindow.getNumIncorrectDesignatedReportMarkets() == 1
@@ -294,7 +295,7 @@ def test_reporting_window_update_fin_market_calculations(localFixture, mockMarke
     newMockMarket.setDesignatedReportPayoutHash(stringToBytes("10"))
     newMockMarket.setReportingWindow(newWindow.address)
     assert newMockMarket.callReportingWindowMigrateMarketInFromSibling(populatedReportingWindow.address)
-    finializMarket(localFixture, newMockMarket, populatedReportingWindow, 19, 12)
+    finializeMarket(localFixture, newMockMarket, populatedReportingWindow, 19, 12)
     # 19 + 12 + existing 114  = 114 + 31 = 145
     assert populatedReportingWindow.getTotalWinningStake() == 145
     assert populatedReportingWindow.getNumIncorrectDesignatedReportMarkets() == 2
@@ -347,7 +348,7 @@ def test_reporting_window_collect_reporting_fees(localFixture, chain, mockMarket
     assert mockCash.getwithdrawEthertoAmountValue() == 0
 
     mockCash.resetWithdrawEtherToValues()
-    finializMarket(localFixture, mockMarket, reportingWindow, 77, 23)
+    finializeMarket(localFixture, mockMarket, reportingWindow, 77, 23)
     assert reportingWindow.allMarketsFinalized()
 
     with raises(TransactionFailed, message="can not forgo fees and all markets finalized and reporting window end time"):
@@ -366,7 +367,7 @@ def test_reporting_window_collect_reporting_fees(localFixture, chain, mockMarket
     # cash balance 134 * 5 / total winnings 175
     assert mockCash.getwithdrawEthertoAmountValue() == 3
     
-def finializMarket(localFixture, mockMarket, reportingWindow, totalSupply, disputeBondStake):
+def finializeMarket(localFixture, mockMarket, reportingWindow, totalSupply, disputeBondStake):
     mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
     mockStakeToken = localFixture.contracts['MockStakeToken']
     mockMarket.setFinalWinningStakeToken(mockStakeToken.address)
