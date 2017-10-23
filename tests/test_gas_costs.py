@@ -113,10 +113,32 @@ def test_redeemDispute(localFixture, universe, cash, market, categoricalMarket, 
     with PrintGasUsed(localFixture, "DisputeBondToken:withdraw", 21272):
         disputeBond.withdraw()
 
-# TODO when this gets merged
-def test_redeemAttendance(localFixture, universe, cash, market):
-    pass
+def test_redeemParticipation(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
+    proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
 
+    assert localFixture.designatedReport(market, [0,10**18], tester.k0)
+    assert localFixture.designatedReport(categoricalMarket, [0,0,categoricalMarket.getNumTicks()], tester.k0)
+    assert localFixture.designatedReport(scalarMarket, [0,scalarMarket.getNumTicks()], tester.k0)
+
+    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+
+    assert market.tryFinalize()
+    assert categoricalMarket.tryFinalize()
+    assert scalarMarket.tryFinalize()
+
+    # We cannot purchase participation tokens yet since the window isn't active
+    participationToken = localFixture.applySignature("ParticipationToken", reportingWindow.getParticipationToken())
+
+    # We'll progress to the start of the window and purchase some participation tokens
+    localFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    assert participationToken.buy(1)
+
+    # Fast forward time until the window is over and we can redeem our winning stake and participation tokens and receive fees
+    localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+
+    with PrintGasUsed(localFixture, "DisputeBondToken:withdraw", 55303):
+        assert participationToken.redeem(False)
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
