@@ -26,7 +26,6 @@ contract CancelOrder is CashAutoConverter, ReentrancyGuard, ICancelOrder {
      */
     function cancelOrder(bytes32 _orderId, Order.TradeTypes _type, IMarket _market, uint8 _outcome) nonReentrant convertToAndFromCash external returns (bool) {
         require(_orderId != bytes32(0));
-        require(_market.getTypeName() == "Market");
 
         // Look up the order the sender wants to cancel
         IOrders _orders = IOrders(controller.lookup("Orders"));

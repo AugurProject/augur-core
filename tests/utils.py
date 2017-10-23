@@ -72,3 +72,22 @@ class ETHDelta():
         delta = self.delta
         resultDelta = newBalance - originalBalance
         assert resultDelta == delta, self.err + ". Delta EXPECTED: %i ACTUAL: %i DIFF: %i" % (delta, resultDelta, delta - resultDelta)
+
+class PrintGasUsed():
+
+    def __init__(self, fixture, action, originalGas=0):
+        self.fixture = fixture
+        self.action = action
+        self.originalGas = originalGas
+ 
+    def __enter__(self):
+        self.startingGas = self.fixture.chain.head_state.gas_used
+     
+    def __exit__(self, *args):
+        if args[1]:
+            raise args[1]
+        gasUsed = self.fixture.chain.head_state.gas_used - self.startingGas
+        if self.originalGas:
+            print "GAS USED WITH %s : %i. ORIGINAL: %i DELTA: %i" % (self.action, gasUsed, self.originalGas, self.originalGas - gasUsed)
+        else:
+            print "GAS USED WITH %s : %i" % (self.action, gasUsed)

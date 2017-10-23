@@ -24,7 +24,7 @@ export class ContractDeployer {
     public readonly gasAmount = 6*10**6;
     public testAccounts;
     public controller;
-    public universe;
+    public universeAddress: string;
     public market;
 
     public constructor(ethjsQuery: EthjsQuery, compilerOutput: CompilerOutputContracts, gasPrice: number) {
@@ -46,12 +46,12 @@ export class ContractDeployer {
         console.log('Initializing contracts...');
         await this.initializeAllContracts();
         console.log('Creating genesis universe...');
-        this.universe = await this.createGenesisUniverse();
+        this.universeAddress = await this.createGenesisUniverse();
         // FIXME: the rest of this shouldn't be part of the deploy script, it should be part of an integration test
         console.log('Approving central authoritiy...');
         await this.approveCentralAuthority();
         console.log('Creating a reasonable market...');
-        this.market = await this.createReasonableMarket(this.universe.address, this.contracts['Cash'].address, 2);
+        this.market = await this.createReasonableMarket(this.universeAddress, this.contracts['Cash'].address, 2);
     }
 
     public async uploadController(): Promise<void> {
@@ -60,12 +60,6 @@ export class ContractDeployer {
         if (ownerAddress.toLowerCase() !== this.testAccounts[0]) {
             throw new Error("Controller owner does not equal from address");
         }
-    }
-
-    public async parseBlockTimestamp(blockTimestamp): Promise<Date> {
-        const timestampHex = `0x${JSON.stringify(blockTimestamp).replace(/\"/g, "")}`;
-        const timestampInt = parseInt(timestampHex, 16) * 1000;
-        return new Date(timestampInt);
     }
 
     private async uploadAndAddDelegatedToController(contractFileName: string, contractName: string): Promise<ContractBlockchainData|undefined> {
@@ -188,14 +182,13 @@ export class ContractDeployer {
         await Promise.all(promises);
     }
 
-    private async createGenesisUniverse(): Promise<ContractBlockchainData> {
+    private async createGenesisUniverse(): Promise<string> {
         const delegator = await this.construct("libraries/Delegator.sol", "Delegator", [ this.controller.address, stringTo32ByteHex('Universe') ], `Instantiating genesis universe.`);
-        const universeBuilder = this.ethjsContract(this.abis.get("Universe")!, this.bytecodes.get("Universe")!, { from: this.testAccounts[0], gasPrice: this.gasPrice });
-        const universe = universeBuilder.at(delegator.address);
-        const transactionHash = await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000");
+        const universe = parseAbiIntoMethods(this.ethjsQuery, this.abis.get('Universe')!, { from: this.testAccounts[0], to: delegator.address, gasPrice: this.gasPrice });
+        const transactionHash = await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000000000000000000000000000");
         await waitForTransactionReceipt(this.ethjsQuery, transactionHash, `Initializing universe.`);
         console.log(`Genesis universe address: ${universe.address}`);
-        return universe;
+        return delegator.address;
     }
 
     // TODO: move these out of this class. this class is for deploying the contracts, not general purpose Augur interactions.
@@ -236,6 +229,7 @@ export class ContractDeployer {
         const reputationToken = parseAbiIntoMethods(this.ethjsQuery, this.abis.get('ReputationToken')!, { to: reputationTokenAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
 
         // get some REP
+        // TODO: just get enough REP to cover the bonds rather than over-allocating
         const repFaucetTransactionHash = await legacyReputationToken.faucet(0);
         const repApprovalTransactionHash = await legacyReputationToken.approve(reputationTokenAddress, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         await waitForTransactionReceipt(this.ethjsQuery, repFaucetTransactionHash, `Using legacy reputation faucet.`);
@@ -272,10 +266,7 @@ export class ContractDeployer {
     }
 
     private async createReasonableMarket(universe: string, denominationToken: string, numOutcomes: number): Promise<Contract> {
-        const block = await this.ethjsQuery.getBlockByNumber(0, true);
-        const blockDateTime = await this.parseBlockTimestamp(block.timestamp);
-        const blockDateTimePlusDay = new Date();
-        blockDateTimePlusDay.setDate(blockDateTime.getDate() + 1);
-        return await this.createMarket(universe, 2, blockDateTimePlusDay.getTime()/1000, 10 ** 16, denominationToken, this.testAccounts[0], 10 ** 4);
+        const endTime = Math.round(new Date().getTime() / 1000);
+        return await this.createMarket(universe, 2, endTime, 10 ** 16, denominationToken, this.testAccounts[0], 10 ** 4);
     }
 }

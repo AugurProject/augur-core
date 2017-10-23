@@ -69,6 +69,28 @@ declare module 'ethjs-shared' {
         status: number|string;
     }
 
+    export interface Block {
+        number: BN;
+        hash: string;
+        parentHash: string;
+        nonce: string;
+        sha3Uncles: string;
+        logsBloom: string;
+        transactionRoot: string;
+        stateRoot: string;
+        receiptRoot: string;
+        miner: string;
+        difficult: BN;
+        totalDifficulty: BN;
+        extraData: string;
+        size: BN;
+        gasLimit: BN;
+        gasUsed: BN;
+        timestamp: BN;
+        transactions: Array<TransactionReceipt>;
+        uncles: Array<string>;
+    }
+
     export interface Log {
         removed: boolean;
         logIndex: BN;

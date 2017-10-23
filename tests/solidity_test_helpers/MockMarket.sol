@@ -414,15 +414,15 @@ contract MockMarket is IMarket {
         return migrateDueToNoRep;
     }
     
-    function isContainerForStakeToken(ITyped _shadyTarget) public view returns (bool) {
+    function isContainerForStakeToken(IStakeToken _shadyTarget) public view returns (bool) {
         return isContForStakeToken;
     }
     
-    function isContainerForDisputeBondToken(ITyped _shadyTarget) public view returns (bool) {
+    function isContainerForDisputeBondToken(IDisputeBond _shadyTarget) public view returns (bool) {
         return isContForDisputeBondToken;
     }
     
-    function isContainerForShareToken(ITyped _shadyTarget) public view returns (bool) {
+    function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool) {
         return isContForShareToken;
     }
     

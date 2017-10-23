@@ -184,7 +184,6 @@ contract Orders is DelegationTarget, IOrders {
 
     function fillOrder(bytes32 _orderId, uint256 _sharesFilled, uint256 _tokensFilled) public onlyWhitelistedCallers returns (bool) {
         Order.Data storage _order = orders[_orderId];
-        require(_order.market.getTypeName() == "Market");
         require(_order.outcome < _order.market.getNumberOfOutcomes());
         require(_order.tradeType == Order.TradeTypes.Bid || _order.tradeType == Order.TradeTypes.Ask);
         require(_orderId != bytes32(0));
