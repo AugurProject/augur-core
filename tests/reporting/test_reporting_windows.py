@@ -306,7 +306,7 @@ def test_reporting_window_collect_reporting_fees(localFixture, chain, mockMarket
     dispute_end_time = reporting_end + localFixture.contracts['Constants'].REPORTING_DISPUTE_DURATION_SECONDS()
 
     with raises(TransactionFailed, message="method has to be called from Stake Token or Dispute Bond or reporting participation token"):
-        populatedReportingWindow.collectReportingFees(tester.a0, 1, False)
+        populatedReportingWindow.collectStakeTokenReportingFees(tester.a0, 1, False)
 
     mockStakeToken = localFixture.contracts['MockStakeToken']
     mockMarket.setIsContainerForStakeToken(True)
