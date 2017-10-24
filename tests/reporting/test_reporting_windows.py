@@ -305,8 +305,14 @@ def test_reporting_window_collect_reporting_fees(localFixture, chain, mockMarket
     reporting_end = start_time + localFixture.contracts['Constants'].REPORTING_DURATION_SECONDS()
     dispute_end_time = reporting_end + localFixture.contracts['Constants'].REPORTING_DISPUTE_DURATION_SECONDS()
 
-    with raises(TransactionFailed, message="method has to be called from Stake Token or Dispute Bond or reporting participation token"):
+    with raises(TransactionFailed, message="method has to be called from Stake Token"):
         populatedReportingWindow.collectStakeTokenReportingFees(tester.a0, 1, False)
+
+    with raises(TransactionFailed, message="method has to be called from Dispute Bond"):
+        populatedReportingWindow.collectDisputeBondReportingFees(tester.a0, 1, False)
+
+    with raises(TransactionFailed, message="method has to be called from Participation token"):
+        populatedReportingWindow.collectAttedanceTokenReportingFees(tester.a0, 1, False)
 
     mockStakeToken = localFixture.contracts['MockStakeToken']
     mockMarket.setIsContainerForStakeToken(True)
@@ -365,6 +371,17 @@ def test_reporting_window_collect_reporting_fees(localFixture, chain, mockMarket
     assert mockCash.getwithdrawEtherToAddressValue() == bytesToHexString(reporterAddress)
     # cash balance 134 * 5 / total winnings 175
     assert mockCash.getwithdrawEthertoAmountValue() == 3
+    
+def test_reporting_window_migrate_fees_due_to_market_migration(localFixture, mockMarket, populatedReportingWindow):
+    newMockMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'newMockMarket')
+     
+    with raises(TransactionFailed, message="methed needs to be called from reporting window"):
+        populatedReportingWindow.migrateFeesDueToMarketMigration(newMockMarket.address)
+    
+    newWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newWindow')   
+    with raises(TransactionFailed, message="market needs to be in calling reporting window"):
+        newWindow.callMigrateFeesDueToMarketMigration(populatedReportingWindow.address, newMockMarket.address)
+    
     
 def finializeMarket(localFixture, mockMarket, reportingWindow, totalSupply, disputeBondStake):
     mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
