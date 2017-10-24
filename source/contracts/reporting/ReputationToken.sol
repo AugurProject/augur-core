@@ -30,32 +30,56 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    // AUDIT: check for reentrancy issues here, _destination will be called as contracts during validation
+    function migrateOutStakeToken(IReputationToken _destination, address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
+        require(universe.isContainerForStakeToken(IStakeToken(msg.sender)));
+        return internalMigrateOut(_destination, msg.sender, _reporter, _attotokens, true);
+    }
+
+    function migrateOutDisputeBondToken(IReputationToken _destination, address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
+        require(universe.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
+        return internalMigrateOut(_destination, msg.sender, _reporter, _attotokens, true);
+    }
+
     function migrateOut(IReputationToken _destination, address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
+        return internalMigrateOut(_destination, msg.sender, _reporter, _attotokens, false);
+    }
+
+    // AUDIT: check for reentrancy issues here, _destination will be called as contracts during validation
+    function internalMigrateOut(IReputationToken _destination, address _sender, address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) internal returns (bool) {
         assertReputationTokenIsLegit(_destination);
-        if (msg.sender != _reporter) {
-            allowed[_reporter][msg.sender] = allowed[_reporter][msg.sender].sub(_attotokens);
+        if (_sender != _reporter) {
+            allowed[_reporter][_sender] = allowed[_reporter][_sender].sub(_attotokens);
         }
         balances[_reporter] = balances[_reporter].sub(_attotokens);
         supply = supply.sub(_attotokens);
-        _destination.migrateIn(_reporter, _attotokens);
+        _destination.migrateIn(_reporter, _attotokens, _bonusIfInForkWindow);
         if (topMigrationDestination == address(0) || _destination.totalSupply() > topMigrationDestination.totalSupply()) {
             topMigrationDestination = _destination;
         }
         return true;
     }
 
-    function migrateIn(address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
-        IUniverse _parentUniverse = universe.getParentUniverse();
-        require(ReputationToken(msg.sender) == _parentUniverse.getReputationToken());
+    function migrateIn(address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) public afterInitialized returns (bool) {
+        require(ReputationToken(msg.sender) == universe.getParentUniverse().getReputationToken());
         balances[_reporter] = balances[_reporter].add(_attotokens);
         // Only count tokens migrated toward the available to be matched in other universes. The bonus should not be added
         universe.increaseRepAvailableForExtraBondPayouts(_attotokens);
-        if (_parentUniverse.getForkingMarket().getReportingState() != IMarket.ReportingState.FINALIZED) {
+        if (eligibleForForkBonus(_bonusIfInForkWindow)) {
             mint(_reporter, _attotokens.div(Reporting.forkMigrationPercentageBonusDivisor()));
         }
         supply = supply.add(_attotokens);
         return true;
+    }
+
+    function eligibleForForkBonus(bool _bonusIfInForkWindow) private returns (bool) {
+        IUniverse _parentUniverse = universe.getParentUniverse();
+        if (_parentUniverse.getForkingMarket().getReportingState() != IMarket.ReportingState.FINALIZED) {
+            return true;
+        }
+        if (_bonusIfInForkWindow) {
+            return block.timestamp < _parentUniverse.getForkEndTime();
+        }
+        return false;
     }
 
     function migrateFromLegacyReputationToken() public afterInitialized returns (bool) {

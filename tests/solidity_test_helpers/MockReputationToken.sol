@@ -147,6 +147,20 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, Variabl
         return true;
     }
     
+    function migrateOutStakeToken(IReputationToken _destination, address _reporter, uint256 _attotokens) public returns (bool) {
+        migrateOutDestinationValue = _destination;
+        migrateOutReporterValue = _reporter;
+        migrateOutAttoTokens = _attotokens;
+        return setMigrateOutValue;
+    }
+
+    function migrateOutDisputeBondToken(IReputationToken _destination, address _reporter, uint256 _attotokens) public returns (bool) {
+        migrateOutDestinationValue = _destination;
+        migrateOutReporterValue = _reporter;
+        migrateOutAttoTokens = _attotokens;
+        return setMigrateOutValue;
+    }
+    
     function migrateOut(IReputationToken _destination, address _reporter, uint256 _attotokens) public returns (bool) {
         migrateOutDestinationValue = _destination;
         migrateOutReporterValue = _reporter;
@@ -154,7 +168,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, Variabl
         return setMigrateOutValue;
     }
     
-    function migrateIn(address _reporter, uint256 _attotokens) public returns (bool) {
+    function migrateIn(address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) public returns (bool) {
         return setMigrateInValue;
     }
     
