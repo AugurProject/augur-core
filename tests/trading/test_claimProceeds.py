@@ -91,7 +91,7 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     finalizeMarket(kitchenSinkFixture, market, [0,10**18])
 
     logs = []
-    captureFilteredLogs(kitchenSinkFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(kitchenSinkFixture.chain.head_state, kitchenSinkFixture.contracts['Augur'], logs)
 
     # redeem shares with a1
     initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
@@ -107,6 +107,7 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     assert logs[0]['numPayoutTokens'] == expectedPayout
     assert logs[0]['numShares'] == 1
     assert logs[0]['sender'] == bytesToHexString(tester.a1)
+    assert logs[0]['finalTokenBalance'] == initialLongHolderETH + expectedPayout
 
     # assert a1 ends up with cash (minus fees) and a2 does not
     assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout

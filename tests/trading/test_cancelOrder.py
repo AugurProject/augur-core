@@ -34,7 +34,7 @@ def test_cancelBid(contractsFixture, cash, market, universe):
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == creatorInitialETH - fix('0.6'), "ETH should be deducted from the creator balance"
 
     logs = []
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
 
     assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
 

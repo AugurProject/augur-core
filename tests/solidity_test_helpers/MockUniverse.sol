@@ -408,45 +408,4 @@ contract MockUniverse is Initializable, IUniverse {
     function incrementOpenInterest(uint256 _amount) public returns (bool) {
         return setIncrementOpenInterestValue;
     }
-
-    function logMarketCreated(address _market, address _marketCreator, uint256 _marketCreationFee, string _extraInfo) public returns (bool) {
-        return true;
-    }
-
-    function logDesignatedReportSubmitted(address _reporter, address _market, address _reportingToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
-        return true;
-    }
-
-    function logReportSubmitted(address _reporter, address _market, address _reportingToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
-        return true;
-    }
-
-    function logWinningTokensRedeemed(address _reporter, address _market, address _reportingToken, uint256 _amountRedeemed, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
-        return true;
-    }
-
-    function logReportsDisputed(address _disputer, address _market, uint8 _reportingPhase, uint256 _disputeBondAmount) public returns (bool) {
-        return true;
-    }
-
-    function logMarketFinalized(address _market) public returns (bool) {
-        return true;
-    }
-
-    function logOrderCanceled(address _shareToken, address _sender, bytes32 _orderId, uint8 _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public returns (bool) {
-        return true;
-    }
-
-    function logOrderCreated(address _shareToken, address _creator, bytes32 _orderId, uint256 _price, uint256 _amount, uint256 _numTokensEscrowed, uint256 _numSharesEscrowed, uint256 _tradeGroupId) public returns (bool) {
-        return true;
-    }
-
-    function logOrderFilled(address _shareToken, address _creator, address _filler, uint256 _price, uint256 _numCreatorShares, uint256 _numCreatorTokens, uint256 _numFillerShares, uint256 _numFillerTokens, uint256 _settlementFees, uint256 _tradeGroupId) public returns (bool) {
-        return true;
-    }
-
-    function logProceedsClaimed(address _sender, address _market, uint256 _numShares, uint256 _numPayoutTokens) public returns (bool) {
-        return true;
-    }
-
 }

@@ -8,6 +8,7 @@ import 'libraries/math/SafeMathInt256.sol';
 import 'trading/Order.sol';
 import 'reporting/IMarket.sol';
 import 'trading/IOrdersFetcher.sol';
+import 'Augur.sol';
 
 
 /**
@@ -175,7 +176,7 @@ contract Orders is DelegationTarget, IOrders {
 
     function logOrderCreated(bytes32 _orderId, uint256 _tradeGroupId) private returns (bool) {
         Order.Data storage _order = orders[_orderId];
-        _order.market.getUniverse().logOrderCreated(_order.market.getShareToken(_order.outcome), _order.creator, _orderId, _order.price, _order.amount, _order.moneyEscrowed, _order.sharesEscrowed, _tradeGroupId);
+        Augur(controller.lookup("Augur")).logOrderCreated(_order.market.getUniverse(), _order.market.getShareToken(_order.outcome), _order.creator, _orderId, _order.price, _order.amount, _order.moneyEscrowed, _order.sharesEscrowed, _tradeGroupId);
         return true;
     }
 
@@ -218,7 +219,7 @@ contract Orders is DelegationTarget, IOrders {
 
     function fillOrderLog(bytes32 _orderId, address _filler, uint256 _creatorSharesFilled, uint256 _creatorTokensFilled, uint256 _fillerSharesFilled, uint256 _fillerTokensFilled, uint256 _settlementFees, uint256 _tradeGroupId) public returns (bool) {
         Order.Data storage _order = orders[_orderId];
-        _order.market.getUniverse().logOrderFilled(_order.market.getShareToken(_order.outcome), _order.creator, _filler, _order.price, _creatorSharesFilled, _creatorTokensFilled, _fillerSharesFilled, _fillerTokensFilled, _settlementFees, _tradeGroupId);
+        Augur(controller.lookup("Augur")).logOrderFilled(_order.market.getUniverse(), _order.market.getShareToken(_order.outcome), _order.creator, _filler, _order.price, _creatorSharesFilled, _creatorTokensFilled, _fillerSharesFilled, _fillerTokensFilled, _settlementFees, _tradeGroupId);
         return true;
     }
 

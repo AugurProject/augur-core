@@ -83,7 +83,7 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
             assert participationToken.redeem(False, sender=tester.k2)
 
     logs = []
-    captureFilteredLogs(localFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(localFixture.chain.head_state, localFixture.contracts['Augur'], logs)
 
     marketStake = marketDesignatedStake.balanceOf(tester.a0)
     expectedFees = reporterFees * marketStake / totalWinningStake + 1 # Rounding error

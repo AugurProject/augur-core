@@ -118,7 +118,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     assert noUniverseReputationToken.balanceOf(tester.a2) == expectedAmount + bonus
 
     logs = []
-    captureFilteredLogs(localFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(localFixture.chain.head_state, localFixture.contracts['Augur'], logs)
 
     # We can finalize the market now since a mjaority of REP has moved. Alternatively we could "localFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1" to move
     initialMarketCreatorETHBalance = localFixture.chain.head_state.get_balance(market.getOwner())
@@ -167,7 +167,7 @@ def test_designatedReportingHappyPath(localFixture, universe, market):
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report
     logs = []
-    captureFilteredLogs(localFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(localFixture.chain.head_state, localFixture.contracts['Augur'], logs)
     assert localFixture.designatedReport(market, [0,10**18], tester.k0)
 
     # Confirm the designated report logging works
@@ -207,7 +207,7 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
     proceedToFirstReporting(localFixture, universe, market, makeReport, 1, [0,10**18], [10**18,0])
 
     logs = []
-    captureFilteredLogs(localFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(localFixture.chain.head_state, localFixture.contracts['Augur'], logs)
 
     # We make one report by Tester 2
     stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])

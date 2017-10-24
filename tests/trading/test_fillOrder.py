@@ -23,7 +23,7 @@ def test_publicFillOrder_bid(contractsFixture, cash, market, universe):
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
     assert len(logs) == 2
@@ -69,7 +69,7 @@ def test_publicFillOrder_ask(contractsFixture, cash, market, universe):
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
     assert len(logs) == 2
@@ -117,7 +117,7 @@ def test_publicFillOrder_bid_scalar(contractsFixture, cash, scalarMarket, univer
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
     assert len(logs) == 2

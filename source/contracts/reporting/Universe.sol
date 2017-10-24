@@ -18,23 +18,11 @@ import 'reporting/IRepPriceOracle.sol';
 import 'reporting/IParticipationToken.sol';
 import 'reporting/IDisputeBond.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'Augur.sol';
 
 
 contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     using SafeMathUint256 for uint256;
-
-    event MarketCreated(address indexed market, address indexed marketCreator, uint256 marketCreationFee, string extraInfo);
-    event DesignatedReportSubmitted(address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
-    event ReportSubmitted(address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
-    event WinningTokensRedeemed(address indexed reporter, address indexed market, address stakeToken, uint256 amountRedeemed, uint256 reportingFeesReceived, uint256[] payoutNumerators);
-    event ReportsDisputed(address indexed disputer, address indexed market, uint8 reportingPhase, uint256 disputeBondAmount);
-    event MarketFinalized(address indexed market);
-    event UniverseForked(address indexed universe);
-    event OrderCanceled(address indexed shareToken, address indexed sender, bytes32 indexed orderId, uint8 orderType, uint256 tokenRefund, uint256 sharesRefund);
-    event OrderCreated(address indexed shareToken, address indexed creator, bytes32 indexed orderId, uint256 price, uint256 amount, uint256 numTokensEscrowed, uint256 numSharesEscrowed, uint256 tradeGroupId);
-    event OrderFilled(address indexed shareToken, address indexed creator, address indexed filler, uint256 price, uint256 numCreatorShares, uint256 numCreatorTokens, uint256 numFillerShares, uint256 numFillerTokens, uint256 settlementFees, uint256 tradeGroupId);
-    event ProceedsClaimed(address indexed sender, address indexed market, uint256 numShares, uint256 numPayoutTokens);
-    event TokensTransferred(address indexed token, address indexed from, address indexed to, uint256 value);
 
     IUniverse private parentUniverse;
     bytes32 private parentPayoutDistributionHash;
@@ -68,7 +56,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
         forkEndTime = block.timestamp + Reporting.forkDurationSeconds();
-        UniverseForked(this);
+        Augur(controller.lookup("Augur")).logUniverseForked();
         return true;
     }
 
@@ -139,6 +127,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     function getOrCreateChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
         if (childUniverses[_parentPayoutDistributionHash] == address(0)) {
             childUniverses[_parentPayoutDistributionHash] = UniverseFactory(controller.lookup("UniverseFactory")).createUniverse(controller, this, _parentPayoutDistributionHash);
+            Augur(controller.lookup("Augur")).logUniverseCreated(childUniverses[_parentPayoutDistributionHash]);
         }
         return childUniverses[_parentPayoutDistributionHash];
     }
@@ -389,73 +378,5 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
     function getMarketCreationCost() public returns (uint256) {
         return getValidityBond() + getTargetReporterGasCosts();
-    }
-
-    //
-    // Logging
-    //
-
-    /* TODO: Do we need this?
-    function logTokensTransferred(address _token, address _from, address _to, uint256 _value) public returns (bool) {
-        // VALIDATION
-        TokensTransferred(_token, _from, _to, _value);
-        return true;
-    }
-    */
-
-    function logMarketCreated(address _market, address _marketCreator, uint256 _marketCreationFee, string _extraInfo) public returns (bool) {
-        require(isContainerForReportingWindow(IReportingWindow(msg.sender)));
-        MarketCreated(_market, _marketCreator, _marketCreationFee, _extraInfo);
-        return true;
-    }
-
-    function logDesignatedReportSubmitted(address _reporter, address _market, address _stakeToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
-        require(isContainerForStakeToken(IStakeToken(msg.sender)));
-        DesignatedReportSubmitted(_reporter, _market, _stakeToken, _amountStaked, _payoutNumerators);
-        return true;
-    }
-
-    function logReportSubmitted(address _reporter, address _market, address _stakeToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
-        require(isContainerForStakeToken(IStakeToken(msg.sender)));
-        ReportSubmitted(_reporter, _market, _stakeToken, _amountStaked, _payoutNumerators);
-        return true;
-    }
-
-    function logWinningTokensRedeemed(address _reporter, address _market, address _stakeToken, uint256 _amountRedeemed, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
-        require(isContainerForStakeToken(IStakeToken(msg.sender)));
-        WinningTokensRedeemed(_reporter, _market, _stakeToken, _amountRedeemed, _reportingFeesReceived, _payoutNumerators);
-        return true;
-    }
-
-    function logReportsDisputed(address _disputer, address _market, uint8 _reportingPhase, uint256 _disputeBondAmount) public returns (bool) {
-        require(isContainerForMarket(IMarket(msg.sender)));
-        ReportsDisputed(_disputer, _market, _reportingPhase, _disputeBondAmount);
-        return true;
-    }
-
-    function logMarketFinalized(address _market) public returns (bool) {
-        require(isContainerForMarket(IMarket(msg.sender)));
-        MarketFinalized(_market);
-        return true;
-    }
-
-    function logOrderCanceled(address _shareToken, address _sender, bytes32 _orderId, uint8 _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public onlyWhitelistedCallers returns (bool) {
-        OrderCanceled(_shareToken, _sender, _orderId, _orderType, _tokenRefund, _sharesRefund);
-        return true;
-    }
-
-    function logOrderCreated(address _shareToken, address _creator, bytes32 _orderId, uint256 _price, uint256 _amount, uint256 _numTokensEscrowed, uint256 _numSharesEscrowed, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bool) {
-        OrderCreated(_shareToken, _creator, _orderId, _price, _amount, _numTokensEscrowed, _numSharesEscrowed, _tradeGroupId);
-        return true;
-    }
-
-    function logOrderFilled(address _shareToken, address _creator, address _filler, uint256 _price, uint256 _numCreatorShares, uint256 _numCreatorTokens, uint256 _numFillerShares, uint256 _numFillerTokens, uint256 _settlementFees, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bool) {
-        OrderFilled(_shareToken, _creator, _filler, _price, _numCreatorShares, _numCreatorTokens, _numFillerShares, _numFillerTokens, _settlementFees, _tradeGroupId);
-        return true;
-    }
-
-    function logProceedsClaimed(address _sender, address _market, uint256 _numShares, uint256 _numPayoutTokens) public onlyWhitelistedCallers returns (bool) {
-        ProceedsClaimed(_sender, _market, _numShares, _numPayoutTokens);
-        return true;
     }
 }

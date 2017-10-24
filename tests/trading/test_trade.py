@@ -20,7 +20,7 @@ def test_one_bid_on_books_buy_full_order(contractsFixture, cash, market, univers
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicSell(market.address, YES, 2, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('2', '0.4'))
 
     assert len(logs) == 2
@@ -61,7 +61,7 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture, cash, market, univ
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicSell(market.address, YES, 1, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('1', '0.4'))
 
     assert len(logs) == 2
@@ -102,7 +102,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture, cash, market, unive
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicSell(market.address, YES, 5, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('5', '0.4'))
 
     assert len(logs) == 3
@@ -154,7 +154,7 @@ def test_two_bids_on_books_buy_both(contractsFixture, cash, market, universe):
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicSell(market.address, YES, 5, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('5', '0.4'))
 
     assert len(logs) == 4
@@ -215,7 +215,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture, cash, market, 
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicSell(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('15', '0.4'))
 
     assert len(logs) == 4
@@ -276,7 +276,7 @@ def test_two_bids_on_books_buy_one_full_then_create(contractsFixture, cash, mark
 
     # fill/create
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicSell(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('15', '0.4'))
 
     assert len(logs) == 3
@@ -328,7 +328,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture, cash, market, univers
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicBuy(market.address, YES, 12, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('12', '0.6'))
 
     assert len(logs) == 2
@@ -368,7 +368,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture, cash, market, univ
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicBuy(market.address, YES, 7, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('7', '0.6'))
 
     assert len(logs) == 2
@@ -408,7 +408,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture, cash, market, unive
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicBuy(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('15', '0.6'))
 
     assert len(logs) == 3
@@ -460,7 +460,7 @@ def test_two_asks_on_books_buy_both(contractsFixture, cash, market, universe):
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicBuy(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('15', '0.6'))
 
     assert len(logs) == 4
@@ -521,7 +521,7 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture, cash, market, 
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicBuy(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('15', '0.6'))
 
     assert len(logs) == 4
@@ -582,7 +582,7 @@ def test_two_asks_on_books_buy_one_full_then_create(contractsFixture, cash, mark
 
     # fill/create
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicBuy(market.address, YES, 15, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('15', '0.6'))
 
     assert len(logs) == 3

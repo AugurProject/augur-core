@@ -52,18 +52,4 @@ contract IUniverse is ITyped {
     function isContainerForParticipationToken(IParticipationToken _shadyTarget) public view returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);
     function incrementOpenInterest(uint256 _amount) public returns (bool);
-    // Logging
-    function logMarketCreated(address _market, address _marketCreator, uint256 _marketCreationFee, string _extraInfo) public returns (bool);
-    function logDesignatedReportSubmitted(address _reporter, address _market, address _reportingToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool);
-    function logReportSubmitted(address _reporter, address _market, address _reportingToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool);    
-    function logWinningTokensRedeemed(address _reporter, address _market, address _reportingToken, uint256 _amountRedeemed, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool);    
-    function logReportsDisputed(address _disputer, address _market, uint8 _reportingPhase, uint256 _disputeBondAmount) public returns (bool);
-    function logMarketFinalized(address _market) public returns (bool);
-    function logOrderCanceled(address _shareToken, address _sender, bytes32 _orderId, uint8 _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public returns (bool);
-    function logOrderCreated(address _shareToken, address _creator, bytes32 _orderId, uint256 _price, uint256 _amount, uint256 _numTokensEscrowed, uint256 _numSharesEscrowed, uint256 _tradeGroupId) public returns (bool);
-    function logOrderFilled(address _shareToken, address _creator, address _filler, uint256 _price, uint256 _numCreatorShares, uint256 _numCreatorTokens, uint256 _numFillerShares, uint256 _numFillerTokens, uint256 _settlementFees, uint256 _tradeGroupId) public returns (bool);    
-    function logProceedsClaimed(address _sender, address _market, uint256 _numShares, uint256 _numPayoutTokens) public returns (bool);
-    /* TODO: Do we need this?
-    function logTokensTransferred(address _token, address _from, address _to, uint256 _value) public returns (bool);
-    */
 }

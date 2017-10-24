@@ -13,6 +13,7 @@ import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'Augur.sol';
 
 
 contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IStakeToken {
@@ -54,9 +55,9 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         buyTokens(msg.sender, _attotokens);
         if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             market.designatedReport();
-            getUniverse().logDesignatedReportSubmitted(msg.sender, market, this, _attotokens, payoutNumerators);
+            Augur(controller.lookup("Augur")).logDesignatedReportSubmitted(market.getUniverse(), msg.sender, market, this, _attotokens, payoutNumerators);
         } else {
-            getUniverse().logReportSubmitted(msg.sender, market, this, _attotokens, payoutNumerators);
+            Augur(controller.lookup("Augur")).logReportSubmitted(market.getUniverse(), msg.sender, market, this, _attotokens, payoutNumerators);
         }
         return true;
     }
@@ -121,7 +122,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
             _reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
         uint256 _feesReceived = market.getReportingWindow().collectStakeTokenReportingFees(msg.sender, _attotokens, forgoFees);
-        getUniverse().logWinningTokensRedeemed(msg.sender, market, this, _attotokens, _feesReceived, payoutNumerators);
+        Augur(controller.lookup("Augur")).logWinningTokensRedeemed(market.getUniverse(), msg.sender, market, this, _attotokens, _feesReceived, payoutNumerators);
         return true;
     }
 

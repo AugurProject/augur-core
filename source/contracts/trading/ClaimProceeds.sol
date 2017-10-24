@@ -9,6 +9,7 @@ import 'reporting/IMarket.sol';
 import 'trading/ICash.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/Reporting.sol';
+import 'Augur.sol';
 
 
 // AUDIT: Ensure that a malicious market can't subversively cause share tokens to be paid out incorrectly.
@@ -60,8 +61,12 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
             _numPayoutTokens = _numPayoutTokens.add(_shareHolderShare);
         }
 
-        _market.getUniverse().logProceedsClaimed(msg.sender, _market, _numShares, _numPayoutTokens);
+        logProceedsClaimed(_market, msg.sender, _numShares, _numPayoutTokens);
         return true;
+    }
+
+    function logProceedsClaimed(IMarket _market, address _sender, uint256 _numShares, uint256 _numPayoutTokens) private returns (bool) {
+        Augur(controller.lookup("Augur")).logProceedsClaimed(_market.getUniverse(), _sender, _market, _numShares, _numPayoutTokens, _sender.balance.add(_numPayoutTokens));
     }
 
     function divideUpWinnings(IMarket _market, IStakeToken _winningStakeToken, uint8 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {

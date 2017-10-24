@@ -64,7 +64,7 @@ def test_publicCreateOrder_bid2(contractsFixture, cash, market, universe):
     tradeGroupID = 42
 
     marketInitialCash = cash.balanceOf(market.address)
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     creatorInitialETH = contractsFixture.chain.head_state.get_balance(tester.a1)
     orderID = createOrder.publicCreateOrder(orderType, amount, fxpPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10'))
     assert orderID != bytearray(32), "Order ID should be non-zero"
@@ -151,7 +151,7 @@ def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     assert noShareToken.balanceOf(tester.a1) == 2
 
     logs = []
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
 
     # create ASK order for 3 shares with a mix of shares and cash
     assert yesShareToken.approve(createOrder.address, fix('2'), sender = tester.k1)

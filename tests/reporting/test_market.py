@@ -14,7 +14,7 @@ def test_market_creation(contractsFixture, universe, cash, market):
        contractsFixture.createReasonableBinaryMarket(universe, shareToken)
 
     logs = []
-    captureFilteredLogs(contractsFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     market = contractsFixture.createReasonableBinaryMarket(universe, cash, extraInfo="so extra")
 
     assert len(logs) == 1

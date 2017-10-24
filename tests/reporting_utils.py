@@ -42,7 +42,7 @@ def proceedToFirstReporting(testFixture, universe, market, makeReport, disputer,
         assert market.getReportingState() == testFixture.contracts['Constants'].DESIGNATED_DISPUTE()
         
         logs = []
-        captureFilteredLogs(testFixture.chain.head_state, universe, logs)
+        captureFilteredLogs(testFixture.chain.head_state, testFixture.contracts['Augur'], logs)
         
         assert market.disputeDesignatedReport(designatedDisputeOutcomes, 1, False, sender=testFixture.testerKey[disputer])
 
@@ -80,7 +80,7 @@ def proceedToLastReporting(testFixture, universe, market, makeReport, designated
     assert market.getReportingState() == testFixture.contracts['Constants'].FIRST_DISPUTE()
 
     logs = []
-    captureFilteredLogs(testFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(testFixture.chain.head_state, testFixture.contracts['Augur'], logs)
 
     disputeFirstReportOutcomeStake = testFixture.contracts['Constants'].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
     assert market.disputeFirstReporters(firstReportDisputeOutcomes, disputeFirstReportOutcomeStake, False, sender=testFixture.testerKey[firstDisputer])
@@ -121,7 +121,7 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
     assert market.getReportingState() == testFixture.contracts['Constants'].LAST_DISPUTE()
 
     logs = []
-    captureFilteredLogs(testFixture.chain.head_state, universe, logs)
+    captureFilteredLogs(testFixture.chain.head_state, testFixture.contracts['Augur'], logs)
 
     # Making a dispute at this phase will progress the market into FORKING
     assert market.disputeLastReporters(sender=tester.k0)
