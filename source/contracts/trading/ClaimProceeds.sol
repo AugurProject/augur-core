@@ -25,6 +25,11 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
 
         IStakeToken _winningStakeToken = _market.getFinalWinningStakeToken();
 
+        uint256 _numShares = 0;
+        uint256 _numPayoutTokens = 0;
+
+        ICash _denominationToken = _market.getDenominationToken();
+
         for (uint8 _outcome = 0; _outcome < _market.getNumberOfOutcomes(); ++_outcome) {
             IShareToken _shareToken = _market.getShareToken(_outcome);
             uint256 _numberOfShares = _shareToken.balanceOf(msg.sender);
@@ -38,7 +43,6 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
             if (_numberOfShares > 0) {
                 _shareToken.destroyShares(msg.sender, _numberOfShares);
             }
-            ICash _denominationToken = _market.getDenominationToken();
             if (_shareHolderShare > 0) {
                 require(_denominationToken.transferFrom(_market, msg.sender, _shareHolderShare));
             }
@@ -51,8 +55,12 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
             if (_reporterShare > 0) {
                 require(_denominationToken.transferFrom(_market, _market.getUniverse().getNextReportingWindow(), _reporterShare));
             }
+            
+            _numShares = _numShares.add(_numberOfShares);
+            _numPayoutTokens = _numPayoutTokens.add(_shareHolderShare);
         }
 
+        _market.getUniverse().logProceedsClaimed(msg.sender, _market, _numShares, _numPayoutTokens);
         return true;
     }
 

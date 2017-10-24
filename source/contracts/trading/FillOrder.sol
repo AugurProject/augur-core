@@ -83,10 +83,10 @@ library Trade {
     // "public" functions
     //
 
-    function tradeMakerSharesForFillerShares(Data _data) internal returns (bool) {
+    function tradeMakerSharesForFillerShares(Data _data) internal returns (uint256) {
         uint256 _numberOfCompleteSets = _data.creator.sharesToSell.min(_data.filler.sharesToSell);
         if (_numberOfCompleteSets == 0) {
-            return true;
+            return 0;
         }
 
         // transfer shares to this contract from each participant
@@ -96,7 +96,7 @@ library Trade {
         }
 
         // sell complete sets
-        _data.contracts.completeSets.sellCompleteSets(this, _data.contracts.market, _numberOfCompleteSets);
+        uint256 _settlementFees = _data.contracts.completeSets.sellCompleteSets(this, _data.contracts.market, _numberOfCompleteSets);
 
         // distribute payout proportionately (fees will have been deducted)
         uint256 _payout = _data.contracts.denominationToken.balanceOf(this);
@@ -108,6 +108,7 @@ library Trade {
         // update available shares for creator and filler
         _data.creator.sharesToSell -= _numberOfCompleteSets;
         _data.filler.sharesToSell -= _numberOfCompleteSets;
+        return _settlementFees;
     }
 
     function tradeMakerSharesForFillerTokens(Data _data) internal returns (bool) {
@@ -377,7 +378,7 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
 
     function fillOrder(address _filler, bytes32 _orderId, uint256 _amountFillerWants, uint256 _tradeGroupId) external onlyWhitelistedCallers returns (uint256) {
         Trade.Data memory _tradeData = Trade.create(controller, _orderId, _filler, _amountFillerWants);
-        _tradeData.tradeMakerSharesForFillerShares();
+        uint256 _settlementFees = _tradeData.tradeMakerSharesForFillerShares();
         _tradeData.tradeMakerSharesForFillerTokens();
         _tradeData.tradeMakerTokensForFillerShares();
         _tradeData.tradeMakerTokensForFillerTokens();
@@ -389,7 +390,7 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
         }
 
         // AUDIT: is there a reentry risk here?  we execute all of the above code, which includes transferring tokens around, before we mark the order as filled
-        _tradeData.contracts.orders.fillOrderLog(_tradeData.order.orderId, _tradeData.filler.participantAddress, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _tradeGroupId);
+        _tradeData.contracts.orders.fillOrderLog(_tradeData.order.orderId, _tradeData.filler.participantAddress, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _settlementFees, _tradeGroupId);
         _tradeData.contracts.orders.fillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
         return _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);
     }

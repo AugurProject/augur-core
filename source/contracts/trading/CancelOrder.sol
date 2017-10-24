@@ -40,7 +40,7 @@ contract CancelOrder is CashAutoConverter, ReentrancyGuard, ICancelOrder {
 
         refundOrder(msg.sender, _type, _sharesEscrowed, _moneyEscrowed, _market, _outcome);
 
-        _orders.cancelOrderLog(_orderId);
+        _market.getUniverse().logOrderCanceled(_market.getShareToken(_outcome), msg.sender, _orderId, uint8(_type), _moneyEscrowed, _sharesEscrowed);
 
         return true;
     }

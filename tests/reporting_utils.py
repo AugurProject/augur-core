@@ -127,13 +127,17 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
     assert market.disputeLastReporters(sender=tester.k0)
     assert market.getReportingState() == testFixture.contracts['Constants'].FORKING()
 
-    # Confirm the last dispute logging works
-    assert len(logs) == 1
-    assert logs[0]['_event_type'] == 'ReportsDisputed'
-    assert logs[0]['reportingPhase'] == testFixture.contracts['Constants'].LAST_DISPUTE()
-    assert logs[0]['disputer'] == bytesToHexString(tester.a0)
-    assert logs[0]['disputeBondAmount'] == testFixture.contracts['Constants'].LAST_REPORTERS_DISPUTE_BOND_AMOUNT()
-    assert logs[0]['market'] == market.address
+    # Confirm the last dispute logging and universe fork logging works
+    assert len(logs) == 2
+
+    assert logs[0]['_event_type'] == 'UniverseForked'
+    assert logs[0]['universe'] == universe.address
+
+    assert logs[1]['_event_type'] == 'ReportsDisputed'
+    assert logs[1]['reportingPhase'] == testFixture.contracts['Constants'].LAST_DISPUTE()
+    assert logs[1]['disputer'] == bytesToHexString(tester.a0)
+    assert logs[1]['disputeBondAmount'] == testFixture.contracts['Constants'].LAST_REPORTERS_DISPUTE_BOND_AMOUNT()
+    assert logs[1]['market'] == market.address
 
 def finalizeForkingMarket(reportingFixture, universe, market, finalizeByMigration, yesMigratorAddress, yesMigratorKey, noMigratorAddress1, noMigratorKey1, noMigratorAddress2, noMigratorKey2, firstReportOutcomes, secondReportOutcomes):
     reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())

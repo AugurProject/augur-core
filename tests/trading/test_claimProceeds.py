@@ -4,7 +4,7 @@ from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
-from utils import fix
+from utils import fix, captureFilteredLogs, bytesToHexString
 from constants import YES, NO
 
 
@@ -90,12 +90,23 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
     finalizeMarket(kitchenSinkFixture, market, [0,10**18])
 
+    logs = []
+    captureFilteredLogs(kitchenSinkFixture.chain.head_state, universe, logs)
+
     # redeem shares with a1
     initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
     claimProceeds.claimProceeds(market.address, sender = tester.k1)
     # redeem shares with a2
     initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
     claimProceeds.claimProceeds(market.address, sender = tester.k2)
+
+    # Confirm claim proceeds logging works correctly
+    assert len(logs) == 2
+    assert logs[0]['_event_type'] == 'ProceedsClaimed'
+    assert logs[0]['market'] == market.address
+    assert logs[0]['numPayoutTokens'] == expectedPayout
+    assert logs[0]['numShares'] == 1
+    assert logs[0]['sender'] == bytesToHexString(tester.a1)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
     assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout

@@ -18,11 +18,8 @@ contract Orders is DelegationTarget, IOrders {
     using Order for Order.Data;
     using SafeMathUint256 for uint256;
 
-    event CancelOrder(address indexed market, address indexed sender, uint256 price, uint256 amount, bytes32 orderId, uint8 outcome, Order.TradeTypes orderType, uint256 cashRefund, uint256 sharesRefund);
     event BuyCompleteSets(address indexed sender, address indexed market, uint256 amount, uint256 numOutcomes);
     event SellCompleteSets(address indexed sender, address indexed market, uint256 amount, uint256 numOutcomes, uint256 creatorFee, uint256 reportingFee);
-    event CreateOrder(address indexed market, address indexed sender, Order.TradeTypes indexed orderType, uint256 price, uint256 amount, uint8 outcome, bytes32 orderId, uint256 moneyEscrowed, uint256 sharesEscrowed, uint256 tradeGroupId);
-    event FillOrder(address indexed market, uint8 indexed outcome, Order.TradeTypes indexed orderType, bytes32 orderId, uint256 price, address creator, address filler, uint256 creatorShares, uint256 creatorTokens, uint256 fillerShares, uint256 fillerTokens, uint256 tradeGroupId);
 
     struct MarketOrders {
         uint256 volume;
@@ -157,23 +154,29 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    function saveOrder(Order.TradeTypes _type, IMarket _market, uint256 _amount, uint256 price, address _sender, uint8 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bytes32 _orderId) {
+    function saveOrder(Order.TradeTypes _type, IMarket _market, uint256 _amount, uint256 _price, address _sender, uint8 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bytes32 _orderId) {
         require(_outcome < _market.getNumberOfOutcomes());
-        _orderId = getOrderId(_type, _market, _amount, price, _sender, block.number, _outcome, _moneyEscrowed, _sharesEscrowed);
+        _orderId = getOrderId(_type, _market, _amount, _price, _sender, block.number, _outcome, _moneyEscrowed, _sharesEscrowed);
         Order.Data storage _order = orders[_orderId];
         _order.orders = this;
         _order.market = _market;
         _order.id = _orderId;
         _order.tradeType = _type;
         _order.outcome = _outcome;
-        _order.price = price;
+        _order.price = _price;
         _order.amount = _amount;
         _order.creator = _sender;
         _order.moneyEscrowed = _moneyEscrowed;
         _order.sharesEscrowed = _sharesEscrowed;
         insertOrderIntoList(_order, _betterOrderId, _worseOrderId);
-        CreateOrder(_market, _sender, _type, price, _amount, _outcome, _orderId, _moneyEscrowed, _sharesEscrowed, _tradeGroupId);
+        logOrderCreated(_orderId, _tradeGroupId);
         return _orderId;
+    }
+
+    function logOrderCreated(bytes32 _orderId, uint256 _tradeGroupId) private returns (bool) {
+        Order.Data storage _order = orders[_orderId];
+        _order.market.getUniverse().logOrderCreated(_order.market.getShareToken(_order.outcome), _order.creator, _orderId, _order.price, _order.amount, _order.moneyEscrowed, _order.sharesEscrowed, _tradeGroupId);
+        return true;
     }
 
     function removeOrder(bytes32 _orderId) public onlyWhitelistedCallers returns (bool) {
@@ -213,9 +216,9 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    function fillOrderLog(bytes32 _orderId, address _filler, uint256 _creatorSharesFilled, uint256 _creatorTokensFilled, uint256 _fillerSharesFilled, uint256 _fillerTokensFilled, uint256 _tradeGroupId) public returns (bool) {
+    function fillOrderLog(bytes32 _orderId, address _filler, uint256 _creatorSharesFilled, uint256 _creatorTokensFilled, uint256 _fillerSharesFilled, uint256 _fillerTokensFilled, uint256 _settlementFees, uint256 _tradeGroupId) public returns (bool) {
         Order.Data storage _order = orders[_orderId];
-        FillOrder(_order.market, _order.outcome, _order.tradeType, _orderId, _order.price, _order.creator, _filler, _creatorSharesFilled, _creatorTokensFilled, _fillerSharesFilled, _fillerTokensFilled, _tradeGroupId);
+        _order.market.getUniverse().logOrderFilled(_order.market.getShareToken(_order.outcome), _order.creator, _filler, _order.price, _creatorSharesFilled, _creatorTokensFilled, _fillerSharesFilled, _fillerTokensFilled, _settlementFees, _tradeGroupId);
         return true;
     }
 
@@ -226,12 +229,6 @@ contract Orders is DelegationTarget, IOrders {
 
     function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _amount, uint256 _numOutcomes, uint256 _creatorFee, uint256 _reportingFee) public returns (bool) {
         SellCompleteSets(_sender, _market, _amount, _numOutcomes, _creatorFee, _reportingFee);
-        return true;
-    }
-
-    function cancelOrderLog(bytes32 _orderId) public returns (bool) {
-        Order.Data storage _order = orders[_orderId];
-        CancelOrder(_order.market, _order.creator, _order.price, _order.amount, _orderId, _order.outcome, _order.tradeType, _order.moneyEscrowed, _order.sharesEscrowed);
         return true;
     }
 

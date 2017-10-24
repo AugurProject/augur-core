@@ -149,8 +149,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
         uint256 _bondAmount = Reporting.designatedReporterDisputeBondAmount();
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
-        IUniverse _universe = getUniverse();
-        _universe.increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
+        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
         this.increaseTotalStake(_bondAmount);
         reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, designatedReporterDisputeBondToken, _bondAmount);
         if (_attotokens > 0) {
@@ -160,7 +159,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         }
         reportingWindow.updateMarketPhase();
-        _universe.logReportsDisputed(msg.sender, this, uint8(ReportingState.DESIGNATED_DISPUTE), _bondAmount);
+        getUniverse().logReportsDisputed(msg.sender, this, uint8(ReportingState.DESIGNATED_DISPUTE), _bondAmount);
         return true;
     }
 
@@ -168,8 +167,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(getReportingState() == ReportingState.FIRST_DISPUTE);
         uint256 _bondAmount = Reporting.firstReportersDisputeBondAmount();
         firstReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
-        IUniverse _universe = getUniverse();
-        _universe.increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
+        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
         this.increaseTotalStake(_bondAmount);
         reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, firstReportersDisputeBondToken, _bondAmount);
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
@@ -181,7 +179,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         }
-        _universe.logReportsDisputed(msg.sender, this, uint8(ReportingState.FIRST_DISPUTE), _bondAmount);
+        getUniverse().logReportsDisputed(msg.sender, this, uint8(ReportingState.FIRST_DISPUTE), _bondAmount);
         return true;
     }
 
@@ -189,13 +187,12 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(getReportingState() == ReportingState.LAST_DISPUTE);
         uint256 _bondAmount = Reporting.lastReportersDisputeBondAmount();
         lastReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
-        IUniverse _universe = getUniverse();
-        _universe.increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
+        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
         this.increaseTotalStake(_bondAmount);
         reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, lastReportersDisputeBondToken, _bondAmount);
         reportingWindow.getUniverse().fork();
         IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
-        _universe.logReportsDisputed(msg.sender, this, uint8(ReportingState.LAST_DISPUTE), _bondAmount);
+        getUniverse().logReportsDisputed(msg.sender, this, uint8(ReportingState.LAST_DISPUTE), _bondAmount);
         return migrateReportingWindow(_newReportingWindow);
     }
 
@@ -280,6 +277,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         // The validity bond is paid to the owner in any valid outcome and the reporting window otherwise
         doFeePayout(isValid(), validityBondAttoeth);
         reportingWindow.updateMarketPhase();
+        getUniverse().logMarketFinalized(this);
         return true;
     }
 

@@ -44,10 +44,11 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
     }
 
     function publicSellCompleteSets(IMarket _market, uint256 _amount) external convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
-        return this.sellCompleteSets(msg.sender, _market, _amount);
+        this.sellCompleteSets(msg.sender, _market, _amount);
+        return true;
     }
 
-    function sellCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (bool) {
+    function sellCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (uint256) {
         require(_sender != address(0));
         require(_market != IMarket(0));
 
@@ -78,6 +79,6 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
         require(_denominationToken.transferFrom(_market, _sender, _payout));
 
         IOrders(controller.lookup("Orders")).sellCompleteSetsLog(_sender, _market, _amount, _numOutcomes, _creatorFee, _reportingFee);
-        return true;
+        return _creatorFee.add(_reportingFee);
     }
 }

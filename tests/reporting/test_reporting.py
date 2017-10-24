@@ -117,9 +117,17 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     assert not reputationToken.balanceOf(tester.a2)
     assert noUniverseReputationToken.balanceOf(tester.a2) == expectedAmount + bonus
 
+    logs = []
+    captureFilteredLogs(localFixture.chain.head_state, universe, logs)
+
     # We can finalize the market now since a mjaority of REP has moved. Alternatively we could "localFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1" to move
     initialMarketCreatorETHBalance = localFixture.chain.head_state.get_balance(market.getOwner())
     assert market.tryFinalize()
+
+    # Confirm market finalization logging works
+    assert len(logs) == 1
+    assert logs[0]['_event_type'] == 'MarketFinalized'
+    assert logs[0]['market'] == market.address
 
     # The market is now finalized and the NO outcome is the winner
     assert market.getReportingState() == localFixture.contracts['Constants'].FINALIZED()
@@ -198,9 +206,10 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
     # Proceed to the FIRST REPORTING phase
     proceedToFirstReporting(localFixture, universe, market, makeReport, 1, [0,10**18], [10**18,0])
 
-    # We make one report by Tester 2
     logs = []
     captureFilteredLogs(localFixture.chain.head_state, universe, logs)
+
+    # We make one report by Tester 2
     stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
     stakeTokenYes.buy(1, sender=tester.k2)
     # If there ws no designated report he first reporter gets the no-show REP bond auto-staked on the outcome they're purchasing
