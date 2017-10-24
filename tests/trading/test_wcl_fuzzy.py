@@ -140,7 +140,7 @@ def execute_bidOrder_tests(fixture, kitchenSinkSnapshot, universe, market, fxpAm
     longCost = long(fxpAmount * fxpPrice)
     shortCost = long(fxpAmount * (market.getNumTicks() - fxpPrice))
     completeSetFees = long(fxpAmount * market.getNumTicks() * fix('0.0101') / 10**18)
-    shortFee = long((completeSetFees * shortCost) / (longCost + shortCost))
+    shortFee = Decimal(completeSetFees * shortCost) / Decimal(longCost + shortCost)
     longFee = completeSetFees - shortFee
 
     print "creator escrows ETH, filler pays with ETH"
@@ -184,10 +184,10 @@ def execute_bidOrder_tests(fixture, kitchenSinkSnapshot, universe, market, fxpAm
         fillerTokens = 0,
         expectedMakerLongShares = 0,
         expectedMakerShortShares = 0,
-        expectedMakerTokens = shortCost - shortFee,
+        expectedMakerTokens = (shortCost - shortFee).quantize(Decimal('1.'), rounding=ROUND_UP),
         expectedFillerLongShares = 0,
         expectedFillerShortShares = 0,
-        expectedFillerTokens = longCost - longFee)
+        expectedFillerTokens = (longCost - longFee).quantize(Decimal('1.'), rounding=ROUND_DOWN))
 
     print "creator escrows ETH, filler pays with shares"
     execute(
@@ -239,7 +239,7 @@ def execute_askOrder_tests(fixture, kitchenSinkSnapshot, universe, market, fxpAm
     longCost = long(fxpAmount * fxpPrice)
     shortCost = long(fxpAmount * (market.getNumTicks() - fxpPrice))
     completeSetFees = long(fxpAmount * market.getNumTicks() * fix('0.0101') / 10**18)
-    longFee = Decimal(Decimal(completeSetFees * longCost) / Decimal(longCost + shortCost)).quantize(Decimal('1.'), rounding=ROUND_UP)
+    longFee = Decimal(completeSetFees * longCost) / Decimal(longCost + shortCost)
     shortFee = completeSetFees - longFee
 
     print "creator escrows ETH, filler pays with ETH"
@@ -283,10 +283,10 @@ def execute_askOrder_tests(fixture, kitchenSinkSnapshot, universe, market, fxpAm
         fillerTokens = 0,
         expectedMakerLongShares = 0,
         expectedMakerShortShares = 0,
-        expectedMakerTokens = longCost - longFee,
+        expectedMakerTokens = (longCost - longFee).quantize(Decimal('1.'), rounding=ROUND_DOWN),
         expectedFillerLongShares = 0,
         expectedFillerShortShares = 0,
-        expectedFillerTokens = shortCost - shortFee)
+        expectedFillerTokens = (shortCost - shortFee).quantize(Decimal('1.'), rounding=ROUND_UP))
 
     print "creator escrows ETH, filler pays with shares"
     execute(
