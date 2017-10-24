@@ -6,7 +6,7 @@ from utils import stringToBytes, captureFilteredLogs, bytesToHexString
 
 tester.STARTGAS = long(6.7 * 10**6)
 
-def test_markett_creation(contractsFixture, universe, cash, market):
+def test_market_creation(contractsFixture, universe, cash, market):
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))

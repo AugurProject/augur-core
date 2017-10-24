@@ -49,7 +49,7 @@ contract MockParticipationToken is ITyped, Initializable, MockVariableSupplyToke
         return _reportingWindow.increaseTotalWinningStake(_attotokens);
     }
 
-    function callCollectParticipationTokenReportingFees(IReportingWindow _reportingWindow, address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns(bool) {
+    function callCollectParticipationTokenReportingFees(IReportingWindow _reportingWindow, address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns(uint256) {
         return _reportingWindow.collectParticipationTokenReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
     
