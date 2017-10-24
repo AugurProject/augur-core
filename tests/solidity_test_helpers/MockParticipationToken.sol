@@ -5,13 +5,13 @@ import 'reporting/IParticipationToken.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
-import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingWindow.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'TEST/MockVariableSupplyToken.sol';
 
 
-contract MockParticipationToken is ITyped, Initializable, VariableSupplyToken, IParticipationToken {
+contract MockParticipationToken is ITyped, Initializable, MockVariableSupplyToken, IParticipationToken {
     using SafeMathUint256 for uint256;
 
     IReportingWindow private initializeReportingWindowValue;

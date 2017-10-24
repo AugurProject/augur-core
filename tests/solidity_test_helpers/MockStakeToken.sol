@@ -4,7 +4,6 @@ pragma solidity 0.4.17;
 import 'reporting/IStakeToken.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
-import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IStakeToken.sol';
@@ -12,9 +11,10 @@ import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'TEST/MockVariableSupplyToken.sol';
 
 
-contract MockStakeToken is ITyped, VariableSupplyToken, IStakeToken {
+contract MockStakeToken is ITyped, MockVariableSupplyToken, IStakeToken {
     using SafeMathUint256 for uint256;
 
     IMarket private initializeMarketValue;

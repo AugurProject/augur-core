@@ -120,7 +120,7 @@ class ContractsFixture:
             },
             'settings': {
                 # TODO: Remove 'remappings' line below and update 'sources' line above
-                'remappings': [ '=%s/' % resolveRelativePath("../source/contracts") ],
+                'remappings': [ '=%s/' % resolveRelativePath("../source/contracts"), 'TEST=%s/' % resolveRelativePath("solidity_test_helpers") ],
                 'optimizer': {
                     'enabled': True,
                     'runs': 500
@@ -151,6 +151,10 @@ class ContractsFixture:
         matches = findall("import ['\"](.*?)['\"]", fileContents)
         for match in matches:
             dependencyPath = path.join(BASE_PATH, '..', 'source/contracts', match)
+            if not path.isfile(dependencyPath):
+                dependencyPath = path.join(BASE_PATH, 'solidity_test_helpers', match).replace("TEST/", "")
+            if not path.isfile(dependencyPath):
+                raise Exception("Could not resolve dependency file path: %s" % dependencyPath)
             if not dependencyPath in knownDependencies:
                 ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
         return(knownDependencies)
