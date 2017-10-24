@@ -32,7 +32,7 @@ contract IReportingWindow is ITyped {
     function allMarketsFinalized() public view returns (bool);
     function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool);
     function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool);
-    function collectAttedanceTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool);
+    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool);
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
     function migrateFeesDueToMarketMigration(IMarket _market) public returns (bool);
     function migrateFeesDueToFork() public returns (bool);
