@@ -171,7 +171,7 @@ class ContractsFixture:
         config_metropolis['BLOCK_GAS_LIMIT'] = 2**60
 
         for a in range(10):
-            tester.base_alloc[getattr(tester, 'a%i' % a)] = {'balance': 10**40}
+            tester.base_alloc[getattr(tester, 'a%i' % a)] = {'balance': 10**24}
 
         self.chain = Chain(env=Env(config=config_metropolis))
         self.contracts = {}
