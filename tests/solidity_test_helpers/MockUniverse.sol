@@ -312,6 +312,7 @@ contract MockUniverse is Initializable, IUniverse {
     function getDesignatedReportNoShowBond() public returns (uint256) {
         return setDesignatedReportNoShowBondValue;
     }
+    
     function getReportingFeeDivisor() public returns (uint256) {
         return setReportingFeeDivisorValue;
     }
