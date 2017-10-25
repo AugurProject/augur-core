@@ -22,7 +22,7 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
     uint256 private bondRemainingToBePaidOut;
     uint256 private bondAmount;
 
-    function initialize(IMarket _market, address _bondHolder, uint256 _bondAmount, bytes32 _payoutDistributionHash) public beforeInitialized returns (bool) {
+    function initialize(IMarket _market, address _bondHolder, uint256 _bondAmount, bytes32 _payoutDistributionHash) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
         bondHolder = _bondHolder;
@@ -32,7 +32,7 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         return true;
     }
 
-    function withdraw(bool forgoFees) public returns (bool) {
+    function withdraw(bool forgoFees) public onlyInGoodTimes returns (bool) {
         require(msg.sender == bondHolder);
         bool _isFinalized = market.getReportingState() == IMarket.ReportingState.FINALIZED;
         require(!market.isContainerForDisputeBondToken(this) || (_isFinalized && market.getFinalPayoutDistributionHash() != disputedPayoutDistributionHash));
@@ -46,14 +46,14 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
         if (bondRemainingToBePaidOut < bondAmount) {
             uint256 _amountToDeductFromExtraPayout = _amountToTransfer.min(bondAmount - bondRemainingToBePaidOut);
-            getUniverse().decreaseExtraDisputeBondRemainingToBePaidOut(_amountToDeductFromExtraPayout); 
+            getUniverse().decreaseExtraDisputeBondRemainingToBePaidOut(_amountToDeductFromExtraPayout);
         }
         _reputationToken.transfer(bondHolder, _amountToTransfer);
         return true;
     }
 
     // NOTE: The UI should warn users about doing this before REP has migrated fully out of the forking universe in order to get their extra payout, which is sourced from REP migrated to other Universes. There is no penalty for waiting (In fact waiting will only ever get them a greater payout)
-    function withdrawToUniverse(IUniverse _shadyUniverse) public returns (bool) {
+    function withdrawToUniverse(IUniverse _shadyUniverse) public onlyInGoodTimes returns (bool) {
         require(msg.sender == bondHolder);
         IUniverse _universe = getUniverse();
         require(!market.isContainerForDisputeBondToken(this) || _universe.getForkingMarket() == market);
@@ -73,13 +73,13 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         _amountToTransfer = _amountToTransfer.add(_amountMinted);
         if (bondRemainingToBePaidOut < bondAmount) {
             uint256 _amountToDeductFromExtraPayout = _amountToTransfer.min(bondAmount - bondRemainingToBePaidOut);
-            getUniverse().decreaseExtraDisputeBondRemainingToBePaidOut(_amountToDeductFromExtraPayout); 
+            getUniverse().decreaseExtraDisputeBondRemainingToBePaidOut(_amountToDeductFromExtraPayout);
         }
         _destinationReputationToken.transfer(bondHolder, _amountToTransfer);
         return true;
     }
 
-    function mintRepTokensForBondMigration(IReputationToken _destinationReputationToken) private returns (uint256) {
+    function mintRepTokensForBondMigration(IReputationToken _destinationReputationToken) private onlyInGoodTimes returns (uint256) {
         IUniverse _universe = market.getUniverse();
         IUniverse _disputeUniverse = _universe.getOrCreateChildUniverse(disputedPayoutDistributionHash);
 
@@ -98,17 +98,7 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
     function withdrawInEmergency() public onlyInBadTimes returns (bool) {
         require(msg.sender == bondHolder);
         IReputationToken _reputationToken = getReputationToken();
-        uint256 _amountToTransfer = _reputationToken.balanceOf(this);
-        if (bondRemainingToBePaidOut > bondAmount) {
-            uint256 _amountToCollectFeesOn = _amountToTransfer.min(bondRemainingToBePaidOut - bondAmount);
-            market.getReportingWindow().collectReportingFeesInEmergency(bondHolder, _amountToCollectFeesOn);
-        }
-        bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
-        if (bondRemainingToBePaidOut < bondAmount) {
-            uint256 _amountToDeductFromExtraPayout = _amountToTransfer.min(bondAmount - bondRemainingToBePaidOut);
-            getUniverse().decreaseExtraDisputeBondRemainingToBePaidOut(_amountToDeductFromExtraPayout);
-        }
-        _reputationToken.transfer(bondHolder, _amountToTransfer);
+        _reputationToken.transfer(bondHolder, _reputationToken.balanceOf(this));
         return true;
     }
 
@@ -148,7 +138,7 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         }
     }
 
-    function transfer(address _destinationAddress, uint256 _attotokens) public returns (bool) {
+    function transfer(address _destinationAddress, uint256 _attotokens) public onlyInGoodTimes returns (bool) {
         require(_attotokens == 1);
         require(msg.sender == bondHolder);
         bondHolder = _destinationAddress;

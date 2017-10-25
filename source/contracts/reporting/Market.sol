@@ -97,7 +97,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function assessFees() private returns (bool) {
+    function assessFees() private onlyInGoodTimes returns (bool) {
         IUniverse _universe = getUniverse();
         require(reportingWindow.getReputationToken().balanceOf(this) == _universe.getDesignatedReportNoShowBond());
         reporterGasCostsFeeAttoeth = _universe.getTargetReporterGasCosts();
@@ -105,12 +105,12 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function createShareToken(uint8 _outcome) private returns (IShareToken) {
+    function createShareToken(uint8 _outcome) private onlyInGoodTimes returns (IShareToken) {
         return ShareTokenFactory(controller.lookup("ShareTokenFactory")).createShareToken(controller, this, _outcome);
     }
 
     // This will need to be called manually for each open market if a spender contract is updated
-    function approveSpenders() private returns (bool) {
+    function approveSpenders() private onlyInGoodTimes returns (bool) {
         bytes32[5] memory _names = [bytes32("CancelOrder"), bytes32("CompleteSets"), bytes32("FillOrder"), bytes32("TradingEscapeHatch"), bytes32("ClaimProceeds")];
         for (uint8 i = 0; i < _names.length; i++) {
             cash.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT);
@@ -128,7 +128,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function designatedReport() public triggersMigration returns (bool) {
+    function designatedReport() public onlyInGoodTimes triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.DESIGNATED_REPORTING);
         IStakeToken _shadyStakeToken = IStakeToken(msg.sender);
         require(isContainerForStakeToken(_shadyStakeToken));
@@ -282,7 +282,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function migrateReportingWindow(IReportingWindow _newReportingWindow) private afterInitialized returns (bool) {
+    function migrateReportingWindow(IReportingWindow _newReportingWindow) private onlyInGoodTimes afterInitialized returns (bool) {
         _newReportingWindow.migrateMarketInFromSibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
@@ -355,7 +355,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function getStakeToken(uint256[] _payoutNumerators, bool _invalid) public returns (IStakeToken) {
+    function getStakeToken(uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes returns (IStakeToken) {
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         IStakeToken _stakeToken = IStakeToken(stakeTokens.getAsAddressOrZero(_payoutDistributionHash));
         if (address(_stakeToken) == NULL_ADDRESS) {
@@ -365,7 +365,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return _stakeToken;
     }
 
-    function transferIncorrectDisputeBondsToWinningStakeToken() private returns (bool) {
+    function transferIncorrectDisputeBondsToWinningStakeToken() private onlyInGoodTimes returns (bool) {
         require(getReportingState() == ReportingState.FINALIZED);
         IReputationToken _reputationToken = reportingWindow.getReputationToken();
         if (getForkingMarket() == this) {
@@ -380,7 +380,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function doFeePayout(bool _toOwner, uint256 _amount) private returns (bool) {
+    function doFeePayout(bool _toOwner, uint256 _amount) private onlyInGoodTimes returns (bool) {
         if (_toOwner) {
             require(getOwner().call.value(_amount)());
         } else {
@@ -390,7 +390,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     // AUDIT: This is called at the beginning of StakeToken:buy. Look for reentrancy issues
-    function firstReporterCompensationCheck(address _reporter) public returns (uint256) {
+    function firstReporterCompensationCheck(address _reporter) public onlyInGoodTimes returns (uint256) {
         require(isContainerForStakeToken(IStakeToken(msg.sender)));
         if (getReportingState() == ReportingState.DESIGNATED_REPORTING) {
             return 0;
@@ -407,7 +407,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         }
     }
 
-    function increaseTotalStake(uint256 _amount) public returns (bool) {
+    function increaseTotalStake(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(msg.sender == address(this) || isContainerForStakeToken(IStakeToken(msg.sender)));
         totalStake = totalStake.add(_amount);
         reportingWindow.increaseTotalStake(_amount);

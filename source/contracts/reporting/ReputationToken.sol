@@ -23,24 +23,24 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     IUniverse private universe;
     IReputationToken private topMigrationDestination;
 
-    function initialize(IUniverse _universe) public beforeInitialized returns (bool) {
+    function initialize(IUniverse _universe) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         require(_universe != address(0));
         universe = _universe;
         return true;
     }
 
-    function migrateOutStakeToken(IReputationToken _destination, address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
+    function migrateOutStakeToken(IReputationToken _destination, address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForStakeToken(IStakeToken(msg.sender)));
         return internalMigrateOut(_destination, msg.sender, _reporter, _attotokens, true);
     }
 
-    function migrateOutDisputeBondToken(IReputationToken _destination, address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
+    function migrateOutDisputeBondToken(IReputationToken _destination, address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
         return internalMigrateOut(_destination, msg.sender, _reporter, _attotokens, true);
     }
 
-    function migrateOut(IReputationToken _destination, address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
+    function migrateOut(IReputationToken _destination, address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         return internalMigrateOut(_destination, msg.sender, _reporter, _attotokens, false);
     }
 
@@ -59,7 +59,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function migrateIn(address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) public afterInitialized returns (bool) {
+    function migrateIn(address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) public onlyInGoodTimes afterInitialized returns (bool) {
         require(ReputationToken(msg.sender) == universe.getParentUniverse().getReputationToken());
         balances[_reporter] = balances[_reporter].add(_attotokens);
         // Only count tokens migrated toward the available to be matched in other universes. The bonus should not be added
@@ -71,7 +71,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function eligibleForForkBonus(bool _bonusIfInForkWindow) private returns (bool) {
+    function eligibleForForkBonus(bool _bonusIfInForkWindow) private onlyInGoodTimes returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
         if (_parentUniverse.getForkingMarket().getReportingState() != IMarket.ReportingState.FINALIZED) {
             return true;
@@ -82,7 +82,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return false;
     }
 
-    function migrateFromLegacyReputationToken() public afterInitialized returns (bool) {
+    function migrateFromLegacyReputationToken() public onlyInGoodTimes afterInitialized returns (bool) {
         var _legacyRepToken = ERC20(controller.lookup("LegacyReputationToken"));
         uint256 _legacyBalance = _legacyRepToken.balanceOf(msg.sender);
         _legacyRepToken.transferFrom(msg.sender, address(0), _legacyBalance);
@@ -91,37 +91,37 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function mintForDisputeBondMigration(uint256 _amount) public afterInitialized returns (bool) {
+    function mintForDisputeBondMigration(uint256 _amount) public onlyInGoodTimes afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
         require(_parentUniverse.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
         mint(msg.sender, _amount);
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
-    function trustedReportingWindowTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
+    function trustedReportingWindowTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForReportingWindow(IReportingWindow(msg.sender)));
         return internalTrustedTransfer(_source, _destination, _attotokens);
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
-    function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
+    function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForMarket(IMarket(msg.sender)));
         return internalTrustedTransfer(_source, _destination, _attotokens);
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
-    function trustedStakeTokenTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
+    function trustedStakeTokenTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForStakeToken(IStakeToken(msg.sender)));
         return internalTrustedTransfer(_source, _destination, _attotokens);
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
-    function trustedParticipationTokenTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
+    function trustedParticipationTokenTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForParticipationToken(IParticipationToken(msg.sender)));
         return internalTrustedTransfer(_source, _destination, _attotokens);
     }
 
-    function internalTrustedTransfer(address _source, address _destination, uint256 _attotokens) internal afterInitialized returns (bool) {
+    function internalTrustedTransfer(address _source, address _destination, uint256 _attotokens) internal onlyInGoodTimes afterInitialized returns (bool) {
         balances[_source] = balances[_source].sub(_attotokens);
         balances[_destination] = balances[_destination].add(_attotokens);
         supply = supply.add(_attotokens);

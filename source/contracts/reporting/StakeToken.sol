@@ -62,7 +62,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function trustedBuy(address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
+    function trustedBuy(address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(IMarket(msg.sender) == market);
         require(_attotokens > 0);
         IMarket.ReportingState _state = market.getReportingState();
@@ -71,7 +71,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function buyTokens(address _reporter, uint256 _attotokens) private afterInitialized returns (bool) {
+    function buyTokens(address _reporter, uint256 _attotokens) private onlyInGoodTimes afterInitialized returns (bool) {
         getReputationToken().trustedStakeTokenTransfer(_reporter, this, _attotokens);
         mint(_reporter, _attotokens);
         bytes32 _payoutDistributionHash = getPayoutDistributionHash();
@@ -137,7 +137,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function migrateLosingTokenRepToDisputeBond(IDisputeBond _disputeBondToken) private returns (bool) {
+    function migrateLosingTokenRepToDisputeBond(IDisputeBond _disputeBondToken) private onlyInGoodTimes returns (bool) {
         if (_disputeBondToken == address(0)) {
             return true;
         }
@@ -154,7 +154,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function migrateLosingTokenRepToWinningToken() private returns (bool) {
+    function migrateLosingTokenRepToWinningToken() private onlyInGoodTimes returns (bool) {
         IReputationToken _reputationToken = getReputationToken();
         uint256 _balance = _reputationToken.balanceOf(this);
         if (_balance == 0) {
@@ -172,9 +172,6 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         burn(msg.sender, _attotokens);
         if (_reporterReputationShare != 0) {
             _reputationToken.transfer(msg.sender, _reporterReputationShare);
-        }
-        if (market.isContainerForStakeToken(this)) {
-            market.getReportingWindow().collectReportingFeesInEmergency(msg.sender, _attotokens);
         }
         return true;
     }

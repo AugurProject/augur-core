@@ -42,7 +42,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     mapping (address => uint256) private designatedReportNoShowBondInAttoRep;
     mapping (address => uint256) private shareSettlementFeeDivisor;
 
-    function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external beforeInitialized returns (bool) {
+    function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         parentUniverse = _parentUniverse;
         parentPayoutDistributionHash = _parentPayoutDistributionHash;
@@ -51,7 +51,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return true;
     }
 
-    function fork() public afterInitialized returns (bool) {
+    function fork() public onlyInGoodTimes afterInitialized returns (bool) {
         require(forkingMarket == address(0));
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
@@ -100,7 +100,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return Reporting.reportingDurationSeconds() + Reporting.reportingDisputeDurationSeconds();
     }
 
-    function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow) {
+    function getReportingWindowByTimestamp(uint256 _timestamp) public onlyInGoodTimes returns (IReportingWindow) {
         uint256 _windowId = getReportingWindowId(_timestamp);
         if (reportingWindows[_windowId] == address(0)) {
             reportingWindows[_windowId] = ReportingWindowFactory(controller.lookup("ReportingWindowFactory")).createReportingWindow(controller, this, _windowId);
@@ -108,19 +108,19 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return reportingWindows[_windowId];
     }
 
-    function getReportingWindowByMarketEndTime(uint256 _endTime) public returns (IReportingWindow) {
+    function getReportingWindowByMarketEndTime(uint256 _endTime) public onlyInGoodTimes returns (IReportingWindow) {
         return getReportingWindowByTimestamp(_endTime + Reporting.designatedReportingDurationSeconds() + Reporting.designatedReportingDisputeDurationSeconds() + 1 + getReportingPeriodDurationInSeconds());
     }
 
-    function getPreviousReportingWindow() public returns (IReportingWindow) {
+    function getPreviousReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp - getReportingPeriodDurationInSeconds());
     }
 
-    function getCurrentReportingWindow() public returns (IReportingWindow) {
+    function getCurrentReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp);
     }
 
-    function getNextReportingWindow() public returns (IReportingWindow) {
+    function getNextReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
     }
 
@@ -136,13 +136,13 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return repAvailableForExtraBondPayouts;
     }
 
-    function increaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
+    function increaseRepAvailableForExtraBondPayouts(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(msg.sender == address(reputationToken));
         repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.add(_amount);
         return true;
     }
 
-    function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool) {
+    function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(parentUniverse.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
         repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.sub(_amount);
         return true;
@@ -152,13 +152,13 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return extraDisputeBondRemainingToBePaidOut;
     }
 
-    function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
+    function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(isContainerForMarket(IMarket(msg.sender)));
         extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.add(_amount);
         return true;
     }
 
-    function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
+    function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
         extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.sub(_amount);
         return true;
@@ -243,12 +243,12 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return getReportingWindowByTimestamp(getForkEndTime());
     }
 
-    function decrementOpenInterest(uint256 _amount) public onlyWhitelistedCallers returns (bool) {
+    function decrementOpenInterest(uint256 _amount) public onlyInGoodTimes onlyWhitelistedCallers returns (bool) {
         openInterestInAttoEth = openInterestInAttoEth.sub(_amount);
     }
 
     // CONSIDER: It would be more correct to decrease open interest for all outstanding shares in a market when it is finalized. We aren't doing this currently since securely and correctly writing this code would require updating the Market contract, which is currently at its size limit.
-    function incrementOpenInterest(uint256 _amount) public onlyWhitelistedCallers returns (bool) {
+    function incrementOpenInterest(uint256 _amount) public onlyInGoodTimes onlyWhitelistedCallers returns (bool) {
         openInterestInAttoEth = openInterestInAttoEth.add(_amount);
     }
 
@@ -266,7 +266,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return getOpenInterestInAttoEth() * Reporting.targetRepMarketCapMultiplier();
     }
 
-    function getValidityBond() public returns (uint256) {
+    function getValidityBond() public onlyInGoodTimes returns (uint256) {
         IReportingWindow _reportingWindow = getCurrentReportingWindow();
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
         if (_currentValidityBondInAttoeth != 0) {
@@ -281,7 +281,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _currentValidityBondInAttoeth;
     }
 
-    function getDesignatedReportStake() public returns (uint256) {
+    function getDesignatedReportStake() public onlyInGoodTimes returns (uint256) {
         IReportingWindow _reportingWindow = getCurrentReportingWindow();
         uint256 _currentDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_reportingWindow];
         if (_currentDesignatedReportStakeInAttoRep != 0) {
@@ -297,7 +297,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _currentDesignatedReportStakeInAttoRep;
     }
 
-    function getDesignatedReportNoShowBond() public returns (uint256) {
+    function getDesignatedReportNoShowBond() public onlyInGoodTimes returns (uint256) {
         IReportingWindow _reportingWindow = getCurrentReportingWindow();
         uint256 _currentDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_reportingWindow];
         if (_currentDesignatedReportNoShowBondInAttoRep != 0) {
@@ -337,7 +337,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _newValue;
     }
 
-    function getReportingFeeDivisor() public returns (uint256) {
+    function getReportingFeeDivisor() public onlyInGoodTimes returns (uint256) {
         IReportingWindow _reportingWindow = getCurrentReportingWindow();
         uint256 _currentFeeDivisor = shareSettlementFeeDivisor[_reportingWindow];
         if (_currentFeeDivisor != 0) {
@@ -361,7 +361,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _currentFeeDivisor;
     }
 
-    function getTargetReporterGasCosts() public returns (uint256) {
+    function getTargetReporterGasCosts() public onlyInGoodTimes returns (uint256) {
         IReportingWindow _reportingWindow = getCurrentReportingWindow();
         uint256 _gasToReport = targetReporterGasCosts[_reportingWindow];
         if (_gasToReport != 0) {
@@ -376,7 +376,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return targetReporterGasCosts[_reportingWindow];
     }
 
-    function getMarketCreationCost() public returns (uint256) {
+    function getMarketCreationCost() public onlyInGoodTimes returns (uint256) {
         return getValidityBond() + getTargetReporterGasCosts();
     }
 }
