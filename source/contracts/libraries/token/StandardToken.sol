@@ -38,6 +38,7 @@ contract StandardToken is ERC20, BasicToken {
             allowed[_from][msg.sender] = _allowance.sub(_value);
         }
         Transfer(_from, _to, _value);
+        emitCustomTransferLogs(_from, _to, _value);
         return true;
     }
 

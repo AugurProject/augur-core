@@ -39,7 +39,6 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
 
         _market.getUniverse().incrementOpenInterest(_cost);
 
-        IOrders(controller.lookup("Orders")).buyCompleteSetsLog(_sender, _market, _amount, _numOutcomes);
         return true;
     }
 
@@ -78,7 +77,6 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
         }
         require(_denominationToken.transferFrom(_market, _sender, _payout));
 
-        IOrders(controller.lookup("Orders")).sellCompleteSetsLog(_sender, _market, _amount, _numOutcomes, _creatorFee, _reportingFee);
         return _creatorFee.add(_reportingFee);
     }
 }

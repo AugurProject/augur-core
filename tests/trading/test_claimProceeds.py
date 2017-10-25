@@ -104,6 +104,7 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     assert len(logs) == 2
     assert logs[0]['_event_type'] == 'ProceedsClaimed'
     assert logs[0]['market'] == market.address
+    assert logs[0]['shareToken'] == yesShareToken.address
     assert logs[0]['numPayoutTokens'] == expectedPayout
     assert logs[0]['numShares'] == 1
     assert logs[0]['sender'] == bytesToHexString(tester.a1)

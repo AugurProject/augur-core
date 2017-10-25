@@ -82,10 +82,8 @@ def test_publicCreateOrder_bid2(contractsFixture, cash, market, universe):
     assert len(logs) == 1
     assert logs[0]['_event_type'] == 'OrderCreated'
     assert logs[0]['amount'] == 1
-    assert logs[0]['creator'] == bytesToHexString(tester.a1)
     assert logs[0]['numSharesEscrowed'] == 0
     assert logs[0]['numTokensEscrowed'] == fix('0.6')
-    assert logs[0]['price'] == fix('0.6')
     assert logs[0]['shareToken'] == shareToken.address
     assert logs[0]['tradeGroupId'] == 42
     assert logs[0]['orderId'] == orderID
@@ -164,10 +162,8 @@ def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     assert len(logs) == 1
     assert logs[0]['_event_type'] == 'OrderCreated'
     assert logs[0]['amount'] == 3
-    assert logs[0]['creator'] == bytesToHexString(tester.a1)
     assert logs[0]['numSharesEscrowed'] == 2
     assert logs[0]['numTokensEscrowed'] == fix('0.4')
-    assert logs[0]['price'] == fix('0.6')
     assert logs[0]['shareToken'] == yesShareToken.address
     assert logs[0]['tradeGroupId'] == 42
     assert logs[0]['orderId'] == orderID

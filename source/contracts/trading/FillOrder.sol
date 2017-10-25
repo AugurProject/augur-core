@@ -390,7 +390,7 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
         }
 
         // AUDIT: is there a reentry risk here?  we execute all of the above code, which includes transferring tokens around, before we mark the order as filled
-        _tradeData.contracts.orders.fillOrderLog(_tradeData.order.orderId, _tradeData.filler.participantAddress, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _settlementFees, _tradeGroupId);
+        controller.getAugur().logOrderFilled(_tradeData.contracts.market.getUniverse(), _tradeData.contracts.market.getShareToken(_tradeData.order.outcome), _tradeData.filler.participantAddress, _tradeData.order.orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _settlementFees, _tradeGroupId);
         _tradeData.contracts.orders.fillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
         return _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);
     }

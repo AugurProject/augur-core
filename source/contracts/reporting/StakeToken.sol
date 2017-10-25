@@ -205,4 +205,9 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         }
         return true;
     }
+
+    function emitCustomTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+        controller.getAugur().logStakeTokensTransferred(market.getUniverse(), _from, _to, _value);
+        return true;
+    }
 }

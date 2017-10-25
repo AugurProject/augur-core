@@ -24,6 +24,7 @@ contract BasicToken is ERC20Basic {
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
         Transfer(msg.sender, _to, _value);
+        emitCustomTransferLogs(msg.sender, _to, _value);
         return true;
     }
 
@@ -42,5 +43,9 @@ contract BasicToken is ERC20Basic {
 
     function totalSupply() public view returns (uint256) {
         return supply;
+    }
+
+    function emitCustomTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+        return true;
     }
 }

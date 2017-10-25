@@ -26,9 +26,6 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
 
         IStakeToken _winningStakeToken = _market.getFinalWinningStakeToken();
 
-        uint256 _numShares = 0;
-        uint256 _numPayoutTokens = 0;
-
         ICash _denominationToken = _market.getDenominationToken();
 
         for (uint8 _outcome = 0; _outcome < _market.getNumberOfOutcomes(); ++_outcome) {
@@ -43,6 +40,7 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
             // always destroy shares as it gives a minor gas refund and is good for the network
             if (_numberOfShares > 0) {
                 _shareToken.destroyShares(msg.sender, _numberOfShares);
+                logProceedsClaimed(_market, _shareToken, msg.sender, _numberOfShares, _shareHolderShare);
             }
             if (_shareHolderShare > 0) {
                 require(_denominationToken.transferFrom(_market, msg.sender, _shareHolderShare));
@@ -56,17 +54,13 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
             if (_reporterShare > 0) {
                 require(_denominationToken.transferFrom(_market, _market.getUniverse().getNextReportingWindow(), _reporterShare));
             }
-
-            _numShares = _numShares.add(_numberOfShares);
-            _numPayoutTokens = _numPayoutTokens.add(_shareHolderShare);
         }
 
-        logProceedsClaimed(_market, msg.sender, _numShares, _numPayoutTokens);
         return true;
     }
 
-    function logProceedsClaimed(IMarket _market, address _sender, uint256 _numShares, uint256 _numPayoutTokens) private returns (bool) {
-        controller.getAugur().logProceedsClaimed(_market.getUniverse(), _sender, _market, _numShares, _numPayoutTokens, _sender.balance.add(_numPayoutTokens));
+    function logProceedsClaimed(IMarket _market, address _shareToken, address _sender, uint256 _numShares, uint256 _numPayoutTokens) private returns (bool) {
+        controller.getAugur().logProceedsClaimed(_market.getUniverse(), _shareToken, _sender, _market, _numShares, _numPayoutTokens, _sender.balance.add(_numPayoutTokens));
     }
 
     function divideUpWinnings(IMarket _market, IStakeToken _winningStakeToken, uint8 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {

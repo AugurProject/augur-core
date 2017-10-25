@@ -54,6 +54,7 @@ def test_transfer(contractsFixture, market):
         shareToken.transfer(tester.a0, 5, sender = tester.k1)
 
     captureFilteredLogs(contractsFixture.chain.head_state, shareToken, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts["Augur"], logs)
     retval = shareToken.transfer(tester.a1, 5, sender=tester.k0)
     afterTransferBalance0 = shareToken.balanceOf(tester.a0)
     afterTransferBalance1 = shareToken.balanceOf(tester.a1)
@@ -64,8 +65,16 @@ def test_transfer(contractsFixture, market):
             "_event_type": "Transfer",
             "from": bytesToHexString(tester.a0),
             "to": bytesToHexString(tester.a1),
+            "value": 5,
+        },
+        {
+            "_event_type": "TokensTransferred",
+            "token": shareToken.address,
+            "from": bytesToHexString(tester.a0),
+            "to": bytesToHexString(tester.a1),
+            "universe": market.getUniverse(),
             "value": 5
-        }
+        },
     ]
     assert(initialBalance0 - 5 == afterTransferBalance0), "Decrease in address 1's balance should equal amount transferred"
     assert(initialBalance1 + 5 == afterTransferBalance1), "Increase in address 2's balance should equal amount transferred"
@@ -79,6 +88,7 @@ def test_approve(contractsFixture, market):
 
     assert(shareToken.allowance(tester.a0, tester.a1) == 0), "initial allowance is 0"
     captureFilteredLogs(contractsFixture.chain.head_state, shareToken, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts["Augur"], logs)
     retval = shareToken.approve(tester.a1, 10, sender=tester.k0)
     assert(retval == 1), "approve a2 to spend 10 cash from a1"
     assert(shareToken.allowance(tester.a0, tester.a1) == 10), "allowance is 10 after approval"
@@ -95,6 +105,14 @@ def test_approve(contractsFixture, market):
             "_event_type": "Transfer",
             "from": bytesToHexString(tester.a0),
             "to": bytesToHexString(tester.a1),
+            "value": 7
+        },
+        {
+            "_event_type": "TokensTransferred",
+            "token": shareToken.address,
+            "from": bytesToHexString(tester.a0),
+            "to": bytesToHexString(tester.a1),
+            "universe": market.getUniverse(),
             "value": 7
         },
     ]

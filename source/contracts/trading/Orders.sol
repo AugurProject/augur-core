@@ -19,9 +19,6 @@ contract Orders is DelegationTarget, IOrders {
     using Order for Order.Data;
     using SafeMathUint256 for uint256;
 
-    event BuyCompleteSets(address indexed sender, address indexed market, uint256 amount, uint256 numOutcomes);
-    event SellCompleteSets(address indexed sender, address indexed market, uint256 amount, uint256 numOutcomes, uint256 creatorFee, uint256 reportingFee);
-
     struct MarketOrders {
         uint256 volume;
         mapping(uint8 => uint256) prices;
@@ -170,14 +167,8 @@ contract Orders is DelegationTarget, IOrders {
         _order.moneyEscrowed = _moneyEscrowed;
         _order.sharesEscrowed = _sharesEscrowed;
         insertOrderIntoList(_order, _betterOrderId, _worseOrderId);
-        logOrderCreated(_orderId, _tradeGroupId);
+        controller.getAugur().logOrderCreated(_order.market.getUniverse(), _order.market.getShareToken(_order.outcome), _orderId, _order.amount, _order.moneyEscrowed, _order.sharesEscrowed, _tradeGroupId);
         return _orderId;
-    }
-
-    function logOrderCreated(bytes32 _orderId, uint256 _tradeGroupId) private returns (bool) {
-        Order.Data storage _order = orders[_orderId];
-        controller.getAugur().logOrderCreated(_order.market.getUniverse(), _order.market.getShareToken(_order.outcome), _order.creator, _orderId, _order.price, _order.amount, _order.moneyEscrowed, _order.sharesEscrowed, _tradeGroupId);
-        return true;
     }
 
     function removeOrder(bytes32 _orderId) public onlyWhitelistedCallers returns (bool) {
@@ -214,22 +205,6 @@ contract Orders is DelegationTarget, IOrders {
             _order.betterOrderId = bytes32(0);
             _order.worseOrderId = bytes32(0);
         }
-        return true;
-    }
-
-    function fillOrderLog(bytes32 _orderId, address _filler, uint256 _creatorSharesFilled, uint256 _creatorTokensFilled, uint256 _fillerSharesFilled, uint256 _fillerTokensFilled, uint256 _settlementFees, uint256 _tradeGroupId) public returns (bool) {
-        Order.Data storage _order = orders[_orderId];
-        controller.getAugur().logOrderFilled(_order.market.getUniverse(), _order.market.getShareToken(_order.outcome), _order.creator, _filler, _order.price, _creatorSharesFilled, _creatorTokensFilled, _fillerSharesFilled, _fillerTokensFilled, _settlementFees, _tradeGroupId);
-        return true;
-    }
-
-    function buyCompleteSetsLog(address _sender, IMarket _market, uint256 _amount, uint256 _numOutcomes) public returns (bool) {
-        BuyCompleteSets(_sender, _market, _amount, _numOutcomes);
-        return true;
-    }
-
-    function sellCompleteSetsLog(address _sender, IMarket _market, uint256 _amount, uint256 _numOutcomes, uint256 _creatorFee, uint256 _reportingFee) public returns (bool) {
-        SellCompleteSets(_sender, _market, _amount, _numOutcomes, _creatorFee, _reportingFee);
         return true;
     }
 
