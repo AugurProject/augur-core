@@ -20,7 +20,7 @@ def test_stake_token_creation_binary(localFixture, mockMarket):
         stakeToken.initialize(mockMarket.address, [0, 1, numTicks])
 
     # outcomes are correct
-    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)        
+    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)
     assert stakeToken.isValid()
 
     assert stakeToken.getPayoutNumerator(0) == 0
@@ -40,7 +40,7 @@ def test_stake_token_creation_category(localFixture, mockMarket):
     with raises(TransactionFailed, message="payout numerators can not be more than market"):
         stakeToken.initialize(mockMarket.address, [0, numTicks])
 
-    assert stakeToken.initialize(mockMarket.address, [0, 1, numTicks - 1])        
+    assert stakeToken.initialize(mockMarket.address, [0, 1, numTicks - 1])
     assert stakeToken.getPayoutNumerator(0) == 0
     assert stakeToken.getPayoutNumerator(1) == 1
     assert stakeToken.getPayoutNumerator(2) == numTicks - 1
@@ -55,7 +55,7 @@ def test_stake_token_getters(localFixture, mockMarket, mockUniverse, mockReporti
     mockMarket.setNumTicks(numTicks)
     mockMarket.setNumberOfOutcomes(3)
 
-    assert stakeToken.initialize(mockMarket.address, [0, 1, numTicks - 1], False)        
+    assert stakeToken.initialize(mockMarket.address, [0, 1, numTicks - 1], False)
     assert stakeToken.getTypeName() == stringToBytes("StakeToken")
     assert stakeToken.getUniverse() == mockUniverse.address
     assert stakeToken.getMarket() == mockMarket.address
@@ -90,17 +90,16 @@ def test_stake_token_buy_no_report_state(localFixture, mockMarket, mockUniverse)
 
     mockMarket.setIsContainerForStakeToken(False)
     with raises(TransactionFailed, message="Stake Token can not be bought, not assoc. to market"):
-        stakeToken.buy(1) 
+        stakeToken.buy(1)
 
     mockMarket.setDesignatedReport(True)
     mockMarket.setIsContainerForStakeToken(True)
-    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION())
     mockUniverse.setDesignatedReportStake(100)
-    stakeToken.setController(localFixture.contracts['Controller'].address)
     mockUniverse.setIsContainerForStakeToken(True)
     assert stakeToken.buy(1)
     assert stakeToken.balanceOf(tester.a0) == 1
-    
+
 def test_stake_token_buy_check_state(localFixture, mockMarket, mockReportingWindow, mockUniverse):
     numTicks = 3 * 10 ** 17
     mockMarket.setNumTicks(numTicks)
@@ -109,15 +108,14 @@ def test_stake_token_buy_check_state(localFixture, mockMarket, mockReportingWind
     stakeToken = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'stakeToken')
     stakeToken.setController(localFixture.contracts["Controller"].address)
     assert stakeToken.initialize(mockMarket.address, [numTicks/3, numTicks/3, numTicks/3], False)
-    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION()) 
-    stakeToken.setController(localFixture.contracts['Controller'].address)
+    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION())
     mockUniverse.setIsContainerForStakeToken(True)
     assert stakeToken.buy(1)
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_REPORTING())
     assert stakeToken.buy(1)
-    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_REPORTING())
     assert stakeToken.buy(1)
-    
+
     mockMarket.setReportingState(localFixture.contracts['Constants'].PRE_REPORTING())
     with raises(TransactionFailed, message="market not in correct state, PRE_REPORTING"):
         stakeToken.buy(1)
@@ -138,23 +136,23 @@ def test_stake_token_buy_check_state(localFixture, mockMarket, mockReportingWind
     with raises(TransactionFailed, message="market not in correct state, FIRST_DISPUTE"):
         stakeToken.buy(1)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_DISPUTE()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_DISPUTE())
     with raises(TransactionFailed, message="market not in correct state, LAST_DISPUTE"):
         stakeToken.buy(1)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FORKING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FORKING())
     with raises(TransactionFailed, message="market not in correct state, FORKING"):
         stakeToken.buy(1)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_FINALIZATION()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_FINALIZATION())
     with raises(TransactionFailed, message="market not in correct state, AWAITING_FINALIZATION"):
         stakeToken.buy(1)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED())
     with raises(TransactionFailed, message="market not in correct state, FINALIZED"):
         stakeToken.buy(1)
 
-def test_stake_token_buy_designated_reporter_state(localFixture, mockMarket, mockUniverse, mockReputationToken, mockReportingWindow):    
+def test_stake_token_buy_designated_reporter_state(localFixture, mockMarket, mockUniverse, mockReputationToken, mockReportingWindow):
     numTicks = 3 * 10 ** 17
     mockMarket.setNumTicks(numTicks)
     mockMarket.setNumberOfOutcomes(3)
@@ -169,20 +167,19 @@ def test_stake_token_buy_designated_reporter_state(localFixture, mockMarket, moc
     designatedReporterStake = 100
     mockUniverse.setDesignatedReportStake(designatedReporterStake)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].DESIGNATED_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].DESIGNATED_REPORTING())
     with raises(TransactionFailed, message="Designated reporter needs to buy DESIGNATED REPORTER bond not more"):
         stakeToken.buy(designatedReporterStake + 1)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].DESIGNATED_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].DESIGNATED_REPORTING())
     with raises(TransactionFailed, message="Designated reporter needs to buy DESIGNATED REPORTER bond not less"):
         stakeToken.buy(designatedReporterStake - 1)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].DESIGNATED_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].DESIGNATED_REPORTING())
     with raises(TransactionFailed, message="Only Designated reporter can buy stake during designated reporting window"):
         stakeToken.buy(designatedReporterStake, sender=tester.k8)
 
     mockMarket.setReportingState(localFixture.contracts['Constants'].DESIGNATED_REPORTING())
-    stakeToken.setController(localFixture.contracts['Controller'].address)
     mockUniverse.setIsContainerForStakeToken(True)
     assert stakeToken.buy(designatedReporterStake)
 
@@ -203,14 +200,13 @@ def test_stake_token_redeem(localFixture, mockMarket, mockReputationToken, mockR
     mockReportingWindow.setNoteReportingGasPrice(True)
     stakeToken = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'stakeToken')
     stakeToken.setController(localFixture.contracts["Controller"].address)
-    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)      
-    
+    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)
+
     mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION())
-    stakeToken.setController(localFixture.contracts['Controller'].address)
     mockUniverse.setIsContainerForStakeToken(True)
     assert stakeToken.buy(10)
     assert stakeToken.buy(20, sender=tester.k2)
-    
+
     mockReputationToken.setBalanceOf(1000)
     mockMarket.setIsContainerForStakeToken(False)
 
@@ -257,19 +253,19 @@ def test_stake_token_verify_trusted_buy(localFixture, mockUniverse, mockMarket, 
 
     stakeToken = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'stakeToken')
     stakeToken.setController(localFixture.contracts["Controller"].address)
-    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)       
-    
-    mockMarket.setReportingState(localFixture.contracts['Constants'].PRE_REPORTING()) 
+    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)
+
+    mockMarket.setReportingState(localFixture.contracts['Constants'].PRE_REPORTING())
     with raises(Exception, message="market can't call trust buy unless market state is first or last"):
         mockMarket.callStakeTokenTrustedBuy(stakeToken, tester.a1, 1)
 
     # call stake token successfully
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_REPORTING())
     assert mockMarket.callStakeTokenTrustedBuy(stakeToken.address, tester.a1, 1)
-    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_REPORTING())
     assert mockMarket.callStakeTokenTrustedBuy(stakeToken.address, tester.a1, 1)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_DISPUTE()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_DISPUTE())
     with raises(Exception, message="market can't call trust buy unless market state is first or last"):
         mockMarket.callStakeTokenTrustedBuy(stakeToken, tester.a1, 1)
 
@@ -280,16 +276,16 @@ def test_stake_token_verify_redeem_forked_tokens(localFixture, mockUniverse, moc
 
     stakeToken = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'stakeToken')
     stakeToken.setController(localFixture.contracts["Controller"].address)
-    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)       
+    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)
 
     mockMarket.setIsContainerForStakeToken(False)
     with raises(TransactionFailed, message="market does not contain stake token"):
         stakeToken.redeemForkedTokens(sender = tester.k0)
-    
+
     mockMarket.setIsContainerForStakeToken(True)
     with raises(TransactionFailed, message="market is not forking"):
         stakeToken.redeemForkedTokens(sender = tester.k0)
-    
+
     # wire up child Universe
     mockChildUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'mockChildUniverse')
     mockChildReputationToken = localFixture.upload('solidity_test_helpers/MockReputationToken.sol', 'mockChildReputationToken')
@@ -302,7 +298,6 @@ def test_stake_token_verify_redeem_forked_tokens(localFixture, mockUniverse, moc
     mockChildUniverse.setReputationToken(mockChildReputationToken.address)
     mockReputationToken.setBalanceOf(1000)
     mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION())
-    stakeToken.setController(localFixture.contracts['Controller'].address)
     mockUniverse.setIsContainerForStakeToken(True)
     assert stakeToken.buy(10, sender=tester.k0)
     assert stakeToken.buy(20, sender=tester.k2)
@@ -339,14 +334,14 @@ def test_stake_token_verify_redeem_winning_tokens(localFixture, mockUniverse, mo
 
     stakeToken = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'stakeToken')
     stakeToken.setController(localFixture.contracts["Controller"].address)
-    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)       
-    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION()) 
+    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)
+    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION())
     mockMarket.setIsContainerForStakeToken(True)
 
     with raises(TransactionFailed, message="market is not finialized"):
         stakeToken.redeemWinningTokens(True)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED())
     mockMarket.setIsContainerForStakeToken(False)
     with raises(TransactionFailed, message="market does not contain this stake token"):
         stakeToken.redeemWinningTokens(True)
@@ -355,27 +350,26 @@ def test_stake_token_verify_redeem_winning_tokens(localFixture, mockUniverse, mo
     mockUniverse.setForkingMarket(mockMarket.address)
     with raises(TransactionFailed, message="market is in fork"):
         stakeToken.redeemWinningTokens(True)
-    
+
     mockUniverse.setForkingMarket()
     mockMarket.setFinalWinningStakeToken()
     with raises(TransactionFailed, message="this stake token isn't market final winning stake token"):
         stakeToken.redeemWinningTokens(True)
-    
+
     mockReportingWindow.setAllMarketsFinalized(False)
     with raises(TransactionFailed, message="can not forgo fees until all markets are finalized"):
         stakeToken.redeemWinningTokens(False)
-    
+
     mockMarket.setFinalWinningStakeToken(stakeToken.address)
-    mockReportingWindow.setAllMarketsFinalized(True)    
-    
-    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION()) 
+    mockReportingWindow.setAllMarketsFinalized(True)
+
+    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION())
     mockReputationToken.setBalanceOf(1000)
-    stakeToken.setController(localFixture.contracts['Controller'].address)
     mockUniverse.setIsContainerForStakeToken(True)
     assert stakeToken.buy(10, sender=tester.k0)
     assert stakeToken.buy(20, sender=tester.k2)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED())
     assert stakeToken.redeemWinningTokens(False, sender=tester.k0)
     assert mockReputationToken.getTransferToValue() == bytesToHexString(tester.a0)
     # 1000 * 10 / 30 = 333
@@ -414,17 +408,17 @@ def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarke
 
     stakeToken = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'stakeToken')
     stakeToken.setController(localFixture.contracts["Controller"].address)
-    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)       
-    
+    assert stakeToken.initialize(mockMarket.address, [0, numTicks], False)
+
     winning_stakeToken = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'winning_stakeToken')
     winning_stakeToken.setController(localFixture.contracts["Controller"].address)
-    assert winning_stakeToken.initialize(mockMarket.address, [numTicks, 0], False)       
+    assert winning_stakeToken.initialize(mockMarket.address, [numTicks, 0], False)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION())
     with raises(TransactionFailed, message="market is not finialized"):
         stakeToken.migrateLosingTokens()
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED())
     mockMarket.setIsContainerForStakeToken(False)
     with raises(TransactionFailed, message="market does not contain this stake token"):
         stakeToken.migrateLosingTokens()
@@ -433,12 +427,12 @@ def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarke
     mockUniverse.setForkingMarket(mockMarket.address)
     with raises(TransactionFailed, message="market is in fork"):
         stakeToken.migrateLosingTokens()
-    
+
     mockUniverse.setForkingMarket()
     mockMarket.setFinalWinningStakeToken(stakeToken.address)
     with raises(TransactionFailed, message="can not migrate losing tokens on final winning stake token"):
         stakeToken.migrateLosingTokens()
-    
+
     designatedRepoertDisputeBond = mockDisputeBondToken
     firstDisputeBond = localFixture.upload('solidity_test_helpers/MockDisputeBondToken.sol', 'firstDisputeBond')
 
@@ -534,7 +528,7 @@ def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarke
     # stake token has lower balance
     assert mockReputationToken.getTransferValueFor(designatedRepoertDisputeBond.address) == 120
     assert mockReputationToken.getTransferValueFor(firstDisputeBond.address) == 33
-    # gets the rest of the reputation tokens 
+    # gets the rest of the reputation tokens
     assert mockReputationToken.getTransferValueFor(winning_stakeToken.address) == 120
 
 @fixture(scope="session")
@@ -599,7 +593,7 @@ def mockDisputeBondToken(localFixture):
 
 @fixture
 def mockReportingWindow(localFixture, mockUniverse, mockReputationToken):
-    # wire up mock reporting window    
+    # wire up mock reporting window
     mockReportingWindow = localFixture.contracts['MockReportingWindow']
     mockReportingWindow.setReputationToken(mockReputationToken.address)
     mockReportingWindow.setUniverse(mockUniverse.address)
