@@ -97,8 +97,8 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(msg.sender, _attotokens);
         IReputationToken _destinationReputationToken = getUniverse().getOrCreateChildUniverse(getPayoutDistributionHash()).getReputationToken();
-        _sourceReputationToken.migrateOut(_destinationReputationToken, this, _attotokens);
-        _destinationReputationToken.transfer(msg.sender, _reporterReputationShare);
+        _sourceReputationToken.migrateOutStakeToken(_destinationReputationToken, this, _attotokens);
+        _destinationReputationToken.transfer(msg.sender, _destinationReputationToken.balanceOf(this));
         return true;
     }
 

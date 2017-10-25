@@ -287,6 +287,7 @@ def test_stake_token_verify_redeem_forked_tokens(localFixture, mockUniverse, moc
     assert stakeToken.buy(10, sender=tester.k0)
     assert stakeToken.buy(20, sender=tester.k2)
 
+    mockChildReputationToken.setBalanceOf(333)
     stakeToken.redeemForkedTokens(sender=tester.k0)
     assert mockChildReputationToken.getTransferToValue() == bytesToHexString(tester.a0)
     # 1000 * 10 / 30 = 333
@@ -298,6 +299,7 @@ def test_stake_token_verify_redeem_forked_tokens(localFixture, mockUniverse, moc
 
     assert stakeToken.balanceOf(tester.a0) == 0
 
+    mockChildReputationToken.setBalanceOf(1000)
     stakeToken.redeemForkedTokens(sender=tester.k2)
     assert mockChildReputationToken.getTransferToValue() == bytesToHexString(tester.a2)
     # 1000 * 20 / 20 = 1000
