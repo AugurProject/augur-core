@@ -250,11 +250,11 @@ export class ContractDeployer {
 
         const targetReportingWindow = parseAbiIntoMethods(this.ethjsQuery, this.abis.get('ReportingWindow')!, { to: targetReportingWindowAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
         const marketCreationFee = await universe.getMarketCreationCost.bind(constant)();
-        const marketAddress = await targetReportingWindow.createMarket.bind({ value: marketCreationFee, constant: true })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
+        const marketAddress = await targetReportingWindow.createMarket.bind({ value: marketCreationFee, constant: true })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter, '');
         if (!marketAddress) {
             throw new Error("Unable to get address for new categorical market.");
         }
-        const createMarketTransactionHash = await targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter);
+        const createMarketTransactionHash = await targetReportingWindow.createMarket.bind({ value: marketCreationFee })(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter, '');
         await waitForTransactionReceipt(this.ethjsQuery, createMarketTransactionHash, `Creating market.`);
         const market = parseAbiIntoMethods(this.ethjsQuery, this.abis.get("Market")!, { to: marketAddress, from: this.testAccounts[0], gasPrice: this.gasPrice });
         const marketNameHex = stringTo32ByteHex("Market");
