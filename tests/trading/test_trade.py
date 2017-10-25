@@ -23,7 +23,8 @@ def test_one_bid_on_books_buy_full_order(contractsFixture, cash, market, univers
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = trade.publicSell(market.address, YES, 2, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('2', '0.4'))
 
-    assert len(logs) == 1
+    assert len(logs) == 3
+    log1 = logs[2]
 
     assert log1["_event_type"] == "OrderFilled"
     assert log1["filler"] == bytesToHexString(tester.a2)
