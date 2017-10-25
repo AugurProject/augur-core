@@ -37,8 +37,7 @@ contract StandardToken is ERC20, BasicToken {
         if (_allowance != ETERNAL_APPROVAL_VALUE) {
             allowed[_from][msg.sender] = _allowance.sub(_value);
         }
-        Transfer(_from, _to, _value);
-        emitCustomTransferLogs(_from, _to, _value);
+        emitTransferLogs(_from, _to, _value);
         return true;
     }
 

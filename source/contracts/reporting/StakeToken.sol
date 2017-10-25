@@ -95,13 +95,10 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
     function redeemForkedTokens() public onlyInGoodTimes afterInitialized returns (bool) {
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() == market);
-        IReputationToken _sourceReputationToken = getReputationToken();
-        uint256 _reputationSupply = _sourceReputationToken.balanceOf(this);
         uint256 _attotokens = balances[msg.sender];
-        uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(msg.sender, _attotokens);
         IReputationToken _destinationReputationToken = getUniverse().getOrCreateChildUniverse(getPayoutDistributionHash()).getReputationToken();
-        _sourceReputationToken.migrateOutStakeToken(_destinationReputationToken, this, _attotokens);
+        getReputationToken().migrateOutStakeToken(_destinationReputationToken, this, _attotokens);
         _destinationReputationToken.transfer(msg.sender, _destinationReputationToken.balanceOf(this));
         return true;
     }
@@ -218,7 +215,8 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function emitCustomTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+    function emitTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+        Transfer(_from, _to, _value);
         controller.getAugur().logStakeTokensTransferred(market.getUniverse(), _from, _to, _value);
         return true;
     }

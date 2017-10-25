@@ -71,7 +71,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function eligibleForForkBonus(bool _bonusIfInForkWindow) private onlyInGoodTimes returns (bool) {
+    function eligibleForForkBonus(bool _bonusIfInForkWindow) private view returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
         if (_parentUniverse.getForkingMarket().getReportingState() != IMarket.ReportingState.FINALIZED) {
             return true;
@@ -149,7 +149,8 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return topMigrationDestination;
     }
 
-    function emitCustomTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+    function emitTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+        Transfer(_from, _to, _value);
         controller.getAugur().logReputationTokensTransferred(universe, _from, _to, _value);
         return true;
     }

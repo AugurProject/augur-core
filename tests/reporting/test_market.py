@@ -27,9 +27,6 @@ def test_market_creation(contractsFixture, universe, cash, market):
     assert logs[1]['market'] == market.address
     assert logs[1]['marketCreator'] == bytesToHexString(tester.a0)
 
-    shadyStakeToken = contractsFixture.upload('../source/contracts/reporting/StakeToken.sol', 'shadyStakeToken')
-    shadyStakeToken.initialize(market.address, [0,10**18])
-
     assert market.getUniverse() == universe.address
     assert market.getNumberOfOutcomes() == 2
     assert market.getNumTicks() == 10**18
