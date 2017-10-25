@@ -13,6 +13,7 @@ import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'Augur.sol';
 
 
 contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IStakeToken {
@@ -54,6 +55,9 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         buyTokens(msg.sender, _attotokens);
         if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             market.designatedReport();
+            controller.getAugur().logDesignatedReportSubmitted(market.getUniverse(), msg.sender, market, this, _attotokens, payoutNumerators);
+        } else {
+            controller.getAugur().logReportSubmitted(market.getUniverse(), msg.sender, market, this, _attotokens, payoutNumerators);
         }
         return true;
     }
@@ -75,7 +79,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         market.updateTentativeWinningPayoutDistributionHash(_payoutDistributionHash);
         getReportingWindow().noteReportingGasPrice(market);
         return true;
-    } 
+    }
 
     function redeemDisavowedTokens(address _reporter) public afterInitialized returns (bool) {
         require(!market.isContainerForStakeToken(this));
@@ -117,7 +121,8 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         if (_reporterReputationShare != 0) {
             _reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
-        market.getReportingWindow().collectStakeTokenReportingFees(msg.sender, _attotokens, forgoFees);
+        uint256 _feesReceived = market.getReportingWindow().collectStakeTokenReportingFees(msg.sender, _attotokens, forgoFees);
+        controller.getAugur().logWinningTokensRedeemed(market.getUniverse(), msg.sender, market, this, _attotokens, _feesReceived, payoutNumerators);
         return true;
     }
 
@@ -198,6 +203,11 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
                 return false;
             }
         }
+        return true;
+    }
+
+    function emitCustomTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+        controller.getAugur().logStakeTokensTransferred(market.getUniverse(), _from, _to, _value);
         return true;
     }
 }

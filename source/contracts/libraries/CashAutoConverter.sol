@@ -30,7 +30,7 @@ contract CashAutoConverter is Controlled {
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _tokenBalance = _cash.balanceOf(msg.sender);
         if (_tokenBalance > 0) {
-            Augur augur = Augur(controller.lookup("Augur"));
+            Augur augur = controller.getAugur();
             augur.trustedTransfer(_cash, msg.sender, this, _tokenBalance);
             _cash.withdrawEtherTo(msg.sender, _tokenBalance);
         }

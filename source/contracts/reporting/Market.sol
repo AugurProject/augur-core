@@ -21,6 +21,7 @@ import 'libraries/token/ERC20Basic.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/SafeMathInt256.sol';
 import 'reporting/Reporting.sol';
+import 'Augur.sol';
 
 
 contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
@@ -159,6 +160,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         }
         reportingWindow.updateMarketPhase();
+        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, ReportingState.DESIGNATED_DISPUTE, _bondAmount);
         return true;
     }
 
@@ -178,6 +180,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         }
+        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, ReportingState.FIRST_DISPUTE, _bondAmount);
         return true;
     }
 
@@ -190,6 +193,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, lastReportersDisputeBondToken, _bondAmount);
         reportingWindow.getUniverse().fork();
         IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
+        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, ReportingState.LAST_DISPUTE, _bondAmount);
         return migrateReportingWindow(_newReportingWindow);
     }
 
@@ -274,6 +278,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         // The validity bond is paid to the owner in any valid outcome and the reporting window otherwise
         doFeePayout(isValid(), validityBondAttoeth);
         reportingWindow.updateMarketPhase();
+        controller.getAugur().logMarketFinalized(getUniverse(), this);
         return true;
     }
 

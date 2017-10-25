@@ -50,4 +50,9 @@ contract ParticipationToken is DelegationTarget, ITyped, Initializable, Variable
     function getReportingWindow() public view returns (IReportingWindow) {
         return reportingWindow;
     }
+
+    function emitCustomTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+        controller.getAugur().logParticipationTokensTransferred(reportingWindow.getUniverse(), _from, _to, _value);
+        return true;
+    }
 }

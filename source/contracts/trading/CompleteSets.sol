@@ -29,7 +29,7 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _denominationToken = _market.getDenominationToken();
-        Augur _augur = Augur(controller.lookup("Augur"));
+        Augur _augur = controller.getAugur();
 
         uint256 _cost = _amount.mul(_market.getNumTicks());
         require(_augur.trustedTransfer(_denominationToken, _sender, _market, _cost));
@@ -39,15 +39,15 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
 
         _market.getUniverse().incrementOpenInterest(_cost);
 
-        IOrders(controller.lookup("Orders")).buyCompleteSetsLog(_sender, _market, _amount, _numOutcomes);
         return true;
     }
 
     function publicSellCompleteSets(IMarket _market, uint256 _amount) external convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
-        return this.sellCompleteSets(msg.sender, _market, _amount);
+        this.sellCompleteSets(msg.sender, _market, _amount);
+        return true;
     }
 
-    function sellCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (bool) {
+    function sellCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (uint256) {
         require(_sender != address(0));
         require(_market != IMarket(0));
 
@@ -77,7 +77,6 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
         }
         require(_denominationToken.transferFrom(_market, _sender, _payout));
 
-        IOrders(controller.lookup("Orders")).sellCompleteSetsLog(_sender, _market, _amount, _numOutcomes, _creatorFee, _reportingFee);
-        return true;
+        return _creatorFee.add(_reportingFee);
     }
 }

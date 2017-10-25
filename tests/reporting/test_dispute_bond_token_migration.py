@@ -27,7 +27,7 @@ def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigra
     INVALID_DISTRIBUTION_HASH = market.derivePayoutDistributionHash(INVALID_OUTCOME, True)
 
     # We proceed the standard market to the FORKING state
-    proceedToForking(localFixture, universe, market, True, tester.k1, tester.k2, tester.k3, NO_OUTCOME, YES_OUTCOME, tester.k2, YES_OUTCOME, NO_OUTCOME, YES_OUTCOME)
+    proceedToForking(localFixture, universe, market, True, 1, 2, 3, NO_OUTCOME, YES_OUTCOME, 2, YES_OUTCOME, NO_OUTCOME, YES_OUTCOME)
 
     # We have 3 dispute bonds for the market
     designatedDisputeBond = localFixture.applySignature('DisputeBondToken', market.getDesignatedReporterDisputeBondToken())

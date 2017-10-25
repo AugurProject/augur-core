@@ -148,4 +148,9 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     function getTopMigrationDestination() public view returns (IReputationToken) {
         return topMigrationDestination;
     }
+
+    function emitCustomTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+        controller.getAugur().logReputationTokensTransferred(universe, _from, _to, _value);
+        return true;
+    }
 }

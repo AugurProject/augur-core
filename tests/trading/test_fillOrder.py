@@ -5,7 +5,7 @@ from utils import fix, bytesToHexString, captureFilteredLogs, longTo32Bytes, lon
 from constants import BID, ASK, YES, NO
 
 
-def test_publicFillOrder_bid(contractsFixture, cash, market):
+def test_publicFillOrder_bid(contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
@@ -23,40 +23,27 @@ def test_publicFillOrder_bid(contractsFixture, cash, market):
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
-    # assert
-    assert logs == [
-        {
-            "_event_type": "BuyCompleteSets",
-            "sender": fillOrder.address,
-            "amount": 2,
-            "numOutcomes": 2,
-            "market": market.address,
-        },
-        {
-            "_event_type": "FillOrder",
-            "market": market.address,
-            "outcome": YES,
-            "orderType": BID,
-            "orderId": orderID,
-            "price": int(fix('0.6')),
-            "creator": bytesToHexString(tester.a1),
-            "filler": bytesToHexString(tester.a2),
-            "creatorShares": 0,
-            "creatorTokens": int(creatorCost),
-            "fillerShares": 0,
-            "fillerTokens": int(fillerCost),
-            "tradeGroupId": 42,
-        },
-    ]
+    assert len(logs) == 3
+
+    assert logs[2]["_event_type"] == "OrderFilled"
+    assert logs[2]["filler"] == bytesToHexString(tester.a2)
+    assert logs[2]["numCreatorShares"] == 0
+    assert logs[2]["numCreatorTokens"] == creatorCost
+    assert logs[2]["numFillerShares"] == 0
+    assert logs[2]["numFillerTokens"] == fillerCost
+    assert logs[2]["settlementFees"] == 0
+    assert logs[2]["shareToken"] == market.getShareToken(YES)
+    assert logs[2]["tradeGroupId"] == 42
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH - creatorCost
     assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH - fillerCost
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0
 
-def test_publicFillOrder_ask(contractsFixture, cash, market):
+def test_publicFillOrder_ask(contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
@@ -74,40 +61,27 @@ def test_publicFillOrder_ask(contractsFixture, cash, market):
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
-    # assert
-    assert logs == [
-        {
-            "_event_type": "BuyCompleteSets",
-            "sender": fillOrder.address,
-            "amount": 2,
-            "numOutcomes": 2,
-            "market": market.address
-        },
-        {
-            "_event_type": "FillOrder",
-            "market": market.address,
-            "outcome": YES,
-            "orderType": ASK,
-            "orderId": orderID,
-            "price": fix('0.6'),
-            "creator": bytesToHexString(tester.a1),
-            "filler": bytesToHexString(tester.a2),
-            "creatorShares": 0,
-            "creatorTokens": creatorCost,
-            "fillerShares": 0,
-            "fillerTokens": fillerCost,
-            "tradeGroupId": tradeGroupID
-        },
-    ]
+    assert len(logs) == 3
+
+    assert logs[2]["_event_type"] == "OrderFilled"
+    assert logs[2]["filler"] == bytesToHexString(tester.a2)
+    assert logs[2]["numCreatorShares"] == 0
+    assert logs[2]["numCreatorTokens"] == creatorCost
+    assert logs[2]["numFillerShares"] == 0
+    assert logs[2]["numFillerTokens"] == fillerCost
+    assert logs[2]["settlementFees"] == 0
+    assert logs[2]["shareToken"] == market.getShareToken(YES)
+    assert logs[2]["tradeGroupId"] == 42
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH - creatorCost
     assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH - fillerCost
     assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
     assert fillOrderID == 0
 
-def test_publicFillOrder_bid_scalar(contractsFixture, cash, scalarMarket):
+def test_publicFillOrder_bid_scalar(contractsFixture, cash, scalarMarket, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
@@ -127,33 +101,20 @@ def test_publicFillOrder_bid_scalar(contractsFixture, cash, scalarMarket):
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
-    # assert
-    assert logs == [
-        {
-            "_event_type": "BuyCompleteSets",
-            "sender": fillOrder.address,
-            "amount": 2,
-            "numOutcomes": 2,
-            "market": market.address,
-        },
-        {
-            "_event_type": "FillOrder",
-            "market": market.address,
-            "outcome": YES,
-            "orderType": BID,
-            "orderId": orderID,
-            "price": int(fix('0.6')),
-            "creator": bytesToHexString(tester.a1),
-            "filler": bytesToHexString(tester.a2),
-            "creatorShares": 0,
-            "creatorTokens": int(creatorCost),
-            "fillerShares": 0,
-            "fillerTokens": int(fillerCost),
-            "tradeGroupId": 42,
-        },
-    ]
+    assert len(logs) == 3
+
+    assert logs[2]["_event_type"] == "OrderFilled"
+    assert logs[2]["filler"] == bytesToHexString(tester.a2)
+    assert logs[2]["numCreatorShares"] == 0
+    assert logs[2]["numCreatorTokens"] == creatorCost
+    assert logs[2]["numFillerShares"] == 0
+    assert logs[2]["numFillerTokens"] == fillerCost
+    assert logs[2]["settlementFees"] == 0
+    assert logs[2]["shareToken"] == market.getShareToken(YES)
+    assert logs[2]["tradeGroupId"] == 42
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH - creatorCost
     assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH - fillerCost

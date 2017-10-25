@@ -139,4 +139,12 @@ contract Controller is IController {
     function onlyInEmergency() public constant onlyInBadTimes returns(bool) {
         return true;
     }
+
+    /*
+     * Helper functions
+     */
+
+    function getAugur() public view returns (Augur) {
+        return Augur(lookup("Augur"));
+    }
 }
