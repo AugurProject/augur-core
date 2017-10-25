@@ -6,7 +6,11 @@ from reporting_utils import proceedToDesignatedReporting, proceedToFirstReportin
 
 tester.STARTGAS = long(6.7 * 10**6)
 
-def test_reportingFullHappyPath(localFixture, universe, cash, market):
+@mark.parametrize('getStakeBonus', [
+    True,
+    False
+])
+def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, market):
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
     stakeTokenNo = localFixture.getStakeToken(market, [10**18,0])
     stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
@@ -127,8 +131,17 @@ def test_reportingFullHappyPath(localFixture, universe, cash, market):
 
     # We can redeem forked REP on any universe we didn't dispute
     stakeTokenBalance = stakeTokenNo.balanceOf(tester.a0)
+
+    # If we wait until after the fork window we won't get the bonus when migrating stake tokens
+    bonus = stakeTokenBalance / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+    expectedrepBalanceInNewUniverse = noUniverseReputationToken.balanceOf(tester.a0) + stakeTokenBalance 
+    if (not getStakeBonus):
+        localFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1
+    else:
+        expectedrepBalanceInNewUniverse += bonus
+
     assert stakeTokenNo.redeemForkedTokens(sender = tester.k0)
-    assert noUniverseReputationToken.balanceOf(tester.a0) == tester0REPBalance + stakeTokenBalance
+    assert noUniverseReputationToken.balanceOf(tester.a0) == expectedrepBalanceInNewUniverse
 
     # We can also see that a tester who now migrates their REP will also not get the bonus
     expectedAmount = reputationToken.balanceOf(tester.a3)

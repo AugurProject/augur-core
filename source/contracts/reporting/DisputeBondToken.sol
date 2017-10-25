@@ -64,7 +64,7 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         IReputationToken _reputationToken = getReputationToken();
         uint256 _amountToTransfer = _reputationToken.balanceOf(this);
         IReputationToken _destinationReputationToken = _legitUniverse.getReputationToken();
-        _reputationToken.migrateOut(_destinationReputationToken, this, _amountToTransfer);
+        _reputationToken.migrateOutDisputeBondToken(_destinationReputationToken, this, _amountToTransfer);
         // We recalculate the amount since migrating may have earned us a bonus
         _amountToTransfer = _destinationReputationToken.balanceOf(this);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);

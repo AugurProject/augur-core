@@ -4,18 +4,19 @@ from pytest import fixture, mark, raises
 from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString
 from reporting_utils import proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
+
 # Migration data is expressed as [beforeFinalization, targetUniverse]
-@mark.parametrize('invalidRep,yesRep,noRep,designatedMigration,firstMigration,lastMigration', [
-    (0, 0, 0, [False, 0], [False, 0], [False, 0]),
-    (100000, 0, 0, [True, 0], [False, 0], [True, 0]),
-    (10 ** 23, 0, 0, [True, 0], [False, 0], [True, 0]),
-    (100000, 100000, 0, [True, 0], [True, 2], [True, 2]),
-    (100000, 0, 100000, [True, 1], [True, 2], [False, 2]),
-    (0, 100000, 100000, [True, 1], [True, 2], [False, 2]),
-    (0, 10**23, 10**23, [True, 1], [True, 2], [False, 2]),
-    (10**23, 10**23, 10**23, [False, 1], [True, 2], [True, 2]),
+@mark.parametrize('invalidRep,yesRep,noRep,designatedMigration,firstMigration,lastMigration,finalizeByMigration', [
+    (0, 0, 0, [False, 0], [False, 0], [False, 0], False),
+    (100000, 0, 0, [True, 0], [False, 0], [True, 0], True),
+    (10 ** 23, 0, 0, [True, 0], [False, 0], [True, 0], False),
+    (100000, 100000, 0, [True, 0], [True, 2], [True, 2], True),
+    (100000, 0, 100000, [True, 1], [True, 2], [False, 2], False),
+    (0, 100000, 100000, [True, 1], [True, 2], [False, 2], True),
+    (0, 10**23, 10**23, [True, 1], [True, 2], [False, 2], False),
+    (10**23, 10**23, 10**23, [False, 1], [True, 2], [True, 2], True),
 ])
-def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigration, firstMigration, lastMigration, localFixture, universe, cash, market):
+def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigration, firstMigration, lastMigration, finalizeByMigration, localFixture, universe, cash, market):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
     completeSets = localFixture.contracts['CompleteSets']
     YES_OUTCOME = [10**18,0]
@@ -66,18 +67,18 @@ def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigra
         destinationUniverse = universeMap[lastMigration[1]]
         doBondWithdraw(localFixture, lastDisputeBond, True, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
 
-    # We'll finalize the forking market
-    finalizeForkingMarket(localFixture, universe, market, False, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, NO_OUTCOME, YES_OUTCOME)
+    # We'll finalize the forking market. If we finalize by migrating REP we'll get the bonus since dispute bonds have that perk. If we wait till the window is over to finalize though we get no such benefit
+    finalizeForkingMarket(localFixture, universe, market, finalizeByMigration, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, NO_OUTCOME, YES_OUTCOME)
 
     if (not designatedMigration[0]):
         destinationUniverse = universeMap[designatedMigration[1]]
-        doBondWithdraw(localFixture, designatedDisputeBond, False, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
+        doBondWithdraw(localFixture, designatedDisputeBond, finalizeByMigration, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
     if (not firstMigration[0]):
         destinationUniverse = universeMap[firstMigration[1]]
-        doBondWithdraw(localFixture, firstDisputeBond, False, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
+        doBondWithdraw(localFixture, firstDisputeBond, finalizeByMigration, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
     if (not lastMigration[0]):
         destinationUniverse = universeMap[lastMigration[1]]
-        doBondWithdraw(localFixture, lastDisputeBond, False, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
+        doBondWithdraw(localFixture, lastDisputeBond, finalizeByMigration, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
 
 def doBondWithdraw(fixture, bond, bonus, universe, reputationToken, destinationUniverse, testerAddress, testerKey):
     disputeUniverse = fixture.applySignature("Universe", universe.getOrCreateChildUniverse(bond.getDisputedPayoutDistributionHash()))
