@@ -84,13 +84,13 @@ def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockPart
     assert reportingWindow.isActive() == False
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == False
-    assert reportingWindow.isOver()
+    assert reportingWindow.isOver() == True
 
     chain.head_state.timestamp = reportingWindow.getEndTime() + 1
     assert reportingWindow.isActive() == False
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == False
-    assert reportingWindow.isOver()
+    assert reportingWindow.isOver() == True
 
 
 def test_reporting_window_create_market(localFixture, chain, mockUniverse, mockMarket, cash, mockReputationToken, mockParticipationToken):

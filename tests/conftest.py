@@ -151,7 +151,7 @@ class ContractsFixture:
         matches = findall("import ['\"](.*?)['\"]", fileContents)
         for match in matches:
             dependencyPath = path.join(BASE_PATH, '..', 'source/contracts', match)
-            if not path.isfile(dependencyPath):
+            if "TEST" in dependencyPath:
                 dependencyPath = path.join(BASE_PATH, 'solidity_test_helpers', match).replace("TEST/", "")
             if not path.isfile(dependencyPath):
                 raise Exception("Could not resolve dependency file path: %s" % dependencyPath)
