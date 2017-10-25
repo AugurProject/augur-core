@@ -8,17 +8,17 @@ import 'reporting/IUniverse.sol';
 
 // AUDIT/CONSIDER: Is it better that this contract provide generic functions that are limited to whitelisted callers or for it to have many specific functions which have more limited and specific validation?
 contract Augur is Controlled {
-    event MarketCreated(address universe, address indexed market, address indexed marketCreator, uint256 marketCreationFee, string extraInfo);
-    event DesignatedReportSubmitted(address universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
-    event ReportSubmitted(address universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
-    event WinningTokensRedeemed(address universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountRedeemed, uint256 reportingFeesReceived, uint256[] payoutNumerators);
-    event ReportsDisputed(address universe, address indexed disputer, address indexed market, uint8 reportingPhase, uint256 disputeBondAmount);
-    event MarketFinalized(address universe, address indexed market);
+    event MarketCreated(address indexed universe, address indexed market, address indexed marketCreator, uint256 marketCreationFee, string extraInfo);
+    event DesignatedReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
+    event ReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
+    event WinningTokensRedeemed(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountRedeemed, uint256 reportingFeesReceived, uint256[] payoutNumerators);
+    event ReportsDisputed(address indexed universe, address indexed disputer, address indexed market, uint8 reportingPhase, uint256 disputeBondAmount);
+    event MarketFinalized(address indexed universe, address indexed market);
     event UniverseForked(address indexed universe);
-    event OrderCanceled(address universe, address indexed shareToken, address indexed sender, bytes32 indexed orderId, uint8 orderType, uint256 tokenRefund, uint256 sharesRefund);
-    event OrderCreated(address universe, address indexed shareToken, address indexed creator, bytes32 indexed orderId, uint256 price, uint256 amount, uint256 numTokensEscrowed, uint256 numSharesEscrowed, uint256 tradeGroupId);
-    event OrderFilled(address universe, address indexed shareToken, address indexed creator, address indexed filler, uint256 price, uint256 numCreatorShares, uint256 numCreatorTokens, uint256 numFillerShares, uint256 numFillerTokens, uint256 settlementFees, uint256 tradeGroupId);
-    event ProceedsClaimed(address universe, address indexed sender, address indexed market, uint256 numShares, uint256 numPayoutTokens, uint256 finalTokenBalance);
+    event OrderCanceled(address indexed universe, address indexed shareToken, address indexed sender, bytes32 orderId, uint8 orderType, uint256 tokenRefund, uint256 sharesRefund);
+    event OrderCreated(address indexed universe, address indexed shareToken, address indexed creator, bytes32 orderId, uint256 price, uint256 amount, uint256 numTokensEscrowed, uint256 numSharesEscrowed, uint256 tradeGroupId);
+    event OrderFilled(address indexed universe, address indexed shareToken, address indexed creator, address filler, uint256 price, uint256 numCreatorShares, uint256 numCreatorTokens, uint256 numFillerShares, uint256 numFillerTokens, uint256 settlementFees, uint256 tradeGroupId);
+    event ProceedsClaimed(address indexed universe, address indexed sender, address indexed market, uint256 numShares, uint256 numPayoutTokens, uint256 finalTokenBalance);
     event UniverseCreated(address indexed parentUniverse, address indexed childUniverse);
 
     function trustedTransfer(ERC20 _token, address _from, address _to, uint256 _amount) public onlyWhitelistedCallers returns (bool) {
