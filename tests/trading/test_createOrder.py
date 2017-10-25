@@ -159,14 +159,14 @@ def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     assert noShareToken.balanceOf(tester.a1) == 2
 
     # Confirm create order logging works correctly
-    assert len(logs) == 1
-    assert logs[0]['_event_type'] == 'OrderCreated'
-    assert logs[0]['amount'] == 3
-    assert logs[0]['numSharesEscrowed'] == 2
-    assert logs[0]['numTokensEscrowed'] == fix('0.4')
-    assert logs[0]['shareToken'] == yesShareToken.address
-    assert logs[0]['tradeGroupId'] == 42
-    assert logs[0]['orderId'] == orderID
+    assert len(logs) == 2
+    assert logs[1]['_event_type'] == 'OrderCreated'
+    assert logs[1]['amount'] == 3
+    assert logs[1]['numSharesEscrowed'] == 2
+    assert logs[1]['numTokensEscrowed'] == fix('0.4')
+    assert logs[1]['shareToken'] == yesShareToken.address
+    assert logs[1]['tradeGroupId'] == 42
+    assert logs[1]['orderId'] == orderID
 
     # validate the order contains expected results
     assert orderID != bytearray(32), "Order ID should be non-zero"

@@ -142,7 +142,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
 
     # If we wait until after the fork window we won't get the bonus when migrating stake tokens
     bonus = stakeTokenBalance / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
-    expectedrepBalanceInNewUniverse = noUniverseReputationToken.balanceOf(tester.a0) + stakeTokenBalance 
+    expectedrepBalanceInNewUniverse = noUniverseReputationToken.balanceOf(tester.a0) + stakeTokenBalance
     if (not getStakeBonus):
         localFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1
     else:
@@ -171,13 +171,13 @@ def test_designatedReportingHappyPath(localFixture, universe, market):
     assert localFixture.designatedReport(market, [0,10**18], tester.k0)
 
     # Confirm the designated report logging works
-    assert len(logs) == 1
-    assert logs[0]['_event_type'] == 'DesignatedReportSubmitted'
-    assert logs[0]['amountStaked'] == localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE()
-    assert logs[0]['reporter'] == bytesToHexString(tester.a0)
-    assert logs[0]['stakeToken'] == localFixture.getStakeToken(market, [0,10**18]).address
-    assert logs[0]['market'] == market.address
-    assert logs[0]['payoutNumerators'] == [0,10**18]
+    assert len(logs) == 2
+    assert logs[1]['_event_type'] == 'DesignatedReportSubmitted'
+    assert logs[1]['amountStaked'] == localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE()
+    assert logs[1]['reporter'] == bytesToHexString(tester.a0)
+    assert logs[1]['stakeToken'] == localFixture.getStakeToken(market, [0,10**18]).address
+    assert logs[1]['market'] == market.address
+    assert logs[1]['payoutNumerators'] == [0,10**18]
 
     # making a designated report also decremented the no show accounting on the reporting window
     assert reportingWindow.getNumDesignatedReportNoShows() == originalNumDesignatedReportNoShows - 1
@@ -220,13 +220,19 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
     assert stakeTokenYes.balanceOf(tester.a2) == expectedStakeTokenBalance
 
     # Confirm the report logging works
-    assert len(logs) == 1
-    assert logs[0]['_event_type'] == 'ReportSubmitted'
-    assert logs[0]['amountStaked'] == expectedStakeTokenBalance
-    assert logs[0]['reporter'] == bytesToHexString(tester.a2)
-    assert logs[0]['stakeToken'] == localFixture.getStakeToken(market, [0,10**18]).address
-    assert logs[0]['market'] == market.address
-    assert logs[0]['payoutNumerators'] == [0,10**18]
+    log = logs[0]
+    if not makeReport:
+        log = logs[1]
+        assert len(logs) == 2
+    else:
+        assert len(logs) == 1
+
+    assert log['_event_type'] == 'ReportSubmitted'
+    assert log['amountStaked'] == expectedStakeTokenBalance
+    assert log['reporter'] == bytesToHexString(tester.a2)
+    assert log['stakeToken'] == localFixture.getStakeToken(market, [0,10**18]).address
+    assert log['market'] == market.address
+    assert log['payoutNumerators'] == [0,10**18]
 
     assert reputationToken.balanceOf(tester.a2) == 1 * 10 ** 6 * 10 ** 18 - 1
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
