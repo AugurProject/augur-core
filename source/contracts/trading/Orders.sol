@@ -176,7 +176,7 @@ contract Orders is DelegationTarget, IOrders {
 
     function logOrderCreated(bytes32 _orderId, uint256 _tradeGroupId) private returns (bool) {
         Order.Data storage _order = orders[_orderId];
-        Augur(controller.lookup("Augur")).logOrderCreated(_order.market.getUniverse(), _order.market.getShareToken(_order.outcome), _order.creator, _orderId, _order.price, _order.amount, _order.moneyEscrowed, _order.sharesEscrowed, _tradeGroupId);
+        controller.getAugur().logOrderCreated(_order.market.getUniverse(), _order.market.getShareToken(_order.outcome), _order.creator, _orderId, _order.price, _order.amount, _order.moneyEscrowed, _order.sharesEscrowed, _tradeGroupId);
         return true;
     }
 
@@ -219,7 +219,7 @@ contract Orders is DelegationTarget, IOrders {
 
     function fillOrderLog(bytes32 _orderId, address _filler, uint256 _creatorSharesFilled, uint256 _creatorTokensFilled, uint256 _fillerSharesFilled, uint256 _fillerTokensFilled, uint256 _settlementFees, uint256 _tradeGroupId) public returns (bool) {
         Order.Data storage _order = orders[_orderId];
-        Augur(controller.lookup("Augur")).logOrderFilled(_order.market.getUniverse(), _order.market.getShareToken(_order.outcome), _order.creator, _filler, _order.price, _creatorSharesFilled, _creatorTokensFilled, _fillerSharesFilled, _fillerTokensFilled, _settlementFees, _tradeGroupId);
+        controller.getAugur().logOrderFilled(_order.market.getUniverse(), _order.market.getShareToken(_order.outcome), _order.creator, _filler, _order.price, _creatorSharesFilled, _creatorTokensFilled, _fillerSharesFilled, _fillerTokensFilled, _settlementFees, _tradeGroupId);
         return true;
     }
 

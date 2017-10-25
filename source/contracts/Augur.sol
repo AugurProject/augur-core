@@ -4,6 +4,8 @@ pragma solidity 0.4.17;
 import 'Controlled.sol';
 import 'libraries/token/ERC20.sol';
 import 'reporting/IUniverse.sol';
+import 'reporting/IMarket.sol';
+import 'trading/Order.sol';
 
 
 // AUDIT/CONSIDER: Is it better that this contract provide generic functions that are limited to whitelisted callers or for it to have many specific functions which have more limited and specific validation?
@@ -12,10 +14,10 @@ contract Augur is Controlled {
     event DesignatedReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
     event ReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
     event WinningTokensRedeemed(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountRedeemed, uint256 reportingFeesReceived, uint256[] payoutNumerators);
-    event ReportsDisputed(address indexed universe, address indexed disputer, address indexed market, uint8 reportingPhase, uint256 disputeBondAmount);
+    event ReportsDisputed(address indexed universe, address indexed disputer, address indexed market, IMarket.ReportingState reportingPhase, uint256 disputeBondAmount);
     event MarketFinalized(address indexed universe, address indexed market);
     event UniverseForked(address indexed universe);
-    event OrderCanceled(address indexed universe, address indexed shareToken, address indexed sender, bytes32 orderId, uint8 orderType, uint256 tokenRefund, uint256 sharesRefund);
+    event OrderCanceled(address indexed universe, address indexed shareToken, address indexed sender, bytes32 orderId, Order.TradeTypes orderType, uint256 tokenRefund, uint256 sharesRefund);
     event OrderCreated(address indexed universe, address indexed shareToken, address indexed creator, bytes32 orderId, uint256 price, uint256 amount, uint256 numTokensEscrowed, uint256 numSharesEscrowed, uint256 tradeGroupId);
     event OrderFilled(address indexed universe, address indexed shareToken, address indexed creator, address filler, uint256 price, uint256 numCreatorShares, uint256 numCreatorTokens, uint256 numFillerShares, uint256 numFillerTokens, uint256 settlementFees, uint256 tradeGroupId);
     event ProceedsClaimed(address indexed universe, address indexed sender, address indexed market, uint256 numShares, uint256 numPayoutTokens, uint256 finalTokenBalance);
@@ -55,7 +57,7 @@ contract Augur is Controlled {
         return true;
     }
 
-    function logReportsDisputed(IUniverse _universe, address _disputer, address _market, uint8 _reportingPhase, uint256 _disputeBondAmount) public returns (bool) {
+    function logReportsDisputed(IUniverse _universe, address _disputer, address _market, IMarket.ReportingState _reportingPhase, uint256 _disputeBondAmount) public returns (bool) {
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
         ReportsDisputed(_universe, _disputer, _market, _reportingPhase, _disputeBondAmount);
         return true;
@@ -67,7 +69,7 @@ contract Augur is Controlled {
         return true;
     }
 
-    function logOrderCanceled(IUniverse _universe, address _shareToken, address _sender, bytes32 _orderId, uint8 _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public onlyWhitelistedCallers returns (bool) {
+    function logOrderCanceled(IUniverse _universe, address _shareToken, address _sender, bytes32 _orderId, Order.TradeTypes _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public onlyWhitelistedCallers returns (bool) {
         OrderCanceled(_universe, _shareToken, _sender, _orderId, _orderType, _tokenRefund, _sharesRefund);
         return true;
     }

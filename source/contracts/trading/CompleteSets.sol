@@ -29,7 +29,7 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _denominationToken = _market.getDenominationToken();
-        Augur _augur = Augur(controller.lookup("Augur"));
+        Augur _augur = controller.getAugur();
 
         uint256 _cost = _amount.mul(_market.getNumTicks());
         require(_augur.trustedTransfer(_denominationToken, _sender, _market, _cost));

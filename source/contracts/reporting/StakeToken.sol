@@ -55,9 +55,9 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         buyTokens(msg.sender, _attotokens);
         if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             market.designatedReport();
-            Augur(controller.lookup("Augur")).logDesignatedReportSubmitted(market.getUniverse(), msg.sender, market, this, _attotokens, payoutNumerators);
+            controller.getAugur().logDesignatedReportSubmitted(market.getUniverse(), msg.sender, market, this, _attotokens, payoutNumerators);
         } else {
-            Augur(controller.lookup("Augur")).logReportSubmitted(market.getUniverse(), msg.sender, market, this, _attotokens, payoutNumerators);
+            controller.getAugur().logReportSubmitted(market.getUniverse(), msg.sender, market, this, _attotokens, payoutNumerators);
         }
         return true;
     }
@@ -79,7 +79,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         market.updateTentativeWinningPayoutDistributionHash(_payoutDistributionHash);
         getReportingWindow().noteReportingGasPrice(market);
         return true;
-    } 
+    }
 
     function redeemDisavowedTokens(address _reporter) public afterInitialized returns (bool) {
         require(!market.isContainerForStakeToken(this));
@@ -122,7 +122,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
             _reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
         uint256 _feesReceived = market.getReportingWindow().collectStakeTokenReportingFees(msg.sender, _attotokens, forgoFees);
-        Augur(controller.lookup("Augur")).logWinningTokensRedeemed(market.getUniverse(), msg.sender, market, this, _attotokens, _feesReceived, payoutNumerators);
+        controller.getAugur().logWinningTokensRedeemed(market.getUniverse(), msg.sender, market, this, _attotokens, _feesReceived, payoutNumerators);
         return true;
     }
 

@@ -56,7 +56,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
         forkEndTime = block.timestamp + Reporting.forkDurationSeconds();
-        Augur(controller.lookup("Augur")).logUniverseForked();
+        controller.getAugur().logUniverseForked();
         return true;
     }
 
@@ -127,7 +127,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     function getOrCreateChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
         if (childUniverses[_parentPayoutDistributionHash] == address(0)) {
             childUniverses[_parentPayoutDistributionHash] = UniverseFactory(controller.lookup("UniverseFactory")).createUniverse(controller, this, _parentPayoutDistributionHash);
-            Augur(controller.lookup("Augur")).logUniverseCreated(childUniverses[_parentPayoutDistributionHash]);
+            controller.getAugur().logUniverseCreated(childUniverses[_parentPayoutDistributionHash]);
         }
         return childUniverses[_parentPayoutDistributionHash];
     }

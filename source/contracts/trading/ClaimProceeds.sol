@@ -56,7 +56,7 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
             if (_reporterShare > 0) {
                 require(_denominationToken.transferFrom(_market, _market.getUniverse().getNextReportingWindow(), _reporterShare));
             }
-            
+
             _numShares = _numShares.add(_numberOfShares);
             _numPayoutTokens = _numPayoutTokens.add(_shareHolderShare);
         }
@@ -66,7 +66,7 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
     }
 
     function logProceedsClaimed(IMarket _market, address _sender, uint256 _numShares, uint256 _numPayoutTokens) private returns (bool) {
-        Augur(controller.lookup("Augur")).logProceedsClaimed(_market.getUniverse(), _sender, _market, _numShares, _numPayoutTokens, _sender.balance.add(_numPayoutTokens));
+        controller.getAugur().logProceedsClaimed(_market.getUniverse(), _sender, _market, _numShares, _numPayoutTokens, _sender.balance.add(_numPayoutTokens));
     }
 
     function divideUpWinnings(IMarket _market, IStakeToken _winningStakeToken, uint8 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {

@@ -160,7 +160,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         }
         reportingWindow.updateMarketPhase();
-        Augur(controller.lookup("Augur")).logReportsDisputed(getUniverse(), msg.sender, this, uint8(ReportingState.DESIGNATED_DISPUTE), _bondAmount);
+        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, ReportingState.DESIGNATED_DISPUTE, _bondAmount);
         return true;
     }
 
@@ -180,7 +180,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         }
-        Augur(controller.lookup("Augur")).logReportsDisputed(getUniverse(), msg.sender, this, uint8(ReportingState.FIRST_DISPUTE), _bondAmount);
+        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, ReportingState.FIRST_DISPUTE, _bondAmount);
         return true;
     }
 
@@ -193,7 +193,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, lastReportersDisputeBondToken, _bondAmount);
         reportingWindow.getUniverse().fork();
         IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
-        Augur(controller.lookup("Augur")).logReportsDisputed(getUniverse(), msg.sender, this, uint8(ReportingState.LAST_DISPUTE), _bondAmount);
+        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, ReportingState.LAST_DISPUTE, _bondAmount);
         return migrateReportingWindow(_newReportingWindow);
     }
 
@@ -278,7 +278,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         // The validity bond is paid to the owner in any valid outcome and the reporting window otherwise
         doFeePayout(isValid(), validityBondAttoeth);
         reportingWindow.updateMarketPhase();
-        Augur(controller.lookup("Augur")).logMarketFinalized(getUniverse(), this);
+        controller.getAugur().logMarketFinalized(getUniverse(), this);
         return true;
     }
 

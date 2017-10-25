@@ -41,7 +41,7 @@ contract CancelOrder is CashAutoConverter, ReentrancyGuard, ICancelOrder {
 
         refundOrder(msg.sender, _type, _sharesEscrowed, _moneyEscrowed, _market, _outcome);
 
-        Augur(controller.lookup("Augur")).logOrderCanceled(_market.getUniverse(), _market.getShareToken(_outcome), msg.sender, _orderId, uint8(_type), _moneyEscrowed, _sharesEscrowed);
+        controller.getAugur().logOrderCanceled(_market.getUniverse(), _market.getShareToken(_outcome), msg.sender, _orderId, _type, _moneyEscrowed, _sharesEscrowed);
 
         return true;
     }

@@ -61,7 +61,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         markets.add(_newMarket);
         firstReporterMarkets.add(_newMarket);
         designatedReportNoShows += 1;
-        Augur(controller.lookup("Augur")).logMarketCreated(universe, _newMarket, msg.sender, msg.value, _extraInfo);
+        controller.getAugur().logMarketCreated(universe, _newMarket, msg.sender, msg.value, _extraInfo);
         return _newMarket;
     }
 
