@@ -207,6 +207,14 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return collectForgoFees;
     }
     
+    function callMigrateFeesDueToMarketMigration(IReportingWindow _reportingWindow, IMarket _market) public returns (bool) {
+        return _reportingWindow.migrateFeesDueToMarketMigration(_market);
+    }
+
+    function callMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool) {
+        return _reportingWindow.migrateFeesDueToFork();
+    }
+
     /*
     * Impl of IReportingWindow and ITyped
      */
