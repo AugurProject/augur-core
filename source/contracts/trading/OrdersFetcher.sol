@@ -31,13 +31,13 @@ contract OrdersFetcher is Controlled, IOrdersFetcher {
         return (_attoshares, _displayPrice, _owner, _tokensEscrowed, _sharesEscrowed, _betterOrderId, _worseOrderId, 0);
     }
 
-    function ascendOrderList(Order.TradeTypes _type, uint256 _price, bytes32 _lowestOrderId) public view returns (bytes32 _betterOrderId, bytes32 _worseOrderId) {
+    function ascendOrderList(Order.OrderTypes _type, uint256 _price, bytes32 _lowestOrderId) public view returns (bytes32 _betterOrderId, bytes32 _worseOrderId) {
         _worseOrderId = _lowestOrderId;
         bool _isWorstPrice;
         IOrders _orders = IOrders(controller.lookup("Orders"));
-        if (_type == Order.TradeTypes.Bid) {
+        if (_type == Order.OrderTypes.Bid) {
             _isWorstPrice = _price <= _orders.getPrice(_worseOrderId);
-        } else if (_type == Order.TradeTypes.Ask) {
+        } else if (_type == Order.OrderTypes.Ask) {
             _isWorstPrice = _price >= _orders.getPrice(_worseOrderId);
         }
         if (_isWorstPrice) {
@@ -55,13 +55,13 @@ contract OrdersFetcher is Controlled, IOrdersFetcher {
         return (_betterOrderId, _worseOrderId);
     }
 
-    function descendOrderList(Order.TradeTypes _type, uint256 _price, bytes32 _highestOrderId) public view returns (bytes32 _betterOrderId, bytes32 _worseOrderId) {
+    function descendOrderList(Order.OrderTypes _type, uint256 _price, bytes32 _highestOrderId) public view returns (bytes32 _betterOrderId, bytes32 _worseOrderId) {
         _betterOrderId = _highestOrderId;
         bool _isBestPrice;
         IOrders _orders = IOrders(controller.lookup("Orders"));
-        if (_type == Order.TradeTypes.Bid) {
+        if (_type == Order.OrderTypes.Bid) {
             _isBestPrice = _price > _orders.getPrice(_betterOrderId);
-        } else if (_type == Order.TradeTypes.Ask) {
+        } else if (_type == Order.OrderTypes.Ask) {
             _isBestPrice = _price < _orders.getPrice(_betterOrderId);
         }
         if (_isBestPrice) {
@@ -82,7 +82,7 @@ contract OrdersFetcher is Controlled, IOrdersFetcher {
         return (_betterOrderId, _worseOrderId);
     }
 
-    function findBoundingOrders(Order.TradeTypes _type, uint256 _price, bytes32 _bestOrderId, bytes32 _worstOrderId, bytes32 _betterOrderId, bytes32 _worseOrderId) public returns (bytes32, bytes32) {
+    function findBoundingOrders(Order.OrderTypes _type, uint256 _price, bytes32 _bestOrderId, bytes32 _worstOrderId, bytes32 _betterOrderId, bytes32 _worseOrderId) public returns (bytes32, bytes32) {
         IOrders _orders = IOrders(controller.lookup("Orders"));
         if (_bestOrderId == _worstOrderId) {
             if (_bestOrderId == bytes32(0)) {

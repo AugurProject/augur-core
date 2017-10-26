@@ -37,7 +37,7 @@ library Reporting {
     function designatedReportingDisputeDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS; }
     function reportingDurationSeconds() internal pure returns (uint256) { return REPORTING_DURATION_SECONDS; }
     function reportingDisputeDurationSeconds() internal pure returns (uint256) { return REPORTING_DISPUTE_DURATION_SECONDS; }
-    function claimProceedsWaitTime() internal pure returns (uint256) { return CLAIM_PROCEEDS_WAIT_TIME; }
+    function claimTradingProceedsWaitTime() internal pure returns (uint256) { return CLAIM_PROCEEDS_WAIT_TIME; }
     function forkDurationSeconds() internal pure returns (uint256) { return FORK_DURATION_SECONDS; }
     function designatedReporterDisputeBondAmount() internal pure returns (uint256) { return DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT; }
     function firstReportersDisputeBondAmount() internal pure returns (uint256) { return FIRST_REPORTERS_DISPUTE_BOND_AMOUNT; }

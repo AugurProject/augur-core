@@ -46,8 +46,8 @@ contract Constants {
     uint256 public constant TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR = Reporting.targetDesignatedReportNoShowsDivisor();
     uint256 public constant DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR = Reporting.designatedReportNoShowBondFloor();
 
-    uint8 public constant BID = uint8(Order.TradeTypes.Bid);
-    uint8 public constant ASK = uint8(Order.TradeTypes.Ask);
+    uint8 public constant BID = uint8(Order.OrderTypes.Bid);
+    uint8 public constant ASK = uint8(Order.OrderTypes.Ask);
     uint8 public constant LONG = uint8(Order.TradeDirections.Long);
     uint8 public constant SHORT = uint8(Order.TradeDirections.Short);
 }

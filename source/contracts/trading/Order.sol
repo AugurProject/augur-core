@@ -22,7 +22,7 @@ library Order {
 
     uint256 constant MIN_ORDER_VALUE = 10**14;
 
-    enum TradeTypes {
+    enum OrderTypes {
         Bid, Ask
     }
 
@@ -40,7 +40,7 @@ library Order {
         bytes32 id;
         address creator;
         uint8 outcome;
-        Order.TradeTypes tradeType;
+        Order.OrderTypes orderType;
         uint256 amount;
         uint256 price;
         uint256 sharesEscrowed;
@@ -53,7 +53,7 @@ library Order {
     // Constructor
     //
 
-    function create(IController _controller, address _creator, uint8 _outcome, Order.TradeTypes _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal view returns (Data) {
+    function create(IController _controller, address _creator, uint8 _outcome, Order.OrderTypes _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal view returns (Data) {
         require(_outcome < _market.getNumberOfOutcomes());
         require(_price < _market.getNumTicks());
 
@@ -67,7 +67,7 @@ library Order {
             id: 0,
             creator: _creator,
             outcome: _outcome,
-            tradeType: _type,
+            orderType: _type,
             amount: _attoshares,
             price: _price,
             sharesEscrowed: 0,
@@ -83,31 +83,31 @@ library Order {
 
     function getOrderId(Order.Data _orderData) internal view returns (bytes32) {
         if (_orderData.id == bytes32(0)) {
-            bytes32 _orderId = _orderData.orders.getOrderId(_orderData.tradeType, _orderData.market, _orderData.amount, _orderData.price, _orderData.creator, block.number, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed);
+            bytes32 _orderId = _orderData.orders.getOrderId(_orderData.orderType, _orderData.market, _orderData.amount, _orderData.price, _orderData.creator, block.number, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed);
             require(_orderData.orders.getAmount(_orderId) == 0);
             _orderData.id = _orderId;
         }
         return _orderData.id;
      }
 
-    function getOrderTradingTypeFromMakerDirection(Order.TradeDirections _creatorDirection) internal pure returns (Order.TradeTypes) {
-        return (_creatorDirection == Order.TradeDirections.Long) ? Order.TradeTypes.Bid : Order.TradeTypes.Ask;
+    function getOrderTradingTypeFromMakerDirection(Order.TradeDirections _creatorDirection) internal pure returns (Order.OrderTypes) {
+        return (_creatorDirection == Order.TradeDirections.Long) ? Order.OrderTypes.Bid : Order.OrderTypes.Ask;
     }
 
-    function getOrderTradingTypeFromFillerDirection(Order.TradeDirections _fillerDirection) internal pure returns (Order.TradeTypes) {
-        return (_fillerDirection == Order.TradeDirections.Long) ? Order.TradeTypes.Ask : Order.TradeTypes.Bid;
+    function getOrderTradingTypeFromFillerDirection(Order.TradeDirections _fillerDirection) internal pure returns (Order.OrderTypes) {
+        return (_fillerDirection == Order.TradeDirections.Long) ? Order.OrderTypes.Ask : Order.OrderTypes.Bid;
     }
 
     function escrowFunds(Order.Data _orderData) internal returns (bool) {
-        if (_orderData.tradeType == Order.TradeTypes.Ask) {
+        if (_orderData.orderType == Order.OrderTypes.Ask) {
             return escrowFundsForAsk(_orderData);
-        } else if (_orderData.tradeType == Order.TradeTypes.Bid) {
+        } else if (_orderData.orderType == Order.OrderTypes.Bid) {
             return escrowFundsForBid(_orderData);
         }
     }
 
     function saveOrder(Order.Data _orderData, uint256 _tradeGroupId) internal returns (bytes32) {
-        return _orderData.orders.saveOrder(_orderData.tradeType, _orderData.market, _orderData.amount, _orderData.price, _orderData.creator, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId);
+        return _orderData.orders.saveOrder(_orderData.orderType, _orderData.market, _orderData.amount, _orderData.price, _orderData.creator, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId);
     }
 
     //

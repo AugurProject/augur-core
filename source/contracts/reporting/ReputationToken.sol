@@ -83,7 +83,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     }
 
     function migrateFromLegacyReputationToken() public onlyInGoodTimes afterInitialized returns (bool) {
-        var _legacyRepToken = ERC20(controller.lookup("LegacyReputationToken"));
+        ERC20 _legacyRepToken = ERC20(controller.lookup("LegacyReputationToken"));
         uint256 _legacyBalance = _legacyRepToken.balanceOf(msg.sender);
         _legacyRepToken.transferFrom(msg.sender, address(0), _legacyBalance);
         balances[msg.sender] = balances[msg.sender].add(_legacyBalance);
@@ -130,9 +130,9 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     }
 
     function assertReputationTokenIsLegit(IReputationToken _shadyReputationToken) private view returns (bool) {
-        var _shadyUniverse = _shadyReputationToken.getUniverse();
+        IUniverse _shadyUniverse = _shadyReputationToken.getUniverse();
         require(universe.isParentOf(_shadyUniverse));
-        var _legitUniverse = _shadyUniverse;
+        IUniverse _legitUniverse = _shadyUniverse;
         require(_legitUniverse.getReputationToken() == _shadyReputationToken);
         return true;
     }
