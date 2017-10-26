@@ -42,7 +42,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     uint256 private totalStake;
     IParticipationToken private participationToken;
 
-    function initialize(IUniverse _universe, uint256 _reportingWindowId) public beforeInitialized returns (bool) {
+    function initialize(IUniverse _universe, uint256 _reportingWindowId) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         universe = _universe;
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
@@ -52,7 +52,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return true;
     }
 
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public afterInitialized payable returns (IMarket _newMarket) {
+    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
         require(universe.getReportingWindowByMarketEndTime(_endTime) == this);
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
@@ -61,10 +61,11 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         markets.add(_newMarket);
         firstReporterMarkets.add(_newMarket);
         designatedReportNoShows += 1;
+        controller.getAugur().logMarketCreated(universe, _newMarket, msg.sender, msg.value, _extraInfo);
         return _newMarket;
     }
 
-    function migrateMarketInFromSibling() public afterInitialized returns (bool) {
+    function migrateMarketInFromSibling() public onlyInGoodTimes afterInitialized returns (bool) {
         IMarket _market = IMarket(msg.sender);
         IReportingWindow _shadyReportingWindow = _market.getReportingWindow();
         require(universe.isContainerForReportingWindow(_shadyReportingWindow));
@@ -75,7 +76,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return true;
     }
 
-    function migrateMarketInFromNibling() public afterInitialized returns (bool) {
+    function migrateMarketInFromNibling() public onlyInGoodTimes afterInitialized returns (bool) {
         IMarket _shadyMarket = IMarket(msg.sender);
         IUniverse _shadyUniverse = _shadyMarket.getUniverse();
         require(_shadyUniverse == universe.getParentUniverse());
@@ -90,7 +91,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return true;
     }
 
-    function removeMarket() public afterInitialized returns (bool) {
+    function removeMarket() public onlyInGoodTimes afterInitialized returns (bool) {
         IMarket _market = IMarket(msg.sender);
         require(markets.contains(_market));
         totalStake = totalStake.sub(_market.getTotalStake());
@@ -100,7 +101,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return true;
     }
 
-    function updateMarketPhase() public afterInitialized returns (bool) {
+    function updateMarketPhase() public onlyInGoodTimes afterInitialized returns (bool) {
         IMarket _market = IMarket(msg.sender);
         require(markets.contains(_market));
         IMarket.ReportingState _state = _market.getReportingState();
@@ -124,7 +125,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return true;
     }
 
-    function updateFinalizedMarket(IMarket _market) private returns (bool) {
+    function updateFinalizedMarket(IMarket _market) private onlyInGoodTimes returns (bool) {
         require(!finalizedMarkets.contains(_market));
 
         if (!_market.isValid()) {
@@ -139,14 +140,14 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         totalWinningStake = totalWinningStake.add(_totalWinningStake);
     }
 
-    function noteReportingGasPrice(IMarket _market) public afterInitialized returns (bool) {
+    function noteReportingGasPrice(IMarket _market) public onlyInGoodTimes afterInitialized returns (bool) {
         require(markets.contains(_market));
         require(_market.isContainerForStakeToken(IStakeToken(msg.sender)));
         reportingGasPrice.record(tx.gasprice);
         return true;
     }
 
-    function noteDesignatedReport() public afterInitialized returns (bool) {
+    function noteDesignatedReport() public onlyInGoodTimes afterInitialized returns (bool) {
         require(isContainerForMarket(IMarket(msg.sender)));
         designatedReportNoShows -= 1;
         return true;
@@ -208,12 +209,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
     }
 
-    function getNextReportingWindow() public returns (IReportingWindow) {
+    function getNextReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
         uint256 _nextTimestamp = getEndTime() + 1;
         return getUniverse().getReportingWindowByTimestamp(_nextTimestamp);
     }
 
-    function getPreviousReportingWindow() public returns (IReportingWindow) {
+    function getPreviousReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
         uint256 _previousTimestamp = getStartTime() - 1;
         return getUniverse().getReportingWindowByTimestamp(_previousTimestamp);
     }
@@ -234,22 +235,22 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return markets.count == finalizedMarkets.count;
     }
 
-    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public onlyInGoodTimes returns (uint256) {
         require(isContainerForStakeToken(IStakeToken(msg.sender)));
         return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
 
-    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public onlyInGoodTimes returns (uint256) {
         require(isContainerForDisputeBond(IDisputeBond(msg.sender)));
         return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
 
-    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool) {
+    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public onlyInGoodTimes returns (uint256) {
         require(msg.sender == address(participationToken));
         return internalCollectReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
 
-    function internalCollectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) internal returns (bool) {
+    function internalCollectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) internal onlyInGoodTimes returns (uint256) {
         bool _eligibleForFees = isOver() && allMarketsFinalized();
         if (!_forgoFees) {
             require(_eligibleForFees);
@@ -265,10 +266,10 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         if (!_forgoFees && _feePayoutShare > 0) {
             _cash.withdrawEtherTo(_reporterAddress, _feePayoutShare);
         }
-        return true;
+        return _feePayoutShare;
     }
 
-    function migrateFeesDueToMarketMigration(IMarket _market) public afterInitialized returns (bool) {
+    function migrateFeesDueToMarketMigration(IMarket _market) public onlyInGoodTimes afterInitialized returns (bool) {
         if (totalStake == 0) {
             return false;
         }
@@ -287,12 +288,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     // This exists as an edge case handler for when a ReportingWindow has no markets but we want to migrate fees to a new universe. If a market exists it should be migrated and that will trigger a fee migration. Otherwise calling this on the desitnation reporting window in the forked universe with the old reporting window as an argument will trigger a fee migration manaully
-    function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public afterInitialized returns (bool) {
+    function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public onlyInGoodTimes afterInitialized returns (bool) {
         require(_reportingWindow.getNumMarkets() == 0);
         _reportingWindow.migrateFeesDueToFork();
     }
 
-    function migrateFeesDueToFork() public afterInitialized returns (bool) {
+    function migrateFeesDueToFork() public onlyInGoodTimes afterInitialized returns (bool) {
         require(isForkingMarketFinalized());
         // NOTE: Will need to figure out a way to transfer other denominations when that is implemented
         ICash _cash = ICash(controller.lookup("Cash"));
@@ -312,12 +313,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return true;
     }
 
-    function increaseTotalStake(uint256 _amount) public returns (bool) {
+    function increaseTotalStake(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(isContainerForMarket(IMarket(msg.sender)));
         totalStake = totalStake.add(_amount);
     }
 
-    function increaseTotalWinningStake(uint256 _amount) public returns (bool) {
+    function increaseTotalWinningStake(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(msg.sender == address(participationToken));
         totalStake = totalStake.add(_amount);
         totalWinningStake = totalWinningStake.add(_amount);
@@ -391,7 +392,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return participationToken == _shadyParticipationToken;
     }
 
-    function privateAddMarket(IMarket _market) private afterInitialized returns (bool) {
+    function privateAddMarket(IMarket _market) private onlyInGoodTimes afterInitialized returns (bool) {
         require(!markets.contains(_market));
         require(!firstReporterMarkets.contains(_market));
         require(!lastReporterMarkets.contains(_market));

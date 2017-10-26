@@ -11,7 +11,7 @@ import 'trading/ICash.sol';
 
 contract IReportingWindow is ITyped {
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public returns (bool);
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feeDivisor, ICash _denominationToken, address _designatedReporterAddress) public payable returns (IMarket _newMarket);
+    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feeDivisor, ICash _denominationToken, address _designatedReporterAddress, string _extraInfo) public payable returns (IMarket _newMarket);
     function migrateMarketInFromSibling() public returns (bool);
     function migrateMarketInFromNibling() public returns (bool);
     function removeMarket() public returns (bool);
@@ -30,9 +30,9 @@ contract IReportingWindow is ITyped {
     function getPreviousReportingWindow() public returns (IReportingWindow);
     function getNumDesignatedReportNoShows() public view returns (uint256);
     function allMarketsFinalized() public view returns (bool);
-    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool);
-    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool);
-    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (bool);
+    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (uint256);
+    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (uint256);
+    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (uint256);
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool);
     function migrateFeesDueToMarketMigration(IMarket _market) public returns (bool);
     function migrateFeesDueToFork() public returns (bool);

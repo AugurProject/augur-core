@@ -120,7 +120,7 @@ class ContractsFixture:
             },
             'settings': {
                 # TODO: Remove 'remappings' line below and update 'sources' line above
-                'remappings': [ '=%s/' % resolveRelativePath("../source/contracts") ],
+                'remappings': [ '=%s/' % resolveRelativePath("../source/contracts"), 'TEST=%s/' % resolveRelativePath("solidity_test_helpers") ],
                 'optimizer': {
                     'enabled': True,
                     'runs': 500
@@ -151,6 +151,10 @@ class ContractsFixture:
         matches = findall("import ['\"](.*?)['\"]", fileContents)
         for match in matches:
             dependencyPath = path.join(BASE_PATH, '..', 'source/contracts', match)
+            if "TEST" in dependencyPath:
+                dependencyPath = path.join(BASE_PATH, 'solidity_test_helpers', match).replace("TEST/", "")
+            if not path.isfile(dependencyPath):
+                raise Exception("Could not resolve dependency file path: %s" % dependencyPath)
             if not dependencyPath in knownDependencies:
                 ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
         return(knownDependencies)
@@ -339,13 +343,13 @@ class ContractsFixture:
         childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
         return childUniverse
 
-    def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender=tester.k0):
-        return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender)
+    def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender=tester.k0, extraInfo=""):
+        return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender, extraInfo)
 
-    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender=tester.k0):
+    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender=tester.k0, extraInfo=""):
         marketCreationFee = universe.getMarketCreationCost()
         reportingWindow = self.applySignature('ReportingWindow', universe.getReportingWindowByMarketEndTime(endTime))
-        marketAddress = reportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
+        marketAddress = reportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, extraInfo, value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
@@ -353,12 +357,12 @@ class ContractsFixture:
     def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress, sender=tester.k0):
         marketCreationFee = universe.getMarketCreationCost()
         reportingWindow = self.applySignature('ReportingWindow', universe.getReportingWindowByMarketEndTime(endTime))
-        marketAddress = reportingWindow.createMarket(endTime, 2, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
+        marketAddress = reportingWindow.createMarket(endTime, 2, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createReasonableBinaryMarket(self, universe, denominationToken, sender=tester.k0):
+    def createReasonableBinaryMarket(self, universe, denominationToken, sender=tester.k0, extraInfo=""):
         return self.createBinaryMarket(
             universe = universe,
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
@@ -366,7 +370,8 @@ class ContractsFixture:
             denominationToken = denominationToken,
             designatedReporterAddress = tester.a0,
             numTicks = 10 ** 18,
-            sender = sender)
+            sender = sender,
+            extraInfo= extraInfo)
 
     def createReasonableCategoricalMarket(self, universe, numOutcomes, denominationToken, sender=tester.k0):
         return self.createCategoricalMarket(

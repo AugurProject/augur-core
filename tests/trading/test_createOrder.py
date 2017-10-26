@@ -51,7 +51,7 @@ def test_publicCreateOrder_ask(contractsFixture, cash, market):
     assert worseOrderId == bytearray(32)
     assert cash.balanceOf(market.address) == 10**18 - 10**17
 
-def test_publicCreateOrder_bid2(contractsFixture, cash, market):
+def test_publicCreateOrder_bid2(contractsFixture, cash, market, universe):
     orders = contractsFixture.contracts['Orders']
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']
@@ -64,7 +64,7 @@ def test_publicCreateOrder_bid2(contractsFixture, cash, market):
     tradeGroupID = 42
 
     marketInitialCash = cash.balanceOf(market.address)
-    captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     creatorInitialETH = contractsFixture.chain.head_state.get_balance(tester.a1)
     orderID = createOrder.publicCreateOrder(orderType, amount, fxpPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10'))
     assert orderID != bytearray(32), "Order ID should be non-zero"
@@ -78,21 +78,15 @@ def test_publicCreateOrder_bid2(contractsFixture, cash, market):
     assert cash.balanceOf(tester.a1) == 0
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == creatorInitialETH - long(0.6 * 10**18)
     assert cash.balanceOf(market.address) - marketInitialCash == 0.6 * 10**18
-    assert logs == [
-        {
-            "_event_type": "CreateOrder",
-            "tradeGroupId": tradeGroupID,
-            "amount": amount,
-            "price": displayPrice,
-            "moneyEscrowed": tokensEscrowed,
-            "sharesEscrowed": sharesEscrowed,
-            "orderId": orderID,
-            "outcome": outcome,
-            "market": market.address,
-            "sender": bytesToHexString(tester.a1),
-            "orderType": BID,
-        }
-    ]
+    shareToken = contractsFixture.getShareToken(market, 0)
+    assert len(logs) == 1
+    assert logs[0]['_event_type'] == 'OrderCreated'
+    assert logs[0]['amount'] == 1
+    assert logs[0]['numSharesEscrowed'] == 0
+    assert logs[0]['numTokensEscrowed'] == fix('0.6')
+    assert logs[0]['shareToken'] == shareToken.address
+    assert logs[0]['tradeGroupId'] == 42
+    assert logs[0]['orderId'] == orderID
 
 def test_createOrder_failure(contractsFixture, universe, cash, market):
     orders = contractsFixture.contracts['Orders']
@@ -154,13 +148,25 @@ def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     assert yesShareToken.balanceOf(tester.a1) == 2
     assert noShareToken.balanceOf(tester.a1) == 2
 
+    logs = []
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
+
     # create ASK order for 3 shares with a mix of shares and cash
     assert yesShareToken.approve(createOrder.address, fix('2'), sender = tester.k1)
-    captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     orderID = createOrder.publicCreateOrder(ASK, 3, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1, value=fix('0.4'))
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a1) == 2
+
+    # Confirm create order logging works correctly
+    assert len(logs) == 2
+    assert logs[1]['_event_type'] == 'OrderCreated'
+    assert logs[1]['amount'] == 3
+    assert logs[1]['numSharesEscrowed'] == 2
+    assert logs[1]['numTokensEscrowed'] == fix('0.4')
+    assert logs[1]['shareToken'] == yesShareToken.address
+    assert logs[1]['tradeGroupId'] == 42
+    assert logs[1]['orderId'] == orderID
 
     # validate the order contains expected results
     assert orderID != bytearray(32), "Order ID should be non-zero"
@@ -170,20 +176,3 @@ def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     assert owner == bytesToHexString(tester.a1)
     assert tokensEscrowed == fix('0.4')
     assert sharesEscrowed == 2
-    # validate the log output of the order
-    assert logs == [
-        {
-            "_event_type": "CreateOrder",
-            "tradeGroupId": 42,
-            "amount": amount,
-            "price": displayPrice,
-            "moneyEscrowed": tokensEscrowed,
-            "sharesEscrowed": sharesEscrowed,
-            "orderId": orderID,
-            "orderType": ASK,
-            "outcome": YES,
-            "market": market.address,
-            "sender": bytesToHexString(tester.a1),
-            "orderType": ASK,
-        }
-    ]

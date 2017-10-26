@@ -11,7 +11,6 @@ def test_publicBuyCompleteSets(contractsFixture, universe, cash, market):
     orders = contractsFixture.contracts['Orders']
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
-    logs = []
 
     assert not cash.balanceOf(tester.a1)
     assert not cash.balanceOf(market.address)
@@ -20,18 +19,8 @@ def test_publicBuyCompleteSets(contractsFixture, universe, cash, market):
     assert universe.getOpenInterestInAttoEth() == 0
 
     cost = 10 * market.getNumTicks()
-    captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     assert completeSets.publicBuyCompleteSets(market.address, 10, sender=tester.k1, value=cost)
 
-    assert logs == [
-        {
-            "_event_type": "BuyCompleteSets",
-            "sender": bytesToHexString(tester.a1),
-            "amount": 10L,
-            "numOutcomes": 2L,
-            "market": market.address
-        },
-    ]
     assert yesShareToken.balanceOf(tester.a1) == 10, "Should have 10 shares of outcome 1"
     assert noShareToken.balanceOf(tester.a1) == 10, "Should have 10 shares of outcome 2"
     assert cash.balanceOf(tester.a1) == 0, "Sender's cash balance should be 0"
@@ -61,7 +50,6 @@ def test_publicSellCompleteSets(contractsFixture, universe, cash, market):
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
     cash.transfer(0, cash.balanceOf(tester.a9), sender = tester.k9)
-    logs = []
 
     assert not cash.balanceOf(tester.a0)
     assert not cash.balanceOf(tester.a1)
@@ -73,23 +61,11 @@ def test_publicSellCompleteSets(contractsFixture, universe, cash, market):
     assert universe.getOpenInterestInAttoEth() == 0
     completeSets.publicBuyCompleteSets(market.address, 10, sender = tester.k1, value = cost)
     assert universe.getOpenInterestInAttoEth() == 10 * market.getNumTicks()
-    captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     initialTester1ETH = contractsFixture.chain.head_state.get_balance(tester.a1)
     initialTester0ETH = contractsFixture.chain.head_state.get_balance(tester.a0)
     result = completeSets.publicSellCompleteSets(market.address, 9, sender=tester.k1)
     assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
 
-    assert logs == [
-        {
-            "_event_type": "SellCompleteSets",
-            "sender": bytesToHexString(tester.a1),
-            "reportingFee": fix('0.0009'),
-            "amount": 9,
-            "creatorFee": fix('0.09'),
-            "numOutcomes": 2,
-            "market": market.address
-        },
-    ]
     assert yesShareToken.balanceOf(tester.a1) == 1, "Should have 1 share of outcome yes"
     assert noShareToken.balanceOf(tester.a1) == 1, "Should have 1 share of outcome no"
     assert yesShareToken.totalSupply() == 1
