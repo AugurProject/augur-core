@@ -394,8 +394,6 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
 
     function privateAddMarket(IMarket _market) private onlyInGoodTimes afterInitialized returns (bool) {
         require(!markets.contains(_market));
-        require(!firstReporterMarkets.contains(_market));
-        require(!lastReporterMarkets.contains(_market));
         totalStake = totalStake.add(_market.getTotalStake());
         markets.add(_market);
         return true;

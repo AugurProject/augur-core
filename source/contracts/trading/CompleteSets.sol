@@ -25,7 +25,6 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
 
     function buyCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (bool) {
         require(_sender != address(0));
-        require(_market != IMarket(0));
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _denominationToken = _market.getDenominationToken();
@@ -49,7 +48,6 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
 
     function sellCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (uint256) {
         require(_sender != address(0));
-        require(_market != IMarket(0));
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _denominationToken = _market.getDenominationToken();

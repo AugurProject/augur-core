@@ -74,7 +74,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require((_numTicks.isMultipleOf(_numOutcomes)));
         require(_feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
-        require(_cash.getTypeName() == "Cash");
         require(_designatedReporterAddress != NULL_ADDRESS);
         reportingWindow = _reportingWindow;
         require(address(getForkingMarket()) == NULL_ADDRESS);

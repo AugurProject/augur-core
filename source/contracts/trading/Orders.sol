@@ -91,7 +91,6 @@ contract Orders is DelegationTarget, IOrders {
     }
 
     function isBetterPrice(Order.OrderTypes _type, uint256 _price, bytes32 _orderId) public view returns (bool) {
-        require(_type == Order.OrderTypes.Bid || _type == Order.OrderTypes.Ask);
         if (_type == Order.OrderTypes.Bid) {
             return (_price > orders[_orderId].price);
         } else if (_type == Order.OrderTypes.Ask) {
@@ -174,7 +173,6 @@ contract Orders is DelegationTarget, IOrders {
     function fillOrder(bytes32 _orderId, uint256 _sharesFilled, uint256 _tokensFilled) public onlyWhitelistedCallers returns (bool) {
         Order.Data storage _order = orders[_orderId];
         require(_order.outcome < _order.market.getNumberOfOutcomes());
-        require(_order.orderType == Order.OrderTypes.Bid || _order.orderType == Order.OrderTypes.Ask);
         require(_orderId != bytes32(0));
         require(_sharesFilled <= _order.sharesEscrowed);
         require(_tokensFilled <= _order.moneyEscrowed);
