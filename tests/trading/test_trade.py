@@ -106,9 +106,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture, cash, market, unive
     assert log1["tradeGroupId"] == 42
 
     assert log2["_event_type"] == "OrderCreated"
-    assert log2["amount"] == 1
-    assert log2["numSharesEscrowed"] == 0
-    assert log2["numTokensEscrowed"] == fix('1', '0.4')
+    assert log2['creator'] == bytesToHexString(tester.a2)
     assert log2["orderId"] == fillOrderID
     assert log2["shareToken"] == market.getShareToken(YES)
     assert log2["tradeGroupId"] == 42
@@ -244,9 +242,7 @@ def test_two_bids_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     assert log1["tradeGroupId"] == 42
 
     assert log2["_event_type"] == "OrderCreated"
-    assert log2["amount"] == 3
-    assert log2["numSharesEscrowed"] == 0
-    assert log2["numTokensEscrowed"] == fix('3', '0.4')
+    assert log2['creator'] == bytesToHexString(tester.a2)
     assert log2["orderId"] == fillOrderID
     assert log2["shareToken"] == market.getShareToken(YES)
     assert log2["tradeGroupId"] == 42
@@ -354,9 +350,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture, cash, market, unive
     assert log1["tradeGroupId"] == 42
 
     assert log2["_event_type"] == "OrderCreated"
-    assert log2["amount"] == 3
-    assert log2["numSharesEscrowed"] == 0
-    assert log2["numTokensEscrowed"] == fix('3', '0.6')
+    assert log2['creator'] == bytesToHexString(tester.a2)
     assert log2["orderId"] == fillOrderID
     assert log2["shareToken"] == market.getShareToken(YES)
     assert log2["tradeGroupId"] == 42
@@ -492,9 +486,7 @@ def test_two_asks_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     assert log1["tradeGroupId"] == 42
 
     assert log2["_event_type"] == "OrderCreated"
-    assert log2["amount"] == 3
-    assert log2["numSharesEscrowed"] == 0
-    assert log2["numTokensEscrowed"] == fix('3', '0.6')
+    assert log2['creator'] == bytesToHexString(tester.a2)
     assert log2["orderId"] == fillOrderID
     assert log2["shareToken"] == market.getShareToken(YES)
     assert log2["tradeGroupId"] == 42

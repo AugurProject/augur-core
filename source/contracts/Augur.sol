@@ -22,7 +22,7 @@ contract Augur is Controlled {
     event MarketFinalized(address indexed universe, address indexed market);
     event UniverseForked(address indexed universe);
     event OrderCanceled(address indexed universe, address indexed shareToken, address indexed sender, bytes32 orderId, Order.TradeTypes orderType, uint256 tokenRefund, uint256 sharesRefund);
-    event OrderCreated(address indexed universe, address indexed shareToken, bytes32 orderId, uint256 amount, uint256 numTokensEscrowed, uint256 numSharesEscrowed, uint256 tradeGroupId);
+    event OrderCreated(address indexed universe, address indexed shareToken, address indexed creator, bytes32 orderId, uint256 tradeGroupId);
     event OrderFilled(address indexed universe, address indexed shareToken, address filler, bytes32 orderId, uint256 numCreatorShares, uint256 numCreatorTokens, uint256 numFillerShares, uint256 numFillerTokens, uint256 settlementFees, uint256 tradeGroupId);
     event ProceedsClaimed(address indexed universe, address indexed shareToken, address indexed sender, address market, uint256 numShares, uint256 numPayoutTokens, uint256 finalTokenBalance);
     event UniverseCreated(address indexed parentUniverse, address indexed childUniverse);
@@ -79,8 +79,8 @@ contract Augur is Controlled {
         return true;
     }
 
-    function logOrderCreated(IUniverse _universe, address _shareToken, bytes32 _orderId, uint256 _amount, uint256 _numTokensEscrowed, uint256 _numSharesEscrowed, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bool) {
-        OrderCreated(_universe, _shareToken, _orderId, _amount, _numTokensEscrowed, _numSharesEscrowed, _tradeGroupId);
+    function logOrderCreated(IUniverse _universe, address _shareToken, address _creator, bytes32 _orderId, uint256 _tradeGroupId) public onlyWhitelistedCallers returns (bool) {
+        OrderCreated(_universe, _shareToken, _creator, _orderId, _tradeGroupId);
         return true;
     }
 
