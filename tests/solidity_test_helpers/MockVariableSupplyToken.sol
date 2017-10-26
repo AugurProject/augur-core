@@ -7,6 +7,7 @@ contract MockVariableSupplyToken is StandardToken {
     uint256 private setBalanceOfValue;
     address private transferToValue;
     uint256 private transferValueValue;
+    uint256 private setTotalSupplyValue;
     uint256[] private transferAmounts;
     address[] private transferAddresses;
     uint256[] private balanceOfAmounts;
@@ -54,6 +55,10 @@ contract MockVariableSupplyToken is StandardToken {
         balanceOfAddresses.push(_to);
     }
 
+    function setTotalSupply(uint256 _totalSupply) public {
+        setTotalSupplyValue = _totalSupply;
+    }
+
     function mint(address _target, uint256 _amount) internal returns (bool) {
         return true;
     }
@@ -77,5 +82,9 @@ contract MockVariableSupplyToken is StandardToken {
         transferAmounts.push(_value);
         transferAddresses.push(_to);
         return true;
+    }
+    
+    function totalSupply() public view returns (uint256) {
+        return setTotalSupplyValue;
     }
 }

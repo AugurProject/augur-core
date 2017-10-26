@@ -242,11 +242,13 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
     function decrementOpenInterest(uint256 _amount) public onlyWhitelistedCallers returns (bool) {
         openInterestInAttoEth = openInterestInAttoEth.sub(_amount);
+        return true;
     }
 
     // CONSIDER: It would be more correct to decrease open interest for all outstanding shares in a market when it is finalized. We aren't doing this currently since securely and correctly writing this code would require updating the Market contract, which is currently at its size limit.
     function incrementOpenInterest(uint256 _amount) public onlyWhitelistedCallers returns (bool) {
         openInterestInAttoEth = openInterestInAttoEth.add(_amount);
+        return true;
     }
 
     function getOpenInterestInAttoEth() public view returns (uint256) {
@@ -303,10 +305,10 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         IReportingWindow _previousReportingWindow = getPreviousReportingWindow();
         uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
         uint256 _designatedReportNoShowsInPreviousWindow = _previousReportingWindow.getNumDesignatedReportNoShows();
-        uint256 _previousDesignatedReportNoShowBondInAttoRep = designatedReportStakeInAttoRep[_previousReportingWindow];
+        uint256 _previousDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_previousReportingWindow];
 
         _currentDesignatedReportNoShowBondInAttoRep = calculateFloatingValue(_designatedReportNoShowsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetDesignatedReportNoShowsDivisor(), _previousDesignatedReportNoShowBondInAttoRep, Reporting.defaultDesignatedReportNoShowBond(), Reporting.designatedReportNoShowBondFloor());
-        designatedReportStakeInAttoRep[_reportingWindow] = _currentDesignatedReportNoShowBondInAttoRep;
+        designatedReportNoShowBondInAttoRep[_reportingWindow] = _currentDesignatedReportNoShowBondInAttoRep;
         return _currentDesignatedReportNoShowBondInAttoRep;
     }
 

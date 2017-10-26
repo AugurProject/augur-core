@@ -169,15 +169,197 @@ def test_universe_dispute_bond_remaining_to_be_paid(localFixture, chain, mockMar
     assert mockDisputeBondToken.callDecreaseExtraDisputeBondRemainingToBePaidOut(populatedUniverse.address, 50)
     assert populatedUniverse.getExtraDisputeBondRemainingToBePaidOut() == 50
 
-def test_open_interest(populatedUniverse):
+def test_open_interest(localFixture, populatedUniverse):
+    multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER()
+    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 0
     assert populatedUniverse.getOpenInterestInAttoEth() == 0
     populatedUniverse.incrementOpenInterest(10)
+    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 10 * multiplier
     assert populatedUniverse.getOpenInterestInAttoEth() == 10
     populatedUniverse.decrementOpenInterest(5)
     assert populatedUniverse.getOpenInterestInAttoEth() == 5
+    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 5 * multiplier
 
-def test_universe_rep_price_oracle(localFixture, populatedUniverse):
-    # mock out RepPriceOracle
+def test_universe_rep_price_oracle(localFixture, populatedUniverse, mockReputationToken, mockShareToken, mockStakeToken):
+    controller = localFixture.contracts['Controller']
+    repPriceOracle = localFixture.uploadAndAddToController("../source/contracts/reporting/RepPriceOracle.sol", 'repPriceOracle')
+    controller.setValue(stringToBytes('RepPriceOracle'), repPriceOracle.address)
+    mockReputationToken.setTotalSupply(0)
+    assert populatedUniverse.getRepMarketCapInAttoeth() == 0
+    mockReputationToken.setTotalSupply(1)
+    repPriceOracle.setRepPriceInAttoEth(100)
+    assert populatedUniverse.getRepMarketCapInAttoeth() == 100
+    mockReputationToken.setTotalSupply(12)
+    assert populatedUniverse.getRepMarketCapInAttoeth() == 1200
+    
+def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse, mockReportingWindow, mockReportingWindowFactory):
+    timestamp = chain.head_state.timestamp
+    constants = localFixture.contracts['Constants']
+    currentReportingWindow = mockReportingWindow
+    previousReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'previousReportingWindow')    
+    nextReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'nextReportingWindow')   
+    newCurrentReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newCurrentReportingWindow')   
+    # set current reporting window
+    mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
+    populatedUniverse.getCurrentReportingWindow()
+    # set previous reporting window
+    mockReportingWindowFactory.setCreateReportingWindowValue(previousReportingWindow.address)
+    populatedUniverse.getPreviousReportingWindow()
+    # set next reporting window
+    mockReportingWindowFactory.setCreateReportingWindowValue(nextReportingWindow.address)
+    populatedUniverse.getNextReportingWindow()
+
+    designated_divisor = constants.TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR()
+    designated_default = constants.DEFAULT_DESIGNATED_REPORT_STAKE()
+    designated_floor = constants.DESIGNATED_REPORT_STAKE_FLOOR()
+
+    validity_divisor = constants.TARGET_INVALID_MARKETS_DIVISOR()
+    validity_default = constants.DEFAULT_VALIDITY_BOND()
+    validity_floor = constants.DEFAULT_VALIDITY_BOND_FLOOR()
+
+    noshow_divisor = constants.TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR()
+    noshow_default = constants.DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND()
+    noshow_floor = constants.DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR()
+
+    # current reporting window
+    designatedStakeValue = populatedUniverse.calculateFloatingValue(0, 0, designated_divisor, 0, designated_default, designated_floor)
+    validityBondValue = populatedUniverse.calculateFloatingValue(0, 0, validity_divisor, 0, validity_default, validity_floor)
+    noshowBondValue = populatedUniverse.calculateFloatingValue(0, 0, noshow_divisor, 0, noshow_default, noshow_floor)
+    # validity bond is the same if window hasn't changed
+    assert populatedUniverse.getDesignatedReportStake() == designatedStakeValue
+    assert populatedUniverse.getDesignatedReportStake() == designatedStakeValue
+    assert populatedUniverse.getValidityBond() == validityBondValue
+    assert populatedUniverse.getValidityBond() == validityBondValue
+    assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
+    assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
+
+    # push reporting window forward
+    chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
+    assert populatedUniverse.getPreviousReportingWindow() == currentReportingWindow.address
+
+    numMarket = 6
+    currentReportingWindow.setNumMarkets(numMarket)    
+    currentReportingWindow.setNumIncorrectDesignatedReportMarkets(5)
+    currentReportingWindow.setNumInvalidMarkets(2)
+    currentReportingWindow.setNumDesignatedReportNoShows(3)
+    newDesignatedStakeValue = populatedUniverse.calculateFloatingValue(5, numMarket, designated_divisor, designatedStakeValue, designated_default, designated_floor)
+    newValidityBondValue = populatedUniverse.calculateFloatingValue(2, numMarket, validity_divisor, validityBondValue, validity_default, validity_floor)
+    newNoshowBondValue = populatedUniverse.calculateFloatingValue(3, numMarket, noshow_divisor, noshowBondValue, noshow_default, noshow_floor)
+    
+    assert populatedUniverse.getDesignatedReportStake() == newDesignatedStakeValue
+    assert populatedUniverse.getValidityBond() == newValidityBondValue
+    assert populatedUniverse.getDesignatedReportNoShowBond() == newNoshowBondValue
+
+    # push reporting window forward again
+    chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
+    mockReportingWindowFactory.setCreateReportingWindowValue(newCurrentReportingWindow.address)
+    assert populatedUniverse.getCurrentReportingWindow() == newCurrentReportingWindow.address
+    assert populatedUniverse.getPreviousReportingWindow() == nextReportingWindow.address
+
+    numMarket = 1600
+    nextReportingWindow.setNumMarkets(numMarket)    
+    nextReportingWindow.setNumIncorrectDesignatedReportMarkets(20)
+    nextReportingWindow.setNumInvalidMarkets(50)
+    nextReportingWindow.setNumDesignatedReportNoShows(30)
+
+    # use previous' window validity bond to compute
+    newestDesignatedStakeValue = populatedUniverse.calculateFloatingValue(20, numMarket, designated_divisor, newDesignatedStakeValue, designated_default, designated_floor)
+    newestValidityBondValue = populatedUniverse.calculateFloatingValue(50, numMarket, validity_divisor, newValidityBondValue, validity_default, validity_floor)
+    newestNoshowBondValue = populatedUniverse.calculateFloatingValue(30, numMarket, noshow_divisor, newNoshowBondValue, noshow_default, noshow_floor)
+    
+    assert populatedUniverse.getValidityBond() == newestValidityBondValue
+    assert populatedUniverse.getDesignatedReportNoShowBond() == newestNoshowBondValue
+    assert populatedUniverse.getDesignatedReportStake() == newestDesignatedStakeValue
+    
+def test_universe_calculate_floating_value_defaults(populatedUniverse):
+    defaultValue = 12
+    totalMarkets = 0
+    assert populatedUniverse.calculateFloatingValue(11, totalMarkets, 4, 22, defaultValue, 6) == defaultValue
+
+def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, mockReputationToken):
+    timestamp = chain.head_state.timestamp
+    controller = localFixture.contracts['Controller']
+    constants = localFixture.contracts['Constants']
+    repPriceOracle = localFixture.uploadAndAddToController("../source/contracts/reporting/RepPriceOracle.sol", 'repPriceOracle')
+    controller.setValue(stringToBytes('RepPriceOracle'), repPriceOracle.address)
+    
+    multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER()
+    # default value
+    defaultValue = 10000
+    assert populatedUniverse.getRepMarketCapInAttoeth() == 0
+    assert populatedUniverse.getReportingFeeDivisor() == defaultValue
+    
+    # puse reporting window forward
+    chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
+
+    # check getRepMarketCapInAttoeth() == 0
+    assert populatedUniverse.getRepMarketCapInAttoeth() == 0
+    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 0
+    assert populatedUniverse.getReportingFeeDivisor() == defaultValue
+
+    # puse reporting window forward
+    chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
+
+    # _currentFeeDivisor > 0
+    mockReputationToken.setTotalSupply(0)
+    repPriceOracle.setRepPriceInAttoEth(0)
+    populatedUniverse.incrementOpenInterest(10)
+    assert populatedUniverse.getRepMarketCapInAttoeth() == 0
+    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 10 * multiplier
+    assert populatedUniverse.getOpenInterestInAttoEth() == 10
+    assert populatedUniverse.getReportingFeeDivisor() == defaultValue
+    # value is cached for reach reporting window
+    assert populatedUniverse.getReportingFeeDivisor() == defaultValue
+
+    # puse reporting window forward
+    chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
+
+    mockReputationToken.setTotalSupply(105)
+    repPriceOracle.setRepPriceInAttoEth(10)
+    populatedUniverse.incrementOpenInterest(10)
+    assert populatedUniverse.getRepMarketCapInAttoeth() == 105 * 10
+    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 20 * multiplier
+    assert populatedUniverse.getOpenInterestInAttoEth() == 20
+    # default because calculation is greater than 10000
+    assert populatedUniverse.getReportingFeeDivisor() == defaultValue
+
+    # puse reporting window forward
+    chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
+
+    mockReputationToken.setTotalSupply(1)
+    repPriceOracle.setRepPriceInAttoEth(1)
+    populatedUniverse.decrementOpenInterest(15)
+    assert populatedUniverse.getRepMarketCapInAttoeth() == 1
+    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 5 * multiplier
+    assert populatedUniverse.getOpenInterestInAttoEth() == 5
+    
+    assert populatedUniverse.getReportingFeeDivisor() == defaultValue / 5 * multiplier
+    
+def test_universe_target_reporter_gas_fee(localFixture, chain, populatedUniverse, mockReputationToken, mockReportingWindow, mockReportingWindowFactory):
+    timestamp = chain.head_state.timestamp
+    constants = localFixture.contracts['Constants']
+    currentReportingWindow = mockReportingWindow
+    previousReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'previousReportingWindow')    
+    # set current reporting window
+    mockReportingWindowFactory.setCreateReportingWindowValue(currentReportingWindow.address)
+    populatedUniverse.getCurrentReportingWindow()
+    # set previous reporting window
+    mockReportingWindowFactory.setCreateReportingWindowValue(previousReportingWindow.address)
+    populatedUniverse.getPreviousReportingWindow()
+
+    gasToReport = constants.GAS_TO_REPORT()
+
+    previousReportingWindow.setAvgReportingGasPrice(4)
+    targetGasCost = gasToReport * 4 * 2;
+    assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
+
+    # puse reporting window forward
+    chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
+    currentReportingWindow.setAvgReportingGasPrice(18)
+    targetGasCost = gasToReport * 18 * 2;
+    assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
+
+
 
 @fixture
 def localSnapshot(fixture, augurInitializedSnapshot):
