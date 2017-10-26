@@ -89,6 +89,10 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
         return migrateOutAttoTokens;
     }
 
+    function callIncreaseRepAvailableForExtraBondPayouts(IUniverse _universe, uint256 _amount) public returns(bool) {
+        return _universe.increaseRepAvailableForExtraBondPayouts(_amount);
+    }
+
     /*
     * Impl of IReputationToken and ITyped
      */

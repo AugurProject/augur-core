@@ -3,162 +3,255 @@ from ethereum.tools.tester import TransactionFailed
 from utils import longToHexString, stringToBytes
 from pytest import fixture, raises
 
-def test_universe_creation(localFixture):
-    universe = localFixture.createUniverse(3, "5")
-    reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
-    assert universe.getParentUniverse() == longToHexString(3)
+def test_universe_creation(localFixture, mockReputationToken, mockReputationTokenFactory, mockUniverse, mockUniverseFactory):
+    universe = localFixture.upload('../source/contracts/reporting/Universe.sol', 'universe')
+
+    with raises(TransactionFailed, message="reputation token can not be address 0"):
+        universe.initialize(mockUniverse.address, stringToBytes("5"))    
+
+    mockReputationTokenFactory.setCreateReputationTokenValue(mockReputationToken.address)
+    universe.setController(localFixture.contracts['Controller'].address)
+    assert universe.initialize(mockUniverse.address, stringToBytes("5"))    
+    assert universe.getReputationToken() == mockReputationToken.address
+    assert universe.getParentUniverse() == mockUniverse.address
     assert universe.getParentPayoutDistributionHash() == stringToBytes("5")
     assert universe.getForkingMarket() == longToHexString(0)
     assert universe.getForkEndTime() == 0
-    assert reputationToken.getUniverse() == universe.address
-    assert reputationToken.getTopMigrationDestination() == longToHexString(0)
     assert universe.getTypeName() == stringToBytes('Universe')
     assert universe.getForkEndTime() == 0
     assert universe.getChildUniverse("5") == longToHexString(0)
 
-def test_get_reporting_window(localFixture):
-    universe = localFixture.createUniverse(1, "10")
-    timestamp = localFixture.chain.head_state.timestamp
-    duration =  localFixture.contracts['Constants'].REPORTING_DURATION_SECONDS()
-    dispute_duration = localFixture.contracts['Constants'].REPORTING_DISPUTE_DURATION_SECONDS()
+    # child universe
+    mockUniverseFactory.setCreateUniverseUniverseValue(mockUniverse.address)
+    assert universe.getOrCreateChildUniverse(stringToBytes("101")) == mockUniverse.address
+    assert mockUniverseFactory.getCreateUniverseParentUniverseValue() == universe.address
+    assert mockUniverseFactory.getCreateUniverseParentPayoutDistributionHashValue() == stringToBytes("101")
+    assert universe.getChildUniverse(stringToBytes("101")) == mockUniverse.address
+    mockUniverse.setParentPayoutDistributionHash(stringToBytes("101"))
+    assert universe.isParentOf(mockUniverse.address)
+    strangerUniverse = localFixture.upload('../source/contracts/reporting/Universe.sol', 'strangerUniverse')
+    assert universe.isParentOf(strangerUniverse.address) == False
+
+def test_universe_fork_market(localFixture, populatedUniverse, mockMarket, mockReportingWindow, chain, mockReportingWindowFactory):
+
+    with raises(TransactionFailed, message="must be called from market"):
+        populatedUniverse.fork()
+    
+    with raises(TransactionFailed, message="forking market has to be in universe"):
+        mockMarket.callForkOnUniverse(populatedUniverse.address)
+
+    timestamp = chain.head_state.timestamp
+    mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
+    reportingWindowId = populatedUniverse.getReportingWindowByTimestamp(timestamp)
+    mockReportingWindow.setStartTime(timestamp)
+
+    mockReportingWindow.setIsContainerForMarket(True)
+    mockMarket.setReportingWindow(mockReportingWindow.address)
+    assert populatedUniverse.getForkingMarket() == longToHexString(0)
+    assert populatedUniverse.isContainerForMarket(mockMarket.address)
+    
+    assert mockMarket.callForkOnUniverse(populatedUniverse.address)
+    assert populatedUniverse.getForkingMarket() == mockMarket.address
+    assert populatedUniverse.getForkEndTime() == timestamp + localFixture.contracts['Constants'].FORK_DURATION_SECONDS()
+
+    assert populatedUniverse.getReportingWindowForForkEndTime() == mockReportingWindow.address
+
+    with raises(TransactionFailed, message="forking market is already set"):
+        mockMarket.callForkOnUniverse()
+
+
+def test_get_reporting_window(localFixture, populatedUniverse, chain):
+    constants = localFixture.contracts['Constants']
+    timestamp = chain.head_state.timestamp
+    duration =  constants.REPORTING_DURATION_SECONDS()
+    dispute_duration = constants.REPORTING_DISPUTE_DURATION_SECONDS()
     total_dispute_duration = duration + dispute_duration
     reportingPeriodDurationForTimestamp = timestamp / total_dispute_duration
 
-    assert universe.getReportingWindowId(timestamp) == reportingPeriodDurationForTimestamp
-    assert universe.getReportingPeriodDurationInSeconds() == total_dispute_duration
+    assert populatedUniverse.getReportingWindowId(timestamp) == reportingPeriodDurationForTimestamp
+    assert populatedUniverse.getReportingPeriodDurationInSeconds() == total_dispute_duration
 
     # reporting window not stored internally, only read-only method
-    assert universe.getReportingWindow(reportingPeriodDurationForTimestamp) == longToHexString(0)
-    report_window = universe.getReportingWindowByTimestamp(timestamp)
+    assert populatedUniverse.getReportingWindow(reportingPeriodDurationForTimestamp) == longToHexString(0)
+    report_window = populatedUniverse.getReportingWindowByTimestamp(timestamp)
 
     # Now reporting window is in internal collection
-    assert universe.getReportingWindow(reportingPeriodDurationForTimestamp) == report_window
+    assert populatedUniverse.getReportingWindow(reportingPeriodDurationForTimestamp) == report_window
 
     # Make up end timestamp for testing internal calculations
-    end_timestamp = localFixture.chain.head_state.timestamp + 1
-    end_report_window_des = universe.getReportingWindowByMarketEndTime(end_timestamp)
+    end_timestamp = chain.head_state.timestamp + 1
+    end_report_window_des = populatedUniverse.getReportingWindowByMarketEndTime(end_timestamp)
 
     # Test getting same calculated end reporting window
-    end_timestamp_des_test = end_timestamp + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS() + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1 + total_dispute_duration
-    assert universe.getReportingWindowByTimestamp(end_timestamp_des_test) == end_report_window_des
+    end_timestamp_des_test = end_timestamp + constants.DESIGNATED_REPORTING_DURATION_SECONDS() + constants.DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1 + total_dispute_duration
+    assert populatedUniverse.getReportingWindowByTimestamp(end_timestamp_des_test) == end_report_window_des
+    assert populatedUniverse.getPreviousReportingWindow() == populatedUniverse.getReportingWindowByTimestamp(chain.head_state.timestamp - total_dispute_duration)
+    assert populatedUniverse.getCurrentReportingWindow() == populatedUniverse.getReportingWindowByTimestamp(chain.head_state.timestamp)
+    assert populatedUniverse.getNextReportingWindow() == populatedUniverse.getReportingWindowByTimestamp(chain.head_state.timestamp + total_dispute_duration)
 
-    assert universe.getPreviousReportingWindow() == universe.getReportingWindowByTimestamp(localFixture.chain.head_state.timestamp - total_dispute_duration)
-    assert universe.getCurrentReportingWindow() == universe.getReportingWindowByTimestamp(localFixture.chain.head_state.timestamp)
-    assert universe.getNextReportingWindow() == universe.getReportingWindowByTimestamp(localFixture.chain.head_state.timestamp + total_dispute_duration)
+def test_universe_contains(localFixture, populatedUniverse, mockMarket, mockStakeToken, chain, mockReportingWindow, mockDisputeBondToken, mockShareToken, mockReportingWindowFactory):
+    mockReportingWindow.setStartTime(0)
+    assert populatedUniverse.isContainerForReportingWindow(mockReportingWindow.address) == False
+    assert populatedUniverse.isContainerForStakeToken(mockStakeToken.address) == False
+    assert populatedUniverse.isContainerForMarket(mockMarket.address) == False
+    assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == False
+    assert populatedUniverse.isContainerForDisputeBondToken(mockDisputeBondToken.address) == False
 
-def test_create_child_universe(localFixture, universe):
-    assert universe.getChildUniverse("20") == longToHexString(0)
-    assert universe.getOrCreateChildUniverse("20") == universe.getChildUniverse("20")
-    assert universe.getChildUniverse("20") != longToHexString(0)
-    child = universe.getChildUniverse("20")
-    assert universe.isParentOf(child)
+    timestamp = chain.head_state.timestamp
+    mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
+    reportingWindowId = populatedUniverse.getReportingWindowByTimestamp(timestamp)
+    mockReportingWindow.setStartTime(timestamp)
 
-    other_universe = localFixture.createUniverse(3, "1")
-    other_child = other_universe.getOrCreateChildUniverse("21")
-    assert universe.isParentOf(other_child) == False
+    mockReportingWindow.setIsContainerForMarket(False)
+    mockMarket.setIsContainerForStakeToken(False)
+    mockMarket.setIsContainerForShareToken(False)
+    mockMarket.setIsContainerForDisputeBondToken(False)
+    
+    assert populatedUniverse.isContainerForStakeToken(mockStakeToken.address) == False
+    assert populatedUniverse.isContainerForMarket(mockMarket.address) == False
+    assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == False
+    assert populatedUniverse.isContainerForDisputeBondToken(mockDisputeBondToken.address) == False
 
-def test_universe_contains_reporting_win(localFixture, universe):
-    other_universe = localFixture.createUniverse(1, "15")
-    other_curr_reporting_win = other_universe.getCurrentReportingWindow()
-    reportingWindow = localFixture.applySignature('ReportingWindow', universe.getCurrentReportingWindow())
+    mockReportingWindow.setIsContainerForMarket(True)
+    mockMarket.setIsContainerForStakeToken(True)
+    mockMarket.setIsContainerForShareToken(True)
+    mockMarket.setIsContainerForDisputeBondToken(True)
+    mockMarket.setReportingWindow(mockReportingWindow.address)
+    mockStakeToken.setMarket(mockMarket.address)
+    mockShareToken.setMarket(mockMarket.address)
+    mockDisputeBondToken.setMarket(mockMarket.address)
 
-    curr_reporting_window = universe.getCurrentReportingWindow()
-    assert universe.isContainerForReportingWindow(curr_reporting_window)
-    # Reporting window is in different universe
-    assert universe.isContainerForReportingWindow(other_curr_reporting_win) == False
+    assert populatedUniverse.isContainerForReportingWindow(mockReportingWindow.address) == True
+    assert populatedUniverse.isContainerForMarket(mockMarket.address) == True
+    assert populatedUniverse.isContainerForStakeToken(mockStakeToken.address) == True
+    assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == True
+    assert populatedUniverse.isContainerForDisputeBondToken(mockDisputeBondToken.address) == True
 
-    # Pass in non ReportingWindow object address
-    nonReportingWindow = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'nonReportingWindow')
-    with raises(TransactionFailed):
-        assert universe.isContainerForReportingWindow(nonReportingWindow.address)
+def test_universe_extra_bond_payout(localFixture, populatedUniverse, mockUniverse, mockDisputeBondToken, mockReputationToken ):
+    with raises(TransactionFailed, message="needs to be called from reputation token"):
+        populatedUniverse.increaseRepAvailableForExtraBondPayouts(100)
 
-    # create reporting windo with startTime of 0
-    reporting_window_factory = localFixture.upload('../source/contracts/factories/ReportingWindowFactory.sol', 'reporting_window_factory')
-    zero_window = reporting_window_factory.createReportingWindow(localFixture.contracts['Controller'].address, universe.address, 0)
-    assert universe.isContainerForReportingWindow(zero_window) == False
+    assert populatedUniverse.getRepAvailableForExtraBondPayouts() == 0
+    assert mockReputationToken.callIncreaseRepAvailableForExtraBondPayouts(populatedUniverse.address, 100)
+    assert populatedUniverse.getRepAvailableForExtraBondPayouts() == 100
 
-def test_universe_contains_dispute_bond_token(localFixture, universe, market):
-    # Pass in non Dispute Bond Token object address
-    nonDisputeBondToken = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'nonReportingWindow')
-    assert universe.isContainerForDisputeBondToken(nonDisputeBondToken.address) == False
+    mockUniverse.setIsContainerForDisputeBondToken(False)
+    with raises(TransactionFailed, message="dispute bond needs to be in parent universe"):
+        mockDisputeBondToken.callDecreaseRepAvailableForExtraBondPayouts(populatedUniverse.address, 50)
 
-    # Create bond for market not in this universe
-    dispute_bond_token_factory = localFixture.upload('../source/contracts/factories/DisputeBondTokenFactory.sol', 'dispute_bond_token_factory')
-    bond = dispute_bond_token_factory.createDisputeBondToken(localFixture.contracts['Controller'].address, market.address, tester.a0, 10, "15")
-    assert universe.isContainerForDisputeBondToken(bond) == False
+    mockUniverse.setIsContainerForDisputeBondToken(True)
+    assert mockDisputeBondToken.callDecreaseRepAvailableForExtraBondPayouts(populatedUniverse.address, 50)
+    assert populatedUniverse.getRepAvailableForExtraBondPayouts() == 50
 
-    # Pass in bond with market address of 0
-    zero_market_bond = dispute_bond_token_factory.createDisputeBondToken(localFixture.contracts['Controller'].address, 0, tester.a0, 10, "15")
-    assert universe.isContainerForDisputeBondToken(zero_market_bond) == False
+def test_universe_dispute_bond_remaining_to_be_paid(localFixture, chain, mockMarket, populatedUniverse, mockReputationToken, mockUniverse, mockDisputeBondToken, mockReportingWindow, mockReportingWindowFactory):
+    assert populatedUniverse.getExtraDisputeBondRemainingToBePaidOut() == 0
 
-    # TODO Get correct dispute bond token from active market in correct state
+    with raises(TransactionFailed, message="market needs to be contained in universe"):
+        mockMarket.callIncreaseExtraDisputeBondRemainingToBePaidOut(100)
 
-    # Since we have non Market/StakeToken/ShareToken lets test the getTypeName() tests
-    with raises(TransactionFailed):
-        universe.isContainerForMarket(nonDisputeBondToken.address)
-    assert universe.isContainerForStakeToken(nonDisputeBondToken.address) == False
-    assert universe.isContainerForShareToken(nonDisputeBondToken.address) == False
+    timestamp = chain.head_state.timestamp
+    mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
+    reportingWindowId = populatedUniverse.getReportingWindowByTimestamp(timestamp)
+    mockReportingWindow.setStartTime(timestamp)
+    mockReportingWindow.setIsContainerForMarket(True)
+    mockMarket.setIsContainerForDisputeBondToken(True)
+    mockMarket.setReportingWindow(mockReportingWindow.address)
+    
+    assert populatedUniverse.isContainerForReportingWindow(mockReportingWindow.address)
+    assert populatedUniverse.isContainerForMarket(mockMarket.address)
+    assert mockMarket.callIncreaseExtraDisputeBondRemainingToBePaidOut(populatedUniverse.address, 100)
+    assert populatedUniverse.getExtraDisputeBondRemainingToBePaidOut() == 100
 
-def test_universe_contains_market(localFixture, cash, market):
-    universe = localFixture.createUniverse(1, "25")
-    # market in different universe
-    assert universe.isContainerForMarket(market.address) == False
+    with raises(TransactionFailed, message="dispute bond needs to be contained in universe"):
+        mockDisputeBondToken.callDecreaseExtraDisputeBondRemainingToBePaidOut(populatedUniverse.address, 50)
 
-    # Give some REP in this universe to tester0 to pay market creation fee
-    legacyReputationToken = localFixture.contracts['LegacyReputationToken']
-    legacyReputationToken.faucet(11 * 10**6 * 10**18)
+    mockDisputeBondToken.setMarket(mockMarket.address)
+    assert mockDisputeBondToken.callDecreaseExtraDisputeBondRemainingToBePaidOut(populatedUniverse.address, 50)
+    assert populatedUniverse.getExtraDisputeBondRemainingToBePaidOut() == 50
 
-    # Get the reputation token for this universe and migrate legacy REP to it
-    reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
-    legacyReputationToken.approve(reputationToken.address, 11 * 10**6 * 10**18)
-    reputationToken.migrateFromLegacyReputationToken()
+def test_open_interest(populatedUniverse):
+    assert populatedUniverse.getOpenInterestInAttoEth() == 0
+    populatedUniverse.incrementOpenInterest(10)
+    assert populatedUniverse.getOpenInterestInAttoEth() == 10
+    populatedUniverse.decrementOpenInterest(5)
+    assert populatedUniverse.getOpenInterestInAttoEth() == 5
 
-    uni_market = localFixture.createReasonableBinaryMarket(universe, cash)
-    assert universe.isContainerForMarket(uni_market.address)
-
-def test_universe_stake_token(localFixture, universe, cash, market):
-    stake_token_factory = localFixture.upload('../source/contracts/factories/StakeTokenFactory.sol', 'stake_token_factory')
-
-    # Stake token not associated with this universe market
-    different_stake_token = stake_token_factory.createStakeToken(localFixture.contracts['Controller'].address, market.address, [0, 10**18])
-    assert universe.isContainerForStakeToken(different_stake_token) == False
-
-    # TODO add test for Stake token associated market address of 0
-
-    # Create market and test it's stake token
-    uni_market = localFixture.createReasonableBinaryMarket(universe, cash)
-    good_stake_token = localFixture.getStakeToken(uni_market, [0,10**18])
-    assert universe.isContainerForMarket(uni_market.address)
-    assert universe.isContainerForStakeToken(good_stake_token.address)
-
-def test_universe_contains_share_token(localFixture, universe, cash, market):
-    share_token_factory = localFixture.upload('../source/contracts/factories/ShareTokenFactory.sol', 'share_token_factory')
-
-    # Share token not associated with this universe market
-    different_share_token = share_token_factory.createShareToken(localFixture.contracts['Controller'].address, market.address, 1)
-    assert universe.isContainerForShareToken(different_share_token) == False
-
-    # TODO add test for Share token associated market address of 0
-
-    # Create market and test it's stake token
-    uni_market = localFixture.createReasonableBinaryMarket(universe, cash)
-    good_share_token = localFixture.getShareToken(uni_market, 1)
-    assert universe.isContainerForShareToken(good_share_token.address)
-
-def test_open_interest(universe):
-    assert universe.getOpenInterestInAttoEth() == 0
-    universe.incrementOpenInterest(10)
-    assert universe.getOpenInterestInAttoEth() == 10
-    universe.decrementOpenInterest(5)
-    assert universe.getOpenInterestInAttoEth() == 5
+def test_universe_rep_price_oracle(localFixture, populatedUniverse):
+    # mock out RepPriceOracle
 
 @fixture
-def localFixture(fixture, augurInitializedSnapshot):
+def localSnapshot(fixture, augurInitializedSnapshot):
     fixture.resetToSnapshot(augurInitializedSnapshot)
+    controller = fixture.contracts['Controller']
     fixture.uploadAndAddToController("solidity_test_helpers/Constants.sol")
-    universe = fixture.createUniverse(0, "")
-    cash = fixture.getSeededCash()
-    augur = fixture.contracts['Augur']
-    fixture.distributeRep(universe)
-    binaryMarket = fixture.createReasonableBinaryMarket(universe, cash)
+    fixture.uploadAndAddToController('solidity_test_helpers/MockShareToken.sol')
+    fixture.uploadAndAddToController('solidity_test_helpers/MockStakeToken.sol')
+    fixture.uploadAndAddToController('solidity_test_helpers/MockDisputeBondToken.sol')
+    fixture.uploadAndAddToController('solidity_test_helpers/MockMarket.sol')
+    fixture.uploadAndAddToController('solidity_test_helpers/MockUniverse.sol')
+    fixture.uploadAndAddToController('solidity_test_helpers/MockReportingWindow.sol')    
+    fixture.uploadAndAddToController('solidity_test_helpers/MockReputationToken.sol')    
+    mockReputationTokenFactory = fixture.upload('solidity_test_helpers/MockReputationTokenFactory.sol')
+    mockReportingWindowFactory = fixture.upload('solidity_test_helpers/MockReportingWindowFactory.sol')
+    mockUniverseFactory = fixture.upload('solidity_test_helpers/MockUniverseFactory.sol')
+    controller.setValue(stringToBytes('ReputationTokenFactory'), mockReputationTokenFactory.address)
+    controller.setValue(stringToBytes('ReportingWindowFactory'), mockReportingWindowFactory.address)
+    controller.setValue(stringToBytes('UniverseFactory'), mockUniverseFactory.address)
+    return fixture.createSnapshot()
+
+@fixture
+def localFixture(fixture, localSnapshot):
+    fixture.resetToSnapshot(localSnapshot)
     return fixture
+
+@fixture
+def chain(localFixture):
+    return localFixture.chain
+
+@fixture
+def mockReportingWindow(localFixture):
+    return localFixture.contracts['MockReportingWindow']
+
+@fixture
+def mockReputationToken(localFixture):
+    return localFixture.contracts['MockReputationToken']
+
+@fixture
+def mockReputationTokenFactory(localFixture):
+    return localFixture.contracts['MockReputationTokenFactory']
+
+@fixture
+def mockReportingWindowFactory(localFixture):
+    return localFixture.contracts['MockReportingWindowFactory']
+
+@fixture
+def mockUniverseFactory(localFixture):
+    return localFixture.contracts['MockUniverseFactory']
+
+@fixture
+def mockUniverse(localFixture):
+    return localFixture.contracts['MockUniverse']
+
+@fixture
+def mockMarket(localFixture):
+    return localFixture.contracts['MockMarket']
+
+@fixture
+def mockDisputeBondToken(localFixture):
+    return localFixture.contracts['MockDisputeBondToken']
+
+@fixture
+def mockStakeToken(localFixture):
+    return localFixture.contracts['MockStakeToken']
+
+@fixture
+def mockShareToken(localFixture):
+    return localFixture.contracts['MockShareToken']
+
+@fixture
+def populatedUniverse(localFixture, mockReputationTokenFactory, mockReputationToken, mockUniverse):
+    universe = localFixture.upload('../source/contracts/reporting/Universe.sol', 'universe')
+    mockReputationTokenFactory.setCreateReputationTokenValue(mockReputationToken.address)
+    universe.setController(localFixture.contracts['Controller'].address)
+    assert universe.initialize(mockUniverse.address, stringToBytes("5"))    
+    return universe

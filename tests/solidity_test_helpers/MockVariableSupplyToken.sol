@@ -26,7 +26,7 @@ contract MockVariableSupplyToken is StandardToken {
     function getTransferValueValue() public returns(uint256) {
         return transferValueValue;
     }
-    
+
     function resetBalanceOfValues() public {
         setBalanceOfValue = 0;
         balanceOfAmounts = [0];
