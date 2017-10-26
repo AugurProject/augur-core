@@ -30,12 +30,6 @@ contract Orders is DelegationTarget, IOrders {
     mapping(bytes32 => bytes32) private worstOrder;
 
     // Getters
-    // this function doesn't work because delegated contracts can't return tuples or dynamic arrays
-    function getOrders(bytes32 _orderId) public view returns (uint256 _amount, uint256 _displayPrice, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId) {
-        Order.Data storage _order = orders[_orderId];
-        return (_order.amount, _order.price, _order.creator, _order.sharesEscrowed, _order.moneyEscrowed, _order.betterOrderId, _order.worseOrderId);
-    }
-
     function getMarket(bytes32 _orderId) public view returns (IMarket) {
         return orders[_orderId].market;
     }
