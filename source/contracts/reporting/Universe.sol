@@ -29,6 +29,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     IReputationToken private reputationToken;
     IMarket private forkingMarket;
     uint256 private forkEndTime;
+    uint256 private forkReputationGoal;
     mapping(uint256 => IReportingWindow) private reportingWindows;
     mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
@@ -55,6 +56,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
         forkEndTime = block.timestamp + Reporting.forkDurationSeconds();
+        forkReputationGoal = reputationToken.totalSupply() / Reporting.forkRepMigrationVictoryDivisor();
         controller.getAugur().logUniverseForked();
         return true;
     }
@@ -81,6 +83,10 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
     function getForkEndTime() public view returns (uint256) {
         return forkEndTime;
+    }
+
+    function getForkReputationGoal() public view returns (uint256) {
+        return forkReputationGoal;
     }
 
     function getReportingWindow(uint256 _reportingWindowId) public view returns (IReportingWindow) {
@@ -332,15 +338,15 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth();
         uint256 _previousFeeDivisor = shareSettlementFeeDivisor[getPreviousReportingWindow()];
         if (_previousFeeDivisor == 0) {
-            _previousFeeDivisor = 100;
+            _previousFeeDivisor = Reporting.defaultReportingFeeDivisor();
         }
         if (_targetRepMarketCapInAttoeth == 0) {
-            _currentFeeDivisor = 10000;
+            _currentFeeDivisor = Reporting.maximumReportingFeeDivisor();
         } else {
             _currentFeeDivisor = _previousFeeDivisor * _repMarketCapInAttoeth / _targetRepMarketCapInAttoeth;
         }
-        if (_currentFeeDivisor > 10000) {
-            _currentFeeDivisor = 10000;
+        if (_currentFeeDivisor > Reporting.maximumReportingFeeDivisor()) {
+            _currentFeeDivisor = Reporting.maximumReportingFeeDivisor();
         }
         shareSettlementFeeDivisor[_reportingWindow] = _currentFeeDivisor;
         return _currentFeeDivisor;

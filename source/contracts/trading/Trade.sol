@@ -14,7 +14,7 @@ import 'libraries/CashAutoConverter.sol';
 
 
 contract Trade is CashAutoConverter, ReentrancyGuard {
-    uint256 private constant MINIMUM_GAS_NEEDED = 300000;
+    uint256 private constant MINIMUM_GAS_NEEDED = 500000;
 
     function publicBuy(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, uint256 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
         return trade(msg.sender, Order.TradeDirections.Long, _market, _outcome, _fxpAmount, _price, _tradeGroupId);

@@ -50,6 +50,7 @@ contract MockUniverse is Initializable, IUniverse {
     bool private setIncrementOpenInterestValue;
     IUniverse private initializParentUniverseValue;
     bytes32 private initializeParentPayoutDistributionHashValue;
+    uint256 private setForkReputationGoalValue;
     /*
     * setters to feed the getters and impl of IUniverse
     */
@@ -195,6 +196,10 @@ contract MockUniverse is Initializable, IUniverse {
 
     function setIncrementOpenInterest(bool _setIncrementOpenInterestValue) public {
         setIncrementOpenInterestValue = _setIncrementOpenInterestValue;
+    }
+
+    function setForkReputationGoal(uint256 _forkReputationGoalValue) public {
+        setForkReputationGoalValue = _forkReputationGoalValue;
     }
 
     function getInitializParentUniverseValue() public view returns (IUniverse) {
@@ -380,5 +385,9 @@ contract MockUniverse is Initializable, IUniverse {
 
     function incrementOpenInterest(uint256 _amount) public returns (bool) {
         return setIncrementOpenInterestValue;
+    }
+
+    function getForkReputationGoal() public view returns (uint256) {
+        return setForkReputationGoalValue;
     }
 }

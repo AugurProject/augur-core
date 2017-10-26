@@ -16,6 +16,9 @@ library Reporting {
     uint256 private constant DEFAULT_VALIDITY_BOND_FLOOR = 1 ether / 100;
     uint256 private constant DESIGNATED_REPORT_STAKE_FLOOR = 2 ether / 100;
     uint256 private constant DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR = 10 ether / 100;
+    uint256 private constant BOND_PAYOUT_MULTIPLIER = 2; // Multiplier applied to the dispute bond payment to get what they should ideally be compensated with
+    uint256 private constant DEFAULT_REPORTING_FEE_DIVISOR = 100; // 1% fees
+    uint256 private constant MAXIMUM_REPORTING_FEE_DIVISOR = 10000; // Minimum .01% fees
 
     // CONSIDER: figure out approprate values for these
     uint256 private constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
@@ -32,6 +35,7 @@ library Reporting {
     uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
 
     uint256 private constant FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR = 20; // 5% bonus to any REP migrated during a fork
+    uint256 private constant FORK_REP_MIGRATION_VICTORY_DIVISOR = 2; // 50% of the REP supply in the forking universe has to migrate for a victory
 
     function designatedReportingDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DURATION_SECONDS; }
     function designatedReportingDisputeDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS; }
@@ -55,4 +59,8 @@ library Reporting {
     function targetDesignatedReportNoShowsDivisor() internal pure returns (uint256) { return TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR; }
     function targetRepMarketCapMultiplier() internal pure returns (uint256) { return TARGET_REP_MARKET_CAP_MULTIPLIER; }
     function forkMigrationPercentageBonusDivisor() internal pure returns (uint256) { return FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR; }
+    function bondPayoutMultiplier() internal pure returns (uint256) { return BOND_PAYOUT_MULTIPLIER; }
+    function forkRepMigrationVictoryDivisor() internal pure returns (uint256) { return FORK_REP_MIGRATION_VICTORY_DIVISOR; }
+    function maximumReportingFeeDivisor() internal pure returns (uint256) { return MAXIMUM_REPORTING_FEE_DIVISOR; }
+    function defaultReportingFeeDivisor() internal pure returns (uint256) { return DEFAULT_REPORTING_FEE_DIVISOR; }
 }

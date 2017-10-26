@@ -10,6 +10,7 @@ import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'reporting/Reporting.sol';
 
 
 // CONSIDER: This could probably just be made Ownable instead if implementing ERC20Basic
@@ -30,7 +31,7 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         bondHolder = _bondHolder;
         disputedPayoutDistributionHash = _payoutDistributionHash;
         bondAmount = _bondAmount;
-        bondRemainingToBePaidOut = _bondAmount * 2;
+        bondRemainingToBePaidOut = _bondAmount * Reporting.bondPayoutMultiplier();
         reputationToken = _market.getUniverse().getReputationToken();
         return true;
     }

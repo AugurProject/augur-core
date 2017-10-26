@@ -34,6 +34,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 1 ether / 2;
     uint256 private constant APPROVAL_AMOUNT = 2**256-1;
     address private constant NULL_ADDRESS = address(0);
+    uint8 private constant MIN_OUTCOMES = 2;
+    uint8 private constant MAX_OUTCOMES = 8;
 
     IReportingWindow private reportingWindow;
     uint256 private endTime;
@@ -68,7 +70,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public onlyInGoodTimes payable beforeInitialized returns (bool _success) {
         endInitialization();
-        require(2 <= _numOutcomes && _numOutcomes <= 8);
+        require(MIN_OUTCOMES <= _numOutcomes && _numOutcomes <= MAX_OUTCOMES);
         require((_numTicks.isMultipleOf(_numOutcomes)));
         require(_feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
@@ -670,8 +672,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         if (address(_winningDestination) == address(0)) {
             return 0;
         }
-        uint256 _halfTotalSupply = 11 * 10**6 * 10**18 / 2;
-        if (_winningDestination.totalSupply() < _halfTotalSupply && block.timestamp < reportingWindow.getUniverse().getForkEndTime()) {
+        IUniverse _universe = reportingWindow.getUniverse();
+        if (_winningDestination.totalSupply() < _universe.getForkReputationGoal() && block.timestamp < _universe.getForkEndTime()) {
             return 0;
         }
         return _winningDestination.getUniverse().getParentPayoutDistributionHash();
