@@ -81,9 +81,7 @@ def test_publicCreateOrder_bid2(contractsFixture, cash, market, universe):
     shareToken = contractsFixture.getShareToken(market, 0)
     assert len(logs) == 1
     assert logs[0]['_event_type'] == 'OrderCreated'
-    assert logs[0]['amount'] == 1
-    assert logs[0]['numSharesEscrowed'] == 0
-    assert logs[0]['numTokensEscrowed'] == fix('0.6')
+    assert logs[0]['creator'] == bytesToHexString(tester.a1)
     assert logs[0]['shareToken'] == shareToken.address
     assert logs[0]['tradeGroupId'] == 42
     assert logs[0]['orderId'] == orderID
@@ -161,9 +159,7 @@ def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     # Confirm create order logging works correctly
     assert len(logs) == 2
     assert logs[1]['_event_type'] == 'OrderCreated'
-    assert logs[1]['amount'] == 3
-    assert logs[1]['numSharesEscrowed'] == 2
-    assert logs[1]['numTokensEscrowed'] == fix('0.4')
+    assert logs[1]['creator'] == bytesToHexString(tester.a1)
     assert logs[1]['shareToken'] == yesShareToken.address
     assert logs[1]['tradeGroupId'] == 42
     assert logs[1]['orderId'] == orderID
