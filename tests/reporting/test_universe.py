@@ -199,15 +199,12 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     timestamp = chain.head_state.timestamp
     constants = localFixture.contracts['Constants']
     currentReportingWindow = mockReportingWindow
-    previousReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'previousReportingWindow')    
     nextReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'nextReportingWindow')   
     newCurrentReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newCurrentReportingWindow')   
     # set current reporting window
     mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
     assert populatedUniverse.getCurrentReportingWindow() == mockReportingWindow.address
-    # set previous reporting window
-    mockReportingWindowFactory.setCreateReportingWindowValue(previousReportingWindow.address)
-    assert populatedUniverse.getPreviousReportingWindow() == previousReportingWindow.address
+
     # set next reporting window
     mockReportingWindowFactory.setCreateReportingWindowValue(nextReportingWindow.address)
     assert populatedUniverse.getNextReportingWindow() == nextReportingWindow.address
@@ -237,11 +234,6 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     assert populatedUniverse.getValidityBond() == validityBondValue
     assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
     assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
-
-    previousReportingWindow.setAvgReportingGasPrice(4)
-    targetGasCost = gasToReport * 4 * 2;
-    assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
-    assert populatedUniverse.getMarketCreationCost() == targetGasCost + validityBondValue
 
     # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
@@ -285,6 +277,12 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     assert populatedUniverse.getValidityBond() == newestValidityBondValue
     assert populatedUniverse.getDesignatedReportNoShowBond() == newestNoshowBondValue
     assert populatedUniverse.getDesignatedReportStake() == newestDesignatedStakeValue
+
+    nextReportingWindow.setAvgReportingGasPrice(4)
+    targetGasCost = gasToReport * 4 * 2;
+    assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
+    assert populatedUniverse.getMarketCreationCost() == targetGasCost + newestValidityBondValue
+
     
 def test_universe_calculate_floating_value_defaults(populatedUniverse):
     defaultValue = 12
