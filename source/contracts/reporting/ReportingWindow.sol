@@ -49,6 +49,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         // Initialize this to some reasonable value to handle the first market ever created without branching code
         reportingGasPrice.record(Reporting.getDefaultReportingGasPrice());
         participationToken = ParticipationTokenFactory(controller.lookup("ParticipationTokenFactory")).createParticipationToken(controller, this);
+        // The reporting window stores fees in Cash so we do not allow extraction of accidental Cash deposits
         tokenExtractionDisallowed[controller.lookup("Cash")] = true;
         return true;
     }

@@ -35,6 +35,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         market = _market;
         payoutNumerators = _payoutNumerators;
         invalid = _invalid;
+        // Stake tokens store REP until they are redeemed so accidental REP transfers are just lost to stake holders
         tokenExtractionDisallowed[getReputationToken()] = true;
         return true;
     }
