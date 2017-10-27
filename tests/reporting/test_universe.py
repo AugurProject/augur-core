@@ -257,33 +257,6 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
     assert populatedUniverse.getMarketCreationCost() == targetGasCost + newValidityBondValue
 
-    # push reporting window forward again
-    chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
-    mockReportingWindowFactory.setCreateReportingWindowValue(newCurrentReportingWindow.address)
-    assert populatedUniverse.getCurrentReportingWindow() == newCurrentReportingWindow.address
-    assert populatedUniverse.getPreviousReportingWindow() == nextReportingWindow.address
-
-    numMarket = 1600
-    nextReportingWindow.setNumMarkets(numMarket)    
-    nextReportingWindow.setNumIncorrectDesignatedReportMarkets(20)
-    nextReportingWindow.setNumInvalidMarkets(50)
-    nextReportingWindow.setNumDesignatedReportNoShows(30)
-
-    # use previous' window validity bond to compute
-    newestDesignatedStakeValue = populatedUniverse.calculateFloatingValue(20, numMarket, designated_divisor, newDesignatedStakeValue, designated_default, designated_floor)
-    newestValidityBondValue = populatedUniverse.calculateFloatingValue(50, numMarket, validity_divisor, newValidityBondValue, validity_default, validity_floor)
-    newestNoshowBondValue = populatedUniverse.calculateFloatingValue(30, numMarket, noshow_divisor, newNoshowBondValue, noshow_default, noshow_floor)
-    
-    assert populatedUniverse.getValidityBond() == newestValidityBondValue
-    assert populatedUniverse.getDesignatedReportNoShowBond() == newestNoshowBondValue
-    assert populatedUniverse.getDesignatedReportStake() == newestDesignatedStakeValue
-
-    nextReportingWindow.setAvgReportingGasPrice(4)
-    targetGasCost = gasToReport * 4 * 2;
-    assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
-    assert populatedUniverse.getMarketCreationCost() == targetGasCost + newestValidityBondValue
-
-    
 def test_universe_calculate_floating_value_defaults(populatedUniverse):
     defaultValue = 12
     totalMarkets = 0
