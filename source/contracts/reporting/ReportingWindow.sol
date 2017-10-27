@@ -60,6 +60,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
         firstReporterMarkets.add(_newMarket);
+        // We assume the market is a no show and decrement on designate report. This only needs to be accurate by the next reporting window
         designatedReportNoShows += 1;
         controller.getAugur().logMarketCreated(universe, _newMarket, msg.sender, msg.value, _extraInfo);
         return _newMarket;
@@ -252,6 +253,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
 
     function internalCollectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) internal onlyInGoodTimes returns (uint256) {
         bool _eligibleForFees = isOver() && allMarketsFinalized();
+        // We do not allow forgoing fees if the caller could collect fees.
         if (!_forgoFees) {
             require(_eligibleForFees);
         } else {

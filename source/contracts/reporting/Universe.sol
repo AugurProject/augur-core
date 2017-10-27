@@ -56,6 +56,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
         forkEndTime = block.timestamp + Reporting.forkDurationSeconds();
+        // We pre calculate the amount of REP needed to determine a winner in the fork REP migration contest
         forkReputationGoal = reputationToken.totalSupply() / Reporting.forkRepMigrationVictoryDivisor();
         controller.getAugur().logUniverseForked();
         return true;

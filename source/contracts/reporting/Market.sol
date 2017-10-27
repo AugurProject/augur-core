@@ -1,6 +1,5 @@
 pragma solidity 0.4.17;
 
-
 import 'reporting/IMarket.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/ITyped.sol';
@@ -157,6 +156,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, designatedReporterDisputeBondToken, _bondAmount);
         if (_attotokens > 0) {
             IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
+            // We expect trustedBuy to call updateTentativeWinningPayoutDistributionHash
             _stakeToken.trustedBuy(msg.sender, _attotokens);
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
@@ -178,6 +178,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         if (_attotokens > 0) {
             require(derivePayoutDistributionHash(_payoutNumerators, _invalid) != tentativeWinningPayoutDistributionHash);
             IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
+            // We expect trustedBuy to call updateTentativeWinningPayoutDistributionHash
             _stakeToken.trustedBuy(msg.sender, _attotokens);
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
@@ -199,6 +200,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return migrateReportingWindow(_newReportingWindow);
     }
 
+    // Given an updated _payoutDistributionHash this will set the current first and second place hashes based on current stake in those outcomes.
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public onlyInGoodTimes returns (bool) {
         if (_payoutDistributionHash == tentativeWinningPayoutDistributionHash || _payoutDistributionHash == bestGuessSecondPlaceTentativeWinningPayoutDistributionHash) {
             _payoutDistributionHash = bytes32(0);
@@ -666,6 +668,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return IMarket.ReportingState.FIRST_REPORTING;
     }
 
+    // In a forking market once the required victory amount of REP has been migrated to one Universe or the fork time period is over this will proivde the payout hash corresponding to the outcome with the most REP moved to it
     function getWinningPayoutDistributionHashFromFork() private view returns (bytes32) {
         IReputationToken _winningDestination = reportingWindow.getReputationToken().getTopMigrationDestination();
         if (address(_winningDestination) == address(0)) {

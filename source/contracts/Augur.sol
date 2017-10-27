@@ -1,6 +1,5 @@
 pragma solidity 0.4.17;
 
-
 import 'Controlled.sol';
 import 'libraries/token/ERC20.sol';
 import 'reporting/IUniverse.sol';
@@ -11,8 +10,7 @@ import 'reporting/IReputationToken.sol';
 import 'trading/IShareToken.sol';
 import 'trading/Order.sol';
 
-
-// AUDIT/CONSIDER: Is it better that this contract provide generic functions that are limited to whitelisted callers or for it to have many specific functions which have more limited and specific validation?
+// Centralized approval authority and event emissions
 contract Augur is Controlled {
     event MarketCreated(address indexed universe, address indexed market, address indexed marketCreator, uint256 marketCreationFee, string extraInfo);
     event DesignatedReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
@@ -27,6 +25,10 @@ contract Augur is Controlled {
     event TradingProceedsClaimed(address indexed universe, address indexed shareToken, address indexed sender, address market, uint256 numShares, uint256 numPayoutTokens, uint256 finalTokenBalance);
     event UniverseCreated(address indexed parentUniverse, address indexed childUniverse);
     event TokensTransferred(address indexed universe, address indexed token, address indexed from, address to, uint256 value);
+
+    //
+    // Transfer
+    //
 
     function trustedTransfer(ERC20 _token, address _from, address _to, uint256 _amount) public onlyWhitelistedCallers returns (bool) {
         require(_amount > 0);

@@ -11,10 +11,7 @@ contract Delegator is DelegationTarget {
         controllerLookupName = _controllerLookupName;
     }
 
-    // We currently only support a single non-array return value
-    // If we truly need to return more advanced sets of data we could follow
-    // the pattern demonstrated here: https://gist.github.com/Arachnid/4ca9da48d51e23e5cfe0f0e14dd6318f
-    // But in a way that is automated.
+    // We currently only support a single non-array return value. If we truly need to return more advanced sets of data we could follow the pattern demonstrated here: https://gist.github.com/Arachnid/4ca9da48d51e23e5cfe0f0e14dd6318f but in a way that is automated.
     function() external payable {
         // Do nothing if we haven't properly set up the delegator to delegate calls
         if (controllerLookupName == 0) {
