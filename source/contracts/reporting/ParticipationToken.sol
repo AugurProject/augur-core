@@ -19,6 +19,7 @@ contract ParticipationToken is DelegationTarget, ITyped, Initializable, Variable
     function initialize(IReportingWindow _reportingWindow) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         reportingWindow = _reportingWindow;
+        tokenExtractionDisallowed[reportingWindow.getReputationToken()] = true;
         return true;
     }
 

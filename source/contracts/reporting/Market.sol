@@ -85,6 +85,9 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         marketCreationBlock = block.number;
         designatedReporterAddress = _designatedReporterAddress;
         cash = _cash;
+        // Markets hold the initial fees paid by the creator in ETH and REP, so we dissallow ETH and REP extraction by the controller
+        mayExtractETH = false;
+        tokenExtractionDisallowed[reportingWindow.getReputationToken()] = true;
         stakeTokens = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         for (uint8 _outcome = 0; _outcome < numOutcomes; _outcome++) {
             shareTokens.push(createShareToken(_outcome));

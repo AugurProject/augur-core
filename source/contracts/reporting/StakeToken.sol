@@ -35,6 +35,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         market = _market;
         payoutNumerators = _payoutNumerators;
         invalid = _invalid;
+        tokenExtractionDisallowed[getReputationToken()] = true;
         return true;
     }
 
