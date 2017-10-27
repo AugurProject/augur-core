@@ -56,8 +56,13 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
         forkEndTime = block.timestamp + Reporting.forkDurationSeconds();
-        // We pre calculate the amount of REP needed to determine a winner in the fork REP migration contest
-        forkReputationGoal = reputationToken.totalSupply() / Reporting.forkRepMigrationVictoryDivisor();
+        // We pre calculate the amount of REP needed to determine a winner early in a fork. We assume maximum possible fork inflation in every fork so this is hard to achieve with every subsequent fork and may become impossible in some universes.
+        if (parentUniverse != IUniverse(0)) {
+            uint256 _previousForkReputationGoal = parentUniverse.getForkReputationGoal();
+            forkReputationGoal = _previousForkReputationGoal + (_previousForkReputationGoal / Reporting.forkMigrationPercentageBonusDivisor());
+        } else {
+            forkReputationGoal = reputationToken.totalSupply() / Reporting.forkRepMigrationVictoryDivisor();
+        }
         controller.getAugur().logUniverseForked();
         return true;
     }

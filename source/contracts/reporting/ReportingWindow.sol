@@ -139,6 +139,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         uint256 _totalWinningStake = _market.getFinalWinningStakeToken().totalSupply();
         _totalWinningStake = _totalWinningStake.add(_market.getTotalWinningDisputeBondStake());
         totalWinningStake = totalWinningStake.add(_totalWinningStake);
+        return true;
     }
 
     function noteReportingGasPrice(IMarket _market) public onlyInGoodTimes afterInitialized returns (bool) {
@@ -293,6 +294,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public onlyInGoodTimes afterInitialized returns (bool) {
         require(_reportingWindow.getNumMarkets() == 0);
         _reportingWindow.migrateFeesDueToFork();
+        return true;
     }
 
     function migrateFeesDueToFork() public onlyInGoodTimes afterInitialized returns (bool) {
@@ -318,12 +320,14 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     function increaseTotalStake(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(isContainerForMarket(IMarket(msg.sender)));
         totalStake = totalStake.add(_amount);
+        return true;
     }
 
     function increaseTotalWinningStake(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(msg.sender == address(participationToken));
         totalStake = totalStake.add(_amount);
         totalWinningStake = totalWinningStake.add(_amount);
+        return true;
     }
 
     function isActive() public afterInitialized view returns (bool) {
