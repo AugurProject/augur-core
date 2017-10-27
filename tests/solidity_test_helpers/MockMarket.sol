@@ -228,6 +228,14 @@ contract MockMarket is IMarket {
         return _reportingWindow.increaseTotalStake(_amount);
     }
 
+    function callForkOnUniverse(IUniverse _universe) public returns(bool) {
+        return _universe.fork();
+    }
+
+    function callIncreaseExtraDisputeBondRemainingToBePaidOut(IUniverse _universe, uint256 _amount) public returns(bool) {
+        return _universe.increaseExtraDisputeBondRemainingToBePaidOut(_amount);
+    }
+
     function getInitializeReportingWindowValue() public view returns (IReportingWindow) {
         return initializeReportingWindowValue;
     }

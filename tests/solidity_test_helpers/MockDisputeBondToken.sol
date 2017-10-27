@@ -49,6 +49,14 @@ contract MockDisputeBondToken is ITyped, IDisputeBond {
         return _reportingWindow.collectDisputeBondReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
 
+    function callDecreaseRepAvailableForExtraBondPayouts(IUniverse _universe, uint256 _amount) public returns(bool) {
+        return _universe.decreaseRepAvailableForExtraBondPayouts(_amount);
+    }
+
+    function callDecreaseExtraDisputeBondRemainingToBePaidOut(IUniverse _universe, uint256 _amount) public returns(bool) {
+        return _universe.decreaseExtraDisputeBondRemainingToBePaidOut(_amount);
+    }
+
     /*
     * Impl of IReportingWindow and ITyped
      */

@@ -38,6 +38,13 @@ contract Constants {
     uint256 public constant DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND = Reporting.defaultDesignatedReportNoShowBond();
 
     uint256 public constant FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR = Reporting.forkMigrationPercentageBonusDivisor();
+    uint256 public constant TARGET_REP_MARKET_CAP_MULTIPLIER = Reporting.targetRepMarketCapMultiplier();
+    uint256 public constant TARGET_INVALID_MARKETS_DIVISOR = Reporting.targetInvalidMarketsDivisor();
+    uint256 public constant DEFAULT_VALIDITY_BOND_FLOOR = Reporting.defaultValidityBondFloor();
+    uint256 public constant TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR = Reporting.targetIncorrectDesignatedReportMarketsDivisor();
+    uint256 public constant DESIGNATED_REPORT_STAKE_FLOOR = Reporting.designatedReportStakeFloor();
+    uint256 public constant TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR = Reporting.targetDesignatedReportNoShowsDivisor();
+    uint256 public constant DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR = Reporting.designatedReportNoShowBondFloor();
 
     uint8 public constant BID = uint8(Order.TradeTypes.Bid);
     uint8 public constant ASK = uint8(Order.TradeTypes.Ask);

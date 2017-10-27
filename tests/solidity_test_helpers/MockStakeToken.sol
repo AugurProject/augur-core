@@ -26,7 +26,6 @@ contract MockStakeToken is ITyped, MockVariableSupplyToken, IStakeToken {
     address private trustedBuyAddressValue;
     uint256 private trustedBuyAttoTokensValue;
     bool private setIsValidValue;
-    uint256 private setTotalSupplyValue;
 
     function getInitializeMarketValue() public returns(IMarket) {
         return initializeMarketValue;
@@ -62,10 +61,6 @@ contract MockStakeToken is ITyped, MockVariableSupplyToken, IStakeToken {
 
     function setIsValid(bool _setIsValidValue) public {
         setIsValidValue = _setIsValidValue;
-    }
-
-    function setTotalSupply(uint256 _totalSupply) public {
-        setTotalSupplyValue = _totalSupply;
     }
 
     function getTypeName() public view returns (bytes32) {
@@ -106,9 +101,5 @@ contract MockStakeToken is ITyped, MockVariableSupplyToken, IStakeToken {
 
     function isValid() public view returns (bool) {
         return setIsValidValue;
-    }
-
-    function totalSupply() public view returns (uint256) {
-        return setTotalSupplyValue;
     }
 }

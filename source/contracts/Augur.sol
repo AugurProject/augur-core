@@ -96,6 +96,7 @@ contract Augur is Controlled {
 
     function logUniverseForked() public returns (bool) {
         UniverseForked(msg.sender);
+        return true;
     }
 
     function logUniverseCreated(IUniverse _childUniverse) public returns (bool) {
