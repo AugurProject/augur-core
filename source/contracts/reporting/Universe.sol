@@ -61,7 +61,8 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
             uint256 _previousForkReputationGoal = parentUniverse.getForkReputationGoal();
             forkReputationGoal = _previousForkReputationGoal + (_previousForkReputationGoal / Reporting.forkMigrationPercentageBonusDivisor());
         } else {
-            forkReputationGoal = reputationToken.totalSupply() / Reporting.forkRepMigrationVictoryDivisor();
+            // We're using a hardcoded supply value instead of getting the total REP supply from the token since at launch we will start out with a 0 supply token and users will migrate legacy REP to this token. Since the first fork may occur before all REP migrates we want to count that unmigrated REP too since it may participate in the fork eventually.
+            forkReputationGoal = Reporting.initialREPSupply() / Reporting.forkRepMigrationVictoryDivisor();
         }
         controller.getAugur().logUniverseForked();
         return true;
