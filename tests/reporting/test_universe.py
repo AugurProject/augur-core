@@ -221,6 +221,8 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     noshow_default = constants.DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND()
     noshow_floor = constants.DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR()
 
+    gasToReport = constants.GAS_TO_REPORT()
+
     # current reporting window
     designatedStakeValue = populatedUniverse.calculateFloatingValue(0, 0, designated_divisor, 0, designated_default, designated_floor)
     validityBondValue = populatedUniverse.calculateFloatingValue(0, 0, validity_divisor, 0, validity_default, validity_floor)
@@ -232,6 +234,12 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     assert populatedUniverse.getValidityBond() == validityBondValue
     assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
     assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
+
+
+    previousReportingWindow.setAvgReportingGasPrice(4)
+    targetGasCost = gasToReport * 4 * 2;
+    assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
+    assert populatedUniverse.getMarketCreationCost() == targetGasCost + validityBondValue
 
     # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
@@ -249,6 +257,11 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     assert populatedUniverse.getDesignatedReportStake() == newDesignatedStakeValue
     assert populatedUniverse.getValidityBond() == newValidityBondValue
     assert populatedUniverse.getDesignatedReportNoShowBond() == newNoshowBondValue
+
+    currentReportingWindow.setAvgReportingGasPrice(14)
+    targetGasCost = gasToReport * 14 * 2;
+    assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
+    assert populatedUniverse.getMarketCreationCost() == targetGasCost + newValidityBondValue
 
     # push reporting window forward again
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
@@ -335,31 +348,6 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     
     assert populatedUniverse.getReportingFeeDivisor() == defaultValue / 5 * multiplier
     
-def test_universe_target_reporter_gas_fee(localFixture, chain, populatedUniverse, mockReputationToken, mockReportingWindow, mockReportingWindowFactory):
-    timestamp = chain.head_state.timestamp
-    constants = localFixture.contracts['Constants']
-    currentReportingWindow = mockReportingWindow
-    previousReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'previousReportingWindow')    
-    # set current reporting window
-    mockReportingWindowFactory.setCreateReportingWindowValue(currentReportingWindow.address)
-    populatedUniverse.getCurrentReportingWindow()
-    # set previous reporting window
-    mockReportingWindowFactory.setCreateReportingWindowValue(previousReportingWindow.address)
-    populatedUniverse.getPreviousReportingWindow()
-
-    gasToReport = constants.GAS_TO_REPORT()
-
-    previousReportingWindow.setAvgReportingGasPrice(4)
-    targetGasCost = gasToReport * 4 * 2;
-    assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
-
-    # puse reporting window forward
-    chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
-    currentReportingWindow.setAvgReportingGasPrice(18)
-    targetGasCost = gasToReport * 18 * 2;
-    assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
-
-
 
 @fixture
 def localSnapshot(fixture, augurInitializedSnapshot):
