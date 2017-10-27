@@ -56,6 +56,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     uint256 private validityBondAttoeth;
     uint256 private reporterGasCostsFeeAttoeth;
     uint256 private totalStake;
+    uint256 private extraDisputeBondRemainingToBePaidOut;
 
     /**
      * @dev Makes the function trigger a migration before execution
@@ -150,7 +151,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
         uint256 _bondAmount = Reporting.designatedReporterDisputeBondAmount();
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
-        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
+        extraDisputeBondRemainingToBePaidOut += _bondAmount;
         this.increaseTotalStake(_bondAmount);
         reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, designatedReporterDisputeBondToken, _bondAmount);
         if (_attotokens > 0) {
@@ -168,7 +169,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(getReportingState() == ReportingState.FIRST_DISPUTE);
         uint256 _bondAmount = Reporting.firstReportersDisputeBondAmount();
         firstReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
-        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
+        extraDisputeBondRemainingToBePaidOut += _bondAmount;
         this.increaseTotalStake(_bondAmount);
         reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, firstReportersDisputeBondToken, _bondAmount);
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
@@ -188,7 +189,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(getReportingState() == ReportingState.LAST_DISPUTE);
         uint256 _bondAmount = Reporting.lastReportersDisputeBondAmount();
         lastReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
-        getUniverse().increaseExtraDisputeBondRemainingToBePaidOut(_bondAmount);
+        extraDisputeBondRemainingToBePaidOut += _bondAmount;
         this.increaseTotalStake(_bondAmount);
         reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, lastReportersDisputeBondToken, _bondAmount);
         reportingWindow.getUniverse().fork();
@@ -324,6 +325,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
         reportingWindow.updateMarketPhase();
+        designatedReporterDisputeBondToken = IDisputeBond(0);
         firstReportersDisputeBondToken = IDisputeBond(0);
         lastReportersDisputeBondToken = IDisputeBond(0);
         tentativeWinningPayoutDistributionHash = designatedReportPayoutHash;
@@ -423,6 +425,12 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return keccak256(_payoutNumerators, _invalid);
     }
 
+    function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public onlyInGoodTimes returns (bool) {
+        require(isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
+        extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.sub(_amount);
+        return true;
+    }
+
     function getStakeTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public view returns (IStakeToken) {
         return IStakeToken(stakeTokens.getAsAddressOrZero(_payoutDistributionHash));
     }
@@ -513,6 +521,10 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function getTotalStake() public view returns (uint256) {
         return totalStake;
+    }
+
+    function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256) {
+        return extraDisputeBondRemainingToBePaidOut;
     }
 
     function getTotalWinningDisputeBondStake() public view returns (uint256) {
