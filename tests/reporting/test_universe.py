@@ -3,13 +3,14 @@ from ethereum.tools.tester import TransactionFailed
 from utils import longToHexString, stringToBytes
 from pytest import fixture, raises
 
-def test_universe_creation(localFixture, mockReputationToken, mockReputationTokenFactory, mockUniverse, mockUniverseFactory):
+def test_universe_creation(localFixture, mockReputationToken, mockReputationTokenFactory, mockUniverse, mockUniverseFactory, mockAugur):
     universe = localFixture.upload('../source/contracts/reporting/Universe.sol', 'universe')
 
     with raises(TransactionFailed, message="reputation token can not be address 0"):
         universe.initialize(mockUniverse.address, stringToBytes("5"))    
 
     mockReputationTokenFactory.setCreateReputationTokenValue(mockReputationToken.address)
+
     universe.setController(localFixture.contracts['Controller'].address)
     assert universe.initialize(mockUniverse.address, stringToBytes("5"))    
     assert universe.getReputationToken() == mockReputationToken.address
@@ -23,16 +24,17 @@ def test_universe_creation(localFixture, mockReputationToken, mockReputationToke
 
     # child universe
     mockUniverseFactory.setCreateUniverseUniverseValue(mockUniverse.address)
+    mockUniverse.setParentPayoutDistributionHash(stringToBytes("101"))
     assert universe.getOrCreateChildUniverse(stringToBytes("101")) == mockUniverse.address
+    assert mockAugur.logUniverseCreatedCalled() == True
     assert mockUniverseFactory.getCreateUniverseParentUniverseValue() == universe.address
     assert mockUniverseFactory.getCreateUniverseParentPayoutDistributionHashValue() == stringToBytes("101")
     assert universe.getChildUniverse(stringToBytes("101")) == mockUniverse.address
-    mockUniverse.setParentPayoutDistributionHash(stringToBytes("101"))
     assert universe.isParentOf(mockUniverse.address)
     strangerUniverse = localFixture.upload('../source/contracts/reporting/Universe.sol', 'strangerUniverse')
     assert universe.isParentOf(strangerUniverse.address) == False
 
-def test_universe_fork_market(localFixture, populatedUniverse, mockMarket, mockReportingWindow, chain, mockReportingWindowFactory):
+def test_universe_fork_market(localFixture, populatedUniverse, mockMarket, mockReportingWindow, chain, mockReportingWindowFactory, mockAugur):
 
     with raises(TransactionFailed, message="must be called from market"):
         populatedUniverse.fork()
@@ -51,6 +53,7 @@ def test_universe_fork_market(localFixture, populatedUniverse, mockMarket, mockR
     assert populatedUniverse.isContainerForMarket(mockMarket.address)
     
     assert mockMarket.callForkOnUniverse(populatedUniverse.address)
+    assert mockAugur.logUniverseForkedCalled() == True
     assert populatedUniverse.getForkingMarket() == mockMarket.address
     assert populatedUniverse.getForkEndTime() == timestamp + localFixture.contracts['Constants'].FORK_DURATION_SECONDS()
 
@@ -201,13 +204,13 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     newCurrentReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newCurrentReportingWindow')   
     # set current reporting window
     mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
-    populatedUniverse.getCurrentReportingWindow()
+    assert populatedUniverse.getCurrentReportingWindow() == mockReportingWindow.address
     # set previous reporting window
     mockReportingWindowFactory.setCreateReportingWindowValue(previousReportingWindow.address)
-    populatedUniverse.getPreviousReportingWindow()
+    assert populatedUniverse.getPreviousReportingWindow() == previousReportingWindow.address
     # set next reporting window
     mockReportingWindowFactory.setCreateReportingWindowValue(nextReportingWindow.address)
-    populatedUniverse.getNextReportingWindow()
+    assert populatedUniverse.getNextReportingWindow() == nextReportingWindow.address
 
     designated_divisor = constants.TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR()
     designated_default = constants.DEFAULT_DESIGNATED_REPORT_STAKE()
@@ -235,7 +238,6 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
     assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
 
-
     previousReportingWindow.setAvgReportingGasPrice(4)
     targetGasCost = gasToReport * 4 * 2;
     assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
@@ -246,7 +248,7 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     assert populatedUniverse.getPreviousReportingWindow() == currentReportingWindow.address
 
     numMarket = 6
-    currentReportingWindow.setNumMarkets(numMarket)    
+    currentReportingWindow.setNumMarkets(numMarket)
     currentReportingWindow.setNumIncorrectDesignatedReportMarkets(5)
     currentReportingWindow.setNumInvalidMarkets(2)
     currentReportingWindow.setNumDesignatedReportNoShows(3)
@@ -364,9 +366,11 @@ def localSnapshot(fixture, augurInitializedSnapshot):
     mockReputationTokenFactory = fixture.upload('solidity_test_helpers/MockReputationTokenFactory.sol')
     mockReportingWindowFactory = fixture.upload('solidity_test_helpers/MockReportingWindowFactory.sol')
     mockUniverseFactory = fixture.upload('solidity_test_helpers/MockUniverseFactory.sol')
+    mockAugur = fixture.uploadAndAddToController("solidity_test_helpers/MockAugur.sol")
     controller.setValue(stringToBytes('ReputationTokenFactory'), mockReputationTokenFactory.address)
     controller.setValue(stringToBytes('ReportingWindowFactory'), mockReportingWindowFactory.address)
     controller.setValue(stringToBytes('UniverseFactory'), mockUniverseFactory.address)
+    controller.setValue(stringToBytes('Augur'), mockAugur.address)
     return fixture.createSnapshot()
 
 @fixture
@@ -405,6 +409,10 @@ def mockUniverse(localFixture):
 @fixture
 def mockMarket(localFixture):
     return localFixture.contracts['MockMarket']
+
+@fixture
+def mockAugur(localFixture):
+    return localFixture.contracts['MockAugur']
 
 @fixture
 def mockDisputeBondToken(localFixture):
