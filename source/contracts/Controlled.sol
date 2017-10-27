@@ -70,5 +70,6 @@ contract Controlled is IControlled {
         require(!tokenExtractionDisallowed[_token]);
         uint256 _balance = _token.balanceOf(this);
         _token.transfer(controller, _balance);
+        return true;
     }
 }

@@ -37,6 +37,42 @@ def test_suicide(controlled, token, chain):
     assert token.balanceOf(controlled.address) == 0
     assert token.balanceOf(tester.a0) == 7
 
+def test_eth_extraction_happy_path(controlled, token, chain):
+    controlled.deposit(value=11)
+    assert chain.head_state.get_balance(controlled.address) == 11
+    startBalance = chain.head_state.get_balance(tester.a0)
+
+    assert controlled.extractETH()
+
+    assert chain.head_state.get_balance(controlled.address) == 0
+    assert chain.head_state.get_balance(tester.a0) == startBalance + 11
+
+def test_eth_extraction_failure(controlled, token, chain):
+    controlled.deposit(value=11)
+    controlled.setMayExtractETH(False)
+
+    with raises(TransactionFailed):
+        controlled.extractETH()
+
+def test_token_extraction_happy_path(controlled, token):
+    token.faucet(7)
+    token.transfer(controlled.address, 7)
+    assert token.balanceOf(tester.a0) == 0
+    assert token.balanceOf(controlled.address) == 7
+
+    assert controlled.extractTokens(token.address)
+
+    assert token.balanceOf(tester.a0) == 7
+    assert token.balanceOf(controlled.address) == 0
+
+def test_token_extraction_failure(controlled, token, chain):
+    token.faucet(7)
+    token.transfer(controlled.address, 7)
+    controlled.setTokenExtractionDisallowed(token.address, True)
+
+    with raises(TransactionFailed):
+        controlled.extractTokens(token.address)
+
 @pytest_fixture(scope="session")
 def localSnapshot(fixture, baseSnapshot):
     fixture.resetToSnapshot(baseSnapshot)
