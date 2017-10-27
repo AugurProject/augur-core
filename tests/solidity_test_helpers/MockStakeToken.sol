@@ -71,7 +71,7 @@ contract MockStakeToken is ITyped, MockVariableSupplyToken, IStakeToken {
         return _reportingWindow.noteReportingGasPrice(_market);
     }
 
-    function callCollectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees, IReportingWindow _reportingWindow) public returns(bool) {
+    function callCollectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees, IReportingWindow _reportingWindow) public returns(uint256) {
         return _reportingWindow.collectStakeTokenReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
 

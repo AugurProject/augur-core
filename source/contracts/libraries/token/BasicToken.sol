@@ -23,7 +23,7 @@ contract BasicToken is ERC20Basic {
     function transfer(address _to, uint256 _value) public returns(bool) {
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
-        Transfer(msg.sender, _to, _value);
+        emitTransferLogs(msg.sender, _to, _value);
         return true;
     }
 
@@ -42,5 +42,10 @@ contract BasicToken is ERC20Basic {
 
     function totalSupply() public view returns (uint256) {
         return supply;
+    }
+
+    function emitTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+        Transfer(_from, _to, _value);
+        return true;
     }
 }

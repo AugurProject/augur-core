@@ -26,9 +26,9 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     IReportingWindow private setPreviousReportingWindowValue;
     uint256 private setNumDesignatedReportNoShowsValue;
     bool private setAllMarketsFinalizedValue;
-    bool private setCollectStakeTokenReportingFeesValue;
-    bool private setCollectDisputeBondReportingFeesValue;
-    bool private setCollectParticipationTokenReportingFeesValue;
+    uint256 private setCollectStakeTokenReportingFeesValue;
+    uint256 private setCollectDisputeBondReportingFeesValue;
+    uint256 private setCollectParticipationTokenReportingFeesValue;
     bool private setTriggerMigrateFeesDueToForkValue;
     bool private setMigrateFeesDueToForkValue;
     bool private setIsContainerForMarketValue;
@@ -62,11 +62,11 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function setRemoveMarket(bool _setRemoveMarketValue) public {
         setRemoveMarketValue = _setRemoveMarketValue;
     }
-    
+
     function setNoteReportingGasPrice(bool _setNoteReportingGasPriceValue) public {
         setNoteReportingGasPriceValue = _setNoteReportingGasPriceValue;
     }
-    
+
     function setUpdateMarketPhase(bool _setUpdateMarketPhaseValue) public {
         setUpdateMarketPhaseValue = _setUpdateMarketPhaseValue;
     }
@@ -74,19 +74,19 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function setNoteDesignatedReport(bool _setNoteDesignatedReportValue) public {
         setNoteDesignatedReportValue = _setNoteDesignatedReportValue;
     }
-    
+
     function setUniverse(IUniverse _universe) public {
         universe = _universe;
     }
-    
+
     function setReputationToken(IReputationToken _setReputationTokenValue) public {
         setReputationTokenValue = _setReputationTokenValue;
     }
-    
+
     function setStartTime(uint256 _setStartTimeValue) public {
         setStartTimeValue = _setStartTimeValue;
     }
-    
+
     function setEndTime(uint256 _setEndTimeValue) public {
         setEndTimeValue = _setEndTimeValue;
     }
@@ -123,15 +123,15 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setAllMarketsFinalizedValue = _setAllMarketsFinalizedValue;
     }
 
-    function setCollectStakeTokenReportingFees(bool _setCollectStakeTokenReportingFeesValue) public {
+    function setCollectStakeTokenReportingFees(uint256 _setCollectStakeTokenReportingFeesValue) public {
         setCollectStakeTokenReportingFeesValue = _setCollectStakeTokenReportingFeesValue;
     }
 
-    function setCollectDisputeBondReportingFees(bool _setCollectDisputeBondReportingFeesValue) public {
+    function setCollectDisputeBondReportingFees(uint256 _setCollectDisputeBondReportingFeesValue) public {
         setCollectDisputeBondReportingFeesValue = _setCollectDisputeBondReportingFeesValue;
     }
 
-    function setCollectParticipationTokenReportingFees(bool _setCollectParticipationTokenReportingFeesValue) public {
+    function setCollectParticipationTokenReportingFees(uint256 _setCollectParticipationTokenReportingFeesValue) public {
         setCollectParticipationTokenReportingFeesValue = _setCollectParticipationTokenReportingFeesValue;
     }
 
@@ -186,7 +186,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function setMigrateFeesDueToMarketMigration(bool _setMigrateFeesDueToMarketMigration) public {
         setMigrateFeesDueToMarketMigrationValue = _setMigrateFeesDueToMarketMigration;
     }
-    
+
     function getInitializeUniverseValue() public view returns(IUniverse) {
         return initializeUniverseValue;
     }
@@ -206,7 +206,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function getCollectForgoFees() public returns(bool) {
         return collectForgoFees;
     }
-    
+
     function callMigrateFeesDueToMarketMigration(IReportingWindow _reportingWindow, IMarket _market) public returns (bool) {
         return _reportingWindow.migrateFeesDueToMarketMigration(_market);
     }
@@ -229,7 +229,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return true;
     }
 
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public payable returns (IMarket _newMarket) {
+    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, string _extraInfo) public payable returns (IMarket _newMarket) {
         return market;
     }
 
@@ -255,7 +255,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
 
     function updateMarketPhase() public returns (bool) {
         return setUpdateMarketPhaseValue;
-    }    
+    }
 
     function getUniverse() public view returns (IUniverse) {
         return universe;
@@ -264,7 +264,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function getReputationToken() public view returns (IReputationToken) {
         return setReputationTokenValue;
     }
-    
+
     function getStartTime() public view returns (uint256) {
         return setStartTimeValue;
     }
@@ -272,64 +272,64 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function getEndTime() public view returns (uint256) {
         return setEndTimeValue;
     }
-    
+
     function getNumMarkets() public view returns (uint256) {
         return setNumMarketsValue;
     }
-    
+
     function getNumInvalidMarkets() public view returns (uint256) {
         return setNumInvalidMarketsValue;
     }
-    
+
     function getNumIncorrectDesignatedReportMarkets() public view returns (uint256) {
         return setNumIncorrectDesignatedReportMarketsValue;
     }
-    
+
     function getAvgReportingGasPrice() public view returns (uint256) {
         return setAvgReportingGasPriceValue;
     }
-    
+
     function getNextReportingWindow() public returns (IReportingWindow) {
         return setNextReportingWindowValue;
     }
-    
+
     function getPreviousReportingWindow() public returns (IReportingWindow) {
         return setPreviousReportingWindowValue;
     }
-    
+
     function getNumDesignatedReportNoShows() public view returns (uint256) {
         return setNumDesignatedReportNoShowsValue;
     }
-    
+
     function allMarketsFinalized() public view returns (bool) {
         return setAllMarketsFinalizedValue;
     }
-    
-    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
+
+    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (uint256) {
         collectReporterAddress = _reporterAddress;
         collectAttoStakeTokens = _attoStakeTokens;
         collectForgoFees = _forgoFees;
-        return true;
+        return collectAttoStakeTokens;
     }
 
-    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
+    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (uint256) {
         collectReporterAddress = _reporterAddress;
         collectAttoStakeTokens = _attoStakeTokens;
         collectForgoFees = _forgoFees;
-        return true;
+        return collectAttoStakeTokens;
     }
 
-    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (bool) {
+    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (uint256) {
         collectReporterAddress = _reporterAddress;
         collectAttoStakeTokens = _attoStakeTokens;
         collectForgoFees = _forgoFees;
-        return true;
+        return collectAttoStakeTokens;
     }
-    
+
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool) {
         return setTriggerMigrateFeesDueToForkValue;
     }
-    
+
     function migrateFeesDueToFork() public returns (bool) {
         return setMigrateFeesDueToForkValue;
     }
@@ -337,15 +337,15 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function migrateFeesDueToMarketMigration(IMarket _market) public returns (bool) {
         return setMigrateFeesDueToMarketMigrationValue;
     }
-    
+
     function isContainerForMarket(IMarket _shadyTarget) public view returns (bool) {
         return setIsContainerForMarketValue;
     }
-    
+
     function isForkingMarketFinalized() public view returns (bool) {
         return setIsForkingMarketFinalizedValue;
     }
-    
+
     function isDisputeActive() public view returns (bool) {
         return setIsDisputeActiveValue;
     }
@@ -359,7 +359,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     }
 
     function isOver() public view returns (bool) {
-        return setIsOverValue;        
+        return setIsOverValue;
     }
 
     function isContainerForParticipationToken(IParticipationToken _shadyTarget) public view returns (bool) {
@@ -369,7 +369,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     function increaseTotalStake(uint256 _amount) public returns (bool) {
         return setIncreaseTotalStakeValue;
     }
-    
+
     function increaseTotalWinningStake(uint256 _amount) public returns (bool) {
         return setIncreaseTotalWinningStakeValue;
     }

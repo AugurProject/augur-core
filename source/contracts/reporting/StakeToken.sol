@@ -13,6 +13,7 @@ import 'reporting/IDisputeBond.sol';
 import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'Augur.sol';
 
 
 contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IStakeToken {
@@ -22,7 +23,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
     uint256[] public payoutNumerators;
     bool private invalid;
 
-    function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public beforeInitialized returns (bool) {
+    function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         require(_market.getNumberOfOutcomes() == _payoutNumerators.length);
         uint256 _sum = 0;
@@ -37,7 +38,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function buy(uint256 _attotokens) public afterInitialized returns (bool) {
+    function buy(uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         IMarket.ReportingState _state = market.getReportingState();
         // If this is the first report and there was no designated reporter we ask the market to compensate them and get back the amount of extra REP to automatically stake against this outcome
         _attotokens = _attotokens.add(market.firstReporterCompensationCheck(msg.sender));
@@ -54,11 +55,14 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         buyTokens(msg.sender, _attotokens);
         if (_state == IMarket.ReportingState.DESIGNATED_REPORTING) {
             market.designatedReport();
+            controller.getAugur().logDesignatedReportSubmitted(market.getUniverse(), msg.sender, market, this, _attotokens, payoutNumerators);
+        } else {
+            controller.getAugur().logReportSubmitted(market.getUniverse(), msg.sender, market, this, _attotokens, payoutNumerators);
         }
         return true;
     }
 
-    function trustedBuy(address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
+    function trustedBuy(address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(IMarket(msg.sender) == market);
         require(_attotokens > 0);
         IMarket.ReportingState _state = market.getReportingState();
@@ -67,7 +71,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function buyTokens(address _reporter, uint256 _attotokens) private afterInitialized returns (bool) {
+    function buyTokens(address _reporter, uint256 _attotokens) private onlyInGoodTimes afterInitialized returns (bool) {
         getReputationToken().trustedStakeTokenTransfer(_reporter, this, _attotokens);
         mint(_reporter, _attotokens);
         bytes32 _payoutDistributionHash = getPayoutDistributionHash();
@@ -75,9 +79,9 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         market.updateTentativeWinningPayoutDistributionHash(_payoutDistributionHash);
         getReportingWindow().noteReportingGasPrice(market);
         return true;
-    } 
+    }
 
-    function redeemDisavowedTokens(address _reporter) public afterInitialized returns (bool) {
+    function redeemDisavowedTokens(address _reporter) public onlyInGoodTimes afterInitialized returns (bool) {
         require(!market.isContainerForStakeToken(this));
         uint256 _reputationSupply = getReputationToken().balanceOf(this);
         uint256 _attotokens = balances[_reporter];
@@ -88,23 +92,20 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
     }
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
-    function redeemForkedTokens() public afterInitialized returns (bool) {
+    function redeemForkedTokens() public onlyInGoodTimes afterInitialized returns (bool) {
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() == market);
-        IReputationToken _sourceReputationToken = getReputationToken();
-        uint256 _reputationSupply = _sourceReputationToken.balanceOf(this);
         uint256 _attotokens = balances[msg.sender];
-        uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(msg.sender, _attotokens);
         IReputationToken _destinationReputationToken = getUniverse().getOrCreateChildUniverse(getPayoutDistributionHash()).getReputationToken();
-        _sourceReputationToken.migrateOutStakeToken(_destinationReputationToken, this, _attotokens);
+        getReputationToken().migrateOutStakeToken(_destinationReputationToken, this, _attotokens);
         _destinationReputationToken.transfer(msg.sender, _destinationReputationToken.balanceOf(this));
         return true;
     }
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
-    function redeemWinningTokens(bool forgoFees) public afterInitialized returns (bool) {
+    function redeemWinningTokens(bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() != market);
@@ -117,11 +118,12 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         if (_reporterReputationShare != 0) {
             _reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
-        market.getReportingWindow().collectStakeTokenReportingFees(msg.sender, _attotokens, forgoFees);
+        uint256 _feesReceived = market.getReportingWindow().collectStakeTokenReportingFees(msg.sender, _attotokens, forgoFees);
+        controller.getAugur().logWinningTokensRedeemed(market.getUniverse(), msg.sender, market, this, _attotokens, _feesReceived, payoutNumerators);
         return true;
     }
 
-    function migrateLosingTokens() public afterInitialized returns (bool) {
+    function migrateLosingTokens() public onlyInGoodTimes afterInitialized returns (bool) {
         require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() != market);
@@ -132,7 +134,7 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function migrateLosingTokenRepToDisputeBond(IDisputeBond _disputeBondToken) private returns (bool) {
+    function migrateLosingTokenRepToDisputeBond(IDisputeBond _disputeBondToken) private onlyInGoodTimes returns (bool) {
         if (_disputeBondToken == address(0)) {
             return true;
         }
@@ -149,13 +151,25 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return true;
     }
 
-    function migrateLosingTokenRepToWinningToken() private returns (bool) {
+    function migrateLosingTokenRepToWinningToken() private onlyInGoodTimes returns (bool) {
         IReputationToken _reputationToken = getReputationToken();
         uint256 _balance = _reputationToken.balanceOf(this);
         if (_balance == 0) {
             return true;
         }
         _reputationToken.transfer(market.getFinalWinningStakeToken(), _balance);
+        return true;
+    }
+
+    function withdrawInEmergency() public onlyInBadTimes returns (bool) {
+        IReputationToken _reputationToken = getReputationToken();
+        uint256 _reputationSupply = _reputationToken.balanceOf(this);
+        uint256 _attotokens = balances[msg.sender];
+        uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
+        burn(msg.sender, _attotokens);
+        if (_reporterReputationShare != 0) {
+            _reputationToken.transfer(msg.sender, _reporterReputationShare);
+        }
         return true;
     }
 
@@ -198,6 +212,12 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
                 return false;
             }
         }
+        return true;
+    }
+
+    function emitTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+        Transfer(_from, _to, _value);
+        controller.getAugur().logStakeTokensTransferred(market.getUniverse(), _from, _to, _value);
         return true;
     }
 }

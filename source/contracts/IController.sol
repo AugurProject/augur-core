@@ -1,5 +1,6 @@
 pragma solidity 0.4.17;
 
+import 'Augur.sol';
 
 
 contract IController {
@@ -8,4 +9,5 @@ contract IController {
     function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) public view returns(bool);
     function stopInEmergency() public view returns(bool);
     function onlyInEmergency() public view returns(bool);
+    function getAugur() public view returns (Augur);
 }

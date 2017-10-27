@@ -82,11 +82,24 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
         with ETHDelta(expectedParticipationFees, tester.a2, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
             assert participationToken.redeem(False, sender=tester.k2)
 
+    logs = []
+    captureFilteredLogs(localFixture.chain.head_state, localFixture.contracts['Augur'], logs)
+
     marketStake = marketDesignatedStake.balanceOf(tester.a0)
     expectedFees = reporterFees * marketStake / totalWinningStake + 1 # Rounding error
     with ETHDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
         with TokenDelta(marketDesignatedStake, -marketStake, tester.a0, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
             assert marketDesignatedStake.redeemWinningTokens(False)
+
+    # Confirm redeeming stake tokens logs appropriately
+    assert len(logs) == 2
+    assert logs[1]['_event_type'] == 'WinningTokensRedeemed'
+    assert logs[1]['reporter'] == bytesToHexString(tester.a0)
+    assert logs[1]['reportingFeesReceived'] == expectedFees
+    assert logs[1]['stakeToken'] == marketDesignatedStake.address
+    assert logs[1]['market'] == market.address
+    assert logs[1]['amountRedeemed'] == marketStake
+    assert logs[1]['payoutNumerators'] == [0,market.getNumTicks()]
 
     categoricalMarketStake = categoricalMarketDesignatedStake.balanceOf(tester.a0)
     expectedFees = reporterFees * categoricalMarketStake / totalWinningStake + 1 # Rounding error
@@ -94,7 +107,7 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
         with TokenDelta(categoricalMarketDesignatedStake, -categoricalMarketStake, tester.a0, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
             assert categoricalMarketDesignatedStake.redeemWinningTokens(False)
 
-def test_dispute_bond_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):    
+def test_dispute_bond_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
     # We'll have testers put up dispute bonds against the designated reports and place stake in other outcomes
     disputeStake = localFixture.contracts["Constants"].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
     otherOutcomeStake = 10 ** 18
@@ -102,7 +115,7 @@ def test_dispute_bond_fee_collection(localFixture, universe, market, categorical
     with TokenDelta(reputationToken, -totalCost, tester.a1, "Disputing did not reduce REP balance correctly"):
         with StakeDelta(totalCost, totalCost, 0, market, reportingWindow, "Disputing is not adjust stake accounting correctly"):
             assert market.disputeDesignatedReport([market.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k1)
-    
+
     with StakeDelta(totalCost, totalCost, 0, categoricalMarket, reportingWindow, "Disputing is not adjust stake accounting correctly"):
         with TokenDelta(reputationToken, -totalCost, tester.a2, "Disputing did not reduce REP balance correctly"):
             assert categoricalMarket.disputeDesignatedReport([categoricalMarket.getNumTicks(),0,0], otherOutcomeStake, False, sender=tester.k2)
@@ -110,7 +123,7 @@ def test_dispute_bond_fee_collection(localFixture, universe, market, categorical
     with TokenDelta(reputationToken, -totalCost, tester.a3, "Disputing did not reduce REP balance correctly"):
         with StakeDelta(totalCost, totalCost, 0, scalarMarket, reportingWindow, "Disputing is not adjust stake accounting correctly"):
             assert scalarMarket.disputeDesignatedReport([scalarMarket.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k3)
-    
+
     # Fast forward time until the window is over and we can redeem our winning stake, and dispute bond tokens and receive fees
     localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
     assert market.tryFinalize()
@@ -160,7 +173,7 @@ def test_dispute_bond_fee_collection(localFixture, universe, market, categorical
         assert scalarMarketDisputeBond.withdraw(False, sender=tester.k3)
 
 
-def test_fee_migration(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):    
+def test_fee_migration(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
     # We'll have testers put up dispute bonds against the designated reports and place stake in other outcomes
     otherOutcomeStake = 10 ** 18
     assert market.disputeDesignatedReport([market.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k1)
@@ -186,7 +199,7 @@ def test_fee_migration(localFixture, universe, market, categoricalMarket, scalar
                 with StakeDelta(scalarMarketStakeDelta, totalScalarMarketStakeMoved, 0, scalarMarket, nextReportingWindow, "Disputing in first is not migrating stake in correctly"):
                     assert scalarMarket.disputeFirstReporters([scalarMarket.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4)
 
-def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):    
+def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
     # We'll have testers put up dispute bonds against the designated reports and place stake in other outcomes
     otherOutcomeStake = 10 ** 18
     assert market.disputeDesignatedReport([market.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k1)
@@ -335,7 +348,7 @@ class StakeDelta():
         self.marketTotalStake = self.market.getTotalStake()
         self.windowTotalStake = self.window.getTotalStake()
         self.windowTotalWinningStake = self.window.getTotalWinningStake()
-    
+
     def __exit__(self, *args):
         if args[1]:
             raise args[1]

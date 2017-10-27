@@ -13,6 +13,7 @@ import 'trading/Order.sol';
 import 'reporting/IMarket.sol';
 import 'trading/ICash.sol';
 import 'trading/IOrders.sol';
+import 'Augur.sol';
 
 
 /**
@@ -40,7 +41,7 @@ contract CancelOrder is CashAutoConverter, ReentrancyGuard, ICancelOrder {
 
         refundOrder(msg.sender, _type, _sharesEscrowed, _moneyEscrowed, _market, _outcome);
 
-        _orders.cancelOrderLog(_orderId);
+        controller.getAugur().logOrderCanceled(_market.getUniverse(), _market.getShareToken(_outcome), msg.sender, _orderId, _type, _moneyEscrowed, _sharesEscrowed);
 
         return true;
     }

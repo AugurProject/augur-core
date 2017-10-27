@@ -3,12 +3,12 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
-from utils import longTo32Bytes, longToHexString, fix
+from utils import longTo32Bytes, longToHexString, fix, captureFilteredLogs, bytesToHexString
 from constants import BID, ASK, YES, NO
 
 tester.STARTGAS = long(6.7 * 10**6)
 
-def test_cancelBid(contractsFixture, cash, market):
+def test_cancelBid(contractsFixture, cash, market, universe):
     ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
@@ -33,7 +33,20 @@ def test_cancelBid(contractsFixture, cash, market):
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == creatorInitialETH - fix('0.6'), "ETH should be deducted from the creator balance"
 
+    logs = []
+    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
+
     assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
+
+    # Confirm cancel order logging works correctly
+    assert len(logs) == 1
+    assert logs[0]['_event_type'] == 'OrderCanceled'
+    assert logs[0]['orderId'] == orderID
+    assert logs[0]['shareToken'] == yesShareToken.address
+    assert logs[0]['sender'] == bytesToHexString(tester.a1)
+    assert logs[0]['orderType'] == orderType
+    assert logs[0]['sharesRefund'] == 0
+    assert logs[0]['tokenRefund'] == fix('0.6')
 
     assert(ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "Canceled order elements should all be zero"
     assert(creatorInitialETH == contractsFixture.chain.head_state.get_balance(tester.a1)), "Maker's ETH should be the same as before the order was placed"
