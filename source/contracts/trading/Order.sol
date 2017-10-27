@@ -22,7 +22,7 @@ library Order {
 
     uint256 constant MIN_ORDER_VALUE = 10**14;
 
-    enum OrderTypes {
+    enum Types {
         Bid, Ask
     }
 
@@ -40,7 +40,7 @@ library Order {
         bytes32 id;
         address creator;
         uint8 outcome;
-        Order.OrderTypes orderType;
+        Order.Types orderType;
         uint256 amount;
         uint256 price;
         uint256 sharesEscrowed;
@@ -53,7 +53,7 @@ library Order {
     // Constructor
     //
 
-    function create(IController _controller, address _creator, uint8 _outcome, Order.OrderTypes _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal view returns (Data) {
+    function create(IController _controller, address _creator, uint8 _outcome, Order.Types _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal view returns (Data) {
         require(_outcome < _market.getNumberOfOutcomes());
         require(_price < _market.getNumTicks());
 
@@ -90,18 +90,18 @@ library Order {
         return _orderData.id;
      }
 
-    function getOrderTradingTypeFromMakerDirection(Order.TradeDirections _creatorDirection) internal pure returns (Order.OrderTypes) {
-        return (_creatorDirection == Order.TradeDirections.Long) ? Order.OrderTypes.Bid : Order.OrderTypes.Ask;
+    function getOrderTradingTypeFromMakerDirection(Order.TradeDirections _creatorDirection) internal pure returns (Order.Types) {
+        return (_creatorDirection == Order.TradeDirections.Long) ? Order.Types.Bid : Order.Types.Ask;
     }
 
-    function getOrderTradingTypeFromFillerDirection(Order.TradeDirections _fillerDirection) internal pure returns (Order.OrderTypes) {
-        return (_fillerDirection == Order.TradeDirections.Long) ? Order.OrderTypes.Ask : Order.OrderTypes.Bid;
+    function getOrderTradingTypeFromFillerDirection(Order.TradeDirections _fillerDirection) internal pure returns (Order.Types) {
+        return (_fillerDirection == Order.TradeDirections.Long) ? Order.Types.Ask : Order.Types.Bid;
     }
 
     function escrowFunds(Order.Data _orderData) internal returns (bool) {
-        if (_orderData.orderType == Order.OrderTypes.Ask) {
+        if (_orderData.orderType == Order.Types.Ask) {
             return escrowFundsForAsk(_orderData);
-        } else if (_orderData.orderType == Order.OrderTypes.Bid) {
+        } else if (_orderData.orderType == Order.Types.Bid) {
             return escrowFundsForBid(_orderData);
         }
     }

@@ -11,7 +11,7 @@ contract Delegator is DelegationTarget {
         controllerLookupName = _controllerLookupName;
     }
 
-    // We currently only support a single non-array return value. If we truly need to return more advanced sets of data we could follow the pattern demonstrated here: https://gist.github.com/Arachnid/4ca9da48d51e23e5cfe0f0e14dd6318f but in a way that is automated.
+    // We currently only support a single non-array return value. If we want to support variable length return data we should find a way to do so using this: https://github.com/ethereum/EIPs/blob/e3dff831121549e850fa662a0e6944878dc1ce22/EIPS/returndatacopy.md
     function() external payable {
         // Do nothing if we haven't properly set up the delegator to delegate calls
         if (controllerLookupName == 0) {
