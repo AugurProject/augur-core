@@ -65,7 +65,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         // Only count tokens migrated toward the available to be matched in other universes. The bonus should not be added
         universe.increaseRepAvailableForExtraBondPayouts(_attotokens);
         if (eligibleForForkBonus(_bonusIfInForkWindow)) {
-            mint(_reporter, _attotokens.div(Reporting.forkMigrationPercentageBonusDivisor()));
+            mint(_reporter, _attotokens.div(Reporting.getForkMigrationPercentageBonusDivisor()));
         }
         supply = supply.add(_attotokens);
         return true;

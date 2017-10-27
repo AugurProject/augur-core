@@ -149,7 +149,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function disputeDesignatedReport(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
-        uint256 _bondAmount = Reporting.designatedReporterDisputeBondAmount();
+        uint256 _bondAmount = Reporting.getDesignatedReporterDisputeBondAmount();
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
         extraDisputeBondRemainingToBePaidOut += _bondAmount;
         this.increaseTotalStake(_bondAmount);
@@ -168,7 +168,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function disputeFirstReporters(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.FIRST_DISPUTE);
-        uint256 _bondAmount = Reporting.firstReportersDisputeBondAmount();
+        uint256 _bondAmount = Reporting.getFirstReportersDisputeBondAmount();
         firstReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
         extraDisputeBondRemainingToBePaidOut += _bondAmount;
         this.increaseTotalStake(_bondAmount);
@@ -189,7 +189,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function disputeLastReporters() public onlyInGoodTimes triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.LAST_DISPUTE);
-        uint256 _bondAmount = Reporting.lastReportersDisputeBondAmount();
+        uint256 _bondAmount = Reporting.getLastReportersDisputeBondAmount();
         lastReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
         extraDisputeBondRemainingToBePaidOut += _bondAmount;
         this.increaseTotalStake(_bondAmount);
@@ -250,17 +250,17 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
         if (address(designatedReporterDisputeBondToken) != address(0)) {
             if (designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.designatedReporterDisputeBondAmount());
+                _payoutStake -= int256(Reporting.getDesignatedReporterDisputeBondAmount());
             }
         }
         if (address(firstReportersDisputeBondToken) != address(0)) {
             if (firstReportersDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.firstReportersDisputeBondAmount());
+                _payoutStake -= int256(Reporting.getFirstReportersDisputeBondAmount());
             }
         }
         if (address(lastReportersDisputeBondToken) != address(0)) {
             if (lastReportersDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.lastReportersDisputeBondAmount());
+                _payoutStake -= int256(Reporting.getLastReportersDisputeBondAmount());
             }
         }
 
@@ -321,7 +321,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         bytes32 _winningForkPayoutDistributionHash = _currentUniverse.getForkingMarket().getFinalPayoutDistributionHash();
         IUniverse _destinationUniverse = _currentUniverse.getOrCreateChildUniverse(_winningForkPayoutDistributionHash);
         // This will put us in the designated dispute phase
-        endTime = block.timestamp - Reporting.designatedReportingDurationSeconds();
+        endTime = block.timestamp - Reporting.getDesignatedReportingDurationSeconds();
         totalStake = 0;
         IReportingWindow _newReportingWindow = _destinationUniverse.getReportingWindowByMarketEndTime(endTime);
         _newReportingWindow.migrateMarketInFromNibling();
@@ -535,17 +535,17 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
         if (address(designatedReporterDisputeBondToken) != address(0)) {
             if (designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != finalPayoutDistributionHash) {
-                _totalDisputeBondStake += Reporting.designatedReporterDisputeBondAmount();
+                _totalDisputeBondStake += Reporting.getDesignatedReporterDisputeBondAmount();
             }
         }
         if (address(firstReportersDisputeBondToken) != address(0)) {
             if (firstReportersDisputeBondToken.getDisputedPayoutDistributionHash() != finalPayoutDistributionHash) {
-                _totalDisputeBondStake += Reporting.firstReportersDisputeBondAmount();
+                _totalDisputeBondStake += Reporting.getFirstReportersDisputeBondAmount();
             }
         }
         if (address(lastReportersDisputeBondToken) != address(0)) {
             if (lastReportersDisputeBondToken.getDisputedPayoutDistributionHash() != finalPayoutDistributionHash) {
-                _totalDisputeBondStake += Reporting.lastReportersDisputeBondAmount();
+                _totalDisputeBondStake += Reporting.getLastReportersDisputeBondAmount();
             }
         }
 
@@ -585,7 +585,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         if (designatedReportReceivedTime != 0) {
             return designatedReportReceivedTime;
         }
-        return endTime + Reporting.designatedReportingDurationSeconds();
+        return endTime + Reporting.getDesignatedReportingDurationSeconds();
     }
 
     function getDesignatedReportReceivedTime() public view returns (uint256) {
@@ -593,7 +593,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function getDesignatedReportDisputeDueTimestamp() public view returns (uint256) {
-        return getDesignatedReportDueTimestamp() + Reporting.designatedReportingDisputeDurationSeconds();
+        return getDesignatedReportDueTimestamp() + Reporting.getDesignatedReportingDisputeDurationSeconds();
     }
 
     function getReportingState() public view returns (ReportingState) {

@@ -47,7 +47,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         universe = _universe;
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         // Initialize this to some reasonable value to handle the first market ever created without branching code
-        reportingGasPrice.record(Reporting.defaultReportingGasPrice());
+        reportingGasPrice.record(Reporting.getDefaultReportingGasPrice());
         participationToken = ParticipationTokenFactory(controller.lookup("ParticipationTokenFactory")).createParticipationToken(controller, this);
         return true;
     }
@@ -200,7 +200,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     function getReportingEndTime() public afterInitialized view returns (uint256) {
-        return getStartTime() + Reporting.reportingDurationSeconds();
+        return getStartTime() + Reporting.getReportingDurationSeconds();
     }
 
     function getDisputeStartTime() public afterInitialized view returns (uint256) {
@@ -208,7 +208,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     function getDisputeEndTime() public afterInitialized view returns (uint256) {
-        return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
+        return getDisputeStartTime() + Reporting.getReportingDisputeDurationSeconds();
     }
 
     function getNextReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {

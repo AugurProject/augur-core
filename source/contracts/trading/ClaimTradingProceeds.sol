@@ -22,7 +22,7 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, IClaimTradi
 
     function claimTradingProceeds(IMarket _market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
         require(_market.getReportingState() == IMarket.ReportingState.FINALIZED);
-        require(block.timestamp > _market.getFinalizationTime() + Reporting.claimTradingProceedsWaitTime());
+        require(block.timestamp > _market.getFinalizationTime() + Reporting.getClaimTradingProceedsWaitTime());
 
         IStakeToken _winningStakeToken = _market.getFinalWinningStakeToken();
 

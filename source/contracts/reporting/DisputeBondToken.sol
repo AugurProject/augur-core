@@ -31,7 +31,7 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         bondHolder = _bondHolder;
         disputedPayoutDistributionHash = _payoutDistributionHash;
         bondAmount = _bondAmount;
-        bondRemainingToBePaidOut = _bondAmount * Reporting.bondPayoutMultiplier();
+        bondRemainingToBePaidOut = _bondAmount * Reporting.getBondPayoutMultiplier();
         reputationToken = _market.getUniverse().getReputationToken();
         return true;
     }

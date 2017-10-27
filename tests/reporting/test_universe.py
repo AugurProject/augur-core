@@ -179,7 +179,7 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     noshow_default = constants.DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND()
     noshow_floor = constants.DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR()
 
-    gasToReport = constants.GAS_TO_REPORT()
+    getGasToReport = constants.GAS_TO_REPORT()
 
     # current reporting window
     designatedStakeValue = populatedUniverse.calculateFloatingValue(0, 0, designated_divisor, 0, designated_default, designated_floor)
@@ -211,7 +211,7 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     assert populatedUniverse.getDesignatedReportNoShowBond() == newNoshowBondValue
 
     currentReportingWindow.setAvgReportingGasPrice(14)
-    targetGasCost = gasToReport * 14 * 2;
+    targetGasCost = getGasToReport * 14 * 2;
     assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
     assert populatedUniverse.getMarketCreationCost() == targetGasCost + newValidityBondValue
 
