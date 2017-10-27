@@ -32,7 +32,6 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     mapping(uint256 => IReportingWindow) private reportingWindows;
     mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
-    uint256 private extraDisputeBondRemainingToBePaidOut;
     // We increase and decrease this value seperate from the totalSupply as we do not want to count potentional infalitonary bonuses from the migration reward
     uint256 private repAvailableForExtraBondPayouts;
 
@@ -145,22 +144,6 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(parentUniverse.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
         repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.sub(_amount);
-        return true;
-    }
-
-    function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256) {
-        return extraDisputeBondRemainingToBePaidOut;
-    }
-
-    function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public onlyInGoodTimes returns (bool) {
-        require(isContainerForMarket(IMarket(msg.sender)));
-        extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.add(_amount);
-        return true;
-    }
-
-    function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public onlyInGoodTimes returns (bool) {
-        require(isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
-        extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.sub(_amount);
         return true;
     }
 

@@ -1,9 +1,42 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed, ABIContract
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString
-from reporting_utils import proceedToForking, finalizeForkingMarket, initializeReportingFixture
+from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta
+from reporting_utils import proceedToForking, finalizeForkingMarket, initializeReportingFixture, proceedToDesignatedReporting
 
+def test_disavowed_dispute_bond_token_redemption(localFixture, universe, cash, market):
+    newMarket = localFixture.createReasonableBinaryMarket(universe, cash)
+    reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
+
+    # We'll do a designated report in the new market
+    proceedToDesignatedReporting(localFixture, universe, newMarket, [0,market.getNumTicks()])
+    localFixture.designatedReport(newMarket, [0,market.getNumTicks()], tester.k0)
+
+    # Now we'll dispute it
+    assert newMarket.disputeDesignatedReport([1,market.getNumTicks()-1], 1, False, sender=tester.k1)
+
+    # We proceed the standard market to the FORKING state
+    proceedToForking(localFixture, universe, market, True, 1, 2, 3, [0,market.getNumTicks()], [market.getNumTicks(),0], 2, [market.getNumTicks(),0], [0,market.getNumTicks()], [market.getNumTicks(),0])
+
+    # We'll finalize the forking market
+    finalizeForkingMarket(localFixture, universe, market, True, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,market.getNumTicks()], [market.getNumTicks(),0])
+
+    disputeBond = localFixture.applySignature("DisputeBondToken", newMarket.getDesignatedReporterDisputeBondToken())
+
+    # Now we can migrate the market to the winning universe
+    assert newMarket.migrateThroughOneFork()
+
+    # Doing this disavows the dispute bond placed against the designated report. We can no longer normally withdraw or withdrawToUniverse but we can call the withdrawDisavowedTokens method
+    newUniverseHash = market.derivePayoutDistributionHash([2,market.getNumTicks()-2])
+    newUniverse = universe.getOrCreateChildUniverse(newUniverseHash)
+    with raises(TransactionFailed):
+        disputeBond.withdrawToUniverse(newUniverse, sender=tester.k1)
+
+    with raises(TransactionFailed):
+        disputeBond.withdraw(sender=tester.k1)
+
+    with TokenDelta(reputationToken, reputationToken.balanceOf(disputeBond.address), tester.a1, "Redeeming a disavowed dispute bond didn't return the REP balance to the bond holder"):
+        assert disputeBond.withdrawDisavowedTokens(sender=tester.k1)
 
 # Migration data is expressed as [beforeFinalization, targetUniverse]
 @mark.parametrize('invalidRep,yesRep,noRep,designatedMigration,firstMigration,lastMigration,finalizeByMigration', [
@@ -19,9 +52,9 @@ from reporting_utils import proceedToForking, finalizeForkingMarket, initializeR
 def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigration, firstMigration, lastMigration, finalizeByMigration, localFixture, universe, cash, market):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
     completeSets = localFixture.contracts['CompleteSets']
-    YES_OUTCOME = [10**18,0]
-    NO_OUTCOME = [0,10**18]
-    INVALID_OUTCOME = [10**18 / 2,10**18 / 2]
+    YES_OUTCOME = [market.getNumTicks(),0]
+    NO_OUTCOME = [0,market.getNumTicks()]
+    INVALID_OUTCOME = [market.getNumTicks() / 2,market.getNumTicks() / 2]
     YES_DISTRIBUTION_HASH = market.derivePayoutDistributionHash(YES_OUTCOME, False)
     NO_DISTRIBUTION_HASH = market.derivePayoutDistributionHash(NO_OUTCOME, False)
     INVALID_DISTRIBUTION_HASH = market.derivePayoutDistributionHash(INVALID_OUTCOME, True)
@@ -59,33 +92,33 @@ def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigra
 
     if (designatedMigration[0]):
         destinationUniverse = universeMap[designatedMigration[1]]
-        doBondWithdraw(localFixture, designatedDisputeBond, True, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
+        doBondWithdraw(localFixture, designatedDisputeBond, True, market, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
     if (firstMigration[0]):
         destinationUniverse = universeMap[firstMigration[1]]
-        doBondWithdraw(localFixture, firstDisputeBond, True, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
+        doBondWithdraw(localFixture, firstDisputeBond, True, market, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
     if (lastMigration[0]):
         destinationUniverse = universeMap[lastMigration[1]]
-        doBondWithdraw(localFixture, lastDisputeBond, True, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
+        doBondWithdraw(localFixture, lastDisputeBond, True, market, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
 
     # We'll finalize the forking market. If we finalize by migrating REP we'll get the bonus since dispute bonds have that perk. If we wait till the window is over to finalize though we get no such benefit
     finalizeForkingMarket(localFixture, universe, market, finalizeByMigration, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, NO_OUTCOME, YES_OUTCOME)
 
     if (not designatedMigration[0]):
         destinationUniverse = universeMap[designatedMigration[1]]
-        doBondWithdraw(localFixture, designatedDisputeBond, finalizeByMigration, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
+        doBondWithdraw(localFixture, designatedDisputeBond, finalizeByMigration, market, universe, reputationToken, destinationUniverse, tester.a1, tester.k1)
     if (not firstMigration[0]):
         destinationUniverse = universeMap[firstMigration[1]]
-        doBondWithdraw(localFixture, firstDisputeBond, finalizeByMigration, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
+        doBondWithdraw(localFixture, firstDisputeBond, finalizeByMigration, market, universe, reputationToken, destinationUniverse, tester.a2, tester.k2)
     if (not lastMigration[0]):
         destinationUniverse = universeMap[lastMigration[1]]
-        doBondWithdraw(localFixture, lastDisputeBond, finalizeByMigration, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
+        doBondWithdraw(localFixture, lastDisputeBond, finalizeByMigration, market, universe, reputationToken, destinationUniverse, tester.a0, tester.k0)
 
-def doBondWithdraw(fixture, bond, bonus, universe, reputationToken, destinationUniverse, testerAddress, testerKey):
+def doBondWithdraw(fixture, bond, bonus, market, universe, reputationToken, destinationUniverse, testerAddress, testerKey):
     disputeUniverse = fixture.applySignature("Universe", universe.getOrCreateChildUniverse(bond.getDisputedPayoutDistributionHash()))
     destinationReputationToken = fixture.applySignature("ReputationToken", destinationUniverse.getReputationToken())
     bondRemainingToBePaid = bond.getBondRemainingToBePaidOut()
     bondAmount = bondRemainingToBePaid / 2
-    amountRequiredForBondPayouts = universe.getExtraDisputeBondRemainingToBePaidOut()
+    amountRequiredForBondPayouts = market.getExtraDisputeBondRemainingToBePaidOut()
     amountInMigrationPool = disputeUniverse.getRepAvailableForExtraBondPayouts()
     bonusDivisor = fixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
 
@@ -103,7 +136,7 @@ def doBondWithdraw(fixture, bond, bonus, universe, reputationToken, destinationU
 
     newBondRemainingToBePaid = bond.getBondRemainingToBePaidOut()
     assert newBondRemainingToBePaid == bondRemainingToBePaid - balanceInDestinationUniverse
-    assert universe.getExtraDisputeBondRemainingToBePaidOut() == amountRequiredForBondPayouts - (bondAmount - newBondRemainingToBePaid)
+    assert market.getExtraDisputeBondRemainingToBePaidOut() == amountRequiredForBondPayouts - (bondAmount - newBondRemainingToBePaid)
     assert disputeUniverse.getRepAvailableForExtraBondPayouts() == amountInMigrationPool - expectedAmountPulledFromDestinationPool
 
 @fixture(scope="session")
