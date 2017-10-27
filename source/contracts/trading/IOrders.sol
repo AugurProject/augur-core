@@ -8,7 +8,6 @@ import 'reporting/IMarket.sol';
 contract IOrders {
     function saveOrder(Order.TradeTypes _type, IMarket _market, uint256 _fxpAmount, uint256 _price, address _sender, uint8 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _tradeGroupId) public returns (bytes32 _orderId);
     function removeOrder(bytes32 _orderId) public returns (bool);
-    function getOrders(bytes32 _orderId) public view returns (uint256 _amount, uint256 _price, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId);
     function getMarket(bytes32 _orderId) public view returns (IMarket);
     function getTradeType(bytes32 _orderId) public view returns (Order.TradeTypes);
     function getOutcome(bytes32 _orderId) public view returns (uint8);
