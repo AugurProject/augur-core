@@ -275,7 +275,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     assert populatedUniverse.getRepMarketCapInAttoeth() == 0
     assert populatedUniverse.getReportingFeeDivisor() == defaultValue
     
-    # puse reporting window forward
+    # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
 
     # check getRepMarketCapInAttoeth() == 0
@@ -283,7 +283,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 0
     assert populatedUniverse.getReportingFeeDivisor() == defaultValue
 
-    # puse reporting window forward
+    # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
 
     # _currentFeeDivisor > 0
@@ -297,7 +297,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     # value is cached for reach reporting window
     assert populatedUniverse.getReportingFeeDivisor() == defaultValue
 
-    # puse reporting window forward
+    # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
 
     mockReputationToken.setTotalSupply(105)
@@ -309,7 +309,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     # default because calculation is greater than 10000
     assert populatedUniverse.getReportingFeeDivisor() == defaultValue
 
-    # puse reporting window forward
+    # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
 
     mockReputationToken.setTotalSupply(1)
