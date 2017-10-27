@@ -202,7 +202,7 @@ contract Orders is DelegationTarget, IOrders {
         return true;
     }
 
-    function setPrice(IMarket _market, uint8 _outcome, uint256 _price) external returns (bool) {
+    function setPrice(IMarket _market, uint8 _outcome, uint256 _price) external onlyWhitelistedCallers returns (bool) {
         marketOrderData[_market].prices[_outcome] = _price;
         return true;
     }
