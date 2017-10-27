@@ -6,7 +6,6 @@ import { TransactionReceipt } from 'ethjs-shared';
 const DEFAULT_TEST_ACCOUNT_BALANCE = 1 * 10 ** 20; // Denominated in wei
 // Set gas block limit extremely high so new blocks don"t have to be mined while uploading contracts
 const GAS_BLOCK_AMOUNT = Math.pow(2, 32);
-const ETHEREUM_POLLING_INTERVAL_MILLISECONDS = process.env.ETHEREUM_POLLING_INTERVAL_MILLISECONDS ? parseInt(process.env.ETHEREUM_POLLING_INTERVAL_MILLISECONDS!, 10) : 1200;
 
 export interface TestAccount {
     privateKey: string;
@@ -80,10 +79,12 @@ export async function sleep(milliseconds: number): Promise<void> {
 }
 
 export async function waitForTransactionReceipt(ethjsQuery: EthjsQuery, transactionHash: string, failureDetails: string): Promise<TransactionReceipt> {
+    let pollingInterval = 10;
     let receipt = await ethjsQuery.getTransactionReceipt(transactionHash);
     while (!receipt || !receipt.blockHash) {
-        await sleep(ETHEREUM_POLLING_INTERVAL_MILLISECONDS);
+        await sleep(pollingInterval);
         receipt = await ethjsQuery.getTransactionReceipt(transactionHash);
+        pollingInterval = Math.min(pollingInterval*2, 5000);
     }
     const status = (typeof receipt.status === 'number') ? receipt.status : parseInt(receipt.status, 16);
     if (!status) {
