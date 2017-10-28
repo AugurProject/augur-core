@@ -57,6 +57,10 @@ contract MockDisputeBondToken is ITyped, IDisputeBond {
         return _universe.decreaseExtraDisputeBondRemainingToBePaidOut(_amount);
     }
 
+    function callMigrateOutDisputeBondToken(IReputationToken _reputationToken, IReputationToken  _destination, address _reporter, uint256 _attotokens) public returns(bool) {
+        return _reputationToken.migrateOutDisputeBondToken(_destination, _reporter, _attotokens);
+    }
+
     /*
     * Impl of IReportingWindow and ITyped
      */

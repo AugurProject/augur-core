@@ -544,26 +544,15 @@ def finializeMarket(localFixture, mockMarket, reportingWindow, totalSupply, disp
     assert mockMarket.callReportingWindowUpdateMarketPhase(reportingWindow.address)
 
 @fixture(scope="session")
-def localSnapshot(fixture, augurInitializedSnapshot):
-    fixture.resetToSnapshot(augurInitializedSnapshot)
+def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
+    fixture.resetToSnapshot(augurInitializedWithMocksSnapshot)
     controller = fixture.contracts['Controller']
-    fixture.uploadAndAddToController("solidity_test_helpers/Constants.sol")
-    fixture.uploadAndAddToController('solidity_test_helpers/MockStakeToken.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockMarket.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockUniverse.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockReportingWindow.sol')    
-    fixture.uploadAndAddToController('solidity_test_helpers/MockReputationToken.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockDisputeBondToken.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockParticipationToken.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockVariableSupplyToken.sol')
-    mockReportingParticipationTokenFactory = fixture.upload('solidity_test_helpers/MockParticipationTokenFactory.sol')
-    mockCash = fixture.upload('solidity_test_helpers/MockCash.sol')
-    mockMarketFactory = fixture.upload('solidity_test_helpers/MockMarketFactory.sol')
-    mockAugur = fixture.uploadAndAddToController("solidity_test_helpers/MockAugur.sol")    
+    mockReportingParticipationTokenFactory = fixture.contracts['MockParticipationTokenFactory']
+    mockCash = fixture.contracts['MockCash']
+    mockMarketFactory = fixture.contracts['MockMarketFactory']
     controller.setValue(stringToBytes('MarketFactory'), mockMarketFactory.address)
     controller.setValue(stringToBytes('Cash'), mockCash.address)
     controller.setValue(stringToBytes('ParticipationTokenFactory'), mockReportingParticipationTokenFactory.address)
-    controller.setValue(stringToBytes('Augur'), mockAugur.address)
     return fixture.createSnapshot()
 
 @fixture

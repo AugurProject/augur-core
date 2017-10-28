@@ -227,18 +227,17 @@ def test_stake_token_redeem(localFixture, mockMarket, mockReputationToken, mockR
     with raises(TransactionFailed, message="market should not contain stake token"):
         stakeToken.redeemDisavowedTokens(tester.a0)
 
-def test_stake_token_trusted_buy_fails(localFixture, binaryMarket):
+def test_stake_token_trusted_buy_fails(localFixture, mockMarket):
     numTicks = 10 ** 18
-    market = binaryMarket
+    market = mockMarket
     universe = localFixture.applySignature('Universe', market.getUniverse())
-    stakeToken = localFixture.getStakeToken(market, [0, numTicks])
-    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    stakeToken = localFixture.upload('../source/contracts/reporting/StakeToken.sol', 'stakeToken')
+    stakeToken.setController(localFixture.contracts["Controller"].address)
 
     with raises(TransactionFailed, message="only market can call this method"):
         stakeToken.trustedBuy(tester.a2, 1)
 
-    proceedToFirstReporting(localFixture, universe, market, False, 1, [numTicks, 0], [numTicks/2, numTicks/2])
-    assert market.getReportingState() == localFixture.contracts['Constants'].FIRST_REPORTING()
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_REPORTING()) 
 
     with raises(TransactionFailed, message="trusted buy can only occur buy trusted contract"):
         stakeToken.trustedBuy(tester.a2, 1)
@@ -532,37 +531,8 @@ def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarke
     assert mockReputationToken.getTransferValueFor(winning_stakeToken.address) == 120
 
 @fixture(scope="session")
-def localSnapshot(fixture, kitchenSinkSnapshot):
-    fixture.resetToSnapshot(kitchenSinkSnapshot)
-    fixture.uploadAndAddToController('solidity_test_helpers/MockMarket.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockReportingWindow.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockUniverse.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockReputationToken.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockDisputeBondToken.sol')
-    universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
-    market = ABIContract(fixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
-    value = 1 * 10**6 * 10**18
-    reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
-    # Give tester reputation tokens
-    for testAccount in [tester.a4, tester.a5, tester.a6, tester.a7, tester.a8, tester.a9]:
-        reputationToken.transfer(testAccount, value)
-
-    return initializeReportingFixture(fixture, universe, market)
-
-@fixture
-def universe(localFixture, chain, kitchenSinkSnapshot):
-    universe = ABIContract(chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
-    return universe
-
-@fixture
-def binaryMarket(localFixture, chain, kitchenSinkSnapshot):
-    market = ABIContract(chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
-    return market
-
-@fixture
-def categoricalMarket(localFixture, chain, kitchenSinkSnapshot):
-    market = ABIContract(chain, kitchenSinkSnapshot['categoricalMarket'].translator, kitchenSinkSnapshot['categoricalMarket'].address)
-    return market
+def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
+    return fixture.createSnapshot()
 
 @fixture
 def localFixture(fixture, localSnapshot):
