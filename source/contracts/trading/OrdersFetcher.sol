@@ -11,12 +11,13 @@ import 'libraries/arrays/Bytes32Arrays.sol';
 import 'trading/Order.sol';
 import 'reporting/IMarket.sol';
 import 'trading/IOrders.sol';
+import 'libraries/Extractable.sol';
 
 
 /**
  * @title OrdersFetcher
  */
-contract OrdersFetcher is Controlled, IOrdersFetcher {
+contract OrdersFetcher is Controlled, Extractable, IOrdersFetcher {
     using Bytes32Arrays for bytes32[];
 
     function getOrder(bytes32 _orderId) public view returns (uint256 _attoshares, uint256 _displayPrice, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _gasPrice) {
@@ -120,5 +121,10 @@ contract OrdersFetcher is Controlled, IOrdersFetcher {
             return (ascendOrderList(_type, _price, _worseOrderId));
         }
         return (_betterOrderId, _worseOrderId);
+    }
+
+    function getProtectedTokens() internal returns (address[]) {
+        address[] memory _protectedTokens = new address[](0);
+        return _protectedTokens;
     }
 }

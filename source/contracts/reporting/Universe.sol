@@ -19,9 +19,10 @@ import 'reporting/IParticipationToken.sol';
 import 'reporting/IDisputeBond.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'Augur.sol';
+import 'libraries/Extractable.sol';
 
 
-contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
+contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniverse {
     using SafeMathUint256 for uint256;
 
     IUniverse private parentUniverse;
@@ -376,5 +377,10 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
     function getMarketCreationCost() public onlyInGoodTimes returns (uint256) {
         return getValidityBond() + getTargetReporterGasCosts();
+    }
+
+    function getProtectedTokens() internal returns (address[]) {
+        address[] memory _protectedTokens = new address[](0);
+        return _protectedTokens;
     }
 }

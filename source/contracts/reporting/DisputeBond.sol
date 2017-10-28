@@ -9,11 +9,13 @@ import 'libraries/Ownable.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IMarket.sol';
+import 'libraries/Extractable.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/Reporting.sol';
+import 'libraries/Extractable.sol';
 
 
-contract DisputeBond is DelegationTarget, ITyped, Initializable, Ownable, IDisputeBond {
+contract DisputeBond is DelegationTarget, Extractable, ITyped, Initializable, Ownable, IDisputeBond {
     using SafeMathUint256 for uint256;
 
     IMarket private market;

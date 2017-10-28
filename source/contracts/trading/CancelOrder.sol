@@ -14,13 +14,14 @@ import 'reporting/IMarket.sol';
 import 'trading/ICash.sol';
 import 'trading/IOrders.sol';
 import 'Augur.sol';
+import 'libraries/Extractable.sol';
 
 
 /**
  * @title CancelOrder
  * @dev This allows you to cancel orders on the book.
  */
-contract CancelOrder is CashAutoConverter, ReentrancyGuard, ICancelOrder {
+contract CancelOrder is CashAutoConverter, Extractable, ReentrancyGuard, ICancelOrder {
     /**
      * @dev Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
      * @return true if successful; throw on failure
@@ -74,5 +75,10 @@ contract CancelOrder is CashAutoConverter, ReentrancyGuard, ICancelOrder {
         }
 
         return true;
+    }
+
+    function getProtectedTokens() internal returns (address[]) {
+        address[] memory _protectedTokens = new address[](0);
+        return _protectedTokens;
     }
 }

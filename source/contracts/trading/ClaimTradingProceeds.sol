@@ -10,6 +10,7 @@ import 'trading/ICash.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/Reporting.sol';
 import 'Augur.sol';
+import 'libraries/Extractable.sol';
 
 
 // AUDIT: Ensure that a malicious market can't subversively cause share tokens to be paid out incorrectly.
@@ -17,7 +18,7 @@ import 'Augur.sol';
  * @title ClaimTradingProceeds
  * @dev This allows users to claim their money from a market by exchanging their shares
  */
-contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, IClaimTradingProceeds {
+contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard, IClaimTradingProceeds {
     using SafeMathUint256 for uint256;
 
     function claimTradingProceeds(IMarket _market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
@@ -84,5 +85,10 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, IClaimTradi
     function calculateCreatorFee(IMarket _market, uint256 _amount) public view returns (uint256) {
         uint256 _creatorFeeDivisor = _market.getMarketCreatorSettlementFeeDivisor();
         return _amount.div(_creatorFeeDivisor);
+    }
+
+    function getProtectedTokens() internal returns (address[]) {
+        address[] memory _protectedTokens = new address[](0);
+        return _protectedTokens;
     }
 }

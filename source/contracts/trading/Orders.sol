@@ -9,13 +9,14 @@ import 'trading/Order.sol';
 import 'reporting/IMarket.sol';
 import 'trading/IOrdersFetcher.sol';
 import 'Augur.sol';
+import 'libraries/Extractable.sol';
 
 
 /**
  * @title Orders
  * @dev Storage of all data associated with orders
  */
-contract Orders is DelegationTarget, IOrders {
+contract Orders is DelegationTarget, Extractable, IOrders {
     using Order for Order.Data;
     using SafeMathUint256 for uint256;
 
@@ -274,5 +275,10 @@ contract Orders is DelegationTarget, IOrders {
 
     function getBestOrderWorstOrderHash(IMarket _market, uint8 _outcome, Order.Types _type) private pure returns (bytes32) {
         return sha256(_market, _outcome, _type);
+    }
+
+    function getProtectedTokens() internal returns (address[]) {
+        address[] memory _protectedTokens = new address[](0);
+        return _protectedTokens;
     }
 }

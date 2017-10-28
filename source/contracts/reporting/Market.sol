@@ -19,11 +19,12 @@ import 'factories/MapFactory.sol';
 import 'libraries/token/ERC20Basic.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/SafeMathInt256.sol';
+import 'libraries/Extractable.sol';
 import 'reporting/Reporting.sol';
 import 'Augur.sol';
 
 
-contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
+contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable, IMarket {
     using SafeMathUint256 for uint256;
     using SafeMathInt256 for int256;
 
@@ -85,9 +86,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         marketCreationBlock = block.number;
         designatedReporterAddress = _designatedReporterAddress;
         cash = _cash;
-        // Markets hold the initial fees paid by the creator in ETH and REP, so we dissallow ETH and REP extraction by the controller
-        mayExtractETH = false;
-        tokenExtractionDisallowed[reportingWindow.getReputationToken()] = true;
         stakeTokens = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         for (uint8 _outcome = 0; _outcome < numOutcomes; _outcome++) {
             shareTokens.push(createShareToken(_outcome));
@@ -682,5 +680,13 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             return 0;
         }
         return _winningDestination.getUniverse().getParentPayoutDistributionHash();
+    }
+
+    // Markets hold the initial fees paid by the creator in ETH and REP, so we dissallow ETH and REP extraction by the controller
+    function getProtectedTokens() internal returns (address[]) {
+        address[] memory _protectedTokens = new address[](2);
+        _protectedTokens[0] = address(0);
+        _protectedTokens[1] = reportingWindow.getReputationToken();
+        return _protectedTokens;
     }
 }

@@ -13,6 +13,7 @@ import 'trading/IOrders.sol';
 import 'trading/IShareToken.sol';
 import 'trading/Order.sol';
 import 'libraries/CashAutoConverter.sol';
+import 'libraries/Extractable.sol';
 
 
 // CONSIDER: At some point it would probably be a good idea to shift much of the logic from trading contracts into extensions. In particular this means sorting for making and WCL calculcations + order walking for taking.
@@ -366,7 +367,7 @@ library DirectionExtensions {
 }
 
 
-contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
+contract FillOrder is CashAutoConverter, Extractable, ReentrancyGuard, IFillOrder {
     using SafeMathUint256 for uint256;
     using Trade for Trade.Data;
     using DirectionExtensions for Trade.Direction;
@@ -393,5 +394,10 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
         controller.getAugur().logOrderFilled(_tradeData.contracts.market.getUniverse(), _tradeData.contracts.market.getShareToken(_tradeData.order.outcome), _tradeData.filler.participantAddress, _tradeData.order.orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _settlementFees, _tradeGroupId);
         _tradeData.contracts.orders.fillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
         return _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);
+    }
+
+    function getProtectedTokens() internal returns (address[]) {
+        address[] memory _protectedTokens = new address[](0);
+        return _protectedTokens;
     }
 }

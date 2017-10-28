@@ -8,9 +8,6 @@ import 'libraries/token/ERC20Basic.sol';
 
 contract Controlled is IControlled {
     IController internal controller;
-    // Inidcates whether ETH may be extracted from this contract by the controller. It should only be allowed when ETH cannot legitimately be held by the contract
-    bool internal mayExtractETH = true;
-    mapping(address => bool) tokenExtractionDisallowed;
 
     modifier onlyWhitelistedCallers {
         require(controller.assertIsWhitelisted(msg.sender));
@@ -58,18 +55,5 @@ contract Controlled is IControlled {
         return true;
     }
 
-    // Send accidentally received ETH to the controller
-    function extractETH() public onlyControllerCaller returns(bool) {
-        require(mayExtractETH);
-        require(controller.call.value(this.balance)());
-        return true;
-    }
 
-    // Send accidentally received tokens to the controller
-    function extractTokens(ERC20Basic _token) public onlyControllerCaller returns (bool) {
-        require(!tokenExtractionDisallowed[_token]);
-        uint256 _balance = _token.balanceOf(this);
-        _token.transfer(controller, _balance);
-        return true;
-    }
 }

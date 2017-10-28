@@ -20,9 +20,10 @@ import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
 import 'reporting/IParticipationToken.sol';
 import 'factories/ParticipationTokenFactory.sol';
+import 'libraries/Extractable.sol';
 
 
-contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingWindow {
+contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable, IReportingWindow {
     using SafeMathUint256 for uint256;
     using Set for Set.Data;
     using RunningAverage for RunningAverage.Data;
@@ -49,8 +50,6 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         // Initialize this to some reasonable value to handle the first market ever created without branching code
         reportingGasPrice.record(Reporting.getDefaultReportingGasPrice());
         participationToken = ParticipationTokenFactory(controller.lookup("ParticipationTokenFactory")).createParticipationToken(controller, this);
-        // The reporting window stores fees in Cash so we do not allow extraction of accidental Cash deposits
-        tokenExtractionDisallowed[controller.lookup("Cash")] = true;
         return true;
     }
 
@@ -409,5 +408,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
 
     function isForkingMarketFinalized() public afterInitialized view returns (bool) {
         return getUniverse().getForkingMarket().getReportingState() == IMarket.ReportingState.FINALIZED;
+    }
+
+    // Disallow Cash extraction
+    function getProtectedTokens() internal returns (address[]) {
+        address[] memory _protectedTokens = new address[](1);
+        _protectedTokens[0] = controller.lookup("Cash");
+        return _protectedTokens;
     }
 }

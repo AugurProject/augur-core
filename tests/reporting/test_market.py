@@ -31,3 +31,27 @@ def test_market_creation(contractsFixture, universe, cash, market):
     assert market.getReportingState() == contractsFixture.contracts['Constants'].PRE_REPORTING()
     assert market.isContainerForStakeToken(shadyStakeToken.address) == 0
     assert market.getDesignatedReportDueTimestamp() == market.getEndTime() + timedelta(days=3).total_seconds()
+
+def test_extraction(contractsFixture, market, universe):
+    controller = contractsFixture.contracts["Controller"]
+    reputationToken = contractsFixture.applySignature("ReputationToken", universe.getReputationToken())
+
+    # ETH and REP extraction are not allowed
+    with raises(TransactionFailed, message="markets should not be allowed to extract ETH"):
+       controller.extractETH(market.address, tester.a0)
+
+    with raises(TransactionFailed, message="markets should not be allowed to extract REP"):
+       controller.extractTokens(market.address, tester.a0, reputationToken.address)
+
+    # If we send some other token we should be allowed to extract it
+    shareToken = contractsFixture.getShareToken(market, 0)
+    assert shareToken.createShares(tester.a0, 10)
+
+    assert shareToken.transfer(market.address, 10)
+    assert shareToken.balanceOf(tester.a0) == 0
+    assert shareToken.balanceOf(market.address) == 10
+
+    assert controller.extractTokens(market.address, tester.a0, shareToken.address)
+
+    # now we should have the original balance
+    assert shareToken.balanceOf(tester.a0) == 10
