@@ -1,10 +1,31 @@
 #!/usr/bin/env python
 
 from ethereum.tools import tester
+from ethereum.tools.tester import TransactionFailed
 from utils import longTo32Bytes, longToHexString, bytesToHexString, fix, captureFilteredLogs
 from constants import BID, ASK, YES, NO
+from pytest import raises
 from pprint import pprint
 
+def test_minimum_gas_failure(contractsFixture, cash, market, universe):
+    createOrder = contractsFixture.contracts['CreateOrder']
+    trade = contractsFixture.contracts['Trade']
+    tradeGroupID = 42L
+
+    # create order
+    orderID = createOrder.publicCreateOrder(BID, 4, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('4', '0.6'))
+
+    # We need to provide a minimum gas amount or we'll get back a failure
+    minGas = 500000
+    fillOrderID = trade.publicSell(market.address, YES, 5, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('5', '0.4'), startgas=minGas-1)
+
+    # We get back a sentinal byte value since not enough gas was provided
+    assert fillOrderID == longTo32Bytes(1)
+
+    # If we provide enough gas we get a legitimate value
+    fillOrderID = trade.publicSell(market.address, YES, 5, fix('0.6'), tradeGroupID, sender = tester.k2, value=fix('5', '0.4'))
+
+    assert fillOrderID != longTo32Bytes(1)
 
 def test_one_bid_on_books_buy_full_order(contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']

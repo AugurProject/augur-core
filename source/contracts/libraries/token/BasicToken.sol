@@ -44,6 +44,7 @@ contract BasicToken is ERC20Basic {
         return supply;
     }
 
+    // Subclasses of this token generally want to send additional logs through the centralized Augur log emitter contract
     function emitTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
         Transfer(_from, _to, _value);
         return true;

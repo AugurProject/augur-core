@@ -1,6 +1,5 @@
 pragma solidity 0.4.17;
 
-
 import 'reporting/IMarket.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/ITyped.sol';
@@ -34,6 +33,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 1 ether / 2;
     uint256 private constant APPROVAL_AMOUNT = 2**256-1;
     address private constant NULL_ADDRESS = address(0);
+    uint8 private constant MIN_OUTCOMES = 2;
+    uint8 private constant MAX_OUTCOMES = 8;
 
     IReportingWindow private reportingWindow;
     uint256 private endTime;
@@ -68,11 +69,10 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public onlyInGoodTimes payable beforeInitialized returns (bool _success) {
         endInitialization();
-        require(2 <= _numOutcomes && _numOutcomes <= 8);
+        require(MIN_OUTCOMES <= _numOutcomes && _numOutcomes <= MAX_OUTCOMES);
         require((_numTicks.isMultipleOf(_numOutcomes)));
         require(_feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
-        require(_cash.getTypeName() == "Cash");
         require(_designatedReporterAddress != NULL_ADDRESS);
         reportingWindow = _reportingWindow;
         require(address(getForkingMarket()) == NULL_ADDRESS);
@@ -112,7 +112,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     // This will need to be called manually for each open market if a spender contract is updated
     function approveSpenders() private onlyInGoodTimes returns (bool) {
-        bytes32[5] memory _names = [bytes32("CancelOrder"), bytes32("CompleteSets"), bytes32("FillOrder"), bytes32("TradingEscapeHatch"), bytes32("ClaimProceeds")];
+        bytes32[5] memory _names = [bytes32("CancelOrder"), bytes32("CompleteSets"), bytes32("FillOrder"), bytes32("TradingEscapeHatch"), bytes32("ClaimTradingProceeds")];
         for (uint8 i = 0; i < _names.length; i++) {
             cash.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT);
         }
@@ -149,13 +149,14 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function disputeDesignatedReport(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
-        uint256 _bondAmount = Reporting.designatedReporterDisputeBondAmount();
+        uint256 _bondAmount = Reporting.getDesignatedReporterDisputeBondAmount();
         designatedReporterDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
         extraDisputeBondRemainingToBePaidOut += _bondAmount;
         this.increaseTotalStake(_bondAmount);
         reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, designatedReporterDisputeBondToken, _bondAmount);
         if (_attotokens > 0) {
             IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
+            // We expect trustedBuy to call updateTentativeWinningPayoutDistributionHash
             _stakeToken.trustedBuy(msg.sender, _attotokens);
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
@@ -167,7 +168,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function disputeFirstReporters(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.FIRST_DISPUTE);
-        uint256 _bondAmount = Reporting.firstReportersDisputeBondAmount();
+        uint256 _bondAmount = Reporting.getFirstReportersDisputeBondAmount();
         firstReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
         extraDisputeBondRemainingToBePaidOut += _bondAmount;
         this.increaseTotalStake(_bondAmount);
@@ -177,6 +178,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         if (_attotokens > 0) {
             require(derivePayoutDistributionHash(_payoutNumerators, _invalid) != tentativeWinningPayoutDistributionHash);
             IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
+            // We expect trustedBuy to call updateTentativeWinningPayoutDistributionHash
             _stakeToken.trustedBuy(msg.sender, _attotokens);
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
@@ -187,7 +189,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function disputeLastReporters() public onlyInGoodTimes triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.LAST_DISPUTE);
-        uint256 _bondAmount = Reporting.lastReportersDisputeBondAmount();
+        uint256 _bondAmount = Reporting.getLastReportersDisputeBondAmount();
         lastReportersDisputeBondToken = DisputeBondTokenFactory(controller.lookup("DisputeBondTokenFactory")).createDisputeBondToken(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
         extraDisputeBondRemainingToBePaidOut += _bondAmount;
         this.increaseTotalStake(_bondAmount);
@@ -198,6 +200,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return migrateReportingWindow(_newReportingWindow);
     }
 
+    // Given an updated _payoutDistributionHash this will set the current first and second place hashes based on current stake in those outcomes.
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public onlyInGoodTimes returns (bool) {
         if (_payoutDistributionHash == tentativeWinningPayoutDistributionHash || _payoutDistributionHash == bestGuessSecondPlaceTentativeWinningPayoutDistributionHash) {
             _payoutDistributionHash = bytes32(0);
@@ -247,17 +250,17 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
         if (address(designatedReporterDisputeBondToken) != address(0)) {
             if (designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.designatedReporterDisputeBondAmount());
+                _payoutStake -= int256(Reporting.getDesignatedReporterDisputeBondAmount());
             }
         }
         if (address(firstReportersDisputeBondToken) != address(0)) {
             if (firstReportersDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.firstReportersDisputeBondAmount());
+                _payoutStake -= int256(Reporting.getFirstReportersDisputeBondAmount());
             }
         }
         if (address(lastReportersDisputeBondToken) != address(0)) {
             if (lastReportersDisputeBondToken.getDisputedPayoutDistributionHash() == _payoutDistributionHash) {
-                _payoutStake -= int256(Reporting.lastReportersDisputeBondAmount());
+                _payoutStake -= int256(Reporting.getLastReportersDisputeBondAmount());
             }
         }
 
@@ -318,7 +321,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         bytes32 _winningForkPayoutDistributionHash = _currentUniverse.getForkingMarket().getFinalPayoutDistributionHash();
         IUniverse _destinationUniverse = _currentUniverse.getOrCreateChildUniverse(_winningForkPayoutDistributionHash);
         // This will put us in the designated dispute phase
-        endTime = block.timestamp - Reporting.designatedReportingDurationSeconds();
+        endTime = block.timestamp - Reporting.getDesignatedReportingDurationSeconds();
         totalStake = 0;
         IReportingWindow _newReportingWindow = _destinationUniverse.getReportingWindowByMarketEndTime(endTime);
         _newReportingWindow.migrateMarketInFromNibling();
@@ -532,17 +535,17 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
         if (address(designatedReporterDisputeBondToken) != address(0)) {
             if (designatedReporterDisputeBondToken.getDisputedPayoutDistributionHash() != finalPayoutDistributionHash) {
-                _totalDisputeBondStake += Reporting.designatedReporterDisputeBondAmount();
+                _totalDisputeBondStake += Reporting.getDesignatedReporterDisputeBondAmount();
             }
         }
         if (address(firstReportersDisputeBondToken) != address(0)) {
             if (firstReportersDisputeBondToken.getDisputedPayoutDistributionHash() != finalPayoutDistributionHash) {
-                _totalDisputeBondStake += Reporting.firstReportersDisputeBondAmount();
+                _totalDisputeBondStake += Reporting.getFirstReportersDisputeBondAmount();
             }
         }
         if (address(lastReportersDisputeBondToken) != address(0)) {
             if (lastReportersDisputeBondToken.getDisputedPayoutDistributionHash() != finalPayoutDistributionHash) {
-                _totalDisputeBondStake += Reporting.lastReportersDisputeBondAmount();
+                _totalDisputeBondStake += Reporting.getLastReportersDisputeBondAmount();
             }
         }
 
@@ -582,7 +585,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         if (designatedReportReceivedTime != 0) {
             return designatedReportReceivedTime;
         }
-        return endTime + Reporting.designatedReportingDurationSeconds();
+        return endTime + Reporting.getDesignatedReportingDurationSeconds();
     }
 
     function getDesignatedReportReceivedTime() public view returns (uint256) {
@@ -590,7 +593,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function getDesignatedReportDisputeDueTimestamp() public view returns (uint256) {
-        return getDesignatedReportDueTimestamp() + Reporting.designatedReportingDisputeDurationSeconds();
+        return getDesignatedReportDueTimestamp() + Reporting.getDesignatedReportingDisputeDurationSeconds();
     }
 
     function getReportingState() public view returns (ReportingState) {
@@ -665,13 +668,14 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return IMarket.ReportingState.FIRST_REPORTING;
     }
 
+    // In a forking market once the required victory amount of REP has been migrated to one Universe or the fork time period is over this will proivde the payout hash corresponding to the outcome with the most REP moved to it
     function getWinningPayoutDistributionHashFromFork() private view returns (bytes32) {
         IReputationToken _winningDestination = reportingWindow.getReputationToken().getTopMigrationDestination();
         if (address(_winningDestination) == address(0)) {
             return 0;
         }
-        uint256 _halfTotalSupply = 11 * 10**6 * 10**18 / 2;
-        if (_winningDestination.totalSupply() < _halfTotalSupply && block.timestamp < reportingWindow.getUniverse().getForkEndTime()) {
+        IUniverse _universe = reportingWindow.getUniverse();
+        if (_winningDestination.totalSupply() < _universe.getForkReputationGoal() && block.timestamp < _universe.getForkEndTime()) {
             return 0;
         }
         return _winningDestination.getUniverse().getParentPayoutDistributionHash();

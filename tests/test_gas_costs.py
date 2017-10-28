@@ -4,7 +4,7 @@ from pytest import fixture, mark, raises
 from utils import longTo32Bytes, captureFilteredLogs, PrintGasUsed, fix
 from constants import BID, ASK, YES, NO
 from datetime import timedelta
-from trading.test_claimProceeds import acquireLongShares, finalizeMarket
+from trading.test_claimTradingProceeds import acquireLongShares, finalizeMarket
 from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, proceedToLastReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 # Market Methods
@@ -86,13 +86,13 @@ def test_orderFilling(localFixture, market):
         fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
 def test_winningShareRedmption(localFixture, cash, market):
-    claimProceeds = localFixture.contracts['ClaimProceeds']
+    claimTradingProceeds = localFixture.contracts['ClaimTradingProceeds']
 
-    acquireLongShares(localFixture, cash, market, YES, 1, claimProceeds.address, sender = tester.k1)
+    acquireLongShares(localFixture, cash, market, YES, 1, claimTradingProceeds.address, sender = tester.k1)
     finalizeMarket(localFixture, market, [0,10**18])
 
-    with PrintGasUsed(localFixture, "ClaimProceeds:claimProceeds", CLAIM_PROCEEDS):
-        claimProceeds.claimProceeds(market.address, sender = tester.k1)
+    with PrintGasUsed(localFixture, "ClaimTradingProceeds:claimTradingProceeds", CLAIM_PROCEEDS):
+        claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
 
 def test_designatedReport(localFixture, universe, cash, market):
     proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])

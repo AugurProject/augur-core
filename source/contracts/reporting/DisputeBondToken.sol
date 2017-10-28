@@ -10,6 +10,7 @@ import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'reporting/Reporting.sol';
 
 
 // CONSIDER: This could probably just be made Ownable instead if implementing ERC20Basic
@@ -30,7 +31,7 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         bondHolder = _bondHolder;
         disputedPayoutDistributionHash = _payoutDistributionHash;
         bondAmount = _bondAmount;
-        bondRemainingToBePaidOut = _bondAmount * 2;
+        bondRemainingToBePaidOut = _bondAmount * Reporting.getBondPayoutMultiplier();
         reputationToken = _market.getUniverse().getReputationToken();
         return true;
     }
@@ -71,26 +72,37 @@ contract DisputeBondToken is DelegationTarget, ITyped, Initializable, ERC20Basic
         require(_universe.getForkingMarket() == market);
         bool _isChildOfMarketUniverse = market.getReportingWindow().getUniverse().isParentOf(_shadyUniverse);
         require(_isChildOfMarketUniverse);
+
         IUniverse _legitUniverse = _shadyUniverse;
         require(_legitUniverse.getParentPayoutDistributionHash() != disputedPayoutDistributionHash);
         IReputationToken _reputationToken = reputationToken;
+
+        // Migrate out the REP balance of this bond to REP in the destination Universe
         uint256 _amountToTransfer = _reputationToken.balanceOf(this);
         IReputationToken _destinationReputationToken = _legitUniverse.getReputationToken();
         _reputationToken.migrateOutDisputeBondToken(_destinationReputationToken, this, _amountToTransfer);
-        // We recalculate the amount since migrating may have earned us a bonus
+
+        // We recalculate the amount we now have since migrating may have earned us a bonus
         _amountToTransfer = _destinationReputationToken.balanceOf(this);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
+
+        // Mint tokens in the new Universe if appropriate
         uint256 _amountMinted = mintRepTokensForBondMigration(_destinationReputationToken);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountMinted);
         _amountToTransfer = _amountToTransfer.add(_amountMinted);
+
+        // Adjust accounting for how much extra bond payout debt exists in this universe
         if (bondRemainingToBePaidOut < bondAmount) {
             uint256 _amountToDeductFromExtraPayout = _amountToTransfer.min(bondAmount - bondRemainingToBePaidOut);
             market.decreaseExtraDisputeBondRemainingToBePaidOut(_amountToDeductFromExtraPayout);
         }
+
+        // Send the bond holder the destination Universe REP
         _destinationReputationToken.transfer(bondHolder, _amountToTransfer);
         return true;
     }
 
+    // When migrating a dispute bond to a new universe we attempt and mint REP to pay the full bond payout amount. We do this by matching REP migrated to an alternate universe
     function mintRepTokensForBondMigration(IReputationToken _destinationReputationToken) private onlyInGoodTimes returns (uint256) {
         IUniverse _disputeUniverse = market.getUniverse().getOrCreateChildUniverse(disputedPayoutDistributionHash);
 

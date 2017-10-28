@@ -20,6 +20,7 @@ contract IUniverse is ITyped {
     function getReputationToken() public view returns (IReputationToken);
     function getForkingMarket() public view returns (IMarket);
     function getForkEndTime() public view returns (uint256);
+    function getForkReputationGoal() public view returns (uint256);
     function getParentPayoutDistributionHash() public view returns (bytes32);
     function getReportingPeriodDurationInSeconds() public view returns (uint256);
     function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow);

@@ -47,7 +47,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         universe = _universe;
         startTime = _reportingWindowId * universe.getReportingPeriodDurationInSeconds();
         // Initialize this to some reasonable value to handle the first market ever created without branching code
-        reportingGasPrice.record(Reporting.defaultReportingGasPrice());
+        reportingGasPrice.record(Reporting.getDefaultReportingGasPrice());
         participationToken = ParticipationTokenFactory(controller.lookup("ParticipationTokenFactory")).createParticipationToken(controller, this);
         return true;
     }
@@ -60,6 +60,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
         firstReporterMarkets.add(_newMarket);
+        // We assume the market is a no show and decrement on designate report. This only needs to be accurate by the next reporting window
         designatedReportNoShows += 1;
         controller.getAugur().logMarketCreated(universe, _newMarket, msg.sender, msg.value, _extraInfo);
         return _newMarket;
@@ -138,6 +139,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         uint256 _totalWinningStake = _market.getFinalWinningStakeToken().totalSupply();
         _totalWinningStake = _totalWinningStake.add(_market.getTotalWinningDisputeBondStake());
         totalWinningStake = totalWinningStake.add(_totalWinningStake);
+        return true;
     }
 
     function noteReportingGasPrice(IMarket _market) public onlyInGoodTimes afterInitialized returns (bool) {
@@ -198,7 +200,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     function getReportingEndTime() public afterInitialized view returns (uint256) {
-        return getStartTime() + Reporting.reportingDurationSeconds();
+        return getStartTime() + Reporting.getReportingDurationSeconds();
     }
 
     function getDisputeStartTime() public afterInitialized view returns (uint256) {
@@ -206,7 +208,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     }
 
     function getDisputeEndTime() public afterInitialized view returns (uint256) {
-        return getDisputeStartTime() + Reporting.reportingDisputeDurationSeconds();
+        return getDisputeStartTime() + Reporting.getReportingDisputeDurationSeconds();
     }
 
     function getNextReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
@@ -252,6 +254,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
 
     function internalCollectReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) internal onlyInGoodTimes returns (uint256) {
         bool _eligibleForFees = isOver() && allMarketsFinalized();
+        // We do not allow forgoing fees if the caller could collect fees.
         if (!_forgoFees) {
             require(_eligibleForFees);
         } else {
@@ -291,6 +294,7 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public onlyInGoodTimes afterInitialized returns (bool) {
         require(_reportingWindow.getNumMarkets() == 0);
         _reportingWindow.migrateFeesDueToFork();
+        return true;
     }
 
     function migrateFeesDueToFork() public onlyInGoodTimes afterInitialized returns (bool) {
@@ -316,12 +320,14 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
     function increaseTotalStake(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(isContainerForMarket(IMarket(msg.sender)));
         totalStake = totalStake.add(_amount);
+        return true;
     }
 
     function increaseTotalWinningStake(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(msg.sender == address(participationToken));
         totalStake = totalStake.add(_amount);
         totalWinningStake = totalWinningStake.add(_amount);
+        return true;
     }
 
     function isActive() public afterInitialized view returns (bool) {
@@ -394,8 +400,6 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
 
     function privateAddMarket(IMarket _market) private onlyInGoodTimes afterInitialized returns (bool) {
         require(!markets.contains(_market));
-        require(!firstReporterMarkets.contains(_market));
-        require(!lastReporterMarkets.contains(_market));
         totalStake = totalStake.add(_market.getTotalStake());
         markets.add(_market);
         return true;

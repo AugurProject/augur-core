@@ -106,10 +106,9 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
     function redeemWinningTokens(bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
-        require(market.getReportingState() == IMarket.ReportingState.FINALIZED);
+        require(market.getFinalWinningStakeToken() == this);
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() != market);
-        require(market.getFinalWinningStakeToken() == this);
         IReputationToken _reputationToken = getReputationToken();
         uint256 _reputationSupply = _reputationToken.balanceOf(this);
         uint256 _attotokens = balances[msg.sender];
