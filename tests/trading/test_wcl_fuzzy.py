@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from decimal import *
+from decimal import Decimal, ROUND_UP, ROUND_DOWN
 from ethereum.tools import tester
 from os import getenv
 from pytest import fixture, mark
