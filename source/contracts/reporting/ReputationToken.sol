@@ -100,33 +100,25 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedReportingWindowTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForReportingWindow(IReportingWindow(msg.sender)));
-        return internalTrustedTransfer(_source, _destination, _attotokens);
+        return internalTransfer(_source, _destination, _attotokens);
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForMarket(IMarket(msg.sender)));
-        return internalTrustedTransfer(_source, _destination, _attotokens);
+        return internalTransfer(_source, _destination, _attotokens);
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedStakeTokenTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForStakeToken(IStakeToken(msg.sender)));
-        return internalTrustedTransfer(_source, _destination, _attotokens);
+        return internalTransfer(_source, _destination, _attotokens);
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedParticipationTokenTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForParticipationToken(IParticipationToken(msg.sender)));
-        return internalTrustedTransfer(_source, _destination, _attotokens);
-    }
-
-    function internalTrustedTransfer(address _source, address _destination, uint256 _attotokens) internal onlyInGoodTimes afterInitialized returns (bool) {
-        balances[_source] = balances[_source].sub(_attotokens);
-        balances[_destination] = balances[_destination].add(_attotokens);
-        supply = supply.add(_attotokens);
-        Transfer(_source, _destination, _attotokens);
-        return true;
+        return internalTransfer(_source, _destination, _attotokens);
     }
 
     function assertReputationTokenIsLegit(IReputationToken _shadyReputationToken) private view returns (bool) {
