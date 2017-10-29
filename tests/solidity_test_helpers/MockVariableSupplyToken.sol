@@ -11,7 +11,9 @@ contract MockVariableSupplyToken is MockStandardToken {
     address[] private transferAddresses;
     uint256[] private balanceOfAmounts;
     address[] private balanceOfAddresses;
-
+    address private transferFromFromValue;
+    address private transferFromToValue;
+    uint256 private transferFromValueValue;
     event Mint(address indexed target, uint256 value);
     event Burn(address indexed target, uint256 value);
 
@@ -57,6 +59,18 @@ contract MockVariableSupplyToken is MockStandardToken {
     function setTotalSupply(uint256 _totalSupply) public {
         setTotalSupplyValue = _totalSupply;
     }
+    
+    function getTransferFromFromValue() public returns(address) {
+        return transferFromFromValue;
+    }
+    
+    function getTransferFromToValue() public returns (address) {
+        return transferFromToValue;
+    }
+
+    function getTransferFromValueValue() public returns (uint256) {
+        return transferFromValueValue;
+    }
 
     function mint(address _target, uint256 _amount) internal returns (bool) {
         return true;
@@ -85,5 +99,12 @@ contract MockVariableSupplyToken is MockStandardToken {
     
     function totalSupply() public view returns (uint256) {
         return setTotalSupplyValue;
+    }
+
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+        transferFromFromValue = _from;
+        transferFromToValue = _to;
+        transferFromValueValue = _value;
+        return true;
     }
 }

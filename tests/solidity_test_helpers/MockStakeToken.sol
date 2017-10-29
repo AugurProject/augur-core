@@ -79,6 +79,10 @@ contract MockStakeToken is ITyped, MockVariableSupplyToken, IStakeToken {
         return _reputationToken.migrateOutStakeToken(_destination, _reporter, _attotokens);
     }
 
+    function callMigrateOut(IReputationToken _reputationToken, IReputationToken  _destination, address _reporter, uint256 _attotokens) public returns(bool) {
+        return _reputationToken.migrateOut(_destination, _reporter, _attotokens);
+    }
+
     function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
         initializeMarketValue = _market;
         initializePayoutNumeratorsValue = _payoutNumerators;

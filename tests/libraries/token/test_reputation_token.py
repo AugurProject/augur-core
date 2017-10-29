@@ -13,9 +13,10 @@ def test_reputation_token_creation(localFixture, mockUniverse):
         reputationToken.initialize(longToHexString(0))
 
     assert reputationToken.initialize(mockUniverse.address)
+    assert reputationToken.getTypeName() == stringToBytes('ReputationToken')
 
 
-def test_reputation_token_migrate_out_stake_token(localFixture, mockUniverse, initializedReputationToken, mockStakeToken, mockReputationToken, mockMarket):
+def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedReputationToken, mockStakeToken, mockReputationToken, mockMarket, mockDisputeBondToken):
     with raises(TransactionFailed, message="universe has to contain stake token && called from stake token"):
         initializedReputationToken.migrateOutStakeToken(mockUniverse.address)
     
@@ -38,14 +39,48 @@ def test_reputation_token_migrate_out_stake_token(localFixture, mockUniverse, in
     assert initializedReputationToken.totalSupply() == 1011
     mockReputationToken.setTotalSupply(1005)
     # sender and reporter is the same
-    mockStakeToken.callMigrateOutStakeToken(initializedReputationToken.address, mockReputationToken.address, mockStakeToken.address, 54)
-    # total repu token supply 1000
-    # 110 - 54, 1000 - 54
+    assert mockStakeToken.callMigrateOutStakeToken(initializedReputationToken.address, mockReputationToken.address, mockStakeToken.address, 54)
+
     assert initializedReputationToken.totalSupply() == 1011 - 54
     assert mockReputationToken.getMigrateInReporterValue() == stringToBytes(mockStakeToken.address)
     assert mockReputationToken.getMigrateInAttoTokensValue() == 54
     assert mockReputationToken.getMigrateInBonusIfInForkWindowValue() == True
     assert initializedReputationToken.getTopMigrationDestination() == stringToBytes(mockReputationToken.address)
+
+    assert mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a1, 35, False)
+    assert initializedReputationToken.totalSupply() == 1011 - 54 + 35
+
+    with raises(TransactionFailed, message="reporter not approve for sender can not sub from zero"):
+        mockStakeToken.callMigrateOutStakeToken(initializedReputationToken.address, mockReputationToken.address, tester.a1, 35)
+
+    assert initializedReputationToken.approve(mockStakeToken.address, 35, sender=tester.k1)
+    assert initializedReputationToken.allowance(tester.a1, mockStakeToken.address) == 35
+    assert initializedReputationToken.balanceOf(tester.a1) == 35
+    # sender is not reporter
+    assert mockStakeToken.callMigrateOutStakeToken(initializedReputationToken.address, mockReputationToken.address, tester.a1, 35)
+    assert initializedReputationToken.allowance(tester.a1, mockStakeToken.address) == 0
+    assert initializedReputationToken.balanceOf(tester.a1) == 0
+
+    assert initializedReputationToken.totalSupply() == 1011 - 54 + 35 - 35
+    assert initializedReputationToken.getTopMigrationDestination() == stringToBytes(mockReputationToken.address)
+    assert mockReputationToken.getMigrateInReporterValue() == bytesToHexString(tester.a1)
+    assert mockReputationToken.getMigrateInAttoTokensValue() == 35
+    assert mockReputationToken.getMigrateInBonusIfInForkWindowValue() == True
+
+    newReputationToken = localFixture.upload('solidity_test_helpers/MockReputationtoken.sol', 'newReputationToken')   
+    parentUniverse.setReputationToken(newReputationToken.address)
+    newReputationToken.setUniverse(parentUniverse.address)
+    newReputationToken.setTotalSupply(6005)
+    assert mockStakeToken.callMigrateOut(initializedReputationToken.address, newReputationToken.address, mockStakeToken.address, 33)
+    # new destination with larger total supply gets migration
+    assert initializedReputationToken.totalSupply() == 1011 - 54 - 33
+    assert initializedReputationToken.getTopMigrationDestination() == stringToBytes(newReputationToken.address)
+    assert newReputationToken.getMigrateInReporterValue() == stringToBytes(mockStakeToken.address)
+    assert newReputationToken.getMigrateInAttoTokensValue() == 33
+    assert newReputationToken.getMigrateInBonusIfInForkWindowValue() == False
+
+    with raises(TransactionFailed, message="universe needs to contain dispute bond"):
+        mockDisputeBondToken.callMigrateOutDisputeBondToken(initializedReputationToken.address, mockReputationToken.address, mockDisputeBondToken.address, 100)
 
 def test_reputation_token_migrate_in(localFixture, mockUniverse, initializedReputationToken, mockReputationToken, mockMarket):
     with raises(TransactionFailed, message="caller needs to be reputation token"):
@@ -69,13 +104,19 @@ def test_reputation_token_migrate_in(localFixture, mockUniverse, initializedRepu
     mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a1, 100, False)
     assert initializedReputationToken.totalSupply() == 100
 
-def migrate_reputation_for_sender(localFixture, initializedReputationToken, sender, amount, mockReputationToken, mockMarket, mockUniverse):
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
-    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')    
-    parentUniverse.setForkingMarket(mockMarket.address)
-    parentUniverse.setReputationToken(mockReputationToken.address)
-    mockUniverse.setParentUniverse(parentUniverse.address)
-    assert mockReputationToken.callMigrateIn(initializedReputationToken.address, sender, amount, False)
+    mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a2, 100, True)
+    assert initializedReputationToken.totalSupply() == 200
+
+def test_reputation_token_migrate_from_legacy_reputationToken(localFixture, mockUniverse, initializedReputationToken, mockLegacyReputationToken):
+    mockLegacyReputationToken.setBalanceOf(100)
+    mockLegacyReputationToken.getFaucetAmountValue() == 0
+    assert initializedReputationToken.migrateFromLegacyReputationToken(sender=tester.k2)
+    assert mockLegacyReputationToken.getFaucetAmountValue() == 0
+    assert mockLegacyReputationToken.getTransferFromFromValue() == longToHexString(tester.a2)
+    assert mockLegacyReputationToken.getTransferFromToValue() == longToHexString(0)
+    assert mockLegacyReputationToken.getTransferFromValueValue() == 100
+    assert initializedReputationToken.totalSupply() == 100
+
 
 @fixture(scope="session")
 def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
@@ -106,10 +147,17 @@ def mockReputationToken(localFixture):
     return mockReputationToken
 
 @fixture
-def mockMarket(localFixture, mockUniverse):
-    # wire up mock market
+def mockMarket(localFixture):
     mockMarket = localFixture.contracts['MockMarket']
     return mockMarket
+
+@fixture
+def mockDisputeBondToken(localFixture):
+    return localFixture.contracts['MockDisputeBondToken']
+
+@fixture
+def mockLegacyReputationToken(localFixture):
+    return localFixture.contracts['MockLegacyReputationToken']
 
 @fixture
 def initializedReputationToken(localFixture, mockUniverse):
