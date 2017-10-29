@@ -47,7 +47,7 @@ contract Controlled is IControlled {
         for (uint256 i = 0; i < _tokens.length; i++) {
             ERC20Basic _token = _tokens[i];
             uint256 _balance = _token.balanceOf(this);
-            _token.transfer(_target, _balance);
+            require(_token.transfer(_target, _balance));
         }
 
         // Transfer Eth to target and terminate contract
