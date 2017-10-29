@@ -127,26 +127,26 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() != market);
         require(market.getFinalWinningStakeToken() != this);
-        migrateLosingTokenRepToDisputeBond(market.getDesignatedReporterDisputeBondToken());
-        migrateLosingTokenRepToDisputeBond(market.getFirstReportersDisputeBondToken());
+        migrateLosingTokenRepToDisputeBond(market.getDesignatedReporterDisputeBond());
+        migrateLosingTokenRepToDisputeBond(market.getFirstReportersDisputeBond());
         migrateLosingTokenRepToWinningToken();
         return true;
     }
 
-    function migrateLosingTokenRepToDisputeBond(IDisputeBond _disputeBondToken) private onlyInGoodTimes returns (bool) {
-        if (_disputeBondToken == address(0)) {
+    function migrateLosingTokenRepToDisputeBond(IDisputeBond _disputeBond) private onlyInGoodTimes returns (bool) {
+        if (_disputeBond == address(0)) {
             return true;
         }
-        if (_disputeBondToken.getDisputedPayoutDistributionHash() == market.getFinalPayoutDistributionHash()) {
+        if (_disputeBond.getDisputedPayoutDistributionHash() == market.getFinalPayoutDistributionHash()) {
             return true;
         }
         IReputationToken _reputationToken = getReputationToken();
-        uint256 _amountNeeded = _disputeBondToken.getBondRemainingToBePaidOut() - _reputationToken.balanceOf(_disputeBondToken);
+        uint256 _amountNeeded = _disputeBond.getBondRemainingToBePaidOut() - _reputationToken.balanceOf(_disputeBond);
         uint256 _amountToTransfer = _amountNeeded.min(_reputationToken.balanceOf(this));
         if (_amountToTransfer == 0) {
             return true;
         }
-        _reputationToken.transfer(_disputeBondToken, _amountToTransfer);
+        _reputationToken.transfer(_disputeBond, _amountToTransfer);
         return true;
     }
 

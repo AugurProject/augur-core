@@ -35,8 +35,8 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return internalMigrateOut(_destination, msg.sender, _reporter, _attotokens, true);
     }
 
-    function migrateOutDisputeBondToken(IReputationToken _destination, address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
-        require(universe.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
+    function migrateOutDisputeBond(IReputationToken _destination, address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+        require(universe.isContainerForDisputeBond(IDisputeBond(msg.sender)));
         return internalMigrateOut(_destination, msg.sender, _reporter, _attotokens, true);
     }
 
@@ -93,7 +93,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
 
     function mintForDisputeBondMigration(uint256 _amount) public onlyInGoodTimes afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
-        require(_parentUniverse.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
+        require(_parentUniverse.isContainerForDisputeBond(IDisputeBond(msg.sender)));
         mint(msg.sender, _amount);
         return true;
     }

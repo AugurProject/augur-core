@@ -85,7 +85,7 @@ def test_dispute_bond_token_escape_hatch(localFixture, reportingWindow, controll
 
     # Now we'll put up a dispute bond on the report
     assert market.disputeDesignatedReport([1, market.getNumTicks()-1], 1, False, sender=tester.k1)
-    disputeBond = localFixture.applySignature("DisputeBondToken", market.getDesignatedReporterDisputeBondToken())
+    disputeBond = localFixture.applySignature("DisputeBond", market.getDesignatedReporterDisputeBond())
 
     # We cannot call the escape hatch on the dispute bond until the system is stopped
     with raises(TransactionFailed):

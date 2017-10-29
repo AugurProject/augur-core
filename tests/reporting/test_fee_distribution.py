@@ -158,9 +158,9 @@ def test_dispute_bond_fee_collection(localFixture, universe, market, categorical
             assert scalarMarketDesignatedStake.redeemWinningTokens(False, sender=tester.k3)
 
     # Now we'll redeem the dispute bonds
-    marketDisputeBond = localFixture.applySignature("DisputeBondToken", market.getDesignatedReporterDisputeBondToken())
-    categoricalMarketDisputeBond = localFixture.applySignature("DisputeBondToken", categoricalMarket.getDesignatedReporterDisputeBondToken())
-    scalarMarketDisputeBond = localFixture.applySignature("DisputeBondToken", scalarMarket.getDesignatedReporterDisputeBondToken())
+    marketDisputeBond = localFixture.applySignature("DisputeBond", market.getDesignatedReporterDisputeBond())
+    categoricalMarketDisputeBond = localFixture.applySignature("DisputeBond", categoricalMarket.getDesignatedReporterDisputeBond())
+    scalarMarketDisputeBond = localFixture.applySignature("DisputeBond", scalarMarket.getDesignatedReporterDisputeBond())
 
     expectedDisputeFees = reporterFees * disputeStake / totalWinningStake
 

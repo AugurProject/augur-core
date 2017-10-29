@@ -3,9 +3,12 @@ pragma solidity 0.4.17;
 
 import 'libraries/ITyped.sol';
 import 'reporting/IMarket.sol';
+import 'libraries/Ownable.sol';
+import 'reporting/IReputationToken.sol';
+import 'reporting/IUniverse.sol';
 
 
-contract MockDisputeBondToken is ITyped, IDisputeBond {
+contract MockDisputeBond is ITyped, IDisputeBond, Ownable {
     IMarket private initializeMarketValue;
     address private initializeBondHolderValue;
     uint256 private initializeBondAmountValue;
@@ -57,8 +60,8 @@ contract MockDisputeBondToken is ITyped, IDisputeBond {
         return _market.decreaseExtraDisputeBondRemainingToBePaidOut(_amount);
     }
 
-    function callMigrateOutDisputeBondToken(IReputationToken _reputationToken, IReputationToken  _destination, address _reporter, uint256 _attotokens) public returns(bool) {
-        return _reputationToken.migrateOutDisputeBondToken(_destination, _reporter, _attotokens);
+    function callMigrateOutDisputeBond(IReputationToken _reputationToken, IReputationToken  _destination, address _reporter, uint256 _attotokens) public returns(bool) {
+        return _reputationToken.migrateOutDisputeBond(_destination, _reporter, _attotokens);
     }
 
     function callMintForDisputeBondMigration(IReputationToken _reputationToken, uint256 _attotokens) public returns(bool) {
@@ -69,7 +72,7 @@ contract MockDisputeBondToken is ITyped, IDisputeBond {
     * Impl of IReportingWindow and ITyped
      */
      function getTypeName() constant public returns (bytes32) {
-        return "DisputeBondToken";
+        return "DisputeBond";
     }
 
     function initialize(IMarket _market, address _bondHolder, uint256 _bondAmount, bytes32 _payoutDistributionHash) public returns (bool) {

@@ -39,9 +39,9 @@ contract IMarket is ITyped, IOwnable {
     function getDenominationToken() public view returns (ICash);
     function getShareToken(uint8 _outcome)  public view returns (IShareToken);
     function getDesignatedReporter() public view returns (address);
-    function getDesignatedReporterDisputeBondToken() public view returns (IDisputeBond);
-    function getFirstReportersDisputeBondToken() public view returns (IDisputeBond);
-    function getLastReportersDisputeBondToken() public view returns (IDisputeBond);
+    function getDesignatedReporterDisputeBond() public view returns (IDisputeBond);
+    function getFirstReportersDisputeBond() public view returns (IDisputeBond);
+    function getLastReportersDisputeBond() public view returns (IDisputeBond);
     function getMarketCreatorSettlementFeeDivisor() public view returns (uint256);
     function getReportingState() public view returns (ReportingState);
     function getFinalizationTime() public view returns (uint256);
@@ -64,7 +64,7 @@ contract IMarket is ITyped, IOwnable {
     function increaseTotalStake(uint256 _amount) public returns (bool);
     function migrateDueToNoReports() public returns (bool);
     function isContainerForStakeToken(IStakeToken _shadyTarget) public view returns (bool);
-    function isContainerForDisputeBondToken(IDisputeBond _shadyTarget) public view returns (bool);
+    function isContainerForDisputeBond(IDisputeBond _shadyTarget) public view returns (bool);
     function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool);
     function isValid() public view returns (bool);
 }
