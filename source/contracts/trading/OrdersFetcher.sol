@@ -19,7 +19,7 @@ import 'trading/IOrders.sol';
 contract OrdersFetcher is Controlled, IOrdersFetcher {
     using Bytes32Arrays for bytes32[];
 
-    function getOrder(bytes32 _orderId) public view returns (uint256 _attoshares, uint256 _displayPrice, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _gasPrice) {
+    function getOrder(bytes32 _orderId) public view returns (uint256 _attoshares, uint256 _displayPrice, address _owner, uint256 _tokensEscrowed, uint256 _sharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _gasPrice) {
         IOrders _orders = IOrders(controller.lookup("Orders"));
         _attoshares = _orders.getAmount(_orderId);
         _displayPrice = _orders.getPrice(_orderId);
