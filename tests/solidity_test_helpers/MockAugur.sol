@@ -89,7 +89,12 @@ contract MockAugur is Controlled {
         return true;
     }
 
+    bool private logReputationTokensTransferredCalledValue;
+
+    function logReputationTokensTransferredCalled() public returns(bool) { return logReputationTokensTransferredCalledValue;}
+
     function logReputationTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
+        logReputationTokensTransferredCalledValue = true;
         return true;
     }
 
