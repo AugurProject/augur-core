@@ -69,7 +69,7 @@ contract ParticipationToken is DelegationTarget, Extractable, ITyped, Initializa
     }
 
     // Disallow REP extraction
-    function getProtectedTokens() internal returns (address[]) {
+    function getProtectedTokens() internal returns (address[] memory) {
         address[] memory _protectedTokens = new address[](1);
         _protectedTokens[0] = reportingWindow.getReputationToken();
         return _protectedTokens;

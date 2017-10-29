@@ -6,7 +6,7 @@ import 'Controlled.sol';
 
 contract Extractable is Controlled {
     // Send accidentally received ETH to the destination
-    function extractETH(address _destination) public onlyControllerCaller returns(bool) {
+    function extractEther(address _destination) public onlyControllerCaller returns(bool) {
         require(mayExtract(ERC20Basic(0)));
         require(_destination.call.value(this.balance)());
         return true;
@@ -16,7 +16,7 @@ contract Extractable is Controlled {
     function extractTokens(address _destination, ERC20Basic _token) public onlyControllerCaller returns (bool) {
         require(mayExtract(_token));
         uint256 _balance = _token.balanceOf(this);
-        _token.transfer(_destination, _balance);
+        require(_token.transfer(_destination, _balance));
         return true;
     }
 
@@ -30,5 +30,5 @@ contract Extractable is Controlled {
         return true;
     }
 
-    function getProtectedTokens() internal returns (address[]);
+    function getProtectedTokens() internal returns (address[] memory);
 }

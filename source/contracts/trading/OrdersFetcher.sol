@@ -123,8 +123,7 @@ contract OrdersFetcher is Controlled, Extractable, IOrdersFetcher {
         return (_betterOrderId, _worseOrderId);
     }
 
-    function getProtectedTokens() internal returns (address[]) {
-        address[] memory _protectedTokens = new address[](0);
-        return _protectedTokens;
+    function getProtectedTokens() internal returns (address[] memory) {
+        return new address[](0);
     }
 }

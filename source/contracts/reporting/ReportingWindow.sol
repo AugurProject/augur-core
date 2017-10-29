@@ -411,7 +411,7 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
     }
 
     // Disallow Cash extraction
-    function getProtectedTokens() internal returns (address[]) {
+    function getProtectedTokens() internal returns (address[] memory) {
         address[] memory _protectedTokens = new address[](1);
         _protectedTokens[0] = controller.lookup("Cash");
         return _protectedTokens;

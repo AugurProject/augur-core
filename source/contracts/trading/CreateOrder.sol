@@ -26,8 +26,7 @@ contract CreateOrder is CashAutoConverter, Extractable, ReentrancyGuard {
         return Order.saveOrder(_orderData, _tradeGroupId);
     }
 
-    function getProtectedTokens() internal returns (address[]) {
-        address[] memory _protectedTokens = new address[](0);
-        return _protectedTokens;
+    function getProtectedTokens() internal returns (address[] memory) {
+        return new address[](0);
     }
 }

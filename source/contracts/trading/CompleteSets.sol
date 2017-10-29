@@ -79,8 +79,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
         return _creatorFee.add(_reportingFee);
     }
 
-    function getProtectedTokens() internal returns (address[]) {
-        address[] memory _protectedTokens = new address[](0);
-        return _protectedTokens;
+    function getProtectedTokens() internal returns (address[] memory) {
+        return new address[](0);
     }
 }

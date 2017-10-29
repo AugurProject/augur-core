@@ -222,7 +222,7 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     }
 
     // Disallow REP extraction
-    function getProtectedTokens() internal returns (address[]) {
+    function getProtectedTokens() internal returns (address[] memory) {
         address[] memory _protectedTokens = new address[](1);
         _protectedTokens[0] = getReputationToken();
         return _protectedTokens;

@@ -32,16 +32,19 @@ def test_market_creation(contractsFixture, universe, cash, market):
     assert market.isContainerForStakeToken(shadyStakeToken.address) == 0
     assert market.getDesignatedReportDueTimestamp() == market.getEndTime() + timedelta(days=3).total_seconds()
 
-def test_extraction(contractsFixture, market, universe):
+def test_extraction(contractsFixture, market, universe, cash):
     controller = contractsFixture.contracts["Controller"]
     reputationToken = contractsFixture.applySignature("ReputationToken", universe.getReputationToken())
 
-    # ETH and REP extraction are not allowed
+    # ETH, REP, and Cash extraction are not allowed
     with raises(TransactionFailed, message="markets should not be allowed to extract ETH"):
-       controller.extractETH(market.address, tester.a0)
+       controller.extractEther(market.address, tester.a0)
 
     with raises(TransactionFailed, message="markets should not be allowed to extract REP"):
        controller.extractTokens(market.address, tester.a0, reputationToken.address)
+
+    with raises(TransactionFailed, message="markets should not be allowed to extract Cash"):
+       controller.extractTokens(market.address, tester.a0, cash.address)
 
     # If we send some other token we should be allowed to extract it
     shareToken = contractsFixture.getShareToken(market, 0)

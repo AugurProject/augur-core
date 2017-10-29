@@ -396,8 +396,7 @@ contract FillOrder is CashAutoConverter, Extractable, ReentrancyGuard, IFillOrde
         return _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);
     }
 
-    function getProtectedTokens() internal returns (address[]) {
-        address[] memory _protectedTokens = new address[](0);
-        return _protectedTokens;
+    function getProtectedTokens() internal returns (address[] memory) {
+        return new address[](0);
     }
 }

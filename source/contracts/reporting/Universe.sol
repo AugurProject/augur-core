@@ -379,8 +379,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return getValidityBond() + getTargetReporterGasCosts();
     }
 
-    function getProtectedTokens() internal returns (address[]) {
-        address[] memory _protectedTokens = new address[](0);
-        return _protectedTokens;
+    function getProtectedTokens() internal returns (address[] memory) {
+        return new address[](0);
     }
 }

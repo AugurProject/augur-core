@@ -95,8 +95,8 @@ contract Controller is IController {
         return true;
     }
 
-    function extractETH(Extractable _target, address _destination) public devModeOwnerOnly returns(bool) {
-        _target.extractETH(_destination);
+    function extractEther(Extractable _target, address _destination) public devModeOwnerOnly returns(bool) {
+        _target.extractEther(_destination);
         return true;
     }
 

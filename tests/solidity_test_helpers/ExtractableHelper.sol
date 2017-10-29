@@ -13,7 +13,7 @@ contract ExtractableHelper is Extractable {
         return true;
     }
 
-    function getProtectedTokens() internal returns (address[]) {
+    function getProtectedTokens() internal returns (address[] memory) {
         return protectedTokens;
     }
 }

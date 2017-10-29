@@ -76,7 +76,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         require(_creator != NULL_ADDRESS);
         require(_designatedReporterAddress != NULL_ADDRESS);
         reportingWindow = _reportingWindow;
-        require(address(getForkingMarket()) == NULL_ADDRESS);
+        require(getForkingMarket() == IMarket(0));
         owner = _creator;
         assessFees();
         endTime = _endTime;
@@ -91,8 +91,8 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
-        // If the value was not at least equal to the sum of these fees this will throw
-        uint256 _refund = msg.value.sub(reporterGasCostsFeeAttoeth.add(validityBondAttoeth));
+        // If the value was not at least equal to the sum of these fees this will throw. The addition here cannot overflow as these fees are capped
+        uint256 _refund = msg.value.sub(reporterGasCostsFeeAttoeth + validityBondAttoeth);
         if (_refund > 0) {
             require(owner.call.value(_refund)());
         }
@@ -281,7 +281,11 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         finalizationTime = block.timestamp;
         transferIncorrectDisputeBondsToWinningStakeToken();
         // The validity bond is paid to the owner in any valid outcome and the reporting window otherwise
-        doFeePayout(isValid(), validityBondAttoeth);
+        if (isValid()) {
+            require(getOwner().call.value(validityBondAttoeth)());
+        } else {
+            cash.depositEtherFor.value(validityBondAttoeth)(getReportingWindow());
+        }
         reportingWindow.updateMarketPhase();
         controller.getAugur().logMarketFinalized(getUniverse(), this);
         return true;
@@ -386,15 +390,6 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return true;
     }
 
-    function doFeePayout(bool _toOwner, uint256 _amount) private onlyInGoodTimes returns (bool) {
-        if (_toOwner) {
-            require(getOwner().call.value(_amount)());
-        } else {
-            cash.depositEtherFor.value(_amount)(getReportingWindow());
-        }
-        return true;
-    }
-
     // AUDIT: This is called at the beginning of StakeToken:buy. Look for reentrancy issues
     function firstReporterCompensationCheck(address _reporter) public onlyInGoodTimes returns (uint256) {
         require(isContainerForStakeToken(IStakeToken(msg.sender)));
@@ -415,7 +410,8 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function increaseTotalStake(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(msg.sender == address(this) || isContainerForStakeToken(IStakeToken(msg.sender)));
-        totalStake = totalStake.add(_amount);
+        // This cannot reasonably exceed uint256 max value as it would require more REP than exists
+        totalStake += _amount;
         reportingWindow.increaseTotalStake(_amount);
         return true;
     }
@@ -423,7 +419,8 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {
         uint256 _sum = 0;
         for (uint8 i = 0; i < _payoutNumerators.length; i++) {
-            _sum = _sum.add(_payoutNumerators[i]);
+            // This cannot reasonably exceed uint256 max value as it would require an invalid numTicks
+            _sum += _payoutNumerators[i];
         }
         require(_sum == numTicks);
         return keccak256(_payoutNumerators, _invalid);
@@ -555,8 +552,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function isContainerForStakeToken(IStakeToken _shadyStakeToken) public view returns (bool) {
         bytes32 _shadyId = _shadyStakeToken.getPayoutDistributionHash();
-        IStakeToken _stakeToken = IStakeToken(stakeTokens.getAsAddressOrZero(_shadyId));
-        return _stakeToken == _shadyStakeToken;
+        return IStakeToken(stakeTokens.getAsAddressOrZero(_shadyId)) == _shadyStakeToken;
     }
 
     function isContainerForShareToken(IShareToken _shadyShareToken) public view returns (bool) {
@@ -683,10 +679,11 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     }
 
     // Markets hold the initial fees paid by the creator in ETH and REP, so we dissallow ETH and REP extraction by the controller
-    function getProtectedTokens() internal returns (address[]) {
-        address[] memory _protectedTokens = new address[](2);
+    function getProtectedTokens() internal returns (address[] memory) {
+        address[] memory _protectedTokens = new address[](3);
         _protectedTokens[0] = address(0);
         _protectedTokens[1] = reportingWindow.getReputationToken();
+        _protectedTokens[0] = cash;
         return _protectedTokens;
     }
 }

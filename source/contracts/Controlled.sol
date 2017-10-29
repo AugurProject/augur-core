@@ -54,6 +54,4 @@ contract Controlled is IControlled {
         selfdestruct(_target);
         return true;
     }
-
-
 }

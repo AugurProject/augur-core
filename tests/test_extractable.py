@@ -11,7 +11,7 @@ def test_eth_extraction_happy_path(extractable, token, chain):
     assert chain.head_state.get_balance(extractable.address) == 11
     startBalance = chain.head_state.get_balance(tester.a0)
 
-    assert extractable.extractETH(tester.a0)
+    assert extractable.extractEther(tester.a0)
 
     assert chain.head_state.get_balance(extractable.address) == 0
     assert chain.head_state.get_balance(tester.a0) == startBalance + 11
@@ -21,10 +21,10 @@ def test_eth_extraction_failure(extractable, token, chain):
     extractable.setProtectedToken(0)
 
     with raises(TransactionFailed):
-        extractable.extractETH(tester.a0)
+        extractable.extractEther(tester.a0)
 
     with raises(TransactionFailed):
-        extractable.extractETH(tester.a0)
+        extractable.extractEther(tester.a0)
 
 def test_token_extraction_happy_path(extractable, token):
     token.faucet(7)

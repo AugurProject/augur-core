@@ -17,8 +17,7 @@ contract RepPriceOracle is Ownable, Extractable, IRepPriceOracle {
         return repPriceInAttoEth;
     }
 
-    function getProtectedTokens() internal returns (address[]) {
-        address[] memory _protectedTokens = new address[](0);
-        return _protectedTokens;
+    function getProtectedTokens() internal returns (address[] memory) {
+        return new address[](0);
     }
 }
