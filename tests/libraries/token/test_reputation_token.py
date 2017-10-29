@@ -68,7 +68,7 @@ def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedRep
     assert mockReputationToken.getMigrateInAttoTokensValue() == 35
     assert mockReputationToken.getMigrateInBonusIfInForkWindowValue() == True
 
-    newReputationToken = localFixture.upload('solidity_test_helpers/MockReputationtoken.sol', 'newReputationToken')   
+    newReputationToken = localFixture.upload('solidity_test_helpers/MockReputationToken.sol', 'newReputationToken')   
     parentUniverse.setReputationToken(newReputationToken.address)
     newReputationToken.setUniverse(parentUniverse.address)
     newReputationToken.setTotalSupply(6005)
