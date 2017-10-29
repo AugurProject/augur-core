@@ -12,10 +12,6 @@ contract MockLegacyReputationToken is MockVariableSupplyToken {
         return faucetAmountValue;
     }
 
-    function MockLegacyReputationToken() public {
-
-    }
-
     function faucet(uint256 _amount) public returns (bool) {
         faucetAmountValue = _amount;
         return true;
