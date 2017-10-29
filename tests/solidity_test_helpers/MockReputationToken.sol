@@ -111,6 +111,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
     function callMigrateIn(IReputationToken _reputationToken, address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) public returns (bool) {
         return _reputationToken.migrateIn(_reporter, _attotokens, _bonusIfInForkWindow);
     }
+    
     /*
     * Impl of IReputationToken and ITyped
      */

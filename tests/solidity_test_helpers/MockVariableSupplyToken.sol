@@ -2,6 +2,7 @@ pragma solidity ^0.4.17;
 
 import 'TEST/MockStandardToken.sol';
 
+
 contract MockVariableSupplyToken is MockStandardToken {
     uint256 private setBalanceOfValue;
     address private transferToValue;

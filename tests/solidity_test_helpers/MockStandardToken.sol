@@ -61,7 +61,6 @@ contract MockStandardToken is ERC20, BasicToken {
         return true;
     }
 
-
     function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
         allowanceOwnerValue = _owner;
         allowanceSpenderValue = _spender;
