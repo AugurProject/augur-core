@@ -41,7 +41,7 @@ contract MockUniverse is Initializable, IUniverse {
     uint256 private setMarketCreationCostValue;
     bool private setIsParentOfValue;
     bool private setIsContainerForReportingWindowValue;
-    bool private setIisContainerForDisputeBondTokenValue;
+    bool private setIisContainerForDisputeBondValue;
     bool private setIsContainerForMarketValue;
     bool private setIsContainerForStakeTokenValue;
     bool private setIsContainerForShareTokenValue;
@@ -170,8 +170,8 @@ contract MockUniverse is Initializable, IUniverse {
         setIsContainerForReportingWindowValue = _setIsContainerForReportingWindowValue;
     }
 
-    function setIsContainerForDisputeBondToken(bool _setIisContainerForDisputeBondTokenValue) public {
-        setIisContainerForDisputeBondTokenValue = _setIisContainerForDisputeBondTokenValue;
+    function setIsContainerForDisputeBond(bool _setIisContainerForDisputeBondValue) public {
+        setIisContainerForDisputeBondValue = _setIisContainerForDisputeBondValue;
     }
 
     function setIsContainerForMarket(bool _setIsContainerForMarketValue) public {
@@ -359,8 +359,8 @@ contract MockUniverse is Initializable, IUniverse {
         return setIsContainerForReportingWindowValue;
     }
 
-    function isContainerForDisputeBondToken(IDisputeBond _shadyTarget) public view returns (bool) {
-        return setIisContainerForDisputeBondTokenValue;
+    function isContainerForDisputeBond(IDisputeBond _shadyTarget) public view returns (bool) {
+        return setIisContainerForDisputeBondValue;
     }
 
     function isContainerForMarket(IMarket _shadyTarget) public view returns (bool) {
