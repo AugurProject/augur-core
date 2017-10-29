@@ -1,7 +1,7 @@
 pragma solidity 0.4.17;
 
 
-import 'legacy_reputation/BasicToken.sol';
+import 'libraries/token/BasicToken.sol';
 
 
 contract MockToken is BasicToken {
