@@ -680,10 +680,14 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     // Markets hold the initial fees paid by the creator in ETH and REP, so we dissallow ETH and REP extraction by the controller
     function getProtectedTokens() internal returns (address[] memory) {
-        address[] memory _protectedTokens = new address[](3);
-        _protectedTokens[0] = address(0);
-        _protectedTokens[1] = reportingWindow.getReputationToken();
-        _protectedTokens[2] = cash;
+        address[] memory _protectedTokens = new address[](numOutcomes + 3);
+        for (uint8 i = 0; i < numOutcomes; i++) {
+            _protectedTokens[i] = shareTokens[i];
+        }
+        // address(1) is the sentinel value for Ether extraction
+        _protectedTokens[numOutcomes] = address(1);
+        _protectedTokens[numOutcomes + 1] = reportingWindow.getReputationToken();
+        _protectedTokens[numOutcomes + 2] = cash;
         return _protectedTokens;
     }
 }

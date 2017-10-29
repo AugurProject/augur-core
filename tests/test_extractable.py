@@ -18,7 +18,7 @@ def test_eth_extraction_happy_path(extractable, token, chain):
 
 def test_eth_extraction_failure(extractable, token, chain):
     extractable.deposit(value=11)
-    extractable.setProtectedToken(0)
+    extractable.setProtectedToken(1)
 
     with raises(TransactionFailed):
         extractable.extractEther(tester.a0)

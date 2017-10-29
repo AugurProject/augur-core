@@ -5,9 +5,12 @@ import 'Controlled.sol';
 
 
 contract Extractable is Controlled {
+    // We use a sentinel value for Ether extraction permission. We're not using ERC20Basic(0) since that can be forbidden inadvertantly by a class providing an incorrectly sized protectedTokens array
+    ERC20Basic private constant ETHER_TOKEN = ERC20Basic(1);
+
     // Send accidentally received ETH to the destination
     function extractEther(address _destination) public onlyControllerCaller returns(bool) {
-        require(mayExtract(ERC20Basic(0)));
+        require(mayExtract(ETHER_TOKEN));
         require(_destination.call.value(this.balance)());
         return true;
     }
