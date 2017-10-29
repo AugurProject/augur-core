@@ -683,7 +683,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         address[] memory _protectedTokens = new address[](3);
         _protectedTokens[0] = address(0);
         _protectedTokens[1] = reportingWindow.getReputationToken();
-        _protectedTokens[0] = cash;
+        _protectedTokens[2] = cash;
         return _protectedTokens;
     }
 }

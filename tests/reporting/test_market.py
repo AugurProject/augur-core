@@ -43,6 +43,9 @@ def test_extraction(contractsFixture, market, universe, cash):
     with raises(TransactionFailed, message="markets should not be allowed to extract REP"):
        controller.extractTokens(market.address, tester.a0, reputationToken.address)
 
+    assert cash.depositEtherFor(market.address, value=10)
+    assert cash.balanceOf(market.address) == 10
+
     with raises(TransactionFailed, message="markets should not be allowed to extract Cash"):
        controller.extractTokens(market.address, tester.a0, cash.address)
 
