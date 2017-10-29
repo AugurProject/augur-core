@@ -215,6 +215,10 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return _reportingWindow.migrateFeesDueToFork();
     }
 
+    function callTrustedReportingWindowTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        return _reputationToken.trustedReportingWindowTransfer(_source, _destination, _attotokens);
+    }
+
     /*
     * Impl of IReportingWindow and ITyped
      */

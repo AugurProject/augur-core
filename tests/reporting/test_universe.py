@@ -281,25 +281,15 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
 
 
 @fixture
-def localSnapshot(fixture, augurInitializedSnapshot):
-    fixture.resetToSnapshot(augurInitializedSnapshot)
+def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
+    fixture.resetToSnapshot(augurInitializedWithMocksSnapshot)
     controller = fixture.contracts['Controller']
-    fixture.uploadAndAddToController("solidity_test_helpers/Constants.sol")
-    fixture.uploadAndAddToController('solidity_test_helpers/MockShareToken.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockStakeToken.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockDisputeBondToken.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockMarket.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockUniverse.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockReportingWindow.sol')
-    fixture.uploadAndAddToController('solidity_test_helpers/MockReputationToken.sol')
-    mockReputationTokenFactory = fixture.upload('solidity_test_helpers/MockReputationTokenFactory.sol')
-    mockReportingWindowFactory = fixture.upload('solidity_test_helpers/MockReportingWindowFactory.sol')
-    mockUniverseFactory = fixture.upload('solidity_test_helpers/MockUniverseFactory.sol')
-    mockAugur = fixture.uploadAndAddToController("solidity_test_helpers/MockAugur.sol")
+    mockReputationTokenFactory = fixture.contracts['MockReputationTokenFactory']
+    mockReportingWindowFactory = fixture.contracts['MockReportingWindowFactory']
+    mockUniverseFactory = fixture.contracts['MockUniverseFactory']
     controller.setValue(stringToBytes('ReputationTokenFactory'), mockReputationTokenFactory.address)
     controller.setValue(stringToBytes('ReportingWindowFactory'), mockReportingWindowFactory.address)
     controller.setValue(stringToBytes('UniverseFactory'), mockUniverseFactory.address)
-    controller.setValue(stringToBytes('Augur'), mockAugur.address)
     return fixture.createSnapshot()
 
 @fixture

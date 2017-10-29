@@ -269,6 +269,19 @@ class ContractsFixture:
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 
+    def uploadAllMockContracts(self):
+        for directory, _, filenames in walk(resolveRelativePath('solidity_test_helpers')):
+            for filename in filenames:
+                name = path.splitext(filename)[0]
+                extension = path.splitext(filename)[1]
+                if extension != '.sol': continue
+                if not name.startswith('Mock'): continue
+                if 'Factory' in name:
+                    self.upload(path.join(directory, filename))    
+                else:
+                    self.uploadAndAddToController(path.join(directory, filename))
+
+
     def whitelistTradingContracts(self):
         for filename in listdir(resolveRelativePath('../source/contracts/trading')):
             name = path.splitext(filename)[0]
@@ -416,6 +429,15 @@ def augurInitializedSnapshot(fixture, controllerSnapshot):
     fixture.whitelistTradingContracts()
     fixture.initializeAllContracts()
     fixture.approveCentralAuthority()
+    return fixture.createSnapshot()
+
+@pytest.fixture(scope="session")
+def augurInitializedWithMocksSnapshot(fixture, augurInitializedSnapshot):
+    fixture.uploadAndAddToController("solidity_test_helpers/Constants.sol")
+    fixture.uploadAllMockContracts()
+    controller = fixture.contracts['Controller']
+    mockAugur = fixture.contracts['MockAugur']
+    controller.setValue(stringToBytes('Augur'), mockAugur.address)
     return fixture.createSnapshot()
 
 @pytest.fixture(scope="session")

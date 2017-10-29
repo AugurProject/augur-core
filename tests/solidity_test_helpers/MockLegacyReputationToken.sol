@@ -1,0 +1,23 @@
+pragma solidity 0.4.17;
+
+import 'libraries/ContractExists.sol';
+import 'TEST/MockVariableSupplyToken.sol';
+
+
+contract MockLegacyReputationToken is MockVariableSupplyToken {
+    using ContractExists for address;
+    uint256 private faucetAmountValue;
+
+    function getFaucetAmountValue() public returns(uint256) {
+        return faucetAmountValue;
+    }
+
+    function MockLegacyReputationToken() public {
+
+    }
+
+    function faucet(uint256 _amount) public returns (bool) {
+        faucetAmountValue = _amount;
+        return true;
+    }
+}
