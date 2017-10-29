@@ -7,7 +7,7 @@
 asn1crypto==0.23.0        # via coincurve
 cffi==1.11.1              # via coincurve
 coincurve==6.0.0          # via ethereum-augur-temp
-ethereum-augur-temp==2.1.10
+ethereum
 numpy==1.13.0
 pbkdf2==1.3               # via ethereum-augur-temp
 py-ecc==1.1.1             # via ethereum-augur-temp
