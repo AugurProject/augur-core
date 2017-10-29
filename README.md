@@ -135,4 +135,4 @@ All augur-core contracts use integers. So ether values in contracts will always 
 
 ## Information about trading worst case loss (WCL)
 
-- [Some notes on WCL/value at risk](https://github.com/AugurProject/augur-core/blob/develop/tests/wcl.txt)
+- [Some notes on WCL/value at risk](https://github.com/AugurProject/augur-core/blob/master/tests/wcl.txt)
