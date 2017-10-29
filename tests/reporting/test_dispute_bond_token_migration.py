@@ -21,7 +21,7 @@ def test_disavowed_dispute_bond_token_redemption(localFixture, universe, cash, m
     # We'll finalize the forking market
     finalizeForkingMarket(localFixture, universe, market, True, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,market.getNumTicks()], [market.getNumTicks(),0])
 
-    disputeBond = localFixture.applySignature("DisputeBondToken", newMarket.getDesignatedReporterDisputeBondToken())
+    disputeBond = localFixture.applySignature("DisputeBond", newMarket.getDesignatedReporterDisputeBond())
 
     # Now we can migrate the market to the winning universe
     assert newMarket.migrateThroughOneFork()
@@ -63,9 +63,9 @@ def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigra
     proceedToForking(localFixture, universe, market, True, 1, 2, 3, NO_OUTCOME, YES_OUTCOME, 2, YES_OUTCOME, NO_OUTCOME, YES_OUTCOME)
 
     # We have 3 dispute bonds for the market
-    designatedDisputeBond = localFixture.applySignature('DisputeBondToken', market.getDesignatedReporterDisputeBondToken())
-    firstDisputeBond = localFixture.applySignature('DisputeBondToken', market.getFirstReportersDisputeBondToken())
-    lastDisputeBond = localFixture.applySignature('DisputeBondToken', market.getLastReportersDisputeBondToken())
+    designatedDisputeBond = localFixture.applySignature('DisputeBond', market.getDesignatedReporterDisputeBond())
+    firstDisputeBond = localFixture.applySignature('DisputeBond', market.getFirstReportersDisputeBond())
+    lastDisputeBond = localFixture.applySignature('DisputeBond', market.getLastReportersDisputeBond())
 
     # Validate the owners
     assert designatedDisputeBond.getBondHolder() == bytesToHexString(tester.a1)

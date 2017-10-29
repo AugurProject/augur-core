@@ -3,9 +3,10 @@ pragma solidity 0.4.17;
 
 import 'libraries/ITyped.sol';
 import 'reporting/IMarket.sol';
+import 'libraries/Ownable.sol';
 
 
-contract MockDisputeBondToken is ITyped, IDisputeBond {
+contract MockDisputeBond is ITyped, IDisputeBond, Ownable {
     IMarket private initializeMarketValue;
     address private initializeBondHolderValue;
     uint256 private initializeBondAmountValue;
@@ -69,7 +70,7 @@ contract MockDisputeBondToken is ITyped, IDisputeBond {
     * Impl of IReportingWindow and ITyped
      */
      function getTypeName() constant public returns (bytes32) {
-        return "DisputeBondToken";
+        return "DisputeBond";
     }
 
     function initialize(IMarket _market, address _bondHolder, uint256 _bondAmount, bytes32 _payoutDistributionHash) public returns (bool) {

@@ -237,7 +237,7 @@ def test_stake_token_trusted_buy_fails(localFixture, mockMarket):
     with raises(TransactionFailed, message="only market can call this method"):
         stakeToken.trustedBuy(tester.a2, 1)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_REPORTING())
 
     with raises(TransactionFailed, message="trusted buy can only occur buy trusted contract"):
         stakeToken.trustedBuy(tester.a2, 1)
@@ -400,7 +400,7 @@ def test_stake_token_verify_redeem_winning_tokens(localFixture, mockUniverse, mo
 
     assert stakeToken.totalSupply() == 0
 
-def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarket, mockReportingWindow, mockReputationToken, mockDisputeBondToken):
+def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarket, mockReportingWindow, mockReputationToken, mockDisputeBond):
     numTicks = 10 ** 18
     mockMarket.setNumberOfOutcomes(2)
     mockMarket.setNumTicks(numTicks)
@@ -432,13 +432,13 @@ def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarke
     with raises(TransactionFailed, message="can not migrate losing tokens on final winning stake token"):
         stakeToken.migrateLosingTokens()
 
-    designatedRepoertDisputeBond = mockDisputeBondToken
-    firstDisputeBond = localFixture.upload('solidity_test_helpers/MockDisputeBondToken.sol', 'firstDisputeBond')
+    designatedRepoertDisputeBond = mockDisputeBond
+    firstDisputeBond = localFixture.upload('solidity_test_helpers/MockDisputeBond.sol', 'firstDisputeBond')
 
     # no dispute bonds, no transfer
     mockReputationToken.setBalanceOf(0)
-    mockMarket.setDesignatedReporterDisputeBondToken()
-    mockMarket.setFirstReportersDisputeBondToken()
+    mockMarket.setDesignatedReporterDisputeBond()
+    mockMarket.setFirstReportersDisputeBond()
     mockMarket.setFinalWinningStakeToken()
     mockReputationToken.resetTransferToValues()
     assert stakeToken.migrateLosingTokens()
@@ -447,7 +447,7 @@ def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarke
 
     # only designated reporting dispute bond payout distribution hash same
     # no first dispute bond
-    mockMarket.setDesignatedReporterDisputeBondToken(designatedRepoertDisputeBond.address)
+    mockMarket.setDesignatedReporterDisputeBond(designatedRepoertDisputeBond.address)
     mockMarket.setFinalPayoutDistributionHash(stringToBytes("101"))
     designatedRepoertDisputeBond.setDisputedPayoutDistributionHash(stringToBytes("101"))
     assert stakeToken.migrateLosingTokens()
@@ -466,7 +466,7 @@ def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarke
     # paid out bond == dispute bond
     mockReputationToken.resetTransferToValues()
     mockReputationToken.resetBalanceOfValues()
-    mockMarket.setDesignatedReporterDisputeBondToken(designatedRepoertDisputeBond.address)
+    mockMarket.setDesignatedReporterDisputeBond(designatedRepoertDisputeBond.address)
     mockMarket.setFinalWinningStakeToken(winning_stakeToken.address)
     designatedRepoertDisputeBond.setBondRemainingToBePaidOut(300)
     mockReputationToken.setBalanceOfValueFor(designatedRepoertDisputeBond.address, 300)
@@ -484,7 +484,7 @@ def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarke
     # dispute bond not paid out
     mockReputationToken.resetTransferToValues()
     mockReputationToken.resetBalanceOfValues()
-    mockMarket.setDesignatedReporterDisputeBondToken(designatedRepoertDisputeBond.address)
+    mockMarket.setDesignatedReporterDisputeBond(designatedRepoertDisputeBond.address)
     mockMarket.setFinalWinningStakeToken(winning_stakeToken.address)
     designatedRepoertDisputeBond.setBondRemainingToBePaidOut(300)
     mockReputationToken.setBalanceOfValueFor(designatedRepoertDisputeBond.address, 0)
@@ -498,11 +498,11 @@ def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarke
     mockReputationToken.resetBalanceOfValues()
 
     # only first dispute bond
-    mockMarket.setDesignatedReporterDisputeBondToken()
+    mockMarket.setDesignatedReporterDisputeBond()
     firstDisputeBond.setDisputedPayoutDistributionHash(stringToBytes("111"))
     mockMarket.setFinalWinningStakeToken(winning_stakeToken.address)
     firstDisputeBond.setBondRemainingToBePaidOut(55)
-    mockMarket.setFirstReportersDisputeBondToken(firstDisputeBond.address)
+    mockMarket.setFirstReportersDisputeBond(firstDisputeBond.address)
     mockReputationToken.setBalanceOfValueFor(stakeToken.address, 99)
     mockReputationToken.setBalanceOfValueFor(firstDisputeBond.address, 12)
 
@@ -514,9 +514,9 @@ def test_stake_token_migrate_losing_tokens(localFixture, mockUniverse, mockMarke
     mockReputationToken.resetTransferToValues()
     mockReputationToken.resetBalanceOfValues()
 
-    mockMarket.setDesignatedReporterDisputeBondToken(designatedRepoertDisputeBond.address)
+    mockMarket.setDesignatedReporterDisputeBond(designatedRepoertDisputeBond.address)
     mockMarket.setFinalWinningStakeToken(winning_stakeToken.address)
-    mockMarket.setFirstReportersDisputeBondToken(firstDisputeBond.address)
+    mockMarket.setFirstReportersDisputeBond(firstDisputeBond.address)
     # set values for math
     designatedRepoertDisputeBond.setBondRemainingToBePaidOut(300)
     firstDisputeBond.setBondRemainingToBePaidOut(65)
@@ -557,9 +557,9 @@ def mockReputationToken(localFixture):
     return mockReputationToken
 
 @fixture
-def mockDisputeBondToken(localFixture):
-    mockDisputeBondToken = localFixture.contracts['MockDisputeBondToken']
-    return mockDisputeBondToken
+def mockDisputeBond(localFixture):
+    mockDisputeBond = localFixture.contracts['MockDisputeBond']
+    return mockDisputeBond
 
 @fixture
 def mockReportingWindow(localFixture, mockUniverse, mockReputationToken):
