@@ -125,7 +125,6 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     function internalTrustedTransfer(address _source, address _destination, uint256 _attotokens) internal onlyInGoodTimes afterInitialized returns (bool) {
         balances[_source] = balances[_source].sub(_attotokens);
         balances[_destination] = balances[_destination].add(_attotokens);
-        supply = supply.add(_attotokens);
         Transfer(_source, _destination, _attotokens);
         return true;
     }

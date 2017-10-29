@@ -154,17 +154,25 @@ def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializ
     with raises(TransactionFailed, message="source balance can not be 0"):
         mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
     
+
     assert initializedReputationToken.totalSupply() == 0
     assert initializedReputationToken.balanceOf(tester.a1) == 0
     give_some_rep_to(mockLegacyReputationToken, initializedReputationToken, tester.k1, 35)
     assert initializedReputationToken.totalSupply() == 35
     assert initializedReputationToken.balanceOf(tester.a2) == 0
     assert initializedReputationToken.balanceOf(tester.a1) == 35
+
+    with raises(TransactionFailed, message="transfer has to be approved"):
+        mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+
+    assert initializedReputationToken.approve(mockStakeToken.address, 35, sender=tester.k1)
+    assert initializedReputationToken.allowance(tester.a1, mockStakeToken.address) == 35
+
     assert mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 35)
     # TODO find out why total supply grows
-    assert initializedReputationToken.totalSupply() == 70 
-    assert initializedReputationToken.balanceOf(tester.a1) == 0
+    assert initializedReputationToken.totalSupply() == 35 
     assert initializedReputationToken.balanceOf(tester.a2) == 35
+    assert initializedReputationToken.balanceOf(tester.a1) == 0
 
 def give_some_rep_to(mockLegacyReputationToken, targetReputationToken, userAccount, amount):
     mockLegacyReputationToken.setBalanceOf(amount)
