@@ -4,6 +4,8 @@ pragma solidity 0.4.17;
 import 'libraries/ITyped.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/Ownable.sol';
+import 'reporting/IReputationToken.sol';
+import 'reporting/IUniverse.sol';
 
 
 contract MockDisputeBond is ITyped, IDisputeBond, Ownable {
@@ -58,8 +60,8 @@ contract MockDisputeBond is ITyped, IDisputeBond, Ownable {
         return _market.decreaseExtraDisputeBondRemainingToBePaidOut(_amount);
     }
 
-    function callMigrateOutDisputeBondToken(IReputationToken _reputationToken, IReputationToken  _destination, address _reporter, uint256 _attotokens) public returns(bool) {
-        return _reputationToken.migrateOutDisputeBondToken(_destination, _reporter, _attotokens);
+    function callMigrateOutDisputeBond(IReputationToken _reputationToken, IReputationToken  _destination, address _reporter, uint256 _attotokens) public returns(bool) {
+        return _reputationToken.migrateOutDisputeBond(_destination, _reporter, _attotokens);
     }
 
     function callMintForDisputeBondMigration(IReputationToken _reputationToken, uint256 _attotokens) public returns(bool) {
