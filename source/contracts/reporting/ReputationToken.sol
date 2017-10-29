@@ -95,6 +95,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         IUniverse _parentUniverse = universe.getParentUniverse();
         require(_parentUniverse.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
         mint(msg.sender, _amount);
+        return true;
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation

@@ -53,6 +53,10 @@ contract MockParticipationToken is ITyped, Initializable, MockVariableSupplyToke
         return _reportingWindow.collectParticipationTokenReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
     
+    function callTrustedParticipationTokenTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        return _reputationToken.trustedParticipationTokenTransfer(_source, _destination, _attotokens);
+    }
+
     function getTypeName() public view returns (bytes32) {
         return "ParticipationToken";
     }

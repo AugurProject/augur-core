@@ -14,9 +14,10 @@ def test_reputation_token_creation(localFixture, mockUniverse):
 
     assert reputationToken.initialize(mockUniverse.address)
     assert reputationToken.getTypeName() == stringToBytes('ReputationToken')
+    assert reputationToken.getUniverse() == mockUniverse.address
 
 
-def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedReputationToken, mockStakeToken, mockReputationToken, mockMarket, mockDisputeBondToken):
+def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedReputationToken, mockStakeToken, mockReputationToken, mockMarket, mockDisputeBondToken, mockLegacyReputationToken):
     with raises(TransactionFailed, message="universe has to contain stake token && called from stake token"):
         initializedReputationToken.migrateOutStakeToken(mockUniverse.address)
     
@@ -47,7 +48,7 @@ def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedRep
     assert mockReputationToken.getMigrateInBonusIfInForkWindowValue() == True
     assert initializedReputationToken.getTopMigrationDestination() == stringToBytes(mockReputationToken.address)
 
-    assert mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a1, 35, False)
+    give_some_rep_to(mockLegacyReputationToken, initializedReputationToken, tester.k1, 35)
     assert initializedReputationToken.totalSupply() == 1011 - 54 + 35
 
     with raises(TransactionFailed, message="reporter not approve for sender can not sub from zero"):
@@ -107,16 +108,67 @@ def test_reputation_token_migrate_in(localFixture, mockUniverse, initializedRepu
     mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a2, 100, True)
     assert initializedReputationToken.totalSupply() == 200
 
-def test_reputation_token_migrate_from_legacy_reputationToken(localFixture, mockUniverse, initializedReputationToken, mockLegacyReputationToken):
+def test_reputation_token_migrate_from_legacy_reputationToken(localFixture, initializedReputationToken, mockLegacyReputationToken):
     mockLegacyReputationToken.setBalanceOf(100)
     mockLegacyReputationToken.getFaucetAmountValue() == 0
     assert initializedReputationToken.migrateFromLegacyReputationToken(sender=tester.k2)
     assert mockLegacyReputationToken.getFaucetAmountValue() == 0
-    assert mockLegacyReputationToken.getTransferFromFromValue() == longToHexString(tester.a2)
+    assert mockLegacyReputationToken.getTransferFromFromValue() == bytesToHexString(tester.a2)
     assert mockLegacyReputationToken.getTransferFromToValue() == longToHexString(0)
     assert mockLegacyReputationToken.getTransferFromValueValue() == 100
     assert initializedReputationToken.totalSupply() == 100
 
+def test_reputation_token_mint_for_dispute_bond_migration(localFixture, initializedReputationToken, mockDisputeBondToken, mockUniverse):
+    with raises(TransactionFailed, message="caller has to be a IDisputeBond"):
+        initializedReputationToken.mintForDisputeBondMigration(1000)
+    
+    with raises(TransactionFailed, message="parent universe does not contain dispute bond"):
+        mockDisputeBondToken.callMintForDisputeBondMigration(1000)
+
+    assert initializedReputationToken.balanceOf(mockDisputeBondToken.address) == 0
+    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')    
+    mockUniverse.setParentUniverse(parentUniverse.address)
+    parentUniverse.setIsContainerForDisputeBondToken(True)
+    mockUniverse.setIsParentOf(True)
+    assert mockDisputeBondToken.callMintForDisputeBondMigration(initializedReputationToken.address, 100)
+    assert initializedReputationToken.balanceOf(mockDisputeBondToken.address) == 100
+
+
+def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializedReputationToken, mockMarket, mockReportingWindow, mockStakeToken, mockParticipationToken, mockLegacyReputationToken):
+    with raises(TransactionFailed, message="universe does not contain reporting window and caller has to be a IReportingWindow"):
+        initializedReputationToken.trustedReportingWindowTransfer(tester.a1, tester.a2, 100)
+
+    with raises(TransactionFailed, message="universe does not contain reporting window"):
+        mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+
+    with raises(TransactionFailed, message="universe does not contain market"):
+        mockMarket.callTrustedMarketTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+
+    with raises(TransactionFailed, message="universe does not contain stake token"):
+        mockStakeToken.callTrustedStakeTokenTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+
+    with raises(TransactionFailed, message="universe does not contain participation token"):
+        mockParticipationToken.callTrustedParticipationTokenTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+
+    mockUniverse.setIsContainerForReportingWindow(True)
+    with raises(TransactionFailed, message="source balance can not be 0"):
+        mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+    
+    assert initializedReputationToken.totalSupply() == 0
+    assert initializedReputationToken.balanceOf(tester.a1) == 0
+    give_some_rep_to(mockLegacyReputationToken, initializedReputationToken, tester.k1, 35)
+    assert initializedReputationToken.totalSupply() == 35
+    assert initializedReputationToken.balanceOf(tester.a2) == 0
+    assert initializedReputationToken.balanceOf(tester.a1) == 35
+    assert mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 35)
+    # TODO find out why total supply grows
+    assert initializedReputationToken.totalSupply() == 70 
+    assert initializedReputationToken.balanceOf(tester.a1) == 0
+    assert initializedReputationToken.balanceOf(tester.a2) == 35
+
+def give_some_rep_to(mockLegacyReputationToken, targetReputationToken, userAccount, amount):
+    mockLegacyReputationToken.setBalanceOf(amount)
+    assert targetReputationToken.migrateFromLegacyReputationToken(sender=userAccount)
 
 @fixture(scope="session")
 def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
@@ -156,8 +208,20 @@ def mockDisputeBondToken(localFixture):
     return localFixture.contracts['MockDisputeBondToken']
 
 @fixture
+def mockReportingWindow(localFixture):
+    return localFixture.contracts['MockReportingWindow']
+
+@fixture
+def mockParticipationToken(localFixture):
+    return localFixture.contracts['MockParticipationToken']
+
+@fixture
 def mockLegacyReputationToken(localFixture):
     return localFixture.contracts['MockLegacyReputationToken']
+
+@fixture
+def mockAugur(localFixture):
+    return localFixture.contracts['MockAugur']
 
 @fixture
 def initializedReputationToken(localFixture, mockUniverse):

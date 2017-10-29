@@ -276,6 +276,10 @@ contract MockMarket is IMarket {
         setMigrateDueToNoReportsNextStateValue = _reportingWindow;
     }
     
+    function callTrustedMarketTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        return _reputationToken.trustedMarketTransfer(_source, _destination, _attotokens);
+    }
+
     /*
     * IMarket methods
     */

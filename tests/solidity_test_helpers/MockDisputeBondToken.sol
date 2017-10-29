@@ -61,6 +61,10 @@ contract MockDisputeBondToken is ITyped, IDisputeBond {
         return _reputationToken.migrateOutDisputeBondToken(_destination, _reporter, _attotokens);
     }
 
+    function callMintForDisputeBondMigration(IReputationToken _reputationToken, uint256 _attotokens) public returns(bool) {
+        return _reputationToken.mintForDisputeBondMigration(_attotokens);
+    }
+
     /*
     * Impl of IReportingWindow and ITyped
      */
