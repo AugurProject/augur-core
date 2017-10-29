@@ -95,6 +95,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         IUniverse _parentUniverse = universe.getParentUniverse();
         require(_parentUniverse.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
         mint(msg.sender, _amount);
+        return true;
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
@@ -118,7 +119,18 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedParticipationTokenTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForParticipationToken(IParticipationToken(msg.sender)));
+<<<<<<< HEAD
         return internalTransfer(_source, _destination, _attotokens);
+=======
+        return internalTrustedTransfer(_source, _destination, _attotokens);
+    }
+
+    function internalTrustedTransfer(address _source, address _destination, uint256 _attotokens) internal onlyInGoodTimes afterInitialized returns (bool) {
+        balances[_source] = balances[_source].sub(_attotokens);
+        balances[_destination] = balances[_destination].add(_attotokens);
+        Transfer(_source, _destination, _attotokens);
+        return true;
+>>>>>>> master
     }
 
     function assertReputationTokenIsLegit(IReputationToken _shadyReputationToken) private view returns (bool) {
