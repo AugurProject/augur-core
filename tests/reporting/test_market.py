@@ -12,10 +12,6 @@ def test_market_creation(contractsFixture, universe, cash, market):
     shadyStakeToken.setController(contractsFixture.contracts["Controller"].address)
     shadyStakeToken.initialize(market.address, [0,10**18])
 
-    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
-    with raises(TransactionFailed, message="markets can only use Cash as their denomination token"):
-       contractsFixture.createReasonableBinaryMarket(universe, shareToken)
-
     logs = []
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     market = contractsFixture.createReasonableBinaryMarket(universe, cash, extraInfo="so extra")

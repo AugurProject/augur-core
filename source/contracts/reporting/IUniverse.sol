@@ -20,6 +20,7 @@ contract IUniverse is ITyped {
     function getReputationToken() public view returns (IReputationToken);
     function getForkingMarket() public view returns (IMarket);
     function getForkEndTime() public view returns (uint256);
+    function getForkReputationGoal() public view returns (uint256);
     function getParentPayoutDistributionHash() public view returns (bytes32);
     function getReportingPeriodDurationInSeconds() public view returns (uint256);
     function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow);
@@ -37,9 +38,6 @@ contract IUniverse is ITyped {
     function getRepAvailableForExtraBondPayouts() public view returns (uint256);
     function increaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool);
     function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public returns (bool);
-    function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256);
-    function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool);
-    function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool);
     function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue, uint256 _floor) public pure returns (uint256 _newValue);
     function getTargetReporterGasCosts() public returns (uint256);
     function getMarketCreationCost() public returns (uint256);

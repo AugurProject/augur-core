@@ -7,13 +7,13 @@ import 'reporting/IMarket.sol';
 
 contract MockDisputeBondToken is ITyped, IDisputeBond {
     IMarket private initializeMarketValue;
-    address private initializeBondHolderValue; 
+    address private initializeBondHolderValue;
     uint256 private initializeBondAmountValue;
     bytes32 private initializePayoutDistributionHashValue;
     IMarket private setMarketValue;
     bytes32 private setDisputedPayoutDistributionHashValue;
     uint256 private setBondRemainingToBePaidOutValue;
-    
+
     /*
     * setters to feed the getters and impl of IReportingWindow
     */
@@ -32,11 +32,11 @@ contract MockDisputeBondToken is ITyped, IDisputeBond {
     function getInitializePayoutDistributionHashValue() public returns(bytes32) {
         return initializePayoutDistributionHashValue;
     }
-    
+
     function setMarket(IMarket _market) public {
         setMarketValue = _market;
     }
-        
+
     function setDisputedPayoutDistributionHash(bytes32 _setDisputedPayoutDistributionHashValue) public {
         setDisputedPayoutDistributionHashValue = _setDisputedPayoutDistributionHashValue;
     }
@@ -53,8 +53,8 @@ contract MockDisputeBondToken is ITyped, IDisputeBond {
         return _universe.decreaseRepAvailableForExtraBondPayouts(_amount);
     }
 
-    function callDecreaseExtraDisputeBondRemainingToBePaidOut(IUniverse _universe, uint256 _amount) public returns(bool) {
-        return _universe.decreaseExtraDisputeBondRemainingToBePaidOut(_amount);
+    function callDecreaseExtraDisputeBondRemainingToBePaidOut(IMarket _market, uint256 _amount) public returns(bool) {
+        return _market.decreaseExtraDisputeBondRemainingToBePaidOut(_amount);
     }
 
     function callMigrateOutDisputeBondToken(IReputationToken _reputationToken, IReputationToken  _destination, address _reporter, uint256 _attotokens) public returns(bool) {

@@ -29,10 +29,10 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     IReputationToken private reputationToken;
     IMarket private forkingMarket;
     uint256 private forkEndTime;
+    uint256 private forkReputationGoal;
     mapping(uint256 => IReportingWindow) private reportingWindows;
     mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
-    uint256 private extraDisputeBondRemainingToBePaidOut;
     // We increase and decrease this value seperate from the totalSupply as we do not want to count potentional infalitonary bonuses from the migration reward
     uint256 private repAvailableForExtraBondPayouts;
 
@@ -55,7 +55,15 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         require(forkingMarket == address(0));
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
-        forkEndTime = block.timestamp + Reporting.forkDurationSeconds();
+        forkEndTime = block.timestamp + Reporting.getForkDurationSeconds();
+        // We pre calculate the amount of REP needed to determine a winner early in a fork. We assume maximum possible fork inflation in every fork so this is hard to achieve with every subsequent fork and may become impossible in some universes.
+        if (parentUniverse != IUniverse(0)) {
+            uint256 _previousForkReputationGoal = parentUniverse.getForkReputationGoal();
+            forkReputationGoal = _previousForkReputationGoal + (_previousForkReputationGoal / Reporting.getForkMigrationPercentageBonusDivisor());
+        } else {
+            // We're using a hardcoded supply value instead of getting the total REP supply from the token since at launch we will start out with a 0 supply token and users will migrate legacy REP to this token. Since the first fork may occur before all REP migrates we want to count that unmigrated REP too since it may participate in the fork eventually.
+            forkReputationGoal = Reporting.getInitialREPSupply() / Reporting.getForkRepMigrationVictoryDivisor();
+        }
         controller.getAugur().logUniverseForked();
         return true;
     }
@@ -84,6 +92,10 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return forkEndTime;
     }
 
+    function getForkReputationGoal() public view returns (uint256) {
+        return forkReputationGoal;
+    }
+
     function getReportingWindow(uint256 _reportingWindowId) public view returns (IReportingWindow) {
         return reportingWindows[_reportingWindowId];
     }
@@ -97,7 +109,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function getReportingPeriodDurationInSeconds() public view returns (uint256) {
-        return Reporting.reportingDurationSeconds() + Reporting.reportingDisputeDurationSeconds();
+        return Reporting.getReportingDurationSeconds() + Reporting.getReportingDisputeDurationSeconds();
     }
 
     function getReportingWindowByTimestamp(uint256 _timestamp) public onlyInGoodTimes returns (IReportingWindow) {
@@ -109,7 +121,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function getReportingWindowByMarketEndTime(uint256 _endTime) public onlyInGoodTimes returns (IReportingWindow) {
-        return getReportingWindowByTimestamp(_endTime + Reporting.designatedReportingDurationSeconds() + Reporting.designatedReportingDisputeDurationSeconds() + 1 + getReportingPeriodDurationInSeconds());
+        return getReportingWindowByTimestamp(_endTime + Reporting.getDesignatedReportingDurationSeconds() + Reporting.getDesignatedReportingDisputeDurationSeconds() + 1 + getReportingPeriodDurationInSeconds());
     }
 
     function getPreviousReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
@@ -145,22 +157,6 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(parentUniverse.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
         repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.sub(_amount);
-        return true;
-    }
-
-    function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256) {
-        return extraDisputeBondRemainingToBePaidOut;
-    }
-
-    function increaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public onlyInGoodTimes returns (bool) {
-        require(isContainerForMarket(IMarket(msg.sender)));
-        extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.add(_amount);
-        return true;
-    }
-
-    function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public onlyInGoodTimes returns (bool) {
-        require(isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
-        extraDisputeBondRemainingToBePaidOut = extraDisputeBondRemainingToBePaidOut.sub(_amount);
         return true;
     }
 
@@ -265,7 +261,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function getTargetRepMarketCapInAttoeth() public view returns (uint256) {
-        return getOpenInterestInAttoEth() * Reporting.targetRepMarketCapMultiplier();
+        return getOpenInterestInAttoEth() * Reporting.getTargetRepMarketCapMultiplier();
     }
 
     function getValidityBond() public onlyInGoodTimes returns (uint256) {
@@ -278,7 +274,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
         uint256 _invalidMarketsInPreviousWindow = _previousReportingWindow.getNumInvalidMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
-        _currentValidityBondInAttoeth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetInvalidMarketsDivisor(), _previousValidityBondInAttoeth, Reporting.defaultValidityBond(), Reporting.defaultValidityBondFloor());
+        _currentValidityBondInAttoeth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetInvalidMarketsDivisor(), _previousValidityBondInAttoeth, Reporting.getDefaultValidityBond(), Reporting.getDefaultValidityBondFloor());
         validityBondInAttoeth[_reportingWindow] = _currentValidityBondInAttoeth;
         return _currentValidityBondInAttoeth;
     }
@@ -294,7 +290,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         uint256 _incorrectDesignatedReportMarketsInPreviousWindow = _previousReportingWindow.getNumIncorrectDesignatedReportMarkets();
         uint256 _previousDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_previousReportingWindow];
 
-        _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectDesignatedReportMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetIncorrectDesignatedReportMarketsDivisor(), _previousDesignatedReportStakeInAttoRep, Reporting.defaultDesignatedReportStake(), Reporting.designatedReportStakeFloor());
+        _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectDesignatedReportMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetIncorrectDesignatedReportMarketsDivisor(), _previousDesignatedReportStakeInAttoRep, Reporting.getDefaultDesignatedReportStake(), Reporting.getDesignatedReportStakeFloor());
         designatedReportStakeInAttoRep[_reportingWindow] = _currentDesignatedReportStakeInAttoRep;
         return _currentDesignatedReportStakeInAttoRep;
     }
@@ -310,7 +306,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         uint256 _designatedReportNoShowsInPreviousWindow = _previousReportingWindow.getNumDesignatedReportNoShows();
         uint256 _previousDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_previousReportingWindow];
 
-        _currentDesignatedReportNoShowBondInAttoRep = calculateFloatingValue(_designatedReportNoShowsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.targetDesignatedReportNoShowsDivisor(), _previousDesignatedReportNoShowBondInAttoRep, Reporting.defaultDesignatedReportNoShowBond(), Reporting.designatedReportNoShowBondFloor());
+        _currentDesignatedReportNoShowBondInAttoRep = calculateFloatingValue(_designatedReportNoShowsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetDesignatedReportNoShowsDivisor(), _previousDesignatedReportNoShowBondInAttoRep, Reporting.getDefaultDesignatedReportNoShowBond(), Reporting.getDesignatedReportNoShowBondFloor());
         designatedReportNoShowBondInAttoRep[_reportingWindow] = _currentDesignatedReportNoShowBondInAttoRep;
         return _currentDesignatedReportNoShowBondInAttoRep;
     }
@@ -349,15 +345,15 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth();
         uint256 _previousFeeDivisor = shareSettlementFeeDivisor[getPreviousReportingWindow()];
         if (_previousFeeDivisor == 0) {
-            _previousFeeDivisor = 100;
+            _previousFeeDivisor = Reporting.getDefaultReportingFeeDivisor();
         }
         if (_targetRepMarketCapInAttoeth == 0) {
-            _currentFeeDivisor = 10000;
+            _currentFeeDivisor = Reporting.getMaximumReportingFeeDivisor();
         } else {
             _currentFeeDivisor = _previousFeeDivisor * _repMarketCapInAttoeth / _targetRepMarketCapInAttoeth;
         }
-        if (_currentFeeDivisor > 10000) {
-            _currentFeeDivisor = 10000;
+        if (_currentFeeDivisor > Reporting.getMaximumReportingFeeDivisor()) {
+            _currentFeeDivisor = Reporting.getMaximumReportingFeeDivisor();
         }
         shareSettlementFeeDivisor[_reportingWindow] = _currentFeeDivisor;
         return _currentFeeDivisor;
@@ -365,16 +361,16 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
     function getTargetReporterGasCosts() public onlyInGoodTimes returns (uint256) {
         IReportingWindow _reportingWindow = getCurrentReportingWindow();
-        uint256 _gasToReport = targetReporterGasCosts[_reportingWindow];
-        if (_gasToReport != 0) {
-            return _gasToReport;
+        uint256 _getGasToReport = targetReporterGasCosts[_reportingWindow];
+        if (_getGasToReport != 0) {
+            return _getGasToReport;
         }
 
         IReportingWindow _previousReportingWindow = getPreviousReportingWindow();
         uint256 _avgGasPrice = _previousReportingWindow.getAvgReportingGasPrice();
-        _gasToReport = Reporting.gasToReport();
+        _getGasToReport = Reporting.getGasToReport();
         // we double it to try and ensure we have more than enough rather than not enough
-        targetReporterGasCosts[_reportingWindow] = _gasToReport * _avgGasPrice * 2;
+        targetReporterGasCosts[_reportingWindow] = _getGasToReport * _avgGasPrice * 2;
         return targetReporterGasCosts[_reportingWindow];
     }
 

@@ -173,7 +173,7 @@ export class ContractDeployer {
     }
 
     private async initializeAllContracts(): Promise<void> {
-        const contractsToInitialize = ["Augur","Cash","CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimProceeds","OrdersFetcher"];
+        const contractsToInitialize = ["Augur","Cash","CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimTradingProceeds","OrdersFetcher"];
         const promises: Array<Promise<TransactionReceipt>> = [];
         for (let contractName of contractsToInitialize) {
             promises.push(this.initializeContract(contractName));

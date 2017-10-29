@@ -22,6 +22,7 @@ contract ParticipationToken is DelegationTarget, ITyped, Initializable, Variable
         return true;
     }
 
+    // Participation tokens should only be purchasable in the event that every market in a reporting window cannot be reported on
     function buy(uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(_attotokens > 0);
         require(reportingWindow.isReportingActive());

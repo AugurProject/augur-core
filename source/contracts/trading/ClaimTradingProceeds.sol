@@ -1,7 +1,7 @@
 pragma solidity 0.4.17;
 
 
-import 'trading/IClaimProceeds.sol';
+import 'trading/IClaimTradingProceeds.sol';
 import 'Controlled.sol';
 import 'libraries/ReentrancyGuard.sol';
 import 'libraries/CashAutoConverter.sol';
@@ -14,15 +14,15 @@ import 'Augur.sol';
 
 // AUDIT: Ensure that a malicious market can't subversively cause share tokens to be paid out incorrectly.
 /**
- * @title ClaimProceeds
+ * @title ClaimTradingProceeds
  * @dev This allows users to claim their money from a market by exchanging their shares
  */
-contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
+contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, IClaimTradingProceeds {
     using SafeMathUint256 for uint256;
 
-    function claimProceeds(IMarket _market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
+    function claimTradingProceeds(IMarket _market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
         require(_market.getReportingState() == IMarket.ReportingState.FINALIZED);
-        require(block.timestamp > _market.getFinalizationTime() + Reporting.claimProceedsWaitTime());
+        require(block.timestamp > _market.getFinalizationTime() + Reporting.getClaimTradingProceedsWaitTime());
 
         IStakeToken _winningStakeToken = _market.getFinalWinningStakeToken();
 
@@ -40,7 +40,7 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
             // always destroy shares as it gives a minor gas refund and is good for the network
             if (_numberOfShares > 0) {
                 _shareToken.destroyShares(msg.sender, _numberOfShares);
-                logProceedsClaimed(_market, _shareToken, msg.sender, _numberOfShares, _shareHolderShare);
+                logTradingProceedsClaimed(_market, _shareToken, msg.sender, _numberOfShares, _shareHolderShare);
             }
             if (_shareHolderShare > 0) {
                 require(_denominationToken.transferFrom(_market, msg.sender, _shareHolderShare));
@@ -59,8 +59,8 @@ contract ClaimProceeds is CashAutoConverter, ReentrancyGuard, IClaimProceeds {
         return true;
     }
 
-    function logProceedsClaimed(IMarket _market, address _shareToken, address _sender, uint256 _numShares, uint256 _numPayoutTokens) private returns (bool) {
-        controller.getAugur().logProceedsClaimed(_market.getUniverse(), _shareToken, _sender, _market, _numShares, _numPayoutTokens, _sender.balance.add(_numPayoutTokens));
+    function logTradingProceedsClaimed(IMarket _market, address _shareToken, address _sender, uint256 _numShares, uint256 _numPayoutTokens) private returns (bool) {
+        controller.getAugur().logTradingProceedsClaimed(_market.getUniverse(), _shareToken, _sender, _market, _numShares, _numPayoutTokens, _sender.balance.add(_numPayoutTokens));
     }
 
     function divideUpWinnings(IMarket _market, IStakeToken _winningStakeToken, uint8 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {

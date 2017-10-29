@@ -7,12 +7,12 @@ def test_universe_creation(localFixture, mockReputationToken, mockReputationToke
     universe = localFixture.upload('../source/contracts/reporting/Universe.sol', 'universe')
 
     with raises(TransactionFailed, message="reputation token can not be address 0"):
-        universe.initialize(mockUniverse.address, stringToBytes("5"))    
+        universe.initialize(mockUniverse.address, stringToBytes("5"))
 
     mockReputationTokenFactory.setCreateReputationTokenValue(mockReputationToken.address)
 
     universe.setController(localFixture.contracts['Controller'].address)
-    assert universe.initialize(mockUniverse.address, stringToBytes("5"))    
+    assert universe.initialize(mockUniverse.address, stringToBytes("5"))
     assert universe.getReputationToken() == mockReputationToken.address
     assert universe.getParentUniverse() == mockUniverse.address
     assert universe.getParentPayoutDistributionHash() == stringToBytes("5")
@@ -38,7 +38,7 @@ def test_universe_fork_market(localFixture, populatedUniverse, mockMarket, mockR
 
     with raises(TransactionFailed, message="must be called from market"):
         populatedUniverse.fork()
-    
+
     with raises(TransactionFailed, message="forking market has to be in universe"):
         mockMarket.callForkOnUniverse(populatedUniverse.address)
 
@@ -51,7 +51,7 @@ def test_universe_fork_market(localFixture, populatedUniverse, mockMarket, mockR
     mockMarket.setReportingWindow(mockReportingWindow.address)
     assert populatedUniverse.getForkingMarket() == longToHexString(0)
     assert populatedUniverse.isContainerForMarket(mockMarket.address)
-    
+
     assert mockMarket.callForkOnUniverse(populatedUniverse.address)
     assert mockAugur.logUniverseForkedCalled() == True
     assert populatedUniverse.getForkingMarket() == mockMarket.address
@@ -109,7 +109,7 @@ def test_universe_contains(localFixture, populatedUniverse, mockMarket, mockStak
     mockMarket.setIsContainerForStakeToken(False)
     mockMarket.setIsContainerForShareToken(False)
     mockMarket.setIsContainerForDisputeBondToken(False)
-    
+
     assert populatedUniverse.isContainerForStakeToken(mockStakeToken.address) == False
     assert populatedUniverse.isContainerForMarket(mockMarket.address) == False
     assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == False
@@ -129,48 +129,6 @@ def test_universe_contains(localFixture, populatedUniverse, mockMarket, mockStak
     assert populatedUniverse.isContainerForStakeToken(mockStakeToken.address) == True
     assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == True
     assert populatedUniverse.isContainerForDisputeBondToken(mockDisputeBondToken.address) == True
-
-def test_universe_extra_bond_payout(localFixture, populatedUniverse, mockUniverse, mockDisputeBondToken, mockReputationToken ):
-    with raises(TransactionFailed, message="needs to be called from reputation token"):
-        populatedUniverse.increaseRepAvailableForExtraBondPayouts(100)
-
-    assert populatedUniverse.getRepAvailableForExtraBondPayouts() == 0
-    assert mockReputationToken.callIncreaseRepAvailableForExtraBondPayouts(populatedUniverse.address, 100)
-    assert populatedUniverse.getRepAvailableForExtraBondPayouts() == 100
-
-    mockUniverse.setIsContainerForDisputeBondToken(False)
-    with raises(TransactionFailed, message="dispute bond needs to be in parent universe"):
-        mockDisputeBondToken.callDecreaseRepAvailableForExtraBondPayouts(populatedUniverse.address, 50)
-
-    mockUniverse.setIsContainerForDisputeBondToken(True)
-    assert mockDisputeBondToken.callDecreaseRepAvailableForExtraBondPayouts(populatedUniverse.address, 50)
-    assert populatedUniverse.getRepAvailableForExtraBondPayouts() == 50
-
-def test_universe_dispute_bond_remaining_to_be_paid(localFixture, chain, mockMarket, populatedUniverse, mockReputationToken, mockUniverse, mockDisputeBondToken, mockReportingWindow, mockReportingWindowFactory):
-    assert populatedUniverse.getExtraDisputeBondRemainingToBePaidOut() == 0
-
-    with raises(TransactionFailed, message="market needs to be contained in universe"):
-        mockMarket.callIncreaseExtraDisputeBondRemainingToBePaidOut(100)
-
-    timestamp = chain.head_state.timestamp
-    mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
-    reportingWindowId = populatedUniverse.getReportingWindowByTimestamp(timestamp)
-    mockReportingWindow.setStartTime(timestamp)
-    mockReportingWindow.setIsContainerForMarket(True)
-    mockMarket.setIsContainerForDisputeBondToken(True)
-    mockMarket.setReportingWindow(mockReportingWindow.address)
-    
-    assert populatedUniverse.isContainerForReportingWindow(mockReportingWindow.address)
-    assert populatedUniverse.isContainerForMarket(mockMarket.address)
-    assert mockMarket.callIncreaseExtraDisputeBondRemainingToBePaidOut(populatedUniverse.address, 100)
-    assert populatedUniverse.getExtraDisputeBondRemainingToBePaidOut() == 100
-
-    with raises(TransactionFailed, message="dispute bond needs to be contained in universe"):
-        mockDisputeBondToken.callDecreaseExtraDisputeBondRemainingToBePaidOut(populatedUniverse.address, 50)
-
-    mockDisputeBondToken.setMarket(mockMarket.address)
-    assert mockDisputeBondToken.callDecreaseExtraDisputeBondRemainingToBePaidOut(populatedUniverse.address, 50)
-    assert populatedUniverse.getExtraDisputeBondRemainingToBePaidOut() == 50
 
 def test_open_interest(localFixture, populatedUniverse):
     multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER()
@@ -194,13 +152,13 @@ def test_universe_rep_price_oracle(localFixture, populatedUniverse, mockReputati
     assert populatedUniverse.getRepMarketCapInAttoeth() == 100
     mockReputationToken.setTotalSupply(12)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 1200
-    
+
 def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse, mockReportingWindow, mockReportingWindowFactory):
     timestamp = chain.head_state.timestamp
     constants = localFixture.contracts['Constants']
     currentReportingWindow = mockReportingWindow
-    nextReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'nextReportingWindow')   
-    newCurrentReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newCurrentReportingWindow')   
+    nextReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'nextReportingWindow')
+    newCurrentReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newCurrentReportingWindow')
     # set current reporting window
     mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
     assert populatedUniverse.getCurrentReportingWindow() == mockReportingWindow.address
@@ -221,7 +179,7 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     noshow_default = constants.DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND()
     noshow_floor = constants.DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR()
 
-    gasToReport = constants.GAS_TO_REPORT()
+    getGasToReport = constants.GAS_TO_REPORT()
 
     # current reporting window
     designatedStakeValue = populatedUniverse.calculateFloatingValue(0, 0, designated_divisor, 0, designated_default, designated_floor)
@@ -247,13 +205,13 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     newDesignatedStakeValue = populatedUniverse.calculateFloatingValue(5, numMarket, designated_divisor, designatedStakeValue, designated_default, designated_floor)
     newValidityBondValue = populatedUniverse.calculateFloatingValue(2, numMarket, validity_divisor, validityBondValue, validity_default, validity_floor)
     newNoshowBondValue = populatedUniverse.calculateFloatingValue(3, numMarket, noshow_divisor, noshowBondValue, noshow_default, noshow_floor)
-    
+
     assert populatedUniverse.getDesignatedReportStake() == newDesignatedStakeValue
     assert populatedUniverse.getValidityBond() == newValidityBondValue
     assert populatedUniverse.getDesignatedReportNoShowBond() == newNoshowBondValue
 
     currentReportingWindow.setAvgReportingGasPrice(14)
-    targetGasCost = gasToReport * 14 * 2;
+    targetGasCost = getGasToReport * 14 * 2;
     assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
     assert populatedUniverse.getMarketCreationCost() == targetGasCost + newValidityBondValue
 
@@ -268,13 +226,13 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     constants = localFixture.contracts['Constants']
     repPriceOracle = localFixture.uploadAndAddToController("../source/contracts/reporting/RepPriceOracle.sol", 'repPriceOracle')
     controller.setValue(stringToBytes('RepPriceOracle'), repPriceOracle.address)
-    
+
     multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER()
     # default value
     defaultValue = 10000
     assert populatedUniverse.getRepMarketCapInAttoeth() == 0
     assert populatedUniverse.getReportingFeeDivisor() == defaultValue
-    
+
     # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
 
@@ -318,9 +276,9 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     assert populatedUniverse.getRepMarketCapInAttoeth() == 1
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 5 * multiplier
     assert populatedUniverse.getOpenInterestInAttoEth() == 5
-    
+
     assert populatedUniverse.getReportingFeeDivisor() == defaultValue / 5 * multiplier
-    
+
 
 @fixture
 def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
@@ -392,5 +350,5 @@ def populatedUniverse(localFixture, mockReputationTokenFactory, mockReputationTo
     universe = localFixture.upload('../source/contracts/reporting/Universe.sol', 'universe')
     mockReputationTokenFactory.setCreateReputationTokenValue(mockReputationToken.address)
     universe.setController(localFixture.contracts['Controller'].address)
-    assert universe.initialize(mockUniverse.address, stringToBytes("5"))    
+    assert universe.initialize(mockUniverse.address, stringToBytes("5"))
     return universe

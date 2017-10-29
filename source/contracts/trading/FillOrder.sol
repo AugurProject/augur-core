@@ -67,9 +67,9 @@ library Trade {
 
         Contracts memory _contracts = getContracts(_controller, _orderId);
         FilledOrder memory _order = getOrder(_contracts, _orderId);
-        Order.TradeTypes _orderTradeType = _contracts.orders.getTradeType(_orderId);
-        Participant memory _creator = getMaker(_contracts, _order, _orderTradeType);
-        Participant memory _filler = getFiller(_contracts, _orderTradeType, _fillerAddress, _fillerSize);
+        Order.Types _orderOrderType = _contracts.orders.getOrderType(_orderId);
+        Participant memory _creator = getMaker(_contracts, _order, _orderOrderType);
+        Participant memory _filler = getFiller(_contracts, _orderOrderType, _fillerAddress, _fillerSize);
 
         return Data({
             contracts: _contracts,
@@ -283,8 +283,8 @@ library Trade {
         });
     }
 
-    function getMaker(Contracts _contracts, FilledOrder _order, Order.TradeTypes _orderTradeType) private view returns (Participant memory) {
-        Direction _direction = (_orderTradeType == Order.TradeTypes.Bid) ? Direction.Long : Direction.Short;
+    function getMaker(Contracts _contracts, FilledOrder _order, Order.Types _orderOrderType) private view returns (Participant memory) {
+        Direction _direction = (_orderOrderType == Order.Types.Bid) ? Direction.Long : Direction.Short;
         uint256 _sharesToSell = _contracts.orders.getOrderSharesEscrowed(_order.orderId);
         uint256 _sharesToBuy = _contracts.orders.getAmount(_order.orderId).sub(_sharesToSell);
         return Participant({
@@ -297,8 +297,8 @@ library Trade {
         });
     }
 
-    function getFiller(Contracts _contracts, Order.TradeTypes _orderTradeType, address _address, uint256 _size) private view returns (Participant memory) {
-        Direction _direction = (_orderTradeType == Order.TradeTypes.Bid) ? Direction.Short : Direction.Long;
+    function getFiller(Contracts _contracts, Order.Types _orderOrderType, address _address, uint256 _size) private view returns (Participant memory) {
+        Direction _direction = (_orderOrderType == Order.Types.Bid) ? Direction.Short : Direction.Long;
         uint256 _sharesToSell = getFillerSharesToSell(_contracts.longShareToken, _contracts.shortShareTokens, _address, _direction, _size);
         uint256 _sharesToBuy = _size.sub(_sharesToSell);
         return Participant({
@@ -335,7 +335,7 @@ library Trade {
     }
 
     function getDirections(IOrders _orders, bytes32 _orderId) private view returns (Direction _creatorDirection, Direction _fillerDirection) {
-        return (_orders.getTradeType(_orderId) == Order.TradeTypes.Bid)
+        return (_orders.getOrderType(_orderId) == Order.Types.Bid)
             ? (Direction.Long, Direction.Short)
             : (Direction.Short, Direction.Long)
         ; // move semicolon up a line when https://github.com/duaraghav8/Solium/issues/110 is fixed
@@ -356,11 +356,11 @@ library Trade {
 
 
 library DirectionExtensions {
-    function toTradeType(Trade.Direction _direction) internal pure returns (Order.TradeTypes) {
+    function toOrderType(Trade.Direction _direction) internal pure returns (Order.Types) {
         if (_direction == Trade.Direction.Long) {
-            return Order.TradeTypes.Bid;
+            return Order.Types.Bid;
         } else {
-            return Order.TradeTypes.Ask;
+            return Order.Types.Ask;
         }
     }
 }

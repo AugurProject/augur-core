@@ -23,7 +23,7 @@ contract MockAugur is Controlled {
     // Logging
     //
     bool private logMarketCreatedCalledValue;
-    
+
     function logMarketCreatedCalled() public returns(bool) {return logMarketCreatedCalledValue;}
 
     function logMarketCreated(IUniverse _universe, address _market, address _marketCreator, uint256 _marketCreationFee, string _extraInfo) public returns (bool) {
@@ -51,7 +51,7 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logOrderCanceled(IUniverse _universe, address _shareToken, address _sender, bytes32 _orderId, Order.TradeTypes _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public onlyWhitelistedCallers returns (bool) {
+    function logOrderCanceled(IUniverse _universe, address _shareToken, address _sender, bytes32 _orderId, Order.Types _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public onlyWhitelistedCallers returns (bool) {
         return true;
     }
 
@@ -67,8 +67,8 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    bool private logUniverseForkedCalledValue;    
-    
+    bool private logUniverseForkedCalledValue;
+
     function logUniverseForkedCalled() public returns (bool) { return logUniverseForkedCalledValue; }
 
     function logUniverseForked() public returns (bool) {
