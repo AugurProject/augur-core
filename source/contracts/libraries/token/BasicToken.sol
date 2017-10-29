@@ -36,6 +36,7 @@ contract BasicToken is ERC20Basic {
         balances[_from] = balances[_from].sub(_value);
         balances[_to] = balances[_to].add(_value);
         Transfer(_from, _to, _value);
+        emitTransferLogs(_from, _to, _value);
         return true;
     }
 
