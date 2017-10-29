@@ -8,8 +8,9 @@ from pytest import fixture, raises
 def test_basic_token_transfer(localFixture, mockToken, mockAugur):
     
     mockToken.mint(tester.a1, 100)
-    assert mockToken.getBalanceForUser(tester.a1) == 100
-
+    assert mockToken.balanceOf(tester.a1) == 100
+    with raises(TransactionFailed, message="can not call internal method"):
+        mockToken.internalTransfer(tester.a1, tester.a2, 100)
 
 
 
@@ -19,7 +20,6 @@ def localSnapshot(fixture, augurInitializedSnapshot):
     fixture.resetToSnapshot(augurInitializedSnapshot)
     controller = fixture.contracts['Controller']
     mockToken = fixture.uploadAndAddToController("solidity_test_helpers/MockToken.sol")
-    assert fixture.contracts['MockToken']
     mockAugur = fixture.uploadAndAddToController("solidity_test_helpers/MockAugur.sol")
     controller.setValue(stringToBytes('Augur'), mockAugur.address)
     return fixture.createSnapshot()
