@@ -149,42 +149,36 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     }
 
     function disputeDesignatedReport(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes triggersMigration returns (bool) {
-        require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
-        uint256 _bondAmount = Reporting.getDesignatedReporterDisputeBondAmount();
-        designatedReporterDisputeBond = DisputeBondFactory(controller.lookup("DisputeBondFactory")).createDisputeBond(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
-        extraDisputeBondRemainingToBePaidOut += _bondAmount;
-        this.increaseTotalStake(_bondAmount);
-        reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, designatedReporterDisputeBond, _bondAmount);
-        if (_attotokens > 0) {
-            IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
-            // We expect trustedBuy to call updateTentativeWinningPayoutDistributionHash
-            _stakeToken.trustedBuy(msg.sender, _attotokens);
-        } else {
-            updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
-        }
-        reportingWindow.updateMarketPhase();
-        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, ReportingState.DESIGNATED_DISPUTE, _bondAmount);
-        return true;
+        return internalDisputeReport(ReportingState.DESIGNATED_DISPUTE, _payoutNumerators, _attotokens, _invalid);
     }
 
     function disputeFirstReporters(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes triggersMigration returns (bool) {
-        require(getReportingState() == ReportingState.FIRST_DISPUTE);
-        uint256 _bondAmount = Reporting.getFirstReportersDisputeBondAmount();
-        firstReportersDisputeBond = DisputeBondFactory(controller.lookup("DisputeBondFactory")).createDisputeBond(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
+        return internalDisputeReport(ReportingState.FIRST_DISPUTE, _payoutNumerators, _attotokens, _invalid);
+    }
+
+    function internalDisputeReport(ReportingState _reportingState, uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) private onlyInGoodTimes returns (bool) {
+        require(getReportingState() == _reportingState);
+        uint256 _bondAmount = _reportingState == ReportingState.DESIGNATED_DISPUTE ? Reporting.getDesignatedReporterDisputeBondAmount() : Reporting.getFirstReportersDisputeBondAmount();
+        IDisputeBond _bond = DisputeBondFactory(controller.lookup("DisputeBondFactory")).createDisputeBond(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
         extraDisputeBondRemainingToBePaidOut += _bondAmount;
         this.increaseTotalStake(_bondAmount);
-        reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, firstReportersDisputeBond, _bondAmount);
-        IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
-        migrateReportingWindow(_newReportingWindow);
+        reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, _bond, _bondAmount);
+        if (_reportingState == ReportingState.DESIGNATED_DISPUTE) {
+            designatedReporterDisputeBond = _bond;
+            reportingWindow.updateMarketPhase();
+        } else {
+            firstReportersDisputeBond = _bond;
+            IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
+            migrateReportingWindow(_newReportingWindow);
+        }
         if (_attotokens > 0) {
-            require(derivePayoutDistributionHash(_payoutNumerators, _invalid) != tentativeWinningPayoutDistributionHash);
             IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
             // We expect trustedBuy to call updateTentativeWinningPayoutDistributionHash
             _stakeToken.trustedBuy(msg.sender, _attotokens);
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         }
-        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, ReportingState.FIRST_DISPUTE, _bondAmount);
+        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, _reportingState, _bondAmount);
         return true;
     }
 
