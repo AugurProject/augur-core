@@ -17,10 +17,10 @@ def test_reputation_token_creation(localFixture, mockUniverse):
     assert reputationToken.getUniverse() == mockUniverse.address
 
 
-def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedReputationToken, mockStakeToken, mockReputationToken, mockMarket, mockDisputeBondToken, mockLegacyReputationToken):
+def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedReputationToken, mockStakeToken, mockReputationToken, mockMarket, mockDisputeBond, mockLegacyReputationToken):
     with raises(TransactionFailed, message="universe has to contain stake token && called from stake token"):
         initializedReputationToken.migrateOutStakeToken(mockUniverse.address)
-    
+
     mockUniverse.setIsContainerForStakeToken(True)
     with raises(TransactionFailed, message="destination reputation tokens universe needs to be parent of local universe"):
         mockStakeToken.callMigrateOutStakeToken(initializedReputationToken.address, mockReputationToken.address, tester.a1, 100)
@@ -29,8 +29,8 @@ def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedRep
     with raises(TransactionFailed, message="destination reputation tokens needs to be its universes reputation token"):
         mockStakeToken.callMigrateOutStakeToken(initializedReputationToken.address, mockReputationToken.address, tester.a1, 100)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
-    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')    
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED())
+    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')
     parentUniverse.setForkingMarket(mockMarket.address)
     parentUniverse.setReputationToken(mockReputationToken.address)
     mockReputationToken.setUniverse(parentUniverse.address)
@@ -68,7 +68,7 @@ def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedRep
     assert mockReputationToken.getMigrateInAttoTokensValue() == 35
     assert mockReputationToken.getMigrateInBonusIfInForkWindowValue() == True
 
-    newReputationToken = localFixture.upload('solidity_test_helpers/MockReputationToken.sol', 'newReputationToken')   
+    newReputationToken = localFixture.upload('solidity_test_helpers/MockReputationToken.sol', 'newReputationToken')
     parentUniverse.setReputationToken(newReputationToken.address)
     newReputationToken.setUniverse(parentUniverse.address)
     newReputationToken.setTotalSupply(6005)
@@ -81,24 +81,24 @@ def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedRep
     assert newReputationToken.getMigrateInBonusIfInForkWindowValue() == False
 
     with raises(TransactionFailed, message="universe needs to contain dispute bond"):
-        mockDisputeBondToken.callMigrateOutDisputeBondToken(initializedReputationToken.address, mockReputationToken.address, mockDisputeBondToken.address, 100)
+        mockDisputeBond.callMigrateOutDisputeBond(initializedReputationToken.address, mockReputationToken.address, mockDisputeBond.address, 100)
 
 def test_reputation_token_migrate_in(localFixture, mockUniverse, initializedReputationToken, mockReputationToken, mockMarket):
     with raises(TransactionFailed, message="caller needs to be reputation token"):
         initializedReputationToken.migrateIn(tester.a1, 100, False)
-    
+
     mockUniverse.setIsContainerForStakeToken(True)
     with raises(TransactionFailed, message="calling reputation token has to be parent universe's reputation token"):
         mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a1, 1000, False)
-    
-    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')    
+
+    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')
     parentUniverse.setReputationToken(mockReputationToken.address)
     mockUniverse.setParentUniverse(parentUniverse.address)
     mockReputationToken.setUniverse(mockUniverse.address)
     with raises(TransactionFailed, message="parent universe needs to have a forking market"):
         mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a1, 100, False)
-    
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
+
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED())
     parentUniverse.setForkingMarket(mockMarket.address)
 
     assert initializedReputationToken.totalSupply() == 0
@@ -118,20 +118,20 @@ def test_reputation_token_migrate_from_legacy_reputationToken(localFixture, init
     assert mockLegacyReputationToken.getTransferFromValueValue() == 100
     assert initializedReputationToken.totalSupply() == 100
 
-def test_reputation_token_mint_for_dispute_bond_migration(localFixture, initializedReputationToken, mockDisputeBondToken, mockUniverse):
+def test_reputation_token_mint_for_dispute_bond_migration(localFixture, initializedReputationToken, mockDisputeBond, mockUniverse):
     with raises(TransactionFailed, message="caller has to be a IDisputeBond"):
         initializedReputationToken.mintForDisputeBondMigration(1000)
-    
-    with raises(TransactionFailed, message="parent universe does not contain dispute bond"):
-        mockDisputeBondToken.callMintForDisputeBondMigration(1000)
 
-    assert initializedReputationToken.balanceOf(mockDisputeBondToken.address) == 0
-    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')    
+    with raises(TransactionFailed, message="parent universe does not contain dispute bond"):
+        mockDisputeBond.callMintForDisputeBondMigration(1000)
+
+    assert initializedReputationToken.balanceOf(mockDisputeBond.address) == 0
+    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')
     mockUniverse.setParentUniverse(parentUniverse.address)
-    parentUniverse.setIsContainerForDisputeBondToken(True)
+    parentUniverse.setIsContainerForDisputeBond(True)
     mockUniverse.setIsParentOf(True)
-    assert mockDisputeBondToken.callMintForDisputeBondMigration(initializedReputationToken.address, 100)
-    assert initializedReputationToken.balanceOf(mockDisputeBondToken.address) == 100
+    assert mockDisputeBond.callMintForDisputeBondMigration(initializedReputationToken.address, 100)
+    assert initializedReputationToken.balanceOf(mockDisputeBond.address) == 100
 
 
 def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializedReputationToken, mockMarket, mockReportingWindow, mockStakeToken, mockParticipationToken, mockLegacyReputationToken):
@@ -153,7 +153,7 @@ def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializ
     mockUniverse.setIsContainerForReportingWindow(True)
     with raises(TransactionFailed, message="source balance can not be 0"):
         mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
-    
+
 
     assert initializedReputationToken.totalSupply() == 0
     assert initializedReputationToken.balanceOf(tester.a1) == 0
@@ -170,7 +170,7 @@ def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializ
 
     assert mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 35)
     # TODO find out why total supply grows
-    assert initializedReputationToken.totalSupply() == 35 
+    assert initializedReputationToken.totalSupply() == 35
     assert initializedReputationToken.balanceOf(tester.a2) == 35
     assert initializedReputationToken.balanceOf(tester.a1) == 0
 
@@ -212,8 +212,8 @@ def mockMarket(localFixture):
     return mockMarket
 
 @fixture
-def mockDisputeBondToken(localFixture):
-    return localFixture.contracts['MockDisputeBondToken']
+def mockDisputeBond(localFixture):
+    return localFixture.contracts['MockDisputeBond']
 
 @fixture
 def mockReportingWindow(localFixture):

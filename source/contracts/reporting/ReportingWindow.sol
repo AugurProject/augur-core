@@ -383,11 +383,11 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
         return _market.isContainerForStakeToken(_shadyStakeToken);
     }
 
-    function isContainerForDisputeBond(IDisputeBond _shadyDisputeBondToken) public afterInitialized view returns (bool) {
-        IMarket _shadyMarket = _shadyDisputeBondToken.getMarket();
+    function isContainerForDisputeBond(IDisputeBond _shadyDisputeBond) public afterInitialized view returns (bool) {
+        IMarket _shadyMarket = _shadyDisputeBond.getMarket();
         require(isContainerForMarket(_shadyMarket));
         IMarket _market = _shadyMarket;
-        return _market.isContainerForDisputeBondToken(_shadyDisputeBondToken);
+        return _market.isContainerForDisputeBond(_shadyDisputeBond);
     }
 
     function isContainerForMarket(IMarket _shadyMarket) public afterInitialized view returns (bool) {

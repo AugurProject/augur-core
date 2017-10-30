@@ -155,7 +155,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function decreaseRepAvailableForExtraBondPayouts(uint256 _amount) public onlyInGoodTimes returns (bool) {
-        require(parentUniverse.isContainerForDisputeBondToken(IDisputeBond(msg.sender)));
+        require(parentUniverse.isContainerForDisputeBond(IDisputeBond(msg.sender)));
         repAvailableForExtraBondPayouts = repAvailableForExtraBondPayouts.sub(_amount);
         return true;
     }
@@ -170,7 +170,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _shadyReportingWindow == _legitReportingWindow;
     }
 
-    function isContainerForDisputeBondToken(IDisputeBond _shadyDisputeBond) public view returns (bool) {
+    function isContainerForDisputeBond(IDisputeBond _shadyDisputeBond) public view returns (bool) {
         IMarket _shadyMarket = _shadyDisputeBond.getMarket();
         if (_shadyMarket == address(0)) {
             return false;
@@ -179,7 +179,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
             return false;
         }
         IMarket _legitMarket = _shadyMarket;
-        return _legitMarket.isContainerForDisputeBondToken(_shadyDisputeBond);
+        return _legitMarket.isContainerForDisputeBond(_shadyDisputeBond);
     }
 
     function isContainerForMarket(IMarket _shadyMarket) public view returns (bool) {
