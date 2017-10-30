@@ -268,15 +268,11 @@ def test_orderBidSorting(where, orderType, hints, contractsFixture, market):
 
 def test_saveOrder(contractsFixture, market):
     orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
     orderId1 = orders.saveOrder(BID, market.address, 10, fix('0.5'), tester.a1, NO, 0, 10, longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
     orderId2 = orders.saveOrder(ASK, market.address, 10, fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
-
-    assert(ordersFetcher.getOrder(orderId1) == [10, fix('0.5'), bytesToHexString(tester.a1), 0, 10, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order1 didn't return the expected array of data"
-    assert(ordersFetcher.getOrder(orderId2) == [10, fix('0.5'), bytesToHexString(tester.a2), fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected array of data"
 
     assert(orders.getAmount(orderId1) == 10), "amount for order1 should be set to 10"
     assert(orders.getAmount(orderId2) == 10), "amount for order2 should be set to 10"
@@ -287,12 +283,23 @@ def test_saveOrder(contractsFixture, market):
     assert(orders.getOrderCreator(orderId1) == bytesToHexString(tester.a1)), "orderOwner for order1 should be tester.a1"
     assert(orders.getOrderCreator(orderId2) == bytesToHexString(tester.a2)), "orderOwner for order2 should be tester.a2"
 
+    assert orders.getOrderMoneyEscrowed(orderId1) == 0, "money escrowed should be 0"
+    assert orders.getOrderMoneyEscrowed(orderId2) ==  fix('5'), "money escrowed should be 5 ETH"
+
+    assert orders.getOrderSharesEscrowed(orderId1) == 10, "shares escrowed should be 10"
+    assert orders.getOrderSharesEscrowed(orderId2) == 0, "shares escrowed should be 0"
+
+    assert orders.getBetterOrderId(orderId1) == longTo32Bytes(0), "better order id should be 0"
+    assert orders.getBetterOrderId(orderId2) == longTo32Bytes(0), "better order id should be 0"
+
+    assert orders.getWorseOrderId(orderId1) == longTo32Bytes(0), "worse order id should be 0"
+    assert orders.getWorseOrderId(orderId2) == longTo32Bytes(0), "worse order id should be 0"
+
     assert(orders.removeOrder(orderId1) == 1), "Remove order 1"
     assert(orders.removeOrder(orderId2) == 1), "Remove order 2"
 
 def test_fillOrder(contractsFixture, market):
     orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
     orderId1 = orders.saveOrder(BID, market.address, 10, fix('0.5'), tester.a1, NO, 0, 10, longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
@@ -309,18 +316,35 @@ def test_fillOrder(contractsFixture, market):
     # fully fill
     assert(orders.fillOrder(orderId1, 10, 0) == 1), "fillOrder wasn't executed successfully"
     # prove all
-    assert(ordersFetcher.getOrder(orderId1) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order1 didn't return the expected data array"
+    assert orders.getAmount(orderId1) == 0
+    assert orders.getPrice(orderId1) == 0
+    assert orders.getOrderCreator(orderId1) == longToHexString(0)
+    assert orders.getOrderMoneyEscrowed(orderId1) == 0
+    assert orders.getOrderSharesEscrowed(orderId1) == 0
+    assert orders.getBetterOrderId(orderId1) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderId1) == longTo32Bytes(0)
     # test partial fill
     assert(orders.fillOrder(orderId2, 0, fix('3')) == 1), "fillOrder wasn't executed successfully"
     # confirm partial fill
-    assert(ordersFetcher.getOrder(orderId2) == [4, fix('0.5'), bytesToHexString(tester.a2), fix('2'), 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected data array"
+    assert orders.getAmount(orderId2) == 4
+    assert orders.getPrice(orderId2) == fix('0.5')
+    assert orders.getOrderCreator(orderId2) == bytesToHexString(tester.a2)
+    assert orders.getOrderMoneyEscrowed(orderId2) == fix('2')
+    assert orders.getOrderSharesEscrowed(orderId2) == 0
+    assert orders.getBetterOrderId(orderId2) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderId2) == longTo32Bytes(0)
     # fill rest of order2
     assert(orders.fillOrder(orderId2, 0, fix('2')) == 1), "fillOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(orderId2) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order2 didn't return the expected data array"
+    assert orders.getAmount(orderId2) == 0
+    assert orders.getPrice(orderId2) == 0
+    assert orders.getOrderCreator(orderId2) == longToHexString(0)
+    assert orders.getOrderMoneyEscrowed(orderId2) == 0
+    assert orders.getOrderSharesEscrowed(orderId2) == 0
+    assert orders.getBetterOrderId(orderId2) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderId2) == longTo32Bytes(0)
 
 def test_removeOrder(contractsFixture, market):
     orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
 
     orderId1 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
@@ -328,8 +352,20 @@ def test_removeOrder(contractsFixture, market):
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
     orderId3 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
     assert(orderId3 != bytearray(32)), "saveOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(orderId3) == [fix('10'), fix('0.5'), bytesToHexString(tester.a1), 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order3 didn't return the expected data array"
+    assert orders.getAmount(orderId3) == fix('10')
+    assert orders.getPrice(orderId3) == fix('0.5')
+    assert orders.getOrderCreator(orderId3) == bytesToHexString(tester.a1)
+    assert orders.getOrderMoneyEscrowed(orderId3) == 0
+    assert orders.getOrderSharesEscrowed(orderId3) == fix('10')
+    assert orders.getBetterOrderId(orderId3) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderId3) == longTo32Bytes(0)
     assert(orders.removeOrder(orderId3) == 1), "removeOrder wasn't executed successfully"
-    assert(ordersFetcher.getOrder(orderId3) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]), "getOrder for order3 should return an 0'd out array as it has been removed"
+    assert orders.getAmount(orderId3) == 0
+    assert orders.getPrice(orderId3) == 0
+    assert orders.getOrderCreator(orderId3) == longToHexString(0)
+    assert orders.getOrderMoneyEscrowed(orderId3) == 0
+    assert orders.getOrderSharesEscrowed(orderId3) == 0
+    assert orders.getBetterOrderId(orderId3) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderId3) == longTo32Bytes(0)
     assert(orders.removeOrder(orderId1) == 1), "Remove order 1"
     assert(orders.removeOrder(orderId2) == 1), "Remove order 2"

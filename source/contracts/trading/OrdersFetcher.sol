@@ -20,18 +20,6 @@ import 'libraries/Extractable.sol';
 contract OrdersFetcher is Controlled, Extractable, IOrdersFetcher {
     using Bytes32Arrays for bytes32[];
 
-    function getOrder(bytes32 _orderId) public view returns (uint256 _attoshares, uint256 _displayPrice, address _owner, uint256 _sharesEscrowed, uint256 _tokensEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, uint256 _gasPrice) {
-        IOrders _orders = IOrders(controller.lookup("Orders"));
-        _attoshares = _orders.getAmount(_orderId);
-        _displayPrice = _orders.getPrice(_orderId);
-        _owner = _orders.getOrderCreator(_orderId);
-        _tokensEscrowed = _orders.getOrderMoneyEscrowed(_orderId);
-        _sharesEscrowed = _orders.getOrderSharesEscrowed(_orderId);
-        _betterOrderId = _orders.getBetterOrderId(_orderId);
-        _worseOrderId = _orders.getWorseOrderId(_orderId);
-        return (_attoshares, _displayPrice, _owner, _tokensEscrowed, _sharesEscrowed, _betterOrderId, _worseOrderId, 0);
-    }
-
     function ascendOrderList(Order.Types _type, uint256 _price, bytes32 _lowestOrderId) public view returns (bytes32 _betterOrderId, bytes32 _worseOrderId) {
         _worseOrderId = _lowestOrderId;
         bool _isWorstPrice;
