@@ -29,15 +29,10 @@ contract StandardToken is ERC20, BasicToken {
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         uint256 _allowance = allowed[_from][msg.sender];
 
-        // Check is not needed because sub(_allowance, _value) will already throw if this condition is not met
-        // require (_value <= _allowance);
-
-        balances[_to] = balances[_to].add(_value);
-        balances[_from] = balances[_from].sub(_value);
+        internalTransfer(_from, _to, _value);
         if (_allowance != ETERNAL_APPROVAL_VALUE) {
             allowed[_from][msg.sender] = _allowance.sub(_value);
         }
-        emitTransferLogs(_from, _to, _value);
         return true;
     }
 
