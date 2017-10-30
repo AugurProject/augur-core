@@ -20,9 +20,10 @@ import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
 import 'reporting/IParticipationToken.sol';
 import 'factories/ParticipationTokenFactory.sol';
+import 'libraries/Extractable.sol';
 
 
-contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingWindow {
+contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable, IReportingWindow {
     using SafeMathUint256 for uint256;
     using Set for Set.Data;
     using RunningAverage for RunningAverage.Data;
@@ -407,5 +408,12 @@ contract ReportingWindow is DelegationTarget, ITyped, Initializable, IReportingW
 
     function isForkingMarketFinalized() public afterInitialized view returns (bool) {
         return getUniverse().getForkingMarket().getReportingState() == IMarket.ReportingState.FINALIZED;
+    }
+
+    // Disallow Cash extraction
+    function getProtectedTokens() internal returns (address[] memory) {
+        address[] memory _protectedTokens = new address[](1);
+        _protectedTokens[0] = controller.lookup("Cash");
+        return _protectedTokens;
     }
 }

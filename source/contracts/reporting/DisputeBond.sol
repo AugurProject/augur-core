@@ -9,11 +9,13 @@ import 'libraries/Ownable.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IMarket.sol';
+import 'libraries/Extractable.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/Reporting.sol';
+import 'libraries/Extractable.sol';
 
 
-contract DisputeBond is DelegationTarget, ITyped, Initializable, Ownable, IDisputeBond {
+contract DisputeBond is DelegationTarget, Extractable, ITyped, Initializable, Ownable, IDisputeBond {
     using SafeMathUint256 for uint256;
 
     IMarket private market;
@@ -39,24 +41,22 @@ contract DisputeBond is DelegationTarget, ITyped, Initializable, Ownable, IDispu
         bool _isFinalized = market.getReportingState() == IMarket.ReportingState.FINALIZED;
         require(_isFinalized && market.getFinalPayoutDistributionHash() != disputedPayoutDistributionHash);
         require(getUniverse().getForkingMarket() != market);
-        IReputationToken _reputationToken = reputationToken;
-        uint256 _amountToTransfer = _reputationToken.balanceOf(this);
+        uint256 _amountToTransfer = reputationToken.balanceOf(this);
         if (bondRemainingToBePaidOut > bondAmount) {
             uint256 _amountToCollectFeesOn = _amountToTransfer.min(bondRemainingToBePaidOut - bondAmount);
             market.getReportingWindow().collectDisputeBondReportingFees(owner, _amountToCollectFeesOn, forgoFees);
         }
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
-        _reputationToken.transfer(owner, _amountToTransfer);
+        reputationToken.transfer(owner, _amountToTransfer);
         return true;
     }
 
     function withdrawDisavowedTokens() public onlyOwner onlyInGoodTimes returns (bool) {
         require(!market.isContainerForDisputeBond(this));
         require(getUniverse().getForkingMarket() != market);
-        IReputationToken _reputationToken = reputationToken;
-        uint256 _amountToTransfer = _reputationToken.balanceOf(this);
+        uint256 _amountToTransfer = reputationToken.balanceOf(this);
         bondRemainingToBePaidOut = bondRemainingToBePaidOut.sub(_amountToTransfer);
-        _reputationToken.transfer(owner, _amountToTransfer);
+        reputationToken.transfer(owner, _amountToTransfer);
         return true;
     }
 
@@ -114,8 +114,7 @@ contract DisputeBond is DelegationTarget, ITyped, Initializable, Ownable, IDispu
     }
 
     function withdrawInEmergency() public onlyOwner onlyInBadTimes returns (bool) {
-        IReputationToken _reputationToken = reputationToken;
-        _reputationToken.transfer(owner, _reputationToken.balanceOf(this));
+        reputationToken.transfer(owner, reputationToken.balanceOf(this));
         return true;
     }
 
@@ -141,5 +140,12 @@ contract DisputeBond is DelegationTarget, ITyped, Initializable, Ownable, IDispu
 
     function getBondRemainingToBePaidOut() constant public returns (uint256) {
         return bondRemainingToBePaidOut;
+    }
+
+    // Disallow REP extraction
+    function getProtectedTokens() internal returns (address[] memory) {
+        address[] memory _protectedTokens = new address[](1);
+        _protectedTokens[0] = reputationToken;
+        return _protectedTokens;
     }
 }

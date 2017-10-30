@@ -8,10 +8,11 @@ import 'libraries/Initializable.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingWindow.sol';
+import 'libraries/Extractable.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
-contract ParticipationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IParticipationToken {
+contract ParticipationToken is DelegationTarget, Extractable, ITyped, Initializable, VariableSupplyToken, IParticipationToken {
     using SafeMathUint256 for uint256;
 
     IReportingWindow private reportingWindow;
@@ -65,5 +66,12 @@ contract ParticipationToken is DelegationTarget, ITyped, Initializable, Variable
         Transfer(_from, _to, _value);
         controller.getAugur().logParticipationTokensTransferred(reportingWindow.getUniverse(), _from, _to, _value);
         return true;
+    }
+
+    // Disallow REP extraction
+    function getProtectedTokens() internal returns (address[] memory) {
+        address[] memory _protectedTokens = new address[](1);
+        _protectedTokens[0] = reportingWindow.getReputationToken();
+        return _protectedTokens;
     }
 }

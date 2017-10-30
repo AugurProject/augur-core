@@ -4,6 +4,7 @@ pragma solidity 0.4.17;
 import 'IController.sol';
 import 'IControlled.sol';
 import 'libraries/token/ERC20Basic.sol';
+import 'libraries/Extractable.sol';
 
 
 contract Controller is IController {
@@ -91,6 +92,16 @@ contract Controller is IController {
 
     function suicideFunds(IControlled _target, address _destination, ERC20Basic[] _tokens) public devModeOwnerOnly returns(bool) {
         _target.suicideFunds(_destination, _tokens);
+        return true;
+    }
+
+    function extractEther(Extractable _target, address _destination) public devModeOwnerOnly returns(bool) {
+        _target.extractEther(_destination);
+        return true;
+    }
+
+    function extractTokens(Extractable _target, address _destination, ERC20Basic _token) public devModeOwnerOnly returns(bool) {
+        _target.extractTokens(_destination, _token);
         return true;
     }
 

@@ -14,9 +14,10 @@ import 'reporting/IReportingWindow.sol';
 import 'reporting/IMarket.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'Augur.sol';
+import 'libraries/Extractable.sol';
 
 
-contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IStakeToken {
+contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, VariableSupplyToken, IStakeToken {
     using SafeMathUint256 for uint256;
 
     IMarket public market;
@@ -218,5 +219,12 @@ contract StakeToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         Transfer(_from, _to, _value);
         controller.getAugur().logStakeTokensTransferred(market.getUniverse(), _from, _to, _value);
         return true;
+    }
+
+    // Disallow REP extraction
+    function getProtectedTokens() internal returns (address[] memory) {
+        address[] memory _protectedTokens = new address[](1);
+        _protectedTokens[0] = getReputationToken();
+        return _protectedTokens;
     }
 }
