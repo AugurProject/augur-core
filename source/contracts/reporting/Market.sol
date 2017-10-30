@@ -19,11 +19,12 @@ import 'factories/MapFactory.sol';
 import 'libraries/token/ERC20Basic.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/SafeMathInt256.sol';
+import 'libraries/Extractable.sol';
 import 'reporting/Reporting.sol';
 import 'Augur.sol';
 
 
-contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
+contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable, IMarket {
     using SafeMathUint256 for uint256;
     using SafeMathInt256 for int256;
 
@@ -75,7 +76,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(_creator != NULL_ADDRESS);
         require(_designatedReporterAddress != NULL_ADDRESS);
         reportingWindow = _reportingWindow;
-        require(address(getForkingMarket()) == NULL_ADDRESS);
+        require(getForkingMarket() == IMarket(0));
         owner = _creator;
         assessFees();
         endTime = _endTime;
@@ -90,8 +91,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
-        // If the value was not at least equal to the sum of these fees this will throw
-        uint256 _refund = msg.value.sub(reporterGasCostsFeeAttoeth.add(validityBondAttoeth));
+        // If the value was not at least equal to the sum of these fees this will throw. The addition here cannot overflow as these fees are capped
+        uint256 _refund = msg.value.sub(reporterGasCostsFeeAttoeth + validityBondAttoeth);
         if (_refund > 0) {
             require(owner.call.value(_refund)());
         }
@@ -148,42 +149,36 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function disputeDesignatedReport(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes triggersMigration returns (bool) {
-        require(getReportingState() == ReportingState.DESIGNATED_DISPUTE);
-        uint256 _bondAmount = Reporting.getDesignatedReporterDisputeBondAmount();
-        designatedReporterDisputeBond = DisputeBondFactory(controller.lookup("DisputeBondFactory")).createDisputeBond(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
-        extraDisputeBondRemainingToBePaidOut += _bondAmount;
-        this.increaseTotalStake(_bondAmount);
-        reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, designatedReporterDisputeBond, _bondAmount);
-        if (_attotokens > 0) {
-            IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
-            // We expect trustedBuy to call updateTentativeWinningPayoutDistributionHash
-            _stakeToken.trustedBuy(msg.sender, _attotokens);
-        } else {
-            updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
-        }
-        reportingWindow.updateMarketPhase();
-        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, ReportingState.DESIGNATED_DISPUTE, _bondAmount);
-        return true;
+        return internalDisputeReport(ReportingState.DESIGNATED_DISPUTE, _payoutNumerators, _attotokens, _invalid);
     }
 
     function disputeFirstReporters(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes triggersMigration returns (bool) {
-        require(getReportingState() == ReportingState.FIRST_DISPUTE);
-        uint256 _bondAmount = Reporting.getFirstReportersDisputeBondAmount();
-        firstReportersDisputeBond = DisputeBondFactory(controller.lookup("DisputeBondFactory")).createDisputeBond(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
+        return internalDisputeReport(ReportingState.FIRST_DISPUTE, _payoutNumerators, _attotokens, _invalid);
+    }
+
+    function internalDisputeReport(ReportingState _reportingState, uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) private onlyInGoodTimes returns (bool) {
+        require(getReportingState() == _reportingState);
+        uint256 _bondAmount = _reportingState == ReportingState.DESIGNATED_DISPUTE ? Reporting.getDesignatedReporterDisputeBondAmount() : Reporting.getFirstReportersDisputeBondAmount();
+        IDisputeBond _bond = DisputeBondFactory(controller.lookup("DisputeBondFactory")).createDisputeBond(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
         extraDisputeBondRemainingToBePaidOut += _bondAmount;
         this.increaseTotalStake(_bondAmount);
-        reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, firstReportersDisputeBond, _bondAmount);
-        IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
-        migrateReportingWindow(_newReportingWindow);
+        reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, _bond, _bondAmount);
+        if (_reportingState == ReportingState.DESIGNATED_DISPUTE) {
+            designatedReporterDisputeBond = _bond;
+            reportingWindow.updateMarketPhase();
+        } else {
+            firstReportersDisputeBond = _bond;
+            IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
+            migrateReportingWindow(_newReportingWindow);
+        }
         if (_attotokens > 0) {
-            require(derivePayoutDistributionHash(_payoutNumerators, _invalid) != tentativeWinningPayoutDistributionHash);
             IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
             // We expect trustedBuy to call updateTentativeWinningPayoutDistributionHash
             _stakeToken.trustedBuy(msg.sender, _attotokens);
         } else {
             updateTentativeWinningPayoutDistributionHash(tentativeWinningPayoutDistributionHash);
         }
-        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, ReportingState.FIRST_DISPUTE, _bondAmount);
+        controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, _reportingState, _bondAmount);
         return true;
     }
 
@@ -280,7 +275,11 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         finalizationTime = block.timestamp;
         transferIncorrectDisputeBondsToWinningStakeToken();
         // The validity bond is paid to the owner in any valid outcome and the reporting window otherwise
-        doFeePayout(isValid(), validityBondAttoeth);
+        if (isValid()) {
+            require(getOwner().call.value(validityBondAttoeth)());
+        } else {
+            cash.depositEtherFor.value(validityBondAttoeth)(getReportingWindow());
+        }
         reportingWindow.updateMarketPhase();
         controller.getAugur().logMarketFinalized(getUniverse(), this);
         return true;
@@ -385,15 +384,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function doFeePayout(bool _toOwner, uint256 _amount) private onlyInGoodTimes returns (bool) {
-        if (_toOwner) {
-            require(getOwner().call.value(_amount)());
-        } else {
-            cash.depositEtherFor.value(_amount)(getReportingWindow());
-        }
-        return true;
-    }
-
     // AUDIT: This is called at the beginning of StakeToken:buy. Look for reentrancy issues
     function firstReporterCompensationCheck(address _reporter) public onlyInGoodTimes returns (uint256) {
         require(isContainerForStakeToken(IStakeToken(msg.sender)));
@@ -414,7 +404,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function increaseTotalStake(uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(msg.sender == address(this) || isContainerForStakeToken(IStakeToken(msg.sender)));
-        totalStake = totalStake.add(_amount);
+        // This cannot reasonably exceed uint256 max value as it would require more REP than exists
+        totalStake += _amount;
         reportingWindow.increaseTotalStake(_amount);
         return true;
     }
@@ -422,7 +413,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {
         uint256 _sum = 0;
         for (uint8 i = 0; i < _payoutNumerators.length; i++) {
-            _sum = _sum.add(_payoutNumerators[i]);
+            // This cannot reasonably exceed uint256 max value as it would require an invalid numTicks
+            _sum += _payoutNumerators[i];
         }
         require(_sum == numTicks);
         return keccak256(_payoutNumerators, _invalid);
@@ -554,8 +546,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function isContainerForStakeToken(IStakeToken _shadyStakeToken) public view returns (bool) {
         bytes32 _shadyId = _shadyStakeToken.getPayoutDistributionHash();
-        IStakeToken _stakeToken = IStakeToken(stakeTokens.getAsAddressOrZero(_shadyId));
-        return _stakeToken == _shadyStakeToken;
+        return IStakeToken(stakeTokens.getAsAddressOrZero(_shadyId)) == _shadyStakeToken;
     }
 
     function isContainerForShareToken(IShareToken _shadyShareToken) public view returns (bool) {
@@ -679,5 +670,18 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             return 0;
         }
         return _winningDestination.getUniverse().getParentPayoutDistributionHash();
+    }
+
+    // Markets hold the initial fees paid by the creator in ETH and REP, so we dissallow ETH and REP extraction by the controller
+    function getProtectedTokens() internal returns (address[] memory) {
+        address[] memory _protectedTokens = new address[](numOutcomes + 3);
+        for (uint8 i = 0; i < numOutcomes; i++) {
+            _protectedTokens[i] = shareTokens[i];
+        }
+        // address(1) is the sentinel value for Ether extraction
+        _protectedTokens[numOutcomes] = address(1);
+        _protectedTokens[numOutcomes + 1] = reportingWindow.getReputationToken();
+        _protectedTokens[numOutcomes + 2] = cash;
+        return _protectedTokens;
     }
 }

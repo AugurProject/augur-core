@@ -8,9 +8,10 @@ import 'trading/IShareToken.sol';
 import 'libraries/CashAutoConverter.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'libraries/Extractable.sol';
 
 
-contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, ITradingEscapeHatch {
+contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter, ITradingEscapeHatch {
     using SafeMathUint256 for uint256;
 
     // market => (outcome => frozenShareValue)
@@ -83,5 +84,9 @@ contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, ITradingEsca
             // The market denominator will have to be < ~10**26 or a single complete set would be unpurchaseable with the total supply of ETH, so there is no realistic risk of overflow here in any case where shares actually exist in the market
             frozenShareValues[_market][_tempOutcome] = _shiftedPrices[_tempOutcome].mul(_market.getNumTicks()).div(_sumOfBids);
         }
+    }
+
+    function getProtectedTokens() internal returns (address[] memory) {
+        return new address[](0);
     }
 }
