@@ -577,18 +577,18 @@ def withdrawBondsFromDisputeTokens(market, lastReportersDisputeStakes, designate
     if (lastReportersDisputerAccountNum == None):
         if (designatedReporterDisputeBond and market.getFinalPayoutDistributionHash() != designatedReporterDisputeBond.getDisputedPayoutDistributionHash()):
             print "Withdrawing designated reporter dispute bond tokens"
-            accountBalanceBeforeWithdrawl = reputationToken.balanceOf(designatedReporterDisputeBond.getBondHolder())
+            accountBalanceBeforeWithdrawl = reputationToken.balanceOf(designatedReporterDisputeBond.getOwner())
             disputeBondBalanceBeforeWithdrawl = reputationToken.balanceOf(designatedReporterDisputeBond.address)
             designatedReporterDisputeBond.withdraw(sender=getattr(tester, 'k' + str(designatedReporterDisputerAccountNum)))
             assert reputationToken.balanceOf(designatedReporterDisputeBond.address) == 0
-            assert reputationToken.balanceOf(designatedReporterDisputeBond.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondBalanceBeforeWithdrawl
+            assert reputationToken.balanceOf(designatedReporterDisputeBond.getOwner()) == accountBalanceBeforeWithdrawl + disputeBondBalanceBeforeWithdrawl
         if (firstReportersDisputeBond and market.getFinalPayoutDistributionHash() != firstReportersDisputeBond.getDisputedPayoutDistributionHash()):
             print "Withdrawing first reporters dispute bond tokens"
-            accountBalanceBeforeWithdrawl = reputationToken.balanceOf(firstReportersDisputeBond.getBondHolder())
+            accountBalanceBeforeWithdrawl = reputationToken.balanceOf(firstReportersDisputeBond.getOwner())
             disputeBondBalanceBeforeWithdrawl = reputationToken.balanceOf(firstReportersDisputeBond.address)
             firstReportersDisputeBond.withdraw(sender=getattr(tester, 'k' + str(firstReportersDisputerAccountNum)))
             assert reputationToken.balanceOf(firstReportersDisputeBond.address) == 0
-            assert reputationToken.balanceOf(firstReportersDisputeBond.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondBalanceBeforeWithdrawl
+            assert reputationToken.balanceOf(firstReportersDisputeBond.getOwner()) == accountBalanceBeforeWithdrawl + disputeBondBalanceBeforeWithdrawl
     else:
         # Withdraw dispute bond tokens to the universe the disputers migrated to
         print "All reporters dispute stakes:"
@@ -618,10 +618,10 @@ def withdrawBondsFromDisputeTokens(market, lastReportersDisputeStakes, designate
                         destinationUniverseReputationToken = cUniverseReputationToken
                         print "Withdrawing designated reporter dispute bond tokens for a" + str(row[0]) + " to universe C"
                     if (destinationUniverse and destinationUniverseReputationToken):
-                        accountBalanceBeforeWithdrawl = destinationUniverseReputationToken.balanceOf(disputeBond.getBondHolder())
+                        accountBalanceBeforeWithdrawl = destinationUniverseReputationToken.balanceOf(disputeBond.getOwner())
                         disputeBond.withdrawToUniverse(destinationUniverse.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
                         assert reputationToken.balanceOf(disputeBond.address) == 0
-                        assert destinationUniverseReputationToken.balanceOf(disputeBond.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondBalanceBeforeWithdrawl * 2
+                        assert destinationUniverseReputationToken.balanceOf(disputeBond.getOwner()) == accountBalanceBeforeWithdrawl + disputeBondBalanceBeforeWithdrawl * 2
                         printTestAccountBalances(destinationUniverseReputationToken, True)
             if (row[0] == firstReportersDisputerAccountNum):
                 disputeAccountNum = firstReportersDisputerAccountNum
@@ -645,10 +645,10 @@ def withdrawBondsFromDisputeTokens(market, lastReportersDisputeStakes, designate
                         destinationUniverseReputationToken = cUniverseReputationToken
                         print "Withdrawing first reporters dispute bond tokens for a" + str(row[0]) + " to universe C"
                     if (destinationUniverse and destinationUniverseReputationToken):
-                        accountBalanceBeforeWithdrawl = destinationUniverseReputationToken.balanceOf(disputeBond.getBondHolder())
+                        accountBalanceBeforeWithdrawl = destinationUniverseReputationToken.balanceOf(disputeBond.getOwner())
                         disputeBond.withdrawToUniverse(destinationUniverse.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
                         assert reputationToken.balanceOf(disputeBond.address) == 0
-                        assert destinationUniverseReputationToken.balanceOf(disputeBond.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondBalanceBeforeWithdrawl * 2
+                        assert destinationUniverseReputationToken.balanceOf(disputeBond.getOwner()) == accountBalanceBeforeWithdrawl + disputeBondBalanceBeforeWithdrawl * 2
                         printTestAccountBalances(destinationUniverseReputationToken, True)
             if (row[0] == lastReportersDisputerAccountNum):
                 disputeAccountNum = lastReportersDisputerAccountNum
@@ -672,10 +672,10 @@ def withdrawBondsFromDisputeTokens(market, lastReportersDisputeStakes, designate
                         destinationUniverseReputationToken = cUniverseReputationToken
                         print "Withdrawing last reporters dispute bond tokens for a" + str(row[0]) + " to universe C"
                     if (destinationUniverse and destinationUniverseReputationToken):
-                        accountBalanceBeforeWithdrawl = destinationUniverseReputationToken.balanceOf(disputeBond.getBondHolder())
+                        accountBalanceBeforeWithdrawl = destinationUniverseReputationToken.balanceOf(disputeBond.getOwner())
                         disputeBond.withdrawToUniverse(destinationUniverse.address, sender=getattr(tester, 'k' + str(disputeAccountNum)))
                         assert reputationToken.balanceOf(disputeBond.address) == 0
-                        assert destinationUniverseReputationToken.balanceOf(disputeBond.getBondHolder()) == accountBalanceBeforeWithdrawl + disputeBondBalanceBeforeWithdrawl * 2
+                        assert destinationUniverseReputationToken.balanceOf(disputeBond.getOwner()) == accountBalanceBeforeWithdrawl + disputeBondBalanceBeforeWithdrawl * 2
                         printTestAccountBalances(destinationUniverseReputationToken, True)
 
 def printTestAccountBalances(reputationToken, showRepFractions):

@@ -28,7 +28,6 @@ contract Ownable is IOwnable {
         _;
     }
 
-
     function getOwner() public view returns (address) {
         return owner;
     }
