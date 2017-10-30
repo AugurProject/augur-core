@@ -19,41 +19,37 @@ WORSE_ORDER_ID = 6
 GAS_PRICE = 7
 
 def test_publicCreateOrder_bid(contractsFixture, cash, market):
-    createOrder = contractsFixture.contracts['CreateOrder']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
+    orders = contractsFixture.contracts['Orders']
     createOrder = contractsFixture.contracts['CreateOrder']
 
     orderID = createOrder.publicCreateOrder(BID, 1, 10**17, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 10**17)
     assert orderID
 
-    amount, displayPrice, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
-    assert amount == 1
-    assert displayPrice == 10**17
-    assert owner == bytesToHexString(tester.a0)
-    assert tokensEscrowed == 10**17
-    assert sharesEscrowed == 0
-    assert betterOrderId == bytearray(32)
-    assert worseOrderId == bytearray(32)
+    assert orders.getAmount(orderID) == 1
+    assert orders.getPrice(orderID) == 10**17
+    assert orders.getOrderCreator(orderID) == bytesToHexString(tester.a0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 10**17
+    assert orders.getOrderSharesEscrowed(orderID) == 0
+    assert orders.getBetterOrderId(orderID) == bytearray(32)
+    assert orders.getWorseOrderId(orderID) == bytearray(32)
 
 def test_publicCreateOrder_ask(contractsFixture, cash, market):
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
+    orders = contractsFixture.contracts['Orders']
     createOrder = contractsFixture.contracts['CreateOrder']
 
     orderID = createOrder.publicCreateOrder(ASK, 1, 10**17, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), 7, value = 10**18)
 
-    amount, displayPrice, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
-    assert amount == 1
-    assert displayPrice == 10**17
-    assert owner == bytesToHexString(tester.a0)
-    assert tokensEscrowed == 10**18 - 10**17
-    assert sharesEscrowed == 0
-    assert betterOrderId == bytearray(32)
-    assert worseOrderId == bytearray(32)
+    assert orders.getAmount(orderID) == 1
+    assert orders.getPrice(orderID) == 10**17
+    assert orders.getOrderCreator(orderID) == bytesToHexString(tester.a0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 10**18 - 10**17
+    assert orders.getOrderSharesEscrowed(orderID) == 0
+    assert orders.getBetterOrderId(orderID) == bytearray(32)
+    assert orders.getWorseOrderId(orderID) == bytearray(32)
     assert cash.balanceOf(market.address) == 10**18 - 10**17
 
 def test_publicCreateOrder_bid2(contractsFixture, cash, market, universe):
     orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']
     logs = []
 
@@ -69,12 +65,11 @@ def test_publicCreateOrder_bid2(contractsFixture, cash, market, universe):
     orderID = createOrder.publicCreateOrder(orderType, amount, fxpPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10'))
     assert orderID != bytearray(32), "Order ID should be non-zero"
 
-    retAmount, displayPrice, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
-    assert retAmount == amount
-    assert displayPrice == fxpPrice
-    assert owner == bytesToHexString(tester.a1)
-    assert tokensEscrowed == 0.6 * 10**18
-    assert sharesEscrowed == 0
+    assert orders.getAmount(orderID) == amount
+    assert orders.getPrice(orderID) == fxpPrice
+    assert orders.getOrderCreator(orderID) == bytesToHexString(tester.a1)
+    assert orders.getOrderMoneyEscrowed(orderID) == 0.6 * 10**18
+    assert orders.getOrderSharesEscrowed(orderID) == 0
     assert cash.balanceOf(tester.a1) == 0
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == creatorInitialETH - long(0.6 * 10**18)
     assert cash.balanceOf(market.address) - marketInitialCash == 0.6 * 10**18
@@ -132,7 +127,6 @@ def test_createOrder_failure(contractsFixture, universe, cash, market):
 
 def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
     completeSets = contractsFixture.contracts['CompleteSets']
@@ -166,9 +160,8 @@ def test_ask_withPartialShares(contractsFixture, universe, cash, market):
 
     # validate the order contains expected results
     assert orderID != bytearray(32), "Order ID should be non-zero"
-    amount, displayPrice, owner, tokensEscrowed, sharesEscrowed, betterOrderId, worseOrderId, gasPrice = ordersFetcher.getOrder(orderID)
-    assert amount == 3
-    assert displayPrice == fix('0.6')
-    assert owner == bytesToHexString(tester.a1)
-    assert tokensEscrowed == fix('0.4')
-    assert sharesEscrowed == 2
+    assert orders.getAmount(orderID) == 3
+    assert orders.getPrice(orderID) == fix('0.6')
+    assert orders.getOrderCreator(orderID) == bytesToHexString(tester.a1)
+    assert orders.getOrderMoneyEscrowed(orderID) == fix('0.4')
+    assert orders.getOrderSharesEscrowed(orderID) == 2

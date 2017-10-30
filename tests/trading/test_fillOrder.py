@@ -9,7 +9,6 @@ def test_publicFillOrder_bid(contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     tradeGroupID = 42
     logs = []
 
@@ -40,14 +39,19 @@ def test_publicFillOrder_bid(contractsFixture, cash, market, universe):
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH - creatorCost
     assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH - fillerCost
-    assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert orders.getAmount(orderID) == 0
+    assert orders.getPrice(orderID) == 0
+    assert orders.getOrderCreator(orderID) == longToHexString(0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 0
+    assert orders.getOrderSharesEscrowed(orderID) == 0
+    assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
     assert fillOrderID == 0
 
 def test_publicFillOrder_ask(contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     tradeGroupID = 42
     logs = []
 
@@ -78,14 +82,19 @@ def test_publicFillOrder_ask(contractsFixture, cash, market, universe):
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH - creatorCost
     assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH - fillerCost
-    assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert orders.getAmount(orderID) == 0
+    assert orders.getPrice(orderID) == 0
+    assert orders.getOrderCreator(orderID) == longToHexString(0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 0
+    assert orders.getOrderSharesEscrowed(orderID) == 0
+    assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
     assert fillOrderID == 0
 
 def test_publicFillOrder_bid_scalar(contractsFixture, cash, scalarMarket, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    ordersFetcher = contractsFixture.contracts['OrdersFetcher']
     # We're testing the scalar market because it has a different numTicks than 10**18 as the other do. In particular it's numTicks is 40*18**18
     market = scalarMarket
     tradeGroupID = 42
@@ -118,5 +127,11 @@ def test_publicFillOrder_bid_scalar(contractsFixture, cash, scalarMarket, univer
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH - creatorCost
     assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH - fillerCost
-    assert ordersFetcher.getOrder(orderID) == [0, 0, longToHexString(0), 0, 0, longTo32Bytes(0), longTo32Bytes(0), 0]
+    assert orders.getAmount(orderID) == 0
+    assert orders.getPrice(orderID) == 0
+    assert orders.getOrderCreator(orderID) == longToHexString(0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 0
+    assert orders.getOrderSharesEscrowed(orderID) == 0
+    assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
     assert fillOrderID == 0

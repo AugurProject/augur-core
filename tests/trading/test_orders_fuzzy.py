@@ -63,7 +63,6 @@ def test_randomSorting(market, orderType, numOrders, withBoundingOrders, deadOrd
     print("Order sorting tests (orderType=" + str(orderType) + ", numOrders=" + str(numOrders) + ", withBoundingOrders=" + str(withBoundingOrders) + ", deadOrderProbability=" + str(deadOrderProbability) + ")")
     fixture.resetToSnapshot(kitchenSinkSnapshot)
     orders = fixture.contracts['Orders']
-    ordersFetcher = fixture.contracts['OrdersFetcher']
     outcomeId = 1
     orderIds = np.arange(1, numOrders + 1)
     # Generate random prices on [0, 1) and rank them (smallest price @ rank 0)
@@ -112,10 +111,9 @@ def test_randomSorting(market, orderType, numOrders, withBoundingOrders, deadOrd
     assert(orderIdsToBytesMapping[bestOrderId] == orders.getBestOrderId(orderType, market.address, outcomeId)), "Verify best order Id"
     assert(orderIdsToBytesMapping[worstOrderId] == orders.getWorstOrderId(orderType, market.address, outcomeId)), "Verify worst order Id"
     for orderId in orderIds:
-        order = ordersFetcher.getOrder(orderIdsToBytesMapping[orderId])
-        orderPrice = order[DISPLAY_PRICE]
-        betterOrderIdAsBytes = order[BETTER_ORDER_ID]
-        worseOrderIdAsBytes = order[WORSE_ORDER_ID]
+        orderPrice = orders.getPrice(orderIdsToBytesMapping[orderId])
+        betterOrderIdAsBytes = orders.getBetterOrderId(orderIdsToBytesMapping[orderId])
+        worseOrderIdAsBytes = orders.getWorseOrderId(orderIdsToBytesMapping[orderId])
         betterOrderId = 0 if betterOrderIdAsBytes == longTo32Bytes(0) else bytesToOrderIdsMapping[betterOrderIdAsBytes]
         worseOrderId = 0 if worseOrderIdAsBytes == longTo32Bytes(0) else bytesToOrderIdsMapping[worseOrderIdAsBytes]
         betterOrderPrice = orders.getPrice(betterOrderIdAsBytes)
@@ -127,11 +125,11 @@ def test_randomSorting(market, orderType, numOrders, withBoundingOrders, deadOrd
             if betterOrderPrice: assert(orderPrice >= betterOrderPrice), "Order price >= better order price"
             if worseOrderPrice: assert(orderPrice <= worseOrderPrice), "Order price <= worse order price"
         if betterOrderId:
-            assert(ordersFetcher.getOrder(betterOrderIdAsBytes)[WORSE_ORDER_ID] == orderIdsToBytesMapping[orderId]), "Better order's worseOrderId should equal orderId"
+            assert(orders.getWorseOrderId(betterOrderIdAsBytes) == orderIdsToBytesMapping[orderId]), "Better order's worseOrderId should equal orderId"
         else:
             assert(orderId == bestOrderId), "Should be the best order Id"
         if worseOrderId:
-            assert(ordersFetcher.getOrder(worseOrderIdAsBytes)[BETTER_ORDER_ID] == orderIdsToBytesMapping[orderId]), "Worse order's betterOrderId should equal orderId"
+            assert(orders.getBetterOrderId(worseOrderIdAsBytes) == orderIdsToBytesMapping[orderId]), "Worse order's betterOrderId should equal orderId"
         else:
             assert(orderId == worstOrderId), "Should be the worst order Id"
     for orderId in orderIds:

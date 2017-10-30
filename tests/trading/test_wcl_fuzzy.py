@@ -68,7 +68,6 @@ def execute(fixture, snapshot, universe, market, orderType, orderSize, orderPric
     reputationToken.migrateFromLegacyReputationToken()
 
     orders = fixture.contracts['Orders']
-    ordersFetcher = fixture.contracts['OrdersFetcher']
     createOrder = fixture.contracts['CreateOrder']
     fillOrder = fixture.contracts['FillOrder']
     completeSets = fixture.contracts['CompleteSets']
@@ -102,12 +101,11 @@ def execute(fixture, snapshot, universe, market, orderType, orderSize, orderPric
     fillerBalance = fixture.chain.head_state.get_balance(fillerAddress)
 
     # Validate order
-    order = ordersFetcher.getOrder(orderId)
-    assert order[ATTOSHARES] == orderSize
-    assert order[DISPLAY_PRICE] == orderPrice
-    assert order[OWNER] == bytesToHexString(creatorAddress)
-    assert order[TOKENS_ESCROWED] == creatorTokens
-    assert order[SHARES_ESCROWED] == creatorLongShares or creatorShortShares
+    assert orders.getAmount(orderId) == orderSize
+    assert orders.getPrice(orderId) == orderPrice
+    assert orders.getOrderCreator(orderId) == bytesToHexString(creatorAddress)
+    assert orders.getOrderMoneyEscrowed(orderId) == creatorTokens
+    assert orders.getOrderSharesEscrowed(orderId) == creatorLongShares or creatorShortShares
 
     # Acquire shares for filler
     fillerEthRequiredLong = 0 if fillerLongShares == 0 else fillerLongShares * market.getNumTicks()
