@@ -37,7 +37,7 @@ contract MockMarket is IMarket {
     uint256 private firstReporterCompCheck;
     bool private migrateDueToNoRep;
     bool private isContForStakeToken;
-    bool private isContForDisputeBondToken;
+    bool private isContForDisputeBond;
     bool private isContForShareToken;
     bool private isValidValue;
     address private owner;
@@ -94,15 +94,15 @@ contract MockMarket is IMarket {
         designatedReporter = _designatedReporter;
     }
 
-    function setDesignatedReporterDisputeBondToken(IDisputeBond _disputeBond) public {
+    function setDesignatedReporterDisputeBond(IDisputeBond _disputeBond) public {
         disputeBond = _disputeBond;
     }
 
-    function setFirstReportersDisputeBondToken(IDisputeBond _firstDisputeBond) public {
+    function setFirstReportersDisputeBond(IDisputeBond _firstDisputeBond) public {
         firstDisputeBond = _firstDisputeBond;
     }
 
-    function setLastReportersDisputeBondToken(IDisputeBond _lastDisputeBond) public {
+    function setLastReportersDisputeBond(IDisputeBond _lastDisputeBond) public {
         lastDisputeBond = _lastDisputeBond;
     }
 
@@ -174,8 +174,8 @@ contract MockMarket is IMarket {
         isContForStakeToken = _isContForStakeToken;
     }
 
-    function setIsContainerForDisputeBondToken(bool _isContForDisputeBondToken) public {
-        isContForDisputeBondToken = _isContForDisputeBondToken;
+    function setIsContainerForDisputeBond(bool _isContForDisputeBond) public {
+        isContForDisputeBond = _isContForDisputeBond;
     }
 
     function setIsContainerForShareToken(bool _isContForShareToken) public {
@@ -354,15 +354,15 @@ contract MockMarket is IMarket {
         return designatedReporter;
     }
 
-    function getDesignatedReporterDisputeBondToken() public view returns (IDisputeBond) {
+    function getDesignatedReporterDisputeBond() public view returns (IDisputeBond) {
         return disputeBond;
     }
 
-    function getFirstReportersDisputeBondToken() public view returns (IDisputeBond) {
+    function getFirstReportersDisputeBond() public view returns (IDisputeBond) {
         return firstDisputeBond;
     }
 
-    function getLastReportersDisputeBondToken() public view returns (IDisputeBond) {
+    function getLastReportersDisputeBond() public view returns (IDisputeBond) {
         return lastDisputeBond;
     }
 
@@ -436,8 +436,8 @@ contract MockMarket is IMarket {
         return isContForStakeToken;
     }
 
-    function isContainerForDisputeBondToken(IDisputeBond _shadyTarget) public view returns (bool) {
-        return isContForDisputeBondToken;
+    function isContainerForDisputeBond(IDisputeBond _shadyTarget) public view returns (bool) {
+        return isContForDisputeBond;
     }
 
     function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool) {

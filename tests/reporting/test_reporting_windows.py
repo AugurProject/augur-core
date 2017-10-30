@@ -22,7 +22,7 @@ def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockPart
     assert reportingWindow.getUniverse() == mockUniverse.address
     assert reportingWindow.getReputationToken() == mockReputationToken.address
     assert reportingWindow.getTypeName() == stringToBytes("ReportingWindow")
-    assert reportingWindow.getStartTime() == start_time     
+    assert reportingWindow.getStartTime() == start_time
     assert reportingWindow.getAvgReportingGasPrice() == localFixture.contracts['Constants'].DEFAULT_REPORTING_GAS_PRICE()
     assert reportingWindow.getParticipationToken() == mockParticipationToken.address
     assert reportingWindow.getReportingStartTime() ==    start_time
@@ -41,7 +41,7 @@ def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockPart
     previousReportingWindow = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'previousReportingWindow')
     mockUniverse.setReportingWindowByTimestamp(previousReportingWindow.address)
     assert reportingWindow.getPreviousReportingWindow() == previousReportingWindow.address
-    
+
     chain.head_state.timestamp = reportingWindow.getStartTime() - 1
     assert reportingWindow.isOver() == False
     assert reportingWindow.isActive() == False
@@ -58,7 +58,7 @@ def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockPart
     assert reportingWindow.isReportingActive() == True
     assert reportingWindow.isDisputeActive() == False
 
-    chain.head_state.timestamp = reportingWindow.getReportingEndTime() 
+    chain.head_state.timestamp = reportingWindow.getReportingEndTime()
     assert reportingWindow.isActive() == True
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == False
@@ -67,7 +67,7 @@ def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockPart
     assert reportingWindow.isActive() == True
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == True
-    
+
     chain.head_state.timestamp = reportingWindow.getDisputeStartTime()
     assert reportingWindow.isActive() == True
     assert reportingWindow.isReportingActive() == False
@@ -79,8 +79,8 @@ def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockPart
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == True
     assert reportingWindow.isOver() == False
-    
-    chain.head_state.timestamp = reportingWindow.getEndTime() 
+
+    chain.head_state.timestamp = reportingWindow.getEndTime()
     assert reportingWindow.isActive() == False
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == False
@@ -105,7 +105,7 @@ def test_reporting_window_create_market(localFixture, chain, mockUniverse, mockM
     numTicks = 1 * 10**6 * 10**18
     feePerEthInWeiValue = 10 ** 18
     designatedReporterAddressValue = tester.a2
-    
+
     mockUniverse.setReportingPeriodDurationInSeconds(timestamp - 10)
     reportingWindow1 = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'reportingWindow1')
     reportingWindow1.setController(localFixture.contracts['Controller'].address)
@@ -151,20 +151,20 @@ def test_reporting_window_create_market(localFixture, chain, mockUniverse, mockM
 def test_reporting_window_migrate_market_in_from_sib(localFixture, mockUniverse, populatedReportingWindow):
     with raises(TransactionFailed, message="migrateMarketInFromSibling method can only be called from Market"):
         populatedReportingWindow.migrateMarketInFromSibling()
-    
+
     newMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'newMarket')
     mockUniverse.setIsContainerForReportingWindow(False)
     with raises(TransactionFailed, message="market is not in universe"):
         newMarket.callReportingWindowMigrateMarketInFromSibling(populatedReportingWindow.address)
-    
+
     assert populatedReportingWindow.isContainerForMarket(newMarket.address) == False
-    
-    newWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newWindow')    
+
+    newWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newWindow')
     newWindow.setIsContainerForMarket(False)
     mockUniverse.setIsContainerForReportingWindow(True)
     with raises(TransactionFailed, message="market reporting window doesn't contain market"):
         newMarket.callReportingWindowMigrateMarketInFromSibling(populatedReportingWindow.address)
-    
+
     newMarket.setReportingWindow(newWindow.address)
     newMarket.setUniverse(mockUniverse.address)
     newWindow.setIsContainerForMarket(True)
@@ -179,13 +179,13 @@ def test_reporting_window_migrate_market_in_from_N_sib(localFixture, mockUnivers
 
     newMockMarket.setReportingWindow(populatedReportingWindow.address)
     newMockMarket.setUniverse(mockUniverse.address)
-    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')    
+    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')
     mockUniverse.setParentUniverse(parentUniverse.address)
     with raises(TransactionFailed, message="market's universe is not the reporting window universe's parent"):
         newMockMarket.callReportingWindowMigrateMarketInFromSibling(populatedReportingWindow.address)
-    
+
     newMockMarket.setUniverse(parentUniverse.address)
-    newWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newWindow')    
+    newWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newWindow')
     newMockMarket.setReportingWindow(newWindow.address)
     parentUniverse.setIsContainerForReportingWindow(False)
     with raises(TransactionFailed, message="parent universe doesn't contain migrating market's reporting window"):
@@ -195,12 +195,12 @@ def test_reporting_window_migrate_market_in_from_N_sib(localFixture, mockUnivers
     newWindow.setIsContainerForMarket(False)
     with raises(TransactionFailed, message="market's reporting window doesn't contain migrating market"):
         newMockMarket.callReportingWindowMigrateMarketInFromSibling(populatedReportingWindow.address)
-    
+
     assert populatedReportingWindow.isContainerForMarket(newMockMarket.address) == False
     newWindow.setIsContainerForMarket(True)
     newMockMarket.callReportingWindowMigrateMarketInFromSibling(populatedReportingWindow.address)
     assert populatedReportingWindow.isContainerForMarket(newMockMarket.address)
-    
+
 def test_reporting_window_remove_market(localFixture, mockUniverse, mockMarket, populatedReportingWindow):
     newMockMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'newMockMarket')
     with raises(TransactionFailed, message="method has to be called from Market"):
@@ -213,14 +213,14 @@ def test_reporting_window_remove_market(localFixture, mockUniverse, mockMarket, 
     assert populatedReportingWindow.getLastReporterMarketsCount() == 0
 
     # migrate new market to test removing from round 1 market collection
-    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')    
+    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')
     parentUniverse.setIsContainerForReportingWindow(True)
     newMockMarket.setUniverse(parentUniverse.address)
-    newWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newWindow')    
+    newWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newWindow')
     newWindow.setIsContainerForMarket(True)
     newMockMarket.setReportingWindow(newWindow.address)
     newMockMarket.setUniverse(mockUniverse.address)
-    newMockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_REPORTING()) 
+    newMockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_REPORTING())
     newMockMarket.callReportingWindowMigrateMarketInFromSibling(populatedReportingWindow.address)
     assert newMockMarket.callReportingWindowUpdateMarketPhase(populatedReportingWindow.address)
     assert populatedReportingWindow.isContainerForMarket(newMockMarket.address)
@@ -230,23 +230,23 @@ def test_reporting_window_remove_market(localFixture, mockUniverse, mockMarket, 
     assert populatedReportingWindow.getLastReporterMarketsCount() == 0
 
     # update mockMarket to round 2 reporting
-    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_REPORTING())
     assert mockMarket.callReportingWindowUpdateMarketPhase(populatedReportingWindow.address)
     assert populatedReportingWindow.getFirstReporterMarketsCount() == 1
     assert populatedReportingWindow.getLastReporterMarketsCount() == 1
 
     # remove new market from round 2
-    assert newMockMarket.callReportingWindowRemoveMarket(populatedReportingWindow.address)    
+    assert newMockMarket.callReportingWindowRemoveMarket(populatedReportingWindow.address)
     # remove market from round 1
     assert mockMarket.callReportingWindowRemoveMarket(populatedReportingWindow.address)
-    
+
     assert populatedReportingWindow.getLastReporterMarketsCount() == 0
-    assert populatedReportingWindow.getFirstReporterMarketsCount() == 0    
+    assert populatedReportingWindow.getFirstReporterMarketsCount() == 0
     assert populatedReportingWindow.isContainerForMarket(mockMarket.address) == False
     assert populatedReportingWindow.isContainerForMarket(newMockMarket.address) == False
 
 def test_reporting_window_update_market_phase(localFixture, mockUniverse, mockMarket, populatedReportingWindow):
-    
+
     with raises(TransactionFailed, message="method has to be called from Market"):
         populatedReportingWindow.updateMarketPhase()
 
@@ -260,24 +260,24 @@ def test_reporting_window_update_market_phase(localFixture, mockUniverse, mockMa
     assert populatedReportingWindow.getLastReporterMarketsCount() == 0
 
     # reomve existing market from round 1 and round 2
-    mockMarket.setReportingState(localFixture.contracts['Constants'].DESIGNATED_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].DESIGNATED_REPORTING())
     assert mockMarket.callReportingWindowUpdateMarketPhase(populatedReportingWindow.address)
     assert populatedReportingWindow.isContainerForMarket(mockMarket.address)
     assert populatedReportingWindow.getFirstReporterMarketsCount() == 0
     assert populatedReportingWindow.getLastReporterMarketsCount() == 0
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FIRST_REPORTING())
     assert mockMarket.callReportingWindowUpdateMarketPhase(populatedReportingWindow.address)
     assert populatedReportingWindow.getFirstReporterMarketsCount() == 1
     assert populatedReportingWindow.getLastReporterMarketsCount() == 0
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_REPORTING()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].LAST_REPORTING())
     assert mockMarket.callReportingWindowUpdateMarketPhase(populatedReportingWindow.address)
     assert populatedReportingWindow.getFirstReporterMarketsCount() == 0
     assert populatedReportingWindow.getLastReporterMarketsCount() == 1
     assert populatedReportingWindow.allMarketsFinalized() == False
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED())
     mockStakeToken = localFixture.contracts['MockStakeToken']
     mockStakeToken.setTotalSupply(100)
     mockMarket.setFinalWinningStakeToken(mockStakeToken.address)
@@ -299,7 +299,7 @@ def test_reporting_window_update_note_reporting_gas_price(localFixture, mockUniv
 
     with raises(TransactionFailed, message="market has to be in internal market collection"):
         mockStakeToken.callNoteReportingGasPrice(newMockMarket.address, populatedReportingWindow.address)
-    
+
     mockMarket.setIsContainerForStakeToken(False)
     with raises(TransactionFailed, message="market has to contain Stake Token"):
         mockStakeToken.callNoteReportingGasPrice(mockMarket.address, populatedReportingWindow.address)
@@ -313,7 +313,7 @@ def test_reporting_window_update_note_reporting_gas_price(localFixture, mockUniv
 
 def test_reporting_window_invalid_markets(localFixture, mockMarket, populatedReportingWindow):
     assert populatedReportingWindow.getNumInvalidMarkets() == 0
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED())
     mockStakeToken = localFixture.contracts['MockStakeToken']
     mockStakeToken.setTotalSupply(100)
     mockMarket.setFinalWinningStakeToken(mockStakeToken.address)
@@ -329,16 +329,16 @@ def test_reporting_window_update_fin_market_calculations(localFixture, mockMarke
     mockMarket.setDesignatedReportPayoutHash(stringToBytes("10"))
     mockMarket.setIsValid(True)
     finializeMarket(localFixture, mockMarket, populatedReportingWindow, 99, 15)
-    # 99 + 15 
+    # 99 + 15
     assert populatedReportingWindow.getTotalWinningStake() == 114
     assert populatedReportingWindow.getNumIncorrectDesignatedReportMarkets() == 1
 
-    # add new market to finialize 
-    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')    
+    # add new market to finialize
+    parentUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'parentUniverse')
     parentUniverse.setIsContainerForReportingWindow(True)
     newMockMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'newMockMarket')
     newMockMarket.setUniverse(parentUniverse.address)
-    newWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newWindow')    
+    newWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newWindow')
     newWindow.setIsContainerForMarket(True)
     newMockMarket.setFinalPayoutDistributionHash(stringToBytes("101"))
     newMockMarket.setDesignatedReportPayoutHash(stringToBytes("10"))
@@ -421,7 +421,7 @@ def test_reporting_window_collect_reporting_fees(localFixture, chain, mockMarket
     assert mockCash.getwithdrawEtherToAddressValue() == bytesToHexString(reporterAddress)
     # cash balance 134 * 5 / total winnings 175
     assert mockCash.getwithdrawEthertoAmountValue() == 3
-    
+
 def test_reporting_window_migrate_fees_due_to_market_migration(localFixture, mockUniverse, mockCash, populatedReportingWindow, mockMarket):
     newMockMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'newMockMarket')
     mockUniverse.setIsContainerForReportingWindow(False)
@@ -429,7 +429,7 @@ def test_reporting_window_migrate_fees_due_to_market_migration(localFixture, moc
     # current reporting window has no stake total
     assert populatedReportingWindow.getTotalStake() == 0
     assert populatedReportingWindow.migrateFeesDueToMarketMigration(newMockMarket.address) == False
-    
+
     mockMarket.callIncreaseTotalStake(populatedReportingWindow.address, 1000)
     with raises(TransactionFailed, message="reporting window needs to be in universe"):
         populatedReportingWindow.migrateFeesDueToMarketMigration(newMockMarket.address)
@@ -462,16 +462,16 @@ def test_reporting_window_migration_fees_due_to_fork(localFixture, mockUniverse,
     with raises(TransactionFailed, message="universe needs forking market"):
         mockReportingWindow.callMigrateFeesDueToFork(populatedReportingWindow.address)
 
-    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_FINALIZATION()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].AWAITING_FINALIZATION())
     mockUniverse.setForkingMarket(mockMarket.address)
 
     with raises(TransactionFailed, message="universe forking market needs to be finalized"):
         mockReportingWindow.callMigrateFeesDueToFork(populatedReportingWindow.address)
-    
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
+
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED())
     mockCash.setBalanceOf(0)
     assert mockReportingWindow.callMigrateFeesDueToFork(populatedReportingWindow.address) == False
-    
+
     mockCash.setBalanceOf(10)
     mockUniverse.setIsContainerForReportingWindow(False)
     with raises(TransactionFailed, message="calling reporting window needs to be in universe"):
@@ -498,7 +498,7 @@ def test_reporting_window_migration_fees_due_to_fork(localFixture, mockUniverse,
 def test_reporting_window_containers_stake_token(localFixture, mockMarket, populatedReportingWindow):
     newMockStakeToken = localFixture.upload('solidity_test_helpers/MockStakeToken.sol', 'newMockStakeToken')
     newMockMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'newMockMarket')
-    
+
     newMockStakeToken.setMarket(newMockMarket.address)
     with raises(TransactionFailed, message="stake token not associated with this reporting window market collection"):
         populatedReportingWindow.isContainerForStakeToken(newMockStakeToken.address)
@@ -510,21 +510,21 @@ def test_reporting_window_containers_stake_token(localFixture, mockMarket, popul
 
     mockMarket.setIsContainerForStakeToken(True)
     assert populatedReportingWindow.isContainerForStakeToken(newMockStakeToken.address)
-    
+
 def test_reporting_window_containers_dispute_token_market_participation(localFixture, mockMarket, populatedReportingWindow, mockParticipationToken):
-    newMockDisputeToken = localFixture.upload('solidity_test_helpers/MockDisputeBondToken.sol', 'newMockDisputeToken')
+    newMockDisputeToken = localFixture.upload('solidity_test_helpers/MockDisputeBond.sol', 'newMockDisputeToken')
     newMockMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'newMockMarket')
-    
+
     newMockDisputeToken.setMarket(newMockMarket.address)
     with raises(TransactionFailed, message="dispute token not associated with this reporting window market collection"):
         populatedReportingWindow.isContainerForDisputeBond(newMockDisputeToken.address)
 
     newMockDisputeToken.setMarket(mockMarket.address)
-    mockMarket.setIsContainerForDisputeBondToken(False)
+    mockMarket.setIsContainerForDisputeBond(False)
 
     assert populatedReportingWindow.isContainerForDisputeBond(newMockDisputeToken.address) == False
 
-    mockMarket.setIsContainerForDisputeBondToken(True)
+    mockMarket.setIsContainerForDisputeBond(True)
     assert populatedReportingWindow.isContainerForDisputeBond(newMockDisputeToken.address)
 
     assert populatedReportingWindow.isContainerForMarket(newMockMarket.address) == False
@@ -535,7 +535,7 @@ def test_reporting_window_containers_dispute_token_market_participation(localFix
     assert populatedReportingWindow.isContainerForParticipationToken(mockParticipationToken.address)
 
 def finializeMarket(localFixture, mockMarket, reportingWindow, totalSupply, disputeBondStake):
-    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED()) 
+    mockMarket.setReportingState(localFixture.contracts['Constants'].FINALIZED())
     mockStakeToken = localFixture.contracts['MockStakeToken']
     mockMarket.setFinalWinningStakeToken(mockStakeToken.address)
     mockStakeToken.setTotalSupply(totalSupply)
@@ -588,9 +588,9 @@ def mockParticipationToken(localFixture):
     return mockParticipationToken
 
 @fixture
-def mockDisputeBondToken(localFixture):
-    mockDisputeBondToken = localFixture.contracts['MockDisputeBondToken']
-    return mockDisputeBondToken
+def mockDisputeBond(localFixture):
+    mockDisputeBond = localFixture.contracts['MockDisputeBond']
+    return mockDisputeBond
 
 @fixture
 def mockAugur(localFixture):
@@ -623,7 +623,7 @@ def populatedReportingWindow(localFixture, chain, mockUniverse, mockMarket, mock
     numTicks = 1 * 10**6 * 10**18
     feePerEthInWeiValue = 10 ** 18
     designatedReporterAddressValue = tester.a2
-    
+
     mockUniverse.setReportingPeriodDurationInSeconds(timestamp - 10)
     reportingWindow = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'reportingWindow')
     reportingWindow.setController(localFixture.contracts['Controller'].address)

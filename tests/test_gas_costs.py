@@ -169,9 +169,9 @@ def test_redeemDispute(localFixture, universe, cash, market, categoricalMarket, 
     assert categoricalMarket.tryFinalize()
     assert scalarMarket.tryFinalize()
 
-    disputeBond = localFixture.applySignature("DisputeBondToken", market.getDesignatedReporterDisputeBondToken())
+    disputeBond = localFixture.applySignature("DisputeBond", market.getDesignatedReporterDisputeBond())
 
-    with PrintGasUsed(localFixture, "DisputeBondToken:withdraw", DISPUTE_BOND_REDEMPTION):
+    with PrintGasUsed(localFixture, "DisputeBond:withdraw", DISPUTE_BOND_REDEMPTION):
         assert disputeBond.withdraw()
 
 def test_redeemParticipation(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
@@ -198,7 +198,7 @@ def test_redeemParticipation(localFixture, universe, cash, market, categoricalMa
     # Fast forward time until the window is over and we can redeem our winning stake and participation tokens and receive fees
     localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
-    with PrintGasUsed(localFixture, "DisputeBondToken:withdraw", PARTICIPATION_TOKEN_REDEMPTION):
+    with PrintGasUsed(localFixture, "DisputeBond:withdraw", PARTICIPATION_TOKEN_REDEMPTION):
         assert participationToken.redeem(False)
 
 @fixture(scope="session")
