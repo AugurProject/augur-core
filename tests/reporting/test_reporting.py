@@ -94,12 +94,38 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     # Attempting to finalize the fork now will not succeed as no REP has been migrated
     assert market.tryFinalize() == 0
 
+    logs = []
+    captureFilteredLogs(localFixture.chain.head_state, localFixture.contracts['Augur'], logs)
+
     # Tester 1 moves their ~1 Million REP to the YES universe and gets a fixed percentage bonus for doing so within the FORKING period
     expectedAmount = reputationToken.balanceOf(tester.a1)
     bonus = expectedAmount / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
     reputationToken.migrateOut(yesUniverseReputationToken.address, tester.a1, reputationToken.balanceOf(tester.a1), sender = tester.k1)
     assert not reputationToken.balanceOf(tester.a1)
     assert yesUniverseReputationToken.balanceOf(tester.a1) == expectedAmount + bonus
+
+    # Confirm the token logs were generated correctly
+
+    assert len(logs) == 3
+
+    burnLog = logs[0]
+    mintLog = logs[1]
+    bonusMintLog = logs[2]
+
+    assert burnLog['_event_type'] == 'TokensBurned'
+    assert burnLog['amount'] == expectedAmount
+    assert burnLog['token'] == reputationToken.address
+    assert burnLog['universe'] == universe.address
+
+    assert mintLog['_event_type'] == 'TokensMinted'
+    assert mintLog['amount'] == expectedAmount
+    assert mintLog['token'] == yesUniverseReputationToken.address
+    assert mintLog['universe'] == yesUniverse.address
+
+    assert bonusMintLog['_event_type'] == 'TokensMinted'
+    assert bonusMintLog['amount'] == bonus
+    assert bonusMintLog['token'] == yesUniverseReputationToken.address
+    assert bonusMintLog['universe'] == yesUniverse.address
 
     # Attempting to finalize the fork now will not succeed as a majority or REP has not yet migrated and fork end time has not been reached
     assert market.tryFinalize() == 0

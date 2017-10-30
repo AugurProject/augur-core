@@ -67,6 +67,14 @@ contract MockAugur is Controlled {
         return true;
     }
 
+    function logReputationBurned(IUniverse _universe, uint256 _amount) public returns (bool) {
+        return true;
+    }
+
+    function logReputationMinted(IUniverse _universe, uint256 _amount) public returns (bool) {
+        return true;
+    }
+
     bool private logUniverseForkedCalledValue;
 
     function logUniverseForkedCalled() public returns (bool) { return logUniverseForkedCalledValue; }
