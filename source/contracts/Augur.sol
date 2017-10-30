@@ -9,10 +9,11 @@ import 'reporting/IStakeToken.sol';
 import 'reporting/IReputationToken.sol';
 import 'trading/IShareToken.sol';
 import 'trading/Order.sol';
+import 'libraries/Extractable.sol';
 
 
 // Centralized approval authority and event emissions
-contract Augur is Controlled {
+contract Augur is Controlled, Extractable {
     event MarketCreated(address indexed universe, address indexed market, address indexed marketCreator, uint256 marketCreationFee, string extraInfo);
     event DesignatedReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
     event ReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
@@ -131,5 +132,9 @@ contract Augur is Controlled {
         require(_universe.isContainerForShareToken(IShareToken(msg.sender)));
         TokensTransferred(_universe, msg.sender, _from, _to, _value);
         return true;
+    }
+
+    function getProtectedTokens() internal returns (address[] memory) {
+        return new address[](0);
     }
 }

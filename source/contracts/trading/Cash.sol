@@ -5,13 +5,14 @@ import 'trading/ICash.sol';
 import 'Controlled.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/token/VariableSupplyToken.sol';
+import 'libraries/Extractable.sol';
 
 
 /**
  * @title Cash
  * @dev ETH wrapper contract to make it look like an ERC20 token.
  */
-contract Cash is Controlled, ITyped, VariableSupplyToken, ICash {
+contract Cash is Controlled, Extractable, ITyped, VariableSupplyToken, ICash {
     using SafeMathUint256 for uint256;
 
     string constant public name = "Cash";
@@ -44,5 +45,9 @@ contract Cash is Controlled, ITyped, VariableSupplyToken, ICash {
 
     function getTypeName() public view returns (bytes32) {
         return "Cash";
+    }
+
+    function getProtectedTokens() internal returns (address[] memory) {
+        return new address[](0);
     }
 }

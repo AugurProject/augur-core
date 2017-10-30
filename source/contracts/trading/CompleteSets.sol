@@ -11,9 +11,10 @@ import 'reporting/IMarket.sol';
 import 'reporting/IReportingWindow.sol';
 import 'trading/IOrders.sol';
 import 'libraries/CashAutoConverter.sol';
+import 'libraries/Extractable.sol';
 
 
-contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, ICompleteSets {
+contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyGuard, ICompleteSets {
     using SafeMathUint256 for uint256;
 
     /**
@@ -76,5 +77,9 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, IComple
         require(_denominationToken.transferFrom(_market, _sender, _payout));
 
         return _creatorFee.add(_reportingFee);
+    }
+
+    function getProtectedTokens() internal returns (address[] memory) {
+        return new address[](0);
     }
 }
