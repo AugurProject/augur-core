@@ -114,7 +114,6 @@ contract DisputeBond is DelegationTarget, Extractable, ITyped, Initializable, Ow
     }
 
     function withdrawInEmergency() public onlyOwner onlyInBadTimes returns (bool) {
-        IReputationToken _reputationToken = reputationToken;
         reputationToken.transfer(owner, reputationToken.balanceOf(this));
         return true;
     }
