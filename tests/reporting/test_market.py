@@ -16,12 +16,12 @@ def test_market_creation(contractsFixture, universe, cash, market):
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     market = contractsFixture.createReasonableBinaryMarket(universe, cash, extraInfo="so extra")
 
-    assert len(logs) == 2
-    assert logs[1]['_event_type'] == 'MarketCreated'
-    assert logs[1]['extraInfo'] == 'so extra'
-    assert logs[1]['marketCreationFee'] == universe.getMarketCreationCost()
-    assert logs[1]['market'] == market.address
-    assert logs[1]['marketCreator'] == bytesToHexString(tester.a0)
+    assert len(logs) == 3
+    assert logs[2]['_event_type'] == 'MarketCreated'
+    assert logs[2]['extraInfo'] == 'so extra'
+    assert logs[2]['marketCreationFee'] == universe.getMarketCreationCost()
+    assert logs[2]['market'] == market.address
+    assert logs[2]['marketCreator'] == bytesToHexString(tester.a0)
 
     assert market.getUniverse() == universe.address
     assert market.getNumberOfOutcomes() == 2

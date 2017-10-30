@@ -28,6 +28,18 @@ contract BasicToken is ERC20Basic {
     }
 
     /**
+    * @dev allows internal token transfers
+    * @param _from The source address
+    * @param _to The destination address 
+    */
+    function internalTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
+        balances[_from] = balances[_from].sub(_value);
+        balances[_to] = balances[_to].add(_value);
+        emitTransferLogs(_from, _to, _value);
+        return true;
+    }
+
+    /**
     * @dev Gets the balance of the specified address.
     * @param _owner The address to query the the balance of.
     * @return An uint256 representing the amount owned by the passed address.
