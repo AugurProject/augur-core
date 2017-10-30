@@ -15,9 +15,6 @@ def test_basic_token_transfer(localFixture, chain, mockToken):
     with raises(TransactionFailed, message="can not cause negative balance"):
         mockToken.callInternalTransfer(tester.a1, tester.a2, 150)
 
-    with raises(TransactionFailed, message="can not cause negative balance"):
-        mockToken.callInternalTransfer(tester.a1, tester.a2, 150)
-
     assert mockToken.callInternalTransfer(tester.a1, tester.a2, 100)
     assert mockToken.balanceOf(tester.a1) == 0
     assert mockToken.balanceOf(tester.a2) == 100
