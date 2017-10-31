@@ -5,9 +5,10 @@ from utils import longToHexString, stringToBytes, bytesToHexString
 from pytest import fixture, raises
 from ethereum.tools.tester import ABIContract, TransactionFailed
 
-def test_market_creation(localFixture, mockUniverse, mockReportingWindow, mockCash, chain, constants, mockMarket, mockReputationToken):
+def test_market_creation(localFixture, mockUniverse, mockReportingWindow, mockCash, chain, constants, mockMarket, mockReputationToken, mockShareToken, mockShareTokenFactory):
     numTicks = 10 ** 10
     fee = 1
+    oneEther = 10 ** 18
     endTime = chain.head_state.timestamp + constants.DESIGNATED_REPORTING_DURATION_SECONDS()
     market = localFixture.upload('../source/contracts/reporting/Market.sol', 'market')
     market.setController(localFixture.contracts["Controller"].address)
@@ -47,12 +48,31 @@ def test_market_creation(localFixture, mockUniverse, mockReportingWindow, mockCa
     with raises(TransactionFailed, message="refund is not over 0"):
         market.initialize(mockReportingWindow.address, endTime, 5, numTicks, 5, mockCash.address, tester.a1, tester.a1, value=0)
 
-
-    assert market.initialize(mockReportingWindow.address, endTime, 5, numTicks, 5, mockCash.address, tester.a1, tester.a1, value=100)
-
+    assert market.initialize(mockReportingWindow.address, endTime, 5, numTicks, 16, mockCash.address, tester.a1, tester.a2, value=100)
+    assert mockShareTokenFactory.getCreateShareTokenMarketValue() == market.address
+    assert mockShareTokenFactory.getCreateShareTokenOutcomeValue() == 5 - 1 # mock logs the last outcome
+    assert market.getTypeName() == stringToBytes("Market")
+    assert market.getUniverse() == mockUniverse.address
+    assert market.getReportingWindow() == mockReportingWindow.address
+    assert market.getDesignatedReporter() == bytesToHexString(tester.a2)
+    assert market.getNumberOfOutcomes() == 5
+    assert market.getEndTime() == endTime
+    assert market.getNumTicks() == numTicks
+    assert market.getDenominationToken() == mockCash.address
+    assert market.getMarketCreatorSettlementFeeDivisor() == oneEther / 16
     
+def test_market_decrease_market_creator_settlement_fee(localFixture, initializeMarket, mockMarket):
+    oneEther = 10 ** 18
 
+    with raises(TransactionFailed, message="method needs to be called from onlyOwner"):
+        initializeMarket.decreaseMarketCreatorSettlementFeeInAttoethPerEth(55, sender=tester.k4)
 
+    with raises(TransactionFailed, message="new fee divisor needs to be greater than fee divisor"):
+        initializeMarket.decreaseMarketCreatorSettlementFeeInAttoethPerEth(55, sender=tester.k1)
+
+    assert initializeMarket.getMarketCreatorSettlementFeeDivisor() == oneEther / 16
+    assert initializeMarket.decreaseMarketCreatorSettlementFeeInAttoethPerEth(15, sender=tester.k1)
+    assert initializeMarket.getMarketCreatorSettlementFeeDivisor() == oneEther / 15
 
 
 @fixture(scope="session")
@@ -111,7 +131,11 @@ def mockShareToken(localFixture):
     return localFixture.contracts['MockShareToken']
 
 @fixture
-def initializeMarket(localFixture, mockReportingWindow, mockUniverse, mockReputationToken):
+def mockShareTokenFactory(localFixture):
+    return localFixture.contracts['MockShareTokenFactory']
+
+@fixture
+def initializeMarket(localFixture, mockReportingWindow, mockUniverse, mockReputationToken, chain, constants, mockCash):
     market = localFixture.upload('../source/contracts/reporting/Market.sol', 'market')
     numTicks = 10 ** 10
     fee = 1
@@ -124,5 +148,6 @@ def initializeMarket(localFixture, mockReportingWindow, mockUniverse, mockReputa
     mockReputationToken.setBalanceOf(100)
     mockUniverse.setTargetReporterGasCosts(15)
     mockUniverse.setValidityBond(12)
-    assert market.initialize(mockReportingWindow.address, endTime, 5, numTicks, 5, mockCash.address, tester.a1, tester.a1, value=100)
+    mockReportingWindow.setUniverse(mockUniverse.address)
+    assert market.initialize(mockReportingWindow.address, endTime, 5, numTicks, 16, mockCash.address, tester.a1, tester.a2, value=100)
     return market
