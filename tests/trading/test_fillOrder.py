@@ -25,17 +25,17 @@ def test_publicFillOrder_bid(contractsFixture, cash, market, universe):
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
-    assert len(logs) == 3
+    assert len(logs) == 5
 
-    assert logs[2]["_event_type"] == "OrderFilled"
-    assert logs[2]["filler"] == bytesToHexString(tester.a2)
-    assert logs[2]["numCreatorShares"] == 0
-    assert logs[2]["numCreatorTokens"] == creatorCost
-    assert logs[2]["numFillerShares"] == 0
-    assert logs[2]["numFillerTokens"] == fillerCost
-    assert logs[2]["settlementFees"] == 0
-    assert logs[2]["shareToken"] == market.getShareToken(YES)
-    assert logs[2]["tradeGroupId"] == 42
+    assert logs[4]["_event_type"] == "OrderFilled"
+    assert logs[4]["filler"] == bytesToHexString(tester.a2)
+    assert logs[4]["numCreatorShares"] == 0
+    assert logs[4]["numCreatorTokens"] == creatorCost
+    assert logs[4]["numFillerShares"] == 0
+    assert logs[4]["numFillerTokens"] == fillerCost
+    assert logs[4]["settlementFees"] == 0
+    assert logs[4]["shareToken"] == market.getShareToken(YES)
+    assert logs[4]["tradeGroupId"] == 42
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH - creatorCost
     assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH - fillerCost
@@ -68,17 +68,17 @@ def test_publicFillOrder_ask(contractsFixture, cash, market, universe):
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
-    assert len(logs) == 3
+    assert len(logs) == 5
 
-    assert logs[2]["_event_type"] == "OrderFilled"
-    assert logs[2]["filler"] == bytesToHexString(tester.a2)
-    assert logs[2]["numCreatorShares"] == 0
-    assert logs[2]["numCreatorTokens"] == creatorCost
-    assert logs[2]["numFillerShares"] == 0
-    assert logs[2]["numFillerTokens"] == fillerCost
-    assert logs[2]["settlementFees"] == 0
-    assert logs[2]["shareToken"] == market.getShareToken(YES)
-    assert logs[2]["tradeGroupId"] == 42
+    assert logs[4]["_event_type"] == "OrderFilled"
+    assert logs[4]["filler"] == bytesToHexString(tester.a2)
+    assert logs[4]["numCreatorShares"] == 0
+    assert logs[4]["numCreatorTokens"] == creatorCost
+    assert logs[4]["numFillerShares"] == 0
+    assert logs[4]["numFillerTokens"] == fillerCost
+    assert logs[4]["settlementFees"] == 0
+    assert logs[4]["shareToken"] == market.getShareToken(YES)
+    assert logs[4]["tradeGroupId"] == 42
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH - creatorCost
     assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH - fillerCost
@@ -113,17 +113,17 @@ def test_publicFillOrder_bid_scalar(contractsFixture, cash, scalarMarket, univer
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
 
-    assert len(logs) == 3
+    assert len(logs) == 5
 
-    assert logs[2]["_event_type"] == "OrderFilled"
-    assert logs[2]["filler"] == bytesToHexString(tester.a2)
-    assert logs[2]["numCreatorShares"] == 0
-    assert logs[2]["numCreatorTokens"] == creatorCost
-    assert logs[2]["numFillerShares"] == 0
-    assert logs[2]["numFillerTokens"] == fillerCost
-    assert logs[2]["settlementFees"] == 0
-    assert logs[2]["shareToken"] == market.getShareToken(YES)
-    assert logs[2]["tradeGroupId"] == 42
+    assert logs[4]["_event_type"] == "OrderFilled"
+    assert logs[4]["filler"] == bytesToHexString(tester.a2)
+    assert logs[4]["numCreatorShares"] == 0
+    assert logs[4]["numCreatorTokens"] == creatorCost
+    assert logs[4]["numFillerShares"] == 0
+    assert logs[4]["numFillerTokens"] == fillerCost
+    assert logs[4]["settlementFees"] == 0
+    assert logs[4]["shareToken"] == market.getShareToken(YES)
+    assert logs[4]["tradeGroupId"] == 42
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH - creatorCost
     assert contractsFixture.chain.head_state.get_balance(tester.a2) == initialFillerETH - fillerCost

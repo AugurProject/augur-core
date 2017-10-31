@@ -58,6 +58,16 @@ contract ShareToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         return true;
     }
 
+    function onMint(address _target, uint256 _amount) internal returns (bool) {
+        controller.getAugur().logShareTokenMinted(market.getUniverse(), _target, _amount);
+        return true;
+    }
+
+    function onBurn(address _target, uint256 _amount) internal returns (bool) {
+        controller.getAugur().logShareTokenBurned(market.getUniverse(), _target, _amount);
+        return true;
+    }
+
     function getProtectedTokens() internal returns (address[] memory) {
         return new address[](0);
     }

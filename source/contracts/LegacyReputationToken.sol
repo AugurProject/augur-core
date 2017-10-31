@@ -29,4 +29,12 @@ contract LegacyReputationToken is VariableSupplyToken {
         FundedAccount(this, msg.sender, _amount, block.timestamp);
         return true;
     }
+
+    function onMint(address, uint256) internal returns (bool) {
+        return true;
+    }
+
+    function onBurn(address, uint256 ) internal returns (bool) {
+        return true;
+    }
 }

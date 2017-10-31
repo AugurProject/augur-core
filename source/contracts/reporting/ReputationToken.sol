@@ -148,14 +148,12 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     }
 
     function onMint(address _target, uint256 _amount) internal returns (bool) {
-        Mint(_target, _amount);
-        controller.getAugur().logReputationMinted(universe, _amount);
+        controller.getAugur().logReputationTokenMinted(universe, _target, _amount);
         return true;
     }
 
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
-        Burn(_target, _amount);
-        controller.getAugur().logReputationBurned(universe, _amount);
+        controller.getAugur().logReputationTokenBurned(universe, _target, _amount);
         return true;
     }
 

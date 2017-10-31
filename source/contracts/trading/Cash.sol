@@ -47,6 +47,14 @@ contract Cash is Controlled, Extractable, ITyped, VariableSupplyToken, ICash {
         return "Cash";
     }
 
+    function onMint(address, uint256) internal returns (bool) {
+        return true;
+    }
+
+    function onBurn(address, uint256) internal returns (bool) {
+        return true;
+    }
+
     function getProtectedTokens() internal returns (address[] memory) {
         return new address[](0);
     }

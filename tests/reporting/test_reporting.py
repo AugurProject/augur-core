@@ -197,13 +197,13 @@ def test_designatedReportingHappyPath(localFixture, universe, market):
     assert localFixture.designatedReport(market, [0,10**18], tester.k0)
 
     # Confirm the designated report logging works
-    assert len(logs) == 3
-    assert logs[2]['_event_type'] == 'DesignatedReportSubmitted'
-    assert logs[2]['amountStaked'] == localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE()
-    assert logs[2]['reporter'] == bytesToHexString(tester.a0)
-    assert logs[2]['stakeToken'] == localFixture.getStakeToken(market, [0,10**18]).address
-    assert logs[2]['market'] == market.address
-    assert logs[2]['payoutNumerators'] == [0,10**18]
+    assert len(logs) == 4
+    assert logs[3]['_event_type'] == 'DesignatedReportSubmitted'
+    assert logs[3]['amountStaked'] == localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE()
+    assert logs[3]['reporter'] == bytesToHexString(tester.a0)
+    assert logs[3]['stakeToken'] == localFixture.getStakeToken(market, [0,10**18]).address
+    assert logs[3]['market'] == market.address
+    assert logs[3]['payoutNumerators'] == [0,10**18]
 
     # making a designated report also decremented the no show accounting on the reporting window
     assert reportingWindow.getNumDesignatedReportNoShows() == originalNumDesignatedReportNoShows - 1
@@ -246,12 +246,12 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
     assert stakeTokenYes.balanceOf(tester.a2) == expectedStakeTokenBalance
 
     # Confirm the report logging works
-    log = logs[1]
+    log = logs[2]
     if not makeReport:
-        log = logs[2]
-        assert len(logs) == 3
+        log = logs[3]
+        assert len(logs) == 4
     else:
-        assert len(logs) == 2
+        assert len(logs) == 3
 
     assert log['_event_type'] == 'ReportSubmitted'
     assert log['amountStaked'] == expectedStakeTokenBalance

@@ -92,14 +92,14 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
             assert marketDesignatedStake.redeemWinningTokens(False)
 
     # Confirm redeeming stake tokens logs appropriately
-    assert len(logs) == 2
-    assert logs[1]['_event_type'] == 'WinningTokensRedeemed'
-    assert logs[1]['reporter'] == bytesToHexString(tester.a0)
-    assert logs[1]['reportingFeesReceived'] == expectedFees
-    assert logs[1]['stakeToken'] == marketDesignatedStake.address
-    assert logs[1]['market'] == market.address
-    assert logs[1]['amountRedeemed'] == marketStake
-    assert logs[1]['payoutNumerators'] == [0,market.getNumTicks()]
+    assert len(logs) == 3
+    assert logs[2]['_event_type'] == 'WinningTokensRedeemed'
+    assert logs[2]['reporter'] == bytesToHexString(tester.a0)
+    assert logs[2]['reportingFeesReceived'] == expectedFees
+    assert logs[2]['stakeToken'] == marketDesignatedStake.address
+    assert logs[2]['market'] == market.address
+    assert logs[2]['amountRedeemed'] == marketStake
+    assert logs[2]['payoutNumerators'] == [0,market.getNumTicks()]
 
     categoricalMarketStake = categoricalMarketDesignatedStake.balanceOf(tester.a0)
     expectedFees = reporterFees * categoricalMarketStake / totalWinningStake + 1 # Rounding error

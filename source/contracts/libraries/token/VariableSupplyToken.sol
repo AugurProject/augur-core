@@ -18,6 +18,7 @@ contract VariableSupplyToken is StandardToken {
     function mint(address _target, uint256 _amount) internal returns (bool) {
         balances[_target] = balances[_target].add(_amount);
         supply = supply.add(_amount);
+        Mint(_target, _amount);
         onMint(_target, _amount);
         return true;
     }
@@ -30,19 +31,14 @@ contract VariableSupplyToken is StandardToken {
     function burn(address _target, uint256 _amount) internal returns (bool) {
         balances[_target] = balances[_target].sub(_amount);
         supply = supply.sub(_amount);
+        Burn(_target, _amount);
         onBurn(_target, _amount);
         return true;
     }
 
     // Subclasses of this token may want to send additional logs through the centralized Augur log emitter contract
-    function onMint(address _target, uint256 _amount) internal returns (bool) {
-        Mint(_target, _amount);
-        return true;
-    }
+    function onMint(address, uint256) internal returns (bool);
 
     // Subclasses of this token may want to send additional logs through the centralized Augur log emitter contract
-    function onBurn(address _target, uint256 _amount) internal returns (bool) {
-        Burn(_target, _amount);
-        return true;
-    }
+    function onBurn(address, uint256) internal returns (bool);
 }

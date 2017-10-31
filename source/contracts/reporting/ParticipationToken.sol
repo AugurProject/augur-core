@@ -74,4 +74,14 @@ contract ParticipationToken is DelegationTarget, Extractable, ITyped, Initializa
         _protectedTokens[0] = reportingWindow.getReputationToken();
         return _protectedTokens;
     }
+
+    function onMint(address _target, uint256 _amount) internal returns (bool) {
+        controller.getAugur().logParticipationTokenMinted(reportingWindow.getUniverse(), _target, _amount);
+        return true;
+    }
+
+    function onBurn(address _target, uint256 _amount) internal returns (bool) {
+        controller.getAugur().logParticipationTokenBurned(reportingWindow.getUniverse(), _target, _amount);
+        return true;
+    }
 }
