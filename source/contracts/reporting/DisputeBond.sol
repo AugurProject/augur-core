@@ -130,10 +130,6 @@ contract DisputeBond is DelegationTarget, Extractable, ITyped, Initializable, Ow
         return market.getUniverse();
     }
 
-    function getBondHolder() constant public returns (address) {
-        return owner;
-    }
-
     function getDisputedPayoutDistributionHash() constant public returns (bytes32) {
         return disputedPayoutDistributionHash;
     }

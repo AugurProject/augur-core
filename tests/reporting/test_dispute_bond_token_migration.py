@@ -68,9 +68,9 @@ def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigra
     lastDisputeBond = localFixture.applySignature('DisputeBond', market.getLastReportersDisputeBond())
 
     # Validate the owners
-    assert designatedDisputeBond.getBondHolder() == bytesToHexString(tester.a1)
-    assert firstDisputeBond.getBondHolder() == bytesToHexString(tester.a2)
-    assert lastDisputeBond.getBondHolder() == bytesToHexString(tester.a0)
+    assert designatedDisputeBond.getOwner() == bytesToHexString(tester.a1)
+    assert firstDisputeBond.getOwner() == bytesToHexString(tester.a2)
+    assert lastDisputeBond.getOwner() == bytesToHexString(tester.a0)
 
     # Validate the disputes outcomes
     assert designatedDisputeBond.getDisputedPayoutDistributionHash() == NO_DISTRIBUTION_HASH
