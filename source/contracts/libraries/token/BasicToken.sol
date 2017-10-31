@@ -32,7 +32,8 @@ contract BasicToken is ERC20Basic {
     function internalTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
         balances[_from] = balances[_from].sub(_value);
         balances[_to] = balances[_to].add(_value);
-        emitTransferLogs(_from, _to, _value);
+        Transfer(_from, _to, _value);
+        onTokenTransfer(_from, _to, _value);
         return true;
     }
 
@@ -54,8 +55,5 @@ contract BasicToken is ERC20Basic {
     }
 
     // Subclasses of this token generally want to send additional logs through the centralized Augur log emitter contract
-    function emitTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
-        Transfer(_from, _to, _value);
-        return true;
-    }
+    function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool); 
 }
