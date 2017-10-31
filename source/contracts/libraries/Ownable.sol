@@ -28,18 +28,17 @@ contract Ownable is IOwnable {
         _;
     }
 
-
     function getOwner() public view returns (address) {
         return owner;
     }
 
     /**
      * @dev Allows the current owner to transfer control of the contract to a newOwner.
-     * @param newOwner The address to transfer ownership to.
+     * @param _newOwner The address to transfer ownership to.
      */
-    function transferOwnership(address newOwner) public onlyOwner returns (bool) {
-        if (newOwner != address(0)) {
-            owner = newOwner;
+    function transferOwnership(address _newOwner) public onlyOwner returns (bool) {
+        if (_newOwner != address(0)) {
+            owner = _newOwner;
         }
         return true;
     }
