@@ -1,23 +1,21 @@
 dist: trusty
 sudo: required
-
 language: bash
-
 services:
-  - docker
-
+- docker
 notifications:
   email: false
-
-before_install: ./.travis/ci-setup.sh
-script: ./.travis/ci.sh
+before_install: "./.travis/test-setup.sh"
+script: "./.travis/test.sh"
+before_deploy: "./.travis/deploy-setup.sh"
 deploy:
-	skip_cleanup: true
-  # deploy develop to the staging environment
-  - provider: script
-    script: .travis/deploy.sh staging
-    on:
-      branch: develop
-
+- skip_cleanup: true
+  provider: script
+  script: ".travis/deploy.sh staging"
+  on:
+    branch: develop
 git:
   depth: 5
+env:
+  global:
+  - secure: G1uNKy6IZKF198pQc6vkMGRNZyc9nkE7vbJGnP/sk7c4Rcb6+3F0CgXvxWDZ7cUpb+i8ONzjOAk1f61m7u0PdTAhDb92XQ4MCSVx6liI5SuZS4WRp6J4klYxNOV2qo8NaEDJnMhgNTAlAztL/DhmL5OTpdosjVq4iFVJ3NByJOo=
