@@ -1,17 +1,10 @@
 import * as binascii from "binascii";
-import EthjsAccount = require("ethjs-account");
 import EthjsQuery = require('ethjs-query');
 import { TransactionReceipt } from 'ethjs-shared';
 
 const DEFAULT_TEST_ACCOUNT_BALANCE = 1 * 10 ** 20; // Denominated in wei
 // Set gas block limit extremely high so new blocks don"t have to be mined while uploading contracts
 const GAS_BLOCK_AMOUNT = Math.pow(2, 32);
-
-export interface TestAccount {
-    privateKey: string;
-    publicKey: string;
-    address: string;
-}
 
 interface RpcClientAccountOption {
     balance: number;
@@ -47,30 +40,10 @@ export function stringTo32ByteHex(stringToEncode: string): string {
     return padAndHexlify(stringToEncode, 64, "right");
 }
 
-export async function generateTestAccounts(secretKeys: string[]): Promise<TestAccount[]> {
-    let testAccounts: Promise<TestAccount>[] = [];
-    for (let secretKey in secretKeys) {
-        const hexlifiedSecretKey = padAndHexlify(secretKeys[secretKey], 64);
-        let testAccount = await EthjsAccount.privateToAccount(hexlifiedSecretKey);
-        for (let testAccountData in testAccount) {
-            testAccount[testAccountData] = testAccount[testAccountData].toLowerCase();
-        }
-        testAccounts.push(testAccount);
-    }
-
-    return await Promise.all(testAccounts);
-}
-
-export async function initializeTestRpcClientOptions(ethHttpProviderPort: number, secretKeys: string[]): Promise<RpcClientOptions> {
-    // Generate test accounts
-    const testAccounts = await generateTestAccounts(secretKeys);
-
+export function initializeTestRpcClientOptions(privateKey: string): RpcClientOptions {
     // Initialize TestRPC account options
     let accountOptions: RpcClientAccountOption[] = [];
-    for (let testAccount in testAccounts) {
-        accountOptions.push({ balance: DEFAULT_TEST_ACCOUNT_BALANCE, secretKey: testAccounts[testAccount].privateKey });
-    }
-
+    accountOptions.push({ balance: DEFAULT_TEST_ACCOUNT_BALANCE, secretKey: privateKey });
     return { gasLimit: GAS_BLOCK_AMOUNT, accounts: accountOptions };
 }
 
