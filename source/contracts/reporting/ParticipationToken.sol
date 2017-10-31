@@ -62,7 +62,7 @@ contract ParticipationToken is DelegationTarget, Extractable, ITyped, Initializa
         return reportingWindow;
     }
 
-    function emitTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
+    function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
         Transfer(_from, _to, _value);
         controller.getAugur().logParticipationTokensTransferred(reportingWindow.getUniverse(), _from, _to, _value);
         return true;
