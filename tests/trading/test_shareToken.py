@@ -68,13 +68,19 @@ def test_transfer(contractsFixture, market):
             "value": 5,
         },
         {
+            "_event_type": "Transfer",
+            "from": bytesToHexString(tester.a0),
+            "to": bytesToHexString(tester.a1),
+            "value": 5
+        },
+        {
             "_event_type": "TokensTransferred",
             "token": shareToken.address,
             "from": bytesToHexString(tester.a0),
             "to": bytesToHexString(tester.a1),
             "universe": market.getUniverse(),
             "value": 5
-        },
+        }
     ]
     assert(initialBalance0 - 5 == afterTransferBalance0), "Decrease in address 1's balance should equal amount transferred"
     assert(initialBalance1 + 5 == afterTransferBalance1), "Increase in address 2's balance should equal amount transferred"
@@ -108,13 +114,19 @@ def test_approve(contractsFixture, market):
             "value": 7
         },
         {
+            "_event_type": "Transfer",
+            "from": bytesToHexString(tester.a0),
+            "to": bytesToHexString(tester.a1),
+            "value": 7
+        },
+        {
             "_event_type": "TokensTransferred",
             "token": shareToken.address,
             "from": bytesToHexString(tester.a0),
             "to": bytesToHexString(tester.a1),
             "universe": market.getUniverse(),
             "value": 7
-        },
+        }        
     ]
 
 def test_transferFrom(contractsFixture, market):
