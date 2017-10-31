@@ -36,6 +36,7 @@ def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedRep
     mockReputationToken.setUniverse(parentUniverse.address)
     mockUniverse.setParentUniverse(parentUniverse.address)
     mockUniverse.setIsParentOf(True)
+    assert initializedReputationToken.totalSupply() == 0
     assert mockReputationToken.callMigrateIn(initializedReputationToken.address, mockStakeToken.address, 1011, False)
     assert initializedReputationToken.totalSupply() == 1011
     mockReputationToken.setTotalSupply(1005)
