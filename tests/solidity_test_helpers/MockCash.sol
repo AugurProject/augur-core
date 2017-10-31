@@ -7,7 +7,7 @@ import 'libraries/ITyped.sol';
 import 'TEST/MockVariableSupplyToken.sol';
 
 
-contract MockCash is ITyped, MockVariableSupplyToken, ICash {  
+contract MockCash is ITyped, MockVariableSupplyToken, ICash {
     address private depositEtherForAddressValue;
     uint256 private withdrawEtherAmountValue;
     address private withdrawEtherToAddressValue;

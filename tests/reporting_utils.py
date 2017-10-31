@@ -40,19 +40,19 @@ def proceedToFirstReporting(testFixture, universe, market, makeReport, disputer,
     if (makeReport):
         assert testFixture.designatedReport(market, reportOutcomes, tester.k0)
         assert market.getReportingState() == testFixture.contracts['Constants'].DESIGNATED_DISPUTE()
-        
+
         logs = []
         captureFilteredLogs(testFixture.chain.head_state, testFixture.contracts['Augur'], logs)
-        
+
         assert market.disputeDesignatedReport(designatedDisputeOutcomes, 1, False, sender=testFixture.testerKey[disputer])
 
         # Confirm the designated dispute logging works
-        assert len(logs) == 3
-        assert logs[2]['_event_type'] == 'ReportsDisputed'
-        assert logs[2]['reportingPhase'] == testFixture.contracts['Constants'].DESIGNATED_DISPUTE()
-        assert logs[2]['disputer'] == bytesToHexString(testFixture.testerAddress[disputer])
-        assert logs[2]['disputeBondAmount'] == testFixture.contracts['Constants'].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
-        assert logs[2]['market'] == market.address
+        assert len(logs) == 4
+        assert logs[3]['_event_type'] == 'ReportsDisputed'
+        assert logs[3]['reportingPhase'] == testFixture.contracts['Constants'].DESIGNATED_DISPUTE()
+        assert logs[3]['disputer'] == bytesToHexString(testFixture.testerAddress[disputer])
+        assert logs[3]['disputeBondAmount'] == testFixture.contracts['Constants'].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
+        assert logs[3]['market'] == market.address
 
     else:
         testFixture.chain.head_state.timestamp = market.getEndTime() + testFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS() + 1
@@ -86,12 +86,12 @@ def proceedToLastReporting(testFixture, universe, market, makeReport, designated
     assert market.disputeFirstReporters(firstReportDisputeOutcomes, disputeFirstReportOutcomeStake, False, sender=testFixture.testerKey[firstDisputer])
 
     # Confirm the first dispute logging works
-    assert len(logs) == 3
-    assert logs[2]['_event_type'] == 'ReportsDisputed'
-    assert logs[2]['reportingPhase'] == testFixture.contracts['Constants'].FIRST_DISPUTE()
-    assert logs[2]['disputer'] == bytesToHexString(testFixture.testerAddress[firstDisputer])
-    assert logs[2]['disputeBondAmount'] == testFixture.contracts['Constants'].FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
-    assert logs[2]['market'] == market.address
+    assert len(logs) == 4
+    assert logs[3]['_event_type'] == 'ReportsDisputed'
+    assert logs[3]['reportingPhase'] == testFixture.contracts['Constants'].FIRST_DISPUTE()
+    assert logs[3]['disputer'] == bytesToHexString(testFixture.testerAddress[firstDisputer])
+    assert logs[3]['disputeBondAmount'] == testFixture.contracts['Constants'].FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
+    assert logs[3]['market'] == market.address
 
     # We're in the LAST REPORTING phase now
     assert market.getReportingState() == testFixture.contracts['Constants'].LAST_REPORTING()
@@ -129,6 +129,7 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
 
     # Confirm the last dispute logging and universe fork logging works
     assert len(logs) == 3
+
     assert logs[1]['_event_type'] == 'UniverseForked'
     assert logs[1]['universe'] == universe.address
 

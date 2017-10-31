@@ -67,6 +67,38 @@ contract MockAugur is Controlled {
         return true;
     }
 
+    function logReputationTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        return true;
+    }
+
+    function logReputationTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        return true;
+    }
+
+    function logShareTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        return true;
+    }
+
+    function logShareTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        return true;
+    }
+
+    function logParticipationTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        return true;
+    }
+
+    function logParticipationTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        return true;
+    }
+
+    function logStakeTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        return true;
+    }
+
+    function logStakeTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        return true;
+    }
+
     bool private logUniverseForkedCalledValue;
 
     function logUniverseForkedCalled() public returns (bool) { return logUniverseForkedCalledValue; }

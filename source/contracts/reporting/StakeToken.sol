@@ -221,6 +221,16 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         return true;
     }
 
+    function onMint(address _target, uint256 _amount) internal returns (bool) {
+        controller.getAugur().logStakeTokenMinted(market.getUniverse(), _target, _amount);
+        return true;
+    }
+
+    function onBurn(address _target, uint256 _amount) internal returns (bool) {
+        controller.getAugur().logStakeTokenBurned(market.getUniverse(), _target, _amount);
+        return true;
+    }
+
     // Disallow REP extraction
     function getProtectedTokens() internal returns (address[] memory) {
         address[] memory _protectedTokens = new address[](1);

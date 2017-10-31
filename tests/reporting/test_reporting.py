@@ -94,12 +94,38 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     # Attempting to finalize the fork now will not succeed as no REP has been migrated
     assert market.tryFinalize() == 0
 
+    logs = []
+    captureFilteredLogs(localFixture.chain.head_state, localFixture.contracts['Augur'], logs)
+
     # Tester 1 moves their ~1 Million REP to the YES universe and gets a fixed percentage bonus for doing so within the FORKING period
     expectedAmount = reputationToken.balanceOf(tester.a1)
     bonus = expectedAmount / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
     reputationToken.migrateOut(yesUniverseReputationToken.address, tester.a1, reputationToken.balanceOf(tester.a1), sender = tester.k1)
     assert not reputationToken.balanceOf(tester.a1)
     assert yesUniverseReputationToken.balanceOf(tester.a1) == expectedAmount + bonus
+
+    # Confirm the token logs were generated correctly
+
+    assert len(logs) == 3
+
+    burnLog = logs[0]
+    mintLog = logs[1]
+    bonusMintLog = logs[2]
+
+    assert burnLog['_event_type'] == 'TokensBurned'
+    assert burnLog['amount'] == expectedAmount
+    assert burnLog['token'] == reputationToken.address
+    assert burnLog['universe'] == universe.address
+
+    assert mintLog['_event_type'] == 'TokensMinted'
+    assert mintLog['amount'] == expectedAmount
+    assert mintLog['token'] == yesUniverseReputationToken.address
+    assert mintLog['universe'] == yesUniverse.address
+
+    assert bonusMintLog['_event_type'] == 'TokensMinted'
+    assert bonusMintLog['amount'] == bonus
+    assert bonusMintLog['token'] == yesUniverseReputationToken.address
+    assert bonusMintLog['universe'] == yesUniverse.address
 
     # Attempting to finalize the fork now will not succeed as a majority or REP has not yet migrated and fork end time has not been reached
     assert market.tryFinalize() == 0
@@ -171,13 +197,13 @@ def test_designatedReportingHappyPath(localFixture, universe, market):
     assert localFixture.designatedReport(market, [0,10**18], tester.k0)
 
     # Confirm the designated report logging works
-    assert len(logs) == 3
-    assert logs[2]['_event_type'] == 'DesignatedReportSubmitted'
-    assert logs[2]['amountStaked'] == localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE()
-    assert logs[2]['reporter'] == bytesToHexString(tester.a0)
-    assert logs[2]['stakeToken'] == localFixture.getStakeToken(market, [0,10**18]).address
-    assert logs[2]['market'] == market.address
-    assert logs[2]['payoutNumerators'] == [0,10**18]
+    assert len(logs) == 4
+    assert logs[3]['_event_type'] == 'DesignatedReportSubmitted'
+    assert logs[3]['amountStaked'] == localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE()
+    assert logs[3]['reporter'] == bytesToHexString(tester.a0)
+    assert logs[3]['stakeToken'] == localFixture.getStakeToken(market, [0,10**18]).address
+    assert logs[3]['market'] == market.address
+    assert logs[3]['payoutNumerators'] == [0,10**18]
 
     # making a designated report also decremented the no show accounting on the reporting window
     assert reportingWindow.getNumDesignatedReportNoShows() == originalNumDesignatedReportNoShows - 1
@@ -220,12 +246,12 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
     assert stakeTokenYes.balanceOf(tester.a2) == expectedStakeTokenBalance
 
     # Confirm the report logging works
-    log = logs[1]
+    log = logs[2]
     if not makeReport:
-        log = logs[2]
-        assert len(logs) == 3
+        log = logs[3]
+        assert len(logs) == 4
     else:
-        assert len(logs) == 2
+        assert len(logs) == 3
 
     assert log['_event_type'] == 'ReportSubmitted'
     assert log['amountStaked'] == expectedStakeTokenBalance

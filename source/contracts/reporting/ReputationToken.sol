@@ -49,10 +49,10 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     function internalMigrateOut(IReputationToken _destination, address _sender, address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) private onlyInGoodTimes returns (bool) {
         assertReputationTokenIsLegit(_destination);
         if (_sender != _reporter) {
+            // Adjust token allowance here since we're bypassing the standard transferFrom method
             allowed[_reporter][_sender] = allowed[_reporter][_sender].sub(_attotokens);
         }
-        balances[_reporter] = balances[_reporter].sub(_attotokens);
-        supply = supply.sub(_attotokens);
+        burn(_reporter, _attotokens);
         _destination.migrateIn(_reporter, _attotokens, _bonusIfInForkWindow);
         if (topMigrationDestination == address(0) || _destination.totalSupply() > topMigrationDestination.totalSupply()) {
             topMigrationDestination = _destination;
@@ -62,13 +62,12 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
 
     function migrateIn(address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) public onlyInGoodTimes afterInitialized returns (bool) {
         require(ReputationToken(msg.sender) == universe.getParentUniverse().getReputationToken());
-        balances[_reporter] = balances[_reporter].add(_attotokens);
+        mint(_reporter, _attotokens);
         // Only count tokens migrated toward the available to be matched in other universes. The bonus should not be added
         universe.increaseRepAvailableForExtraBondPayouts(_attotokens);
         if (eligibleForForkBonus(_bonusIfInForkWindow)) {
             mint(_reporter, _attotokens.div(Reporting.getForkMigrationPercentageBonusDivisor()));
         }
-        supply = supply.add(_attotokens);
         return true;
     }
 
@@ -87,8 +86,7 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
         ERC20 _legacyRepToken = ERC20(controller.lookup("LegacyReputationToken"));
         uint256 _legacyBalance = _legacyRepToken.balanceOf(msg.sender);
         _legacyRepToken.transferFrom(msg.sender, address(0), _legacyBalance);
-        balances[msg.sender] = balances[msg.sender].add(_legacyBalance);
-        supply = supply.add(_legacyBalance);
+        mint(msg.sender, _legacyBalance);
         return true;
     }
 
@@ -146,6 +144,16 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     function emitTransferLogs(address _from, address _to, uint256 _value) internal returns (bool) {
         Transfer(_from, _to, _value);
         controller.getAugur().logReputationTokensTransferred(universe, _from, _to, _value);
+        return true;
+    }
+
+    function onMint(address _target, uint256 _amount) internal returns (bool) {
+        controller.getAugur().logReputationTokenMinted(universe, _target, _amount);
+        return true;
+    }
+
+    function onBurn(address _target, uint256 _amount) internal returns (bool) {
+        controller.getAugur().logReputationTokenBurned(universe, _target, _amount);
         return true;
     }
 

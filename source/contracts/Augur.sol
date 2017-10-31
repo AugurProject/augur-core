@@ -27,6 +27,8 @@ contract Augur is Controlled, Extractable {
     event TradingProceedsClaimed(address indexed universe, address indexed shareToken, address indexed sender, address market, uint256 numShares, uint256 numPayoutTokens, uint256 finalTokenBalance);
     event UniverseCreated(address indexed parentUniverse, address indexed childUniverse);
     event TokensTransferred(address indexed universe, address indexed token, address indexed from, address to, uint256 value);
+    event TokensMinted(address indexed universe, address indexed token, address indexed target, uint256 amount);
+    event TokensBurned(address indexed universe, address indexed token, address indexed target, uint256 amount);
 
     //
     // Transfer
@@ -131,6 +133,54 @@ contract Augur is Controlled, Extractable {
     function logShareTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         require(_universe.isContainerForShareToken(IShareToken(msg.sender)));
         TokensTransferred(_universe, msg.sender, _from, _to, _value);
+        return true;
+    }
+
+    function logReputationTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.getReputationToken() == IReputationToken(msg.sender));
+        TokensBurned(_universe, msg.sender, _target, _amount);
+        return true;
+    }
+
+    function logReputationTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.getReputationToken() == IReputationToken(msg.sender));
+        TokensMinted(_universe, msg.sender, _target, _amount);
+        return true;
+    }
+
+    function logShareTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForShareToken(IShareToken(msg.sender)));
+        TokensBurned(_universe, msg.sender, _target, _amount);
+        return true;
+    }
+
+    function logShareTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForShareToken(IShareToken(msg.sender)));
+        TokensMinted(_universe, msg.sender, _target, _amount);
+        return true;
+    }
+
+    function logParticipationTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForParticipationToken(IParticipationToken(msg.sender)));
+        TokensBurned(_universe, msg.sender, _target, _amount);
+        return true;
+    }
+
+    function logParticipationTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForParticipationToken(IParticipationToken(msg.sender)));
+        TokensMinted(_universe, msg.sender, _target, _amount);
+        return true;
+    }
+
+    function logStakeTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForStakeToken(IStakeToken(msg.sender)));
+        TokensBurned(_universe, msg.sender, _target, _amount);
+        return true;
+    }
+
+    function logStakeTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForStakeToken(IStakeToken(msg.sender)));
+        TokensMinted(_universe, msg.sender, _target, _amount);
         return true;
     }
 
