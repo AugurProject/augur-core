@@ -66,4 +66,8 @@ contract MockStandardToken is ERC20, BasicToken {
         allowanceSpenderValue = _spender;
         return allowanceValue;
     }
+
+    function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
+        return true;
+    }
 }

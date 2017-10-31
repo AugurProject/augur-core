@@ -9,4 +9,8 @@ contract StandardTokenHelper is StandardToken {
         supply = supply.add(_amount);
         return true;
     }
+    
+    function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
+        return true;
+    }    
 }

@@ -58,4 +58,8 @@ contract Cash is Controlled, Extractable, ITyped, VariableSupplyToken, ICash {
     function getProtectedTokens() internal returns (address[] memory) {
         return new address[](0);
     }
+
+    function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
+        return true;
+    }    
 }

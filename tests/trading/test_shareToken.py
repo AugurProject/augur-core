@@ -74,7 +74,7 @@ def test_transfer(contractsFixture, market):
             "to": bytesToHexString(tester.a1),
             "universe": market.getUniverse(),
             "value": 5
-        },
+        }
     ]
     assert(initialBalance0 - 5 == afterTransferBalance0), "Decrease in address 1's balance should equal amount transferred"
     assert(initialBalance1 + 5 == afterTransferBalance1), "Increase in address 2's balance should equal amount transferred"
@@ -114,7 +114,7 @@ def test_approve(contractsFixture, market):
             "to": bytesToHexString(tester.a1),
             "universe": market.getUniverse(),
             "value": 7
-        },
+        }
     ]
 
 def test_transferFrom(contractsFixture, market):
