@@ -11,6 +11,13 @@ notifications:
 
 before_install: ./.travis/ci-setup.sh
 script: ./.travis/ci.sh
+deploy:
+	skip_cleanup: true
+  # deploy develop to the staging environment
+  - provider: script
+    script: .travis/deploy.sh staging
+    on:
+      branch: develop
 
 git:
   depth: 5

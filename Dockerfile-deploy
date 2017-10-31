@@ -1,0 +1,12 @@
+FROM node:8.6.0
+
+COPY package.json /app/package.json
+COPY package-lock.json /app/package-lock.json
+WORKDIR /app
+RUN npm install
+COPY tsconfig.json /app/tsconfig.json
+COPY typings/ /app/typings/
+COPY source/ /app/source/
+RUN npx tsc
+
+ENTRYPOINT [ "node", "output/deployment/deployContracts.js" ]
