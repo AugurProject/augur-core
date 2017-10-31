@@ -216,7 +216,6 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     }
 
     function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
-        Transfer(_from, _to, _value);
         controller.getAugur().logStakeTokensTransferred(market.getUniverse(), _from, _to, _value);
         return true;
     }

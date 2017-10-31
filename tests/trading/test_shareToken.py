@@ -68,12 +68,6 @@ def test_transfer(contractsFixture, market):
             "value": 5,
         },
         {
-            "_event_type": "Transfer",
-            "from": bytesToHexString(tester.a0),
-            "to": bytesToHexString(tester.a1),
-            "value": 5
-        },
-        {
             "_event_type": "TokensTransferred",
             "token": shareToken.address,
             "from": bytesToHexString(tester.a0),
@@ -106,12 +100,6 @@ def test_approve(contractsFixture, market):
             "owner": bytesToHexString(tester.a0),
             "spender": bytesToHexString(tester.a1),
             "value": 10
-        },
-        {
-            "_event_type": "Transfer",
-            "from": bytesToHexString(tester.a0),
-            "to": bytesToHexString(tester.a1),
-            "value": 7
         },
         {
             "_event_type": "Transfer",
