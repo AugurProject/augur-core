@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString
+from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta
 from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, proceedToLastReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
 
 tester.STARTGAS = long(6.7 * 10**6)
@@ -290,13 +290,34 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
     True,
     False
 ])
-def test_lastReportingHappyPath(localFixture, makeReport, universe, market):
+def test_lastReportingHappyPath(localFixture, makeReport, universe, market, cash):
+    newMarket = localFixture.createReasonableBinaryMarket(universe, cash)
+    completeSets = localFixture.contracts['CompleteSets']
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
+    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
-    # Proceed to the LAST REPORTING phase
+    # Generate some fees to confirm the market migration also migrates proportional fees
+    cost = 10 * market.getNumTicks()
+    assert completeSets.publicBuyCompleteSets(market.address, 10, sender=tester.k1, value=cost)
+    assert completeSets.publicSellCompleteSets(market.address, 10, sender=tester.k1)
+    fees = cash.balanceOf(newMarket.getReportingWindow())
+    assert fees > 0
+
+    # We'll proceed to the designated reporting phase so that there is also stake from a market that does not migrate
+    proceedToFirstReporting(localFixture, universe, newMarket, makeReport, 1, [0,10**18], [10**18,0])
+    newMarketStakeToken = localFixture.getStakeToken(newMarket, [0,10**18])
+    assert newMarketStakeToken.buy(1000)
+
+    # Proceed to the LAST REPORTING phase for the main market
+    originalReportingWindowStake = reportingWindow.getTotalStake()
+    assert originalReportingWindowStake > 0
     proceedToLastReporting(localFixture, universe, market, makeReport, 1, 3, [0,10**18], [10**18,0], 2, [10**18,0], [0,10**18])
 
+    # Confirm that fees have moved proportionally when the market migrated from the first dispute
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    marketStakeForFees = market.getTotalStake() - 1
+    expectedMigratedFees = fees * marketStakeForFees / (originalReportingWindowStake + marketStakeForFees)
+    assert cash.balanceOf(market.getReportingWindow()) == expectedMigratedFees
 
     stakeTokenNo = localFixture.getStakeToken(market, [10**18,0])
     stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
@@ -351,6 +372,12 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     newMarket = localFixture.createReasonableBinaryMarket(universe, cash)
     completeSets = localFixture.contracts['CompleteSets']
 
+    # Generate some fees to confirm the market migration also migrates fees
+    cost = 10 * newMarket.getNumTicks()
+    assert completeSets.publicBuyCompleteSets(newMarket.address, 10, sender=tester.k1, value=cost)
+    assert completeSets.publicSellCompleteSets(newMarket.address, 10, sender=tester.k1)
+    assert cash.balanceOf(newMarket.getReportingWindow()) > 0
+
     # We'll do a designated report in the new market based on the makeReport param used for the forking market
     proceedToDesignatedReporting(localFixture, universe, newMarket, [0,10**18])
     if (makeReport):
@@ -369,8 +396,12 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     # We'll finalize the forking market
     finalizeForkingMarket(localFixture, universe, market, finalizeByMigration, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,10**18], [10**18,0])
 
-    # Now we can migrate the market to the winning universe
-    assert newMarket.migrateThroughOneFork()
+    # Now we can migrate the market to the winning universe. We also confirm that migration will move fees
+    windowCashBalance = cash.balanceOf(newMarket.getReportingWindow())
+    with TokenDelta(cash, -windowCashBalance, newMarket.getReportingWindow(), "Fork migration did not trigger window fee migratgion"):
+        assert newMarket.migrateThroughOneFork()
+
+    assert cash.balanceOf(newMarket.getReportingWindow()) == windowCashBalance
 
     # Now that we're on the correct universe we are send back to the DESIGNATED DISPUTE phase, which in the case of no designated reporter means the FIRST Reporting phase
     if (makeReport):
@@ -464,6 +495,9 @@ def test_invalid_designated_report(localFixture, universe, cash, market):
     # Since the designated reporter showed up the market creator still gets back the reporter gas cost fee
     increaseInMarketCreatorBalance = localFixture.chain.head_state.get_balance(market.getOwner()) - initialMarketCreatorETHBalance
     assert increaseInMarketCreatorBalance == expectedMarketCreatorFeePayout
+
+def test_cannot_fork_twice():
+    pass
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
