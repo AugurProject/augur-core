@@ -306,7 +306,8 @@ def test_lastReportingHappyPath(localFixture, makeReport, universe, market, cash
     # We'll proceed to the designated reporting phase so that there is also stake from a market that does not migrate
     proceedToFirstReporting(localFixture, universe, newMarket, makeReport, 1, [0,10**18], [10**18,0])
     newMarketStakeToken = localFixture.getStakeToken(newMarket, [0,10**18])
-    assert newMarketStakeToken.buy(1000)
+    firstDisputeStake = localFixture.contracts["Constants"].FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
+    assert newMarketStakeToken.buy(firstDisputeStake)
 
     # Proceed to the LAST REPORTING phase for the main market
     originalReportingWindowStake = reportingWindow.getTotalStake()
@@ -315,8 +316,7 @@ def test_lastReportingHappyPath(localFixture, makeReport, universe, market, cash
 
     # Confirm that fees have moved proportionally when the market migrated from the first dispute
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    marketStakeForFees = market.getTotalStake() - 1
-    expectedMigratedFees = fees * marketStakeForFees / (originalReportingWindowStake + marketStakeForFees)
+    expectedMigratedFees = fees / 2
     assert cash.balanceOf(market.getReportingWindow()) == expectedMigratedFees
 
     stakeTokenNo = localFixture.getStakeToken(market, [10**18,0])
@@ -496,8 +496,31 @@ def test_invalid_designated_report(localFixture, universe, cash, market):
     increaseInMarketCreatorBalance = localFixture.chain.head_state.get_balance(market.getOwner()) - initialMarketCreatorETHBalance
     assert increaseInMarketCreatorBalance == expectedMarketCreatorFeePayout
 
-def test_cannot_fork_twice():
-    pass
+def test_cannot_fork_twice(localFixture, universe, cash, market):
+    newMarket = localFixture.createReasonableBinaryMarket(universe, cash)
+
+    proceedToLastReporting(localFixture, universe, market, True, 1, 3, [0,10**18], [10**18,0], 2, [10**18,0], [0,10**18])
+    proceedToLastReporting(localFixture, universe, newMarket, True, 1, 3, [0,10**18], [10**18,0], 2, [10**18,0], [0,10**18])
+
+    # Both markets are in last reporting
+    assert market.getReportingState() == localFixture.contracts["Constants"].LAST_REPORTING()
+    assert newMarket.getReportingState() == localFixture.contracts["Constants"].LAST_REPORTING()
+
+    # We'll progress to the dispute phase for both
+    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+
+    # Both markets are in last dispute
+    assert market.getReportingState() == localFixture.contracts["Constants"].LAST_DISPUTE()
+    assert newMarket.getReportingState() == localFixture.contracts["Constants"].LAST_DISPUTE()
+
+    # One can fork by having a dispute made
+    assert market.disputeLastReporters()
+
+    # The other market however cannot fork without error since the current fork is not finalized
+    with raises(TransactionFailed):
+        newMarket.disputeLastReporters()
+
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
