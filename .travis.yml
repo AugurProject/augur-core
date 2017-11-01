@@ -18,4 +18,4 @@ git:
   depth: 5
 env:
   global:
-  - secure: G1uNKy6IZKF198pQc6vkMGRNZyc9nkE7vbJGnP/sk7c4Rcb6+3F0CgXvxWDZ7cUpb+i8ONzjOAk1f61m7u0PdTAhDb92XQ4MCSVx6liI5SuZS4WRp6J4klYxNOV2qo8NaEDJnMhgNTAlAztL/DhmL5OTpdosjVq4iFVJ3NByJOo=
+  - secure: ADmhKnkSyCrheJ0Vpa5X/JribTsux/07i4FbhxBTIq/YM+kkcygkO807UDPcbe8vfYWWxp4lcDTdPTYKvGbyJZIsD6yV17+V10Lp58YjexpKFVzqsqLXG7IFaTCvPvG+vqzu63QI6DNY06Z+aUjeRRXJMIG0pMpCIflzN4bkAcA=
