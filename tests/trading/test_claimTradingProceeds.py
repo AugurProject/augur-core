@@ -4,7 +4,7 @@ from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
-from utils import fix, captureFilteredLogs, bytesToHexString
+from utils import fix, captureFilteredLogs, bytesToHexString, ETHDelta, TokenDelta
 from constants import YES, NO
 
 
@@ -77,7 +77,9 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     yesShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(NO))
     expectedValue = 1 * market.getNumTicks()
-    expectedSettlementFees = expectedValue * 0.0101
+    expectedReporterFees = expectedValue / universe.getReportingFeeDivisor()
+    expectedMarketCreatorFees = expectedValue / market.getMarketCreatorSettlementFeeDivisor()
+    expectedSettlementFees = expectedReporterFees + expectedMarketCreatorFees
     expectedPayout = long(expectedValue - expectedSettlementFees)
 
     assert universe.getOpenInterestInAttoEth() == 0
@@ -93,12 +95,14 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     logs = []
     captureFilteredLogs(kitchenSinkFixture.chain.head_state, kitchenSinkFixture.contracts['Augur'], logs)
 
-    # redeem shares with a1
-    initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
-    claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
-    # redeem shares with a2
-    initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
-    claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k2)
+    with ETHDelta(expectedMarketCreatorFees, tester.a0, kitchenSinkFixture.chain, "Market creator fees not paid"):
+        with TokenDelta(cash, expectedReporterFees, market.getReportingWindow(), "Reporter fees not paid"):
+            # redeem shares with a1
+            initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
+            claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
+            # redeem shares with a2
+            initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
+            claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k2)
 
     # Confirm claim proceeds logging works correctly
     assert len(logs) == 4
