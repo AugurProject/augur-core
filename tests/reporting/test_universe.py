@@ -22,9 +22,6 @@ def test_universe_creation(localFixture, mockReputationToken, mockReputationToke
     assert universe.getForkEndTime() == 0
     assert universe.getChildUniverse("5") == longToHexString(0)
 
-    strangerUniverse = localFixture.upload('../source/contracts/reporting/Universe.sol', 'strangerUniverse')
-    assert universe.isParentOf(strangerUniverse.address) == False
-
 def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, mockUniverseFactory, mockMarket, mockReportingWindow, chain, mockReportingWindowFactory, mockAugur):
 
     with raises(TransactionFailed, message="must be called from market"):
@@ -57,6 +54,8 @@ def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, moc
     assert mockUniverseFactory.getCreateUniverseParentPayoutDistributionHashValue() == stringToBytes("101")
     assert populatedUniverse.getChildUniverse(stringToBytes("101")) == mockUniverse.address
     assert populatedUniverse.isParentOf(mockUniverse.address)
+    strangerUniverse = localFixture.upload('../source/contracts/reporting/Universe.sol', 'strangerUniverse')
+    assert populatedUniverse.isParentOf(strangerUniverse.address) == False
 
     assert populatedUniverse.getReportingWindowForForkEndTime() == mockReportingWindow.address
 
