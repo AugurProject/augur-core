@@ -138,6 +138,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getOrCreateChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
+        require(forkingMarket != address(0));
         if (childUniverses[_parentPayoutDistributionHash] == address(0)) {
             childUniverses[_parentPayoutDistributionHash] = UniverseFactory(controller.lookup("UniverseFactory")).createUniverse(controller, this, _parentPayoutDistributionHash);
             controller.getAugur().logUniverseCreated(childUniverses[_parentPayoutDistributionHash]);
