@@ -1,45 +1,45 @@
 #!/usr/bin/env node
 
-import * as fs from "async-file";
-import * as getPort from "get-port";
 import * as path from "path";
-import EthjsHttpProvider = require('ethjs-provider-http');
-import EthjsQuery = require("ethjs-query");
 import { SolidityContractCompiler } from "../libraries/CompileSolidity";
 import { ContractDeployer } from "../libraries/ContractDeployer";
 import { initializeTestRpcClientOptions } from "../libraries/HelperFunctions";
 import { RpcClient } from "../libraries/RpcClient";
+import { Connector } from '../libraries/Connector';
+import { Configuration } from '../libraries/Configuration';
 
 const CONTRACT_INPUT_DIR_PATH = path.join(__dirname, "../../source/contracts");
 const CONTRACT_OUTPUT_DIR_PATH = path.join(__dirname, "../../output/contracts");
 const COMPILED_CONTRACT_OUTPUT_FILE_NAME = "augurCore";
 
-export async function compileAndDeployContracts(): Promise<ContractDeployer> {
+export async function compileAndDeployContracts(configuration: Configuration, connector: Connector): Promise<ContractDeployer> {
     // Compile contracts to a single output file
     const solidityContractCompiler = new SolidityContractCompiler(CONTRACT_INPUT_DIR_PATH, CONTRACT_OUTPUT_DIR_PATH, COMPILED_CONTRACT_OUTPUT_FILE_NAME);
     const compilerOutput = await solidityContractCompiler.compileContracts();
 
-    const ethjsHttpProviderHost = (typeof process.env.ETHEREUM_HOST === "undefined") ? "localhost" : process.env.ETHEREUM_HOST;
-    const ethjsHttpProviderPort = (typeof process.env.ETHEREUM_PORT === "undefined") ? await getPort() : parseInt(process.env.ETHEREUM_PORT || "0");
-    const gasPrice = ((typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? 20 : parseInt(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH || "20")) * 10**9;
     // If no Ethereum host has been specified, use TestRPC.
     if (typeof process.env.ETHEREUM_HOST === "undefined") {
-        const testRpcOptions = await initializeTestRpcClientOptions(ethjsHttpProviderPort, ["Augur0"]);
+        const testRpcOptions = initializeTestRpcClientOptions(configuration.privateKey);
         const rpcClient = new RpcClient();
-        await rpcClient.listen(ethjsHttpProviderPort, testRpcOptions);
+        await rpcClient.listen(configuration.httpProviderPort, testRpcOptions);
     }
-    const ethjsHttpProvider = new EthjsHttpProvider(`http://${ethjsHttpProviderHost}:${ethjsHttpProviderPort}`);
-    const ethjsQuery = new EthjsQuery(ethjsHttpProvider);
-    const contractDeployer = new ContractDeployer(ethjsQuery, compilerOutput, gasPrice);
+    await connector.waitUntilConnected();
+    const contractDeployer = new ContractDeployer(configuration, connector, compilerOutput);
     await contractDeployer.deploy();
 
     return contractDeployer;
 }
 
-// If this script is not being imported by another module (i.e., it is being run independently via the command line)
-if (!module.parent) {
+// the rest of the code in this file is for running this as a standalone script, rather than as a library
+async function runStandalone() {
     require('source-map-support').install();
-    compileAndDeployContracts().then(() => {
+    const configuration = await Configuration.create();
+    const connector = new Connector(configuration);
+    await compileAndDeployContracts(configuration, connector);
+}
+
+if (!module.parent) {
+    runStandalone().then(() => {
         process.exit();
     }).catch(error => {
         console.log(error);

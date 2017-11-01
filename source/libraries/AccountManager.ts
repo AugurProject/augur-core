@@ -1,0 +1,59 @@
+import BN = require('bn.js');
+import { Account, generate, privateToAccount } from 'ethjs-account';
+import { Transaction } from 'ethjs-shared';
+import { sign } from 'ethjs-signer';
+import { Connector } from './Connector';
+import { Configuration } from './Configuration';
+
+export class AccountManager {
+    private readonly connector: Connector;
+    private readonly accounts = new Map<string, Account>();
+    private readonly nonces = new Map<string, BN>();
+    public readonly defaultAddress: string;
+
+    constructor(connector: Connector, configuration: Configuration) {
+        this.connector = connector;
+        const account = generate('non entropic entropy for account seed');
+        this.accounts.set(account.address, account);
+        this.defaultAddress = account.address;
+        if (typeof configuration.privateKey !== 'undefined') {
+            this.defaultAddress = this.addAccount(configuration.privateKey);
+        }
+    }
+
+    public addAccount(privateKey: string): string {
+        const account = privateToAccount(privateKey);
+        this.accounts.set(account.address, account);
+        return account.address;
+    }
+
+    public async getNonce(address: string): Promise<BN> {
+        if (!this.accounts.has(address)) throw new Error(`Nonce requested for an account not managed by this Account Manager.  Requested address: ${address}`);
+
+        const nonce = this.nonces.has(address)
+            ? this.nonces.get(address)!.add(new BN(1))
+            : await this.connector.ethjsQuery.getTransactionCount(address);
+        this.nonces.set(address, nonce);
+        return nonce;
+    }
+
+    public async signTransaction(transaction: Transaction): Promise<string> {
+        const sender = transaction.from || this.defaultAddress;
+        if (typeof transaction.data === 'undefined') throw new Error(`transaction.data was undefined.`);
+        if (typeof transaction.gas === 'undefined') throw new Error(`transaction.gas was undefined.`);
+        if (typeof transaction.gasPrice === 'undefined') throw new Error(`transaction.gasPrice was undefined.`);
+        const nonce = await this.getNonce(sender);
+        const transactionToSend = Object.assign(
+            {
+                from: sender,
+                data: transaction.data,
+                gas: transaction.gas,
+                gasPrice: transaction.gasPrice,
+                nonce: nonce,
+            },
+            transaction.to ? { to: transaction.to } : <{to:string}>{},
+            transaction.value ? { value: transaction.value } : <{value:BN}>{},
+        );
+        return sign(transactionToSend, this.accounts.get(sender)!.privateKey);
+    }
+}
