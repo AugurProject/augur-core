@@ -1,25 +1,26 @@
 declare module 'ethjs-query' {
     import EthjsHttpProvider = require('ethjs-provider-http');
     import EthjsRpc = require('ethjs-rpc');
-    import { Abi, Block, TransactionForSend, TransactionForCall, TransactionReceipt, BN as BNInterface, Log } from 'ethjs-shared';
+    import BN = require('bn.js');
+    import { Abi, Block, Transaction, TransactionReceipt, Log } from 'ethjs-shared';
 
     class EthjsQuery {
         constructor(provider: EthjsHttpProvider);
+        rpc: EthjsRpc;
         accounts(): Promise<Array<string>>;
-        estimateGas(transaction: TransactionForCall): Promise<BNInterface>;
-        getBalance(address: string): Promise<BNInterface>;
+        call(transaction: Transaction): Promise<any>;
+        estimateGas(transaction: Transaction): Promise<BN>;
+        getBalance(address: string): Promise<BN>;
         getBlockByNumber(blockNumber: number|"earliest"|"latest"|"pending", returnFullBlock: boolean): Promise<Block>;
-        getLogs(options: { fromBlock: BNInterface | string, toBlock: BNInterface | string, address: string, topics: (string | null)[] }): Promise<Array<Log>>;
+        getLogs(options: { fromBlock: BN | string, toBlock: BN | string, address: string, topics: (string | null)[] }): Promise<Array<Log>>;
+        getTransactionCount(address: string): Promise<BN>;
         getTransactionReceipt(transactionHash: string): Promise<TransactionReceipt>;
         net_version(): Promise<string>;
-        rpc: EthjsRpc;
+        sendTransaction(transaction: Transaction): Promise<string>;
+        sendRawTransaction(signedTransaction: string): Promise<string>;
     }
 
     namespace EthjsQuery {
-        class BN extends BNInterface {
-            constructor(value: number | string, radix?: number)
-        }
-
         const keccak256: (source: string) => string;
     }
 

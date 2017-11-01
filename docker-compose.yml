@@ -23,6 +23,7 @@ services:
       - ETHEREUM_HOST=parity-dev-node
       - ETHEREUM_PORT=8545
       - ETHEREUM_GAS_PRICE_IN_NANOETH=1
+      - ETHEREUM_PRIVATE_KEY=0xe2b0241b73cd78d450f85eca67188fb884e7ebe961f8981814474c500d581952
     links:
       - parity-dev-node
   geth-integration-tests:
@@ -37,5 +38,6 @@ services:
       - ETHEREUM_HOST=geth-dev-node
       - ETHEREUM_PORT=8545
       - ETHEREUM_GAS_PRICE_IN_NANOETH=1
+      - ETHEREUM_PRIVATE_KEY=0xe2b0241b73cd78d450f85eca67188fb884e7ebe961f8981814474c500d581952
     links:
       - geth-dev-node

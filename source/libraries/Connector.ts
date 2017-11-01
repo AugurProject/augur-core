@@ -1,35 +1,24 @@
-import * as getPort from "get-port";
 import EthjsHttpProvider = require('ethjs-provider-http');
 import EthjsQuery = require('ethjs-query');
+import { Configuration } from './Configuration';
 
 export class Connector {
-    private ethjsQuery: EthjsQuery|null = null;
+    public readonly ethjsQuery: EthjsQuery;
 
-    public async getEthjsQuery(): Promise<EthjsQuery> {
-        if (this.ethjsQuery === null) {
-            this.ethjsQuery = await this.connect();
-        }
-        return this.ethjsQuery;
+    constructor(configuration: Configuration) {
+        const ethjsHttpProvider = new EthjsHttpProvider(`http://${configuration.httpProviderHost}:${configuration.httpProviderPort}`);
+        this.ethjsQuery = new EthjsQuery(ethjsHttpProvider);
     }
 
     public async waitUntilConnected(): Promise<EthjsQuery> {
-        const ethjsQuery = await this.getEthjsQuery();
         while (true) {
             try {
-                await ethjsQuery.net_version();
+                await this.ethjsQuery.net_version();
                 break;
             } catch {
                 // swallow the error, we just want to loop until the net_version call above succeeds.
             }
         }
-        return ethjsQuery;
-    }
-
-    private async connect(): Promise<EthjsQuery> {
-        const ethjsHttpProviderHost = (typeof process.env.ETHEREUM_HOST === "undefined") ? "localhost" : process.env.ETHEREUM_HOST;
-        const ethjsHttpProviderPort = (typeof process.env.ETHEREUM_PORT === "undefined") ? await getPort() : parseInt(process.env.ETHEREUM_PORT || "0");
-        const ethjsHttpProvider = new EthjsHttpProvider(`http://${ethjsHttpProviderHost}:${ethjsHttpProviderPort}`);
-        const ethjsQuery = new EthjsQuery(ethjsHttpProvider);
-        return ethjsQuery;
+        return this.ethjsQuery;
     }
 }
