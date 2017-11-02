@@ -13,6 +13,10 @@ contract MockMapFactory {
         createMapValue = _map;
     }
 
+    function getMap() public returns(Map) {
+        return createMapValue;
+    }
+
     function getCreateOwner() public returns(address) {
         return createOwnerValue;
     }

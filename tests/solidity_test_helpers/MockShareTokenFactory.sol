@@ -9,10 +9,23 @@ import 'IController.sol';
 contract MockShareTokenFactory {
     IMarket private createShareTokenMarketValue;
     uint8 private createShareTokenOutcomeValue;
-    IShareToken private setCreateShareTokenValue;
+    uint8 private createShareTokenCounter;
+    IShareToken[] private setCreateShareTokenValue;
 
-    function setCreateShareToken(IShareToken _shareToken) public {
-        setCreateShareTokenValue = _shareToken;
+    function resetCreateShareToken() public {
+        createShareTokenCounter = 0;
+    }
+
+    function getCreateShareTokenCounter() public returns(uint8) {
+        return createShareTokenCounter;
+    }
+
+    function getCreateShareToken(uint8 _index) public returns(IShareToken) {
+        return setCreateShareTokenValue[_index];
+    }
+
+    function pushCreateShareToken(IShareToken _shareToken) public {
+        setCreateShareTokenValue.push(_shareToken);
     }
 
     function getCreateShareTokenMarketValue() public returns(IMarket) {
@@ -26,6 +39,6 @@ contract MockShareTokenFactory {
     function createShareToken(IController _controller, IMarket _market, uint8 _outcome) public returns (IShareToken) {
         createShareTokenMarketValue = _market;
         createShareTokenOutcomeValue = _outcome;
-        return setCreateShareTokenValue;
+        return setCreateShareTokenValue[createShareTokenCounter++];
     }
 }

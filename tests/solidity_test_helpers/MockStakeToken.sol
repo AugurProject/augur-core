@@ -87,6 +87,10 @@ contract MockStakeToken is ITyped, MockVariableSupplyToken, IStakeToken {
         return _reputationToken.trustedStakeTokenTransfer(_source, _destination, _attotokens);
     }
 
+    function callMarketDesignatedReport(IMarket _market) public returns (bool) {
+        return _market.designatedReport();
+    }
+
     function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
         initializeMarketValue = _market;
         initializePayoutNumeratorsValue = _payoutNumerators;

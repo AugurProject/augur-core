@@ -48,6 +48,7 @@ def test_market_creation(localFixture, mockUniverse, mockReportingWindow, mockCa
     with raises(TransactionFailed, message="refund is not over 0"):
         market.initialize(mockReportingWindow.address, endTime, 5, numTicks, 5, mockCash.address, tester.a1, tester.a1, value=0)
 
+    mockShareTokenFactory.resetCreateShareToken();
     assert market.initialize(mockReportingWindow.address, endTime, 5, numTicks, 16, mockCash.address, tester.a1, tester.a2, value=100)
     assert mockShareTokenFactory.getCreateShareTokenMarketValue() == market.address
     assert mockShareTokenFactory.getCreateShareTokenOutcomeValue() == 5 - 1 # mock logs the last outcome
@@ -60,6 +61,12 @@ def test_market_creation(localFixture, mockUniverse, mockReportingWindow, mockCa
     assert market.getNumTicks() == numTicks
     assert market.getDenominationToken() == mockCash.address
     assert market.getMarketCreatorSettlementFeeDivisor() == oneEther / 16
+    assert mockShareTokenFactory.getCreateShareTokenCounter() == 5;
+    assert mockShareTokenFactory.getCreateShareToken(0) == market.getShareToken(0)
+    assert mockShareTokenFactory.getCreateShareToken(1) == market.getShareToken(1)
+    assert mockShareTokenFactory.getCreateShareToken(2) == market.getShareToken(2)
+    assert mockShareTokenFactory.getCreateShareToken(3) == market.getShareToken(3)
+    assert mockShareTokenFactory.getCreateShareToken(4) == market.getShareToken(4)
     
 def test_market_decrease_market_creator_settlement_fee(localFixture, initializeMarket, mockMarket):
     oneEther = 10 ** 18
@@ -74,23 +81,107 @@ def test_market_decrease_market_creator_settlement_fee(localFixture, initializeM
     assert initializeMarket.decreaseMarketCreatorSettlementFeeInAttoethPerEth(15, sender=tester.k1)
     assert initializeMarket.getMarketCreatorSettlementFeeDivisor() == oneEther / 15
 
+def test_market_designated_report(localFixture, mockUniverse, chain, initializeMarket, mockStakeToken, mockStakeTokenFactory, mockReportingWindow, mockReputationToken):
+    with raises(TransactionFailed, message="market is not in designated reporting state"):
+        initializeMarket.designatedReport()
+    
+    chain.head_state.timestamp = initializeMarket.getDesignatedReportDueTimestamp() - 1
+    with raises(TransactionFailed, message="designated report method needs to be called from StakeToken"):
+        initializeMarket.designatedReport()
+
+    with raises(TransactionFailed, message="StakeToken needs to be contained by market"):
+        mockStakeToken.callMarketDesignatedReport(initializeMarket.address)
+    
+    numTicks = 10 ** 10
+    payoutNumerators = [numTicks, 0, 0, 0, 0]
+    push_to_designated_report_state(localFixture, mockUniverse, chain, initializeMarket, mockStakeToken, payoutNumerators, mockStakeTokenFactory, mockReportingWindow, mockReputationToken)
+
+def test_market_dispute_report(localFixture, constants, initializeMarket, chain, mockUniverse, mockDisputeBond, mockDisputeBondFactory, mockStakeToken, mockStakeTokenFactory, mockReportingWindow, mockReputationToken, mockAugur):
+    numTicks = 10 ** 10
+    payoutNumerators = [numTicks, 0, 0, 0, 0]
+    payoutNumeratorsDispute = [0, numTicks, 0, 0, 0]
+    with raises(TransactionFailed, message="market needs to be in DESIGNATED_DISPUTE state"):
+        initializeMarket.disputeDesignatedReport(payoutNumerators, 100, False)
+    
+    chain.head_state.timestamp = initializeMarket.getDesignatedReportDueTimestamp() - 1
+    push_to_designated_report_state(localFixture, mockUniverse, chain, initializeMarket, mockStakeToken, payoutNumerators, mockStakeTokenFactory, mockReportingWindow, mockReputationToken)
+    mockDisputeBondFactory.setCreateDisputeBond(mockDisputeBond.address)
+    payoutHashValue = initializeMarket.derivePayoutDistributionHash(payoutNumeratorsDispute, False)
+    mockStakeTokenFactory.initializeMap(localFixture.contracts['Controller'].address)
+    mockStakeToken.setPayoutDistributionHash(payoutHashValue)
+    mockStakeTokenFactory.setStakeToken(payoutHashValue, mockStakeToken.address)
+    assert initializeMarket.getStakeToken(payoutNumeratorsDispute, False)
+
+    bondAmount = constants.DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
+    stakeAmount = initializeMarket.getTotalStake()
+    beforeAmount = initializeMarket.getExtraDisputeBondRemainingToBePaidOut()
+    assert initializeMarket.getReportingState() == constants.DESIGNATED_DISPUTE()    
+    assert initializeMarket.disputeDesignatedReport(payoutNumeratorsDispute, 100, False, sender=tester.k2)
+    assert mockReportingWindow.getIncreaseTotalStakeCalled() == True
+    assert mockAugur.logReportsDisputedCalled() == True
+    assert mockReputationToken.getTrustedTransferSourceValue() == bytesToHexString(tester.a2)
+    assert mockReputationToken.getTrustedTransferDestinationValue() == mockDisputeBond.address
+    assert mockReputationToken.getTrustedTransferAttotokensValue() == bondAmount
+    assert initializeMarket.getExtraDisputeBondRemainingToBePaidOut() == beforeAmount + bondAmount
+    assert initializeMarket.getTotalStake() == stakeAmount + bondAmount
+    # need to test stake token trusted by 
+    
+    # need to pass in 0 for _attotokens
+
+
+
+def push_to_designated_report_state(localFixture, mockUniverse, chain, initializeMarket, mockStakeToken, payoutNumerators, mockStakeTokenFactory, mockReportingWindow, mockReputationToken):
+    payoutHashValue = initializeMarket.derivePayoutDistributionHash(payoutNumerators, False)
+    mockStakeTokenFactory.initializeMap(localFixture.contracts['Controller'].address)
+    mockStakeToken.setPayoutDistributionHash(payoutHashValue)
+    mockStakeTokenFactory.setStakeToken(payoutHashValue, mockStakeToken.address)
+    assert initializeMarket.getStakeToken(payoutNumerators, False)
+    assert mockStakeTokenFactory.getCreateDistroHashValue() == payoutHashValue
+    assert mockStakeTokenFactory.getCreateStakeTokenMarketValue() == initializeMarket.address
+    assert mockStakeTokenFactory.getCreateStakeTokenPayoutValue() == payoutNumerators
+    assert initializeMarket.getStakeToken(payoutNumerators, False) == mockStakeToken.address
+
+    mockReportingWindow.setReputationToken(mockReputationToken.address)
+    mockReputationToken.setBalanceOf(105)
+    ownerBalance = chain.head_state.get_balance(tester.a1)
+
+    assert mockStakeToken.callMarketDesignatedReport(initializeMarket.address)
+    assert initializeMarket.getDesignatedReportReceivedTime() == chain.head_state.timestamp
+    assert initializeMarket.getTentativeWinningPayoutDistributionHash() == mockStakeToken.getPayoutDistributionHash()
+    assert mockReportingWindow.getUpdateMarketPhase() == True
+    assert mockReportingWindow.getNoteDesignatedReport() == True
+    assert mockReputationToken.getTransferValueFor(tester.a1) == 105
+    assert chain.head_state.get_balance(tester.a1) == ownerBalance + mockUniverse.getTargetReporterGasCosts()
+
 
 @fixture(scope="session")
 def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     fixture.resetToSnapshot(augurInitializedWithMocksSnapshot)
     controller = fixture.contracts['Controller']
     mockReportingParticipationTokenFactory = fixture.contracts['MockParticipationTokenFactory']
+    mockDisputeBondFactory = fixture.contracts['MockDisputeBondFactory']
     mockCash = fixture.contracts['MockCash']
-    mockShareTokenFactory = fixture.contracts['MockShareTokenFactory']
+    mockAugur = fixture.contracts['MockAugur']
+    mockShareTokenFactory = fixture.contracts['MockShareTokenFactory']    
     mockShareToken = fixture.contracts['MockShareToken']
     mockFillOrder = fixture.contracts['MockFillOrder']
-    mockShareTokenFactory.setCreateShareToken(mockShareToken.address)
-    mockMapFactory = fixture.contracts['MockMapFactory']
-    controller.setValue(stringToBytes('MapFactory'), mockMapFactory.address)
+    mockStakeTokenFactory = fixture.contracts['MockStakeTokenFactory']
+
+    # pre populate share tokens for max of 8 possible outcomes
+    for index in range(8):
+        item = fixture.upload('solidity_test_helpers/MockShareToken.sol', 'newMockShareToken' + str(index));
+        mockShareTokenFactory.pushCreateShareToken(item.address)
+    
+    #mockMapFactory = fixture.contracts['MockMapFactory']
+    # TODO: remove MockMapFactory probably don't need it
+    #controller.setValue(stringToBytes('MapFactory'), mockMapFactory.address)
     controller.setValue(stringToBytes('Cash'), mockCash.address)
     controller.setValue(stringToBytes('ParticipationTokenFactory'), mockReportingParticipationTokenFactory.address)
     controller.setValue(stringToBytes('ShareTokenFactory'), mockShareTokenFactory.address)
     controller.setValue(stringToBytes('FillOrder'), mockShareTokenFactory.address)    
+    controller.setValue(stringToBytes('StakeTokenFactory'), mockStakeTokenFactory.address)    
+    controller.setValue(stringToBytes('DisputeBondFactory'), mockDisputeBondFactory.address)    
+    mockShareTokenFactory.resetCreateShareToken();
     return fixture.createSnapshot()
 
 @fixture
@@ -104,7 +195,9 @@ def mockUniverse(localFixture):
 
 @fixture
 def mockReportingWindow(localFixture):
-    return localFixture.contracts['MockReportingWindow']
+    mockReportingWindow = localFixture.contracts['MockReportingWindow']
+    mockReportingWindow.reset()
+    return mockReportingWindow
 
 @fixture
 def constants(localFixture):
@@ -123,6 +216,10 @@ def mockMarket(localFixture):
     return localFixture.contracts['MockMarket']
 
 @fixture
+def mockAugur(localFixture):
+    return localFixture.contracts['MockAugur']
+
+@fixture
 def mockReputationToken(localFixture):
     return localFixture.contracts['MockReputationToken']
 
@@ -131,17 +228,39 @@ def mockShareToken(localFixture):
     return localFixture.contracts['MockShareToken']
 
 @fixture
+def mockStakeTokenFactory(localFixture):
+    return localFixture.contracts['MockStakeTokenFactory']
+
+@fixture
 def mockShareTokenFactory(localFixture):
     return localFixture.contracts['MockShareTokenFactory']
 
 @fixture
-def initializeMarket(localFixture, mockReportingWindow, mockUniverse, mockReputationToken, chain, constants, mockCash):
+def mockStakeToken(localFixture):
+    return localFixture.contracts['MockStakeToken']
+
+@fixture
+def mockMapFactory(localFixture):
+    return localFixture.contracts['MockMapFactory']
+
+@fixture
+def mockDisputeBond(localFixture):
+    return localFixture.contracts['MockDisputeBond']
+
+@fixture
+def mockDisputeBondFactory(localFixture):
+    return localFixture.contracts['MockDisputeBondFactory']
+
+@fixture
+def initializeMarket(localFixture, mockReportingWindow, mockUniverse, mockReputationToken, chain, constants, mockCash, mockMapFactory):
     market = localFixture.upload('../source/contracts/reporting/Market.sol', 'market')
+    contractMap = localFixture.upload('../source/contracts/libraries/collections/Map.sol', 'Map')
     numTicks = 10 ** 10
     fee = 1
     endTime = chain.head_state.timestamp + constants.DESIGNATED_REPORTING_DURATION_SECONDS()
     market.setController(localFixture.contracts["Controller"].address)
 
+    mockMapFactory.setMap(contractMap.address)
     mockUniverse.setForkingMarket(longToHexString(0))
     mockUniverse.setDesignatedReportNoShowBond(100)
     mockReportingWindow.setReputationToken(mockReputationToken.address)
