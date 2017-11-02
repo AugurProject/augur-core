@@ -4,7 +4,7 @@ from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
-from utils import fix, captureFilteredLogs, bytesToHexString, ETHDelta, TokenDelta
+from utils import fix, captureFilteredLogs, bytesToHexString, EtherDelta, TokenDelta
 from constants import YES, NO
 
 
@@ -95,7 +95,7 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     logs = []
     captureFilteredLogs(kitchenSinkFixture.chain.head_state, kitchenSinkFixture.contracts['Augur'], logs)
 
-    with ETHDelta(expectedMarketCreatorFees, tester.a0, kitchenSinkFixture.chain, "Market creator fees not paid"):
+    with EtherDelta(expectedMarketCreatorFees, tester.a0, kitchenSinkFixture.chain, "Market creator fees not paid"):
         with TokenDelta(cash, expectedReporterFees, market.getReportingWindow(), "Reporter fees not paid"):
             # redeem shares with a1
             initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)

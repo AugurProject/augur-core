@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs, ETHDelta, TokenDelta
+from utils import longTo32Bytes, captureFilteredLogs, EtherDelta, TokenDelta
 
 def test_market_escape_hatch_all_fees(localFixture, controller, market, reputationToken):
     # We can't call the Market escape hatch when things are alright
@@ -12,7 +12,7 @@ def test_market_escape_hatch_all_fees(localFixture, controller, market, reputati
     assert controller.emergencyStop()
 
     # Now we can call the market escape hatch and get back all the fees paid in creation
-    with ETHDelta(localFixture.chain.head_state.get_balance(market.address), market.getOwner(), localFixture.chain, "ETH balance was not given to the market owner"):
+    with EtherDelta(localFixture.chain.head_state.get_balance(market.address), market.getOwner(), localFixture.chain, "ETH balance was not given to the market owner"):
         with TokenDelta(reputationToken, reputationToken.balanceOf(market.address), market.getOwner(), "REP balance was not given to the market owner"):
             assert market.withdrawInEmergency()
 
@@ -21,8 +21,8 @@ def test_market_escape_hatch_partial_fees(localFixture, market, reputationToken,
     localFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
 
     stakeToken = localFixture.getStakeToken(market, [0, market.getNumTicks()], False)
-    ethDelta = constants.DEFAULT_VALIDITY_BOND() - localFixture.chain.head_state.get_balance(market.address)
-    with ETHDelta(ethDelta, market.address, localFixture.chain, "First reporter gas fee was not given to first reporter"):
+    MarketEtherDelta = constants.DEFAULT_VALIDITY_BOND() - localFixture.chain.head_state.get_balance(market.address)
+    with EtherDelta(MarketEtherDelta, market.address, localFixture.chain, "First reporter gas fee was not given to first reporter"):
         with TokenDelta(reputationToken, -reputationToken.balanceOf(market.address), market.address, "REP balance was not given to the first reporter"):
             stakeToken.buy(0, sender=tester.k1)
 
@@ -30,7 +30,7 @@ def test_market_escape_hatch_partial_fees(localFixture, market, reputationToken,
     assert controller.emergencyStop()
 
     # We will only get back the validity bond since our REP bond and first reporter bond were forfeit already
-    with ETHDelta(constants.DEFAULT_VALIDITY_BOND(), market.getOwner(), localFixture.chain, "Remaining ETH balance was not given to the market owner"):
+    with EtherDelta(constants.DEFAULT_VALIDITY_BOND(), market.getOwner(), localFixture.chain, "Remaining ETH balance was not given to the market owner"):
         with TokenDelta(reputationToken, 0, market.getOwner(), "REP balance was somehow given to the market owner"):
             assert market.withdrawInEmergency()
 
