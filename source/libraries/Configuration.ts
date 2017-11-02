@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as getPort from "get-port";
 import BN = require('bn.js');
 
@@ -6,12 +7,16 @@ export class Configuration {
     public readonly httpProviderPort: number;
     public readonly gasPrice: BN;
     public readonly privateKey: string;
+    public readonly contractSourceRoot: string;
+    public readonly contractOutputPath: string;
 
-    public constructor(host: string, port: number, gasPrice: BN, privateKey: string) {
+    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputPath: string) {
         this.httpProviderHost = host;
         this.httpProviderPort = port;
         this.gasPrice = gasPrice;
         this.privateKey = privateKey;
+        this.contractSourceRoot = contractSourceRoot;
+        this.contractOutputPath = contractOutputPath;
     }
 
     public static create = async (): Promise<Configuration> => {
@@ -19,6 +24,9 @@ export class Configuration {
         const port = (typeof process.env.ETHEREUM_PORT === "undefined") ? await getPort() : parseInt(process.env.ETHEREUM_PORT || "0");
         const gasPrice = (typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? new BN(20) : new BN(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH!).mul(new BN(1000000000));
         const privateKey = process.env.ETHEREUM_PRIVATE_KEY || '0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d';
-        return new Configuration(host, port, gasPrice, privateKey);
+        const contractSourceRoot = path.join(__dirname, "../../source/contracts/");
+        const contractOutputPath = path.join(__dirname, "../../output/contracts/contracts.json");
+
+        return new Configuration(host, port, gasPrice, privateKey, contractSourceRoot, contractOutputPath);
     }
 }

@@ -13,5 +13,6 @@
     },
     "python.linting.pylintEnabled": false,
     "solidity.lintOnChange": false,
-    "solidity.solidityRoot": "source/contracts"
+    "solidity.solidityRoot": "source/contracts",
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }
