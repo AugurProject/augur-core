@@ -1,8 +1,8 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'legacy_reputation/BasicToken.sol';
-import 'legacy_reputation/ERC20.sol';
+import '../legacy_reputation/BasicToken.sol';
+import '../legacy_reputation/ERC20.sol';
 
 
 /**

@@ -1,8 +1,8 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'libraries/token/ERC20Basic.sol';
-import 'libraries/math/SafeMathUint256.sol';
+import '../../libraries/token/ERC20Basic.sol';
+import '../../libraries/math/SafeMathUint256.sol';
 
 
 /**

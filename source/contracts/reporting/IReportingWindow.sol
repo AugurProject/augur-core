@@ -1,12 +1,12 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'libraries/ITyped.sol';
-import 'reporting/IUniverse.sol';
-import 'reporting/IMarket.sol';
-import 'reporting/IReputationToken.sol';
-import 'reporting/IParticipationToken.sol';
-import 'trading/ICash.sol';
+import '../libraries/ITyped.sol';
+import '../reporting/IUniverse.sol';
+import '../reporting/IMarket.sol';
+import '../reporting/IReputationToken.sol';
+import '../reporting/IParticipationToken.sol';
+import '../trading/ICash.sol';
 
 
 contract IReportingWindow is ITyped {

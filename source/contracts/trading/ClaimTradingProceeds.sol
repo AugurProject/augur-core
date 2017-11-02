@@ -1,16 +1,16 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'trading/IClaimTradingProceeds.sol';
-import 'Controlled.sol';
-import 'libraries/ReentrancyGuard.sol';
-import 'libraries/CashAutoConverter.sol';
-import 'reporting/IMarket.sol';
-import 'trading/ICash.sol';
-import 'libraries/math/SafeMathUint256.sol';
-import 'reporting/Reporting.sol';
-import 'Augur.sol';
-import 'libraries/Extractable.sol';
+import '../trading/IClaimTradingProceeds.sol';
+import '../Controlled.sol';
+import '../libraries/ReentrancyGuard.sol';
+import '../libraries/CashAutoConverter.sol';
+import '../reporting/IMarket.sol';
+import '../trading/ICash.sol';
+import '../libraries/math/SafeMathUint256.sol';
+import '../reporting/Reporting.sol';
+import '../Augur.sol';
+import '../libraries/Extractable.sol';
 
 
 // AUDIT: Ensure that a malicious market can't subversively cause share tokens to be paid out incorrectly.

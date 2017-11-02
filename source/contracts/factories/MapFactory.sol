@@ -1,9 +1,9 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'libraries/Delegator.sol';
-import 'IController.sol';
-import 'libraries/collections/Map.sol';
+import '../libraries/Delegator.sol';
+import '../IController.sol';
+import '../libraries/collections/Map.sol';
 
 
 contract MapFactory {

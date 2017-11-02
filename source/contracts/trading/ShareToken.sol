@@ -1,13 +1,13 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'trading/IShareToken.sol';
-import 'libraries/DelegationTarget.sol';
-import 'libraries/token/VariableSupplyToken.sol';
-import 'libraries/ITyped.sol';
-import 'libraries/Initializable.sol';
-import 'reporting/IMarket.sol';
-import 'libraries/Extractable.sol';
+import '../trading/IShareToken.sol';
+import '../libraries/DelegationTarget.sol';
+import '../libraries/token/VariableSupplyToken.sol';
+import '../libraries/ITyped.sol';
+import '../libraries/Initializable.sol';
+import '../reporting/IMarket.sol';
+import '../libraries/Extractable.sol';
 
 
 contract ShareToken is DelegationTarget, Extractable, ITyped, Initializable, VariableSupplyToken, IShareToken {

@@ -1,8 +1,8 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'IController.sol';
-import 'libraries/token/ERC20Basic.sol';
+import './IController.sol';
+import './libraries/token/ERC20Basic.sol';
 
 
 contract IControlled {

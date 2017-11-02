@@ -1,17 +1,17 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'trading/ICompleteSets.sol';
-import 'Augur.sol';
-import 'Controlled.sol';
-import 'libraries/ReentrancyGuard.sol';
-import 'libraries/math/SafeMathUint256.sol';
-import 'trading/ICash.sol';
-import 'reporting/IMarket.sol';
-import 'reporting/IReportingWindow.sol';
-import 'trading/IOrders.sol';
-import 'libraries/CashAutoConverter.sol';
-import 'libraries/Extractable.sol';
+import '../trading/ICompleteSets.sol';
+import '../Augur.sol';
+import '../Controlled.sol';
+import '../libraries/ReentrancyGuard.sol';
+import '../libraries/math/SafeMathUint256.sol';
+import '../trading/ICash.sol';
+import '../reporting/IMarket.sol';
+import '../reporting/IReportingWindow.sol';
+import '../trading/IOrders.sol';
+import '../libraries/CashAutoConverter.sol';
+import '../libraries/Extractable.sol';
 
 
 contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyGuard, ICompleteSets {

@@ -1,9 +1,9 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'libraries/ITyped.sol';
-import 'reporting/IMarket.sol';
-import 'libraries/IOwnable.sol';
+import '../libraries/ITyped.sol';
+import '../reporting/IMarket.sol';
+import '../libraries/IOwnable.sol';
 
 
 contract IDisputeBond is ITyped, IOwnable {

@@ -1,15 +1,15 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
-import 'Controlled.sol';
-import 'libraries/token/ERC20.sol';
-import 'reporting/IUniverse.sol';
-import 'reporting/IMarket.sol';
-import 'reporting/IParticipationToken.sol';
-import 'reporting/IStakeToken.sol';
-import 'reporting/IReputationToken.sol';
-import 'trading/IShareToken.sol';
-import 'trading/Order.sol';
-import 'libraries/Extractable.sol';
+import './Controlled.sol';
+import './libraries/token/ERC20.sol';
+import './reporting/IUniverse.sol';
+import './reporting/IMarket.sol';
+import './reporting/IParticipationToken.sol';
+import './reporting/IStakeToken.sol';
+import './reporting/IReputationToken.sol';
+import './trading/IShareToken.sol';
+import './trading/Order.sol';
+import './libraries/Extractable.sol';
 
 
 // Centralized approval authority and event emissions

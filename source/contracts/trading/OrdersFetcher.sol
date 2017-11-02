@@ -2,16 +2,16 @@
  * Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
  */
 
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'trading/IOrdersFetcher.sol';
-import 'Controlled.sol';
-import 'libraries/arrays/Bytes32Arrays.sol';
-import 'trading/Order.sol';
-import 'reporting/IMarket.sol';
-import 'trading/IOrders.sol';
-import 'libraries/Extractable.sol';
+import '../trading/IOrdersFetcher.sol';
+import '../Controlled.sol';
+import '../libraries/arrays/Bytes32Arrays.sol';
+import '../trading/Order.sol';
+import '../reporting/IMarket.sol';
+import '../trading/IOrders.sol';
+import '../libraries/Extractable.sol';
 
 
 /**

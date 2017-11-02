@@ -1,26 +1,26 @@
 // Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'reporting/IReportingWindow.sol';
-import 'libraries/DelegationTarget.sol';
-import 'libraries/ITyped.sol';
-import 'libraries/Initializable.sol';
-import 'libraries/collections/Set.sol';
-import 'reporting/IUniverse.sol';
-import 'reporting/IReputationToken.sol';
-import 'reporting/IMarket.sol';
-import 'reporting/IStakeToken.sol';
-import 'reporting/IDisputeBond.sol';
-import 'trading/ICash.sol';
-import 'factories/MarketFactory.sol';
-import 'reporting/Reporting.sol';
-import 'libraries/math/SafeMathUint256.sol';
-import 'libraries/math/RunningAverage.sol';
-import 'reporting/IParticipationToken.sol';
-import 'factories/ParticipationTokenFactory.sol';
-import 'libraries/Extractable.sol';
+import '../reporting/IReportingWindow.sol';
+import '../libraries/DelegationTarget.sol';
+import '../libraries/ITyped.sol';
+import '../libraries/Initializable.sol';
+import '../libraries/collections/Set.sol';
+import '../reporting/IUniverse.sol';
+import '../reporting/IReputationToken.sol';
+import '../reporting/IMarket.sol';
+import '../reporting/IStakeToken.sol';
+import '../reporting/IDisputeBond.sol';
+import '../trading/ICash.sol';
+import '../factories/MarketFactory.sol';
+import '../reporting/Reporting.sol';
+import '../libraries/math/SafeMathUint256.sol';
+import '../libraries/math/RunningAverage.sol';
+import '../reporting/IParticipationToken.sol';
+import '../factories/ParticipationTokenFactory.sol';
+import '../libraries/Extractable.sol';
 
 
 contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable, IReportingWindow {

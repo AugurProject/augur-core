@@ -1,25 +1,25 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'reporting/IUniverse.sol';
-import 'libraries/DelegationTarget.sol';
-import 'libraries/ITyped.sol';
-import 'libraries/Initializable.sol';
-import 'factories/ReputationTokenFactory.sol';
-import 'factories/ReportingWindowFactory.sol';
-import 'factories/UniverseFactory.sol';
-import 'reporting/IMarket.sol';
-import 'reporting/IReputationToken.sol';
-import 'reporting/IStakeToken.sol';
-import 'reporting/IDisputeBond.sol';
-import 'reporting/IReportingWindow.sol';
-import 'reporting/Reporting.sol';
-import 'reporting/IRepPriceOracle.sol';
-import 'reporting/IParticipationToken.sol';
-import 'reporting/IDisputeBond.sol';
-import 'libraries/math/SafeMathUint256.sol';
-import 'Augur.sol';
-import 'libraries/Extractable.sol';
+import '../reporting/IUniverse.sol';
+import '../libraries/DelegationTarget.sol';
+import '../libraries/ITyped.sol';
+import '../libraries/Initializable.sol';
+import '../factories/ReputationTokenFactory.sol';
+import '../factories/ReportingWindowFactory.sol';
+import '../factories/UniverseFactory.sol';
+import '../reporting/IMarket.sol';
+import '../reporting/IReputationToken.sol';
+import '../reporting/IStakeToken.sol';
+import '../reporting/IDisputeBond.sol';
+import '../reporting/IReportingWindow.sol';
+import '../reporting/Reporting.sol';
+import '../reporting/IRepPriceOracle.sol';
+import '../reporting/IParticipationToken.sol';
+import '../reporting/IDisputeBond.sol';
+import '../libraries/math/SafeMathUint256.sol';
+import '../Augur.sol';
+import '../libraries/Extractable.sol';
 
 
 contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniverse {

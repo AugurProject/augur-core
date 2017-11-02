@@ -1,20 +1,20 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'reporting/IStakeToken.sol';
-import 'libraries/DelegationTarget.sol';
-import 'libraries/ITyped.sol';
-import 'libraries/Initializable.sol';
-import 'libraries/token/VariableSupplyToken.sol';
-import 'reporting/IUniverse.sol';
-import 'reporting/IReputationToken.sol';
-import 'reporting/IStakeToken.sol';
-import 'reporting/IDisputeBond.sol';
-import 'reporting/IReportingWindow.sol';
-import 'reporting/IMarket.sol';
-import 'libraries/math/SafeMathUint256.sol';
-import 'Augur.sol';
-import 'libraries/Extractable.sol';
+import '../reporting/IStakeToken.sol';
+import '../libraries/DelegationTarget.sol';
+import '../libraries/ITyped.sol';
+import '../libraries/Initializable.sol';
+import '../libraries/token/VariableSupplyToken.sol';
+import '../reporting/IUniverse.sol';
+import '../reporting/IReputationToken.sol';
+import '../reporting/IStakeToken.sol';
+import '../reporting/IDisputeBond.sol';
+import '../reporting/IReportingWindow.sol';
+import '../reporting/IMarket.sol';
+import '../libraries/math/SafeMathUint256.sol';
+import '../Augur.sol';
+import '../libraries/Extractable.sol';
 
 
 contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, VariableSupplyToken, IStakeToken {

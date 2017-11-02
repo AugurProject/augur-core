@@ -1,13 +1,13 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'libraries/Delegator.sol';
-import 'reporting/IReportingWindow.sol';
-import 'reporting/IMarket.sol';
-import 'reporting/IReputationToken.sol';
-import 'trading/ICash.sol';
-import 'IController.sol';
-import 'Augur.sol';
+import '../libraries/Delegator.sol';
+import '../reporting/IReportingWindow.sol';
+import '../reporting/IMarket.sol';
+import '../reporting/IReputationToken.sol';
+import '../trading/ICash.sol';
+import '../IController.sol';
+import '../Augur.sol';
 
 
 contract MarketFactory {

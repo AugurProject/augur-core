@@ -1,8 +1,8 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'trading/Order.sol';
-import 'reporting/IMarket.sol';
+import '../trading/Order.sol';
+import '../reporting/IMarket.sol';
 
 
 contract IOrders {

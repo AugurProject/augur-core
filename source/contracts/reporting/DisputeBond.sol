@@ -1,18 +1,18 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'reporting/IDisputeBond.sol';
-import 'libraries/DelegationTarget.sol';
-import 'libraries/ITyped.sol';
-import 'libraries/Initializable.sol';
-import 'libraries/Ownable.sol';
-import 'reporting/IUniverse.sol';
-import 'reporting/IReputationToken.sol';
-import 'reporting/IMarket.sol';
-import 'libraries/Extractable.sol';
-import 'libraries/math/SafeMathUint256.sol';
-import 'reporting/Reporting.sol';
-import 'libraries/Extractable.sol';
+import '../reporting/IDisputeBond.sol';
+import '../libraries/DelegationTarget.sol';
+import '../libraries/ITyped.sol';
+import '../libraries/Initializable.sol';
+import '../libraries/Ownable.sol';
+import '../reporting/IUniverse.sol';
+import '../reporting/IReputationToken.sol';
+import '../reporting/IMarket.sol';
+import '../libraries/Extractable.sol';
+import '../libraries/math/SafeMathUint256.sol';
+import '../reporting/Reporting.sol';
+import '../libraries/Extractable.sol';
 
 
 contract DisputeBond is DelegationTarget, Extractable, ITyped, Initializable, Ownable, IDisputeBond {

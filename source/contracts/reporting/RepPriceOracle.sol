@@ -1,8 +1,8 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
-import 'libraries/Ownable.sol';
-import 'reporting/IRepPriceOracle.sol';
-import 'libraries/Extractable.sol';
+import '../libraries/Ownable.sol';
+import '../reporting/IRepPriceOracle.sol';
+import '../libraries/Extractable.sol';
 
 
 contract RepPriceOracle is Ownable, Extractable, IRepPriceOracle {

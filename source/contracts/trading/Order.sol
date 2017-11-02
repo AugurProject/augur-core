@@ -6,14 +6,14 @@
 // price is the exact price you want to buy/sell at [which may not be the cost, for example to short a binary market it'll cost numTicks-price, to go long it'll cost price]
 // smallest order value is Order.MIN_ORDER_VALUE
 
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'Augur.sol';
-import 'IController.sol';
-import 'libraries/math/SafeMathUint256.sol';
-import 'reporting/IMarket.sol';
-import 'trading/IOrders.sol';
+import '../Augur.sol';
+import '../IController.sol';
+import '../libraries/math/SafeMathUint256.sol';
+import '../reporting/IMarket.sol';
+import '../trading/IOrders.sol';
 
 
 // CONSIDER: Is `price` the most appropriate name for the value being used? It does correspond 1:1 with the attoETH per share, but the range might be considered unusual?

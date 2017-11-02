@@ -1,7 +1,7 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
-import 'libraries/ContractExists.sol';
-import 'libraries/token/VariableSupplyToken.sol';
+import './libraries/ContractExists.sol';
+import './libraries/token/VariableSupplyToken.sol';
 
 
 contract LegacyReputationToken is VariableSupplyToken {

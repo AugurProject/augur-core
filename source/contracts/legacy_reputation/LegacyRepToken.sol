@@ -1,9 +1,9 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'legacy_reputation/Initializable.sol';
-import 'legacy_reputation/PausableToken.sol';
-import 'legacy_reputation/ERC20Basic.sol';
+import '../legacy_reputation/Initializable.sol';
+import '../legacy_reputation/PausableToken.sol';
+import '../legacy_reputation/ERC20Basic.sol';
 
 
 /**

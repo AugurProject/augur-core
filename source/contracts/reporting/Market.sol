@@ -1,27 +1,27 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
-import 'reporting/IMarket.sol';
-import 'libraries/DelegationTarget.sol';
-import 'libraries/ITyped.sol';
-import 'libraries/Initializable.sol';
-import 'libraries/Ownable.sol';
-import 'libraries/collections/Map.sol';
-import 'reporting/IUniverse.sol';
-import 'reporting/IStakeToken.sol';
-import 'reporting/IReputationToken.sol';
-import 'reporting/IDisputeBond.sol';
-import 'trading/ICash.sol';
-import 'trading/IShareToken.sol';
-import 'factories/ShareTokenFactory.sol';
-import 'factories/StakeTokenFactory.sol';
-import 'factories/DisputeBondFactory.sol';
-import 'factories/MapFactory.sol';
-import 'libraries/token/ERC20Basic.sol';
-import 'libraries/math/SafeMathUint256.sol';
-import 'libraries/math/SafeMathInt256.sol';
-import 'libraries/Extractable.sol';
-import 'reporting/Reporting.sol';
-import 'Augur.sol';
+import '../reporting/IMarket.sol';
+import '../libraries/DelegationTarget.sol';
+import '../libraries/ITyped.sol';
+import '../libraries/Initializable.sol';
+import '../libraries/Ownable.sol';
+import '../libraries/collections/Map.sol';
+import '../reporting/IUniverse.sol';
+import '../reporting/IStakeToken.sol';
+import '../reporting/IReputationToken.sol';
+import '../reporting/IDisputeBond.sol';
+import '../trading/ICash.sol';
+import '../trading/IShareToken.sol';
+import '../factories/ShareTokenFactory.sol';
+import '../factories/StakeTokenFactory.sol';
+import '../factories/DisputeBondFactory.sol';
+import '../factories/MapFactory.sol';
+import '../libraries/token/ERC20Basic.sol';
+import '../libraries/math/SafeMathUint256.sol';
+import '../libraries/math/SafeMathInt256.sol';
+import '../libraries/Extractable.sol';
+import '../reporting/Reporting.sol';
+import '../Augur.sol';
 
 
 contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable, IMarket {

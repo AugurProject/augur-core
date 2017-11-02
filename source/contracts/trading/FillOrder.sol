@@ -1,19 +1,19 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'trading/IFillOrder.sol';
-import 'Augur.sol';
-import 'Controlled.sol';
-import 'libraries/ReentrancyGuard.sol';
-import 'libraries/math/SafeMathUint256.sol';
-import 'reporting/IMarket.sol';
-import 'trading/ICash.sol';
-import 'trading/ICompleteSets.sol';
-import 'trading/IOrders.sol';
-import 'trading/IShareToken.sol';
-import 'trading/Order.sol';
-import 'libraries/CashAutoConverter.sol';
-import 'libraries/Extractable.sol';
+import '../trading/IFillOrder.sol';
+import '../Augur.sol';
+import '../Controlled.sol';
+import '../libraries/ReentrancyGuard.sol';
+import '../libraries/math/SafeMathUint256.sol';
+import '../reporting/IMarket.sol';
+import '../trading/ICash.sol';
+import '../trading/ICompleteSets.sol';
+import '../trading/IOrders.sol';
+import '../trading/IShareToken.sol';
+import '../trading/Order.sol';
+import '../libraries/CashAutoConverter.sol';
+import '../libraries/Extractable.sol';
 
 
 // CONSIDER: At some point it would probably be a good idea to shift much of the logic from trading contracts into extensions. In particular this means sorting for making and WCL calculcations + order walking for taking.

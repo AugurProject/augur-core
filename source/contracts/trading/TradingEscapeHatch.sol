@@ -1,14 +1,14 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'trading/ITradingEscapeHatch.sol';
-import 'trading/ICash.sol';
-import 'trading/IOrders.sol';
-import 'trading/IShareToken.sol';
-import 'libraries/CashAutoConverter.sol';
-import 'libraries/DelegationTarget.sol';
-import 'libraries/math/SafeMathUint256.sol';
-import 'libraries/Extractable.sol';
+import '../trading/ITradingEscapeHatch.sol';
+import '../trading/ICash.sol';
+import '../trading/IOrders.sol';
+import '../trading/IShareToken.sol';
+import '../libraries/CashAutoConverter.sol';
+import '../libraries/DelegationTarget.sol';
+import '../libraries/math/SafeMathUint256.sol';
+import '../libraries/Extractable.sol';
 
 
 contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter, ITradingEscapeHatch {

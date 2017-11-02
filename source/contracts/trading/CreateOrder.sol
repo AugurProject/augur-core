@@ -1,14 +1,14 @@
 // Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'Controlled.sol';
-import 'libraries/ReentrancyGuard.sol';
-import 'trading/Order.sol';
-import 'trading/ICreateOrder.sol';
-import 'libraries/CashAutoConverter.sol';
-import 'libraries/Extractable.sol';
+import '../Controlled.sol';
+import '../libraries/ReentrancyGuard.sol';
+import '../trading/Order.sol';
+import '../trading/ICreateOrder.sol';
+import '../libraries/CashAutoConverter.sol';
+import '../libraries/Extractable.sol';
 
 
 contract CreateOrder is CashAutoConverter, Extractable, ReentrancyGuard {

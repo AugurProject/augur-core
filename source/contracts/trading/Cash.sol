@@ -1,11 +1,11 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'trading/ICash.sol';
-import 'Controlled.sol';
-import 'libraries/ITyped.sol';
-import 'libraries/token/VariableSupplyToken.sol';
-import 'libraries/Extractable.sol';
+import '../trading/ICash.sol';
+import '../Controlled.sol';
+import '../libraries/ITyped.sol';
+import '../libraries/token/VariableSupplyToken.sol';
+import '../libraries/Extractable.sol';
 
 
 /**

@@ -1,9 +1,9 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'libraries/ITyped.sol';
-import 'libraries/token/ERC20.sol';
-import 'reporting/IReportingWindow.sol';
+import '../libraries/ITyped.sol';
+import '../libraries/token/ERC20.sol';
+import '../reporting/IReportingWindow.sol';
 
 
 contract IRegistrationToken is ITyped, ERC20 {

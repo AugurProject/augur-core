@@ -1,17 +1,17 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'reporting/IReputationToken.sol';
-import 'libraries/DelegationTarget.sol';
-import 'libraries/ITyped.sol';
-import 'libraries/Initializable.sol';
-import 'libraries/token/VariableSupplyToken.sol';
-import 'libraries/token/ERC20.sol';
-import 'reporting/IUniverse.sol';
-import 'reporting/IMarket.sol';
-import 'reporting/Reporting.sol';
-import 'libraries/math/SafeMathUint256.sol';
-import 'libraries/Extractable.sol';
+import '../reporting/IReputationToken.sol';
+import '../libraries/DelegationTarget.sol';
+import '../libraries/ITyped.sol';
+import '../libraries/Initializable.sol';
+import '../libraries/token/VariableSupplyToken.sol';
+import '../libraries/token/ERC20.sol';
+import '../reporting/IUniverse.sol';
+import '../reporting/IMarket.sol';
+import '../reporting/Reporting.sol';
+import '../libraries/math/SafeMathUint256.sol';
+import '../libraries/Extractable.sol';
 
 
 contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable, VariableSupplyToken, IReputationToken {

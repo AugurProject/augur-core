@@ -1,7 +1,7 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
-import 'libraries/token/StandardToken.sol';
+import '../../libraries/token/StandardToken.sol';
 
 
 contract VariableSupplyToken is StandardToken {
