@@ -34,11 +34,11 @@ contract LegacyReputationToken is VariableSupplyToken {
         return true;
     }
 
-    function onBurn(address, uint256 ) internal returns (bool) {
+    function onBurn(address, uint256) internal returns (bool) {
         return true;
     }
 
-    function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
+    function onTokenTransfer(address, address, uint256) internal returns (bool) {
         return true;
     }
 }

@@ -1,15 +1,6 @@
 declare module 'ethjs-shared' {
-    export class BN {
-        toString(base: number): string;
-        toNumber(): number;
-        add(other: BN): BN;
-        sub(other: BN): BN;
-        mul(other: BN): BN;
-        div(other: BN): BN;
-        pow(other: BN): BN;
-    }
-
-    export type Primitive = 'uint256' | 'bool' | 'address' | 'uint64';
+    import BN = require('bn.js');
+    export type Primitive = 'uint256' | 'uint64' | 'uint8' | 'bool' | 'string' | 'address' | 'bytes32' | 'bytes';
 
     export interface AbiParameter {
         name: string,
@@ -23,6 +14,7 @@ declare module 'ethjs-shared' {
     export interface AbiFunction {
         name: string,
         type: 'function',
+        stateMutability: 'pure' | 'constant' | 'view' | 'payable' | 'nonpayable',
         constant: boolean,
         payable: boolean,
         inputs: AbiParameter[],
@@ -38,23 +30,14 @@ declare module 'ethjs-shared' {
 
     export type Abi = AbiFunction | AbiEvent;
 
-    export interface TransactionForSend {
-        from: string;
-        to: string;
-        gas?: BN|number;
-        gasPrice?: BN|number;
-        value?: BN|number;
-        data: string;
-        nonce?: BN|number;
-    }
-
-    export interface TransactionForCall {
-        to?: string;
+    export interface Transaction {
         from?: string;
-        gas?: BN|number;
-        gasPrice?: BN|number;
-        value?: BN|number;
+        to?: string;
+        gas?: BN;
+        gasPrice?: BN;
+        value?: BN;
         data?: string;
+        nonce?: BN;
     }
 
     export interface TransactionReceipt {

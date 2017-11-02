@@ -1,4 +1,6 @@
 declare module 'solc' {
+    export type Primitive = 'uint256' | 'bool' | 'address' | 'uint64' | 'bytes32' | 'bytes';
+
     interface CompilerInputSourceFile {
         keccak256?: string;
         urls: string[];
@@ -30,11 +32,11 @@ declare module 'solc' {
         type: "function"|"constructor"|"fallback"|"event";
         name: string;
         constant: boolean;
-        inputs: { name: string, type: string }[];
+        inputs: { name: string, type: Primitive }[];
     }
     interface CompilerOutputContractAbiFunction extends CompilerOutputContractAbi {
         type: "function"|"constructor"|"fallback";
-        outputs?: { name: string, type: string }[];
+        outputs?: { name: string, type: Primitive }[];
         payable: boolean;
         stateMutability: "pure"|"view"|"nonpayable"|"payable";
         constant: boolean;

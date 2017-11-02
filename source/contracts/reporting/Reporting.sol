@@ -23,7 +23,7 @@ library Reporting {
     // CONSIDER: figure out approprate values for these
     uint256 private constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
     uint256 private constant FIRST_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21;
-    uint256 private constant LAST_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**22;
+    uint256 private constant LAST_REPORTERS_DISPUTE_BOND_AMOUNT = 1375 * 10**20; // 1.25% of REP Total Supply TODO: We need to have this account for maximal inflation from forking
 
     // NOTE: We need to maintain this cost to roughly match the gas cost of reporting. This was last updated 10/02/2017
     uint256 private constant GAS_TO_REPORT = 600000;

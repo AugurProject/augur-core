@@ -22,19 +22,7 @@ def test_universe_creation(localFixture, mockReputationToken, mockReputationToke
     assert universe.getForkEndTime() == 0
     assert universe.getChildUniverse("5") == longToHexString(0)
 
-    # child universe
-    mockUniverseFactory.setCreateUniverseUniverseValue(mockUniverse.address)
-    mockUniverse.setParentPayoutDistributionHash(stringToBytes("101"))
-    assert universe.getOrCreateChildUniverse(stringToBytes("101")) == mockUniverse.address
-    assert mockAugur.logUniverseCreatedCalled() == True
-    assert mockUniverseFactory.getCreateUniverseParentUniverseValue() == universe.address
-    assert mockUniverseFactory.getCreateUniverseParentPayoutDistributionHashValue() == stringToBytes("101")
-    assert universe.getChildUniverse(stringToBytes("101")) == mockUniverse.address
-    assert universe.isParentOf(mockUniverse.address)
-    strangerUniverse = localFixture.upload('../source/contracts/reporting/Universe.sol', 'strangerUniverse')
-    assert universe.isParentOf(strangerUniverse.address) == False
-
-def test_universe_fork_market(localFixture, populatedUniverse, mockMarket, mockReportingWindow, chain, mockReportingWindowFactory, mockAugur):
+def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, mockUniverseFactory, mockMarket, mockReportingWindow, chain, mockReportingWindowFactory, mockAugur):
 
     with raises(TransactionFailed, message="must be called from market"):
         populatedUniverse.fork()
@@ -56,6 +44,18 @@ def test_universe_fork_market(localFixture, populatedUniverse, mockMarket, mockR
     assert mockAugur.logUniverseForkedCalled() == True
     assert populatedUniverse.getForkingMarket() == mockMarket.address
     assert populatedUniverse.getForkEndTime() == timestamp + localFixture.contracts['Constants'].FORK_DURATION_SECONDS()
+
+    # child universe
+    mockUniverseFactory.setCreateUniverseUniverseValue(mockUniverse.address)
+    mockUniverse.setParentPayoutDistributionHash(stringToBytes("101"))
+    assert populatedUniverse.getOrCreateChildUniverse(stringToBytes("101")) == mockUniverse.address
+    assert mockAugur.logUniverseCreatedCalled() == True
+    assert mockUniverseFactory.getCreateUniverseParentUniverseValue() == populatedUniverse.address
+    assert mockUniverseFactory.getCreateUniverseParentPayoutDistributionHashValue() == stringToBytes("101")
+    assert populatedUniverse.getChildUniverse(stringToBytes("101")) == mockUniverse.address
+    assert populatedUniverse.isParentOf(mockUniverse.address)
+    strangerUniverse = localFixture.upload('../source/contracts/reporting/Universe.sol', 'strangerUniverse')
+    assert populatedUniverse.isParentOf(strangerUniverse.address) == False
 
     assert populatedUniverse.getReportingWindowForForkEndTime() == mockReportingWindow.address
 
