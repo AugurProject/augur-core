@@ -53,7 +53,7 @@ class TokenDelta():
         resultDelta = newBalance - originalBalance
         assert resultDelta == delta, self.err + ". Delta EXPECTED: %i ACTUAL: %i DIFF: %i" % (delta, resultDelta, delta - resultDelta)
 
-class ETHDelta():
+class EtherDelta():
     
     def __init__(self, delta, account, chain, err=""):
         self.account = account

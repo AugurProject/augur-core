@@ -152,7 +152,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return internalDisputeReport(ReportingState.DESIGNATED_DISPUTE, _payoutNumerators, _attotokens, _invalid);
     }
 
-    function disputeFirstReporters(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes triggersMigration returns (bool) {
+    function disputeFirstReporters(uint256[] _payoutNumerators, uint256 _attotokens, bool _invalid) public onlyInGoodTimes returns (bool) {
         return internalDisputeReport(ReportingState.FIRST_DISPUTE, _payoutNumerators, _attotokens, _invalid);
     }
 
@@ -182,7 +182,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return true;
     }
 
-    function disputeLastReporters() public onlyInGoodTimes triggersMigration returns (bool) {
+    function disputeLastReporters() public onlyInGoodTimes returns (bool) {
         require(getReportingState() == ReportingState.LAST_DISPUTE);
         uint256 _bondAmount = Reporting.getLastReportersDisputeBondAmount();
         lastReportersDisputeBond = DisputeBondFactory(controller.lookup("DisputeBondFactory")).createDisputeBond(controller, this, msg.sender, _bondAmount, tentativeWinningPayoutDistributionHash);
@@ -274,14 +274,14 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
         finalizationTime = block.timestamp;
         transferIncorrectDisputeBondsToWinningStakeToken();
+        reportingWindow.updateMarketPhase();
+        controller.getAugur().logMarketFinalized(getUniverse(), this);
         // The validity bond is paid to the owner in any valid outcome and the reporting window otherwise
         if (isValid()) {
             require(getOwner().call.value(validityBondAttoeth)());
         } else {
             cash.depositEtherFor.value(validityBondAttoeth)(getReportingWindow());
         }
-        reportingWindow.updateMarketPhase();
-        controller.getAugur().logMarketFinalized(getUniverse(), this);
         return true;
     }
 
