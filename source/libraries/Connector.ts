@@ -1,6 +1,8 @@
 import EthjsHttpProvider = require('ethjs-provider-http');
 import EthjsQuery = require('ethjs-query');
+import { TransactionReceipt } from 'ethjs-shared';
 import { Configuration } from './Configuration';
+import { sleep } from './HelperFunctions';
 
 export class Connector {
     public readonly ethjsQuery: EthjsQuery;
@@ -20,5 +22,20 @@ export class Connector {
             }
         }
         return this.ethjsQuery;
+    }
+
+    waitForTransactionReceipt = async (transactionHash: string, failureDetails: string): Promise<TransactionReceipt>  => {
+        let pollingInterval = 10;
+        let receipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
+        while (!receipt || !receipt.blockHash) {
+            await sleep(pollingInterval);
+            receipt = await this.ethjsQuery.getTransactionReceipt(transactionHash);
+            pollingInterval = Math.min(pollingInterval*2, 5000);
+        }
+        const status = (typeof receipt.status === 'number') ? receipt.status : parseInt(receipt.status, 16);
+        if (!status) {
+            throw new Error(`Transaction failed.  ${failureDetails}`);
+        }
+        return receipt;
     }
 }

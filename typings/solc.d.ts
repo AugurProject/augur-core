@@ -106,5 +106,5 @@ declare module 'solc' {
         contracts: CompilerOutputContracts;
     }
     type ReadCallback = (path: string) => { contents?: string, error?: string};
-    function compileStandardWrapper(input: string, readCallback?: ReadCallback);
+    function compileStandardWrapper(input: string, readCallback?: ReadCallback): string;
 }

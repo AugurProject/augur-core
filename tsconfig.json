@@ -14,8 +14,20 @@
         "watch": false,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "strictNullChecks": true,
         "alwaysStrict": true,
-        "allowJs": false
+        "allowJs": false,
+        "allowSyntheticDefaultImports": false,
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitAny": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "strict": true,
+        "strictFunctionTypes": true,
+        "strictNullChecks": true
     }
 }
