@@ -14,7 +14,11 @@ case $1 in
   "rinkeby")
     host="rinkeby.augur.net"
     privateKey=$RINKEBY_PRIVATE_KEY
+    ;;
+  "kovan")
+    host="kovan.augur.net"
+    privateKey=$KOVAN_PRIVATE_KEY
 esac
 
 #docker container run -e ETHEREUM_HOST -e ETHERUM_PORT -e ETHEREUM_PRIVATE_KEY -it augur/core-deploy:latest
-ETHEREUM_HOST=$host ETHEREUM_PORT=$port ETHEREUM_PRIVATE_KEY=$privateKey node --inspect-brk output/deployment/deployContracts.js
+ETHEREUM_HOST=$host ETHEREUM_PORT=$port ETHEREUM_PRIVATE_KEY=$privateKey node --inspect-brk output/deployment/compileAndDeploy.js
