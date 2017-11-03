@@ -2,11 +2,19 @@
 
 set -e
 
-echo "Deploying Augur..."
+echo "Deploying Augur to $1"
 
-export ETHEREUM_HOST="ropsten.augur.net"
-export ETHEREUM_PORT="8545"
-export ETHEREUM_PRIVATE_KEY=$ROPSTEN_PRIVATE_KEY
+port="8545"
+
+case $1 in
+  "ropsten")
+    host="ropsten.augur.net"
+    privateKey=$ROPSTEN_PRIVATE_KEY
+    ;;
+  "rinkeby")
+    host="rinkeby.augur.net"
+    privateKey=$RINKEBY_PRIVATE_KEY
+esac
 
 #docker container run -e ETHEREUM_HOST -e ETHERUM_PORT -e ETHEREUM_PRIVATE_KEY -it augur/core-deploy:latest
-node output/deployment/deployContracts.js
+ETHEREUM_HOST=$host ETHEREUM_PORT=$port ETHEREUM_PRIVATE_KEY=$privateKey node --inspect-brk output/deployment/deployContracts.js
