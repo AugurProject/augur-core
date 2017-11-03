@@ -141,9 +141,12 @@ export class ContractDeployer {
         const data = `0x${ContractDeployer.getEncodedConstructData(contract.abi, contract.bytecode, constructorArgs).toString('hex')}`;
         // TODO: remove `gas` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
         const gasEstimate = await this.connector.ethjsQuery.estimateGas({ from: this.accountManager.defaultAddress, data: data, gas: new BN(6500000) });
+        const nonce = await this.accountManager.nonces.get(this.accountManager.defaultAddress);
         const signedTransaction = await this.accountManager.signTransaction({ gas: gasEstimate, gasPrice: this.configuration.gasPrice, data: data});
+        console.log(`Upload contract: ${contractName}, txnhash: ${transactionHash}, nonce: ${nonce}, gas: ${gasEstimate}`);
         const transactionHash = await this.connector.ethjsQuery.sendRawTransaction(signedTransaction);
         const receipt = await this.connector.waitForTransactionReceipt(transactionHash, failureDetails);
+        console.log(`Uploaded contract: ${contractName}: \"${receipt.contractAddress}\"`);
         return receipt.contractAddress;
     }
 
