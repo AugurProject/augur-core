@@ -85,6 +85,20 @@ export class Controlled extends Contract {
         super(connector, accountManager, address, defaultGasPrice);
     }
 
+    public getController_ = async (options?: { sender?: string }): Promise<string> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getController","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
+        const result = await this.localCall(abi, [], options.sender);
+        return <string>result[0];
+    }
+
+    public controllerLookupName_ = async (options?: { sender?: string }): Promise<string> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":true,"inputs":[],"name":"controllerLookupName","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
+        const result = await this.localCall(abi, [], options.sender);
+        return <string>result[0];
+    }
+
     public setController = async (address: string, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
         options = options || {};
         const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
