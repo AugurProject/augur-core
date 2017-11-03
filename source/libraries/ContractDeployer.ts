@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import BN = require('bn.js');
 import { basename as getFilenameFromPath } from "path";
 import EthjsAbi = require("ethjs-abi");
 import { TransactionReceipt } from 'ethjs-shared';
@@ -95,7 +96,8 @@ export class ContractDeployer {
         const abi = this.compiledContracts[contractLookupKey][contractName]!.abi;
         const bytecode = this.compiledContracts[contractLookupKey][contractName]!.evm.bytecode.object;
         const data = this.getEncodedConstructData(abi, bytecode, constructorArgs);
-        const gasEstimate = await this.connector.ethjsQuery.estimateGas({ from: this.accountManager.defaultAddress, data: data });
+        // TODO: remove `gas` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
+        const gasEstimate = await this.connector.ethjsQuery.estimateGas({ from: this.accountManager.defaultAddress, data: data, gas: new BN(6500000) });
         const signedTransaction = await this.accountManager.signTransaction({ gas: gasEstimate, gasPrice: this.configuration.gasPrice, data: data});
         const transactionHash = await this.connector.ethjsQuery.sendRawTransaction(signedTransaction);
         const receipt = await this.connector.waitForTransactionReceipt(transactionHash, failureDetails);
