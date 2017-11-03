@@ -8,7 +8,7 @@ import { Configuration } from './Configuration';
 export class AccountManager {
     private readonly connector: Connector;
     private readonly accounts = new Map<string, Account>();
-    private readonly nonces = new Map<string, BN>();
+    public readonly nonces = new Map<string, BN>();
     public readonly defaultAddress: string;
 
     constructor(configuration: Configuration, connector: Connector) {
