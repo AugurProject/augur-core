@@ -130,6 +130,10 @@ export class ContractDeployer {
             }
 
             for (let contractName in this.compiledContracts[contractFileName]) {
+                // Filter out any contracts that don't match the file name so helper libraries are skipped
+                if (contractName != getFilenameFromPath(contractFileName, '.sol')) {
+                    continue;
+                }
                 // Filter out interface contracts, as they do not need to be deployed
                 if (this.compiledContracts[contractFileName][contractName].evm.bytecode.object === "") {
                     continue;
