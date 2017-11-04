@@ -8,6 +8,7 @@ import 'libraries/collections/Map.sol';
 import 'reporting/IStakeToken.sol';
 import 'factories/MapFactory.sol';
 
+
 contract MockStakeTokenFactory {
     IMarket private createStakeTokenMarketValue;
     uint256[] private createStakeTokenPayoutValue;

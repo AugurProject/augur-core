@@ -55,25 +55,27 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setUpdateMarketPhaseValue = false;
         setNoteDesignatedReportValue = false;
         setIncreaseTotalStakeValue = false;
+        setRemoveMarketValue = false;
+        setMigrateMarketInFromSiblingValue = false;
     }
 
-    function setMigrateMarketInFromSibling(bool _setMigrateMarketInFromSiblingValue) public {
-        setMigrateMarketInFromSiblingValue = _setMigrateMarketInFromSiblingValue;
+    function getMigrateMarketInFromSiblingCalled() public returns(bool) {
+        return setMigrateMarketInFromSiblingValue;
     }
 
     function setMigrateMarketInFromNibling(bool _setMigrateMarketInFromNiblingValue) public {
         setMigrateMarketInFromNiblingValue = _setMigrateMarketInFromNiblingValue;
     }
 
-    function setRemoveMarket(bool _setRemoveMarketValue) public {
-        setRemoveMarketValue = _setRemoveMarketValue;
+    function getRemoveMarketCalled() public returns (bool) {
+        return setRemoveMarketValue;
     }
 
     function setNoteReportingGasPrice(bool _setNoteReportingGasPriceValue) public {
         setNoteReportingGasPriceValue = _setNoteReportingGasPriceValue;
     }
 
-    function getUpdateMarketPhase() public returns(bool) {
+    function getUpdateMarketPhaseCalled() public returns(bool) {
         return setUpdateMarketPhaseValue;
     }
 
@@ -244,7 +246,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     }
 
     function migrateMarketInFromSibling() public returns (bool) {
-        return setMigrateMarketInFromSiblingValue;
+        setMigrateMarketInFromSiblingValue = true;
+        return true;
     }
 
     function migrateMarketInFromNibling() public returns (bool) {
@@ -252,7 +255,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     }
 
     function removeMarket() public returns (bool) {
-        return setRemoveMarketValue;
+        setRemoveMarketValue = true;
+        return true;
     }
 
     function noteReportingGasPrice(IMarket _market) public returns (bool) {

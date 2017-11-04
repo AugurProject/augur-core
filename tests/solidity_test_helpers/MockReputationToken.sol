@@ -36,6 +36,15 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
     /*
     * setters to feed the getters and impl of IUniverse
     */
+    function reset() public {
+        trustedTransferSourceValue = address(0);
+        trustedTransferDestinationValue = address(0);
+        trustedTransferAttotokensValue = 0;
+        migrateInReporterValue = address(0);
+        migrateInAttoTokensValue = 0;
+        migrateInBonusIfInForkWindowValue = false;
+    }
+
     function setMigrateOut(bool _setMigrateOutValue) public {
         setMigrateOutValue = _setMigrateOutValue;
     }

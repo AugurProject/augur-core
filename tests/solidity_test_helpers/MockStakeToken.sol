@@ -91,6 +91,14 @@ contract MockStakeToken is ITyped, MockVariableSupplyToken, IStakeToken {
         return _market.designatedReport();
     }
 
+    function callUpdateTentativeWinningPayoutDistributionHash(IMarket _market, bytes32 payoutDistribution) public returns (bool) {
+        return _market.updateTentativeWinningPayoutDistributionHash(payoutDistribution);
+    }
+
+    function callIncreaseTotalStake(IMarket _market, uint256 _attotokens) public returns (bool) {
+        return _market.increaseTotalStake(_attotokens);
+    }
+
     function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
         initializeMarketValue = _market;
         initializePayoutNumeratorsValue = _payoutNumerators;
