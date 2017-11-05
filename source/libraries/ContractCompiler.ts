@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import * as fs from "async-file";
-import * as readFile from "fs-readfile-promise";
+import readFile = require('fs-readfile-promise');
 import asyncMkdirp = require('async-mkdirp');
 import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
@@ -58,7 +58,7 @@ export class ContractCompiler {
             return file.indexOf("legacy_reputation") > -1 || (stats.isFile() && path.extname(file) !== ".sol");
         }
         const filePaths = await recursiveReadDir(this.configuration.contractSourceRoot, [ignoreFile]);
-        const filesPromises = filePaths.map(async filePath => await readFile(filePath));
+        const filesPromises = filePaths.map(async filePath => (await readFile(filePath)).toString('utf8'));
         const files = await Promise.all(filesPromises);
 
         let inputJson: CompilerInput = {
@@ -78,7 +78,7 @@ export class ContractCompiler {
         };
         for (var file in files) {
             const filePath = filePaths[file].replace(this.configuration.contractSourceRoot, "").replace(/\\/g, "/");
-            inputJson.sources[filePath] = { content : files[file].toString() };
+            inputJson.sources[filePath] = { content : files[file] };
         }
 
         return inputJson;

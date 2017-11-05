@@ -33,7 +33,8 @@ export class Contract {
     protected async remoteCall(abi: AbiFunction, parameters: Array<any>, sender?: string, gasPrice?: BN, attachedEth?: BN): Promise<string> {
         const from = sender || this.accountManager.defaultAddress;
         const data = encodeMethod(abi, parameters);
-        const gas = await this.connector.ethjsQuery.estimateGas(Object.assign({ to: this.address, from: from, data: data }, attachedEth ? { value: attachedEth } : {} ));
+        // TODO: remove `gas` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
+        const gas = await this.connector.ethjsQuery.estimateGas(Object.assign({ to: this.address, from: from, data: data, gas: new BN(6500000) }, attachedEth ? { value: attachedEth } : {} ));
         gasPrice = gasPrice || this.defaultGasPrice;
         const transaction = Object.assign({ from: from, to: this.address, data: data, gasPrice: gasPrice, gas: gas }, attachedEth ? { value: attachedEth } : {});
         const signedTransaction = await this.accountManager.signTransaction(transaction);
@@ -53,16 +54,16 @@ export class Controller extends Contract {
         return <string>result[0];
     }
 
-    public setValue = async (key: string, value: string, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
+    public registerContract = async (key: string, address: string, commitHash: string, fileHash: string, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_key","type":"bytes32"},{"name":"_value","type":"address"}],"name":"setValue","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-        return await this.remoteCall(abi, [key, value], options.sender, options.gasPrice);
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_key","type":"bytes32"},{"name":"_address","type":"address"},{"name":"_commitHash","type":"bytes20"},{"name":"_fileHash","type":"bytes32"}],"name":"registerContract","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        return await this.remoteCall(abi, [key, address, commitHash, fileHash], options.sender, options.gasPrice);
     }
 
-    public setValue_ = async (key: string, value: string, options?: { sender?: string }): Promise<boolean> => {
+    public registerContract_ = async (key: string, address: string, commitHash: string, fileHash: string, options?: { sender?: string }): Promise<boolean> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_key","type":"bytes32"},{"name":"_value","type":"address"}],"name":"setValue","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-        const result = await this.localCall(abi, [key, value], options.sender);
+        const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_key","type":"bytes32"},{"name":"_address","type":"address"},{"name":"_commitHash","type":"bytes20"},{"name":"_fileHash","type":"bytes32"}],"name":"registerContract","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const result = await this.localCall(abi, [key, address, commitHash, fileHash], options.sender);
         return <boolean>result[0];
     }
 

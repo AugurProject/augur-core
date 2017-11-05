@@ -4,6 +4,12 @@ from json import loads
 from decimal import Decimal
 from struct import pack
 
+garbageAddress = '0xdefec8eddefec8eddefec8eddefec8eddefec8ed'
+garbageBytes20 = str(bytearray.fromhex('baadf00dbaadf00dbaadf00dbaadf00dbaadf00d'))
+garbageBytes32 = str(bytearray.fromhex('deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'))
+twentyZeros = str(pack(">l", 0).rjust(20, '\x00'))
+thirtyTwoZeros = str(pack(">l", 0).rjust(32, '\x00'))
+
 def fix(n, m = 1):
     return long(Decimal(n) * Decimal(m) * 10**18)
 
@@ -34,7 +40,7 @@ def captureFilteredLogs(state, contract, logs):
     state.log_listeners.append(lambda x: captureLog(contract, logs, x))
 
 class TokenDelta():
-    
+
     def __init__(self, token, delta, account, err=""):
         self.account = account
         self.token = token
@@ -43,7 +49,7 @@ class TokenDelta():
 
     def __enter__(self):
         self.originalBalance = self.token.balanceOf(self.account)
-    
+
     def __exit__(self, *args):
         if args[1]:
             raise args[1]
@@ -54,7 +60,7 @@ class TokenDelta():
         assert resultDelta == delta, self.err + ". Delta EXPECTED: %i ACTUAL: %i DIFF: %i" % (delta, resultDelta, delta - resultDelta)
 
 class EtherDelta():
-    
+
     def __init__(self, delta, account, chain, err=""):
         self.account = account
         self.chain = chain
@@ -63,7 +69,7 @@ class EtherDelta():
 
     def __enter__(self):
         self.originalBalance = self.chain.head_state.get_balance(self.account)
-    
+
     def __exit__(self, *args):
         if args[1]:
             raise args[1]
@@ -79,10 +85,10 @@ class PrintGasUsed():
         self.fixture = fixture
         self.action = action
         self.originalGas = originalGas
- 
+
     def __enter__(self):
         self.startingGas = self.fixture.chain.head_state.gas_used
-     
+
     def __exit__(self, *args):
         if args[1]:
             raise args[1]

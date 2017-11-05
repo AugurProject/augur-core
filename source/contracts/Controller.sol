@@ -8,9 +8,17 @@ import 'libraries/Extractable.sol';
 
 
 contract Controller is IController {
+    struct ContractDetails {
+        bytes32 name;
+        address contractAddress;
+        bytes20 commitHash;
+        bytes32 fileHash;
+    }
+
     address public owner;
     mapping(address => bool) public whitelist;
-    mapping(bytes32 => address) public registry;
+    // TODO: remove the registry in favor of registeredContracts
+    mapping(bytes32 => ContractDetails) public registry;
     bool public stopped = false;
 
     modifier onlyWhitelistedCallers {
@@ -67,22 +75,27 @@ contract Controller is IController {
      * Registry for lookups [whitelisted augur contracts and dev mode can use it]
      */
 
-    function setValue(bytes32 _key, address _value) public onlyWhitelistedCallers returns(bool) {
-        registry[_key] = _value;
+    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _fileHash) public onlyOwnerCaller returns(bool) {
+        registry[_key] = ContractDetails(_key, _address, _commitHash, _fileHash);
         return true;
     }
 
-    function removeValue(bytes32 _key) public onlyWhitelistedCallers returns(bool) {
-        registry[_key] = address(0);
+    function getContractDetails(bytes32 _key) public view returns (address, bytes20, bytes32) {
+        ContractDetails storage _details = registry[_key];
+        return (_details.contractAddress, _details.commitHash, _details.fileHash);
+    }
+
+    function unregisterContract(bytes32 _key) public onlyOwnerCaller returns(bool) {
+        delete registry[_key];
         return true;
     }
 
     function lookup(bytes32 _key) public view returns(address) {
-        return registry[_key];
+        return registry[_key].contractAddress;
     }
 
     function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) public view returns(bool) {
-        require(registry[_allowedCaller] == _caller || (msg.sender == owner && whitelist[owner]));
+        require(registry[_allowedCaller].contractAddress == _caller || (msg.sender == owner && whitelist[owner]));
         return true;
     }
 

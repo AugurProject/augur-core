@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
-from utils import captureFilteredLogs, bytesToHexString
+from utils import captureFilteredLogs, bytesToHexString, garbageBytes20, garbageBytes32
 
 def test_init(contractsFixture, market):
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
@@ -127,7 +127,7 @@ def test_transferFrom(contractsFixture, market):
 def test_setController(contractsFixture, market):
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
     newController = contractsFixture.upload('../source/contracts/Controller.sol', 'newController')
-    newController.setValue('shareToken'.ljust(32, '\x00'), shareToken.address)
+    newController.registerContract('shareToken'.ljust(32, '\x00'), shareToken.address, garbageBytes20, garbageBytes32)
 
     contractsFixture.contracts['Controller'].updateController(shareToken.address, newController.address, sender=tester.k0)
     with raises(TransactionFailed):

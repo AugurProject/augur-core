@@ -2,5 +2,4 @@
 **/*.pyc
 **/.cache/
 **/compilation_cache/
-.git/
 node_modules/

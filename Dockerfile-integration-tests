@@ -14,6 +14,8 @@ RUN npx tsc
 RUN node ./output/deployment/compileContracts.js
 
 COPY source/ /app/source/
+# necessary so the script can get the commit hash of head
+COPY .git/ /app/.git/
 RUN npx tsc
 
 ENTRYPOINT [ "npx", "mocha", "output/tests-integration/**/*.js", "--no-timeouts", "--require", "source-map-support/register" ]
