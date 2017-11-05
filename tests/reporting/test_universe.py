@@ -1,6 +1,6 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from utils import longToHexString, stringToBytes
+from utils import longToHexString, stringToBytes, twentyZeros, thirtyTwoZeros
 from pytest import fixture, raises
 
 def test_universe_creation(localFixture, mockReputationToken, mockReputationTokenFactory, mockUniverse, mockUniverseFactory, mockAugur):
@@ -23,7 +23,6 @@ def test_universe_creation(localFixture, mockReputationToken, mockReputationToke
     assert universe.getChildUniverse("5") == longToHexString(0)
 
 def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, mockUniverseFactory, mockMarket, mockReportingWindow, chain, mockReportingWindowFactory, mockAugur):
-
     with raises(TransactionFailed, message="must be called from market"):
         populatedUniverse.fork()
 
@@ -144,7 +143,7 @@ def test_open_interest(localFixture, populatedUniverse):
 def test_universe_rep_price_oracle(localFixture, populatedUniverse, mockReputationToken, mockShareToken, mockStakeToken):
     controller = localFixture.contracts['Controller']
     repPriceOracle = localFixture.uploadAndAddToController("../source/contracts/reporting/RepPriceOracle.sol", 'repPriceOracle')
-    controller.setValue(stringToBytes('RepPriceOracle'), repPriceOracle.address)
+    controller.registerContract(stringToBytes('RepPriceOracle'), repPriceOracle.address, twentyZeros, thirtyTwoZeros)
     mockReputationToken.setTotalSupply(0)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 0
     mockReputationToken.setTotalSupply(1)
@@ -225,7 +224,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     controller = localFixture.contracts['Controller']
     constants = localFixture.contracts['Constants']
     repPriceOracle = localFixture.uploadAndAddToController("../source/contracts/reporting/RepPriceOracle.sol", 'repPriceOracle')
-    controller.setValue(stringToBytes('RepPriceOracle'), repPriceOracle.address)
+    controller.registerContract(stringToBytes('RepPriceOracle'), repPriceOracle.address, twentyZeros, thirtyTwoZeros)
 
     multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER()
     # default value
@@ -287,9 +286,9 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     mockReputationTokenFactory = fixture.contracts['MockReputationTokenFactory']
     mockReportingWindowFactory = fixture.contracts['MockReportingWindowFactory']
     mockUniverseFactory = fixture.contracts['MockUniverseFactory']
-    controller.setValue(stringToBytes('ReputationTokenFactory'), mockReputationTokenFactory.address)
-    controller.setValue(stringToBytes('ReportingWindowFactory'), mockReportingWindowFactory.address)
-    controller.setValue(stringToBytes('UniverseFactory'), mockUniverseFactory.address)
+    controller.registerContract(stringToBytes('ReputationTokenFactory'), mockReputationTokenFactory.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('ReportingWindowFactory'), mockReportingWindowFactory.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('UniverseFactory'), mockUniverseFactory.address, twentyZeros, thirtyTwoZeros)
     return fixture.createSnapshot()
 
 @fixture

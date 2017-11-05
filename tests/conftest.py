@@ -12,7 +12,7 @@ from os import path, walk, makedirs, listdir
 import pytest
 from re import findall
 from solc import compile_standard
-from utils import bytesToHexString, bytesToLong, longToHexString, stringToBytes
+from utils import bytesToHexString, bytesToLong, longToHexString, stringToBytes, garbageBytes20, garbageBytes32, twentyZeros, thirtyTwoZeros
 from copy import deepcopy
 
 # used to resolve relative paths
@@ -197,7 +197,7 @@ class ContractsFixture:
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
         contract = self.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs)
         if not contract: return None
-        self.contracts['Controller'].setValue(lookupKey.ljust(32, '\x00'), contract.address)
+        self.contracts['Controller'].registerContract(lookupKey.ljust(32, '\x00'), contract.address, garbageBytes20, garbageBytes32)
         return(contract)
 
     def upload(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
@@ -277,7 +277,7 @@ class ContractsFixture:
                 if extension != '.sol': continue
                 if not name.startswith('Mock'): continue
                 if 'Factory' in name:
-                    self.upload(path.join(directory, filename))    
+                    self.upload(path.join(directory, filename))
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 
@@ -437,7 +437,7 @@ def augurInitializedWithMocksSnapshot(fixture, augurInitializedSnapshot):
     fixture.uploadAllMockContracts()
     controller = fixture.contracts['Controller']
     mockAugur = fixture.contracts['MockAugur']
-    controller.setValue(stringToBytes('Augur'), mockAugur.address)
+    controller.registerContract(stringToBytes('Augur'), mockAugur.address, twentyZeros, thirtyTwoZeros)
     return fixture.createSnapshot()
 
 @pytest.fixture(scope="session")
