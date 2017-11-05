@@ -54,8 +54,8 @@ contract MockUniverse is Initializable, IUniverse {
     /*
     * setters to feed the getters and impl of IUniverse
     */
-    function setFork(bool _setforkValue) public {
-        setforkValue = _setforkValue;
+    function getForkCalled() public returns(bool) {
+        return setforkValue;
     }
 
     function setParentUniverse(IUniverse _setParentUniverseValue) public {
@@ -224,7 +224,8 @@ contract MockUniverse is Initializable, IUniverse {
     }
 
     function fork() public returns (bool) {
-        return setforkValue;
+        setforkValue = true;
+        return true;
     }
 
     function getParentUniverse() public view returns (IUniverse) {
