@@ -15,6 +15,13 @@ import 'trading/Order.sol';
 // AUDIT/CONSIDER: Is it better that this contract provide generic functions that are limited to whitelisted callers or for it to have many specific functions which have more limited and specific validation?
 contract MockAugur is Controlled {
 
+    function reset() public {
+        logMarketCreatedCalledValue = false;
+        logReportsDisputedCalledValue = false;
+        logUniverseForkedCalledValue = false;
+        logReputationTokensTransferredCalledValue = false;
+    }
+
     function trustedTransfer(ERC20 _token, address _from, address _to, uint256 _amount) public onlyWhitelistedCallers returns (bool) {
         return true;
     }
@@ -43,7 +50,12 @@ contract MockAugur is Controlled {
         return true;
     }
 
+    bool private logReportsDisputedCalledValue;
+
+    function logReportsDisputedCalled() public returns(bool) { return logReportsDisputedCalledValue; }
+    
     function logReportsDisputed(IUniverse _universe, address _disputer, address _market, IMarket.ReportingState _reportingPhase, uint256 _disputeBondAmount) public returns (bool) {
+        logReportsDisputedCalledValue = true;
         return true;
     }
 

@@ -51,28 +51,36 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     /*
     * setters to feed the getters and impl of IReportingWindow
     */
-    function setMigrateMarketInFromSibling(bool _setMigrateMarketInFromSiblingValue) public {
-        setMigrateMarketInFromSiblingValue = _setMigrateMarketInFromSiblingValue;
+    function reset() public {
+        setUpdateMarketPhaseValue = false;
+        setNoteDesignatedReportValue = false;
+        setIncreaseTotalStakeValue = false;
+        setRemoveMarketValue = false;
+        setMigrateMarketInFromSiblingValue = false;
+    }
+
+    function getMigrateMarketInFromSiblingCalled() public returns(bool) {
+        return setMigrateMarketInFromSiblingValue;
     }
 
     function setMigrateMarketInFromNibling(bool _setMigrateMarketInFromNiblingValue) public {
         setMigrateMarketInFromNiblingValue = _setMigrateMarketInFromNiblingValue;
     }
 
-    function setRemoveMarket(bool _setRemoveMarketValue) public {
-        setRemoveMarketValue = _setRemoveMarketValue;
+    function getRemoveMarketCalled() public returns (bool) {
+        return setRemoveMarketValue;
     }
 
     function setNoteReportingGasPrice(bool _setNoteReportingGasPriceValue) public {
         setNoteReportingGasPriceValue = _setNoteReportingGasPriceValue;
     }
 
-    function setUpdateMarketPhase(bool _setUpdateMarketPhaseValue) public {
-        setUpdateMarketPhaseValue = _setUpdateMarketPhaseValue;
+    function getUpdateMarketPhaseCalled() public returns(bool) {
+        return setUpdateMarketPhaseValue;
     }
 
-    function setNoteDesignatedReport(bool _setNoteDesignatedReportValue) public {
-        setNoteDesignatedReportValue = _setNoteDesignatedReportValue;
+    function getNoteDesignatedReport() public returns(bool) {
+        return setNoteDesignatedReportValue;
     }
 
     function setUniverse(IUniverse _universe) public {
@@ -175,8 +183,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setIsContainerForParticipationTokenValue = _isContainerForParticipationToken;
     }
 
-    function setIncreaseTotalStake(bool _setIncreaseTotalStakeValue) public {
-        setIncreaseTotalStakeValue = _setIncreaseTotalStakeValue;
+    function getIncreaseTotalStakeCalled() public returns(bool) {
+        return setIncreaseTotalStakeValue;
     }
 
     function setIncreaseTotalWinningStake(bool _setIncreaseTotalWinningStakeValue) public {
@@ -238,7 +246,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     }
 
     function migrateMarketInFromSibling() public returns (bool) {
-        return setMigrateMarketInFromSiblingValue;
+        setMigrateMarketInFromSiblingValue = true;
+        return true;
     }
 
     function migrateMarketInFromNibling() public returns (bool) {
@@ -246,7 +255,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     }
 
     function removeMarket() public returns (bool) {
-        return setRemoveMarketValue;
+        setRemoveMarketValue = true;
+        return true;
     }
 
     function noteReportingGasPrice(IMarket _market) public returns (bool) {
@@ -254,11 +264,13 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     }
 
     function noteDesignatedReport() public returns (bool) {
-        return setNoteDesignatedReportValue;
+        setNoteDesignatedReportValue = true;
+        return true;
     }
 
     function updateMarketPhase() public returns (bool) {
-        return setUpdateMarketPhaseValue;
+        setUpdateMarketPhaseValue = true;
+        return true;
     }
 
     function getUniverse() public view returns (IUniverse) {
@@ -371,7 +383,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     }
 
     function increaseTotalStake(uint256 _amount) public returns (bool) {
-        return setIncreaseTotalStakeValue;
+        setIncreaseTotalStakeValue = true;
     }
 
     function increaseTotalWinningStake(uint256 _amount) public returns (bool) {
