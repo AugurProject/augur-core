@@ -24,6 +24,7 @@ services:
       - ETHEREUM_PORT=8545
       - ETHEREUM_GAS_PRICE_IN_NANOETH=1
       - ETHEREUM_PRIVATE_KEY=0xe2b0241b73cd78d450f85eca67188fb884e7ebe961f8981814474c500d581952
+      # - AUGUR_CONTROLLER_ADDRESS=0x65d8b74efe5ff13ea6254864814269320d2db8fd
     links:
       - parity-dev-node
   geth-integration-tests:
@@ -39,5 +40,6 @@ services:
       - ETHEREUM_PORT=8545
       - ETHEREUM_GAS_PRICE_IN_NANOETH=1
       - ETHEREUM_PRIVATE_KEY=0xe2b0241b73cd78d450f85eca67188fb884e7ebe961f8981814474c500d581952
+      # - AUGUR_CONTROLLER_ADDRESS=0x35d93ab4de2f58c495e8ec0654f6dcc95c690fd2
     links:
       - geth-dev-node

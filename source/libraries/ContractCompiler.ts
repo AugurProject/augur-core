@@ -5,7 +5,7 @@ import readFile = require('fs-readfile-promise');
 import asyncMkdirp = require('async-mkdirp');
 import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
-import { CompilerInput, CompilerOutput, CompilerOutputContracts, compileStandardWrapper } from "solc";
+import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
 import { Configuration } from './Configuration';
 
 export class ContractCompiler {
@@ -15,7 +15,7 @@ export class ContractCompiler {
         this.configuration = configuration
     }
 
-    public async compileContracts(): Promise<CompilerOutputContracts> {
+    public async compileContracts(): Promise<CompilerOutput> {
         // Check if all contracts are cached (and thus do not need to be compiled)
         try {
             const stats = await fs.stat(this.configuration.contractOutputPath);
@@ -48,9 +48,9 @@ export class ContractCompiler {
 
         // Output contract data to single file
         const contractOutputFilePath = this.configuration.contractOutputPath;
-        await fs.writeFile(contractOutputFilePath, JSON.stringify(compilerOutput.contracts));
+        await fs.writeFile(contractOutputFilePath, JSON.stringify(compilerOutput, null, '\t'));
 
-        return compilerOutput.contracts;
+        return compilerOutput;
     }
 
     public async generateCompilerInput(): Promise<CompilerInput> {

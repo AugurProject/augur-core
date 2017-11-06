@@ -1,5 +1,5 @@
 declare module 'solc' {
-    export type Primitive = 'uint256' | 'bool' | 'address' | 'uint64' | 'bytes32' | 'bytes';
+    import { Abi, Primitive } from 'ethereum';
 
     interface CompilerInputSourceFile {
         keccak256?: string;
@@ -28,23 +28,6 @@ declare module 'solc' {
         message: string;
         formattedMessage?: string;
     }
-    interface CompilerOutputContractAbi {
-        type: "function"|"constructor"|"fallback"|"event";
-        name: string;
-        constant: boolean;
-        inputs: { name: string, type: Primitive }[];
-    }
-    interface CompilerOutputContractAbiFunction extends CompilerOutputContractAbi {
-        type: "function"|"constructor"|"fallback";
-        outputs?: { name: string, type: Primitive }[];
-        payable: boolean;
-        stateMutability: "pure"|"view"|"nonpayable"|"payable";
-        constant: boolean;
-    }
-    interface CompilerOutputContractAbiEvent extends CompilerOutputContractAbi {
-        type: "event";
-        anonymous: boolean;
-    }
     interface CompilerOutputEvmBytecode {
         object: string;
         opcodes: string;
@@ -62,11 +45,10 @@ declare module 'solc' {
             legacyAST: any;
         },
     }
-    type CompilerOutputAbi = CompilerOutputContractAbiFunction|CompilerOutputContractAbiEvent;
     interface CompilerOutputContracts {
         [globalName: string]: {
             [contractName: string]: {
-                abi: (CompilerOutputAbi)[];
+                abi: Abi;
                 metadata: string;
                 userdoc: any;
                 devdoc: any;
