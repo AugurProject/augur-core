@@ -1,7 +1,7 @@
 
 from ethereum.tools import tester
 from datetime import timedelta
-from utils import longToHexString, stringToBytes, bytesToHexString
+from utils import longToHexString, stringToBytes, bytesToHexString, twentyZeros, thirtyTwoZeros
 from pytest import fixture, raises
 from ethereum.tools.tester import ABIContract, TransactionFailed
 
@@ -426,12 +426,12 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
         item = fixture.upload('solidity_test_helpers/MockShareToken.sol', 'newMockShareToken' + str(index));
         mockShareTokenFactory.pushCreateShareToken(item.address)
     
-    controller.setValue(stringToBytes('Cash'), mockCash.address)
-    controller.setValue(stringToBytes('ParticipationTokenFactory'), mockReportingParticipationTokenFactory.address)
-    controller.setValue(stringToBytes('ShareTokenFactory'), mockShareTokenFactory.address)
-    controller.setValue(stringToBytes('FillOrder'), mockShareTokenFactory.address)    
-    controller.setValue(stringToBytes('StakeTokenFactory'), mockStakeTokenFactory.address)    
-    controller.setValue(stringToBytes('DisputeBondFactory'), mockDisputeBondFactory.address)    
+    controller.registerContract(stringToBytes('Cash'), mockCash.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('ParticipationTokenFactory'), mockReportingParticipationTokenFactory.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('ShareTokenFactory'), mockShareTokenFactory.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('FillOrder'), mockShareTokenFactory.address, twentyZeros, thirtyTwoZeros)    
+    controller.registerContract(stringToBytes('StakeTokenFactory'), mockStakeTokenFactory.address, twentyZeros, thirtyTwoZeros)    
+    controller.registerContract(stringToBytes('DisputeBondFactory'), mockDisputeBondFactory.address, twentyZeros, thirtyTwoZeros)    
     mockShareTokenFactory.resetCreateShareToken();
     return fixture.createSnapshot()
 
