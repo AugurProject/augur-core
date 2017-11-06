@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 
 import BN = require('bn.js');
+import { hash } from 'crypto-promise';
+import readFile = require('fs-readfile-promise');
+import { Repository } from 'nodegit';
+import { resolve as resolvePath } from 'path';
 import { basename as getFilenameFromPath } from "path";
 import EthjsAbi = require("ethjs-abi");
 import { TransactionReceipt } from 'ethjs-shared';
@@ -47,6 +51,22 @@ export class ContractDeployer {
         return this.contracts.get(contractName)!;
     }
 
+    private async getGitCommit(): Promise<string> {
+        const repositoryRootPath = resolvePath(__dirname, '..', '..');
+        const repository = await Repository.open(repositoryRootPath);
+        const headCommit = await repository.getHeadCommit();
+        return `0x${headCommit.sha()}`;
+    }
+
+    private async getFileSha(relativeFilePath: string): Promise<string> {
+        const filePath = resolvePath(__dirname, '..', '..', 'source', 'contracts', relativeFilePath);
+        const fileContents = await readFile(filePath);
+        // FIXME: expose the json input from ContractCompiler and use the file it has read/decoded here instead of re-reading and re-decoding
+        // we could pass the buffer through directly, but we want to have node parse as utf8 first since that is what the compile code-path does
+        const digest = await hash('sha256')(fileContents.toString('utf8'), 'utf8');
+        return `0x${digest.toString('hex')}`;
+    }
+
     private async uploadController(): Promise<void> {
         const address = await this.upload("Controller.sol");
         if (typeof address === 'undefined') throw new Error(`Controller.sol contract did not upload correctly, possible abstract?`);
@@ -72,9 +92,10 @@ export class ContractDeployer {
         if (typeof address === "undefined") {
             return undefined;
         }
-        // TODO: Add padding to hexlifiedLookupKey to make it the right length?  It seems to work without padding.
         const hexlifiedLookupKey = stringTo32ByteHex(lookupKey);
-        await this.controller.setValue(hexlifiedLookupKey, address);
+        const commitHash = await this.getGitCommit();
+        const fileHash = await this.getFileSha(relativeFilePath);
+        await this.controller.registerContract(hexlifiedLookupKey, address, commitHash, fileHash);
 
         const controlled = ContractFactory(this.connector, this.accountManager, lookupKey, address, this.configuration.gasPrice);
         this.contracts.set(lookupKey, controlled);
@@ -104,22 +125,22 @@ export class ContractDeployer {
         return receipt.contractAddress;
     }
 
-    private async upload(contractLookupKey: string, lookupKey: string = "", contractName: string = "", constructorArgs: Array<string> = []): Promise<string|undefined> {
-        lookupKey = (lookupKey === "") ? getFilenameFromPath(contractLookupKey).split(".")[0] : lookupKey;
+    private async upload(relativeFilePath: string, lookupKey: string = "", contractName: string = "", constructorArgs: Array<string> = []): Promise<string|undefined> {
+        lookupKey = (lookupKey === "") ? getFilenameFromPath(relativeFilePath).split(".")[0] : lookupKey;
         contractName = (contractName === "") ? lookupKey : contractName;
         if (this.contracts.has(lookupKey)) {
             return this.contracts.get(lookupKey)!.address;
         }
-        const bytecode = this.compiledContracts[contractLookupKey][contractName].evm.bytecode.object;
+        const bytecode = this.compiledContracts[relativeFilePath][contractName].evm.bytecode.object;
         if (!this.abis.has(contractName)) {
-            this.abis.set(contractName, this.compiledContracts[contractLookupKey][contractName].abi);
+            this.abis.set(contractName, this.compiledContracts[relativeFilePath][contractName].abi);
             this.bytecodes.set(contractName, bytecode);
         }
         // Abstract contracts have a 0-length array for bytecode
         if (bytecode.length === 0) {
             return undefined;
         }
-        return await this.construct(contractLookupKey, contractName, constructorArgs, `Uploading ${contractName}`);
+        return await this.construct(relativeFilePath, contractName, constructorArgs, `Uploading ${contractName}`);
     }
 
     private async uploadAllContracts(): Promise<void> {

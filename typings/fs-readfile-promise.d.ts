@@ -1,8 +1,4 @@
-declare namespace ReadFilePromise {
-    interface readFile {
-        (path: string): Promise<string[]>;
-    }
+declare module 'fs-readfile-promise' {
+    function readFile(path: string): Promise<Buffer>;
+    export = readFile;
 }
-
-declare var ReadFilePromise: ReadFilePromise.readFile;
-export = ReadFilePromise;

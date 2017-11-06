@@ -1,6 +1,6 @@
 from ethereum.tools import tester
 from datetime import timedelta
-from utils import longToHexString, stringToBytes, bytesToHexString
+from utils import longToHexString, stringToBytes, bytesToHexString, twentyZeros, thirtyTwoZeros
 from pytest import fixture, raises
 from ethereum.tools.tester import ABIContract, TransactionFailed
 
@@ -550,9 +550,9 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     mockReportingParticipationTokenFactory = fixture.contracts['MockParticipationTokenFactory']
     mockCash = fixture.contracts['MockCash']
     mockMarketFactory = fixture.contracts['MockMarketFactory']
-    controller.setValue(stringToBytes('MarketFactory'), mockMarketFactory.address)
-    controller.setValue(stringToBytes('Cash'), mockCash.address)
-    controller.setValue(stringToBytes('ParticipationTokenFactory'), mockReportingParticipationTokenFactory.address)
+    controller.registerContract(stringToBytes('MarketFactory'), mockMarketFactory.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('Cash'), mockCash.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('ParticipationTokenFactory'), mockReportingParticipationTokenFactory.address, twentyZeros, thirtyTwoZeros)
     return fixture.createSnapshot()
 
 @fixture

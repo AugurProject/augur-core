@@ -1,7 +1,7 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from utils import longToHexString, stringToBytes, captureFilteredLogs
+from utils import longToHexString, stringToBytes, captureFilteredLogs, twentyZeros, thirtyTwoZeros
 from pytest import fixture, raises
 
 
@@ -21,7 +21,7 @@ def test_basic_token_transfer(localFixture, chain, mockToken):
 
     value =  2**256-1
     assert mockToken.mint(tester.a1, value)
-    
+
     with raises(TransactionFailed, message="can not cause user to overflow balance"):
         mockToken.callInternalTransfer(tester.a1, tester.a2, value)
 
@@ -42,7 +42,7 @@ def localSnapshot(fixture, augurInitializedSnapshot):
     controller = fixture.contracts['Controller']
     mockToken = fixture.uploadAndAddToController("solidity_test_helpers/MockToken.sol")
     mockAugur = fixture.uploadAndAddToController("solidity_test_helpers/MockAugur.sol")
-    controller.setValue(stringToBytes('Augur'), mockAugur.address)
+    controller.registerContract(stringToBytes('Augur'), mockAugur.address, twentyZeros, thirtyTwoZeros)
     return fixture.createSnapshot()
 
 @fixture

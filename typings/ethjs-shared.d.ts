@@ -1,6 +1,6 @@
 declare module 'ethjs-shared' {
     import BN = require('bn.js');
-    export type Primitive = 'uint256' | 'uint64' | 'uint8' | 'bool' | 'string' | 'address' | 'bytes32' | 'bytes';
+    export type Primitive = 'uint256' | 'uint64' | 'uint8' | 'bool' | 'string' | 'address' | 'bytes20' | 'bytes32' | 'bytes';
 
     export interface AbiParameter {
         name: string,
