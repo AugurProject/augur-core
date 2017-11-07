@@ -2,121 +2,139 @@
 
 import BN = require('bn.js');
 import { hash } from 'crypto-promise';
-import readFile = require('fs-readfile-promise');
 import { Repository } from 'nodegit';
 import { resolve as resolvePath } from 'path';
-import { basename as getFilenameFromPath } from "path";
-import EthjsAbi = require("ethjs-abi");
+import { encodeParams } from 'ethjs-abi';
 import { TransactionReceipt } from 'ethjs-shared';
 import { stringTo32ByteHex } from "./HelperFunctions";
-import { CompilerOutputContracts, CompilerOutputAbi } from "solc";
+import { CompilerOutput } from "solc";
+import { Abi, AbiFunction } from 'ethereum';
 import { Configuration } from './Configuration';
 import { Connector } from './Connector';
 import { ContractFactory, Controller, Controlled, Universe } from './ContractInterfaces';
 import { AccountManager } from './AccountManager';
+import { Contracts, Contract } from './Contracts';
 
 export class ContractDeployer {
     private readonly accountManager: AccountManager;
     private readonly configuration: Configuration;
     private readonly connector: Connector;
-    private readonly compiledContracts: CompilerOutputContracts;
-    private readonly contracts = new Map<string, Controlled>();
-    private readonly abis = new Map<string, Array<CompilerOutputAbi>>();
-    private readonly bytecodes = new Map<string, string>();
+    private readonly contracts: Contracts;
     public controller: Controller;
     public universe: Universe;
 
-    public constructor(configuration: Configuration, connector: Connector, accountManager: AccountManager, compilerOutput: CompilerOutputContracts) {
+    public constructor(configuration: Configuration, connector: Connector, accountManager: AccountManager, compilerOutput: CompilerOutput) {
         this.configuration = configuration;
         this.connector = connector;
         this.accountManager = accountManager;
-        this.compiledContracts = compilerOutput;
+        this.contracts = new Contracts(compilerOutput);
     }
 
     public async deploy(): Promise<void> {
-        console.log('Uploading controller...');
-        await this.uploadController();
-        console.log('Uploading contracts...');
+        this.controller = await this.uploadController();
         await this.uploadAllContracts();
-        console.log('Whitelisting contracts...');
         await this.whitelistTradingContracts();
-        console.log('Initializing contracts...');
         await this.initializeAllContracts();
-        console.log('Creating genesis universe...');
         this.universe = await this.createGenesisUniverse();
     }
 
     public getContract = (contractName: string): Controlled => {
         if (!this.contracts.has(contractName)) throw new Error(`Contract named ${contractName} does not exist.`);
-        return this.contracts.get(contractName)!;
+        const contract = this.contracts.get(contractName);
+        if (contract.address === undefined) throw new Error(`Contract name ${contractName} has not yet been uploaded.`);
+        const controlled = ContractFactory(this.connector, this.accountManager, contract.contractName, contract.address, this.configuration.gasPrice);
+        return controlled;
     }
 
-    private async getGitCommit(): Promise<string> {
+    private static async getGitCommit(): Promise<string> {
         const repositoryRootPath = resolvePath(__dirname, '..', '..');
         const repository = await Repository.open(repositoryRootPath);
         const headCommit = await repository.getHeadCommit();
         return `0x${headCommit.sha()}`;
     }
 
-    private async getFileSha(relativeFilePath: string): Promise<string> {
-        const filePath = resolvePath(__dirname, '..', '..', 'source', 'contracts', relativeFilePath);
-        const fileContents = await readFile(filePath);
-        // FIXME: expose the json input from ContractCompiler and use the file it has read/decoded here instead of re-reading and re-decoding
-        // we could pass the buffer through directly, but we want to have node parse as utf8 first since that is what the compile code-path does
-        const digest = await hash('sha256')(fileContents.toString('utf8'), 'utf8');
+    private static async getBytecodeSha(bytecode: Buffer): Promise<string> {
+        const digest = await hash('sha256')(bytecode);
         return `0x${digest.toString('hex')}`;
     }
 
-    private async uploadController(): Promise<void> {
-        const address = await this.upload("Controller.sol");
-        if (typeof address === 'undefined') throw new Error(`Controller.sol contract did not upload correctly, possible abstract?`);
-        this.controller = new Controller(this.connector, this.accountManager, address, this.configuration.gasPrice);
-        const ownerAddress = await this.controller.owner_();
-        if (ownerAddress.toLowerCase() !== this.accountManager.defaultAddress.toLowerCase()) {
-            throw new Error("Controller owner does not equal from address");
-        }
-    }
-
-    private async uploadAndAddDelegatedToController(contractFileName: string, contractName: string): Promise<Controlled|undefined> {
-        const delegationTargetName = contractName + "Target";
-        const hexlifiedDelegationTargetName = stringTo32ByteHex(delegationTargetName);
-        const delegatorConstructorArgs = [this.controller.address, hexlifiedDelegationTargetName];
-
-        await this.uploadAndAddToController(contractFileName, delegationTargetName, contractName);
-        return await this.uploadAndAddToController("libraries/Delegator.sol", contractName, "Delegator", delegatorConstructorArgs);
-    }
-
-    private async uploadAndAddToController(relativeFilePath: string, lookupKey: string = "", signatureKey: string = "", constructorArgs: any = []): Promise<Controlled|undefined> {
-        lookupKey = (lookupKey === "") ? getFilenameFromPath(relativeFilePath).split(".")[0] : lookupKey;
-        const address = await this.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs);
-        if (typeof address === "undefined") {
-            return undefined;
-        }
-        const hexlifiedLookupKey = stringTo32ByteHex(lookupKey);
-        const commitHash = await this.getGitCommit();
-        const fileHash = await this.getFileSha(relativeFilePath);
-        await this.controller.registerContract(hexlifiedLookupKey, address, commitHash, fileHash);
-
-        const controlled = ContractFactory(this.connector, this.accountManager, lookupKey, address, this.configuration.gasPrice);
-        this.contracts.set(lookupKey, controlled);
-        return controlled;
-    }
-
-    private getEncodedConstructData(abi: Array<CompilerOutputAbi>, bytecode: string, constructorArgs: Array<string>): string {
+    private static getEncodedConstructData(abi: Abi, bytecode: Buffer, constructorArgs: Array<string>): Buffer {
         if (constructorArgs.length === 0) {
             return bytecode;
         }
-        const constructorSignature = abi.find(signature => signature.type === 'constructor');
+        // TODO: submit a TypeScript bug that it can't deduce the type is AbiFunction|undefined here
+        const constructorSignature = <AbiFunction|undefined>abi.find(signature => signature.type === 'constructor');
         if (typeof constructorSignature === 'undefined') throw new Error(`ABI did not contain a constructor.`);
         const constructorInputTypes = constructorSignature.inputs.map(x => x.type);
-        const encodedConstructorParameters = EthjsAbi.encodeParams(constructorInputTypes, constructorArgs).substring(2);
-        return `${bytecode}${encodedConstructorParameters}`
+        const encodedConstructorParameters = Buffer.from(encodeParams(constructorInputTypes, constructorArgs).substring(2), 'hex');
+        return Buffer.concat([bytecode, encodedConstructorParameters]);
     }
 
-    private async construct(contractLookupKey: string, contractName: string, constructorArgs: Array<string>, failureDetails: string): Promise<string> {
-        const abi = this.compiledContracts[contractLookupKey][contractName]!.abi;
-        const bytecode = this.compiledContracts[contractLookupKey][contractName]!.evm.bytecode.object;
-        const data = this.getEncodedConstructData(abi, bytecode, constructorArgs);
+    private async uploadController(): Promise<Controller> {
+        console.log('Uploading controller...');
+        const address = (this.configuration.controllerAddress !== undefined)
+            ? this.configuration.controllerAddress
+            : await this.construct(this.contracts.get('Controller'), [], `Uploading Controller.sol`);
+        const controller = new Controller(this.connector, this.accountManager, address, this.configuration.gasPrice);
+        const ownerAddress = await controller.owner_();
+        if (ownerAddress.toLowerCase() !== this.accountManager.defaultAddress.toLowerCase()) {
+            throw new Error("Controller owner does not equal from address");
+        }
+        console.log(`Controller address: ${controller.address}`);
+        return controller;
+    }
+
+    private async uploadAllContracts(): Promise<void> {
+        console.log('Uploading contracts...');
+
+        const promises: Array<Promise<void>> = [];
+        for (let contract of this.contracts) {
+            promises.push(this.upload(contract));
+        }
+
+        await Promise.all(promises);
+    }
+
+    private async upload(contract: Contract): Promise<void> {
+        const contractsToDelegate: {[key:string]: boolean} = {"Orders": true, "TradingEscapeHatch": true};
+        const contractName = contract.contractName
+        if (contractName === 'Controller') return;
+        if (contractName === 'Delegator') return;
+        if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
+        if (contract.relativeFilePath.startsWith('libraries/')) return;
+        // Check to see if we have already uploded this version of the contract
+        const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
+        const key = stringTo32ByteHex(contractsToDelegate[contractName] ? `${contractName}Target` : contractName);
+        const contractDetails = await this.controller.getContractDetails_(key);
+        const previouslyUploadedBytecodeHash = contractDetails[2];
+        if (bytecodeHash === previouslyUploadedBytecodeHash) {
+            console.log(`Using existing contract for ${contractName}`);
+            contract.address = contractDetails[0];
+        } else {
+            console.log(`Uploading new version of contract for ${contractName}`);
+            contract.address = contractsToDelegate[contractName]
+                ? await this.uploadAndAddDelegatedToController(contract)
+                : await this.uploadAndAddToController(contract);
+        }
+    }
+
+    private async uploadAndAddDelegatedToController(contract: Contract): Promise<string> {
+        const delegationTargetName = `${contract.contractName}Target`;
+        const delegatorConstructorArgs = [this.controller.address, stringTo32ByteHex(delegationTargetName)];
+        await this.uploadAndAddToController(contract, delegationTargetName);
+        return await this.uploadAndAddToController(this.contracts.get('Delegator'), contract.contractName, delegatorConstructorArgs);
+    }
+
+    private async uploadAndAddToController(contract: Contract, registrationKey: string = contract.contractName, constructorArgs: Array<any> = []): Promise<string> {
+        const address = await this.construct(contract, constructorArgs, `Uploading ${contract.contractName}`);
+        const commitHash = await ContractDeployer.getGitCommit();
+        const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
+        await this.controller.registerContract(stringTo32ByteHex(registrationKey), address, commitHash, bytecodeHash);
+        return address;
+    }
+
+    private async construct(contract: Contract, constructorArgs: Array<string>, failureDetails: string): Promise<string> {
+        const data = `0x${ContractDeployer.getEncodedConstructData(contract.abi, contract.bytecode, constructorArgs).toString('hex')}`;
         // TODO: remove `gas` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
         const gasEstimate = await this.connector.ethjsQuery.estimateGas({ from: this.accountManager.defaultAddress, data: data, gas: new BN(6500000) });
         const signedTransaction = await this.accountManager.signTransaction({ gas: gasEstimate, gasPrice: this.configuration.gasPrice, data: data});
@@ -125,47 +143,19 @@ export class ContractDeployer {
         return receipt.contractAddress;
     }
 
-    private async upload(relativeFilePath: string, lookupKey: string = "", contractName: string = "", constructorArgs: Array<string> = []): Promise<string|undefined> {
-        lookupKey = (lookupKey === "") ? getFilenameFromPath(relativeFilePath).split(".")[0] : lookupKey;
-        contractName = (contractName === "") ? lookupKey : contractName;
-        if (this.contracts.has(lookupKey)) {
-            return this.contracts.get(lookupKey)!.address;
-        }
-        const bytecode = this.compiledContracts[relativeFilePath][contractName].evm.bytecode.object;
-        if (!this.abis.has(contractName)) {
-            this.abis.set(contractName, this.compiledContracts[relativeFilePath][contractName].abi);
-            this.bytecodes.set(contractName, bytecode);
-        }
-        // Abstract contracts have a 0-length array for bytecode
-        if (bytecode.length === 0) {
-            return undefined;
-        }
-        return await this.construct(relativeFilePath, contractName, constructorArgs, `Uploading ${contractName}`);
-    }
-
-    private async uploadAllContracts(): Promise<void> {
-        const contractsToDelegate: {[key:string]: boolean} = {"Orders": true, "TradingEscapeHatch": true};
-
-        const promises: Promise<Controlled|undefined>[] = [];
-        for (let contractFileName in this.compiledContracts) {
-            if (contractFileName === "Controller.sol" || contractFileName === "libraries/Delegator.sol" || contractFileName.startsWith('legacy_reputation/')) {
+    private async whitelistTradingContracts(): Promise<void> {
+        console.log('Whitelisting contracts...');
+        const promises: Array<Promise<TransactionReceipt>> = [];
+        for (let contract of this.contracts) {
+            if (!contract.relativeFilePath.startsWith("trading/")) continue;
+            if (contract.address === undefined) throw new Error(`Attempted to whitelist ${contract.contractName} but it has not yet been uploaded.`);
+            // Skip if already whitelisted (happens if this contract was previously uploaded)
+            if (await this.controller.whitelist_(contract.address)) {
+                console.log(`Skipping already whitelisted ${contract.contractName}.`);
                 continue;
-            }
-
-            for (let contractName in this.compiledContracts[contractFileName]) {
-                // Filter out any contracts that don't match the file name so helper libraries are skipped
-                if (contractName != getFilenameFromPath(contractFileName, '.sol')) {
-                    continue;
-                }
-                // Filter out interface contracts, as they do not need to be deployed
-                if (this.compiledContracts[contractFileName][contractName].evm.bytecode.object === "") {
-                    continue;
-                }
-                if (contractsToDelegate[contractName] === true) {
-                    promises.push(this.uploadAndAddDelegatedToController(contractFileName, contractName));
-                } else {
-                    promises.push(this.uploadAndAddToController(contractFileName));
-                }
+            } else {
+                console.log(`Whitelisting ${contract.contractName}`);
+                promises.push(this.whitelistContract(contract.contractName));
             }
         }
 
@@ -177,27 +167,10 @@ export class ContractDeployer {
         return await this.connector.waitForTransactionReceipt(transactionHash, `Whitelisting ${contractName}`);
     }
 
-    private async whitelistTradingContracts(): Promise<void> {
-        const promises: Array<Promise<TransactionReceipt>> = [];
-        for (let contractFileName in this.compiledContracts) {
-            if (contractFileName.indexOf("trading/") > -1) {
-                const contractName = getFilenameFromPath(contractFileName, ".sol");
-                if (!this.contracts.has(contractName)) continue;
-                promises.push(this.whitelistContract(contractName));
-            }
-        }
-
-        await Promise.all(promises);
-    }
-
-    private async initializeContract(contractName: string): Promise<TransactionReceipt> {
-        const transactionHash = await this.getContract(contractName).setController(this.controller.address);
-        return await this.connector.waitForTransactionReceipt(transactionHash, `Initializing ${contractName}`);
-    }
-
     private async initializeAllContracts(): Promise<void> {
+        console.log('Initializing contracts...');
         const contractsToInitialize = ["Augur","Cash","CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimTradingProceeds","OrdersFetcher"];
-        const promises: Array<Promise<TransactionReceipt>> = [];
+        const promises: Array<Promise<any>> = [];
         for (let contractName of contractsToInitialize) {
             promises.push(this.initializeContract(contractName));
         }
@@ -205,8 +178,20 @@ export class ContractDeployer {
         await Promise.all(promises);
     }
 
+    private async initializeContract(contractName: string): Promise<TransactionReceipt|void> {
+        // Check if contract already initialized (happens if this contract was previously uploaded)
+        if (await this.getContract(contractName).getController_() === this.controller.address) {
+            console.log(`Skipping already initialized ${contractName}.`)
+            return;
+        }
+        console.log(`Initializing ${contractName}`);
+        const transactionHash = await this.getContract(contractName).setController(this.controller.address);
+        return await this.connector.waitForTransactionReceipt(transactionHash, `Initializing ${contractName}`);
+    }
+
     private async createGenesisUniverse(): Promise<Universe> {
-        const delegatorAddress = await this.construct("libraries/Delegator.sol", "Delegator", [ this.controller.address, stringTo32ByteHex('Universe') ], `Instantiating genesis universe.`);
+        console.log('Creating genesis universe...');
+        const delegatorAddress = await this.construct(this.contracts.get('Delegator'), [ this.controller.address, stringTo32ByteHex('Universe') ], `Instantiating genesis universe.`);
         const universe = new Universe(this.connector, this.accountManager, delegatorAddress, this.configuration.gasPrice);
         const transactionHash = await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000000000000000000000000000");
         await this.connector.waitForTransactionReceipt(transactionHash, `Initializing universe.`);

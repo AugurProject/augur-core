@@ -1,34 +1,5 @@
 declare module 'ethjs-shared' {
     import BN = require('bn.js');
-    export type Primitive = 'uint256' | 'uint64' | 'uint8' | 'bool' | 'string' | 'address' | 'bytes20' | 'bytes32' | 'bytes';
-
-    export interface AbiParameter {
-        name: string,
-        type: Primitive,
-    }
-
-    export interface AbiEventParameter extends AbiParameter {
-        indexed: boolean,
-    }
-
-    export interface AbiFunction {
-        name: string,
-        type: 'function',
-        stateMutability: 'pure' | 'constant' | 'view' | 'payable' | 'nonpayable',
-        constant: boolean,
-        payable: boolean,
-        inputs: AbiParameter[],
-        outputs: AbiParameter[],
-    }
-
-    export interface AbiEvent {
-        name: string,
-        type: 'event',
-        inputs: AbiEventParameter[],
-        anonymous: boolean,
-    }
-
-    export type Abi = AbiFunction | AbiEvent;
 
     export interface Transaction {
         from?: string;

@@ -12,7 +12,7 @@ contract Controller is IController {
         bytes32 name;
         address contractAddress;
         bytes20 commitHash;
-        bytes32 fileHash;
+        bytes32 bytecodeHash;
     }
 
     address public owner;
@@ -75,14 +75,14 @@ contract Controller is IController {
      * Registry for lookups [whitelisted augur contracts and dev mode can use it]
      */
 
-    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _fileHash) public onlyOwnerCaller returns(bool) {
-        registry[_key] = ContractDetails(_key, _address, _commitHash, _fileHash);
+    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyOwnerCaller returns(bool) {
+        registry[_key] = ContractDetails(_key, _address, _commitHash, _bytecodeHash);
         return true;
     }
 
     function getContractDetails(bytes32 _key) public view returns (address, bytes20, bytes32) {
         ContractDetails storage _details = registry[_key];
-        return (_details.contractAddress, _details.commitHash, _details.fileHash);
+        return (_details.contractAddress, _details.commitHash, _details.bytecodeHash);
     }
 
     function unregisterContract(bytes32 _key) public onlyOwnerCaller returns(bool) {
