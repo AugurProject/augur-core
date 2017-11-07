@@ -5,6 +5,7 @@ set -e
 echo "Deploying Augur to $1"
 
 port="8545"
+inspect="" #"--inspect--brk"
 
 case $1 in
   "ropsten")
@@ -25,4 +26,4 @@ case $1 in
 esac
 
 #docker container run -e ETHEREUM_HOST -e ETHERUM_PORT -e ETHEREUM_PRIVATE_KEY -it augur/core-deploy:latest
-ETHEREUM_HOST=$host ETHEREUM_PORT=$port ETHEREUM_PRIVATE_KEY=$privateKey node output/deployment/compileAndDeploy.js
+ETHEREUM_HOST=$host ETHEREUM_PORT=$port ETHEREUM_PRIVATE_KEY=$privateKey node $inspect output/deployment/compileAndDeploy.js
