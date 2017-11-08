@@ -1,8 +1,8 @@
 import * as fs from "async-file";
 import { Abi, AbiFunction, Primitive } from 'ethereum';
-import { ContractCompiler } from "../libraries/ContractCompiler";
+import { ContractCompiler } from "./ContractCompiler";
 import { CompilerOutput, CompilerOutputContracts } from "solc";
-import { Configuration } from '../libraries/Configuration';
+import { Configuration } from './Configuration';
 
 
 export async function generateContractInterfaces(compiler: ContractCompiler, configuration: Configuration): Promise<String> {
