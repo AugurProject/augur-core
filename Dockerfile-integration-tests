@@ -7,9 +7,11 @@ RUN npm install
 COPY tsconfig.json /app/tsconfig.json
 COPY typings/ /app/typings/
 COPY source/contracts/ /app/source/contracts/
-COPY source/tools/ /app/source/tools/
-RUN npx tsc -p source/tools/
-RUN node ./output/tools/compileContracts.js
+COPY source/deployment/compileContracts.ts /app/source/deployment/compileContracts.ts
+COPY source/libraries/Configuration.ts /app/source/libraries/Configuration.ts
+COPY source/libraries/ContractCompiler.ts /app/source/libraries/ContractCompiler.ts
+COPY source/tools/generateContractInterfaces.ts /app/source/tools/generateContractInterfaces.ts
+RUN npx tsc
 RUN node ./output/tools/generateContractInterfaces.js
 
 COPY source/ /app/source/

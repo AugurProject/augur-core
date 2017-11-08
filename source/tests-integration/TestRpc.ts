@@ -1,4 +1,4 @@
-import { Configuration } from '../tools/Configuration';
+import { Configuration } from '../libraries/Configuration';
 import { Connector } from '../libraries/Connector';
 import { server as serverFactory } from 'ethereumjs-testrpc';
 

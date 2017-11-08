@@ -3,7 +3,7 @@
 import * as fs from "async-file";
 import { Abi, AbiFunction, Primitive } from 'ethereum';
 import { CompilerOutputContracts, CompilerOutput } from "solc";
-import { Configuration } from './Configuration';
+import { Configuration } from '../libraries/Configuration';
 
 doWork().then(() => {
     process.exit();

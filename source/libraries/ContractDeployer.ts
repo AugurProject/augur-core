@@ -9,7 +9,7 @@ import { TransactionReceipt } from 'ethjs-shared';
 import { stringTo32ByteHex } from "./HelperFunctions";
 import { CompilerOutput } from "solc";
 import { Abi, AbiFunction } from 'ethereum';
-import { Configuration } from '../tools/Configuration';
+import { Configuration } from './Configuration';
 import { Connector } from './Connector';
 import { ContractFactory, Controller, Controlled, Universe } from './ContractInterfaces';
 import { AccountManager } from './AccountManager';

@@ -3,7 +3,7 @@
 import { readFile } from "async-file";
 import { ContractDeployer } from "../libraries/ContractDeployer";
 import { Connector } from '../libraries/Connector';
-import { Configuration } from '../tools/Configuration';
+import { Configuration } from '../libraries/Configuration';
 import { AccountManager } from '../libraries/AccountManager';
 
 // the rest of the code in this file is for running this as a standalone script, rather than as a library

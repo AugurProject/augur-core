@@ -1,9 +1,9 @@
 import BN = require('bn.js');
 import { TestRpc } from './TestRpc';
-import { Configuration } from '../tools/Configuration';
+import { Configuration } from '../libraries/Configuration';
 import { Connector } from '../libraries/Connector';
 import { AccountManager } from '../libraries/AccountManager';
-import { ContractCompiler } from '../tools/ContractCompiler';
+import { ContractCompiler } from '../libraries/ContractCompiler';
 import { ContractDeployer } from '../libraries/ContractDeployer';
 import { LegacyReputationToken, Cash, Universe, ReputationToken, ReportingWindow, Market } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
