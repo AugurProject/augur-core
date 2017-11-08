@@ -428,6 +428,8 @@ def test_market_try_finalize_forking(localFixture, chain, initializeMarket, cons
     assert initializeMarket.tryFinalize() == True
     assert initializeMarket.getFinalPayoutDistributionHash() == payoutStakeTokenHashTarget
 
+def test_market_migrate_due_to_no_reports(localFixture, initializeMarket, chain, mockReportingWindow, mockNextReportingWindow):
+    chain.head_state.timestamp = mockNextReportingWindow.getEndTime()
 
 def push_to_last_dispute(localFixture, initializeMarket, constants, mockAugur, mockReportingWindow, mockDisputeBondFactory, mockReputationToken, mockDisputeBond, chain, mockUniverse, mockStakeToken, mockStakeTokenFactory, mockNextReportingWindow, mockForkReportingWindow):
     numTicks = 10 ** 10
