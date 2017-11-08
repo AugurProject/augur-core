@@ -2,7 +2,7 @@ declare module 'ethjs-query' {
     import EthjsHttpProvider = require('ethjs-provider-http');
     import EthjsRpc = require('ethjs-rpc');
     import BN = require('bn.js');
-    import { Abi, Block, Transaction, TransactionReceipt, Log } from 'ethjs-shared';
+    import { Block, Transaction, TransactionReceipt, Log } from 'ethjs-shared';
 
     class EthjsQuery {
         constructor(provider: EthjsHttpProvider);

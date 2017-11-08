@@ -1,6 +1,5 @@
 pragma solidity 0.4.17;
 
-
 import 'trading/ICash.sol';
 import 'Controlled.sol';
 import 'libraries/ITyped.sol';
@@ -13,8 +12,6 @@ import 'libraries/Extractable.sol';
  * @dev ETH wrapper contract to make it look like an ERC20 token.
  */
 contract Cash is Controlled, Extractable, ITyped, VariableSupplyToken, ICash {
-    using SafeMathUint256 for uint256;
-
     string constant public name = "Cash";
     string constant public symbol = "CASH";
     uint256 constant public decimals = 18;

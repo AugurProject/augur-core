@@ -1,6 +1,6 @@
 import BN = require('bn.js');
 import { encodeMethod, decodeParams } from 'ethjs-abi';
-import { AbiFunction } from 'ethjs-shared';
+import { AbiFunction } from 'ethereum';
 import { AccountManager } from './AccountManager';
 import { Connector } from './Connector';
 
@@ -77,6 +77,20 @@ export class Controller extends Contract {
         options = options || {};
         const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_target","type":"address"}],"name":"addToWhitelist","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         const result = await this.localCall(abi, [address], options.sender);
+        return <boolean>result[0];
+    }
+
+    public getContractDetails_ = async (key: string, options?: { sender?: string }): Promise<Array<string>> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_key","type":"bytes32"}],"name":"getContractDetails","outputs":[{"name":"","type":"address"},{"name":"","type":"bytes20"},{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
+        const result = await this.localCall(abi, [key], options.sender);
+        return <Array<string>>result;
+    }
+
+    public whitelist_ = async (key: string, options?: { sender?: string }): Promise<boolean> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":true,"inputs":[{"name":"","type":"address"}],"name":"whitelist","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
+        const result = await this.localCall(abi, [key], options.sender);
         return <boolean>result[0];
     }
 }
