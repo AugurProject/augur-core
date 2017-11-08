@@ -1,9 +1,9 @@
 import BN = require('bn.js');
 import { TestRpc } from './TestRpc';
-import { Configuration } from '../libraries/Configuration';
+import { Configuration } from '../tools/Configuration';
 import { Connector } from '../libraries/Connector';
 import { AccountManager } from '../libraries/AccountManager';
-import { ContractCompiler } from '../libraries/ContractCompiler';
+import { ContractCompiler } from '../tools/ContractCompiler';
 import { ContractDeployer } from '../libraries/ContractDeployer';
 import { LegacyReputationToken, Cash, Universe, ReputationToken, ReportingWindow, Market } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
@@ -38,13 +38,13 @@ export class TestFixture {
 
     public async approveCentralAuthority(): Promise<void> {
         const authority = this.contractDeployer.getContract('Augur');
-        const cash = <Cash>this.contractDeployer.getContract('Cash');
+        const cash = new Cash(this.connector, this.accountManager, this.contractDeployer.getContract('Cash').address, this.configuration.gasPrice);
         const transactionHash = await cash.approve(authority.address, new BN(2).pow(new BN(256)).sub(new BN(1)));
         await this.connector.waitForTransactionReceipt(transactionHash, `Approving central authority.`);
     }
 
     public async createMarket(universe: Universe, numOutcomes: number, endTime: number, feePerEthInWei: number, denominationToken: string, designatedReporter: string, numTicks: number): Promise<Market> {
-        const legacyReputationToken = <LegacyReputationToken>this.contractDeployer.getContract('LegacyReputationToken');
+        const legacyReputationToken = new LegacyReputationToken(this.connector, this.accountManager, this.contractDeployer.getContract('LegacyReputationToken').address, this.configuration.gasPrice);
         const reputationTokenAddress = await universe.getReputationToken_();
         const reputationToken = new ReputationToken(this.connector, this.accountManager, reputationTokenAddress, this.configuration.gasPrice);
 

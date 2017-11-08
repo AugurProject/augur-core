@@ -3,7 +3,7 @@ import { Account, generate, privateToAccount } from 'ethjs-account';
 import { Transaction } from 'ethjs-shared';
 import { sign } from 'ethjs-signer';
 import { Connector } from './Connector';
-import { Configuration } from './Configuration';
+import { Configuration } from '../tools/Configuration';
 
 export class AccountManager {
     private readonly connector: Connector;

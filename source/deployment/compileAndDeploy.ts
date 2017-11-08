@@ -1,5 +1,5 @@
-import { Configuration } from '../libraries/Configuration';
-import { ContractCompiler } from '../libraries/ContractCompiler';
+import { Configuration } from '../tools/Configuration';
+import { ContractCompiler } from '../tools/ContractCompiler';
 import { ContractDeployer } from '../libraries/ContractDeployer';
 import { Connector } from '../libraries/Connector';
 import { AccountManager } from '../libraries/AccountManager';

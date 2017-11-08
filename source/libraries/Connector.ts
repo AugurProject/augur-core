@@ -1,7 +1,7 @@
 import EthjsHttpProvider = require('ethjs-provider-http');
 import EthjsQuery = require('ethjs-query');
 import { TransactionReceipt } from 'ethjs-shared';
-import { Configuration } from './Configuration';
+import { Configuration } from '../tools/Configuration';
 import { sleep } from './HelperFunctions';
 
 export class Connector {

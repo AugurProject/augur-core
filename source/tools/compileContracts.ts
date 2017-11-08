@@ -1,5 +1,5 @@
-import { Configuration } from '../libraries/Configuration';
-import { ContractCompiler } from "../libraries/ContractCompiler";
+import { Configuration } from '../tools/Configuration';
+import { ContractCompiler } from "../tools/ContractCompiler";
 require('source-map-support').install();
 
 async function doWork(): Promise<void> {
