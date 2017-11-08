@@ -297,7 +297,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         require(getReportingState() == ReportingState.AWAITING_NO_REPORT_MIGRATION);
         IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
         migrateReportingWindow(_newReportingWindow);
-        return false;
+        return true;
     }
 
     function migrateThroughAllForks() public onlyInGoodTimes returns (bool) {
