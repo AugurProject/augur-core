@@ -3,12 +3,11 @@
   "rules": {
     "imports-on-top": 0,
     "variable-declarations": 0,
-    "indentation": [0, 4],
+    "indentation": ["error", 4],
     "quotes": [2, "double"],
     "no-empty-blocks": 0,
     "arg-overflow": 0,
     "uppercase": 0,
-    "operator-whitespace": 0,
-    "function-whitespace": 0
+    "operator-whitespace": 0
   }
 }

@@ -1,3 +1,1 @@
- - Once https://github.com/duaraghav8/Solium/issues/116 is fixed re-enable solium linting for indentation
  - Once https://github.com/duaraghav8/Solium/issues/106 is fixed re-enable solium linting for assignment operator spacing
- - Once https://github.com/duaraghav8/Solium/issues/104 is fixed re-enable solium linting for function whitespace
