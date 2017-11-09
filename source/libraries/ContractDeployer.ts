@@ -93,7 +93,11 @@ export class ContractDeployer {
 
         const promises: Array<Promise<void>> = [];
         for (let contract of this.contracts) {
-            promises.push(this.upload(contract));
+            // Avoid fail-fast behavior of Promise.all by catchign all errors here
+            promises.push(this.upload(contract).catch((e) => {
+                console.log(`Error uploading ${contract.contractName}`, e);
+                return e;
+            }));
         }
 
         await Promise.all(promises);
