@@ -42,7 +42,7 @@ export class ContractDeployer {
         if (!this.contracts.has(contractName)) throw new Error(`Contract named ${contractName} does not exist.`);
         const contract = this.contracts.get(contractName);
         if (contract.address === undefined) throw new Error(`Contract name ${contractName} has not yet been uploaded.`);
-        const controlled = ContractFactory(this.connector, this.accountManager, contract.contractName, contract.address, this.configuration.gasPrice);
+        const controlled = ContractFactory(this.connector, this.accountManager, contract.address, this.configuration.gasPrice);
         return controlled;
     }
 
