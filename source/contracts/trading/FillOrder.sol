@@ -246,8 +246,7 @@ library Trade {
     function getTokensDepleted(Data _data, Direction _direction, uint256 _startingSharesToBuy, uint256 _endingSharesToBuy) internal pure returns (uint256) {
         return _startingSharesToBuy
             .sub(_endingSharesToBuy)
-            .mul((_direction == Direction.Long) ? _data.order.sharePriceLong : _data.order.sharePriceShort)
-        ; // move semicolon up a line when https://github.com/duaraghav8/Solium/issues/110 is fixed
+            .mul((_direction == Direction.Long) ? _data.order.sharePriceLong : _data.order.sharePriceShort);
     }
 
     function getTokensToCover(Data _data, Direction _direction, uint256 _numShares) internal pure returns (uint256) {
@@ -338,8 +337,7 @@ library Trade {
     function getDirections(IOrders _orders, bytes32 _orderId) private view returns (Direction _creatorDirection, Direction _fillerDirection) {
         return (_orders.getOrderType(_orderId) == Order.Types.Bid)
             ? (Direction.Long, Direction.Short)
-            : (Direction.Short, Direction.Long)
-        ; // move semicolon up a line when https://github.com/duaraghav8/Solium/issues/110 is fixed
+            : (Direction.Short, Direction.Long);
     }
 
     function getFillerSharesToSell(IShareToken _longShareToken, IShareToken[] memory _shortShareTokens, address _filler, Direction _fillerDirection, uint256 _fillerSize) private view returns (uint256) {
