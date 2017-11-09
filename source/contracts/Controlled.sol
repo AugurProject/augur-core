@@ -50,8 +50,8 @@ contract Controlled is IControlled {
             require(_token.transfer(_target, _balance));
         }
 
-        // Transfer Eth to target and terminate contract
-        selfdestruct(_target);
+        // Transfer Eth to target
+        require(_target.call.value(this.balance)());
         return true;
     }
 }
