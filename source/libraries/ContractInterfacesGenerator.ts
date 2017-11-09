@@ -15,19 +15,14 @@ export class ContractInterfaceGenerator {
     }
 
     public async generateContractInterfaces(): Promise<String> {
-
         const contractsOutput: CompilerOutput = await this.compiler.compileContracts();
-
         const fileContents: String = this.contractInterfacesTemplate(contractsOutput.contracts);
-
         await fs.writeFile(this.configuration.contractInterfacesOutputPath, fileContents);
-
         return fileContents;
     }
 
     private contractInterfacesTemplate(contracts: CompilerOutputContracts) {
-
-        let contractInterfaces: Array<string> = [];
+        const contractInterfaces: Array<string> = [];
 
         // We add Controlled first to let other contracts inherit from it
         contractInterfaces.push(this.contractInterfaceTemplate("Controlled", contracts["Controlled.sol"]["Controlled"].abi));
@@ -94,10 +89,10 @@ export class ContractInterfaceGenerator {
     }
 
     private contractInterfaceTemplate(contractName: String, contractAbi: Abi) {
-        let contractMethods: Array<String> = [];
+        const contractMethods: Array<String> = [];
 
         // Typescript doesn't allow the same name for a function. We only have one existing case for function overloading in a class and it has the same signature, so this is ok at the moment.
-        let seen: Set<string> = new Set();
+        const seen: Set<string> = new Set();
 
         const contractFunctions: Array<AbiFunction> = contractAbi
             .filter(v => v.type == "function")
@@ -112,7 +107,7 @@ export class ContractInterfaceGenerator {
             seen.add(abiFunction.name);
         }
 
-        let extendsControlled: boolean = seen.has("getController") && contractName != "Controlled";
+        const extendsControlled: boolean = seen.has("getController") && contractName != "Controlled";
 
         return `export class ${contractName} extends ${extendsControlled ? "Controlled" : "Contract"} {
     public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
@@ -125,9 +120,9 @@ ${contractMethods.join("\n\n")}
     }
 
     private remoteMethodTemplate(abiFunction: AbiFunction) {
-        let argNames: String = this.getArgNamesString(abiFunction);
-        let params: String = this.getParamsString(abiFunction);
-        let options: String = `{ sender?: string, gasPrice?: BN${abiFunction.payable ? ", attachedEth?: BN" : ""} }`;
+        const argNames: String = this.getArgNamesString(abiFunction);
+        const params: String = this.getParamsString(abiFunction);
+        const options: String = `{ sender?: string, gasPrice?: BN${abiFunction.payable ? ", attachedEth?: BN" : ""} }`;
         return `    public ${abiFunction.name} = async(${params} options?: ${options}): Promise<string> => {
         options = options || {};
         const abi: AbiFunction = ${JSON.stringify(abiFunction)};
@@ -136,12 +131,12 @@ ${contractMethods.join("\n\n")}
     }
 
     private localMethodTemplate(abiFunction: AbiFunction) {
-        let argNames: String = this.getArgNamesString(abiFunction);
-        let params: String = this.getParamsString(abiFunction);
-        let options: String = `{ sender?: string${abiFunction.payable ? ", attachedEth?: BN" : ""} }`;
-        let returnType: String = this.getTsTypeFromPrimitive(abiFunction.outputs[0].type, true);
-        let returnPromiseType: String = abiFunction.outputs.length == 1 ? returnType : "Array<string>";
-        let returnValue: String = abiFunction.outputs.length == 1 ? `<${returnType}>result[0]` : "<Array<string>>result";
+        const argNames: String = this.getArgNamesString(abiFunction);
+        const params: String = this.getParamsString(abiFunction);
+        const options: String = `{ sender?: string${abiFunction.payable ? ", attachedEth?: BN" : ""} }`;
+        const returnType: String = this.getTsTypeFromPrimitive(abiFunction.outputs[0].type);
+        const returnPromiseType: String = abiFunction.outputs.length == 1 ? returnType : "Array<string>";
+        const returnValue: String = abiFunction.outputs.length == 1 ? `<${returnType}>result[0]` : "<Array<string>>result";
         return `    public ${abiFunction.name}_ = async(${params} options?: ${options}): Promise<${returnPromiseType}> => {
         options = options || {};
         const abi: AbiFunction = ${JSON.stringify(abiFunction)};
@@ -150,13 +145,13 @@ ${contractMethods.join("\n\n")}
     }`;
     }
 
-    private getTsTypeFromPrimitive(abiType: Primitive, forReturnValue?: boolean) {
+    private getTsTypeFromPrimitive(abiType: Primitive) {
         switch(abiType) {
             case 'uint8':
             case 'uint64':
             case 'uint256':
             case 'int256': {
-                return forReturnValue ? 'BN' : 'BN|number';
+                return 'BN';
             }
             case 'string':
             case 'address':
@@ -172,7 +167,7 @@ ${contractMethods.join("\n\n")}
                 return 'Array<string>'
             }
             case 'uint256[]': {
-                return forReturnValue ? 'Array<BN>' : 'Array<BN|number>';
+                return 'Array<BN>';
             }
             default: {
                 throw "Unrecognized Value: " + abiType;
