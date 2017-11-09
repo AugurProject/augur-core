@@ -9,5 +9,6 @@ COPY tsconfig.json /app/tsconfig.json
 COPY typings/ /app/typings/
 COPY source/ /app/source/
 RUN npx tsc
+RUN node ./output/deployment/compileContracts.js
 
 ENTRYPOINT [ "node", "output/deployment/deployContracts.js" ]
