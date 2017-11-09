@@ -21,11 +21,11 @@ contract MockVariableSupplyToken is MockStandardToken {
     function setBalanceOf(uint256 _balance) public {
         setBalanceOfValue = _balance;
     }
-    
+
     function getTransferToValue() public returns(address) {
         return transferToValue;
     }
-    
+
     function getTransferValueValue() public returns(uint256) {
         return transferValueValue;
     }
@@ -42,16 +42,16 @@ contract MockVariableSupplyToken is MockStandardToken {
         transferAmounts = [0];
         transferAddresses = [0];
     }
-    
+
     function getTransferValueFor(address _to) public returns(uint256) {
-       for (uint8 j = 0; j < transferAddresses.length; j++) {
+        for (uint8 j = 0; j < transferAddresses.length; j++) {
             if (transferAddresses[j] == _to) {
                 return transferAmounts[j];
             }
         }
         return 0;
     }
-    
+
     function setBalanceOfValueFor(address _to, uint256 _value) public returns(uint256) {
         balanceOfAmounts.push(_value);
         balanceOfAddresses.push(_to);
@@ -60,11 +60,11 @@ contract MockVariableSupplyToken is MockStandardToken {
     function setTotalSupply(uint256 _totalSupply) public {
         setTotalSupplyValue = _totalSupply;
     }
-    
+
     function getTransferFromFromValue() public returns(address) {
         return transferFromFromValue;
     }
-    
+
     function getTransferFromToValue() public returns (address) {
         return transferFromToValue;
     }
@@ -82,14 +82,14 @@ contract MockVariableSupplyToken is MockStandardToken {
     }
 
     function balanceOf(address _owner) public view returns (uint256) {
-       for (uint8 j = 0; j < balanceOfAddresses.length; j++) {
+        for (uint8 j = 0; j < balanceOfAddresses.length; j++) {
             if (balanceOfAddresses[j] == _owner) {
                 return balanceOfAmounts[j];
             }
         }
         return setBalanceOfValue;
     }
-    
+
     function transfer(address _to, uint256 _value) public returns (bool) {
         transferToValue = _to;
         transferValueValue = _value;
@@ -97,7 +97,7 @@ contract MockVariableSupplyToken is MockStandardToken {
         transferAddresses.push(_to);
         return true;
     }
-    
+
     function totalSupply() public view returns (uint256) {
         return setTotalSupplyValue;
     }

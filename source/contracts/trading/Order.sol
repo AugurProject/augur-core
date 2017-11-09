@@ -88,7 +88,7 @@ library Order {
             _orderData.id = _orderId;
         }
         return _orderData.id;
-     }
+    }
 
     function getOrderTradingTypeFromMakerDirection(Order.TradeDirections _creatorDirection) internal pure returns (Order.Types) {
         return (_creatorDirection == Order.TradeDirections.Long) ? Order.Types.Bid : Order.Types.Ask;
