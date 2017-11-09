@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import * as fs from "async-file";
 import readFile = require('fs-readfile-promise');
 import asyncMkdirp = require('async-mkdirp');
@@ -42,15 +40,16 @@ export class ContractCompiler {
             }
             throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
         }
+        const filteredCompilerOutput = this.filterCompilerOutput(compilerOutput);
 
         // Create output directory (if it doesn't exist)
         await asyncMkdirp(path.dirname(this.configuration.contractOutputPath));
 
         // Output contract data to single file
         const contractOutputFilePath = this.configuration.contractOutputPath;
-        await fs.writeFile(contractOutputFilePath, JSON.stringify(compilerOutput, null, '\t'));
+        await fs.writeFile(contractOutputFilePath, JSON.stringify(filteredCompilerOutput, null, '\t'));
 
-        return compilerOutput;
+        return filteredCompilerOutput;
     }
 
     public async generateCompilerInput(): Promise<CompilerInput> {
@@ -82,5 +81,33 @@ export class ContractCompiler {
         }
 
         return inputJson;
+    }
+
+    private filterCompilerOutput(compilerOutput: CompilerOutput): CompilerOutput {
+        const result: CompilerOutput = { contracts: {} };
+        for (let relativeFilePath in compilerOutput.contracts) {
+            for (let contractName in compilerOutput.contracts[relativeFilePath]) {
+                // don't include libraries
+                if (relativeFilePath.startsWith('libraries/') && contractName !== 'Delegator') continue;
+                // don't include embedded libraries
+                if (!relativeFilePath.endsWith(`${contractName}.sol`)) continue;
+                const abi = compilerOutput.contracts[relativeFilePath][contractName].abi;
+                if (abi === undefined) continue;
+                const bytecode = compilerOutput.contracts[relativeFilePath][contractName].evm.bytecode.object;
+                if (bytecode === undefined) continue;
+                // don't include interfaces
+                if (/^I[A-Z].*/.test(contractName)) continue;
+                // TODO: turn this into an error once we establish naming convention for abstract methods
+                if (bytecode.length === 0) continue;
+
+                result.contracts[relativeFilePath] = {
+                    [contractName]: {
+                        abi: abi,
+                        evm: { bytecode: { object: bytecode } }
+                    }
+                }
+            }
+        }
+        return result;
     }
 }

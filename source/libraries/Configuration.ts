@@ -9,17 +9,19 @@ export class Configuration {
     public readonly privateKey: string;
     public readonly contractSourceRoot: string;
     public readonly contractOutputPath: string;
+    public readonly contractAddressesOutputPath: string;
     public readonly contractInterfacesOutputPath: string;
     public readonly controllerAddress: string|undefined;
 
-    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputPath: string, contractInterfacesOutputPath: string, controllerAddress: string|undefined) {
+    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputRoot: string, controllerAddress: string|undefined) {
         this.httpProviderHost = host;
         this.httpProviderPort = port;
         this.gasPrice = gasPrice;
         this.privateKey = privateKey;
         this.contractSourceRoot = contractSourceRoot;
-        this.contractOutputPath = contractOutputPath;
-        this.contractInterfacesOutputPath = contractInterfacesOutputPath;
+        this.contractOutputPath = path.join(contractOutputRoot, 'contracts.json');
+        this.contractAddressesOutputPath = path.join(contractOutputRoot, 'addresses.json');
+        this.contractInterfacesOutputPath = path.join(contractSourceRoot, 'libraries', 'ContractInterfaces.ts');
         this.controllerAddress = controllerAddress;
     }
 
@@ -29,10 +31,9 @@ export class Configuration {
         const gasPrice = (typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? new BN(20) : new BN(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH!).mul(new BN(1000000000));
         const privateKey = process.env.ETHEREUM_PRIVATE_KEY || '0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d';
         const contractSourceRoot = path.join(__dirname, "../../source/contracts/");
-        const contractOutputPath = path.join(__dirname, "../../output/contracts/contracts.json");
-        const contractInterfacesOutputPath = path.join(__dirname, "../../source/libraries/ContractInterfaces.ts");
+        const contractOutputRoot = path.join(__dirname, "../../output/contracts/");
         const controllerAddress = process.env.AUGUR_CONTROLLER_ADDRESS;
 
-        return new Configuration(host, port, gasPrice, privateKey, contractSourceRoot, contractOutputPath, contractInterfacesOutputPath, controllerAddress);
+        return new Configuration(host, port, gasPrice, privateKey, contractSourceRoot, contractOutputRoot, controllerAddress);
     }
 }
