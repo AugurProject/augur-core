@@ -2,7 +2,7 @@
 
 import { ContractCompiler } from "../libraries/ContractCompiler";
 import { Configuration } from '../libraries/Configuration';
-import { generateContractInterfaces } from '../libraries/ContractInterfacesGenerator';
+import { ContractInterfaceGenerator } from '../libraries/ContractInterfacesGenerator';
 
 async function doWork(): Promise<void> {
 
@@ -10,7 +10,9 @@ async function doWork(): Promise<void> {
 
     const compiler: ContractCompiler = new ContractCompiler(configuration);
 
-    generateContractInterfaces(compiler, configuration);
+    const interfacesGenerator: ContractInterfaceGenerator = new ContractInterfaceGenerator(configuration, compiler);
+
+    interfacesGenerator.generateContractInterfaces();
 }
 
 doWork().then(() => {
