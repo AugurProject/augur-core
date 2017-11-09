@@ -13,7 +13,6 @@
     "security/no-low-level-calls": 0,
     "security/no-inline-assembly": 0,
     "security/no-call-value": 0,
-    "security/no-block-members": 0,
-    "security/enforce-explicit-visibility": 0
+    "security/no-block-members": 0
   }
 }
