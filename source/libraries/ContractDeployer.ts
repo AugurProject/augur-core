@@ -1,9 +1,8 @@
-#!/usr/bin/env node
-
 import BN = require('bn.js');
 import { hash } from 'crypto-promise';
 import { Repository } from 'nodegit';
 import { resolve as resolvePath } from 'path';
+import { writeFile } from "async-file";
 import { encodeParams } from 'ethjs-abi';
 import { TransactionReceipt } from 'ethjs-shared';
 import { stringTo32ByteHex } from "./HelperFunctions";
@@ -36,6 +35,7 @@ export class ContractDeployer {
         await this.whitelistTradingContracts();
         await this.initializeAllContracts();
         this.universe = await this.createGenesisUniverse();
+        await this.generateAddressMappingFile();
     }
 
     public getContract = (contractName: string): Controlled => {
@@ -191,11 +191,33 @@ export class ContractDeployer {
 
     private async createGenesisUniverse(): Promise<Universe> {
         console.log('Creating genesis universe...');
+        // we have to manually upload because Geth's gas estimation appears to be broken when instantiating a contract as part of a call: https://github.com/ethereum/go-ethereum/issues/1590#issuecomment-338751085
         const delegatorAddress = await this.construct(this.contracts.get('Delegator'), [ this.controller.address, stringTo32ByteHex('Universe') ], `Instantiating genesis universe.`);
         const universe = new Universe(this.connector, this.accountManager, delegatorAddress, this.configuration.gasPrice);
         const transactionHash = await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000000000000000000000000000");
         await this.connector.waitForTransactionReceipt(transactionHash, `Initializing universe.`);
         console.log(`Genesis universe address: ${universe.address}`);
         return universe;
+    }
+
+    private async generateAddressMapping(): Promise<string> {
+        const mapping: { [name: string]: string } = {};
+        mapping['Controller'] = this.controller.address;
+        mapping['Universe'] = this.universe.address;
+        if (this.contracts.get('Augur').address === undefined) throw new Error(`Augur not uploaded.`);
+        mapping['Augur'] = this.contracts.get('Augur').address!;
+        for (let contract of this.contracts) {
+            if (!contract.relativeFilePath.startsWith('trading/')) continue;
+            if (/^I[A-Z].*/.test(contract.contractName)) continue;
+            if (contract.address === undefined) throw new Error(`${contract.contractName} not uploaded.`);
+            mapping[contract.contractName] = contract.address;
+        }
+        const networkId = await this.connector.ethjsQuery.net_version();
+        return JSON.stringify({ [networkId]: mapping }, null, '\t');
+    }
+
+    private async generateAddressMappingFile(): Promise<void> {
+        const addressMappingJson = await this.generateAddressMapping();
+        await writeFile(this.configuration.contractAddressesOutputPath, addressMappingJson, 'utf8')
     }
 }
