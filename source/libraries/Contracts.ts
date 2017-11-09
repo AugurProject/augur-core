@@ -20,6 +20,7 @@ export class Contracts implements Iterable<Contract> {
     private readonly contracts = new Map<string, Contract>();
 
     public constructor(compilerOutput: CompilerOutput) {
+        console.log(`Processing ${compilerOutput.contracts.length}`)
         for (let relativeFilePath in compilerOutput.contracts) {
             for (let contractName in compilerOutput.contracts[relativeFilePath]) {
                 const bytecode = Buffer.from(compilerOutput.contracts[relativeFilePath][contractName].evm.bytecode.object, 'hex');
