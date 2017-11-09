@@ -161,7 +161,7 @@ export class ContractDeployer {
             }
         }
 
-        await Promise.all(promises);
+        await resolveAll(promises);
     }
 
     private async whitelistContract(contractName: string): Promise<TransactionReceipt> {
@@ -177,7 +177,7 @@ export class ContractDeployer {
             promises.push(this.initializeContract(contractName));
         }
 
-        await Promise.all(promises);
+        await resolveAll(promises);
     }
 
     private async initializeContract(contractName: string): Promise<TransactionReceipt|void> {

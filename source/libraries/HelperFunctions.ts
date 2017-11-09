@@ -6,7 +6,7 @@ export async function sleep(milliseconds: number): Promise<void> {
     return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 }
 
-export async function resolveAll(promises: Array<Promise<void>>) {
+export async function resolveAll(promises: Iterable<Promise<any>>) {
     let firstError: Error|null = null;
     for (let promise of promises) {
         try {
