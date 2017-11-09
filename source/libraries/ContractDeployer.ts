@@ -5,7 +5,7 @@ import { resolve as resolvePath } from 'path';
 import { writeFile } from "async-file";
 import { encodeParams } from 'ethjs-abi';
 import { TransactionReceipt } from 'ethjs-shared';
-import { stringTo32ByteHex } from "./HelperFunctions";
+import { stringTo32ByteHex, resolveAll } from "./HelperFunctions";
 import { CompilerOutput } from "solc";
 import { Abi, AbiFunction } from 'ethereum';
 import { Configuration } from './Configuration';
@@ -90,17 +90,8 @@ export class ContractDeployer {
 
     private async uploadAllContracts(): Promise<void> {
         console.log('Uploading contracts...');
-
-        const promises: Array<Promise<void>> = [];
-        for (let contract of this.contracts) {
-            // Avoid fail-fast behavior of Promise.all by catchign all errors here
-            promises.push(this.upload(contract).catch((e) => {
-                console.log(`Error uploading ${contract.contractName}`, e);
-                return e;
-            }));
-        }
-
-        await Promise.all(promises);
+        const promises = [...this.contracts].map(this.upload);
+        await resolveAll(promises);
     }
 
     private async upload(contract: Contract): Promise<void> {

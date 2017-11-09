@@ -5,3 +5,16 @@ export function stringTo32ByteHex(stringToEncode: string): string {
 export async function sleep(milliseconds: number): Promise<void> {
     return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 }
+
+export async function resolveAll(promises: Array<Promise<void>>) {
+    let firstError: Error|null = null;
+    for (let promise of promises) {
+        try {
+            await promise;
+        } catch(e) {
+            firstError = firstError || e;
+        }
+    }
+    if (firstError !== null) throw firstError;
+}
+
