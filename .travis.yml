@@ -11,9 +11,9 @@ before_deploy: "./.travis/deploy-setup.sh"
 deploy:
 - skip_cleanup: true
   provider: script
-  script: ".travis/deploy.sh staging"
+  script: ".travis/deploy.sh rinkeby"
   on:
-    branch: develop
+    branch: master
 git:
   depth: 5
 env:
