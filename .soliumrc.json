@@ -4,15 +4,28 @@
   "rules": {
     "imports-on-top": 0,
     "variable-declarations": 0,
-    "indentation": ["error", 4],
-    "quotes": [2, "double"],
     "no-empty-blocks": 0,
     "arg-overflow": 0,
     "uppercase": 0,
     "operator-whitespace": 0,
+    "array-declarations": "error",
+    "indentation": ["error", 4],
+    "quotes": ["error", "double"],
+    "conditionals-whitespace": "error",
+    "comma-whitespace": "error",
+    "semicolon-whitespace": "error",
+    "function-whitespace": "error",
+    "lbrace": "error",
+    "mixedcase": "warning",
+    "camelcase": "warning",
+    "no-unused-vars": "error",
+    "blank-lines": "warning",
+    "whitespace": "warning",
+    "pragma-on-top": "warning",
     "security/no-low-level-calls": 0,
     "security/no-inline-assembly": 0,
     "security/no-call-value": 0,
-    "security/no-block-members": 0
+    "security/no-block-members": 0,
+    "security/enforce-explicit-visibility": "error"
   }
 }
