@@ -428,17 +428,17 @@ def test_market_try_finalize_forking(localFixture, chain, initializeMarket, cons
     assert initializeMarket.tryFinalize() == True
     assert initializeMarket.getFinalPayoutDistributionHash() == payoutStakeTokenHashTarget
 
-def test_market_migrate_due_to_no_reports(localFixture, initializeMarket, chain, mockReportingWindow, mockNextReportingWindow):
+def test_market_migrate_due_to_no_reports(localFixture, initializeMarket, chain, mockReportingWindow, mockNextReportingWindow, mockUniverse):
     with raises(TransactionFailed, message="reporting state needs to be AWAITING_NO_REPORT_MIGRATION"):
         initializeMarket.migrateDueToNoReports()
 
     chain.head_state.timestamp = mockNextReportingWindow.getEndTime()
-    assert initializeMarket.migrateDueToNoReports()
+    assert initializeMarket.migrateDueToNoReports() == True
 
     mockUniverse.setNextReportingWindow(mockNextReportingWindow.address)
-    assert mockReportingWindow.getUpdateMarketPhaseCalled() == True
     assert mockReportingWindow.getRemoveMarketCalled() == True
     assert mockNextReportingWindow.getMigrateMarketInFromSiblingCalled() == True
+    assert mockNextReportingWindow.getUpdateMarketPhaseCalled() == True
     assert initializeMarket.getReportingWindow() == mockNextReportingWindow.address
 
 def push_to_last_dispute(localFixture, initializeMarket, constants, mockAugur, mockReportingWindow, mockDisputeBondFactory, mockReputationToken, mockDisputeBond, chain, mockUniverse, mockStakeToken, mockStakeTokenFactory, mockNextReportingWindow, mockForkReportingWindow):
