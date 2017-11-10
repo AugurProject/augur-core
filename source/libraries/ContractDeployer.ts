@@ -90,7 +90,7 @@ export class ContractDeployer {
 
     private async uploadAllContracts(): Promise<void> {
         console.log('Uploading contracts...');
-        const promises = [...this.contracts].map(this.upload);
+        const promises = [...this.contracts].map(contract => this.upload(contract));
         await resolveAll(promises);
     }
 
