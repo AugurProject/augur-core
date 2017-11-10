@@ -15,7 +15,7 @@ contract DelegatorHelper is DelegationTarget, ITyped {
     uint256[] public uint256Array;
     DelegatorHelper private otherContract;
 
-    function getTypeName() view returns (bytes32) {
+    function getTypeName() public view returns (bytes32) {
         return "DelegatorHelper";
     }
 
@@ -99,29 +99,29 @@ contract DelegatorHelper is DelegationTarget, ITyped {
         return otherContract.name();
     }
 
-    function addToOtherMap(uint256 _key, uint256 _value) returns (bool) {
+    function addToOtherMap(uint256 _key, uint256 _value) public returns (bool) {
         return otherContract.addToMap(_key, _value);
     }
 
-    function getOtherMapValue(uint256 _key) returns (uint256) {
+    function getOtherMapValue(uint256 _key) public returns (uint256) {
         return otherContract.getMapValue(_key);
     }
 
-    function noInputReturn() returns (uint256) {
+    function noInputReturn() public returns (uint256) {
         return 1;
     }
 
-    function manyInputsNoReturn(uint256 _one, uint256 _two, uint256 _three, uint256 _four) {
+    function manyInputsNoReturn(uint256 _one, uint256 _two, uint256 _three, uint256 _four) public {
         return;
     }
 
-    function returnDynamic() returns (uint256[]) {
+    function returnDynamic() public returns (uint256[]) {
         uint256[] memory _retval = new uint256[](5);
         _retval[0] = 1;
         return _retval;
     }
 
-    function returnFixed() returns (uint256[5] _retval) {
+    function returnFixed() public returns (uint256[5] _retval) {
         _retval[0] = 1;
         return _retval;
     }
