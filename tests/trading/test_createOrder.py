@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
-from utils import bytesToLong, longTo32Bytes, longToHexString, bytesToHexString, fix, unfix, captureFilteredLogs
+from utils import bytesToLong, longTo32Bytes, longToHexString, bytesToHexString, fix, unfix, captureFilteredLogs, EtherDelta
 from uuid import uuid4
 from constants import BID, ASK, YES, NO
 
@@ -165,3 +165,15 @@ def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     assert orders.getOrderCreator(orderID) == bytesToHexString(tester.a1)
     assert orders.getOrderMoneyEscrowed(orderID) == fix('0.4')
     assert orders.getOrderSharesEscrowed(orderID) == 2
+
+def test_duplicate_creation_transaction(contractsFixture, cash, market):
+    orders = contractsFixture.contracts['Orders']
+    createOrder = contractsFixture.contracts['CreateOrder']
+
+    with EtherDelta(-10**17, tester.a0, contractsFixture.chain):
+        orderID = createOrder.publicCreateOrder(BID, 1, 10**17, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 10**17)
+
+    assert orderID
+
+    with raises(TransactionFailed):
+        createOrder.publicCreateOrder(BID, 1, 10**17, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 10**17)
