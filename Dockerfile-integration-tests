@@ -12,6 +12,10 @@ COPY source/libraries/Configuration.ts /app/source/libraries/Configuration.ts
 COPY source/libraries/ContractCompiler.ts /app/source/libraries/ContractCompiler.ts
 RUN npx tsc
 RUN node ./output/deployment/compileContracts.js
+COPY source/libraries/ContractInterfacesGenerator.ts /app/source/libraries/ContractInterfacesGenerator.ts
+COPY source/tools/generateContractInterfaces.ts /app/source/tools/generateContractInterfaces.ts
+RUN npx tsc
+RUN node ./output/tools/generateContractInterfaces.js
 
 COPY source/ /app/source/
 # necessary so the script can get the commit hash of head

@@ -170,7 +170,7 @@ contract MockMarket is IMarket {
         migrateDueToNoRep = _migrateDueToNoRep;
     }
 
-    function setIsContainerForStakeToken(bool _isContForStakeToken) {
+    function setIsContainerForStakeToken(bool _isContForStakeToken) public {
         isContForStakeToken = _isContForStakeToken;
     }
 
@@ -273,11 +273,11 @@ contract MockMarket is IMarket {
     function setMigrateDueToNoReportsNextState(IReportingWindow _reportingWindow) public {
         setMigrateDueToNoReportsNextStateValue = _reportingWindow;
     }
-    
+
     function callTrustedMarketTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
         return _reputationToken.trustedMarketTransfer(_source, _destination, _attotokens);
     }
-    
+
     function setExtraDisputeBondRemainingToBePaidOut(uint256 _setExtraDisputeBondRemainingToBePaidOutValue) public {
         setExtraDisputeBondRemainingToBePaidOutValue = _setExtraDisputeBondRemainingToBePaidOutValue;
     }

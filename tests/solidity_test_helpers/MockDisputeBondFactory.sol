@@ -23,8 +23,8 @@ contract MockDisputeBondFactory {
     }
 
     function getCreateDisputeBondAmountValue() public returns(uint256) {
-         return createDisputeBondAmountValue;
-     }
+        return createDisputeBondAmountValue;
+    }
 
     function getCreateDisputeBondPayoutDistributionHash() public returns(bytes32) {
         return createDisputeBondPayoutDistributionHash;

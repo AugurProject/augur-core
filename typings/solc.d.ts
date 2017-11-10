@@ -30,9 +30,9 @@ declare module 'solc' {
     }
     interface CompilerOutputEvmBytecode {
         object: string;
-        opcodes: string;
-        sourceMap: string;
-        linkReferences: {} | {
+        opcodes?: string;
+        sourceMap?: string;
+        linkReferences?: {} | {
             [globalName: string]: {
                 [name: string]: {start: number, length: number}[];
             };
@@ -49,19 +49,19 @@ declare module 'solc' {
         [globalName: string]: {
             [contractName: string]: {
                 abi: Abi;
-                metadata: string;
-                userdoc: any;
-                devdoc: any;
-                ir: string;
+                metadata?: string;
+                userdoc?: any;
+                devdoc?: any;
+                ir?: string;
                 evm: {
-                    assembly: string;
-                    legacyAssembly: any;
+                    assembly?: string;
+                    legacyAssembly?: any;
                     bytecode: CompilerOutputEvmBytecode;
-                    deployedBytecode: CompilerOutputEvmBytecode;
-                    methodIdentifiers: {
+                    deployedBytecode?: CompilerOutputEvmBytecode;
+                    methodIdentifiers?: {
                         [methodName: string]: string;
                     };
-                    gasEstimates: {
+                    gasEstimates?: {
                         creation: {
                             codeDepositCost: string;
                             executionCost: string;
@@ -75,7 +75,7 @@ declare module 'solc' {
                         };
                     };
                 };
-                ewasm: {
+                ewasm?: {
                     wast: string;
                     wasm: string;
                 }
@@ -84,7 +84,7 @@ declare module 'solc' {
     }
     interface CompilerOutput {
         errors?: CompilerOutputError[];
-        sources: CompilerOutputSources;
+        sources?: CompilerOutputSources;
         contracts: CompilerOutputContracts;
     }
     type ReadCallback = (path: string) => { contents?: string, error?: string};

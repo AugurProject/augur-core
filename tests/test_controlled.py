@@ -29,8 +29,7 @@ def test_suicide(controlled, token, chain):
         controlled.suicideFunds(tester.a1, [], sender=tester.k1)
     with raises(TransactionFailed):
         controlled.suicideFunds(tester.a1, [tester.a1], sender=tester.k0)
-    # self destructs so no return value
-    controlled.suicideFunds(tester.a0, [token.address], sender=tester.k0)
+    assert controlled.suicideFunds(tester.a0, [token.address], sender=tester.k0)
 
     assert chain.head_state.get_balance(controlled.address) == 0
     assert chain.head_state.get_balance(tester.a0) == startBalance + 11

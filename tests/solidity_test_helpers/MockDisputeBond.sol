@@ -71,7 +71,7 @@ contract MockDisputeBond is ITyped, IDisputeBond, Ownable {
     /*
     * Impl of IReportingWindow and ITyped
      */
-     function getTypeName() constant public returns (bytes32) {
+    function getTypeName() constant public returns (bytes32) {
         return "DisputeBond";
     }
 
