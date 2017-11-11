@@ -7,7 +7,6 @@ pragma solidity 0.4.17;
 
 import 'trading/IOrdersFetcher.sol';
 import 'Controlled.sol';
-import 'libraries/arrays/Bytes32Arrays.sol';
 import 'trading/Order.sol';
 import 'reporting/IMarket.sol';
 import 'trading/IOrders.sol';
@@ -18,8 +17,6 @@ import 'libraries/Extractable.sol';
  * @title OrdersFetcher
  */
 contract OrdersFetcher is Controlled, Extractable, IOrdersFetcher {
-    using Bytes32Arrays for bytes32[];
-
     function ascendOrderList(Order.Types _type, uint256 _price, bytes32 _lowestOrderId) public view returns (bytes32 _betterOrderId, bytes32 _worseOrderId) {
         _worseOrderId = _lowestOrderId;
         bool _isWorstPrice;
