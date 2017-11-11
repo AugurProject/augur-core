@@ -133,6 +133,7 @@ library Trade {
         // update available assets for creator and filler
         _data.creator.sharesToSell -= _numberOfSharesToTrade;
         _data.filler.sharesToBuy -= _numberOfSharesToTrade;
+        return true;
     }
 
     function tradeMakerTokensForFillerShares(Data _data) internal returns (bool) {
@@ -157,6 +158,7 @@ library Trade {
         // update available assets for creator and filler
         _data.creator.sharesToBuy -= _numberOfSharesToTrade;
         _data.filler.sharesToSell -= _numberOfSharesToTrade;
+        return true;
     }
 
     function tradeMakerTokensForFillerTokens(Data _data) internal returns (bool) {
@@ -189,6 +191,7 @@ library Trade {
 
         _data.creator.sharesToBuy -= _numberOfCompleteSets;
         _data.filler.sharesToBuy -= _numberOfCompleteSets;
+        return true;
     }
 
     //
