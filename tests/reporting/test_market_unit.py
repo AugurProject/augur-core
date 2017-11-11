@@ -443,10 +443,12 @@ def test_market_migrate_due_to_no_reports(localFixture, initializeMarket, chain,
 
 def test_market_migrate_through_one_fork(localFixture, initializeMarket, constants, mockMarket, mockUniverse, mockReportingWindow, mockNextReportingWindow):
     mockNewReportingWindow = mockNextReportingWindow
+    newMarket = localFixture.upload('../source/contracts/reporting/Market.sol', 'newMarket')
     with raises(TransactionFailed, message="market state has to be AWAITING_FORK_MIGRATION"):
-        initializeMarket.migrateThroughOneFork()
+        newMarket.migrateThroughOneFork()
 
     mockUniverse.setForkingMarket(mockMarket.address)
+    mockReportingWindow.setIsForkingMarketFinalized(False)
     with raises(TransactionFailed, message="fork has not be finalized"):
         initializeMarket.migrateThroughOneFork()
 
