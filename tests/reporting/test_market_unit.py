@@ -441,6 +441,30 @@ def test_market_migrate_due_to_no_reports(localFixture, initializeMarket, chain,
     assert mockNextReportingWindow.getUpdateMarketPhaseCalled() == True
     assert initializeMarket.getReportingWindow() == mockNextReportingWindow.address
 
+def test_market_migrate_through_one_fork(localFixture, initializeMarket, constants, mockMarket, mockUniverse, mockReportingWindow, mockNextReportingWindow):
+    mockNewReportingWindow = mockNextReportingWindow
+    with raises(TransactionFailed, message="market state has to be AWAITING_FORK_MIGRATION"):
+        initializeMarket.migrateThroughOneFork()
+
+    mockUniverse.setForkingMarket(mockMarket.address)
+    with raises(TransactionFailed, message="fork has not be finalized"):
+        initializeMarket.migrateThroughOneFork()
+
+    mockReportingWindow.setIsForkingMarketFinalized(True)
+    mockMarket.setFinalPayoutDistributionHash(stringToBytes("blahblahblah"))
+    mockNewUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'mockNewUniverse');
+    mockUniverse.setOrCreateChildUniverse(mockNewUniverse.address)
+    mockNewUniverse.setReportingWindowByMarketEndTime(mockNewReportingWindow.address)
+
+    assert initializeMarket.migrateThroughOneFork() == True
+    assert mockReportingWindow.getRemoveMarketCalled() == True
+    assert mockNewReportingWindow.getMigrateMarketInFromNiblingCalled() == True
+    assert initializeMarket.getDesignatedReporterDisputeBond() == longToHexString(0)
+    assert initializeMarket.getFirstReportersDisputeBond() == longToHexString(0)
+    assert initializeMarket.getLastReportersDisputeBond() == longToHexString(0)
+    assert initializeMarket.getTentativeWinningPayoutDistributionHash() == initializeMarket.getDesignatedReportPayoutHash()
+
+
 def push_to_last_dispute(localFixture, initializeMarket, constants, mockAugur, mockReportingWindow, mockDisputeBondFactory, mockReputationToken, mockDisputeBond, chain, mockUniverse, mockStakeToken, mockStakeTokenFactory, mockNextReportingWindow, mockForkReportingWindow):
     numTicks = 10 ** 10
     push_to_designated_despute_state(localFixture, mockUniverse, chain, initializeMarket, mockStakeToken, [0, numTicks, 0, 0, 0], mockStakeTokenFactory, mockReportingWindow, mockReputationToken, constants)
