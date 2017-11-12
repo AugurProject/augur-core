@@ -177,6 +177,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
         trustedTransferSourceValue = _source;
         trustedTransferDestinationValue = _destination;
         trustedTransferAttotokensValue = _attotokens;
+        transfer(_destination, _attotokens);
         return setTrustedTransferValue;
     }
 
