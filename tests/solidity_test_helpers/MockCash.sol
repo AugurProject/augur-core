@@ -13,6 +13,13 @@ contract MockCash is ITyped, MockVariableSupplyToken, ICash {
     address private withdrawEtherToAddressValue;
     uint256 private withdrawEthertoAmountValue;
 
+    function reset() public {
+        depositEtherForAddressValue = address(0);
+        withdrawEtherAmountValue = 0;
+        withdrawEtherToAddressValue = address(0);
+        withdrawEthertoAmountValue = 0;
+    }
+
     function getDepositEtherForAddressValue() public returns(address) {
         return depositEtherForAddressValue;
     }

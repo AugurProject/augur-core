@@ -20,6 +20,7 @@ contract MockAugur is Controlled {
         logReportsDisputedCalledValue = false;
         logUniverseForkedCalledValue = false;
         logReputationTokensTransferredCalledValue = false;
+        logMarketFinalizedCalledValue = false;
     }
 
     function trustedTransfer(ERC20 _token, address _from, address _to, uint256 _amount) public onlyWhitelistedCallers returns (bool) {
@@ -59,7 +60,12 @@ contract MockAugur is Controlled {
         return true;
     }
 
+    function logMarketFinalizedCalled() public returns (bool) { return logMarketFinalizedCalledValue; }
+    
+    bool private logMarketFinalizedCalledValue;
+
     function logMarketFinalized(IUniverse _universe, address _market) public returns (bool) {
+        logMarketFinalizedCalledValue = true;
         return true;
     }
 
