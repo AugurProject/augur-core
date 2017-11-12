@@ -397,12 +397,11 @@ def test_market_try_finalize_forking(localFixture, chain, initializeMarket, cons
     endTime = mockNextReportingWindow.getEndTime() + constants.DESIGNATED_REPORTING_DURATION_SECONDS()
     mockForkReportingWindow = set_mock_reporting_window(localFixture, initializeMarket, mockUniverse, mockReputationToken, endTime)
     push_to_last_dispute(localFixture, initializeMarket, constants, mockAugur, mockReportingWindow, mockDisputeBondFactory, mockReputationToken, mockDisputeBond, chain, mockUniverse, mockStakeToken, mockStakeTokenFactory, mockNextReportingWindow, mockForkReportingWindow)
-    chain.head_state.timestamp = mockForkReportingWindow.getEndTime() + 1
+    chain.head_state.timestamp = mockForkReportingWindow.getEndTime() - 1
     mockReputationToken.reset()
 
-    mockReputationToken.setTopMigrationDestination(longToHexString(1))
-    # if exists top migration destination then state is FORKING
-    assert initializeMarket.getReportingState() == constants.FORKING()
+    mockUniverse.setForkingMarket(initializeMarket.address)
+    mockReputationToken.setTopMigrationDestination(longToHexString(0))
 
     mockUniverse.setForkEndTime(chain.head_state.timestamp + 1)
     mockUniverse.setForkReputationGoal(55)
@@ -411,7 +410,7 @@ def test_market_try_finalize_forking(localFixture, chain, initializeMarket, cons
     mockReputationToken.setTopMigrationDestination(mockWinningReputationToken.address)
     mockWinningReputationToken.setTotalSupply(10)
     mockWinningReputationToken.setUniverse(mockUniverse.address)
-    # if winning dest reputation token has less supply thant universe fork reputation token and block time less than universe fork end time
+
     assert initializeMarket.getReportingState() == constants.FORKING()
     mockDisputeStakeToken = set_mock_stake_token_value(localFixture, initializeMarket, [0, 0, 0, numTicks/2, numTicks/2], mockStakeTokenFactory, 100)
     payoutStakeTokenHashTarget = mockDisputeStakeToken.getPayoutDistributionHash()
@@ -419,9 +418,7 @@ def test_market_try_finalize_forking(localFixture, chain, initializeMarket, cons
     mockUniverse.setForkEndTime(chain.head_state.timestamp - 1)
     mockUniverse.setForkReputationGoal(5500)
     mockUniverse.setParentPayoutDistributionHash(stringToBytes(payoutStakeTokenHashTarget))
-    mockUniverse.setForkingMarket(initializeMarket.address)
     mockWinningReputationToken.setTotalSupply(4000)
-    assert initializeMarket.getReportingState() == constants.AWAITING_FINALIZATION()
 
     mockDisputeStakeToken.setIsValid(True)
     assert initializeMarket.getStakeToken([0, 0, 0, numTicks/2, numTicks/2], False) == mockDisputeStakeToken.address
