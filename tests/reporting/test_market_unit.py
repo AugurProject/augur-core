@@ -400,8 +400,8 @@ def test_market_try_finalize_forking(localFixture, chain, initializeMarket, cons
     chain.head_state.timestamp = mockForkReportingWindow.getEndTime() + 1
     mockReputationToken.reset()
 
-    mockReputationToken.setTopMigrationDestination(longToHexString(0))
-    # if no top migration destination then state is FORKING
+    mockReputationToken.setTopMigrationDestination(longToHexString(1))
+    # if exists top migration destination then state is FORKING
     assert initializeMarket.getReportingState() == constants.FORKING()
 
     mockUniverse.setForkEndTime(chain.head_state.timestamp + 1)
