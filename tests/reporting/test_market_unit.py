@@ -402,7 +402,7 @@ def test_market_try_finalize_forking(localFixture, chain, initializeMarket, cons
 
     mockReputationToken.setTopMigrationDestination(longToHexString(0))
     # if no top migration destination then state is FORKING
-    #assert initializeMarket.getReportingState() == constants.FORKING()
+    assert initializeMarket.getReportingState() == constants.FORKING()
 
     mockUniverse.setForkEndTime(chain.head_state.timestamp + 1)
     mockUniverse.setForkReputationGoal(55)
@@ -412,7 +412,7 @@ def test_market_try_finalize_forking(localFixture, chain, initializeMarket, cons
     mockWinningReputationToken.setTotalSupply(10)
     mockWinningReputationToken.setUniverse(mockUniverse.address)
     # if winning dest reputation token has less supply thant universe fork reputation token and block time less than universe fork end time
-    #assert initializeMarket.getReportingState() == constants.FORKING()
+    assert initializeMarket.getReportingState() == constants.FORKING()
     mockDisputeStakeToken = set_mock_stake_token_value(localFixture, initializeMarket, [0, 0, 0, numTicks/2, numTicks/2], mockStakeTokenFactory, 100)
     payoutStakeTokenHashTarget = mockDisputeStakeToken.getPayoutDistributionHash()
 
