@@ -1,5 +1,9 @@
 pragma solidity 0.4.17;
 
+/**
+ * Contracts inheriting from Extractable can have ETH or ERC20 tokens withdrawn from them by the Controller (if it has "dev mode" enabled).  The allows the Augur team to have the Controller refund ETH or ERC20 tokens that were sent to a contract by mistake.
+ */
+
 import 'libraries/token/ERC20Basic.sol';
 import 'Controlled.sol';
 
