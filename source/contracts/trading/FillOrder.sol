@@ -344,7 +344,7 @@ library Trade {
     }
 
     function getFillerSharesToSell(IShareToken _longShareToken, IShareToken[] memory _shortShareTokens, address _filler, Direction _fillerDirection, uint256 _fillerSize) private view returns (uint256) {
-        uint256 _sharesAvailable = SafeMathUint256.maxUint256();
+        uint256 _sharesAvailable = SafeMathUint256.getUint256Max();
         if (_fillerDirection == Direction.Short) {
             _sharesAvailable = _longShareToken.balanceOf(_filler);
         } else {

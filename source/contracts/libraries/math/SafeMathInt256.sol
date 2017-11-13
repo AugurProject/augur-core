@@ -1,7 +1,6 @@
 pragma solidity 0.4.17;
 
 
-
 /**
  * @title SafeMathInt256
  * @dev Int256 math operations with safety checks that throw on error
@@ -18,6 +17,7 @@ library SafeMathInt256 {
     }
 
     function div(int256 a, int256 b) internal pure returns (int256) {
+        // No need to check for dividing by 0 -- Solidity automatically throws on division by 0
         int256 c = a / b;
         return c;
     }

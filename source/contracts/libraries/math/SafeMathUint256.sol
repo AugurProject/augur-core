@@ -1,7 +1,6 @@
 pragma solidity 0.4.17;
 
 
-
 /**
  * @title SafeMathUint256
  * @dev Uint256 math operations with safety checks that throw on error
@@ -47,12 +46,12 @@ library SafeMathUint256 {
         }
     }
 
-    function maxUint256() internal pure returns (uint256) {
-        return 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    function getUint256Min() internal pure returns (uint256) {
+        return 0;
     }
 
-    function minUint256() internal pure returns (uint256) {
-        return 0;
+    function getUint256Max() internal pure returns (uint256) {
+        return 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
     }
 
     function isMultipleOf(uint256 a, uint256 b) internal pure returns (bool) {
