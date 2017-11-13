@@ -12,8 +12,9 @@ export class Configuration {
     public readonly contractAddressesOutputPath: string;
     public readonly contractInterfacesOutputPath: string;
     public readonly controllerAddress: string|undefined;
+    public readonly createGenesisUniverse: boolean;
 
-    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputRoot: string, controllerAddress: string|undefined) {
+    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputRoot: string, controllerAddress: string|undefined, createGenesisUniverse: boolean=false) {
         this.httpProviderHost = host;
         this.httpProviderPort = port;
         this.gasPrice = gasPrice;
@@ -23,6 +24,7 @@ export class Configuration {
         this.contractAddressesOutputPath = path.join(contractOutputRoot, 'addresses.json');
         this.contractInterfacesOutputPath = path.join(contractSourceRoot, 'libraries', 'ContractInterfaces.ts');
         this.controllerAddress = controllerAddress;
+        this.createGenesisUniverse = createGenesisUniverse;
     }
 
     public static create = async (): Promise<Configuration> => {
@@ -33,7 +35,8 @@ export class Configuration {
         const contractSourceRoot = path.join(__dirname, "../../source/contracts/");
         const contractOutputRoot = path.join(__dirname, "../../output/contracts/");
         const controllerAddress = process.env.AUGUR_CONTROLLER_ADDRESS;
+        const createGenesisUniverse = process.env.CREATE_GENESIS_UNIVERSE === "true";
 
-        return new Configuration(host, port, gasPrice, privateKey, contractSourceRoot, contractOutputRoot, controllerAddress);
+        return new Configuration(host, port, gasPrice, privateKey, contractSourceRoot, contractOutputRoot, controllerAddress, createGenesisUniverse);
     }
 }
