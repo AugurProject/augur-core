@@ -30,6 +30,14 @@ contract SafeMathUint256Tester {
         return _a.max(_b);
     }
 
+    function getUint256Min() public view returns (uint256) {
+        return SafeMathUint256.getUint256Min();
+    }
+
+    function getUint256Max() public view returns (uint256) {
+        return SafeMathUint256.getUint256Max();
+    }
+
     function fxpMul(uint256 _a, uint256 _b, uint256 _base) public view returns (uint256) {
         return SafeMathUint256.fxpMul(_a, _b, _base);
     }
