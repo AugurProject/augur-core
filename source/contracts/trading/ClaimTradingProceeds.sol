@@ -77,7 +77,7 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
     }
 
     function calculateReportingFee(IMarket _market, uint256 _amount) public returns (uint256) {
-        uint256 _reportingFeeDivisor = _market.getUniverse().getReportingFeeDivisor();
+        uint256 _reportingFeeDivisor = _market.getUniverse().getOrCacheReportingFeeDivisor();
         return _amount.div(_reportingFeeDivisor);
     }
 

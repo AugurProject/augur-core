@@ -19,7 +19,7 @@ def test_market_creation(contractsFixture, universe, cash, market):
     assert len(logs) == 3
     assert logs[2]['_event_type'] == 'MarketCreated'
     assert logs[2]['extraInfo'] == 'so extra'
-    assert logs[2]['marketCreationFee'] == universe.getMarketCreationCost()
+    assert logs[2]['marketCreationFee'] == universe.getOrCacheMarketCreationCost()
     assert logs[2]['market'] == market.address
     assert logs[2]['marketCreator'] == bytesToHexString(tester.a0)
 

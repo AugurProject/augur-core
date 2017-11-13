@@ -139,7 +139,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
     bUniverse = None
     cUniverse = None
     winningStakeToken = None
-    designatedReporterStake = universe.getDesignatedReportStake()
+    designatedReporterStake = universe.getOrCacheDesignatedReportStake()
     stakeDelta = 0
 
     designatedReporterDisputeBond = None

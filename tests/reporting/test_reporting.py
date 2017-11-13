@@ -241,7 +241,7 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
     # If there ws no designated report he first reporter gets the no-show REP bond auto-staked on the outcome they're purchasing
     expectedStakeTokenBalance = 1
     if (not makeReport):
-        expectedStakeTokenBalance += universe.getDesignatedReportNoShowBond()
+        expectedStakeTokenBalance += universe.getOrCacheDesignatedReportNoShowBond()
 
     assert stakeTokenYes.balanceOf(tester.a2) == expectedStakeTokenBalance
 
@@ -445,7 +445,7 @@ def test_invalid_first_report(localFixture, universe, cash, market):
     # We make an invalid report
     stakeTokenInvalid = localFixture.getOrCreateStakeToken(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], True)
     stakeTokenInvalid.buy(1, sender=tester.k2)
-    assert stakeTokenInvalid.balanceOf(tester.a2) == 1 + universe.getDesignatedReportNoShowBond()
+    assert stakeTokenInvalid.balanceOf(tester.a2) == 1 + universe.getOrCacheDesignatedReportNoShowBond()
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == stakeTokenInvalid.getPayoutDistributionHash()
     assert not stakeTokenInvalid.isValid()

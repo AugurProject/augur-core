@@ -33,11 +33,11 @@ def test_market_creation_fee_getter(kitchenSinkFixture, universe):
 
     # When getting the market creation cost we may use a view function that will throw if the current and previous reporting window do not exist
     with raises(TransactionFailed):
-        universe.getMarketCreationCostView()
+        universe.getMarketCreationCost()
 
     # Calling the normal function which creates these windows if they do not exist should return correctly
-    marketCreationCost = universe.getMarketCreationCost()
+    marketCreationCost = universe.getOrCacheMarketCreationCost()
     assert marketCreationCost > 0
 
     # Now we should be able to call the view version and get the same value
-    assert marketCreationCost == universe.getMarketCreationCostView()
+    assert marketCreationCost == universe.getMarketCreationCost()

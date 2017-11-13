@@ -101,7 +101,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function assessFees() private onlyInGoodTimes returns (bool) {
         IUniverse _universe = getUniverse();
-        require(reportingWindow.getReputationToken().balanceOf(this) == _universe.getDesignatedReportNoShowBond());
+        require(reportingWindow.getReputationToken().balanceOf(this) == _universe.getOrCacheDesignatedReportNoShowBond());
         reporterGasCostsFeeAttoeth = _universe.getOrCacheTargetReporterGasCosts();
         validityBondAttoeth = _universe.getOrCacheValidityBond();
         return true;
