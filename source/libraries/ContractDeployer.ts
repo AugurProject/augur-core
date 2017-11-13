@@ -34,7 +34,11 @@ export class ContractDeployer {
         await this.uploadAllContracts();
         await this.whitelistTradingContracts();
         await this.initializeAllContracts();
-        this.universe = await this.createGenesisUniverse();
+
+        if(this.configuration.createGenesisUniverse) {
+            this.universe = await this.createGenesisUniverse();
+        }
+
         await this.generateAddressMappingFile();
     }
 
@@ -203,9 +207,10 @@ export class ContractDeployer {
     private async generateAddressMapping(): Promise<string> {
         const mapping: { [name: string]: string } = {};
         mapping['Controller'] = this.controller.address;
-        mapping['Universe'] = this.universe.address;
+        if (this.universe) mapping['Universe'] = this.universe.address;
         if (this.contracts.get('Augur').address === undefined) throw new Error(`Augur not uploaded.`);
         mapping['Augur'] = this.contracts.get('Augur').address!;
+        mapping['LegacyReputationToken'] = this.contracts.get('LegacyReputationToken').address!;
         for (let contract of this.contracts) {
             if (!contract.relativeFilePath.startsWith('trading/')) continue;
             if (/^I[A-Z].*/.test(contract.contractName)) continue;
