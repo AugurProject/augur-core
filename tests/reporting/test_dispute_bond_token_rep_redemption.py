@@ -128,9 +128,9 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         OUTCOME_A = SCALAR_OUTCOME_A
         OUTCOME_B = SCALAR_OUTCOME_B
         OUTCOME_C = SCALAR_OUTCOME_C
-    stakeTokenA = contractsFixture.getStakeToken(market, OUTCOME_A, False)
-    stakeTokenB = contractsFixture.getStakeToken(market, OUTCOME_B, False)
-    stakeTokenC = contractsFixture.getStakeToken(market, OUTCOME_C, False)
+    stakeTokenA = contractsFixture.getOrCreateStakeToken(market, OUTCOME_A, False)
+    stakeTokenB = contractsFixture.getOrCreateStakeToken(market, OUTCOME_B, False)
+    stakeTokenC = contractsFixture.getOrCreateStakeToken(market, OUTCOME_C, False)
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
     aUniverseReputationToken = None
     bUniverseReputationToken = None

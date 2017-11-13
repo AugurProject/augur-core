@@ -113,7 +113,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return Reporting.getReportingDurationSeconds() + Reporting.getReportingDisputeDurationSeconds();
     }
 
-    function getReportingWindowByTimestamp(uint256 _timestamp) public onlyInGoodTimes returns (IReportingWindow) {
+    function getOrCreateReportingWindowByTimestamp(uint256 _timestamp) public onlyInGoodTimes returns (IReportingWindow) {
         uint256 _windowId = getReportingWindowId(_timestamp);
         if (reportingWindows[_windowId] == address(0)) {
             reportingWindows[_windowId] = ReportingWindowFactory(controller.lookup("ReportingWindowFactory")).createReportingWindow(controller, this, _windowId);
@@ -121,19 +121,40 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return reportingWindows[_windowId];
     }
 
-    function getReportingWindowByMarketEndTime(uint256 _endTime) public onlyInGoodTimes returns (IReportingWindow) {
+    function getReportingWindowByTimestamp(uint256 _timestamp) public view onlyInGoodTimes returns (IReportingWindow) {
+        uint256 _windowId = getReportingWindowId(_timestamp);
+        return reportingWindows[_windowId];
+    }
+
+    function getOrCreateReportingWindowByMarketEndTime(uint256 _endTime) public onlyInGoodTimes returns (IReportingWindow) {
+        return getOrCreateReportingWindowByTimestamp(_endTime + Reporting.getDesignatedReportingDurationSeconds() + Reporting.getDesignatedReportingDisputeDurationSeconds() + 1 + getReportingPeriodDurationInSeconds());
+    }
+
+    function getReportingWindowByMarketEndTime(uint256 _endTime) public view onlyInGoodTimes returns (IReportingWindow) {
         return getReportingWindowByTimestamp(_endTime + Reporting.getDesignatedReportingDurationSeconds() + Reporting.getDesignatedReportingDisputeDurationSeconds() + 1 + getReportingPeriodDurationInSeconds());
     }
 
-    function getPreviousReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
+    function getOrCreatePreviousReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
+        return getOrCreateReportingWindowByTimestamp(block.timestamp - getReportingPeriodDurationInSeconds());
+    }
+
+    function getPreviousReportingWindow() public view onlyInGoodTimes returns (IReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp - getReportingPeriodDurationInSeconds());
     }
 
-    function getCurrentReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
+    function getOrCreateCurrentReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
+        return getOrCreateReportingWindowByTimestamp(block.timestamp);
+    }
+
+    function getCurrentReportingWindow() public view onlyInGoodTimes returns (IReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp);
     }
 
-    function getNextReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
+    function getOrCreateNextReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
+        return getOrCreateReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
+    }
+
+    function getNextReportingWindow() public view onlyInGoodTimes returns (IReportingWindow) {
         return getReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
     }
 
@@ -237,7 +258,11 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return childUniverses[_parentPayoutDistributionHash] == _shadyChild;
     }
 
-    function getReportingWindowForForkEndTime() public returns (IReportingWindow) {
+    function getOrCreateReportingWindowForForkEndTime() public returns (IReportingWindow) {
+        return getOrCreateReportingWindowByTimestamp(getForkEndTime());
+    }
+
+    function getReportingWindowForForkEndTime() public view returns (IReportingWindow) {
         return getReportingWindowByTimestamp(getForkEndTime());
     }
 
@@ -266,28 +291,38 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return getOpenInterestInAttoEth() * Reporting.getTargetRepMarketCapMultiplier();
     }
 
-    function getValidityBond() public onlyInGoodTimes returns (uint256) {
-        IReportingWindow _reportingWindow = getCurrentReportingWindow();
+    function getOrCacheValidityBond() public onlyInGoodTimes returns (uint256) {
+        IReportingWindow _reportingWindow = getOrCreateCurrentReportingWindow();
+        uint256 _validityBond = getOrCacheValidityBondInternal(_reportingWindow, getOrCreatePreviousReportingWindow());
+        validityBondInAttoeth[_reportingWindow] = _validityBond;
+        return _validityBond;
+    }
+
+    function getValidityBond() public view onlyInGoodTimes returns (uint256) {
+        return getOrCacheValidityBondInternal(getCurrentReportingWindow(), getPreviousReportingWindow());
+    }
+
+    function getOrCacheValidityBondInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
+        require(_reportingWindow != IReportingWindow(0));
+        require(_previousReportingWindow != IReportingWindow(0));
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
         if (_currentValidityBondInAttoeth != 0) {
             return _currentValidityBondInAttoeth;
         }
-        IReportingWindow _previousReportingWindow = getPreviousReportingWindow();
         uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
         uint256 _invalidMarketsInPreviousWindow = _previousReportingWindow.getNumInvalidMarkets();
         uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousReportingWindow];
         _currentValidityBondInAttoeth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetInvalidMarketsDivisor(), _previousValidityBondInAttoeth, Reporting.getDefaultValidityBond(), Reporting.getDefaultValidityBondFloor());
-        validityBondInAttoeth[_reportingWindow] = _currentValidityBondInAttoeth;
         return _currentValidityBondInAttoeth;
     }
 
     function getDesignatedReportStake() public onlyInGoodTimes returns (uint256) {
-        IReportingWindow _reportingWindow = getCurrentReportingWindow();
+        IReportingWindow _reportingWindow = getOrCreateCurrentReportingWindow();
         uint256 _currentDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_reportingWindow];
         if (_currentDesignatedReportStakeInAttoRep != 0) {
             return _currentDesignatedReportStakeInAttoRep;
         }
-        IReportingWindow _previousReportingWindow = getPreviousReportingWindow();
+        IReportingWindow _previousReportingWindow = getOrCreatePreviousReportingWindow();
         uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
         uint256 _incorrectDesignatedReportMarketsInPreviousWindow = _previousReportingWindow.getNumIncorrectDesignatedReportMarkets();
         uint256 _previousDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_previousReportingWindow];
@@ -298,12 +333,12 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getDesignatedReportNoShowBond() public onlyInGoodTimes returns (uint256) {
-        IReportingWindow _reportingWindow = getCurrentReportingWindow();
+        IReportingWindow _reportingWindow = getOrCreateCurrentReportingWindow();
         uint256 _currentDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_reportingWindow];
         if (_currentDesignatedReportNoShowBondInAttoRep != 0) {
             return _currentDesignatedReportNoShowBondInAttoRep;
         }
-        IReportingWindow _previousReportingWindow = getPreviousReportingWindow();
+        IReportingWindow _previousReportingWindow = getOrCreatePreviousReportingWindow();
         uint256 _totalMarketsInPreviousWindow = _previousReportingWindow.getNumMarkets();
         uint256 _designatedReportNoShowsInPreviousWindow = _previousReportingWindow.getNumDesignatedReportNoShows();
         uint256 _previousDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_previousReportingWindow];
@@ -348,14 +383,14 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getReportingFeeDivisor() public onlyInGoodTimes returns (uint256) {
-        IReportingWindow _reportingWindow = getCurrentReportingWindow();
+        IReportingWindow _reportingWindow = getOrCreateCurrentReportingWindow();
         uint256 _currentFeeDivisor = shareSettlementFeeDivisor[_reportingWindow];
         if (_currentFeeDivisor != 0) {
             return _currentFeeDivisor;
         }
         uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth();
         uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth();
-        uint256 _previousFeeDivisor = shareSettlementFeeDivisor[getPreviousReportingWindow()];
+        uint256 _previousFeeDivisor = shareSettlementFeeDivisor[getOrCreatePreviousReportingWindow()];
         if (_previousFeeDivisor == 0) {
             _previousFeeDivisor = Reporting.getDefaultReportingFeeDivisor();
         }
@@ -371,22 +406,37 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return _currentFeeDivisor;
     }
 
-    function getTargetReporterGasCosts() public onlyInGoodTimes returns (uint256) {
-        IReportingWindow _reportingWindow = getCurrentReportingWindow();
+    function getOrCacheTargetReporterGasCosts() public onlyInGoodTimes returns (uint256) {
+        IReportingWindow _reportingWindow = getOrCreateCurrentReportingWindow();
+        uint256 _reporterGasCost = getOrCacheTargetReporterGasCostsInternal(_reportingWindow, getOrCreatePreviousReportingWindow());
+        targetReporterGasCosts[_reportingWindow] = _reporterGasCost;
+        return _reporterGasCost;
+    }
+
+    function getTargetReporterGasCosts() public view onlyInGoodTimes returns (uint256) {
+        return getOrCacheTargetReporterGasCostsInternal(getCurrentReportingWindow(), getPreviousReportingWindow());
+    }
+
+    function getOrCacheTargetReporterGasCostsInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
+        require(_reportingWindow != IReportingWindow(0));
+        require(_previousReportingWindow != IReportingWindow(0));
         uint256 _getGasToReport = targetReporterGasCosts[_reportingWindow];
         if (_getGasToReport != 0) {
             return _getGasToReport;
         }
 
-        IReportingWindow _previousReportingWindow = getPreviousReportingWindow();
         uint256 _avgGasPrice = _previousReportingWindow.getAvgReportingGasPrice();
         _getGasToReport = Reporting.getGasToReport();
         // we double it to try and ensure we have more than enough rather than not enough
-        targetReporterGasCosts[_reportingWindow] = _getGasToReport * _avgGasPrice * 2;
-        return targetReporterGasCosts[_reportingWindow];
+        return _getGasToReport * _avgGasPrice * 2;
+
     }
 
     function getMarketCreationCost() public onlyInGoodTimes returns (uint256) {
+        return getOrCacheValidityBond() + getOrCacheTargetReporterGasCosts();
+    }
+
+    function getMarketCreationCostView() public view onlyInGoodTimes returns (uint256) {
         return getValidityBond() + getTargetReporterGasCosts();
     }
 

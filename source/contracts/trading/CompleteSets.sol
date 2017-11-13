@@ -71,7 +71,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
             _denominationToken.withdrawEtherTo(_market.getOwner(), _creatorFee);
         }
         if (_reportingFee != 0) {
-            IReportingWindow _reportingWindow = _market.getUniverse().getNextReportingWindow();
+            IReportingWindow _reportingWindow = _market.getUniverse().getOrCreateNextReportingWindow();
             require(_denominationToken.transferFrom(_market, _reportingWindow, _reportingFee));
         }
         require(_denominationToken.transferFrom(_market, _sender, _payout));

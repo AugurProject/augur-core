@@ -26,7 +26,7 @@ def proceedToDesignatedReporting(testFixture, universe, market, reportOutcomes, 
             testFixture.designatedReport(market, reportOutcomes, designatedReporter)
 
     # Fast forward to the reporting phase time
-    reportingWindow = testFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
+    reportingWindow = testFixture.applySignature('ReportingWindow', universe.getOrCreateNextReportingWindow())
     testFixture.chain.head_state.timestamp = market.getEndTime() + 1
 
     # This will cause us to be in the DESIGNATED REPORTING phase
@@ -68,7 +68,7 @@ def proceedToLastReporting(testFixture, universe, market, makeReport, designated
     if (market.getReportingState() != testFixture.contracts['Constants'].FIRST_REPORTING()):
         proceedToFirstReporting(testFixture, universe, market, makeReport, designatedDisputer, reportOutcomes, designatedDisputeOutcomes)
 
-    stakeToken = testFixture.getStakeToken(market, firstReportOutcomes)
+    stakeToken = testFixture.getOrCreateStakeToken(market, firstReportOutcomes)
 
     # We make one report by the firstReporter
     assert stakeToken.buy(1, sender=testFixture.testerKey[firstReporter])
@@ -105,8 +105,8 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
 
     reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
-    stakeTokenNo = testFixture.getStakeToken(market, lastReportOutcomes)
-    stakeTokenYes = testFixture.getStakeToken(market, firstReportDisputeOutcomes)
+    stakeTokenNo = testFixture.getOrCreateStakeToken(market, lastReportOutcomes)
+    stakeTokenYes = testFixture.getOrCreateStakeToken(market, firstReportDisputeOutcomes)
 
     # If we buy the delta between outcome stakes that will be sufficient to make the outcome win
     noStake = market.getPayoutDistributionHashStake(stakeTokenNo.getPayoutDistributionHash())
@@ -164,8 +164,8 @@ def finalizeForkingMarket(reportingFixture, universe, market, finalizeByMigratio
     # Attempting to finalize the fork now will not succeed as a majority or REP has not yet migrated and fork end time has not been reached
     assert market.tryFinalize() == 0
 
-    stakeTokenNo = reportingFixture.getStakeToken(market, secondReportOutcomes)
-    stakeTokenYes = reportingFixture.getStakeToken(market, firstReportOutcomes)
+    stakeTokenNo = reportingFixture.getOrCreateStakeToken(market, secondReportOutcomes)
+    stakeTokenYes = reportingFixture.getOrCreateStakeToken(market, firstReportOutcomes)
 
     winningTokenAddress = stakeTokenYes.address
 

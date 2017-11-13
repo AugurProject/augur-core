@@ -48,7 +48,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     bool private setIncreaseTotalWinningStakeValue;
     bool private setMigrateFeesDueToMarketMigrationValue;
     bool private setNoteDesignatedReportValue;
-    
+
     /*
     * setters to feed the getters and impl of IReportingWindow
     */
@@ -308,11 +308,11 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return setAvgReportingGasPriceValue;
     }
 
-    function getNextReportingWindow() public returns (IReportingWindow) {
+    function getOrCreateNextReportingWindow() public returns (IReportingWindow) {
         return setNextReportingWindowValue;
     }
 
-    function getPreviousReportingWindow() public returns (IReportingWindow) {
+    function getOrCreatePreviousReportingWindow() public returns (IReportingWindow) {
         return setPreviousReportingWindowValue;
     }
 
