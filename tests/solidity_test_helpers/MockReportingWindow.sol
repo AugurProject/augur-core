@@ -48,6 +48,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     bool private setIncreaseTotalWinningStakeValue;
     bool private setMigrateFeesDueToMarketMigrationValue;
     bool private setNoteDesignatedReportValue;
+    
     /*
     * setters to feed the getters and impl of IReportingWindow
     */
@@ -57,14 +58,15 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setIncreaseTotalStakeValue = false;
         setRemoveMarketValue = false;
         setMigrateMarketInFromSiblingValue = false;
+        setMigrateMarketInFromNiblingValue = false;
     }
 
     function getMigrateMarketInFromSiblingCalled() public returns(bool) {
         return setMigrateMarketInFromSiblingValue;
     }
 
-    function setMigrateMarketInFromNibling(bool _setMigrateMarketInFromNiblingValue) public {
-        setMigrateMarketInFromNiblingValue = _setMigrateMarketInFromNiblingValue;
+    function getMigrateMarketInFromNiblingCalled() public returns(bool) {
+        return setMigrateMarketInFromNiblingValue;
     }
 
     function getRemoveMarketCalled() public returns (bool) {
@@ -251,7 +253,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     }
 
     function migrateMarketInFromNibling() public returns (bool) {
-        return setMigrateMarketInFromNiblingValue;
+        setMigrateMarketInFromNiblingValue = true;
+        return true;
     }
 
     function removeMarket() public returns (bool) {
