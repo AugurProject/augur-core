@@ -30,6 +30,10 @@ case $1 in
     gasPrice=1
 esac
 
+AUGUR_CONTROLLER_ADDRESS=$controller ETHEREUM_GAS_PRICE_IN_NANOETH=$gasPrice ETHEREUM_HOST=$host ETHEREUM_PORT=$port ETHEREUM_PRIVATE_KEY=$privateKey node $inspect output/deployment/compileAndDeploy.js
+
+exit
+
 docker container run -it \
   -e AUGUR_CONTROLLER_ADDRESS=$controller \
   -e ETHEREUM_GAS_PRICE_IN_NANOETH=$gasPrice \
@@ -37,4 +41,3 @@ docker container run -it \
   -e ETHEREUM_PORT=$port \
   -e ETHEREUM_PRIVATE_KEY=$privateKey \
   augur/core-deploy:latest
-#ETHEREUM_HOST=$host ETHEREUM_PORT=$port ETHEREUM_PRIVATE_KEY=$privateKey node $inspect output/deployment/compileAndDeploy.js
