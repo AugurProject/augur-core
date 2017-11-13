@@ -36,11 +36,11 @@ def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockPart
 
     nextReportingWindow = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'nextReportingWindow')
     mockUniverse.setReportingWindowByTimestamp(nextReportingWindow.address)
-    assert reportingWindow.getNextReportingWindow() == nextReportingWindow.address
+    assert reportingWindow.getOrCreateNextReportingWindow() == nextReportingWindow.address
 
     previousReportingWindow = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'previousReportingWindow')
     mockUniverse.setReportingWindowByTimestamp(previousReportingWindow.address)
-    assert reportingWindow.getPreviousReportingWindow() == previousReportingWindow.address
+    assert reportingWindow.getOrCreatePreviousReportingWindow() == previousReportingWindow.address
 
     chain.head_state.timestamp = reportingWindow.getStartTime() - 1
     assert reportingWindow.isOver() == False

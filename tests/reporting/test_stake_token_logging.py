@@ -2,8 +2,8 @@ from ethereum.tools import tester
 from utils import captureFilteredLogs, bytesToHexString
 
 def test_stake_token_logging(contractsFixture, market, universe):
-    stakeToken = contractsFixture.getStakeToken(market, [10**18,0])
-    reportingWindow = contractsFixture.applySignature('ReportingWindow', universe.getNextReportingWindow())
+    stakeToken = contractsFixture.getOrCreateStakeToken(market, [10**18,0])
+    reportingWindow = contractsFixture.applySignature('ReportingWindow', universe.getOrCreateNextReportingWindow())
 
     # Fast forward to one second after the next reporting window
     contractsFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1

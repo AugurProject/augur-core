@@ -12,9 +12,9 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
     assert scalarMarket.tryFinalize()
 
     # We can't redeem the stake used to do the designated report for fees yet since the window is not yet over
-    marketDesignatedStake = localFixture.getStakeToken(market, [0, market.getNumTicks()])
-    categoricalMarketDesignatedStake = localFixture.getStakeToken(categoricalMarket, [0, 0, categoricalMarket.getNumTicks()])
-    scalarMarketDesignatedStake = localFixture.getStakeToken(scalarMarket, [0, scalarMarket.getNumTicks()])
+    marketDesignatedStake = localFixture.getOrCreateStakeToken(market, [0, market.getNumTicks()])
+    categoricalMarketDesignatedStake = localFixture.getOrCreateStakeToken(categoricalMarket, [0, 0, categoricalMarket.getNumTicks()])
+    scalarMarketDesignatedStake = localFixture.getOrCreateStakeToken(scalarMarket, [0, scalarMarket.getNumTicks()])
 
     with raises(TransactionFailed):
         marketDesignatedStake.redeemWinningTokens(False)
@@ -130,9 +130,9 @@ def test_dispute_bond_fee_collection(localFixture, universe, market, categorical
     assert categoricalMarket.tryFinalize()
     assert scalarMarket.tryFinalize()
 
-    marketDesignatedStake = localFixture.getStakeToken(market, [market.getNumTicks(), 0])
-    categoricalMarketDesignatedStake = localFixture.getStakeToken(categoricalMarket, [categoricalMarket.getNumTicks(), 0, 0])
-    scalarMarketDesignatedStake = localFixture.getStakeToken(scalarMarket, [scalarMarket.getNumTicks(), 0])
+    marketDesignatedStake = localFixture.getOrCreateStakeToken(market, [market.getNumTicks(), 0])
+    categoricalMarketDesignatedStake = localFixture.getOrCreateStakeToken(categoricalMarket, [categoricalMarket.getNumTicks(), 0, 0])
+    scalarMarketDesignatedStake = localFixture.getOrCreateStakeToken(scalarMarket, [scalarMarket.getNumTicks(), 0])
 
     reporterFees = 1000 * market.getNumTicks() / universe.getReportingFeeDivisor()
     totalWinningStake = reportingWindow.getTotalWinningStake()
@@ -186,7 +186,7 @@ def test_fee_migration(localFixture, universe, market, categoricalMarket, scalar
 
     # Progress to the Limited dispute phase and dispute one of the markets. This should migrate fees to the reporting window the market migrates to proportional to its stake
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
-    nextReportingWindow = localFixture.applySignature("ReportingWindow", universe.getNextReportingWindow())
+    nextReportingWindow = localFixture.applySignature("ReportingWindow", universe.getOrCreateNextReportingWindow())
     scalarMarketStake = scalarMarket.getTotalStake()
     firstDisputeCost = localFixture.contracts["Constants"].FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
     scalarMarketStakeDelta = firstDisputeCost + otherOutcomeStake
@@ -222,7 +222,7 @@ def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket
     localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
 
     forkDuration = lastDisputeCost = localFixture.contracts["Constants"].FORK_DURATION_SECONDS()
-    nextReportingWindow = localFixture.applySignature("ReportingWindow", universe.getReportingWindowByTimestamp(localFixture.chain.head_state.timestamp + forkDuration))
+    nextReportingWindow = localFixture.applySignature("ReportingWindow", universe.getOrCreateReportingWindowByTimestamp(localFixture.chain.head_state.timestamp + forkDuration))
     scalarMarketStake = scalarMarket.getTotalStake()
     lastDisputeCost = localFixture.contracts["Constants"].LAST_REPORTERS_DISPUTE_BOND_AMOUNT()
     totalScalarMarketStakeMoved = scalarMarketStake + lastDisputeCost
@@ -248,7 +248,7 @@ def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket
     # migrate one of the markets to the winning universe and confirm fees went with it
     oldReportingWindowAddress = market.getReportingWindow()
     designatedReportingDuration = localFixture.contracts["Constants"].DESIGNATED_REPORTING_DURATION_SECONDS()
-    newReportingWindowAddress = newUniverse.getReportingWindowByMarketEndTime(localFixture.chain.head_state.timestamp - designatedReportingDuration)
+    newReportingWindowAddress = newUniverse.getOrCreateReportingWindowByMarketEndTime(localFixture.chain.head_state.timestamp - designatedReportingDuration)
     migratedFees = cash.balanceOf(oldReportingWindowAddress)
     with TokenDelta(cash, -migratedFees, oldReportingWindowAddress, "Migrating to a new universe didn't migrate ETH out correctly"):
         with TokenDelta(cash, migratedFees, newReportingWindowAddress, "Migrating to a new universe didn't migrate ETH in correctly"):

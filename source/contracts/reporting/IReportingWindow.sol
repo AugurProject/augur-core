@@ -26,8 +26,8 @@ contract IReportingWindow is ITyped {
     function getNumInvalidMarkets() public view returns (uint256);
     function getNumIncorrectDesignatedReportMarkets() public view returns (uint256);
     function getAvgReportingGasPrice() public view returns (uint256);
-    function getNextReportingWindow() public returns (IReportingWindow);
-    function getPreviousReportingWindow() public returns (IReportingWindow);
+    function getOrCreateNextReportingWindow() public returns (IReportingWindow);
+    function getOrCreatePreviousReportingWindow() public returns (IReportingWindow);
     function getNumDesignatedReportNoShows() public view returns (uint256);
     function allMarketsFinalized() public view returns (bool);
     function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns (uint256);

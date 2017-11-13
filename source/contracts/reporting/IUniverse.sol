@@ -23,11 +23,11 @@ contract IUniverse is ITyped {
     function getForkReputationGoal() public view returns (uint256);
     function getParentPayoutDistributionHash() public view returns (bytes32);
     function getReportingPeriodDurationInSeconds() public view returns (uint256);
-    function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow);
-    function getReportingWindowByMarketEndTime(uint256 _endTime) public returns (IReportingWindow);
-    function getCurrentReportingWindow() public returns (IReportingWindow);
-    function getNextReportingWindow() public returns (IReportingWindow);
-    function getReportingWindowForForkEndTime() public returns (IReportingWindow);
+    function getOrCreateReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow);
+    function getOrCreateReportingWindowByMarketEndTime(uint256 _endTime) public returns (IReportingWindow);
+    function getOrCreateCurrentReportingWindow() public returns (IReportingWindow);
+    function getOrCreateNextReportingWindow() public returns (IReportingWindow);
+    function getOrCreateReportingWindowForForkEndTime() public returns (IReportingWindow);
     function getOpenInterestInAttoEth() public view returns (uint256);
     function getRepMarketCapInAttoeth() public view returns (uint256);
     function getTargetRepMarketCapInAttoeth() public view returns (uint256);

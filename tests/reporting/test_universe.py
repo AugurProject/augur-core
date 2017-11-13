@@ -31,7 +31,7 @@ def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, moc
 
     timestamp = chain.head_state.timestamp
     mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
-    reportingWindowId = populatedUniverse.getReportingWindowByTimestamp(timestamp)
+    reportingWindowId = populatedUniverse.getOrCreateReportingWindowByTimestamp(timestamp)
     mockReportingWindow.setStartTime(timestamp)
 
     mockReportingWindow.setIsContainerForMarket(True)
@@ -56,7 +56,7 @@ def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, moc
     strangerUniverse = localFixture.upload('../source/contracts/reporting/Universe.sol', 'strangerUniverse')
     assert populatedUniverse.isParentOf(strangerUniverse.address) == False
 
-    assert populatedUniverse.getReportingWindowForForkEndTime() == mockReportingWindow.address
+    assert populatedUniverse.getOrCreateReportingWindowForForkEndTime() == mockReportingWindow.address
 
     with raises(TransactionFailed, message="forking market is already set"):
         mockMarket.callForkOnUniverse()
@@ -75,21 +75,21 @@ def test_get_reporting_window(localFixture, populatedUniverse, chain):
 
     # reporting window not stored internally, only read-only method
     assert populatedUniverse.getReportingWindow(reportingPeriodDurationForTimestamp) == longToHexString(0)
-    report_window = populatedUniverse.getReportingWindowByTimestamp(timestamp)
+    report_window = populatedUniverse.getOrCreateReportingWindowByTimestamp(timestamp)
 
     # Now reporting window is in internal collection
     assert populatedUniverse.getReportingWindow(reportingPeriodDurationForTimestamp) == report_window
 
     # Make up end timestamp for testing internal calculations
     end_timestamp = chain.head_state.timestamp + 1
-    end_report_window_des = populatedUniverse.getReportingWindowByMarketEndTime(end_timestamp)
+    end_report_window_des = populatedUniverse.getOrCreateReportingWindowByMarketEndTime(end_timestamp)
 
     # Test getting same calculated end reporting window
     end_timestamp_des_test = end_timestamp + constants.DESIGNATED_REPORTING_DURATION_SECONDS() + constants.DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1 + total_dispute_duration
-    assert populatedUniverse.getReportingWindowByTimestamp(end_timestamp_des_test) == end_report_window_des
-    assert populatedUniverse.getPreviousReportingWindow() == populatedUniverse.getReportingWindowByTimestamp(chain.head_state.timestamp - total_dispute_duration)
-    assert populatedUniverse.getCurrentReportingWindow() == populatedUniverse.getReportingWindowByTimestamp(chain.head_state.timestamp)
-    assert populatedUniverse.getNextReportingWindow() == populatedUniverse.getReportingWindowByTimestamp(chain.head_state.timestamp + total_dispute_duration)
+    assert populatedUniverse.getOrCreateReportingWindowByTimestamp(end_timestamp_des_test) == end_report_window_des
+    assert populatedUniverse.getOrCreatePreviousReportingWindow() == populatedUniverse.getOrCreateReportingWindowByTimestamp(chain.head_state.timestamp - total_dispute_duration)
+    assert populatedUniverse.getOrCreateCurrentReportingWindow() == populatedUniverse.getOrCreateReportingWindowByTimestamp(chain.head_state.timestamp)
+    assert populatedUniverse.getOrCreateNextReportingWindow() == populatedUniverse.getOrCreateReportingWindowByTimestamp(chain.head_state.timestamp + total_dispute_duration)
 
 def test_universe_contains(localFixture, populatedUniverse, mockMarket, mockStakeToken, chain, mockReportingWindow, mockDisputeBond, mockShareToken, mockReportingWindowFactory):
     mockReportingWindow.setStartTime(0)
@@ -101,7 +101,7 @@ def test_universe_contains(localFixture, populatedUniverse, mockMarket, mockStak
 
     timestamp = chain.head_state.timestamp
     mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
-    reportingWindowId = populatedUniverse.getReportingWindowByTimestamp(timestamp)
+    reportingWindowId = populatedUniverse.getOrCreateReportingWindowByTimestamp(timestamp)
     mockReportingWindow.setStartTime(timestamp)
 
     mockReportingWindow.setIsContainerForMarket(False)
@@ -160,11 +160,11 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     newCurrentReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'newCurrentReportingWindow')
     # set current reporting window
     mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
-    assert populatedUniverse.getCurrentReportingWindow() == mockReportingWindow.address
+    assert populatedUniverse.getOrCreateCurrentReportingWindow() == mockReportingWindow.address
 
     # set next reporting window
     mockReportingWindowFactory.setCreateReportingWindowValue(nextReportingWindow.address)
-    assert populatedUniverse.getNextReportingWindow() == nextReportingWindow.address
+    assert populatedUniverse.getOrCreateNextReportingWindow() == nextReportingWindow.address
 
     designated_divisor = constants.TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR()
     designated_default = constants.DEFAULT_DESIGNATED_REPORT_STAKE()
@@ -194,7 +194,7 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
 
     # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
-    assert populatedUniverse.getPreviousReportingWindow() == currentReportingWindow.address
+    assert populatedUniverse.getOrCreatePreviousReportingWindow() == currentReportingWindow.address
 
     numMarket = 6
     currentReportingWindow.setNumMarkets(numMarket)

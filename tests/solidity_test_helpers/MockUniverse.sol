@@ -260,23 +260,23 @@ contract MockUniverse is Initializable, IUniverse {
         return setReportingPeriodDurationInSecondsValue;
     }
 
-    function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow) {
+    function getOrCreateReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow) {
         return setReportingWindowByTimestampValue;
     }
 
-    function getReportingWindowByMarketEndTime(uint256 _endTime) public returns (IReportingWindow) {
+    function getOrCreateReportingWindowByMarketEndTime(uint256 _endTime) public returns (IReportingWindow) {
         return setReportingWindowByMarketEndTimeValue;
     }
 
-    function getCurrentReportingWindow() public returns (IReportingWindow) {
+    function getOrCreateCurrentReportingWindow() public returns (IReportingWindow) {
         return setCurrentReportingWindowValue;
     }
 
-    function getNextReportingWindow() public returns (IReportingWindow) {
+    function getOrCreateNextReportingWindow() public returns (IReportingWindow) {
         return setNextReportingWindowValue;
     }
 
-    function getReportingWindowForForkEndTime() public returns (IReportingWindow) {
+    function getOrCreateReportingWindowForForkEndTime() public returns (IReportingWindow) {
         return setReportingWindowForForkEndTimeValue;
     }
 
