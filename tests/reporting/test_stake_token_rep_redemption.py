@@ -30,7 +30,7 @@ def test_one_market_one_correct_report(localFixture, universe, market):
     market.tryFinalize()
 
     # The designated reporter may redeem their stake tokens which were purchased to make the designated report
-    stakeToken = localFixture.getStakeToken(market, [0, 10**18])
+    stakeToken = localFixture.getOrCreateStakeToken(market, [0, 10**18])
     assert stakeToken.balanceOf(tester.a0) == expectedStakeTokenBalance
 
     expectedREPBalance = initialREPBalance
@@ -79,7 +79,7 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     market.tryFinalize()
 
     # The market1 designated reporter may redeem their stake tokens which were purchased to make the designated report
-    stakeToken = localFixture.getStakeToken(market, [0, 10**18])
+    stakeToken = localFixture.getOrCreateStakeToken(market, [0, 10**18])
     assert stakeToken.balanceOf(tester.a0) == designatedReportStake
 
     expectedREPBalance = initialREPBalance
@@ -99,7 +99,7 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
 
     # If we redeem the second tester's tokens they'll get ALL of the fees on the reporting window now and their normal share of REP
     market2.tryFinalize()
-    stakeToken = localFixture.getStakeToken(market2, [0, 10**18])
+    stakeToken = localFixture.getOrCreateStakeToken(market2, [0, 10**18])
     assert stakeToken.balanceOf(tester.a0) == designatedReportStake
 
     initialREPBalance = reputationToken.balanceOf(tester.a0)
@@ -133,8 +133,8 @@ def test_stake_token_redemption(localFixture, universe, market, numReports, numC
 
 def doReports(fixture, market, numReporters, numCorrect):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
-    stakeTokenWinner = fixture.getStakeToken(market, [0,10**18])
-    stakeTokenLoser = fixture.getStakeToken(market, [10**18,0])
+    stakeTokenWinner = fixture.getOrCreateStakeToken(market, [0,10**18])
+    stakeTokenLoser = fixture.getOrCreateStakeToken(market, [10**18,0])
 
     for i in range(0, numReporters):
         testerKey = fixture.testerKey[i]
@@ -151,7 +151,7 @@ def confirmPayouts(fixture, market, numCorrectReporters, noShowBond):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = fixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     universe = fixture.applySignature('Universe', market.getUniverse())
-    stakeToken = fixture.getStakeToken(market, [0,10**18])
+    stakeToken = fixture.getOrCreateStakeToken(market, [0,10**18])
 
     for i in range(0, numCorrectReporters):
         testerAddress = fixture.testerAddress[i]

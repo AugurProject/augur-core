@@ -38,7 +38,7 @@ def test_reportingWindowCreation(localFixture, universe, cash):
     endTime = long(localFixture.chain.head_state.timestamp + timedelta(days=365).total_seconds())
 
     with PrintGasUsed(localFixture, "REPORTING_WINDOW_CREATE", REPORTING_WINDOW_CREATE):
-        universe.getReportingWindowByMarketEndTime(endTime)
+        universe.getOrCreateReportingWindowByMarketEndTime(endTime)
 
 def test_marketCreation(localFixture, universe, cash):
     marketCreationFee = universe.getMarketCreationCost()
@@ -50,7 +50,7 @@ def test_marketCreation(localFixture, universe, cash):
     numTicks = 10 ** 18
     numOutcomes = 2
 
-    reportingWindow = localFixture.applySignature('ReportingWindow', universe.getReportingWindowByMarketEndTime(endTime))
+    reportingWindow = localFixture.applySignature('ReportingWindow', universe.getOrCreateReportingWindowByMarketEndTime(endTime))
 
     with PrintGasUsed(localFixture, "ReportingWindow:createMarket", MARKET_CREATION):
         marketAddress = reportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", value = marketCreationFee, startgas=long(6.7 * 10**6))
@@ -103,7 +103,7 @@ def test_designatedReport(localFixture, universe, cash, market):
 def test_report(localFixture, universe, cash, market):
     proceedToFirstReporting(localFixture, universe, market, False, 1, [0,10**18], [10**18,0])
 
-    stakeTokenYes = localFixture.getStakeToken(market, [0,10**18])
+    stakeTokenYes = localFixture.getOrCreateStakeToken(market, [0,10**18])
     with PrintGasUsed(localFixture, "FIRST StakeToken:buy", FIRST_REPORT):
         stakeTokenYes.buy(0, sender=tester.k2)
 
@@ -149,7 +149,7 @@ def test_redeemStake(localFixture, universe, cash, market, categoricalMarket, sc
     assert categoricalMarket.tryFinalize()
     assert scalarMarket.tryFinalize()
 
-    stakeToken = localFixture.getStakeToken(market, [0,10**18])
+    stakeToken = localFixture.getOrCreateStakeToken(market, [0,10**18])
 
     with PrintGasUsed(localFixture, "StakeToken:redeemWinningTokens", STAKE_REDEMPTION):
         stakeToken.redeemWinningTokens(False)

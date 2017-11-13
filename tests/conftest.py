@@ -330,8 +330,8 @@ class ContractsFixture:
         assert universe.getTypeName() == stringToBytes('Universe')
         return universe
 
-    def getStakeToken(self, market, payoutDistribution, invalid=False):
-        stakeTokenAddress = market.getStakeToken(payoutDistribution, invalid)
+    def getOrCreateStakeToken(self, market, payoutDistribution, invalid=False):
+        stakeTokenAddress = market.getOrCreateStakeToken(payoutDistribution, invalid)
         assert stakeTokenAddress
         stakeToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['StakeToken']), stakeTokenAddress)
         return stakeToken
@@ -343,7 +343,7 @@ class ContractsFixture:
         return shareToken
 
     def designatedReport(self, market, payoutDistribution, reporterKey, invalid=False):
-        stakeToken = self.getStakeToken(market, payoutDistribution, invalid)
+        stakeToken = self.getOrCreateStakeToken(market, payoutDistribution, invalid)
         universe = self.applySignature('Universe', market.getUniverse())
         designatedReportStake = universe.getDesignatedReportStake()
         return stakeToken.buy(designatedReportStake, sender=reporterKey)
@@ -361,7 +361,7 @@ class ContractsFixture:
 
     def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender=tester.k0, extraInfo=""):
         marketCreationFee = universe.getMarketCreationCost()
-        reportingWindow = self.applySignature('ReportingWindow', universe.getReportingWindowByMarketEndTime(endTime))
+        reportingWindow = self.applySignature('ReportingWindow', universe.getOrCreateReportingWindowByMarketEndTime(endTime))
         marketAddress = reportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, extraInfo, value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
@@ -369,7 +369,7 @@ class ContractsFixture:
 
     def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress, sender=tester.k0):
         marketCreationFee = universe.getMarketCreationCost()
-        reportingWindow = self.applySignature('ReportingWindow', universe.getReportingWindowByMarketEndTime(endTime))
+        reportingWindow = self.applySignature('ReportingWindow', universe.getOrCreateReportingWindowByMarketEndTime(endTime))
         marketAddress = reportingWindow.createMarket(endTime, 2, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)

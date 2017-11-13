@@ -52,7 +52,7 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
                 _denominationToken.withdrawEtherTo(_market.getOwner(), _creatorShare);
             }
             if (_reporterShare > 0) {
-                require(_denominationToken.transferFrom(_market, _market.getUniverse().getNextReportingWindow(), _reporterShare));
+                require(_denominationToken.transferFrom(_market, _market.getUniverse().getOrCreateNextReportingWindow(), _reporterShare));
             }
         }
 

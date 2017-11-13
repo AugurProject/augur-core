@@ -55,7 +55,7 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
 
     function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
-        require(universe.getReportingWindowByMarketEndTime(_endTime) == this);
+        require(universe.getOrCreateReportingWindowByMarketEndTime(_endTime) == this);
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
         getReputationToken().trustedReportingWindowTransfer(msg.sender, _marketFactory, universe.getDesignatedReportNoShowBond());
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
@@ -212,14 +212,14 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
         return getDisputeStartTime() + Reporting.getReportingDisputeDurationSeconds();
     }
 
-    function getNextReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
+    function getOrCreateNextReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
         uint256 _nextTimestamp = getEndTime() + 1;
-        return getUniverse().getReportingWindowByTimestamp(_nextTimestamp);
+        return getUniverse().getOrCreateReportingWindowByTimestamp(_nextTimestamp);
     }
 
-    function getPreviousReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
+    function getOrCreatePreviousReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
         uint256 _previousTimestamp = getStartTime() - 1;
-        return getUniverse().getReportingWindowByTimestamp(_previousTimestamp);
+        return getUniverse().getOrCreateReportingWindowByTimestamp(_previousTimestamp);
     }
 
     function getTotalStake() public view returns (uint256) {

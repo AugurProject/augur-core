@@ -260,23 +260,23 @@ contract MockUniverse is Initializable, IUniverse {
         return setReportingPeriodDurationInSecondsValue;
     }
 
-    function getReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow) {
+    function getOrCreateReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow) {
         return setReportingWindowByTimestampValue;
     }
 
-    function getReportingWindowByMarketEndTime(uint256 _endTime) public returns (IReportingWindow) {
+    function getOrCreateReportingWindowByMarketEndTime(uint256 _endTime) public returns (IReportingWindow) {
         return setReportingWindowByMarketEndTimeValue;
     }
 
-    function getCurrentReportingWindow() public returns (IReportingWindow) {
+    function getOrCreateCurrentReportingWindow() public returns (IReportingWindow) {
         return setCurrentReportingWindowValue;
     }
 
-    function getNextReportingWindow() public returns (IReportingWindow) {
+    function getOrCreateNextReportingWindow() public returns (IReportingWindow) {
         return setNextReportingWindowValue;
     }
 
-    function getReportingWindowForForkEndTime() public returns (IReportingWindow) {
+    function getOrCreateReportingWindowForForkEndTime() public returns (IReportingWindow) {
         return setReportingWindowForForkEndTimeValue;
     }
 
@@ -292,7 +292,7 @@ contract MockUniverse is Initializable, IUniverse {
         return setTargetRepMarketCapInAttoethValue;
     }
 
-    function getValidityBond() public returns (uint256) {
+    function getOrCacheValidityBond() public returns (uint256) {
         return setValidityBondValue;
     }
 
@@ -344,7 +344,7 @@ contract MockUniverse is Initializable, IUniverse {
         return _newValue;
     }
 
-    function getTargetReporterGasCosts() public returns (uint256) {
+    function getOrCacheTargetReporterGasCosts() public returns (uint256) {
         return setTargetReporterGasCostsValue;
     }
 

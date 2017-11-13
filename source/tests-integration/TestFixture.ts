@@ -56,17 +56,17 @@ export class TestFixture {
         await this.connector.waitForTransactionReceipt(repApprovalTransactionHash, `Approving legacy reputation.`);
         const repMigrationTransactionHash = await reputationToken.migrateFromLegacyReputationToken();
         // necessary because it is used part of market creation fee calculation
-        const currentReportingWindowTransactionHash = await universe.getCurrentReportingWindow();
+        const currentReportingWindowTransactionHash = await universe.getOrCreateCurrentReportingWindow();
         // necessary because it is used as part of market creation fee calculation
-        const previousReportingWindowTransactionHash = await universe.getPreviousReportingWindow();
+        const previousReportingWindowTransactionHash = await universe.getOrCreatePreviousReportingWindow();
         // necessary because createMarket needs its reporting window already created
-        const marketReportingWindowTransactionHash = await universe.getReportingWindowByMarketEndTime(endTime);
+        const marketReportingWindowTransactionHash = await universe.getOrCreateReportingWindowByMarketEndTime(endTime);
         await this.connector.waitForTransactionReceipt(repMigrationTransactionHash, `Migrating reputation.`);
         await this.connector.waitForTransactionReceipt(currentReportingWindowTransactionHash, `Instantiating current reporting window.`);
         await this.connector.waitForTransactionReceipt(previousReportingWindowTransactionHash, `Instantiating previous reporting window.`);
         await this.connector.waitForTransactionReceipt(marketReportingWindowTransactionHash, `Instantiating market reporting window.`);
 
-        const targetReportingWindowAddress = await universe.getReportingWindowByMarketEndTime_(endTime);
+        const targetReportingWindowAddress = await universe.getOrCreateReportingWindowByMarketEndTime_(endTime);
 
         const targetReportingWindow = new ReportingWindow(this.connector, this.accountManager, targetReportingWindowAddress, this.configuration.gasPrice);
         const marketCreationFee = await universe.getMarketCreationCost_();

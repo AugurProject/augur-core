@@ -102,8 +102,8 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     function assessFees() private onlyInGoodTimes returns (bool) {
         IUniverse _universe = getUniverse();
         require(reportingWindow.getReputationToken().balanceOf(this) == _universe.getDesignatedReportNoShowBond());
-        reporterGasCostsFeeAttoeth = _universe.getTargetReporterGasCosts();
-        validityBondAttoeth = _universe.getValidityBond();
+        reporterGasCostsFeeAttoeth = _universe.getOrCacheTargetReporterGasCosts();
+        validityBondAttoeth = _universe.getOrCacheValidityBond();
         return true;
     }
 
@@ -168,11 +168,11 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             reportingWindow.updateMarketPhase();
         } else {
             firstReportersDisputeBond = _bond;
-            IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
+            IReportingWindow _newReportingWindow = getUniverse().getOrCreateNextReportingWindow();
             migrateReportingWindow(_newReportingWindow);
         }
         if (_attotokens > 0) {
-            IStakeToken _stakeToken = getStakeToken(_payoutNumerators, _invalid);
+            IStakeToken _stakeToken = getOrCreateStakeToken(_payoutNumerators, _invalid);
             // We expect trustedBuy to call updateTentativeWinningPayoutDistributionHash
             _stakeToken.trustedBuy(msg.sender, _attotokens);
         } else {
@@ -190,7 +190,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         this.increaseTotalStake(_bondAmount);
         reportingWindow.getReputationToken().trustedMarketTransfer(msg.sender, lastReportersDisputeBond, _bondAmount);
         reportingWindow.getUniverse().fork();
-        IReportingWindow _newReportingWindow = getUniverse().getReportingWindowForForkEndTime();
+        IReportingWindow _newReportingWindow = getUniverse().getOrCreateReportingWindowForForkEndTime();
         controller.getAugur().logReportsDisputed(getUniverse(), msg.sender, this, ReportingState.LAST_DISPUTE, _bondAmount);
         return migrateReportingWindow(_newReportingWindow);
     }
@@ -295,7 +295,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function migrateDueToNoReports() public onlyInGoodTimes returns (bool) {
         require(getReportingState() == ReportingState.AWAITING_NO_REPORT_MIGRATION);
-        IReportingWindow _newReportingWindow = getUniverse().getNextReportingWindow();
+        IReportingWindow _newReportingWindow = getUniverse().getOrCreateNextReportingWindow();
         migrateReportingWindow(_newReportingWindow);
         return true;
     }
@@ -322,7 +322,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         // This will put us in the designated dispute phase
         endTime = block.timestamp - Reporting.getDesignatedReportingDurationSeconds();
         totalStake = 0;
-        IReportingWindow _newReportingWindow = _destinationUniverse.getReportingWindowByMarketEndTime(endTime);
+        IReportingWindow _newReportingWindow = _destinationUniverse.getOrCreateReportingWindowByMarketEndTime(endTime);
         _newReportingWindow.migrateMarketInFromNibling();
         reportingWindow.removeMarket();
         reportingWindow = _newReportingWindow;
@@ -359,7 +359,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return true;
     }
 
-    function getStakeToken(uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes returns (IStakeToken) {
+    function getOrCreateStakeToken(uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes returns (IStakeToken) {
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         IStakeToken _stakeToken = IStakeToken(stakeTokens.getAsAddressOrZero(_payoutDistributionHash));
         if (address(_stakeToken) == NULL_ADDRESS) {
