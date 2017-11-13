@@ -369,7 +369,7 @@ def test_market_try_finalize_valid(localFixture, chain, initializeMarket, consta
     assert mockForkReportingWindow.getUpdateMarketPhaseCalled() == True
     assert mockAugur.logMarketFinalizedCalled() == True
     # market is valid market owner gets validity bond back
-    assert chain.head_state.get_balance(tester.a1) == ownerBalance + mockUniverse.getValidityBond()
+    assert chain.head_state.get_balance(tester.a1) == ownerBalance + mockUniverse.getOrCacheValidityBond()
     mockReputationToken.getTransferValueFor(finalPayoutStakeToken.address) == 34
     mockReputationToken.getTransferValueFor(finalPayoutStakeToken.address) == 55
 
@@ -558,7 +558,7 @@ def push_to_designated_despute_state(localFixture, mockUniverse, chain, initiali
     assert mockReportingWindow.getUpdateMarketPhaseCalled() == True
     assert mockReportingWindow.getNoteDesignatedReport() == True
     assert mockReputationToken.getTransferValueFor(tester.a1) == 105
-    assert chain.head_state.get_balance(tester.a1) == ownerBalance + mockUniverse.getTargetReporterGasCosts()
+    assert chain.head_state.get_balance(tester.a1) == ownerBalance + mockUniverse.getOrCacheTargetReporterGasCosts()
     assert initializeMarket.getReportingState() == constants.DESIGNATED_DISPUTE()
 
 @fixture(scope="session")

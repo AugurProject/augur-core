@@ -3538,15 +3538,15 @@ export class IUniverse extends Contract {
         return <BN>result[0];
     }
 
-    public getValidityBond = async( options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
+    public getOrCacheValidityBond = async( options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getValidityBond","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCacheValidityBond","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         return await this.remoteCall(abi, [], options.sender, options.gasPrice);
     }
 
-    public getValidityBond_ = async( options?: { sender?: string }): Promise<BN> => {
+    public getOrCacheValidityBond_ = async( options?: { sender?: string }): Promise<BN> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getValidityBond","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCacheValidityBond","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         const result = await this.localCall(abi, [], options.sender);
         return <BN>result[0];
     }
@@ -3699,15 +3699,15 @@ export class IUniverse extends Contract {
         return <string>result[0];
     }
 
-    public getTargetReporterGasCosts = async( options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
+    public getOrCacheTargetReporterGasCosts = async( options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getTargetReporterGasCosts","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCacheTargetReporterGasCosts","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         return await this.remoteCall(abi, [], options.sender, options.gasPrice);
     }
 
-    public getTargetReporterGasCosts_ = async( options?: { sender?: string }): Promise<BN> => {
+    public getOrCacheTargetReporterGasCosts_ = async( options?: { sender?: string }): Promise<BN> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getTargetReporterGasCosts","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCacheTargetReporterGasCosts","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         const result = await this.localCall(abi, [], options.sender);
         return <BN>result[0];
     }
@@ -6048,15 +6048,15 @@ export class Universe extends Controlled {
         return <BN>result[0];
     }
 
-    public getValidityBond = async( options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
+    public getOrCacheValidityBond = async( options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getValidityBond","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCacheValidityBond","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         return await this.remoteCall(abi, [], options.sender, options.gasPrice);
     }
 
-    public getValidityBond_ = async( options?: { sender?: string }): Promise<BN> => {
+    public getOrCacheValidityBond_ = async( options?: { sender?: string }): Promise<BN> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getValidityBond","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCacheValidityBond","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         const result = await this.localCall(abi, [], options.sender);
         return <BN>result[0];
     }
@@ -6236,15 +6236,15 @@ export class Universe extends Controlled {
         return <string>result[0];
     }
 
-    public getTargetReporterGasCosts = async( options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
+    public getOrCacheTargetReporterGasCosts = async( options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getTargetReporterGasCosts","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCacheTargetReporterGasCosts","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         return await this.remoteCall(abi, [], options.sender, options.gasPrice);
     }
 
-    public getTargetReporterGasCosts_ = async( options?: { sender?: string }): Promise<BN> => {
+    public getOrCacheTargetReporterGasCosts_ = async( options?: { sender?: string }): Promise<BN> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getTargetReporterGasCosts","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCacheTargetReporterGasCosts","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         const result = await this.localCall(abi, [], options.sender);
         return <BN>result[0];
     }

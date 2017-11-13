@@ -292,7 +292,7 @@ contract MockUniverse is Initializable, IUniverse {
         return setTargetRepMarketCapInAttoethValue;
     }
 
-    function getValidityBond() public returns (uint256) {
+    function getOrCacheValidityBond() public returns (uint256) {
         return setValidityBondValue;
     }
 
@@ -344,7 +344,7 @@ contract MockUniverse is Initializable, IUniverse {
         return _newValue;
     }
 
-    function getTargetReporterGasCosts() public returns (uint256) {
+    function getOrCacheTargetReporterGasCosts() public returns (uint256) {
         return setTargetReporterGasCostsValue;
     }
 

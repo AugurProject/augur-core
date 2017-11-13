@@ -187,8 +187,8 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     # validity bond is the same if window hasn't changed
     assert populatedUniverse.getDesignatedReportStake() == designatedStakeValue
     assert populatedUniverse.getDesignatedReportStake() == designatedStakeValue
-    assert populatedUniverse.getValidityBond() == validityBondValue
-    assert populatedUniverse.getValidityBond() == validityBondValue
+    assert populatedUniverse.getOrCacheValidityBond() == validityBondValue
+    assert populatedUniverse.getOrCacheValidityBond() == validityBondValue
     assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
     assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
 
@@ -206,12 +206,12 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     newNoshowBondValue = populatedUniverse.calculateFloatingValue(3, numMarket, noshow_divisor, noshowBondValue, noshow_default, noshow_floor)
 
     assert populatedUniverse.getDesignatedReportStake() == newDesignatedStakeValue
-    assert populatedUniverse.getValidityBond() == newValidityBondValue
+    assert populatedUniverse.getOrCacheValidityBond() == newValidityBondValue
     assert populatedUniverse.getDesignatedReportNoShowBond() == newNoshowBondValue
 
     currentReportingWindow.setAvgReportingGasPrice(14)
     targetGasCost = getGasToReport * 14 * 2;
-    assert populatedUniverse.getTargetReporterGasCosts() == targetGasCost
+    assert populatedUniverse.getOrCacheTargetReporterGasCosts() == targetGasCost
     assert populatedUniverse.getMarketCreationCost() == targetGasCost + newValidityBondValue
 
 def test_universe_calculate_floating_value_defaults(populatedUniverse):

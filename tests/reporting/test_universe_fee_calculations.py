@@ -46,7 +46,7 @@ def test_floating_amount_calculation(numWithCondition, targetWithConditionPerHun
 def test_default_target_reporter_gas_costs(contractsFixture, universe, market):
     # The target reporter gas cost is an attempt to charge the market creator for the estimated cost of reporting that may occur for their market. With no previous reporting window to base costs off of it assumes basic default values
 
-    targetReporterGasCosts = universe.getTargetReporterGasCosts()
+    targetReporterGasCosts = universe.getOrCacheTargetReporterGasCosts()
     expectedTargetReporterGasCost = contractsFixture.contracts['Constants'].GAS_TO_REPORT()
     expectedTargetReporterGasCost *= contractsFixture.contracts['Constants'].DEFAULT_REPORTING_GAS_PRICE()
     expectedTargetReporterGasCost *= 2
@@ -84,7 +84,7 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture, unive
     expectedTargetReporterGasCost = reportingFixture.contracts['Constants'].GAS_TO_REPORT()
     expectedTargetReporterGasCost *= expectedAvgReportingGasCost
     expectedTargetReporterGasCost *= 2
-    targetReporterGasCosts = universe.getTargetReporterGasCosts()
+    targetReporterGasCosts = universe.getOrCacheTargetReporterGasCosts()
     assert targetReporterGasCosts == expectedTargetReporterGasCost
 
 @fixture(scope="session")

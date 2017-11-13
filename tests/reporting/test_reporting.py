@@ -15,8 +15,8 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     stakeTokenNo = localFixture.getOrCreateStakeToken(market, [10**18,0])
     stakeTokenYes = localFixture.getOrCreateStakeToken(market, [0,10**18])
     reportingWindow = localFixture.applySignature('ReportingWindow', universe.getOrCreateNextReportingWindow())
-    expectedMarketCreatorFeePayout = universe.getValidityBond()
-    reporterGasCosts = universe.getTargetReporterGasCosts()
+    expectedMarketCreatorFeePayout = universe.getOrCacheValidityBond()
+    reporterGasCosts = universe.getOrCacheTargetReporterGasCosts()
 
     # We can't yet report on the market as it's in the pre reporting phase
     assert market.getReportingState() == localFixture.contracts['Constants'].PRE_REPORTING()
@@ -437,7 +437,7 @@ def test_noReports(localFixture, pastDisputePhase, universe, market):
 def test_invalid_first_report(localFixture, universe, cash, market):
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
-    expectedReportingWindowFeePayout = universe.getValidityBond()
+    expectedReportingWindowFeePayout = universe.getOrCacheValidityBond()
 
     # Proceed to the FIRST REPORTING phase
     proceedToFirstReporting(localFixture, universe, market, False, 1, [0,10**18], [10**18,0])
@@ -463,8 +463,8 @@ def test_invalid_first_report(localFixture, universe, cash, market):
 
 def test_invalid_designated_report(localFixture, universe, cash, market):
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    expectedReportingWindowFeePayout = universe.getValidityBond()
-    expectedMarketCreatorFeePayout = universe.getTargetReporterGasCosts()
+    expectedReportingWindowFeePayout = universe.getOrCacheValidityBond()
+    expectedMarketCreatorFeePayout = universe.getOrCacheTargetReporterGasCosts()
 
     # Proceed to the DESIGNATED REPORTING phase
     proceedToDesignatedReporting(localFixture, universe, market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])

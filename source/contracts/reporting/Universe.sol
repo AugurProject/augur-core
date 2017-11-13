@@ -291,18 +291,18 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return getOpenInterestInAttoEth() * Reporting.getTargetRepMarketCapMultiplier();
     }
 
-    function getValidityBond() public onlyInGoodTimes returns (uint256) {
+    function getOrCacheValidityBond() public onlyInGoodTimes returns (uint256) {
         IReportingWindow _reportingWindow = getOrCreateCurrentReportingWindow();
-        uint256 _validityBond = getValidityBondInternal(_reportingWindow, getOrCreatePreviousReportingWindow());
+        uint256 _validityBond = getOrCacheValidityBondInternal(_reportingWindow, getOrCreatePreviousReportingWindow());
         validityBondInAttoeth[_reportingWindow] = _validityBond;
         return _validityBond;
     }
 
-    function getValidityBondView() public view onlyInGoodTimes returns (uint256) {
-        return getValidityBondInternal(getCurrentReportingWindow(), getPreviousReportingWindow());
+    function getValidityBond() public view onlyInGoodTimes returns (uint256) {
+        return getOrCacheValidityBondInternal(getCurrentReportingWindow(), getPreviousReportingWindow());
     }
 
-    function getValidityBondInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
+    function getOrCacheValidityBondInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
         require(_reportingWindow != IReportingWindow(0));
         require(_previousReportingWindow != IReportingWindow(0));
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
@@ -406,18 +406,18 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return _currentFeeDivisor;
     }
 
-    function getTargetReporterGasCosts() public onlyInGoodTimes returns (uint256) {
+    function getOrCacheTargetReporterGasCosts() public onlyInGoodTimes returns (uint256) {
         IReportingWindow _reportingWindow = getOrCreateCurrentReportingWindow();
-        uint256 _reporterGasCost = getTargetReporterGasCostsInternal(_reportingWindow, getOrCreatePreviousReportingWindow());
+        uint256 _reporterGasCost = getOrCacheTargetReporterGasCostsInternal(_reportingWindow, getOrCreatePreviousReportingWindow());
         targetReporterGasCosts[_reportingWindow] = _reporterGasCost;
         return _reporterGasCost;
     }
 
-    function getTargetReporterGasCostsView() public view onlyInGoodTimes returns (uint256) {
-        return getTargetReporterGasCostsInternal(getCurrentReportingWindow(), getPreviousReportingWindow());
+    function getTargetReporterGasCosts() public view onlyInGoodTimes returns (uint256) {
+        return getOrCacheTargetReporterGasCostsInternal(getCurrentReportingWindow(), getPreviousReportingWindow());
     }
 
-    function getTargetReporterGasCostsInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
+    function getOrCacheTargetReporterGasCostsInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
         require(_reportingWindow != IReportingWindow(0));
         require(_previousReportingWindow != IReportingWindow(0));
         uint256 _getGasToReport = targetReporterGasCosts[_reportingWindow];
@@ -433,11 +433,11 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getMarketCreationCost() public onlyInGoodTimes returns (uint256) {
-        return getValidityBond() + getTargetReporterGasCosts();
+        return getOrCacheValidityBond() + getOrCacheTargetReporterGasCosts();
     }
 
     function getMarketCreationCostView() public view onlyInGoodTimes returns (uint256) {
-        return getValidityBondView() + getTargetReporterGasCostsView();
+        return getValidityBond() + getTargetReporterGasCosts();
     }
 
     function getProtectedTokens() internal returns (address[] memory) {
