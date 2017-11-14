@@ -328,6 +328,8 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getDesignatedReportStakeInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
+        require(_reportingWindow != IReportingWindow(0));
+        require(_previousReportingWindow != IReportingWindow(0));
         uint256 _currentDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_reportingWindow];
         if (_currentDesignatedReportStakeInAttoRep != 0) {
             return _currentDesignatedReportStakeInAttoRep;
@@ -352,6 +354,8 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getDesignatedReportNoShowBondInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
+        require(_reportingWindow != IReportingWindow(0));
+        require(_previousReportingWindow != IReportingWindow(0));
         uint256 _currentDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_reportingWindow];
         if (_currentDesignatedReportNoShowBondInAttoRep != 0) {
             return _currentDesignatedReportNoShowBondInAttoRep;
@@ -410,6 +414,8 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getReportingFeeDivisorInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
+        require(_reportingWindow != IReportingWindow(0));
+        require(_previousReportingWindow != IReportingWindow(0));
         uint256 _currentFeeDivisor = shareSettlementFeeDivisor[_reportingWindow];
         if (_currentFeeDivisor != 0) {
             return _currentFeeDivisor;
