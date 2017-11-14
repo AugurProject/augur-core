@@ -41,3 +41,59 @@ def test_market_creation_fee_getter(kitchenSinkFixture, universe):
 
     # Now we should be able to call the view version and get the same value
     assert marketCreationCost == universe.getMarketCreationCost()
+
+def test_validity_bond_getter(kitchenSinkFixture, universe):
+    universe = kitchenSinkFixture.createUniverse(universe.address, "")
+
+    # When getting the validity bond we may use a view function that will throw if the current and previous reporting window do not exist
+    with raises(TransactionFailed):
+        universe.getValidityBond()
+
+    # Calling the normal function which creates these windows if they do not exist should return correctly
+    bond = universe.getOrCacheValidityBond()
+    assert bond > 0
+
+    # Now we should be able to call the view version and get the same value
+    assert bond == universe.getValidityBond()
+
+def test_designated_report_stake_getter(kitchenSinkFixture, universe):
+    universe = kitchenSinkFixture.createUniverse(universe.address, "")
+
+    # When getting the designated report stake we may use a view function that will throw if the current and previous reporting window do not exist
+    with raises(TransactionFailed):
+        universe.getDesignatedReportStake()
+
+    # Calling the normal function which creates these windows if they do not exist should return correctly
+    stake = universe.getOrCacheDesignatedReportStake()
+    assert stake > 0
+
+    # Now we should be able to call the view version and get the same value
+    assert stake == universe.getDesignatedReportStake()
+
+def test_designated_report_no_show_bond_getter(kitchenSinkFixture, universe):
+    universe = kitchenSinkFixture.createUniverse(universe.address, "")
+
+    # When getting the no show bond we may use a view function that will throw if the current and previous reporting window do not exist
+    with raises(TransactionFailed):
+        universe.getDesignatedReportNoShowBond()
+
+    # Calling the normal function which creates these windows if they do not exist should return correctly
+    bond = universe.getOrCacheDesignatedReportNoShowBond()
+    assert bond > 0
+
+    # Now we should be able to call the view version and get the same value
+    assert bond == universe.getDesignatedReportNoShowBond()
+
+def test_reporting_fee_divisor_getter(kitchenSinkFixture, universe):
+    universe = kitchenSinkFixture.createUniverse(universe.address, "")
+
+    # When getting the reporting fee divisor we may use a view function that will throw if the current and previous reporting window do not exist
+    with raises(TransactionFailed):
+        universe.getReportingFeeDivisor()
+
+    # Calling the normal function which creates these windows if they do not exist should return correctly
+    feeDivisor = universe.getOrCacheReportingFeeDivisor()
+    assert feeDivisor > 0
+
+    # Now we should be able to call the view version and get the same value
+    assert feeDivisor == universe.getReportingFeeDivisor()
