@@ -5,13 +5,13 @@ services:
 - docker
 notifications:
   email: false
-before_install: "./.travis/test-setup.sh"
-script: "./.travis/test.sh"
-before_deploy: "./.travis/deploy-setup.sh"
+before_install: "./deployment/test-setup.sh"
+script: "./deployment/test.sh"
+before_deploy: "./deployment/deploy-setup.sh"
 deploy:
 - skip_cleanup: true
   provider: script
-  script: ".travis/deploy.sh rinkeby"
+  script: "deployment/deploy.sh rinkeby"
   on:
     branch: master
 git:
