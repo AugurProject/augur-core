@@ -10,6 +10,7 @@ import 'reporting/IReportingWindow.sol';
 import 'reporting/IStakeToken.sol';
 import 'reporting/IDisputeBond.sol';
 import 'trading/IShareToken.sol';
+import 'libraries/IMailbox.sol';
 
 
 contract IMarket is ITyped, IOwnable {
@@ -59,6 +60,7 @@ contract IMarket is ITyped, IOwnable {
     function getTotalStake() public view returns (uint256);
     function getTotalWinningDisputeBondStake() public view returns (uint256);
     function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256);
+    function getMarketCreatorMailbox() public view returns (IMailbox);
     function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool);
     function firstReporterCompensationCheck(address _reporter) public returns (uint256);
     function increaseTotalStake(uint256 _amount) public returns (bool);
