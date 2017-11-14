@@ -3777,19 +3777,6 @@ export class Market extends Controlled {
         return <boolean>result[0];
     }
 
-    public decreaseMarketCreatorSettlementFeeInAttoethPerEth = async(newFeePerEthInWei: BN|number, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
-        options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_newFeePerEthInWei","type":"uint256"}],"name":"decreaseMarketCreatorSettlementFeeInAttoethPerEth","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-        return await this.remoteCall(abi, [newFeePerEthInWei], options.sender, options.gasPrice);
-    }
-
-    public decreaseMarketCreatorSettlementFeeInAttoethPerEth_ = async(newFeePerEthInWei: BN|number, options?: { sender?: string }): Promise<boolean> => {
-        options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_newFeePerEthInWei","type":"uint256"}],"name":"decreaseMarketCreatorSettlementFeeInAttoethPerEth","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-        const result = await this.localCall(abi, [newFeePerEthInWei], options.sender);
-        return <boolean>result[0];
-    }
-
     public updateTentativeWinningPayoutDistributionHash = async(payoutDistributionHash: string, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
         options = options || {};
         const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_payoutDistributionHash","type":"bytes32"}],"name":"updateTentativeWinningPayoutDistributionHash","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};

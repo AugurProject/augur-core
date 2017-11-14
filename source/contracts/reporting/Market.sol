@@ -123,13 +123,6 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return true;
     }
 
-    function decreaseMarketCreatorSettlementFeeInAttoethPerEth(uint256 _newFeePerEthInWei) public onlyInGoodTimes onlyOwner returns (bool) {
-        uint256 _newFeeDivisor = 1 ether / _newFeePerEthInWei;
-        require(_newFeeDivisor > feeDivisor);
-        feeDivisor = _newFeeDivisor;
-        return true;
-    }
-
     function designatedReport() public onlyInGoodTimes triggersMigration returns (bool) {
         require(getReportingState() == ReportingState.DESIGNATED_REPORTING);
         IStakeToken _shadyStakeToken = IStakeToken(msg.sender);
