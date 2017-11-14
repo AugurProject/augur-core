@@ -185,12 +185,12 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     validityBondValue = populatedUniverse.calculateFloatingValue(0, 0, validity_divisor, 0, validity_default, validity_floor)
     noshowBondValue = populatedUniverse.calculateFloatingValue(0, 0, noshow_divisor, 0, noshow_default, noshow_floor)
     # validity bond is the same if window hasn't changed
-    assert populatedUniverse.getDesignatedReportStake() == designatedStakeValue
-    assert populatedUniverse.getDesignatedReportStake() == designatedStakeValue
+    assert populatedUniverse.getOrCacheDesignatedReportStake() == designatedStakeValue
+    assert populatedUniverse.getOrCacheDesignatedReportStake() == designatedStakeValue
     assert populatedUniverse.getOrCacheValidityBond() == validityBondValue
     assert populatedUniverse.getOrCacheValidityBond() == validityBondValue
-    assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
-    assert populatedUniverse.getDesignatedReportNoShowBond() == noshowBondValue
+    assert populatedUniverse.getOrCacheDesignatedReportNoShowBond() == noshowBondValue
+    assert populatedUniverse.getOrCacheDesignatedReportNoShowBond() == noshowBondValue
 
     # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
@@ -205,14 +205,14 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     newValidityBondValue = populatedUniverse.calculateFloatingValue(2, numMarket, validity_divisor, validityBondValue, validity_default, validity_floor)
     newNoshowBondValue = populatedUniverse.calculateFloatingValue(3, numMarket, noshow_divisor, noshowBondValue, noshow_default, noshow_floor)
 
-    assert populatedUniverse.getDesignatedReportStake() == newDesignatedStakeValue
+    assert populatedUniverse.getOrCacheDesignatedReportStake() == newDesignatedStakeValue
     assert populatedUniverse.getOrCacheValidityBond() == newValidityBondValue
-    assert populatedUniverse.getDesignatedReportNoShowBond() == newNoshowBondValue
+    assert populatedUniverse.getOrCacheDesignatedReportNoShowBond() == newNoshowBondValue
 
     currentReportingWindow.setAvgReportingGasPrice(14)
     targetGasCost = getGasToReport * 14 * 2;
     assert populatedUniverse.getOrCacheTargetReporterGasCosts() == targetGasCost
-    assert populatedUniverse.getMarketCreationCost() == targetGasCost + newValidityBondValue
+    assert populatedUniverse.getOrCacheMarketCreationCost() == targetGasCost + newValidityBondValue
 
 def test_universe_calculate_floating_value_defaults(populatedUniverse):
     defaultValue = 12
@@ -230,7 +230,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     # default value
     defaultValue = 10000
     assert populatedUniverse.getRepMarketCapInAttoeth() == 0
-    assert populatedUniverse.getReportingFeeDivisor() == defaultValue
+    assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue
 
     # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
@@ -238,7 +238,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     # check getRepMarketCapInAttoeth() == 0
     assert populatedUniverse.getRepMarketCapInAttoeth() == 0
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 0
-    assert populatedUniverse.getReportingFeeDivisor() == defaultValue
+    assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue
 
     # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
@@ -250,9 +250,9 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     assert populatedUniverse.getRepMarketCapInAttoeth() == 0
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 10 * multiplier
     assert populatedUniverse.getOpenInterestInAttoEth() == 10
-    assert populatedUniverse.getReportingFeeDivisor() == defaultValue
+    assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue
     # value is cached for reach reporting window
-    assert populatedUniverse.getReportingFeeDivisor() == defaultValue
+    assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue
 
     # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
@@ -264,7 +264,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 20 * multiplier
     assert populatedUniverse.getOpenInterestInAttoEth() == 20
     # default because calculation is greater than 10000
-    assert populatedUniverse.getReportingFeeDivisor() == defaultValue
+    assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue
 
     # push reporting window forward
     chain.head_state.timestamp = chain.head_state.timestamp + populatedUniverse.getReportingPeriodDurationInSeconds()
@@ -276,7 +276,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 5 * multiplier
     assert populatedUniverse.getOpenInterestInAttoEth() == 5
 
-    assert populatedUniverse.getReportingFeeDivisor() == defaultValue / 5 * multiplier
+    assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue / 5 * multiplier
 
 
 @fixture

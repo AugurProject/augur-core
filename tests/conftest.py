@@ -345,7 +345,7 @@ class ContractsFixture:
     def designatedReport(self, market, payoutDistribution, reporterKey, invalid=False):
         stakeToken = self.getOrCreateStakeToken(market, payoutDistribution, invalid)
         universe = self.applySignature('Universe', market.getUniverse())
-        designatedReportStake = universe.getDesignatedReportStake()
+        designatedReportStake = universe.getOrCacheDesignatedReportStake()
         return stakeToken.buy(designatedReportStake, sender=reporterKey)
 
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
@@ -360,7 +360,7 @@ class ContractsFixture:
         return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender, extraInfo)
 
     def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender=tester.k0, extraInfo=""):
-        marketCreationFee = universe.getMarketCreationCost()
+        marketCreationFee = universe.getOrCacheMarketCreationCost()
         reportingWindow = self.applySignature('ReportingWindow', universe.getOrCreateReportingWindowByMarketEndTime(endTime))
         marketAddress = reportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, extraInfo, value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
         assert marketAddress
@@ -368,7 +368,7 @@ class ContractsFixture:
         return market
 
     def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress, sender=tester.k0):
-        marketCreationFee = universe.getMarketCreationCost()
+        marketCreationFee = universe.getOrCacheMarketCreationCost()
         reportingWindow = self.applySignature('ReportingWindow', universe.getOrCreateReportingWindowByMarketEndTime(endTime))
         marketAddress = reportingWindow.createMarket(endTime, 2, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
         assert marketAddress

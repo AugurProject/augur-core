@@ -56,7 +56,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
         uint256 _payout = _amount.mul(_market.getNumTicks());
         _market.getUniverse().decrementOpenInterest(_payout);
         uint256 _creatorFee = _payout.div(_creatorFeeDivisor);
-        uint256 _reportingFeeDivisor = _market.getUniverse().getReportingFeeDivisor();
+        uint256 _reportingFeeDivisor = _market.getUniverse().getOrCacheReportingFeeDivisor();
         uint256 _reportingFee = _payout.div(_reportingFeeDivisor);
         _payout = _payout.sub(_creatorFee).sub(_reportingFee);
 

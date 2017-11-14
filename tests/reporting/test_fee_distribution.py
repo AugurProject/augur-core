@@ -63,7 +63,7 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
     # Fast forward time until the window is over and we can redeem our winning stake and participation tokens and receive fees
     localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
 
-    reporterFees = 1000 * market.getNumTicks() / universe.getReportingFeeDivisor()
+    reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
     totalWinningStake = reportingWindow.getTotalWinningStake()
     assert cash.balanceOf(reportingWindow.address) == reporterFees
 
@@ -134,7 +134,7 @@ def test_dispute_bond_fee_collection(localFixture, universe, market, categorical
     categoricalMarketDesignatedStake = localFixture.getOrCreateStakeToken(categoricalMarket, [categoricalMarket.getNumTicks(), 0, 0])
     scalarMarketDesignatedStake = localFixture.getOrCreateStakeToken(scalarMarket, [scalarMarket.getNumTicks(), 0])
 
-    reporterFees = 1000 * market.getNumTicks() / universe.getReportingFeeDivisor()
+    reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
     totalWinningStake = reportingWindow.getTotalWinningStake()
     assert cash.balanceOf(reportingWindow.address) == reporterFees
 
@@ -180,7 +180,7 @@ def test_fee_migration(localFixture, universe, market, categoricalMarket, scalar
     assert categoricalMarket.disputeDesignatedReport([categoricalMarket.getNumTicks(),0,0], otherOutcomeStake, False, sender=tester.k2)
     assert scalarMarket.disputeDesignatedReport([scalarMarket.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k3)
 
-    reporterFees = 1000 * market.getNumTicks() / universe.getReportingFeeDivisor()
+    reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
     totalWinningStake = reportingWindow.getTotalWinningStake()
     assert cash.balanceOf(reportingWindow.address) == reporterFees
 
@@ -206,7 +206,7 @@ def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket
     assert categoricalMarket.disputeDesignatedReport([categoricalMarket.getNumTicks(),0,0], otherOutcomeStake, False, sender=tester.k2)
     assert scalarMarket.disputeDesignatedReport([scalarMarket.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k3)
 
-    reporterFees = 1000 * market.getNumTicks() / universe.getReportingFeeDivisor()
+    reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
     totalWinningStake = reportingWindow.getTotalWinningStake()
     assert cash.balanceOf(reportingWindow.address) == reporterFees
 
@@ -271,7 +271,7 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
     with EtherDelta(marketCreatorFees, tester.a0, fixture.chain, "The market creator didn't get their share of fees from complete set sale"):
         completeSets.publicSellCompleteSets(market.address, 1000, sender=tester.k1)
     fees = cash.balanceOf(market.getReportingWindow())
-    reporterFees = cost / universe.getReportingFeeDivisor()
+    reporterFees = cost / universe.getOrCacheReportingFeeDivisor()
     assert fees == reporterFees
 
     # Distribute REP
@@ -296,7 +296,7 @@ def localFixture(fixture, localSnapshot, kitchenSinkSnapshot):
     fixture.chain.head_state.timestamp = market.getEndTime() + 1
 
     # Designated Report on each market
-    designatedReportCost = universe.getDesignatedReportStake()
+    designatedReportCost = universe.getOrCacheDesignatedReportStake()
     totalDesignatedReportCostInWindow = designatedReportCost * 3
     with TokenDelta(reputationToken, 0, tester.a0, "Doing the designated report didn't deduct REP correctly or didn't award the no show bond"):
         with StakeDelta(designatedReportCost, totalDesignatedReportCostInWindow, 0, market, reportingWindow, "Doing the designated report din't adjust stake accounting correctly"):

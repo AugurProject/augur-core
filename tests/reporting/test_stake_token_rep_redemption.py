@@ -15,13 +15,13 @@ def test_one_market_one_correct_report(localFixture, universe, market):
     initialRepBalance = reputationToken.balanceOf(tester.a0)
     assert localFixture.designatedReport(market, [0,10**18], tester.k0)
     # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
-    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getDesignatedReportNoShowBond() - universe.getDesignatedReportStake()
+    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getOrCacheDesignatedReportNoShowBond() - universe.getOrCacheDesignatedReportStake()
     initialREPBalance = reputationToken.balanceOf(tester.a0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
     assert market.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
 
-    expectedStakeTokenBalance = universe.getDesignatedReportStake()
+    expectedStakeTokenBalance = universe.getOrCacheDesignatedReportStake()
 
     # Time passes until the end of the reporting window
     localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
@@ -55,7 +55,7 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     initialRepBalance = reputationToken.balanceOf(tester.a0)
     assert localFixture.designatedReport(market, [0,10**18], tester.k0)
     # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
-    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getDesignatedReportNoShowBond() - universe.getDesignatedReportStake()
+    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getOrCacheDesignatedReportNoShowBond() - universe.getOrCacheDesignatedReportStake()
     initialREPBalance = reputationToken.balanceOf(tester.a0)
 
     # We're now in the DESIGNATED DISPUTE PHASE
@@ -66,11 +66,11 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     initialRepBalance = reputationToken.balanceOf(tester.a0)
     assert localFixture.designatedReport(market2, [0,10**18], tester.k0)
     # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
-    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getDesignatedReportNoShowBond() - universe.getDesignatedReportStake()
+    assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getOrCacheDesignatedReportNoShowBond() - universe.getOrCacheDesignatedReportStake()
     initialREPBalance = reputationToken.balanceOf(tester.a0)
     assert market2.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
 
-    designatedReportStake = universe.getDesignatedReportStake()
+    designatedReportStake = universe.getOrCacheDesignatedReportStake()
 
     # Time passes until the end of the reporting window
     localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
@@ -125,7 +125,7 @@ def test_stake_token_redemption(localFixture, universe, market, numReports, numC
     # Proceed to FIRST REPORTING
     proceedToFirstReporting(localFixture, universe, market, False, 1, [0,10**18], [10**18,0])
 
-    noShowBond = universe.getDesignatedReportNoShowBond()
+    noShowBond = universe.getOrCacheDesignatedReportNoShowBond()
 
     doReports(localFixture, market, numReports, numCorrect)
 

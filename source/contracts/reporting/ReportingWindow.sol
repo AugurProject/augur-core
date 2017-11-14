@@ -57,7 +57,7 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
         require(block.timestamp < startTime);
         require(universe.getOrCreateReportingWindowByMarketEndTime(_endTime) == this);
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
-        getReputationToken().trustedReportingWindowTransfer(msg.sender, _marketFactory, universe.getDesignatedReportNoShowBond());
+        getReputationToken().trustedReportingWindowTransfer(msg.sender, _marketFactory, universe.getOrCacheDesignatedReportNoShowBond());
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
         firstReporterMarkets.add(_newMarket);

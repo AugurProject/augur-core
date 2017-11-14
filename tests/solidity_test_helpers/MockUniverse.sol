@@ -296,15 +296,15 @@ contract MockUniverse is Initializable, IUniverse {
         return setValidityBondValue;
     }
 
-    function getDesignatedReportStake() public returns (uint256) {
+    function getOrCacheDesignatedReportStake() public returns (uint256) {
         return setDesignatedReportStakeValue;
     }
 
-    function getDesignatedReportNoShowBond() public returns (uint256) {
+    function getOrCacheDesignatedReportNoShowBond() public returns (uint256) {
         return setDesignatedReportNoShowBondValue;
     }
 
-    function getReportingFeeDivisor() public returns (uint256) {
+    function getOrCacheReportingFeeDivisor() public returns (uint256) {
         return setReportingFeeDivisorValue;
     }
 
@@ -348,7 +348,7 @@ contract MockUniverse is Initializable, IUniverse {
         return setTargetReporterGasCostsValue;
     }
 
-    function getMarketCreationCost() public returns (uint256) {
+    function getOrCacheMarketCreationCost() public returns (uint256) {
         return setMarketCreationCostValue;
     }
 

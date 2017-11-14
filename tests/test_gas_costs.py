@@ -33,7 +33,7 @@ pytestmark = mark.skip(reason="Just for testing gas cost")
 tester.STARTGAS = long(6.7 * 10**6)
 
 def test_reportingWindowCreation(localFixture, universe, cash):
-    marketCreationFee = universe.getMarketCreationCost()
+    marketCreationFee = universe.getOrCacheMarketCreationCost()
 
     endTime = long(localFixture.chain.head_state.timestamp + timedelta(days=365).total_seconds())
 
@@ -41,7 +41,7 @@ def test_reportingWindowCreation(localFixture, universe, cash):
         universe.getOrCreateReportingWindowByMarketEndTime(endTime)
 
 def test_marketCreation(localFixture, universe, cash):
-    marketCreationFee = universe.getMarketCreationCost()
+    marketCreationFee = universe.getOrCacheMarketCreationCost()
 
     endTime = long(localFixture.chain.head_state.timestamp + timedelta(days=1).total_seconds())
     feePerEthInWei = 10**16

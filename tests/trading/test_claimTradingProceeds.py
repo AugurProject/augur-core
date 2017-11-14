@@ -77,7 +77,7 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     yesShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(NO))
     expectedValue = 1 * market.getNumTicks()
-    expectedReporterFees = expectedValue / universe.getReportingFeeDivisor()
+    expectedReporterFees = expectedValue / universe.getOrCacheReportingFeeDivisor()
     expectedMarketCreatorFees = expectedValue / market.getMarketCreatorSettlementFeeDivisor()
     expectedSettlementFees = expectedReporterFees + expectedMarketCreatorFees
     expectedPayout = long(expectedValue - expectedSettlementFees)
