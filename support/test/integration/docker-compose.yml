@@ -14,7 +14,7 @@ services:
   parity-integration-tests:
     build:
       context: .
-      dockerfile: Dockerfile-integration-tests
+      dockerfile: Dockerfile
     # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
     # ports:
@@ -30,7 +30,7 @@ services:
   geth-integration-tests:
     build:
       context: .
-      dockerfile: Dockerfile-integration-tests
+      dockerfile: Dockerfile
     # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
     # ports:
