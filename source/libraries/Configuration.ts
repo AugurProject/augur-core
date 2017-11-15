@@ -14,7 +14,7 @@ export class Configuration {
     public readonly controllerAddress: string|undefined;
     public readonly createGenesisUniverse: boolean;
 
-    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputRoot: string, controllerAddress: string|undefined, createGenesisUniverse: boolean=false) {
+    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputRoot: string, controllerAddress: string|undefined, createGenesisUniverse: boolean=true) {
         this.httpProviderHost = host;
         this.httpProviderPort = port;
         this.gasPrice = gasPrice;
@@ -35,7 +35,7 @@ export class Configuration {
         const contractSourceRoot = path.join(__dirname, "../../source/contracts/");
         const contractOutputRoot = path.join(__dirname, "../../output/contracts/");
         const controllerAddress = process.env.AUGUR_CONTROLLER_ADDRESS;
-        const createGenesisUniverse = process.env.CREATE_GENESIS_UNIVERSE === "true";
+        const createGenesisUniverse = (typeof process.env.CREATE_GENESIS_UNIVERSE === "undefined") ? true : process.env.CREATE_GENESIS_UNIVERSE === "true";
 
         return new Configuration(host, port, gasPrice, privateKey, contractSourceRoot, contractOutputRoot, controllerAddress, createGenesisUniverse);
     }
