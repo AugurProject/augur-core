@@ -3,8 +3,9 @@
   "verson": "0.1.0",
   "description": "Core augur contracts and deployment process",
   "author": "The Augur Developers <tam@augur.net>",
+  "repository": "http://github.com/AugurProject/augur-core",
   "license": {
-    "type": "GPLv3",
+    "type": "GPL-3.0",
     "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
   },
   "directories": {
