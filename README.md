@@ -38,19 +38,19 @@ You may run augur-core using docker as follows:
 ### Build:
 
 ```
-docker image build --tag augur-core-tests --file Dockerfile-test .
+npm run docker:build
 ```
 
 ### Run:
 
 ```
-docker container run --rm -it augur-core-tests
+npm run docker:test:unit
 ```
 
 ### Debug:
 
 ```
-docker container run --rm -it --entrypoint /bin/bash augur-core-tests
+npm run docker:test:console
 py.test -s tests/trading_tests.py
 ```
 

@@ -23,6 +23,7 @@
     "deploy:foundation": "npm run deploy:net -- foundation",
     "deploy": "npm run deploy:rinkeby",
     "docker:build": "bash support/setup.sh",
+    "docker:test:console": "bash support/test/unit/run.sh console",
     "docker:test:unit": "bash support/test/unit/run.sh",
     "docker:test:integration": "bash support/test/unit/run.sh",
     "docker:test": "npm run docker:test:unit && npm run docker:test:integration",
