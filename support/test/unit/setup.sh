@@ -7,4 +7,4 @@
 
 # Build the test image
 
-docker image build --tag augur/augur-core-test:latest -f ./support/test/unit/Dockerfile .
+docker build --tag augur/augur-core-test:latest -f ./support/test/unit/Dockerfile .
