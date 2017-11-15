@@ -12,7 +12,7 @@ deploy:
   provider: script
   script: "npm run docker:deploy"
   on:
-    branch: master
+    branch: feature/ci
 git:
   depth: 5
 env:
