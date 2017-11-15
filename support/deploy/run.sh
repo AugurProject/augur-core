@@ -46,7 +46,7 @@ case $1 in
     ;;
   "direct")
     node output/deployment/compileContracts.js
-    AUGUR_CONTROLLER_ADDRESS=$controller ETHEREUM_GAS_PRICE_IN_NANOETH=$gasPrice ETHEREUM_HOST=$host ETHEREUM_PORT=$port ETHEREUM_PRIVATE_KEY=$privateKey support/deploy/deploy.sh
+    AUGUR_CONTROLLER_ADDRESS=$controller ETHEREUM_GAS_PRICE_IN_NANOETH=$gasPrice ETHEREUM_HOST=$host ETHEREUM_PORT=$port ETHEREUM_PRIVATE_KEY=$privateKey bash support/deploy/deploy.sh
     ;;
   *)
     echo "Must specifiy either docker or direct as first argument"
