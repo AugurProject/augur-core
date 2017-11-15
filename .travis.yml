@@ -1,11 +1,11 @@
 dist: trusty
 sudo: required
-language: bash
+language: javascript
 services:
   - docker
 notifications:
   email: false
-before_install: "npm run docker:build"
+before_script: "npm run docker:build"
 script: "npm run docker:test"
 deploy:
   skip_cleanup: true
