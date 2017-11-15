@@ -263,13 +263,16 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
     scalarMarket = ABIContract(fixture.chain, kitchenSinkSnapshot['scalarMarket'].translator, kitchenSinkSnapshot['scalarMarket'].address)
     cash = ABIContract(fixture.chain, kitchenSinkSnapshot['cash'].translator, kitchenSinkSnapshot['cash'].address)
     completeSets = fixture.contracts['CompleteSets']
+    mailbox = fixture.applySignature('Mailbox', market.getMarketCreatorMailbox())
 
     # Generate the fees in our initial reporting window
     cost = 1000 * market.getNumTicks()
     marketCreatorFees = cost / market.getMarketCreatorSettlementFeeDivisor()
     completeSets.publicBuyCompleteSets(market.address, 1000, sender = tester.k1, value = cost)
-    with EtherDelta(marketCreatorFees, tester.a0, fixture.chain, "The market creator didn't get their share of fees from complete set sale"):
+    with TokenDelta(cash, marketCreatorFees, mailbox.address, "The market creator mailbox didn't get their share of fees from complete set sale"):
         completeSets.publicSellCompleteSets(market.address, 1000, sender=tester.k1)
+    with EtherDelta(marketCreatorFees, market.getOwner(), fixture.chain, "The market creator did not get their fees when withdrawing ETH from the mailbox"):
+        assert mailbox.withdrawEther()
     fees = cash.balanceOf(market.getReportingWindow())
     reporterFees = cost / universe.getOrCacheReportingFeeDivisor()
     assert fees == reporterFees

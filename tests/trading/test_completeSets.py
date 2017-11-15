@@ -72,7 +72,7 @@ def test_publicSellCompleteSets(contractsFixture, universe, cash, market):
     assert noShareToken.totalSupply() == 1
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialTester1ETH + fix('8.9091')
     assert cash.balanceOf(market.address) == fix('1')
-    assert contractsFixture.chain.head_state.get_balance(tester.a0) == initialTester0ETH + fix('0.09')
+    assert cash.balanceOf(market.getMarketCreatorMailbox()) == fix('0.09')
     assert cash.balanceOf(market.getReportingWindow()) == fix('0.0009')
 
 def test_publicSellCompleteSets_failure(contractsFixture, universe, cash, market):

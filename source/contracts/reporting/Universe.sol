@@ -303,8 +303,10 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getOrCacheValidityBondInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
-        require(_reportingWindow != IReportingWindow(0));
-        require(_previousReportingWindow != IReportingWindow(0));
+        // If the windows haven't been created yet return 0 to indicate this
+        if (_reportingWindow == IReportingWindow(0) || _previousReportingWindow == IReportingWindow(0)) {
+            return 0;
+        }
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_reportingWindow];
         if (_currentValidityBondInAttoeth != 0) {
             return _currentValidityBondInAttoeth;
@@ -328,6 +330,10 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getDesignatedReportStakeInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
+        // If the windows haven't been created yet return 0 to indicate this
+        if (_reportingWindow == IReportingWindow(0) || _previousReportingWindow == IReportingWindow(0)) {
+            return 0;
+        }
         uint256 _currentDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_reportingWindow];
         if (_currentDesignatedReportStakeInAttoRep != 0) {
             return _currentDesignatedReportStakeInAttoRep;
@@ -352,6 +358,10 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getDesignatedReportNoShowBondInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
+        // If the windows haven't been created yet return 0 to indicate this
+        if (_reportingWindow == IReportingWindow(0) || _previousReportingWindow == IReportingWindow(0)) {
+            return 0;
+        }
         uint256 _currentDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_reportingWindow];
         if (_currentDesignatedReportNoShowBondInAttoRep != 0) {
             return _currentDesignatedReportNoShowBondInAttoRep;
@@ -410,6 +420,10 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getReportingFeeDivisorInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
+        // If the windows haven't been created yet return 0 to indicate this
+        if (_reportingWindow == IReportingWindow(0) || _previousReportingWindow == IReportingWindow(0)) {
+            return 0;
+        }
         uint256 _currentFeeDivisor = shareSettlementFeeDivisor[_reportingWindow];
         if (_currentFeeDivisor != 0) {
             return _currentFeeDivisor;
@@ -443,8 +457,10 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getTargetReporterGasCostsInternal(IReportingWindow _reportingWindow, IReportingWindow _previousReportingWindow) internal view onlyInGoodTimes returns (uint256) {
-        require(_reportingWindow != IReportingWindow(0));
-        require(_previousReportingWindow != IReportingWindow(0));
+        // If the windows haven't been created yet return 0 to indicate this
+        if (_reportingWindow == IReportingWindow(0) || _previousReportingWindow == IReportingWindow(0)) {
+            return 0;
+        }
         uint256 _getGasToReport = targetReporterGasCosts[_reportingWindow];
         if (_getGasToReport != 0) {
             return _getGasToReport;

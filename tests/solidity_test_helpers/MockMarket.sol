@@ -3,6 +3,7 @@ pragma solidity ^0.4.17;
 import 'reporting/IMarket.sol';
 import 'reporting/IUniverse.sol';
 import 'libraries/ITyped.sol';
+import 'libraries/IMailbox.sol';
 
 
 contract MockMarket is IMarket {
@@ -55,6 +56,7 @@ contract MockMarket is IMarket {
     uint256 private setTotalStakeValue;
     uint256 private setExtraDisputeBondRemainingToBePaidOutValue;
     bool private setDecreaseExtraDisputeBondRemainingToBePaidOutValue;
+    IMailbox private setMarketCreatorMailbox;
     /*
     * setters to feed the getters and impl of IMarket
     */
@@ -286,6 +288,10 @@ contract MockMarket is IMarket {
         setDecreaseExtraDisputeBondRemainingToBePaidOutValue = _setDecreaseExtraDisputeBondRemainingToBePaidOutValue;
     }
 
+    function setMarketCreatorMailboxValue(IMailbox _setMarketCreatorMailbox) public {
+        setMarketCreatorMailbox = _setMarketCreatorMailbox;
+    }
+
     /*
     * IMarket methods
     */
@@ -466,5 +472,9 @@ contract MockMarket is IMarket {
 
     function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
         return setDecreaseExtraDisputeBondRemainingToBePaidOutValue;
+    }
+
+    function getMarketCreatorMailbox() public view returns (IMailbox) {
+        return setMarketCreatorMailbox;
     }
 }

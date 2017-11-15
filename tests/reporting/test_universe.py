@@ -219,12 +219,22 @@ def test_universe_calculate_floating_value_defaults(populatedUniverse):
     totalMarkets = 0
     assert populatedUniverse.calculateFloatingValue(11, totalMarkets, 4, 22, defaultValue, 6) == defaultValue
 
-def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, mockReputationToken):
+def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, mockReputationToken, mockReportingWindow, mockReportingWindowFactory):
     timestamp = chain.head_state.timestamp
     controller = localFixture.contracts['Controller']
     constants = localFixture.contracts['Constants']
     repPriceOracle = localFixture.uploadAndAddToController("../source/contracts/reporting/RepPriceOracle.sol", 'repPriceOracle')
     controller.registerContract(stringToBytes('RepPriceOracle'), repPriceOracle.address, twentyZeros, thirtyTwoZeros)
+
+    previousReportingWindow = localFixture.upload('solidity_test_helpers/MockReportingWindow.sol', 'previousReportingWindow')
+
+    # set current reporting window
+    mockReportingWindowFactory.setCreateReportingWindowValue(mockReportingWindow.address)
+    assert populatedUniverse.getOrCreateCurrentReportingWindow() == mockReportingWindow.address
+
+    # set previous reporting window
+    mockReportingWindowFactory.setCreateReportingWindowValue(previousReportingWindow.address)
+    assert populatedUniverse.getOrCreatePreviousReportingWindow() == previousReportingWindow.address
 
     multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER()
     # default value

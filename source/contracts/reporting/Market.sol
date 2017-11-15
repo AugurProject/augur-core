@@ -20,6 +20,8 @@ import 'libraries/token/ERC20Basic.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/SafeMathInt256.sol';
 import 'libraries/Extractable.sol';
+import 'factories/MailboxFactory.sol';
+import 'libraries/IMailbox.sol';
 import 'reporting/Reporting.sol';
 import 'Augur.sol';
 
@@ -59,6 +61,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     uint256 private reporterGasCostsFeeAttoeth;
     uint256 private totalStake;
     uint256 private extraDisputeBondRemainingToBePaidOut;
+    IMailbox private marketCreatorMailbox;
 
     /**
      * @dev Makes the function trigger a migration before execution
@@ -87,6 +90,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         designatedReporterAddress = _designatedReporterAddress;
         cash = _cash;
         stakeTokens = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
+        marketCreatorMailbox = MailboxFactory(controller.lookup("MailboxFactory")).createMailbox(controller, owner);
         for (uint8 _outcome = 0; _outcome < numOutcomes; _outcome++) {
             shareTokens.push(createShareToken(_outcome));
         }
@@ -120,13 +124,6 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         for (uint8 j = 0; j < numOutcomes; j++) {
             shareTokens[j].approve(controller.lookup("FillOrder"), APPROVAL_AMOUNT);
         }
-        return true;
-    }
-
-    function decreaseMarketCreatorSettlementFeeInAttoethPerEth(uint256 _newFeePerEthInWei) public onlyInGoodTimes onlyOwner returns (bool) {
-        uint256 _newFeeDivisor = 1 ether / _newFeePerEthInWei;
-        require(_newFeeDivisor > feeDivisor);
-        feeDivisor = _newFeeDivisor;
         return true;
     }
 
@@ -520,6 +517,10 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256) {
         return extraDisputeBondRemainingToBePaidOut;
+    }
+
+    function getMarketCreatorMailbox() public view returns (IMailbox) {
+        return marketCreatorMailbox;
     }
 
     function getTotalWinningDisputeBondStake() public view returns (uint256) {

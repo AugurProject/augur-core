@@ -66,9 +66,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
         }
 
         if (_creatorFee != 0) {
-            // For this payout we transfer Cash to this contract and then convert it into ETH before giving it ot the market owner
-            require(_denominationToken.transferFrom(_market, this, _creatorFee));
-            _denominationToken.withdrawEtherTo(_market.getOwner(), _creatorFee);
+            require(_denominationToken.transferFrom(_market, _market.getMarketCreatorMailbox(), _creatorFee));
         }
         if (_reportingFee != 0) {
             IReportingWindow _reportingWindow = _market.getUniverse().getOrCreateNextReportingWindow();

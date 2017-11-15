@@ -60,25 +60,12 @@ def test_market_creation(localFixture, mockUniverse, mockReportingWindow, mockCa
     assert market.getNumTicks() == numTicks
     assert market.getDenominationToken() == mockCash.address
     assert market.getMarketCreatorSettlementFeeDivisor() == oneEther / 16
-    assert mockShareTokenFactory.getCreateShareTokenCounter() == 5;
+    assert mockShareTokenFactory.getCreateShareTokenCounter() == 5
     assert mockShareTokenFactory.getCreateShareToken(0) == market.getShareToken(0)
     assert mockShareTokenFactory.getCreateShareToken(1) == market.getShareToken(1)
     assert mockShareTokenFactory.getCreateShareToken(2) == market.getShareToken(2)
     assert mockShareTokenFactory.getCreateShareToken(3) == market.getShareToken(3)
     assert mockShareTokenFactory.getCreateShareToken(4) == market.getShareToken(4)
-
-def test_market_decrease_market_creator_settlement_fee(localFixture, initializeMarket, mockMarket):
-    oneEther = 10 ** 18
-
-    with raises(TransactionFailed, message="method needs to be called from onlyOwner"):
-        initializeMarket.decreaseMarketCreatorSettlementFeeInAttoethPerEth(55, sender=tester.k4)
-
-    with raises(TransactionFailed, message="new fee divisor needs to be greater than fee divisor"):
-        initializeMarket.decreaseMarketCreatorSettlementFeeInAttoethPerEth(55, sender=tester.k1)
-
-    assert initializeMarket.getMarketCreatorSettlementFeeDivisor() == oneEther / 16
-    assert initializeMarket.decreaseMarketCreatorSettlementFeeInAttoethPerEth(15, sender=tester.k1)
-    assert initializeMarket.getMarketCreatorSettlementFeeDivisor() == oneEther / 15
 
 def test_market_designated_report(localFixture, constants, mockUniverse, chain, initializeMarket, mockStakeToken, mockStakeTokenFactory, mockReportingWindow, mockReputationToken):
     with raises(TransactionFailed, message="market is not in designated reporting state"):

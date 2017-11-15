@@ -47,9 +47,7 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
                 require(_denominationToken.transferFrom(_market, msg.sender, _shareHolderShare));
             }
             if (_creatorShare > 0) {
-                // For this payout we transfer Cash to this contract and then convert it into ETH before giving it ot the market owner
-                require(_denominationToken.transferFrom(_market, this, _creatorShare));
-                _denominationToken.withdrawEtherTo(_market.getOwner(), _creatorShare);
+                require(_denominationToken.transferFrom(_market, _market.getMarketCreatorMailbox(), _creatorShare));
             }
             if (_reporterShare > 0) {
                 require(_denominationToken.transferFrom(_market, _market.getUniverse().getOrCreateNextReportingWindow(), _reporterShare));
