@@ -47,7 +47,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
         return true;
     }
 
-    function sellCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (uint256) {
+    function sellCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (uint256 _creatorFee, uint256 _reportingFee) {
         require(_sender != address(0));
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
@@ -55,9 +55,9 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
         uint256 _creatorFeeDivisor = _market.getMarketCreatorSettlementFeeDivisor();
         uint256 _payout = _amount.mul(_market.getNumTicks());
         _market.getUniverse().decrementOpenInterest(_payout);
-        uint256 _creatorFee = _payout.div(_creatorFeeDivisor);
+        _creatorFee = _payout.div(_creatorFeeDivisor);
         uint256 _reportingFeeDivisor = _market.getUniverse().getOrCacheReportingFeeDivisor();
-        uint256 _reportingFee = _payout.div(_reportingFeeDivisor);
+        _reportingFee = _payout.div(_reportingFeeDivisor);
         _payout = _payout.sub(_creatorFee).sub(_reportingFee);
 
         // Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
@@ -74,7 +74,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
         }
         require(_denominationToken.transferFrom(_market, _sender, _payout));
 
-        return _creatorFee.add(_reportingFee);
+        return (_creatorFee, _reportingFee);
     }
 
     function getProtectedTokens() internal returns (address[] memory) {

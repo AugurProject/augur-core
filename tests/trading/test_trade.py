@@ -52,7 +52,8 @@ def test_one_bid_on_books_buy_full_order(contractsFixture, cash, market, univers
     assert log1["numCreatorTokens"] == fix('2', '0.6')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('2', '0.4')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
@@ -91,7 +92,8 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture, cash, market, univ
     assert log1["numCreatorTokens"] == fix('1', '0.6')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('1', '0.4')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
@@ -131,7 +133,8 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture, cash, market, unive
     assert log1["numCreatorTokens"] == fix('4', '0.6')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('4', '0.4')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
@@ -185,7 +188,8 @@ def test_two_bids_on_books_buy_both(contractsFixture, cash, market, universe):
     assert log1["numCreatorTokens"] == fix('4', '0.6')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('4', '0.4')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
@@ -195,7 +199,8 @@ def test_two_bids_on_books_buy_both(contractsFixture, cash, market, universe):
     assert log2["numCreatorTokens"] == fix('1', '0.6')
     assert log2["numFillerShares"] == 0
     assert log2["numFillerTokens"] == fix('1', '0.4')
-    assert log2["settlementFees"] == 0
+    assert log2["marketCreatorFees"] == 0
+    assert log2["reporterFees"] == 0
     assert log2["shareToken"] == market.getShareToken(YES)
     assert log2["tradeGroupId"] == 42
 
@@ -245,7 +250,8 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     assert log1["numCreatorTokens"] == fix('12', '0.6')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('12', '0.4')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
@@ -255,7 +261,8 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     assert log2["numCreatorTokens"] == fix('3', '0.6')
     assert log2["numFillerShares"] == 0
     assert log2["numFillerTokens"] == fix('3', '0.4')
-    assert log2["settlementFees"] == 0
+    assert log2["marketCreatorFees"] == 0
+    assert log2["reporterFees"] == 0
     assert log2["shareToken"] == market.getShareToken(YES)
     assert log2["tradeGroupId"] == 42
 
@@ -305,7 +312,8 @@ def test_two_bids_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     assert log1["numCreatorTokens"] == fix('12', '0.6')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('12', '0.4')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
@@ -364,7 +372,8 @@ def test_one_ask_on_books_buy_full_order(contractsFixture, cash, market, univers
     assert log1["numCreatorTokens"] == fix('12', '0.4')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('12', '0.6')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
@@ -402,7 +411,8 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture, cash, market, univ
     assert log1["numCreatorTokens"] == fix('7', '0.4')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('7', '0.6')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
@@ -442,7 +452,8 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture, cash, market, unive
     assert log1["numCreatorTokens"] == fix('12', '0.4')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('12', '0.6')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
@@ -496,7 +507,8 @@ def test_two_asks_on_books_buy_both(contractsFixture, cash, market, universe):
     assert log1["numCreatorTokens"] == fix('12', '0.4')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('12', '0.6')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
@@ -506,7 +518,8 @@ def test_two_asks_on_books_buy_both(contractsFixture, cash, market, universe):
     assert log2["numCreatorTokens"] == fix('3', '0.4')
     assert log2["numFillerShares"] == 0
     assert log2["numFillerTokens"] == fix('3', '0.6')
-    assert log2["settlementFees"] == 0
+    assert log2["marketCreatorFees"] == 0
+    assert log2["reporterFees"] == 0
     assert log2["shareToken"] == market.getShareToken(YES)
     assert log2["tradeGroupId"] == 42
 
@@ -555,7 +568,8 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     assert log1["numCreatorTokens"] == fix('12', '0.4')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('12', '0.6')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
@@ -565,7 +579,8 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     assert log2["numCreatorTokens"] == fix('3', '0.4')
     assert log2["numFillerShares"] == 0
     assert log2["numFillerTokens"] == fix('3', '0.6')
-    assert log2["settlementFees"] == 0
+    assert log2["marketCreatorFees"] == 0
+    assert log2["reporterFees"] == 0
     assert log2["shareToken"] == market.getShareToken(YES)
     assert log2["tradeGroupId"] == 42
 
@@ -615,7 +630,8 @@ def test_two_asks_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     assert log1["numCreatorTokens"] == fix('12', '0.4')
     assert log1["numFillerShares"] == 0
     assert log1["numFillerTokens"] == fix('12', '0.6')
-    assert log1["settlementFees"] == 0
+    assert log1["marketCreatorFees"] == 0
+    assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
     assert log1["tradeGroupId"] == 42
 
