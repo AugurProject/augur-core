@@ -53,7 +53,7 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
         return true;
     }
 
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
+    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, string _topic, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
         require(universe.getOrCreateReportingWindowByMarketEndTime(_endTime) == this);
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
@@ -63,7 +63,7 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
         firstReporterMarkets.add(_newMarket);
         // We assume the market is a no show and decrement on designate report. This only needs to be accurate by the next reporting window
         designatedReportNoShows += 1;
-        controller.getAugur().logMarketCreated(universe, _newMarket, msg.sender, msg.value, _extraInfo);
+        controller.getAugur().logMarketCreated(universe, _newMarket, msg.sender, msg.value, _topic, _extraInfo);
         return _newMarket;
     }
 
