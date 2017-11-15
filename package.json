@@ -12,8 +12,8 @@
     "test": "test"
   },
   "scripts": {
-    "build:source": "npx tsc && node output/deployment/compileContracts.js",
-    "build:contracts": "npx tsc && node output/deployment/compileContracts.js",
+    "build:source": "npx tsc",
+    "build:contracts": "node output/deployment/compileContracts.js",
     "build:interfaces": "node output/tools/generateContractInterfaces.js",
     "build": "npm run build:source && npm run build:contracts && npm run build:interfaces",
     "test": "npx mocha output/tests-integration/**/*.js --no-timeouts --require source-map-support/register",
