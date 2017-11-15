@@ -356,13 +356,13 @@ class ContractsFixture:
         childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
         return childUniverse
 
-    def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender=tester.k0, extraInfo=""):
-        return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender, extraInfo)
+    def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender=tester.k0, topic="", extraInfo=""):
+        return self.createCategoricalMarket(universe, 2, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender, topic, extraInfo)
 
-    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender=tester.k0, extraInfo=""):
+    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numTicks, sender=tester.k0, topic="", extraInfo=""):
         marketCreationFee = universe.getOrCacheMarketCreationCost()
         reportingWindow = self.applySignature('ReportingWindow', universe.getOrCreateReportingWindowByMarketEndTime(endTime))
-        marketAddress = reportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, extraInfo, value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
+        marketAddress = reportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, topic, extraInfo, value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
@@ -370,12 +370,12 @@ class ContractsFixture:
     def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, numTicks, designatedReporterAddress, sender=tester.k0):
         marketCreationFee = universe.getOrCacheMarketCreationCost()
         reportingWindow = self.applySignature('ReportingWindow', universe.getOrCreateReportingWindowByMarketEndTime(endTime))
-        marketAddress = reportingWindow.createMarket(endTime, 2, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
+        marketAddress = reportingWindow.createMarket(endTime, 2, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "", value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createReasonableBinaryMarket(self, universe, denominationToken, sender=tester.k0, extraInfo=""):
+    def createReasonableBinaryMarket(self, universe, denominationToken, sender=tester.k0, topic="", extraInfo=""):
         return self.createBinaryMarket(
             universe = universe,
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
@@ -384,6 +384,7 @@ class ContractsFixture:
             designatedReporterAddress = tester.a0,
             numTicks = 10 ** 18,
             sender = sender,
+            topic= topic,
             extraInfo= extraInfo)
 
     def createReasonableCategoricalMarket(self, universe, numOutcomes, denominationToken, sender=tester.k0):
