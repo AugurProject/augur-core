@@ -1,8 +1,12 @@
 #!/bin/bash
 
-node output/deployment/deployContracts.js
+if [[ "${SKIP_DEPLOY}x" == "x" ]]; then
+  node output/deployment/deployContracts.js
+fi
 
-if [[ "$TRAVIS" == "true" ]];
+echo "Contract deployment complete, updating contracts repo"
+
+if [[ "$TRAVIS" == "true" ]]; then
   if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
     echo "Skipping updating augur-contracts for pull request ${TRAVIS_PULL_REQUEST}"
     exit
@@ -20,4 +24,4 @@ fi
 git clone $repo_url output/augur-contracts
 cd output/augur-contracts
 npm install
-BRANCH=$branch COMMIT=$commit npm run update-contracts -- ../contracts
+BRANCH=$branch COMMIT=$commit SOURCE=../contracts npm run update-contracts
