@@ -5,12 +5,12 @@ services:
   - docker
 notifications:
   email: false
-before_install: "./support/setup.sh"
-script: "./support/test/unit/run.sh"
+before_install: "npm run docker:build"
+script: "npm run docker:test"
 deploy:
   skip_cleanup: true
   provider: script
-  script: "/support/test/deploy/run.sh rinkeby"
+  script: "npm run docker:deploy"
   on:
     branch: master
 git:
