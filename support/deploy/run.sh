@@ -37,12 +37,13 @@ esac
 
 case $1 in
   "docker")
-    docker container run -it \
+    docker container run -rm -it \
       -e AUGUR_CONTROLLER_ADDRESS=$controller \
       -e ETHEREUM_GAS_PRICE_IN_NANOETH=$gasPrice \
       -e ETHEREUM_HOST=$host \
       -e ETHEREUM_PORT=$port \
       -e ETHEREUM_PRIVATE_KEY=$privateKey \
+      --entrypoint "bash /app/deploy.sh"
       augur/core-deploy:latest
     ;;
   "direct")
