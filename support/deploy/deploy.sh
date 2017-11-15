@@ -1,4 +1,5 @@
 #!/bin/bash
+
 node output/deployment/deployContracts.js
 
 if [[ "$TRAVIS" == "true" ]];
