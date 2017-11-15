@@ -1,8 +1,6 @@
 dist: trusty
 sudo: required
 language: javascript
-services:
-  - docker
 
 notifications:
   email: false
@@ -12,6 +10,7 @@ before_install:
   - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
   - sudo apt-get update
   - sudo apt-get -y install docker-ce
+  - sudo service docker start
 
 before_script:
   - npm run docker:build
