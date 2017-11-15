@@ -3,18 +3,29 @@ sudo: required
 language: javascript
 services:
   - docker
+
 notifications:
   email: false
-before_script: "npm run docker:build"
-script: "npm run docker:test"
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+
+before_script:
+  - npm run docker:build
+script:
+  - npm run docker:test
+
 deploy:
   skip_cleanup: true
   provider: script
   script: "npm run docker:deploy"
   on:
     branch: feature/ci
+
 git:
   depth: 5
+
 env:
   global:
     - secure: ADmhKnkSyCrheJ0Vpa5X/JribTsux/07i4FbhxBTIq/YM+kkcygkO807UDPcbe8vfYWWxp4lcDTdPTYKvGbyJZIsD6yV17+V10Lp58YjexpKFVzqsqLXG7IFaTCvPvG+vqzu63QI6DNY06Z+aUjeRRXJMIG0pMpCIflzN4bkAcA=
