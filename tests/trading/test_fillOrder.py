@@ -33,7 +33,8 @@ def test_publicFillOrder_bid(contractsFixture, cash, market, universe):
     assert logs[4]["numCreatorTokens"] == creatorCost
     assert logs[4]["numFillerShares"] == 0
     assert logs[4]["numFillerTokens"] == fillerCost
-    assert logs[4]["settlementFees"] == 0
+    assert logs[4]["marketCreatorFees"] == 0
+    assert logs[4]["reporterFees"] == 0
     assert logs[4]["shareToken"] == market.getShareToken(YES)
     assert logs[4]["tradeGroupId"] == 42
 
@@ -76,7 +77,8 @@ def test_publicFillOrder_ask(contractsFixture, cash, market, universe):
     assert logs[4]["numCreatorTokens"] == creatorCost
     assert logs[4]["numFillerShares"] == 0
     assert logs[4]["numFillerTokens"] == fillerCost
-    assert logs[4]["settlementFees"] == 0
+    assert logs[4]["marketCreatorFees"] == 0
+    assert logs[4]["reporterFees"] == 0
     assert logs[4]["shareToken"] == market.getShareToken(YES)
     assert logs[4]["tradeGroupId"] == 42
 
@@ -121,7 +123,8 @@ def test_publicFillOrder_bid_scalar(contractsFixture, cash, scalarMarket, univer
     assert logs[4]["numCreatorTokens"] == creatorCost
     assert logs[4]["numFillerShares"] == 0
     assert logs[4]["numFillerTokens"] == fillerCost
-    assert logs[4]["settlementFees"] == 0
+    assert logs[4]["marketCreatorFees"] == 0
+    assert logs[4]["reporterFees"] == 0
     assert logs[4]["shareToken"] == market.getShareToken(YES)
     assert logs[4]["tradeGroupId"] == 42
 

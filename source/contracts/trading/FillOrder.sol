@@ -84,10 +84,10 @@ library Trade {
     // "public" functions
     //
 
-    function tradeMakerSharesForFillerShares(Data _data) internal returns (uint256) {
+    function tradeMakerSharesForFillerShares(Data _data) internal returns (uint256, uint256) {
         uint256 _numberOfCompleteSets = _data.creator.sharesToSell.min(_data.filler.sharesToSell);
         if (_numberOfCompleteSets == 0) {
-            return 0;
+            return (0, 0);
         }
 
         // transfer shares to this contract from each participant
@@ -97,7 +97,7 @@ library Trade {
         }
 
         // sell complete sets
-        uint256 _settlementFees = _data.contracts.completeSets.sellCompleteSets(this, _data.contracts.market, _numberOfCompleteSets);
+        var (_marketCreatorFees, _reporterFees) = _data.contracts.completeSets.sellCompleteSets(this, _data.contracts.market, _numberOfCompleteSets);
 
         // distribute payout proportionately (fees will have been deducted)
         uint256 _payout = _data.contracts.denominationToken.balanceOf(this);
@@ -109,7 +109,7 @@ library Trade {
         // update available shares for creator and filler
         _data.creator.sharesToSell -= _numberOfCompleteSets;
         _data.filler.sharesToSell -= _numberOfCompleteSets;
-        return _settlementFees;
+        return (_marketCreatorFees, _reporterFees);
     }
 
     function tradeMakerSharesForFillerTokens(Data _data) internal returns (bool) {
@@ -380,7 +380,7 @@ contract FillOrder is CashAutoConverter, Extractable, ReentrancyGuard, IFillOrde
 
     function fillOrder(address _filler, bytes32 _orderId, uint256 _amountFillerWants, uint256 _tradeGroupId) external onlyWhitelistedCallers returns (uint256) {
         Trade.Data memory _tradeData = Trade.create(controller, _orderId, _filler, _amountFillerWants);
-        uint256 _settlementFees = _tradeData.tradeMakerSharesForFillerShares();
+        var (_marketCreatorFees, _reporterFees) = _tradeData.tradeMakerSharesForFillerShares();
         _tradeData.tradeMakerSharesForFillerTokens();
         _tradeData.tradeMakerTokensForFillerShares();
         _tradeData.tradeMakerTokensForFillerTokens();
@@ -392,9 +392,14 @@ contract FillOrder is CashAutoConverter, Extractable, ReentrancyGuard, IFillOrde
         }
 
         // AUDIT: is there a reentry risk here?  we execute all of the above code, which includes transferring tokens around, before we mark the order as filled
-        controller.getAugur().logOrderFilled(_tradeData.contracts.market.getUniverse(), _tradeData.contracts.market.getShareToken(_tradeData.order.outcome), _tradeData.filler.participantAddress, _tradeData.order.orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _settlementFees, _tradeGroupId);
+        logOrderFilled(_tradeData, _marketCreatorFees, _reporterFees, _tradeGroupId);
         _tradeData.contracts.orders.fillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
         return _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);
+    }
+
+    function logOrderFilled(Trade.Data _tradeData, uint256 _marketCreatorFees, uint256 _reporterFees, uint256 _tradeGroupId) private returns (bool) {
+        controller.getAugur().logOrderFilled(_tradeData.contracts.market.getUniverse(), _tradeData.contracts.market.getShareToken(_tradeData.order.outcome), _tradeData.filler.participantAddress, _tradeData.order.orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _marketCreatorFees, _reporterFees, _tradeGroupId);
+        return true;
     }
 
     function getProtectedTokens() internal returns (address[] memory) {
