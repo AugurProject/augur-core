@@ -147,7 +147,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     captureFilteredLogs(localFixture.chain.head_state, localFixture.contracts['Augur'], logs)
 
     # We can finalize the market now since a mjaority of REP has moved. Alternatively we could "localFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1" to move
-    initialMarketCreatorETHBalance = localFixture.chain.head_state.get_balance(market.getOwner())
+    initialMarketCreatorETHBalance = localFixture.chain.head_state.get_balance(market.getMarketCreatorMailbox())
     assert market.tryFinalize()
 
     # Confirm market finalization logging works
@@ -160,7 +160,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     assert market.getFinalWinningStakeToken() == stakeTokenNo.address
 
     # Since the designated report was not invalid the market creator gets back the validity bond
-    increaseInMarketCreatorBalance = localFixture.chain.head_state.get_balance(market.getOwner()) - initialMarketCreatorETHBalance
+    increaseInMarketCreatorBalance = localFixture.chain.head_state.get_balance(market.getMarketCreatorMailbox()) - initialMarketCreatorETHBalance
     assert increaseInMarketCreatorBalance == expectedMarketCreatorFeePayout
 
     # We can redeem forked REP on any universe we didn't dispute
@@ -470,7 +470,7 @@ def test_invalid_designated_report(localFixture, universe, cash, market):
     proceedToDesignatedReporting(localFixture, universe, market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)])
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report of invalid
-    initialMarketCreatorETHBalance = localFixture.chain.head_state.get_balance(market.getOwner())
+    initialMarketCreatorETHBalance = localFixture.chain.head_state.get_balance(market.getMarketCreatorMailbox())
     assert localFixture.designatedReport(market, [long(0.5 * 10 ** 18), long(0.5 * 10 ** 18)], tester.k0, True)
 
     # We're now in the DESIGNATED DISPUTE PHASE
@@ -493,7 +493,7 @@ def test_invalid_designated_report(localFixture, universe, cash, market):
     assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
 
     # Since the designated reporter showed up the market creator still gets back the reporter gas cost fee
-    increaseInMarketCreatorBalance = localFixture.chain.head_state.get_balance(market.getOwner()) - initialMarketCreatorETHBalance
+    increaseInMarketCreatorBalance = localFixture.chain.head_state.get_balance(market.getMarketCreatorMailbox()) - initialMarketCreatorETHBalance
     assert increaseInMarketCreatorBalance == expectedMarketCreatorFeePayout
 
 def test_cannot_fork_twice(localFixture, universe, cash, market):
