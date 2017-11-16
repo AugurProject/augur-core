@@ -25,7 +25,7 @@ deploy:
   provider: script
   script: "npm run docker:deploy"
   on:
-    branch: feature/ci
+    branch: develop
 
 git:
   depth: 5
