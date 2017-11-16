@@ -12,8 +12,10 @@ async function doWork() {
     const configuration = await Configuration.create();
     const connector = new Connector(configuration);
     const accountManager = new AccountManager(configuration, connector);
+    console.log("Compiling contracts");
     const compilerOutput = JSON.parse(await readFile(configuration.contractOutputPath, "utf8"));
     const contractDeployer = new ContractDeployer(configuration, connector, accountManager, compilerOutput);
+    console.log("Beginning deployment");
     await contractDeployer.deploy();
 }
 

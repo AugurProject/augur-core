@@ -25,4 +25,4 @@ COPY tests/ /app/tests/
 
 WORKDIR /app
 
-ENTRYPOINT [ "pytest", "tests", "-vv" ]
+ENTRYPOINT [ "npm", "run", "test:unit" ]

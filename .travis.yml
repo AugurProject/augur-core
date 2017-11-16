@@ -1,16 +1,38 @@
 dist: trusty
 sudo: required
-
-language: bash
-
+language: javascript
 services:
   - docker
 
 notifications:
   email: false
 
-before_install: ./.travis/ci-setup.sh
-script: ./.travis/ci.sh
+before_install:
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  - sudo apt-get update
+  - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+  - sudo sudo curl -L https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+  - sudo chmod +x /usr/local/bin/docker-compose
+
+before_script:
+  - npm run docker:build
+script:
+  - npm run docker:test
+
+# deploy:
+#  skip_cleanup: true
+#  provider: script
+#  script: "npm run docker:deploy"
+#  on:
+#    branch: develop
 
 git:
   depth: 5
+
+env:
+  global:
+    - secure: ADmhKnkSyCrheJ0Vpa5X/JribTsux/07i4FbhxBTIq/YM+kkcygkO807UDPcbe8vfYWWxp4lcDTdPTYKvGbyJZIsD6yV17+V10Lp58YjexpKFVzqsqLXG7IFaTCvPvG+vqzu63QI6DNY06Z+aUjeRRXJMIG0pMpCIflzN4bkAcA=
+    - secure: eubvvOD8TapXLzjzcDe0MBgE+IGOMDLZPAUwfPc6+H5N8efZoa6nLMhm/7wVYBPpuBQAQC3T3I8YPYh/qJMU8pQ7771FOxqMUXmpvEGUHZoZQ66/Nu0uylBeKwYDc5o7u1Qj1xW+JwCMWpfcUlbCHYPgR5Av/1m62ZFPaCKoj34=
+    - secure: E6zBunUrmP6w9RzCSgIY0hS99v8u1L55AGsY1MtPr+u6uMLIkif6uMG/O881DmOkDtBgv/m60fx2Ka+bEZpxWY30ahTc08SUhjMEGC9MeRr5PvEeEzbsiOez+OFIRdngMGptHbTagqKGl3KrJPp21YsYL5GGFWil7iUZ/poent8=
+    - secure: Qww+6lLL/9Xs3fWQrEtXgsvH9amXy8HPb0iQ3nDZEuQ/jB7mpUWrF2OLK7HCk12MVny4Ey7im+dW/nn7hUi5i7Loj2tBUAXn8hxopqO2MlyjscQkmBJCeuqQRipSc4deCnLvfROrXhX3XmSC7435qTAFc8OfrJFec8T45j92lZw=

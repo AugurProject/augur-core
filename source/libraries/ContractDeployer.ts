@@ -5,7 +5,7 @@ import { resolve as resolvePath } from 'path';
 import { writeFile } from "async-file";
 import { encodeParams } from 'ethjs-abi';
 import { TransactionReceipt } from 'ethjs-shared';
-import { stringTo32ByteHex } from "./HelperFunctions";
+import { stringTo32ByteHex, resolveAll } from "./HelperFunctions";
 import { CompilerOutput } from "solc";
 import { Abi, AbiFunction } from 'ethereum';
 import { Configuration } from './Configuration';
@@ -90,13 +90,8 @@ export class ContractDeployer {
 
     private async uploadAllContracts(): Promise<void> {
         console.log('Uploading contracts...');
-
-        const promises: Array<Promise<void>> = [];
-        for (let contract of this.contracts) {
-            promises.push(this.upload(contract));
-        }
-
-        await Promise.all(promises);
+        const promises = [...this.contracts].map(contract => this.upload(contract));
+        await resolveAll(promises);
     }
 
     private async upload(contract: Contract): Promise<void> {
@@ -141,9 +136,12 @@ export class ContractDeployer {
         const data = `0x${ContractDeployer.getEncodedConstructData(contract.abi, contract.bytecode, constructorArgs).toString('hex')}`;
         // TODO: remove `gas` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
         const gasEstimate = await this.connector.ethjsQuery.estimateGas({ from: this.accountManager.defaultAddress, data: data, gas: new BN(6500000) });
+        const nonce = await this.accountManager.nonces.get(this.accountManager.defaultAddress);
         const signedTransaction = await this.accountManager.signTransaction({ gas: gasEstimate, gasPrice: this.configuration.gasPrice, data: data});
+        console.log(`Upload contract: ${contract.contractName} nonce: ${nonce}, gas: ${gasEstimate}`);
         const transactionHash = await this.connector.ethjsQuery.sendRawTransaction(signedTransaction);
         const receipt = await this.connector.waitForTransactionReceipt(transactionHash, failureDetails);
+        console.log(`Uploaded contract: ${contract.contractName}: \"${receipt.contractAddress}\"`);
         return receipt.contractAddress;
     }
 
@@ -163,7 +161,7 @@ export class ContractDeployer {
             }
         }
 
-        await Promise.all(promises);
+        await resolveAll(promises);
     }
 
     private async whitelistContract(contractName: string): Promise<TransactionReceipt> {
@@ -179,7 +177,7 @@ export class ContractDeployer {
             promises.push(this.initializeContract(contractName));
         }
 
-        await Promise.all(promises);
+        await resolveAll(promises);
     }
 
     private async initializeContract(contractName: string): Promise<TransactionReceipt|void> {
