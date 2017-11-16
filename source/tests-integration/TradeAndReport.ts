@@ -1,4 +1,5 @@
 // Create market, make a trade on it, designated reporter reports, market is finalized, traders settle shares, reporters redeem tokens.
+import BN = require('bn.js');
 import { expect } from "chai";
 import { stringTo32ByteHex } from "../libraries/HelperFunctions";
 import { TestFixture } from './TestFixture';
@@ -10,7 +11,7 @@ describe("TradeAndReport", () => {
     });
     it("#tradeAndReport", async () => {
         await fixture.approveCentralAuthority();
-        const market = await fixture.createReasonableMarket(fixture.universe, fixture.cash.address, 2);
+        const market = await fixture.createReasonableMarket(fixture.universe, fixture.cash.address, new BN(2));
         const actualTypeName = await market.getTypeName_();
         const expectedTypeName = stringTo32ByteHex("Market");
         expect(actualTypeName).to.equal(expectedTypeName);

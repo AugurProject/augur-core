@@ -22,7 +22,7 @@ export class Configuration {
         this.contractSourceRoot = contractSourceRoot;
         this.contractOutputPath = path.join(contractOutputRoot, 'contracts.json');
         this.contractAddressesOutputPath = path.join(contractOutputRoot, 'addresses.json');
-        this.contractInterfacesOutputPath = path.join(contractSourceRoot, 'libraries', 'ContractInterfaces.ts');
+        this.contractInterfacesOutputPath = path.join(contractSourceRoot, '../libraries', 'ContractInterfaces.ts');
         this.controllerAddress = controllerAddress;
         this.createGenesisUniverse = createGenesisUniverse;
     }

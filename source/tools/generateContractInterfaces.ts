@@ -8,7 +8,7 @@ async function doWork(): Promise<void> {
     const configuration = await Configuration.create();
     const compiler: ContractCompiler = new ContractCompiler(configuration);
     const interfacesGenerator: ContractInterfaceGenerator = new ContractInterfaceGenerator(configuration, compiler);
-    interfacesGenerator.generateContractInterfaces();
+    await interfacesGenerator.generateContractInterfaces();
 }
 
 doWork().then(() => {
