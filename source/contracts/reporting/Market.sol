@@ -141,7 +141,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         // The owner gets the no-show REP bond
         _reputationToken.transfer(owner, _reputationToken.balanceOf(this));
         // The owner gets the reporter gas costs
-        require(getOwner().call.value(reporterGasCostsFeeAttoeth)());
+        marketCreatorMailbox.depositEther.value(reporterGasCostsFeeAttoeth)();
         return true;
     }
 
@@ -275,7 +275,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         controller.getAugur().logMarketFinalized(getUniverse(), this);
         // The validity bond is paid to the owner in any valid outcome and the reporting window otherwise
         if (isValid()) {
-            require(getOwner().call.value(validityBondAttoeth)());
+            marketCreatorMailbox.depositEther.value(validityBondAttoeth)();
         } else {
             cash.depositEtherFor.value(validityBondAttoeth)(getReportingWindow());
         }
