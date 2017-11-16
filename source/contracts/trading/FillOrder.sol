@@ -399,6 +399,7 @@ contract FillOrder is CashAutoConverter, Extractable, ReentrancyGuard, IFillOrde
 
     function logOrderFilled(Trade.Data _tradeData, uint256 _marketCreatorFees, uint256 _reporterFees, uint256 _tradeGroupId) private returns (bool) {
         controller.getAugur().logOrderFilled(_tradeData.contracts.market.getUniverse(), _tradeData.contracts.market.getShareToken(_tradeData.order.outcome), _tradeData.filler.participantAddress, _tradeData.order.orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _marketCreatorFees, _reporterFees, _tradeGroupId);
+        return true;
     }
 
     function getProtectedTokens() internal returns (address[] memory) {
