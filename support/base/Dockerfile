@@ -16,7 +16,7 @@ RUN npm install
 # Copy the git info so ContractDeployer can read the hash on deploy
 COPY .git/ /app/.git/
 COPY ./support/deploy/deploy.sh /app/support/deploy/deploy.sh
-COPY ./support/artifacts/run.sh /app/support/artifacts/artifacts.sh
+COPY ./support/artifacts/run.sh /app/support/artifacts/run.sh
 
 # Copy source
 COPY tsconfig.json /app/tsconfig.json
