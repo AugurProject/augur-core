@@ -375,7 +375,7 @@ class ContractsFixture:
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createReasonableBinaryMarket(self, universe, denominationToken, sender=tester.k0, topic="", extraInfo=""):
+    def createReasonableBinaryMarket(self, universe, denominationToken, sender=tester.k0, topic=0, extraInfo=""):
         return self.createBinaryMarket(
             universe = universe,
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
