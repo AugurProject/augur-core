@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Provide augur/augur-core:latest
+# Provide augurproject/augur-core:latest
 bash ./support/base/setup.sh
 bash ./support/test/unit/setup.sh
 

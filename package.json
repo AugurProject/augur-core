@@ -24,6 +24,7 @@
     "deploy:ropsten": "npm run deploy:net -- ropsten",
     "deploy:foundation": "npm run deploy:net -- foundation",
     "deploy": "npm run deploy:rinkeby",
+    "artifacts": "bash support/artifacts/run.sh",
     "docker:build": "bash support/setup.sh",
     "docker:test:console": "bash support/test/unit/run.sh console",
     "docker:test:unit": "bash support/test/unit/run.sh",
