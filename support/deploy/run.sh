@@ -4,6 +4,8 @@ set -e
 
 echo "Deploying Augur to $2"
 
+[[ "${ARTIFACTS}" == "true" ]] || ARTIFACTS=false
+
 port="8545"
 case $2 in
   "ropsten")
@@ -41,18 +43,24 @@ case $1 in
       -e ETHEREUM_HOST=$host \
       -e ETHEREUM_PORT=$port \
       -e ETHEREUM_PRIVATE_KEY=$privateKey \
-      --entrypoint "bash /app/deploy.sh"
-      augur/core-deploy:latest
+      -e DEPLOY=true \
+      -e ARTIFACTS=$ARTIFACTS
+      --entrypoint "bash support/deploy/deploy.sh"
+      augurproject/core-deploy:latest
     ;;
   "direct")
-    node output/deployment/compileContracts.js
-    AUGUR_CONTROLLER_ADDRESS=$controller ETHEREUM_GAS_PRICE_IN_NANOETH=$gasPrice ETHEREUM_HOST=$host ETHEREUM_PORT=$port ETHEREUM_PRIVATE_KEY=$privateKey bash support/deploy/deploy.sh
+    AUGUR_CONTROLLER_ADDRESS=$controller \
+    ETHEREUM_GAS_PRICE_IN_NANOETH=$gasPrice \
+    ETHEREUM_HOST=$host \
+    ETHEREUM_PORT=$port \
+    ETHEREUM_PRIVATE_KEY=$privateKey \
+    DEPLOY=true \
+    ARTIFACTS=$ARTIFACTS
+      bash support/deploy/deploy.sh
     ;;
   *)
     echo "Must specifiy either docker or direct as first argument"
     exit 1
     ;;
 esac
-
-exit
 
