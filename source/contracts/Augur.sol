@@ -44,7 +44,7 @@ contract Augur is Controlled, Extractable {
     // Logging
     //
 
-    function logMarketCreated(IUniverse _universe, address _market, address _marketCreator, uint256 _marketCreationFee, string _topic, string _extraInfo) public returns (bool) {
+    function logMarketCreated(IUniverse _universe, address _market, address _marketCreator, uint256 _marketCreationFee, bytes32 _topic, string _extraInfo) public returns (bool) {
         require(_universe.isContainerForReportingWindow(IReportingWindow(msg.sender)));
         MarketCreated(_universe, _topic, _marketCreator, _market, _marketCreationFee, _extraInfo);
         return true;
