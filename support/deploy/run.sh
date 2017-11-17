@@ -44,9 +44,9 @@ case $1 in
       -e ETHEREUM_PORT=$port \
       -e ETHEREUM_PRIVATE_KEY=$privateKey \
       -e DEPLOY=true \
-      -e ARTIFACTS=$ARTIFACTS
-      --entrypoint "bash support/deploy/deploy.sh"
-      augurproject/core-deploy:latest
+      -e ARTIFACTS=$ARTIFACTS \
+      --entrypoint "bash"  \
+      augurproject/augur-core:latest -- /app/support/deploy/deploy.sh
     ;;
   "direct")
     AUGUR_CONTROLLER_ADDRESS=$controller \
