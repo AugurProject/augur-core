@@ -70,11 +70,11 @@ export class TestFixture {
 
         const targetReportingWindow = new ReportingWindow(this.connector, this.accountManager, targetReportingWindowAddress, this.configuration.gasPrice);
         const marketCreationFee = await universe.getMarketCreationCost_();
-        const marketAddress = await targetReportingWindow.createMarket_(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter, '', '', { attachedEth: marketCreationFee });
+        const marketAddress = await targetReportingWindow.createMarket_(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter, stringTo32ByteHex(" "), '', { attachedEth: marketCreationFee });
         if (!marketAddress) {
             throw new Error("Unable to get address for new categorical market.");
         }
-        const createMarketTransactionHash = await targetReportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter, '', '', { attachedEth: marketCreationFee });
+        const createMarketTransactionHash = await targetReportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter, stringTo32ByteHex(" "), '', { attachedEth: marketCreationFee });
         await this.connector.waitForTransactionReceipt(createMarketTransactionHash, `Creating market.`);
         const market = new Market(this.connector, this.accountManager, marketAddress, this.configuration.gasPrice);
 
