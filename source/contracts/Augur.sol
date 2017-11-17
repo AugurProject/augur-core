@@ -14,7 +14,7 @@ import 'libraries/Extractable.sol';
 
 // Centralized approval authority and event emissions
 contract Augur is Controlled, Extractable {
-    event MarketCreated(address indexed universe, string indexed topic, address indexed marketCreator, address market, uint256 marketCreationFee, string extraInfo);
+    event MarketCreated(address indexed universe, bytes32 indexed topic, address indexed marketCreator, address market, uint256 marketCreationFee, string extraInfo);
     event DesignatedReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
     event ReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
     event WinningTokensRedeemed(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountRedeemed, uint256 reportingFeesReceived, uint256[] payoutNumerators);
