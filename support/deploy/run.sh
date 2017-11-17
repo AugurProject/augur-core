@@ -37,7 +37,7 @@ esac
 
 case $1 in
   "docker")
-    docker run -rm -it \
+    docker run --rm -it \
       -e AUGUR_CONTROLLER_ADDRESS=$controller \
       -e ETHEREUM_GAS_PRICE_IN_NANOETH=$gasPrice \
       -e ETHEREUM_HOST=$host \
