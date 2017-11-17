@@ -32,8 +32,8 @@ git:
 
 branches:
   only:
-  - master
-	- develop
+    - master
+    - develop
 
 env:
   global:
