@@ -8,7 +8,7 @@ if [[ "$TRAVIS" == "true" ]]; then
 
   branch=$TRAVIS_BRANCH
   commit=$TRAVIS_COMMIT
-  repo_url=https://AugurIntegration:$GITHUB_DEPLOYMENT_TOKEN@github.com/AugurProject/augur-contracts
+  repo_url=https://$GITHUB_DEPLOYMENT_TOKEN@github.com/AugurProject/augur-contracts
 else
   branch=$(git rev-parse --abbrev-ref HEAD)
   commit=$(git rev-parse --short HEAD)
