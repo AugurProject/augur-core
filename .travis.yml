@@ -7,12 +7,10 @@ notifications:
   email: false
 before_install:
 - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-- sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu
-  $(lsb_release -cs) stable"
+- sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 - sudo apt-get update
 - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
-- sudo sudo curl -L https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname
-  -s`-`uname -m` -o /usr/local/bin/docker-compose
+- sudo sudo curl -L https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
 - sudo chmod +x /usr/local/bin/docker-compose
 before_script:
 - npm run docker:build
@@ -22,7 +20,6 @@ deploy:
   script: ARTIFACTS=true npm run docker:deploy
   on:
     branch: master
->>>>>>> Add deployment token
 git:
   depth: 5
 branches:
