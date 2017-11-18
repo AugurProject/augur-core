@@ -20,12 +20,12 @@ before_script:
 script:
   - npm run docker:test
 
-deploy:
-  skip_cleanup: true
-  provider: script
-  script: "ARTIFACTS=true npm run docker:deploy"
-  on:
-    branch: master
+#deploy:
+#  skip_cleanup: true
+#  provider: script
+#  script: "ARTIFACTS=true npm run docker:deploy"
+#  on:
+#    branch: master
 
 git:
   depth: 5

@@ -122,7 +122,34 @@ pytest
 unset INCLUDE_FUZZY_TESTS
 ```
 
-When writing tests, it is highly recommended to make use of the ContractFixtures class for ‘placeholder’ variables. Python’s unit testing framework comes handy here; encapsulate tests within functions that start with “test_”, and use “assert” statements when testing for certain values. Parameterized tests are recommended as well to test various possibilities and edge cases.
+When writing tests, it is highly recommended to make use of the ContractFixtures class for ‘placeholder’ variables. Python’s unit testing framework comes handy here; encapsulate tests within functions that start with "test\_", and use “assert” statements when testing for certain values. Parameterized tests are recommended as well to test various possibilities and edge cases.
+
+## Deployment
+
+Solidity contract deployment is handled by `ContractDeployer.ts` and the wrapper programs located in `source/deployment`. This deployment framework allows for incremental deploys of contracts to a given controller (specified via a configuration option). This allows us to deploy new contracts without touching the controller, effectively upgrading in-place the deployed system.
+
+### How to run a deployment
+
+Deployment can be run in two modes, direct or docker. In direct mode the assumoption is that the entire system has been built (typescript and solidity), and there is a working nodejs environment locally. Furthermore, one must posses an account on the deployment target (e.g. Rinkeby testnet) which has enough ETH to cover the costs of the deployment. For the purposes of deploying to the testnets, those with access to the augur private testnet keys can deploy and update the existing contracts. For reference, these keys are stored in an encrypted git repository within the Augur Project's keybase team. If you need access -- please inquire within Discord.
+
+All deployment commands can be managed through scripts described in package.json, and are accessible to `npm run` and `yarn`.
+
+### Example Rinkeby Deployment
+```
+augur-core % npm run build # build and create compile artifacts
+augur-core % RINKEBY_PRIVATE_KEY=$(cat path/to/keys/deploy_keys/rinkeby.prv) npm run deploy:rinkeby
+```
+
+
+### Example Updating augur-contracts
+This deployment will generate artifacts in the ./output/contracts directory. To merge these changes into augur-contracts, there are scripts located in that repository. *When running deploymen locally this step is not done automatically*. To include these changes you can work from within your checked out augur-contracts.
+
+```
+augur-contracts % SOURCE="path/to/augur-core/output/contracts" BRANCH=master npm run update-contracts
+augur-contracts % npm version patch
+augur-contracts % git push && git push --tags
+augur-contracts % npm publish
+```
 
 ## Additional notes
 
