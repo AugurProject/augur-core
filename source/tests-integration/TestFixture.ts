@@ -5,7 +5,7 @@ import { Connector } from '../libraries/Connector';
 import { AccountManager } from '../libraries/AccountManager';
 import { ContractCompiler } from '../libraries/ContractCompiler';
 import { ContractDeployer } from '../libraries/ContractDeployer';
-import { LegacyReputationToken, Cash, Universe, ReputationToken, ReportingWindow, Market } from '../libraries/ContractInterfaces';
+import { LegacyReputationToken, Cash, Universe, ReputationToken, ReportingWindow, Market, CreateOrder, Orders } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
 
 export class TestFixture {
@@ -87,7 +87,43 @@ export class TestFixture {
     public async createReasonableMarket(universe: Universe, denominationToken: string, numOutcomes: BN): Promise<Market> {
         const endTime = new BN(Math.round(new Date().getTime() / 1000));
         const fee = (new BN(10)).pow(new BN(16));
-        const numTicks = (new BN(10)).pow(new BN(4));
+        const numTicks = new BN(10752);
         return await this.createMarket(universe, numOutcomes, endTime, fee, denominationToken, this.accountManager.defaultAddress, numTicks);
+    }
+
+    public async placeOrder(market: string, type: BN, numShares: BN, price: BN, outcome: BN, betterOrderID: string, worseOrderID: string, tradeGroupID: BN): Promise<void> {
+        const createOrderContract = await this.contractDeployer.getContract("CreateOrder");
+        const createOrder = new CreateOrder(this.connector, this.accountManager, createOrderContract.address, this.configuration.gasPrice);
+
+        const ethValue = numShares.mul(price);
+
+        const placeOrderTransactionHash = await createOrder.publicCreateOrder(type, numShares, price, market, outcome, betterOrderID, worseOrderID, tradeGroupID, { attachedEth: ethValue });
+        const receipt = await this.connector.waitForTransactionReceipt(placeOrderTransactionHash, `Placing Order.`);
+        if (receipt.status != 1) {
+            throw new Error("Could not create Order");
+        }
+        return;
+    }
+
+    public async getOrderPrice(orderID: string): Promise<BN> {
+        const ordersContract = await this.contractDeployer.getContract("Orders");
+        const orders = new Orders(this.connector, this.accountManager, ordersContract.address, this.configuration.gasPrice);
+
+        const price = await orders.getPrice_(orderID);
+        if (price.toNumber() == 0) {
+            throw new Error("Unable to get order price");
+        }
+        return price;
+    }
+
+    public async getBestOrderId(type: BN, market: string, outcome: BN): Promise<string> {
+        const ordersContract = await this.contractDeployer.getContract("Orders");
+        const orders = new Orders(this.connector, this.accountManager, ordersContract.address, this.configuration.gasPrice);
+
+        const orderID = await orders.getBestOrderId_(type, market, outcome);
+        if (!orderID) {
+            throw new Error("Unable to get order price");
+        }
+        return orderID;
     }
 }
