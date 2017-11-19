@@ -15,5 +15,17 @@ describe("TradeAndReport", () => {
         const actualTypeName = await market.getTypeName_();
         const expectedTypeName = stringTo32ByteHex("Market");
         expect(actualTypeName).to.equal(expectedTypeName);
+
+        const type = new BN(0);
+        const outcome = new BN(0);
+        const numShares = new BN(10000000000000);
+        const price = new BN(2150);
+
+        await fixture.placeOrder(market.address, type, numShares, price, outcome, stringTo32ByteHex(""), stringTo32ByteHex(""), new BN(42));
+
+        const orderID = await fixture.getBestOrderId(type, market.address, outcome)
+
+        const orderPrice = await fixture.getOrderPrice(orderID);
+        expect(orderPrice.toNumber()).to.equal(price.toNumber());
     });
 });

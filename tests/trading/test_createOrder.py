@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from ethereum.tools import tester
+from datetime import timedelta
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
 from utils import bytesToLong, longTo32Bytes, longToHexString, bytesToHexString, fix, unfix, captureFilteredLogs, EtherDelta
@@ -187,3 +188,29 @@ def test_minimum_order(contractsFixture, cash, market):
 
     with raises(TransactionFailed):
         createOrder.publicCreateOrder(ASK, 1, market.getNumTicks()-1, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 1)
+
+def test_publicCreateOrder_bid_real_example_case(contractsFixture, universe, cash):
+    market = contractsFixture.createBinaryMarket(
+            universe = universe,
+            endTime = long(contractsFixture.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
+            feePerEthInWei = 10**16,
+            denominationToken = cash,
+            designatedReporterAddress = tester.a0,
+            numTicks = 10752,
+            sender = tester.k0,
+            topic= "",
+            extraInfo= "")
+
+    orders = contractsFixture.contracts['Orders']
+    createOrder = contractsFixture.contracts['CreateOrder']
+
+    orderID = createOrder.publicCreateOrder(BID, 10000000000000, 2000, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), 7, value = 20000000000000000)
+    assert orderID
+
+    assert orders.getAmount(orderID) == 10000000000000
+    assert orders.getPrice(orderID) == 2000
+    assert orders.getOrderCreator(orderID) == bytesToHexString(tester.a0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 20000000000000000
+    assert orders.getOrderSharesEscrowed(orderID) == 0
+    assert orders.getBetterOrderId(orderID) == bytearray(32)
+    assert orders.getWorseOrderId(orderID) == bytearray(32)
