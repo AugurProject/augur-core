@@ -138,7 +138,7 @@ library Order {
             _attosharesToCover -= _orderData.sharesEscrowed;
             for (_i = 0; _i < _numberOfOutcomes; _i++) {
                 if (_i != _orderData.outcome) {
-                    _orderData.market.getShareToken(_i).transferFrom(_orderData.creator, _orderData.market, _orderData.sharesEscrowed);
+                    _orderData.market.getShareToken(_i).trustedTransfer(_orderData.creator, _orderData.market, _orderData.sharesEscrowed);
                 }
             }
         }
