@@ -40,7 +40,6 @@ fi
 git clone $repo_url output/augur-contracts
 current_dir=$PWD;
 cd output/augur-contracts
-git checkout -b paul origin/paul
 npm install
 
 BRANCH=$branch COMMIT=$commit TAG=$tag SOURCE=../contracts npm run update-contracts
