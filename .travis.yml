@@ -29,6 +29,7 @@ branches:
   only:
     - master
     - develop
+    - /^v\d+\.\d+\.\d+$/
 env:
   global:
     secure: ADmhKnkSyCrheJ0Vpa5X/JribTsux/07i4FbhxBTIq/YM+kkcygkO807UDPcbe8vfYWWxp4lcDTdPTYKvGbyJZIsD6yV17+V10Lp58YjexpKFVzqsqLXG7IFaTCvPvG+vqzu63QI6DNY06Z+aUjeRRXJMIG0pMpCIflzN4bkAcA=
