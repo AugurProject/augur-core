@@ -17,7 +17,6 @@ case $2 in
     host="rinkeby.augur.net"
     privateKey=$RINKEBY_PRIVATE_KEY
     gasPrice=20
-    #controller="0xa76ecf40e366d3462a857cbb4695158e4601a8f6"
     ;;
   "kovan")
     host="kovan.augur.net"
