@@ -36,6 +36,10 @@ contract ShareToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         return true;
     }
 
+    function trustedTransfer(address _source, address _destination, uint256 _attotokens) public onlyWhitelistedCallers onlyInGoodTimes afterInitialized returns (bool) {
+        return internalTransfer(_source, _destination, _attotokens);
+    }
+
     function getTypeName() public view returns(bytes32) {
         return "ShareToken";
     }

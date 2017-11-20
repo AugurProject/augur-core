@@ -12,4 +12,5 @@ contract IShareToken is ITyped, ERC20 {
     function destroyShares(address, uint256 balance) external returns (bool);
     function getMarket() external view returns (IMarket);
     function getOutcome() external view returns (uint8);
+    function trustedTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
 }
