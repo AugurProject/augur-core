@@ -30,14 +30,12 @@ deploy:
     skip_cleanup: true
     script: ARTIFACTS=true npm run docker:deploy
     on:
-      branch: master
       tags: true
 git:
   depth: 5
 branches:
   only:
     - master
-    - develop
     - /^v\d+\.\d+\.\d+$/
 env:
   global:
