@@ -17,12 +17,21 @@ before_script:
 script:
   - npm run docker:test
 deploy:
-  skip_cleanup: true
-  provider: script
-  script: ARTIFACTS=true npm run docker:deploy
-  on:
-    branch: master
-    tags: true
+  - provider: releases
+    skip_cleanup: true
+    api_key:
+      secure: FWDm5RjvdV39l0Ubmt1rR6It70YyKy69UueV42O90VElrm2D0thx8b3L14dnP7oFz40EYp5Q9AkzGw/dhunyQzjy09nm0Oo4hGlVOLoPeiLSL+U8BdjgUQUcwyqTmn7tZU9hiASz1XbW2PMJ7khgZyPFc65j/tJnXQrnpY7TP50=
+    file:
+      - output/contracts/addresses.json
+      - output/contracts/abi.json
+    on:
+      tags: true
+  - provider: script
+    skip_cleanup: true
+    script: ARTIFACTS=true npm run docker:deploy
+    on:
+      branch: master
+      tags: true
 git:
   depth: 5
 branches:
