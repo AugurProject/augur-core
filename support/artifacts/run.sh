@@ -28,13 +28,22 @@ else
   fi
 fi
 
+if [[ -e "$HOME/.npmrc" ]]; then
+  echo "Using exisiting .npmrc"
+elif [[ -e "$HOME/.npmrpc.deploy" && "${NPM_TOKEN}x" != "x" ]]; then
+  echo "Using NPM_TOKEN to create ~/.npmrc"
+  cp ~/.npmrc.deploy ~/.npmrc
+else
+  echo "No logged in NPM session and NPM_TOKEN not set, will not be able to publish to NPM"
+fi
+
 git clone $repo_url output/augur-contracts
 current_dir=$PWD;
 cd output/augur-contracts
 git checkout -b paul origin/paul
 npm install
 
-  BRANCH=$branch COMMIT=$commit TAG=$tag SOURCE=../contracts npm run update-contracts
+BRANCH=$branch COMMIT=$commit TAG=$tag SOURCE=../contracts npm run update-contracts
 update_success=$?
 cd $current_dir
 
