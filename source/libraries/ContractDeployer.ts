@@ -102,19 +102,29 @@ export class ContractDeployer {
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
         if (contract.relativeFilePath.startsWith('libraries/')) return;
         // Check to see if we have already uploded this version of the contract
-        const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
-        const key = stringTo32ByteHex(contractsToDelegate[contractName] ? `${contractName}Target` : contractName);
-        const contractDetails = await this.controller.getContractDetails_(key);
-        const previouslyUploadedBytecodeHash = contractDetails[2];
-        if (bytecodeHash === previouslyUploadedBytecodeHash) {
+        if (await this.shouldUpgradeContract(contract, contractsToDelegate[contractName])) {
             console.log(`Using existing contract for ${contractName}`);
-            contract.address = contractDetails[0];
+            contract.address = await this.getExistingContractAddress(contractName);
         } else {
             console.log(`Uploading new version of contract for ${contractName}`);
             contract.address = contractsToDelegate[contractName]
                 ? await this.uploadAndAddDelegatedToController(contract)
                 : await this.uploadAndAddToController(contract);
         }
+    }
+
+    private async shouldUpgradeContract(contract: Contract, isDelegated: boolean): Promise<boolean> {
+        const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
+        const key = stringTo32ByteHex(isDelegated ? `${contract.contractName}Target` : contract.contractName);
+        const contractDetails = await this.controller.getContractDetails_(key);
+        const previouslyUploadedBytecodeHash = contractDetails[2];
+        return bytecodeHash === previouslyUploadedBytecodeHash;
+    }
+
+    private async getExistingContractAddress(contractName: string): Promise<string> {
+        const key = stringTo32ByteHex(contractName);
+        const contractDetails = await this.controller.getContractDetails_(key);
+        return contractDetails[0];
     }
 
     private async uploadAndAddDelegatedToController(contract: Contract): Promise<string> {
@@ -124,11 +134,11 @@ export class ContractDeployer {
         return await this.uploadAndAddToController(this.contracts.get('Delegator'), contract.contractName, delegatorConstructorArgs);
     }
 
-    private async uploadAndAddToController(contract: Contract, registrationKey: string = contract.contractName, constructorArgs: Array<any> = []): Promise<string> {
+    private async uploadAndAddToController(contract: Contract, registrationContractName: string = contract.contractName, constructorArgs: Array<any> = []): Promise<string> {
         const address = await this.construct(contract, constructorArgs, `Uploading ${contract.contractName}`);
         const commitHash = await ContractDeployer.getGitCommit();
         const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
-        await this.controller.registerContract(stringTo32ByteHex(registrationKey), address, commitHash, bytecodeHash);
+        await this.controller.registerContract(stringTo32ByteHex(registrationContractName), address, commitHash, bytecodeHash);
         return address;
     }
 
@@ -157,15 +167,15 @@ export class ContractDeployer {
                 continue;
             } else {
                 console.log(`Whitelisting ${contract.contractName}`);
-                promises.push(this.whitelistContract(contract.contractName));
+                promises.push(this.whitelistContract(contract.contractName, contract.address));
             }
         }
 
         await resolveAll(promises);
     }
 
-    private async whitelistContract(contractName: string): Promise<TransactionReceipt> {
-        const transactionHash = <string>await this.controller.addToWhitelist(this.getContract(contractName).address, { sender: this.accountManager.defaultAddress });
+    private async whitelistContract(contractName: string, contractAddress: string): Promise<TransactionReceipt> {
+        const transactionHash = await this.controller.addToWhitelist(contractAddress, { sender: this.accountManager.defaultAddress });
         return await this.connector.waitForTransactionReceipt(transactionHash, `Whitelisting ${contractName}`);
     }
 
