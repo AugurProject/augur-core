@@ -3,10 +3,8 @@ sudo: required
 language: javascript
 services:
   - docker
-
 notifications:
   email: false
-
 before_install:
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
   - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
@@ -14,30 +12,35 @@ before_install:
   - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
   - sudo sudo curl -L https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
   - sudo chmod +x /usr/local/bin/docker-compose
-
 before_script:
   - npm run docker:build
 script:
   - npm run docker:test
-
-#deploy:
-#  skip_cleanup: true
-#  provider: script
-#  script: "ARTIFACTS=true npm run docker:deploy"
-#  on:
-#    branch: master
-
+deploy:
+  - provider: releases
+    skip_cleanup: true
+    api_key:
+      secure: FWDm5RjvdV39l0Ubmt1rR6It70YyKy69UueV42O90VElrm2D0thx8b3L14dnP7oFz40EYp5Q9AkzGw/dhunyQzjy09nm0Oo4hGlVOLoPeiLSL+U8BdjgUQUcwyqTmn7tZU9hiASz1XbW2PMJ7khgZyPFc65j/tJnXQrnpY7TP50=
+    file:
+      - output/contracts/addresses.json
+      - output/contracts/abi.json
+    on:
+      tags: true
+  - provider: script
+    skip_cleanup: true
+    script: ARTIFACTS=true npm run docker:deploy
+    on:
+      tags: true
 git:
   depth: 5
-
 branches:
   only:
     - master
-    - develop
-
+    - /^v\d+\.\d+\.\d+$/
 env:
   global:
-    - secure: ADmhKnkSyCrheJ0Vpa5X/JribTsux/07i4FbhxBTIq/YM+kkcygkO807UDPcbe8vfYWWxp4lcDTdPTYKvGbyJZIsD6yV17+V10Lp58YjexpKFVzqsqLXG7IFaTCvPvG+vqzu63QI6DNY06Z+aUjeRRXJMIG0pMpCIflzN4bkAcA=
-    - secure: eubvvOD8TapXLzjzcDe0MBgE+IGOMDLZPAUwfPc6+H5N8efZoa6nLMhm/7wVYBPpuBQAQC3T3I8YPYh/qJMU8pQ7771FOxqMUXmpvEGUHZoZQ66/Nu0uylBeKwYDc5o7u1Qj1xW+JwCMWpfcUlbCHYPgR5Av/1m62ZFPaCKoj34=
-    - secure: E6zBunUrmP6w9RzCSgIY0hS99v8u1L55AGsY1MtPr+u6uMLIkif6uMG/O881DmOkDtBgv/m60fx2Ka+bEZpxWY30ahTc08SUhjMEGC9MeRr5PvEeEzbsiOez+OFIRdngMGptHbTagqKGl3KrJPp21YsYL5GGFWil7iUZ/poent8=
-    - secure: Qww+6lLL/9Xs3fWQrEtXgsvH9amXy8HPb0iQ3nDZEuQ/jB7mpUWrF2OLK7HCk12MVny4Ey7im+dW/nn7hUi5i7Loj2tBUAXn8hxopqO2MlyjscQkmBJCeuqQRipSc4deCnLvfROrXhX3XmSC7435qTAFc8OfrJFec8T45j92lZw=
+    secure: ADmhKnkSyCrheJ0Vpa5X/JribTsux/07i4FbhxBTIq/YM+kkcygkO807UDPcbe8vfYWWxp4lcDTdPTYKvGbyJZIsD6yV17+V10Lp58YjexpKFVzqsqLXG7IFaTCvPvG+vqzu63QI6DNY06Z+aUjeRRXJMIG0pMpCIflzN4bkAcA=
+    secure: eubvvOD8TapXLzjzcDe0MBgE+IGOMDLZPAUwfPc6+H5N8efZoa6nLMhm/7wVYBPpuBQAQC3T3I8YPYh/qJMU8pQ7771FOxqMUXmpvEGUHZoZQ66/Nu0uylBeKwYDc5o7u1Qj1xW+JwCMWpfcUlbCHYPgR5Av/1m62ZFPaCKoj34=
+    secure: E6zBunUrmP6w9RzCSgIY0hS99v8u1L55AGsY1MtPr+u6uMLIkif6uMG/O881DmOkDtBgv/m60fx2Ka+bEZpxWY30ahTc08SUhjMEGC9MeRr5PvEeEzbsiOez+OFIRdngMGptHbTagqKGl3KrJPp21YsYL5GGFWil7iUZ/poent8=
+    secure: X+oknrdo94NEw0oj5WTTkt0Qc42vZRypUhj39U+MBAwscLOReBpY7mRxpoXFjyVvxOwwxS0uj5vO+zaYn1Coz0cjhCCTcBnhGVf8tlfvGhx4r3V1/ISgSzigj/dgsigEB/BYojWX2ubX2ubOVpBb+PaDV1zCOw/6cmfKks8emcY=
+    secure: Y/HFZpl4ivYsq/x17529XhnSvM59NajIeu8dqP2HFFNQNCNVEXaL4TbPWBp/I7ClcT+PHro8bVsHemcKYRDjqhm5sAgMcTSvR4WnuwpgEf/s86bgNOqt0pJ3lhkzc5+L0zhJ68n6JWOaUQykF6DCE9jyLH1WSMmu2VZGHoi/EYY=

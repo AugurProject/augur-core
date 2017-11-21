@@ -17,7 +17,6 @@ case $2 in
     host="rinkeby.augur.net"
     privateKey=$RINKEBY_PRIVATE_KEY
     gasPrice=20
-    controller="0xa76ecf40e366d3462a857cbb4695158e4601a8f6"
     ;;
   "kovan")
     host="kovan.augur.net"
@@ -44,18 +43,18 @@ case $1 in
       -e ETHEREUM_PORT=$port \
       -e ETHEREUM_PRIVATE_KEY=$privateKey \
       -e DEPLOY=true \
-      -e ARTIFACTS=$ARTIFACTS
-      --entrypoint "bash support/deploy/deploy.sh"
-      augurproject/core-deploy:latest
+      -e ARTIFACTS=$ARTIFACTS \
+      -e GITHUB_DEPLOYMENT_TOKEN=$GITHUB_DEPLOYMENT_TOKEN \
+      --entrypoint "bash"  \
+      augurproject/augur-core:latest -- /app/support/deploy/deploy.sh
     ;;
   "direct")
-    AUGUR_CONTROLLER_ADDRESS=$controller \
     ETHEREUM_GAS_PRICE_IN_NANOETH=$gasPrice \
     ETHEREUM_HOST=$host \
     ETHEREUM_PORT=$port \
     ETHEREUM_PRIVATE_KEY=$privateKey \
     DEPLOY=true \
-    ARTIFACTS=$ARTIFACTS
+    ARTIFACTS=$ARTIFACTS \
       bash support/deploy/deploy.sh
     ;;
   *)
