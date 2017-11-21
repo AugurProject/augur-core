@@ -29,6 +29,12 @@ contract IMarket is ITyped, IOwnable {
         FINALIZED
     }
 
+    enum MarketType {
+        BINARY,
+        CATEGORICAL,
+        SCALAR
+    }
+
     function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feeDivisor, ICash _cash, address _creator, address _designatedReporterAddress) public payable returns (bool _success);
     function updateTentativeWinningPayoutDistributionHash(bytes32 _payoutDistributionHash) public returns (bool);
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32);

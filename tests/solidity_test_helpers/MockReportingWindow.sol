@@ -243,7 +243,15 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return true;
     }
 
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket _newMarket) {
+    function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket _newMarket) {
+        return market;
+    }
+
+    function createCategoricalMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket _newMarket) {
+        return market;
+    }
+
+    function createScalarMarket(uint256 _endTime, int256 _minPrice, int256 _maxPrice, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket _newMarket) {
         return market;
     }
 

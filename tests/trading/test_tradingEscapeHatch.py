@@ -19,16 +19,16 @@ def test_escapeHatch(contractsFixture, cash, market):
     initialTester2ETH = contractsFixture.chain.head_state.get_balance(tester.a2)
 
     # create order with cash
-    orderID = createOrder.publicCreateOrder(contractsFixture.contracts['Constants'].ASK(), 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1, value=fix('0.4'))
+    orderID = createOrder.publicCreateOrder(contractsFixture.contracts['Constants'].ASK(), fix(1), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1, value=fix('1', '4000'))
     assert orderID
 
     # fill order with cash using on-chain matcher
-    assert trade.publicTakeBestOrder(LONG, market.address, YES, 1, fix('0.6'), sender=tester.k2, value=fix('0.6')) == 0
+    assert trade.publicTakeBestOrder(LONG, market.address, YES, fix(1), 6000, sender=tester.k2, value=fix('1', '6000')) == 0
 
     # assert starting values
-    assert cash.balanceOf(market.address) == fix('1')
-    assert noShareToken.balanceOf(tester.a1) == 1
-    assert yesShareToken.balanceOf(tester.a2) == 1
+    assert cash.balanceOf(market.address) == fix('10000')
+    assert noShareToken.balanceOf(tester.a1) == fix(1)
+    assert yesShareToken.balanceOf(tester.a2) == fix(1)
     with raises(TransactionFailed):
         tradingEscapeHatch.claimSharesInUpdate(market.address)
 

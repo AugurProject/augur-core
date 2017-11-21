@@ -60,7 +60,7 @@ def finalizeMarket(fixture, market, payoutNumerators):
 def test_helpers(kitchenSinkFixture, scalarMarket):
     market = scalarMarket
     claimTradingProceeds = kitchenSinkFixture.contracts['ClaimTradingProceeds']
-    finalizeMarket(kitchenSinkFixture, market, [0,40*10**18])
+    finalizeMarket(kitchenSinkFixture, market, [0,40*10**4])
 
     assert claimTradingProceeds.calculateCreatorFee(market.address, fix('3')) == fix('0.03')
     assert claimTradingProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
@@ -90,7 +90,7 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     # get NO shares with a2
     acquireShortShareSet(kitchenSinkFixture, cash, market, YES, 1, claimTradingProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(kitchenSinkFixture, market, [0,10**18])
+    finalizeMarket(kitchenSinkFixture, market, [0,10**4])
 
     logs = []
     captureFilteredLogs(kitchenSinkFixture.chain.head_state, kitchenSinkFixture.contracts['Augur'], logs)
@@ -141,7 +141,7 @@ def test_redeem_shares_in_categorical_market(kitchenSinkFixture, universe, cash,
     # get short shares with a2
     acquireShortShareSet(kitchenSinkFixture, cash, market, 2, 1, claimTradingProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(kitchenSinkFixture, market, [0, 0, 3 * 10 ** 17])
+    finalizeMarket(kitchenSinkFixture, market, [0, 0, market.getNumTicks()])
 
     # redeem shares with a1
     initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
@@ -151,7 +151,7 @@ def test_redeem_shares_in_categorical_market(kitchenSinkFixture, universe, cash,
     claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
-    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout
+    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout + 1 # rounding errors from fees
     assert kitchenSinkFixture.chain.head_state.get_balance(tester.a2) == initialShortHolderETH
     assert shareToken2.balanceOf(tester.a1) == 0
     assert shareToken2.balanceOf(tester.a2) == 0
@@ -178,7 +178,7 @@ def test_redeem_shares_in_scalar_market(kitchenSinkFixture, universe, cash, scal
     # get NO shares with a2
     acquireShortShareSet(kitchenSinkFixture, cash, market, YES, 1, claimTradingProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(kitchenSinkFixture, market, [10**19, 3*10**19])
+    finalizeMarket(kitchenSinkFixture, market, [10**5, 3*10**5])
 
     # redeem shares with a1
     initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
@@ -206,7 +206,7 @@ def test_reedem_failure(kitchenSinkFixture, cash, market):
     # set timestamp to after market end
     kitchenSinkFixture.chain.head_state.timestamp = market.getEndTime() + 1
     # have tester.a0 subimt designated report (75% high, 25% low, range -10*10^18 to 30*10^18)
-    kitchenSinkFixture.designatedReport(market, [0, 10**18], tester.k0)
+    kitchenSinkFixture.designatedReport(market, [0, 10**4], tester.k0)
     # set timestamp to after designated dispute end
     kitchenSinkFixture.chain.head_state.timestamp = market.getDesignatedReportDisputeDueTimestamp() + 1
 

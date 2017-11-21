@@ -112,7 +112,7 @@ def test_reporting_window_create_market(localFixture, chain, mockUniverse, mockM
 
     assert reportingWindow1.initialize(mockUniverse.address, 1)
     with raises(TransactionFailed, message="start time is less than current block time"):
-        newMarket = reportingWindow1.createMarket(endTimeValue, numOutcomesValue, numTicks, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "info")
+        newMarket = reportingWindow1.createBinaryMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "info")
 
     mockUniverse.setReportingPeriodDurationInSeconds(timestamp)
     reportingWindow2 = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'reportingWindow2')
@@ -120,7 +120,7 @@ def test_reporting_window_create_market(localFixture, chain, mockUniverse, mockM
     assert reportingWindow2.initialize(mockUniverse.address, 2)
     mockUniverse.setReportingWindowByMarketEndTime(tester.a0)
     with raises(TransactionFailed, message="reporting window not associated with universe"):
-        newMarket = reportingWindow2.createMarket(endTimeValue, numOutcomesValue, numTicks, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "info")
+        newMarket = reportingWindow2.createBinaryMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "info")
 
     mockUniverse.setReportingPeriodDurationInSeconds(timestamp - 1)
     mockUniverse.setDesignatedReportNoShowBond(10)
@@ -132,13 +132,13 @@ def test_reporting_window_create_market(localFixture, chain, mockUniverse, mockM
     assert reportingWindow3.getNumMarkets() == 0
     mockUniverse.setReportingWindowByMarketEndTime(reportingWindow3.address)
     assert mockAugur.logMarketCreatedCalled() == False
-    newMarket = reportingWindow3.createMarket(endTimeValue, numOutcomesValue, numTicks, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "info")
+    newMarket = reportingWindow3.createBinaryMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "info")
     assert mockAugur.logMarketCreatedCalled() == True
     assert newMarket == mockMarket.address
     assert mockMarketFactory.getCreateMarketReportingWindowValue() == reportingWindow3.address
     assert mockMarketFactory.getCreateMarketEndTimeValue() == endTimeValue
     assert mockMarketFactory.getCreateMarketNumOutcomesValue() == numOutcomesValue
-    assert mockMarketFactory.getCreateMarketNumTicksValue() == numTicks
+    assert mockMarketFactory.getCreateMarketNumTicksValue() == 10000
     assert mockMarketFactory.getCreateMarketfeePerEthInWeiValue() == feePerEthInWeiValue
     assert mockMarketFactory.getCreateMarketDenominationTokenValue() == mockCash.address
     assert mockMarketFactory.getCreateMarketCreatorValue() == bytesToHexString(tester.a0)
@@ -632,5 +632,5 @@ def populatedReportingWindow(localFixture, chain, mockUniverse, mockMarket, mock
     mockUniverse.setReputationToken(mockReputationToken.address)
     assert reportingWindow.initialize(mockUniverse.address, 2)
     mockUniverse.setReportingWindowByMarketEndTime(reportingWindow.address)
-    reportingWindow.createMarket(endTimeValue, numOutcomesValue, numTicks, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "", "")
+    reportingWindow.createBinaryMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "", "")
     return reportingWindow
