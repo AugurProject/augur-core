@@ -18,20 +18,24 @@
     "build:contracts": "node output/deployment/compileContracts.js",
     "build:interfaces": "node output/tools/generateContractInterfaces.js",
     "build": "npm run build:source && npm run lint && npm run build:contracts && npm run build:interfaces",
+
     "test:unit": "pytest tests -vv",
     "test:integration": "npx mocha output/tests-integration/**/*.js --no-timeouts --require source-map-support/register",
+
     "deploy:net": "bash support/deploy/run.sh direct",
     "deploy:rinkeby": "npm run deploy:net -- rinkeby",
     "deploy:ropsten": "npm run deploy:net -- ropsten",
     "deploy:foundation": "npm run deploy:net -- foundation",
     "deploy": "npm run deploy:rinkeby",
     "artifacts": "bash support/artifacts/run.sh",
-    "docker:build:base": "docker build --tag augurproject/augur-core:latest -f support/base/Dockerfile .",
-    "docker:build:test:unit": "docker build --tag augurproject/augur-core-test:latest -f ./support/test/unit/Dockerfile .",
-    "docker:build": "npm run docker:build:base && npm run docker:build:test:unit",
-    "docker:test:console": "docker run --rm -it entrypoint=/bin/bash augurproject/augur-core-test:latest",
-    "docker:test:unit": "docker run --rom -it augurproject/augur-core-test:latest",
-    "docker:test:integration": "docker-compose -f support/test/integration/docker-compose.yml up --build --abort-on-container-exit",
+    "docker:build:base": "docker build --tag augurproject/augur-core-base:latest -f support/base/Dockerfile .",
+    "docker:build": "docker build --tag augurproject/augur-core:latest -f support/Dockerfile .",
+
+    "docker:push:base": "docker push augurproject/augur-core-base:latest",
+
+    "docker:shell": "docker run --rm -it entrypoint=bash augurproject/augur-core:latest",
+    "docker:test:unit": "docker run --rm -it --entrypoint=npm augurproject/augur-core:latest run test:unit",
+    "docker:test:integration": "docker-compose -f support/test/integration/docker-compose.yml up --abort-on-container-exit",
     "docker:test": "npm run docker:test:unit && npm run docker:test:integration",
 
     "docker:deploy:net": "bash support/deploy/run.sh docker",

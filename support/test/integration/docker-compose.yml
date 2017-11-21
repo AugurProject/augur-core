@@ -11,7 +11,7 @@ services:
     image: augurproject/augur-core:latest
     build:
       context: ../../../
-      dockerfile: support/base/Dockerfile
+      dockerfile: support/Dockerfile
     entrypoint: [ "npm", "run", "test:integration"]
     # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
@@ -33,7 +33,7 @@ services:
     image: augurproject/augur-core:latest
     build:
       context: ../../../
-      dockerfile: support/base/Dockerfile
+      dockerfile: support/Dockerfile
     entrypoint: [ "npm", "run", "test:integration"]
     # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
