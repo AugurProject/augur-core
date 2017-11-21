@@ -54,13 +54,13 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
     }
 
     function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
-        _newMarket = createMarket(_endTime, 2, Reporting.getBinaryMarketNumTicks(), _feePerEthInWei, _denominationToken, _designatedReporterAddress);
+        _newMarket = createMarketInternal(_endTime, 2, Reporting.getBinaryMarketNumTicks(), _feePerEthInWei, _denominationToken, _designatedReporterAddress);
         controller.getAugur().logMarketCreated(universe, _newMarket, msg.sender, msg.value, _topic, 0, 1, IMarket.MarketType.BINARY, _extraInfo);
         return _newMarket;
     }
 
     function createCategoricalMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
-        _newMarket = createMarket(_endTime, _numOutcomes, Reporting.getCategoricalMarketNumTicks(_numOutcomes), _feePerEthInWei, _denominationToken, _designatedReporterAddress);
+        _newMarket = createMarketInternal(_endTime, _numOutcomes, Reporting.getCategoricalMarketNumTicks(_numOutcomes), _feePerEthInWei, _denominationToken, _designatedReporterAddress);
         controller.getAugur().logMarketCreated(universe, _newMarket, msg.sender, msg.value, _topic, 0, 1, IMarket.MarketType.CATEGORICAL, _extraInfo);
         return _newMarket;
     }
@@ -68,27 +68,22 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
     function createScalarMarket(uint256 _endTime, int256 _minPrice, int256 _maxPrice, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(_minPrice < _maxPrice);
 
-        _newMarket = createMarket(_endTime, 2, Reporting.getScalarMarketNumTicks(_minPrice, _maxPrice), _feePerEthInWei, _denominationToken, _designatedReporterAddress);
+        _newMarket = createMarketInternal(_endTime, 2, Reporting.getScalarMarketNumTicks(_minPrice, _maxPrice), _feePerEthInWei, _denominationToken, _designatedReporterAddress);
         controller.getAugur().logMarketCreated(universe, _newMarket, msg.sender, msg.value, _topic, _minPrice, _maxPrice, IMarket.MarketType.SCALAR, _extraInfo);
         return _newMarket;
     }
 
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) private onlyInGoodTimes afterInitialized returns (IMarket _newMarket) {
+    function createMarketInternal(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) private onlyInGoodTimes afterInitialized returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
         require(universe.getOrCreateReportingWindowByMarketEndTime(_endTime) == this);
-        _newMarket = createMarketInternal(_endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _designatedReporterAddress);
+        MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
+        getReputationToken().trustedReportingWindowTransfer(msg.sender, _marketFactory, universe.getOrCacheDesignatedReportNoShowBond());
+        _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
         markets.add(_newMarket);
         firstReporterMarkets.add(_newMarket);
         // We assume the market is a no show and decrement on designated report. This only needs to be accurate by the next reporting window
         designatedReportNoShows += 1;
         return _newMarket;
-    }
-
-    // We break this out into a different function to avoid stack depth errors
-    function createMarketInternal(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) private onlyInGoodTimes afterInitialized returns (IMarket _newMarket) {
-        MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
-        getReputationToken().trustedReportingWindowTransfer(msg.sender, _marketFactory, universe.getOrCacheDesignatedReportNoShowBond());
-        return _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
     }
 
     function migrateMarketInFromSibling() public onlyInGoodTimes afterInitialized returns (bool) {
