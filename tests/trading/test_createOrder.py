@@ -111,8 +111,6 @@ def test_createOrder_failure(contractsFixture, universe, cash, market):
     assert completeSets.publicBuyCompleteSets(market.address, 2, sender=tester.k1, value=fix('2'))
     with raises(TransactionFailed):
         createOrder.publicCreateOrder(ASK, 1, fix('3'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
-    with raises(TransactionFailed):
-        createOrder.publicCreateOrder(ASK, 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
 
     assert yesShareToken.approve(createOrder.address, 12, sender=tester.k1) == 1, "Approve createOrder contract to spend shares from the user's account (account 1)"
     assert yesShareToken.allowance(tester.a1, createOrder.address) == 12, "CreateOrder contract's allowance should be equal to the amount approved"
