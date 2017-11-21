@@ -48,6 +48,13 @@ library SafeMathInt256 {
         }
     }
 
+    function abs(int256 a) internal pure returns (uint256) {
+        if (a >= 0) {
+            return uint256(a);
+        }
+        return uint256(a * -1);
+    }
+
     function getInt256Min() internal pure returns (int256) {
         return INT256_MIN;
     }

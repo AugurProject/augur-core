@@ -65,10 +65,10 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
         return _newMarket;
     }
 
-    function createScalarMarket(uint256 _endTime, int256 _minPrice, int256 _maxPrice, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
+    function createScalarMarket(uint256 _endTime, int256 _minPrice, int256 _maxPrice, int256 _tickShift, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(_minPrice < _maxPrice);
 
-        _newMarket = createMarketInternal(_endTime, 2, Reporting.getScalarMarketNumTicks(_minPrice, _maxPrice), _feePerEthInWei, _denominationToken, _designatedReporterAddress);
+        _newMarket = createMarketInternal(_endTime, 2, Reporting.getScalarMarketNumTicks(_minPrice, _maxPrice, _tickShift), _feePerEthInWei, _denominationToken, _designatedReporterAddress);
         controller.getAugur().logMarketCreated(universe, _newMarket, msg.sender, msg.value, _topic, _minPrice, _maxPrice, IMarket.MarketType.SCALAR, _extraInfo);
         return _newMarket;
     }

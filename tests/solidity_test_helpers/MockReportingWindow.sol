@@ -251,7 +251,7 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return market;
     }
 
-    function createScalarMarket(uint256 _endTime, int256 _minPrice, int256 _maxPrice, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket _newMarket) {
+    function createScalarMarket(uint256 _endTime, int256 _minPrice, int256 _maxPrice, int256 _tickShift, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket _newMarket) {
         return market;
     }
 

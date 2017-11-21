@@ -13,7 +13,7 @@ contract IReportingWindow is ITyped {
     function initialize(IUniverse _universe, uint256 _reportingWindowId) public returns (bool);
     function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket);
     function createCategoricalMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket);
-    function createScalarMarket(uint256 _endTime, int256 _minPrice, int256 _maxPrice, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket);
+    function createScalarMarket(uint256 _endTime, int256 _minPrice, int256 _maxPrice, int256 _tickShift, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket);
     function migrateMarketInFromSibling() public returns (bool);
     function migrateMarketInFromNibling() public returns (bool);
     function removeMarket() public returns (bool);

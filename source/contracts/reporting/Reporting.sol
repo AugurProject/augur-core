@@ -87,7 +87,12 @@ library Reporting {
         if (_numOutcomes == 8) {return 10000;}
     }
 
-    function getScalarMarketNumTicks(int256 _minPrice, int256 _maxPrice) internal pure returns (uint256) {
-        return uint256(_maxPrice.sub(_minPrice)).mul(10000);
+    function getScalarMarketNumTicks(int256 _minPrice, int256 _maxPrice, int256 _tickShift) internal pure returns (uint256) {
+        uint256 _normalizedTicks = 10 ** _tickShift.abs();
+        uint256 _range = uint256(_maxPrice.sub(_minPrice));
+        if (_tickShift < 0) {
+            return _range.div(_normalizedTicks);
+        }
+        return _range.mul(_normalizedTicks);
     }
 }
