@@ -12,20 +12,10 @@ before_install:
   - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
   - sudo sudo curl -L https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
   - sudo chmod +x /usr/local/bin/docker-compose
-before_script:
-  - npm run docker:build
 script:
+  - npm run docker:build
   - npm run docker:test
 deploy:
-  - provider: releases
-    skip_cleanup: true
-    api_key:
-      secure: FWDm5RjvdV39l0Ubmt1rR6It70YyKy69UueV42O90VElrm2D0thx8b3L14dnP7oFz40EYp5Q9AkzGw/dhunyQzjy09nm0Oo4hGlVOLoPeiLSL+U8BdjgUQUcwyqTmn7tZU9hiASz1XbW2PMJ7khgZyPFc65j/tJnXQrnpY7TP50=
-    file:
-      - output/contracts/addresses.json
-      - output/contracts/abi.json
-    on:
-      tags: true
   - provider: script
     skip_cleanup: true
     script: ARTIFACTS=true npm run docker:deploy
