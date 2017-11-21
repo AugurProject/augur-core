@@ -36,7 +36,7 @@
     "docker:shell": "docker run --rm -it entrypoint=bash augurproject/augur-core:latest",
     "docker:test:unit": "docker run --rm -it --entrypoint=npm augurproject/augur-core:latest run test:unit",
     "docker:test:integration": "docker-compose -f support/test/integration/docker-compose.yml up --abort-on-container-exit",
-    "docker:test": "npm run docker:test:unit && npm run docker:test:integration",
+    "docker:test": "npm run docker:test:unit & npm run docker:test:integration",
 
     "docker:deploy:net": "bash support/deploy/run.sh docker",
     "docker:deploy:rinkeby": "npm run docker:deploy:net -- rinkeby",
