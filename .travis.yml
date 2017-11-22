@@ -21,9 +21,9 @@ stages:
 jobs:
   include:
     - script: if [[ "$TESTS" == "integration" ]]; then
-                npm run docker:test:integration
+                npm run docker:test:integration;
               else
-                npm run docker:test:unit:single -- $TESTS
+                npm run docker:test:unit:single -- $TESTS;
               fi
     - stage: build
       script: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
