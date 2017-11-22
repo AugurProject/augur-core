@@ -40,6 +40,11 @@ fi
 git clone $repo_url output/augur-contracts
 current_dir=$PWD;
 cd output/augur-contracts
+
+git config user.email "team@augur.net"
+git config user.name "The Augur Developers"
+git config push.default "simple"
+
 npm install
 
 AUTOCOMMIT=true BRANCH=$branch COMMIT=$commit TAG=$tag SOURCE=../contracts npm run update-contracts
