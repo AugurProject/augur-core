@@ -29,11 +29,10 @@ jobs:
         - DOCKER_USERNAME=pgebheim
         - secure: CvVr4K0XDzl00jX+olBBV6RNFNA0V7spOTLFjsrNsQkL4pLrKVTK83MhlvKQ4BHUcZ5d5c8uFIJ3LhOXOs2jn5IErrNNeqvbQrrrW7xDDdv7DlpcycIetCTuTUPYsrD++ygrgNa38Vdf8ODFB+lyFBq3ZRZpZIptcHqPw0GeR0s=
     - stage: test
-      script:
-        - npm run docker:test:unit:single -- $PYTEST && npm run docker:test:integration
+      script: npm run docker:test:unit:single -- $PYTEST && npm run docker:test:integration
     - stage: deploy
       script: skip
-      deploy:
+      deploy: &script
         provider: script
         skip_cleanup: true
         script: ARTIFACTS=true npm run docker:deploy
