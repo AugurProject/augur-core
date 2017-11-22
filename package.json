@@ -30,6 +30,7 @@
     "docker:build:base": "docker build --tag augurproject/augur-core-base:latest -f support/base/Dockerfile .",
     "docker:build": "docker build --tag augurproject/augur-core:latest -f support/Dockerfile .",
     "docker:push:base": "docker push augurproject/augur-core-base:latest",
+    "docker:push": "docker push augurproject/augur-core:latest",
     "docker:shell": "docker run --rm -it entrypoint=bash augurproject/augur-core:latest",
     "docker:test:unit": "docker run --rm --entrypoint=npm augurproject/augur-core:latest run test:unit",
     "docker:test:unit:single": "docker run --rm --entrypoint=npm augurproject/augur-core:latest run test:unit:single",
