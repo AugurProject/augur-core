@@ -38,7 +38,7 @@ env:
     - secure: X+oknrdo94NEw0oj5WTTkt0Qc42vZRypUhj39U+MBAwscLOReBpY7mRxpoXFjyVvxOwwxS0uj5vO+zaYn1Coz0cjhCCTcBnhGVf8tlfvGhx4r3V1/ISgSzigj/dgsigEB/BYojWX2ubX2ubOVpBb+PaDV1zCOw/6cmfKks8emcY=
     - secure: Y/HFZpl4ivYsq/x17529XhnSvM59NajIeu8dqP2HFFNQNCNVEXaL4TbPWBp/I7ClcT+PHro8bVsHemcKYRDjqhm5sAgMcTSvR4WnuwpgEf/s86bgNOqt0pJ3lhkzc5+L0zhJ68n6JWOaUQykF6DCE9jyLH1WSMmu2VZGHoi/EYY=
   matrix:
-    - PYTEST=test/test*.py
-    - PYTEST=test/libraries
-    - PYTEST=test/trading
-    - PYTEST=test/reporting
+    - PYTEST=tests/test*.py
+    - PYTEST=tests/libraries
+    - PYTEST=tests/trading
+    - PYTEST=tests/reporting
