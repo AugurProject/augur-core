@@ -42,9 +42,14 @@ case $1 in
       -e ETHEREUM_PORT=$port \
       -e ETHEREUM_PRIVATE_KEY=$privateKey \
       -e DEPLOY=true \
-      -e ARTIFACTS=$ARTIFACTS \
-      -e GITHUB_DEPLOYMENT_TOKEN=$GITHUB_DEPLOYMENT_TOKEN \
-      -e NPM_TOKEN=$NPM_TOKEN \
+      -e ARTIFACTS \
+      -e GITHUB_DEPLOYMENT_TOKEN \
+      -e NPM_TOKEN \
+      -e TRAVIS \
+      -e TRAVIS_BRANCH \
+      -e TRAVIS_TAG \
+      -e TRAVIS_COMMIT \
+      -e TRAVIS_PULL_REQUEST \
       --entrypoint "bash"  \
       augurproject/augur-core:latest -- /app/support/deploy/deploy.sh
     ;;
