@@ -177,3 +177,13 @@ def test_duplicate_creation_transaction(contractsFixture, cash, market):
 
     with raises(TransactionFailed):
         createOrder.publicCreateOrder(BID, 1, 10**17, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 10**17)
+
+def test_minimum_order(contractsFixture, cash, market):
+    orders = contractsFixture.contracts['Orders']
+    createOrder = contractsFixture.contracts['CreateOrder']
+
+    with raises(TransactionFailed):
+        createOrder.publicCreateOrder(BID, 1, 1, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 1)
+
+    with raises(TransactionFailed):
+        createOrder.publicCreateOrder(ASK, 1, market.getNumTicks()-1, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 1)
