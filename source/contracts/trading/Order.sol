@@ -115,7 +115,7 @@ library Order {
     //
 
     function escrowFundsForBid(Order.Data _orderData) private returns (bool) {
-        uint256 _orderValueInAttotokens = _orderData.market.getNumTicks().sub(_orderData.price).mul(_orderData.amount);
+        uint256 _orderValueInAttotokens = _orderData.price.mul(_orderData.amount);
         require(_orderValueInAttotokens >= MIN_ORDER_VALUE);
 
         require(_orderData.moneyEscrowed == 0);
@@ -152,7 +152,7 @@ library Order {
     }
 
     function escrowFundsForAsk(Order.Data _orderData) private returns (bool) {
-        uint256 _orderValueInAttotokens = _orderData.amount.mul(_orderData.price);
+        uint256 _orderValueInAttotokens = _orderData.market.getNumTicks().sub(_orderData.price).mul(_orderData.amount);
         require(_orderValueInAttotokens >= MIN_ORDER_VALUE);
 
         require(_orderData.moneyEscrowed == 0);
