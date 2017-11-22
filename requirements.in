@@ -2,5 +2,4 @@ ethereum==2.1.2
 pycryptodome==3.4.6
 numpy==1.13.0
 pytest==3.1.2
-pytest-xdist==1.20.1
 py-solc==1.4.0
