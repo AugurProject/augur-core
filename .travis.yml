@@ -28,6 +28,7 @@ jobs:
         - DOCKER_USERNAME=pgebheim
         - secure: CvVr4K0XDzl00jX+olBBV6RNFNA0V7spOTLFjsrNsQkL4pLrKVTK83MhlvKQ4BHUcZ5d5c8uFIJ3LhOXOs2jn5IErrNNeqvbQrrrW7xDDdv7DlpcycIetCTuTUPYsrD++ygrgNa38Vdf8ODFB+lyFBq3ZRZpZIptcHqPw0GeR0s=
     - stage: deploy
+      script: skip
       env:
         - TESTS=
       deploy: &script
