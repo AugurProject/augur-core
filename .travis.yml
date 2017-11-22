@@ -13,7 +13,7 @@ before_install:
   - sudo sudo curl -L https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
   - sudo chmod +x /usr/local/bin/docker-compose
 
-stags:
+stages:
   - build
   - test
   - deploy
@@ -53,7 +53,5 @@ env:
     - secure: X+oknrdo94NEw0oj5WTTkt0Qc42vZRypUhj39U+MBAwscLOReBpY7mRxpoXFjyVvxOwwxS0uj5vO+zaYn1Coz0cjhCCTcBnhGVf8tlfvGhx4r3V1/ISgSzigj/dgsigEB/BYojWX2ubX2ubOVpBb+PaDV1zCOw/6cmfKks8emcY=
     - secure: Y/HFZpl4ivYsq/x17529XhnSvM59NajIeu8dqP2HFFNQNCNVEXaL4TbPWBp/I7ClcT+PHro8bVsHemcKYRDjqhm5sAgMcTSvR4WnuwpgEf/s86bgNOqt0pJ3lhkzc5+L0zhJ68n6JWOaUQykF6DCE9jyLH1WSMmu2VZGHoi/EYY=
   matrix:
-    - PYTEST=tests/test*.py
-    - PYTEST=tests/libraries
-    - PYTEST=tests/trading tests/reporting/test_dispute*.py"
+    - PYTEST="tests/test*.py tests/libraries tests/trading"
     - PYTEST=tests/reporting
