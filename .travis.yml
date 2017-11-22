@@ -14,7 +14,7 @@ before_install:
   - sudo chmod +x /usr/local/bin/docker-compose
 script:
   - npm run docker:build
-  - npm run docker:test:single -- $PYTEST
+  - npm run docker:test:unit:single -- $PYTEST
   - npm run docker:test:integration
 jobs:
   include:
