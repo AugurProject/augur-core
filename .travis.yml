@@ -22,22 +22,29 @@ jobs:
   include:
     - stage: build
       script: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-              docker pull augurproject/augur-core:latest;
               npm run docker:build;
               npm run docker:push
       env:
         - DOCKER_USERNAME=pgebheim
         - secure: CvVr4K0XDzl00jX+olBBV6RNFNA0V7spOTLFjsrNsQkL4pLrKVTK83MhlvKQ4BHUcZ5d5c8uFIJ3LhOXOs2jn5IErrNNeqvbQrrrW7xDDdv7DlpcycIetCTuTUPYsrD++ygrgNa38Vdf8ODFB+lyFBq3ZRZpZIptcHqPw0GeR0s=
     - stage: test
-      script: npm run docker:test:unit:single -- $PYTEST && npm run docker:test:integration
+      script: if [[ "$TESTS" == "integration" ]]; then
+                npm run docker:test:integration
+              else
+                npm run docker:test:unit:single -- $TESTS
+              fi
     - stage: deploy
       script: skip
+      env:
+        - TESTS=
       deploy: &script
         provider: script
         skip_cleanup: true
         script: ARTIFACTS=true npm run docker:deploy
         on:
           tags: true
+      if: tag =~ ^v\d+\.\d+\.\d+$
+
 git:
   depth: 5
 branches:
@@ -52,5 +59,7 @@ env:
     - secure: X+oknrdo94NEw0oj5WTTkt0Qc42vZRypUhj39U+MBAwscLOReBpY7mRxpoXFjyVvxOwwxS0uj5vO+zaYn1Coz0cjhCCTcBnhGVf8tlfvGhx4r3V1/ISgSzigj/dgsigEB/BYojWX2ubX2ubOVpBb+PaDV1zCOw/6cmfKks8emcY=
     - secure: Y/HFZpl4ivYsq/x17529XhnSvM59NajIeu8dqP2HFFNQNCNVEXaL4TbPWBp/I7ClcT+PHro8bVsHemcKYRDjqhm5sAgMcTSvR4WnuwpgEf/s86bgNOqt0pJ3lhkzc5+L0zhJ68n6JWOaUQykF6DCE9jyLH1WSMmu2VZGHoi/EYY=
   matrix:
-    - PYTEST="tests/test*.py tests/libraries tests/trading"
-    - PYTEST=tests/reporting
+    - TESTS="tests/test*.py tests/libraries tests/trading"
+    - TESTS="tests/reporting"
+    - TESTS="integration"
+
