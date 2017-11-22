@@ -42,7 +42,7 @@ current_dir=$PWD;
 cd output/augur-contracts
 npm install
 
-BRANCH=$branch COMMIT=$commit TAG=$tag SOURCE=../contracts npm run update-contracts
+AUTOCOMMIT=true BRANCH=$branch COMMIT=$commit TAG=$tag SOURCE=../contracts npm run update-contracts
 update_success=$?
 cd $current_dir
 
