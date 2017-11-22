@@ -12,18 +12,33 @@ before_install:
   - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
   - sudo sudo curl -L https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
   - sudo chmod +x /usr/local/bin/docker-compose
-script:
-  - npm run docker:build
-  - npm run docker:test:unit:single -- $PYTEST
-  - npm run docker:test:integration
+
+stags:
+  - build
+  - test
+  - deploy
+
 jobs:
   include:
+    - stage: build
+      script: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
+              docker pull augurproject/augur-core:latest;
+              npm run docker:build;
+              npm run docker:push
+      env:
+        - DOCKER_USERNAME=pgebheim@gmail.com
+        - secure: CvVr4K0XDzl00jX+olBBV6RNFNA0V7spOTLFjsrNsQkL4pLrKVTK83MhlvKQ4BHUcZ5d5c8uFIJ3LhOXOs2jn5IErrNNeqvbQrrrW7xDDdv7DlpcycIetCTuTUPYsrD++ygrgNa38Vdf8ODFB+lyFBq3ZRZpZIptcHqPw0GeR0s=
+    - stage: test
+      script:
+        - docker pull augurproject/augur-core:latest &&  npm run docker:test:unit:single -- $PYTEST && npm run docker:test:integration
     - stage: deploy
-      provider: script
-      skip_cleanup: true
-      script: ARTIFACTS=true npm run docker:deploy
-      on:
-        tags: true
+      script: docker pull augurproject/augur-core:latest
+      deploy:
+        provider: script
+        skip_cleanup: true
+        script: ARTIFACTS=true npm run docker:deploy
+        on:
+          tags: true
 git:
   depth: 5
 branches:
@@ -40,5 +55,5 @@ env:
   matrix:
     - PYTEST=tests/test*.py
     - PYTEST=tests/libraries
-    - PYTEST=tests/trading
+    - PYTEST=tests/trading tests/reporting/test_dispute*.py"
     - PYTEST=tests/reporting
