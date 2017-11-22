@@ -89,7 +89,7 @@ library Reporting {
 
     function getScalarMarketNumTicks(int256 _minPrice, int256 _maxPrice, int256 _tickShift) internal pure returns (uint256) {
         // Overflow prevention
-        require (_tickShift < 76);
+        require (_tickShift <= 76);
         uint256 _normalizedTicks = 10 ** _tickShift.abs();
         uint256 _range = uint256(_maxPrice.sub(_minPrice));
         if (_tickShift < 0) {
