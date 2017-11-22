@@ -14,7 +14,7 @@ import 'libraries/Extractable.sol';
 
 // Centralized approval authority and event emissions
 contract Augur is Controlled, Extractable {
-    event MarketCreated(address indexed universe, bytes32 indexed topic, address indexed marketCreator, address market, uint256 marketCreationFee, string extraInfo);
+    event MarketCreated(address indexed universe, bytes32 indexed topic, address indexed marketCreator, address market, uint256 marketCreationFee, int256 minPrice, int256 maxPrice, IMarket.MarketType marketType, string extraInfo);
     event DesignatedReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
     event ReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
     event WinningTokensRedeemed(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountRedeemed, uint256 reportingFeesReceived, uint256[] payoutNumerators);
@@ -44,9 +44,9 @@ contract Augur is Controlled, Extractable {
     // Logging
     //
 
-    function logMarketCreated(IUniverse _universe, address _market, address _marketCreator, uint256 _marketCreationFee, bytes32 _topic, string _extraInfo) public returns (bool) {
+    function logMarketCreated(IUniverse _universe, address _market, address _marketCreator, uint256 _marketCreationFee, bytes32 _topic, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType, string _extraInfo) public returns (bool) {
         require(_universe.isContainerForReportingWindow(IReportingWindow(msg.sender)));
-        MarketCreated(_universe, _topic, _marketCreator, _market, _marketCreationFee, _extraInfo);
+        MarketCreated(_universe, _topic, _marketCreator, _market, _marketCreationFee, _minPrice, _maxPrice, _marketType, _extraInfo);
         return true;
     }
 

@@ -137,7 +137,8 @@ def execute(fixture, snapshot, universe, market, orderType, orderSize, orderPric
 def execute_bidOrder_tests(fixture, kitchenSinkSnapshot, universe, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * fxpPrice)
     shortCost = long(fxpAmount * (market.getNumTicks() - fxpPrice))
-    completeSetFees = long(fxpAmount * market.getNumTicks() * fix('0.0101') / 10**18)
+    totalProceeds = long(fxpAmount * market.getNumTicks())
+    completeSetFees = totalProceeds / 10000 + totalProceeds / 100
     shortFee = Decimal(completeSetFees * shortCost) / Decimal(longCost + shortCost)
     longFee = completeSetFees - shortFee
 
@@ -236,7 +237,8 @@ def execute_bidOrder_tests(fixture, kitchenSinkSnapshot, universe, market, fxpAm
 def execute_askOrder_tests(fixture, kitchenSinkSnapshot, universe, market, fxpAmount, fxpPrice):
     longCost = long(fxpAmount * fxpPrice)
     shortCost = long(fxpAmount * (market.getNumTicks() - fxpPrice))
-    completeSetFees = long(fxpAmount * market.getNumTicks() * fix('0.0101') / 10**18)
+    totalProceeds = long(fxpAmount * market.getNumTicks())
+    completeSetFees = totalProceeds / 10000 + totalProceeds / 100
     longFee = Decimal(completeSetFees * longCost) / Decimal(longCost + shortCost)
     shortFee = completeSetFees - longFee
 
@@ -369,7 +371,7 @@ def test_scalar(fixture, kitchenSinkSnapshot, universe, scalarMarket, randomAmou
     print 'Random amount: ' + str(randomAmount)
     print 'Random price: ' + str(randomNormalizedPrice)
     print ""
-    fxpAmount = randomAmount
+    fxpAmount = randomAmount / 40
     fxpPrice = long(randomNormalizedPrice * scalarMarket.getNumTicks())
     print "Start Fuzzy WCL tests - Scalar Market - bidOrders."
     execute_bidOrder_tests(fixture, kitchenSinkSnapshot, universe, scalarMarket, fxpAmount, fxpPrice)
@@ -417,7 +419,7 @@ def fillerKey():
 
 @fixture
 def randomAmount():
-    return randint(1, 11)
+    return fix(randint(1, 11))
 
 @fixture
 def randomNormalizedPrice():

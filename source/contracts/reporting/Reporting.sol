@@ -1,7 +1,13 @@
 pragma solidity 0.4.17;
 
+import 'libraries/math/SafeMathInt256.sol';
+import 'libraries/math/SafeMathUint256.sol';
+
 
 library Reporting {
+    using SafeMathInt256 for int256;
+    using SafeMathUint256 for uint256;
+
     uint256 private constant DESIGNATED_REPORTING_DURATION_SECONDS = 3 days;
     uint256 private constant DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     uint256 private constant REPORTING_DURATION_SECONDS = 27 * 1 days;
@@ -38,6 +44,8 @@ library Reporting {
     uint256 private constant FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR = 20; // 5% bonus to any REP migrated during a fork
     uint256 private constant FORK_REP_MIGRATION_VICTORY_DIVISOR = 2; // 50% of the REP supply in the forking universe has to migrate for a victory
 
+    uint256 private constant BINARY_MARKET_NUM_TICKS = 10000;
+
     function getDesignatedReportingDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DURATION_SECONDS; }
     function getDesignatedReportingDisputeDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS; }
     function getReportingDurationSeconds() internal pure returns (uint256) { return REPORTING_DURATION_SECONDS; }
@@ -65,4 +73,28 @@ library Reporting {
     function getMaximumReportingFeeDivisor() internal pure returns (uint256) { return MAXIMUM_REPORTING_FEE_DIVISOR; }
     function getDefaultReportingFeeDivisor() internal pure returns (uint256) { return DEFAULT_REPORTING_FEE_DIVISOR; }
     function getInitialREPSupply() internal pure returns (uint256) { return INITIAL_REP_SUPPLY; }
+    function getBinaryMarketNumTicks() internal pure returns (uint256) { return BINARY_MARKET_NUM_TICKS; }
+
+    function getCategoricalMarketNumTicks(uint8 _numOutcomes) internal pure returns (uint256) {
+        require(_numOutcomes >= 2 && _numOutcomes <= 8);
+
+        if (_numOutcomes == 2) {return 10000;}
+        if (_numOutcomes == 3) {return 10002;}
+        if (_numOutcomes == 4) {return 10000;}
+        if (_numOutcomes == 5) {return 10000;}
+        if (_numOutcomes == 6) {return 10002;}
+        if (_numOutcomes == 7) {return 10003;}
+        if (_numOutcomes == 8) {return 10000;}
+    }
+
+    function getScalarMarketNumTicks(int256 _minPrice, int256 _maxPrice, int256 _tickShift) internal pure returns (uint256) {
+        // Overflow prevention
+        require (_tickShift <= 76);
+        uint256 _normalizedTicks = 10 ** _tickShift.abs();
+        uint256 _range = uint256(_maxPrice.sub(_minPrice));
+        if (_tickShift < 0) {
+            return _range.div(_normalizedTicks);
+        }
+        return _range.mul(_normalizedTicks);
+    }
 }

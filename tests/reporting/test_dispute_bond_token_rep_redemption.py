@@ -20,13 +20,13 @@ LAST_REPORTERS_DISPUTE_BOND_AMOUNT = 1375 * 10**20
 MARKET_TYPE_CATEGORICAL = 0
 MARKET_TYPE_SCALAR = 1
 
-CATEGORICAL_OUTCOME_A = [3*10**17, 0, 0]
-CATEGORICAL_OUTCOME_B = [0, 3*10**17, 0]
-CATEGORICAL_OUTCOME_C = [0, 0, 3*10**17]
+CATEGORICAL_OUTCOME_A = [10002, 0, 0]
+CATEGORICAL_OUTCOME_B = [0, 10002, 0]
+CATEGORICAL_OUTCOME_C = [0, 0, 10002]
 
-SCALAR_OUTCOME_A = [30*10**18, 10*10**18]
-SCALAR_OUTCOME_B = [10*10**18, 30*10**18]
-SCALAR_OUTCOME_C = [20*10**18, 20*10**18]
+SCALAR_OUTCOME_A = [30*10**4, 10*10**4]
+SCALAR_OUTCOME_B = [10*10**4, 30*10**4]
+SCALAR_OUTCOME_C = [20*10**4, 20*10**4]
 
 @mark.parametrize('marketType,designatedReporterAccountNum,designatedReporterOutcome,designatedReporterDisputerAccountNum,designatedReporterDisputeStakes,firstReportersDisputerAccountNum,firstReporterDisputeOutcome,firstReportersDisputeStakes,lastReportersDisputerAccountNum,lastReportersDisputeStakes,expectedAccountBalances', [
     # CONSIDER: Create test cases where:
@@ -162,7 +162,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
 
     # Perform designated reports on the other markets so they can finalize and we can redeemWinningTokens later
     assert contractsFixture.designatedReport(otherMarket, otherOutcome, tester.k0)
-    assert contractsFixture.designatedReport(binaryMarket, [10**18,0], tester.k0)
+    assert contractsFixture.designatedReport(binaryMarket, [10**4,0], tester.k0)
 
     # Perform designated report (if there is one)
     if (len(designatedReporterOutcome) > 0):

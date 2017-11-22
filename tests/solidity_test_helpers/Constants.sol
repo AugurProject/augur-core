@@ -50,4 +50,14 @@ contract Constants {
     uint8 public constant ASK = uint8(Order.Types.Ask);
     uint8 public constant LONG = uint8(Order.TradeDirections.Long);
     uint8 public constant SHORT = uint8(Order.TradeDirections.Short);
+
+    uint256 public constant BINARY_MARKET_NUM_TICKS = Reporting.getBinaryMarketNumTicks();
+
+    function getCategoricalMarketNumTicks(uint8 _numOutcomes) public pure returns (uint256) {
+        return Reporting.getCategoricalMarketNumTicks(_numOutcomes);
+    }
+
+    function getScalarMarketNumTicks(int256 _minPrice, int256 _maxPrice, int256 _tickShift) public pure returns (uint256) {
+        return Reporting.getScalarMarketNumTicks(_minPrice, _maxPrice, _tickShift);
+    }
 }
