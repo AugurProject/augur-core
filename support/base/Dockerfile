@@ -9,7 +9,7 @@ FROM python:2.7.13
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
 	&& apt-get install -y nodejs
 
-RUN wget --quiet --output-document /usr/local/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.17/solc-static-linux \
+RUN wget --quiet --output-document /usr/local/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.18/solc-static-linux \
 	&& chmod a+x /usr/local/bin/solc
 
 COPY requirements.txt /app/requirements.txt

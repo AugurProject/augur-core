@@ -1,4 +1,4 @@
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
 // Utility to check if the address actually contains a contract based on size.

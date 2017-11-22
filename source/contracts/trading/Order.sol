@@ -6,7 +6,7 @@
 // price is the exact price you want to buy/sell at [which may not be the cost, for example to short a binary market it'll cost numTicks-price, to go long it'll cost price]
 // smallest order value is Order.MIN_ORDER_VALUE
 
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
 import 'Augur.sol';

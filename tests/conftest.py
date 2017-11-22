@@ -124,9 +124,6 @@ class ContractsFixture:
                 'optimizer': {
                     'enabled': True,
                     'runs': 500
-                },
-                'outputSelection': {
-                    '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
                 }
             }
         }
