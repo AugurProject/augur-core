@@ -12,19 +12,13 @@ before_install:
   - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
   - sudo sudo curl -L https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
   - sudo chmod +x /usr/local/bin/docker-compose
-
-stages:
-  - build
-  - test
-  - deploy
-
+script: if [[ "$TESTS" == "integration" ]]; then
+          npm run docker:test:integration;
+        else
+          npm run docker:test:unit:single -- $TESTS;
+        fi
 jobs:
   include:
-    - script: if [[ "$TESTS" == "integration" ]]; then
-                npm run docker:test:integration;
-              else
-                npm run docker:test:unit:single -- $TESTS;
-              fi
     - stage: build
       script: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
               docker pull augurproject/augur-core:latest;
@@ -42,8 +36,11 @@ jobs:
         script: ARTIFACTS=true npm run docker:deploy
         on:
           tags: true
-      if: tag =~ ^v\d+\.\d+\.\d+$
-
+stages:
+  - build
+  - test
+  - name: deploy
+    if: tag =~ ^v\d+\.\d+\.\d+$
 git:
   depth: 5
 branches:
