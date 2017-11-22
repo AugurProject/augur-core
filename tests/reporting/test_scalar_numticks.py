@@ -19,6 +19,12 @@ def test_scalar_num_ticks(minPrice, maxPrice, tickShift, expectedValue, localFix
     constants = localFixture.contracts['Constants']
     assert constants.getScalarMarketNumTicks(minPrice, maxPrice, tickShift) == expectedValue
 
+def test_scalar_num_ticks_fail(localFixture):
+    constants = localFixture.contracts['Constants']
+
+    with raises(TransactionFailed):
+        constants.getScalarMarketNumTicks(0, 1, 77)
+
 @fixture(scope="session")
 def localSnapshot(fixture, controllerSnapshot):
     fixture.resetToSnapshot(controllerSnapshot)
