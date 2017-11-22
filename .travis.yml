@@ -14,13 +14,16 @@ before_install:
   - sudo chmod +x /usr/local/bin/docker-compose
 script:
   - npm run docker:build
-  - npm run docker:test
-deploy:
-  - provider: script
-    skip_cleanup: true
-    script: ARTIFACTS=true npm run docker:deploy
-    on:
-      tags: true
+  - npm run docker:test:single -- $PYTEST
+  - npm run docker:test:integration
+jobs:
+  include:
+    - stage: deploy
+      provider: script
+      skip_cleanup: true
+      script: ARTIFACTS=true npm run docker:deploy
+      on:
+        tags: true
 git:
   depth: 5
 branches:
@@ -34,3 +37,8 @@ env:
     - secure: E6zBunUrmP6w9RzCSgIY0hS99v8u1L55AGsY1MtPr+u6uMLIkif6uMG/O881DmOkDtBgv/m60fx2Ka+bEZpxWY30ahTc08SUhjMEGC9MeRr5PvEeEzbsiOez+OFIRdngMGptHbTagqKGl3KrJPp21YsYL5GGFWil7iUZ/poent8=
     - secure: X+oknrdo94NEw0oj5WTTkt0Qc42vZRypUhj39U+MBAwscLOReBpY7mRxpoXFjyVvxOwwxS0uj5vO+zaYn1Coz0cjhCCTcBnhGVf8tlfvGhx4r3V1/ISgSzigj/dgsigEB/BYojWX2ubX2ubOVpBb+PaDV1zCOw/6cmfKks8emcY=
     - secure: Y/HFZpl4ivYsq/x17529XhnSvM59NajIeu8dqP2HFFNQNCNVEXaL4TbPWBp/I7ClcT+PHro8bVsHemcKYRDjqhm5sAgMcTSvR4WnuwpgEf/s86bgNOqt0pJ3lhkzc5+L0zhJ68n6JWOaUQykF6DCE9jyLH1WSMmu2VZGHoi/EYY=
+  matrix:
+    - PYTEST=test/test*.py
+    - PYTEST=test/libraries
+    - PYTEST=test/trading
+    - PYTEST=test/reporting
