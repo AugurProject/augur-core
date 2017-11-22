@@ -30,7 +30,7 @@ fi
 
 if [[ -e "$HOME/.npmrc" ]]; then
   echo "Using exisiting .npmrc"
-elif [[ -e "$HOME/.npmrpc.deploy" && "${NPM_TOKEN}x" != "x" ]]; then
+elif [[ -e "$HOME/.npmrc.deploy" && "${NPM_TOKEN}x" != "x" ]]; then
   echo "Using NPM_TOKEN to create ~/.npmrc"
   cp ~/.npmrc.deploy ~/.npmrc
 else
