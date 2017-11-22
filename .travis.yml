@@ -20,6 +20,11 @@ stages:
 
 jobs:
   include:
+    - script: if [[ "$TESTS" == "integration" ]]; then
+                npm run docker:test:integration
+              else
+                npm run docker:test:unit:single -- $TESTS
+              fi
     - stage: build
       script: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
               npm run docker:build;
@@ -27,12 +32,6 @@ jobs:
       env:
         - DOCKER_USERNAME=pgebheim
         - secure: CvVr4K0XDzl00jX+olBBV6RNFNA0V7spOTLFjsrNsQkL4pLrKVTK83MhlvKQ4BHUcZ5d5c8uFIJ3LhOXOs2jn5IErrNNeqvbQrrrW7xDDdv7DlpcycIetCTuTUPYsrD++ygrgNa38Vdf8ODFB+lyFBq3ZRZpZIptcHqPw0GeR0s=
-    - stage: test
-      script: if [[ "$TESTS" == "integration" ]]; then
-                npm run docker:test:integration
-              else
-                npm run docker:test:unit:single -- $TESTS
-              fi
     - stage: deploy
       script: skip
       env:
