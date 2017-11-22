@@ -34,6 +34,6 @@ COPY ./support/artifacts/run.sh /app/support/artifacts/run.sh
 COPY ./support/.npmrc /root/.npmrc.deploy
 
 # Copy the git info so ContractDeployer can read the hash on deploy
-COPY .git/ /app/.git/
 RUN npm run build:source
+COPY .git/ /app/.git/
 
