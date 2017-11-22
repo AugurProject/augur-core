@@ -91,9 +91,9 @@ library Trade {
         }
 
         // transfer shares to this contract from each participant
-        _data.contracts.longShareToken.trustedTransfer(getLongShareSellerSource(_data), this, _numberOfCompleteSets);
+        _data.contracts.longShareToken.trustedFillOrderTransfer(getLongShareSellerSource(_data), this, _numberOfCompleteSets);
         for (uint8 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
-            _data.contracts.shortShareTokens[_i].trustedTransfer(getShortShareSellerSource(_data), this, _numberOfCompleteSets);
+            _data.contracts.shortShareTokens[_i].trustedFillOrderTransfer(getShortShareSellerSource(_data), this, _numberOfCompleteSets);
         }
 
         // sell complete sets
@@ -120,10 +120,10 @@ library Trade {
 
         // transfer shares from creator (escrowed in market) to filler
         if (_data.creator.direction == Direction.Short) {
-            _data.contracts.longShareToken.trustedTransfer(_data.contracts.market, _data.filler.participantAddress, _numberOfSharesToTrade);
+            _data.contracts.longShareToken.trustedFillOrderTransfer(_data.contracts.market, _data.filler.participantAddress, _numberOfSharesToTrade);
         } else {
             for (uint8 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
-                _data.contracts.shortShareTokens[_i].trustedTransfer(_data.contracts.market, _data.filler.participantAddress, _numberOfSharesToTrade);
+                _data.contracts.shortShareTokens[_i].trustedFillOrderTransfer(_data.contracts.market, _data.filler.participantAddress, _numberOfSharesToTrade);
             }
         }
 
@@ -144,10 +144,10 @@ library Trade {
 
         // transfer shares from filler to creator
         if (_data.filler.direction == Direction.Short) {
-            _data.contracts.longShareToken.trustedTransfer(_data.filler.participantAddress, _data.creator.participantAddress, _numberOfSharesToTrade);
+            _data.contracts.longShareToken.trustedFillOrderTransfer(_data.filler.participantAddress, _data.creator.participantAddress, _numberOfSharesToTrade);
         } else {
             for (uint8 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
-                _data.contracts.shortShareTokens[_i].trustedTransfer(_data.filler.participantAddress, _data.creator.participantAddress, _numberOfSharesToTrade);
+                _data.contracts.shortShareTokens[_i].trustedFillOrderTransfer(_data.filler.participantAddress, _data.creator.participantAddress, _numberOfSharesToTrade);
             }
         }
 
