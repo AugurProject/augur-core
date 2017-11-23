@@ -12,7 +12,9 @@ before_install:
   - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
   - sudo sudo curl -L https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
   - sudo chmod +x /usr/local/bin/docker-compose
-script: if [[ "$TESTS" == "integration" ]]; then
+script: docker pull $IMAGE_BUILD;
+        docker tag $IMAGE_BUILD $IMAGE_LATEST;
+        if [[ "$TESTS" == "integration" ]]; then
           npm run docker:test:integration;
         else
           npm run docker:test:unit:single -- $TESTS;
