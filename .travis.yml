@@ -23,7 +23,7 @@ jobs:
       script: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
               docker pull $IMAGE_LATEST;
               npm run docker:build;
-              docker tag $IMAGE_BUILD $IMAGE_LATEST;
+              docker tag $IMAGE_LATEST $IMAGE_BUILD;
               docker push $IMAGE_BUILD
       env:
         - DOCKER_USERNAME=augurintegration
@@ -36,7 +36,7 @@ jobs:
         provider: script
         skip_cleanup: true
         script: docker pull $IMAGE_BUILD;
-                docker tag $IMAGE_LATEST $IMAGE_BUILD;
+                docker tag $IMAGE_BUILD $IMAGE_LATEST;
                 ARTIFACTS=true npm run docker:deploy && docker push $IMAGE_LATEST
         on:
           tags: true
@@ -58,7 +58,7 @@ env:
     - secure: E6zBunUrmP6w9RzCSgIY0hS99v8u1L55AGsY1MtPr+u6uMLIkif6uMG/O881DmOkDtBgv/m60fx2Ka+bEZpxWY30ahTc08SUhjMEGC9MeRr5PvEeEzbsiOez+OFIRdngMGptHbTagqKGl3KrJPp21YsYL5GGFWil7iUZ/poent8=
     - secure: X+oknrdo94NEw0oj5WTTkt0Qc42vZRypUhj39U+MBAwscLOReBpY7mRxpoXFjyVvxOwwxS0uj5vO+zaYn1Coz0cjhCCTcBnhGVf8tlfvGhx4r3V1/ISgSzigj/dgsigEB/BYojWX2ubX2ubOVpBb+PaDV1zCOw/6cmfKks8emcY=
     - secure: Y/HFZpl4ivYsq/x17529XhnSvM59NajIeu8dqP2HFFNQNCNVEXaL4TbPWBp/I7ClcT+PHro8bVsHemcKYRDjqhm5sAgMcTSvR4WnuwpgEf/s86bgNOqt0pJ3lhkzc5+L0zhJ68n6JWOaUQykF6DCE9jyLH1WSMmu2VZGHoi/EYY=
-    - IMAGE_BUILD=augurproject/augur-core:${TRAVIS_BUILD_NUMBER}
+    - IMAGE_BUILD=augurproject/augur-core:build.${TRAVIS_BUILD_NUMBER}
     - IMAGE_LATEST=augurproject/augur-core:latest
   matrix:
     - TESTS="tests/test*.py tests/libraries tests/trading"
