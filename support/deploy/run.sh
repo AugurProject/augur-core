@@ -37,14 +37,19 @@ esac
 case $1 in
   "docker")
     docker run --rm -it \
-      -e AUGUR_CONTROLLER_ADDRESS=$controller \
       -e ETHEREUM_GAS_PRICE_IN_NANOETH=$gasPrice \
       -e ETHEREUM_HOST=$host \
       -e ETHEREUM_PORT=$port \
       -e ETHEREUM_PRIVATE_KEY=$privateKey \
       -e DEPLOY=true \
-      -e ARTIFACTS=$ARTIFACTS \
-      -e GITHUB_DEPLOYMENT_TOKEN=$GITHUB_DEPLOYMENT_TOKEN \
+      -e ARTIFACTS \
+      -e GITHUB_DEPLOYMENT_TOKEN \
+      -e NPM_TOKEN \
+      -e TRAVIS \
+      -e TRAVIS_BRANCH \
+      -e TRAVIS_TAG \
+      -e TRAVIS_COMMIT \
+      -e TRAVIS_PULL_REQUEST \
       --entrypoint "bash"  \
       augurproject/augur-core:latest -- /app/support/deploy/deploy.sh
     ;;
