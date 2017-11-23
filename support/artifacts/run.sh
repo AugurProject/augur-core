@@ -6,6 +6,10 @@ if [[ "$TRAVIS" == "true" ]]; then
     exit
   fi
 
+  git config --global user.email "team@augur.net"
+  git config --global user.name "Augur CI"
+  git config --global push.default "simple"
+
   branch=$TRAVIS_BRANCH
   tag=$TRAVIS_TAG
   commit=$TRAVIS_COMMIT
@@ -40,10 +44,6 @@ fi
 git clone $repo_url output/augur-contracts
 current_dir=$PWD;
 cd output/augur-contracts
-
-git config user.email "team@augur.net"
-git config user.name "The Augur Developers"
-git config push.default "simple"
 
 npm install
 
