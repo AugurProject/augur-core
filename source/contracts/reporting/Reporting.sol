@@ -7,23 +7,22 @@ library Reporting {
     uint256 private constant REPORTING_DURATION_SECONDS = 27 * 1 days;
     uint256 private constant REPORTING_DISPUTE_DURATION_SECONDS = 3 days;
     uint256 private constant CLAIM_PROCEEDS_WAIT_TIME = 3 days;
-    uint256 private constant REGISTRATION_TOKEN_BOND_AMOUNT = 1 ether;
     uint256 private constant FORK_DURATION_SECONDS = 60 days;
 
     uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
-    uint256 private constant DEFAULT_DESIGNATED_REPORT_STAKE = 2 ether;
+    uint256 private constant DEFAULT_DESIGNATED_REPORT_STAKE = 2 * 10**18;
     uint256 private constant DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND = 10 ether;
     uint256 private constant DEFAULT_VALIDITY_BOND_FLOOR = 1 ether / 100;
-    uint256 private constant DESIGNATED_REPORT_STAKE_FLOOR = 2 ether / 100;
+    uint256 private constant DESIGNATED_REPORT_STAKE_FLOOR = 2 * 10**18 / 100; // FIXME: having a floor this low means there is limited financial incentive to dispute designated report
     uint256 private constant DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR = 10 ether / 100;
     uint256 private constant BOND_PAYOUT_MULTIPLIER = 2; // Multiplier applied to the dispute bond payment to get what they should ideally be compensated with
     uint256 private constant DEFAULT_REPORTING_FEE_DIVISOR = 100; // 1% fees
     uint256 private constant MAXIMUM_REPORTING_FEE_DIVISOR = 10000; // Minimum .01% fees
 
     // CONSIDER: figure out approprate values for these
-    uint256 private constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;
-    uint256 private constant FIRST_REPORTERS_DISPUTE_BOND_AMOUNT = 11 * 10**21;
-    uint256 private constant LAST_REPORTERS_DISPUTE_BOND_AMOUNT = 1375 * 10**20; // 1.25% of REP Total Supply TODO: We need to have this account for maximal inflation from forking
+    uint256 private constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 1375 * 10**18;
+    uint256 private constant FIRST_REPORTERS_DISPUTE_BOND_AMOUNT = 13750 * 10**18;
+    uint256 private constant LAST_REPORTERS_DISPUTE_BOND_AMOUNT = 137500 * 10**18; // 1.25% of REP Total Supply TODO: We need to have this account for maximal inflation from forking
 
     // NOTE: We need to maintain this cost to roughly match the gas cost of reporting. This was last updated 10/02/2017
     uint256 private constant GAS_TO_REPORT = 600000;
@@ -34,7 +33,7 @@ library Reporting {
     uint256 private constant TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR = 100; // 1% of markets are expected to have an incorrect designate report
     uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
 
-    uint256 private constant INITIAL_REP_SUPPLY = 11 * 10 ** 6 * 10 ** 18; // 11 Million REP
+    uint256 private constant INITIAL_REP_SUPPLY = 11000000 * 10**18; // 11 Million REP
     uint256 private constant FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR = 20; // 5% bonus to any REP migrated during a fork
     uint256 private constant FORK_REP_MIGRATION_VICTORY_DIVISOR = 2; // 50% of the REP supply in the forking universe has to migrate for a victory
 
@@ -51,7 +50,7 @@ library Reporting {
     function getDefaultReportingGasPrice() internal pure returns (uint256) { return DEFAULT_REPORTING_GAS_PRICE; }
     function getDefaultValidityBond() internal pure returns (uint256) { return DEFAULT_VALIDITY_BOND; }
     function getDefaultDesignatedReportStake() internal pure returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
-    function getDefaultDesignatedReportNoShowBond() internal pure returns (uint256) { return DEFAULT_DESIGNATED_REPORT_STAKE; }
+    function getDefaultDesignatedReportNoShowBond() internal pure returns (uint256) { return DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND; }
     function getDefaultValidityBondFloor() internal pure returns (uint256) { return DEFAULT_VALIDITY_BOND_FLOOR; }
     function getDesignatedReportStakeFloor() internal pure returns (uint256) { return DESIGNATED_REPORT_STAKE_FLOOR; }
     function getDesignatedReportNoShowBondFloor() internal pure returns (uint256) { return DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR; }
