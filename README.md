@@ -17,9 +17,9 @@ npm install
 sudo pip install -r requirements.txt
 ```
 
-For PyEthereum to work properly you'll also need to install the 0.4.17 Solc compiler on your machine. Instructions for installing it in your environment can be found here:
+For PyEthereum to work properly you'll also need to install the 0.4.18 Solc compiler on your machine. Instructions for installing it in your environment can be found here:
 
-[Solc 0.4.17 Installation Instructions](https://github.com/ethereum/solidity/releases/tag/v0.4.17)
+[Solc 0.4.18 Installation Instructions](https://github.com/ethereum/solidity/releases/tag/v0.4.18)
 
 On macOS you will need to use a
 [virtualenv](https://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/) or use a [homebrew](https://brew.sh/) Python to work around System Integrity Protection.
