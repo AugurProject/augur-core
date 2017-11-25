@@ -66,6 +66,11 @@ export class ContractCompiler {
                 optimizer: {
                     enabled: true,
                     runs: 500
+                },
+                outputSelection: {
+                    "*": {
+                        "*": [ "abi", "evm.bytecode.object" ]
+                    }
                 }
             },
             sources: {}
