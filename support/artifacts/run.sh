@@ -6,6 +6,10 @@ if [[ "$TRAVIS" == "true" ]]; then
     exit
   fi
 
+  git config --global user.email "team@augur.net"
+  git config --global user.name "Augur CI"
+  git config --global push.default "simple"
+
   branch=$TRAVIS_BRANCH
   tag=$TRAVIS_TAG
   commit=$TRAVIS_COMMIT
@@ -30,7 +34,7 @@ fi
 
 if [[ -e "$HOME/.npmrc" ]]; then
   echo "Using exisiting .npmrc"
-elif [[ -e "$HOME/.npmrpc.deploy" && "${NPM_TOKEN}x" != "x" ]]; then
+elif [[ -e "$HOME/.npmrc.deploy" && "${NPM_TOKEN}x" != "x" ]]; then
   echo "Using NPM_TOKEN to create ~/.npmrc"
   cp ~/.npmrc.deploy ~/.npmrc
 else
@@ -40,9 +44,10 @@ fi
 git clone $repo_url output/augur-contracts
 current_dir=$PWD;
 cd output/augur-contracts
+
 npm install
 
-BRANCH=$branch COMMIT=$commit TAG=$tag SOURCE=../contracts npm run update-contracts
+AUTOCOMMIT=true BRANCH=$branch COMMIT=$commit TAG=$tag SOURCE=../contracts npm run update-contracts
 update_success=$?
 cd $current_dir
 

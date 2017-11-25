@@ -1,4 +1,4 @@
-version: "3"
+version: "3.2"
 services:
   parity-dev-node:
     image: augurproject/dev-node-parity:latest
@@ -12,6 +12,8 @@ services:
     build:
       context: ../../../
       dockerfile: support/Dockerfile
+      cache_from:
+        - augurproject/augur-core:latest
     entrypoint: [ "npm", "run", "test:integration"]
     # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
@@ -34,6 +36,8 @@ services:
     build:
       context: ../../../
       dockerfile: support/Dockerfile
+      cache_from:
+        - augurproject/augur-core:latest
     entrypoint: [ "npm", "run", "test:integration"]
     # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
