@@ -1,6 +1,6 @@
 // Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-pragma solidity 0.4.17;
+pragma solidity 0.4.18;
 
 
 import 'reporting/IReportingWindow.sol';

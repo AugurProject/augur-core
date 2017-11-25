@@ -126,7 +126,9 @@ class ContractsFixture:
                     'runs': 500
                 },
                 'outputSelection': {
-                    '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
+                    "*": {
+                        '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
+                    }
                 }
             }
         }
