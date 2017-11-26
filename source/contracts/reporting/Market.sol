@@ -116,7 +116,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     }
 
     // This will need to be called manually for each open market if a spender contract is updated
-    function approveSpenders() private onlyInGoodTimes returns (bool) {
+    function approveSpenders() public onlyInGoodTimes returns (bool) {
         bytes32[5] memory _names = [bytes32("CancelOrder"), bytes32("CompleteSets"), bytes32("FillOrder"), bytes32("TradingEscapeHatch"), bytes32("ClaimTradingProceeds")];
         for (uint8 i = 0; i < _names.length; i++) {
             cash.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT);

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from ethereum.tools import tester
+from datetime import timedelta
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
 from utils import bytesToLong, longTo32Bytes, longToHexString, bytesToHexString, fix, unfix, captureFilteredLogs, EtherDelta
@@ -110,8 +111,6 @@ def test_createOrder_failure(contractsFixture, universe, cash, market):
     assert completeSets.publicBuyCompleteSets(market.address, 2, sender=tester.k1, value=fix('2'))
     with raises(TransactionFailed):
         createOrder.publicCreateOrder(ASK, 1, fix('3'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
-    with raises(TransactionFailed):
-        createOrder.publicCreateOrder(ASK, 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1)
 
     assert yesShareToken.approve(createOrder.address, 12, sender=tester.k1) == 1, "Approve createOrder contract to spend shares from the user's account (account 1)"
     assert yesShareToken.allowance(tester.a1, createOrder.address) == 12, "CreateOrder contract's allowance should be equal to the amount approved"
@@ -187,3 +186,50 @@ def test_minimum_order(contractsFixture, cash, market):
 
     with raises(TransactionFailed):
         createOrder.publicCreateOrder(ASK, 1, market.getNumTicks()-1, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), 7, value = 1)
+
+def test_publicCreateOrder_bid_real_example_case(contractsFixture, universe, cash):
+    market = contractsFixture.createBinaryMarket(
+            universe = universe,
+            endTime = long(contractsFixture.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
+            feePerEthInWei = 10**16,
+            denominationToken = cash,
+            designatedReporterAddress = tester.a0,
+            numTicks = 10752,
+            sender = tester.k0,
+            topic= "",
+            extraInfo= "")
+
+    orders = contractsFixture.contracts['Orders']
+    createOrder = contractsFixture.contracts['CreateOrder']
+
+    orderID = createOrder.publicCreateOrder(BID, 10000000000000, 2000, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), 7, value = 20000000000000000)
+    assert orderID
+
+    assert orders.getAmount(orderID) == 10000000000000
+    assert orders.getPrice(orderID) == 2000
+    assert orders.getOrderCreator(orderID) == bytesToHexString(tester.a0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 20000000000000000
+    assert orders.getOrderSharesEscrowed(orderID) == 0
+    assert orders.getBetterOrderId(orderID) == bytearray(32)
+    assert orders.getWorseOrderId(orderID) == bytearray(32)
+
+def test_publicCreateOrder_bid_shares_escrowed(contractsFixture, universe, market, cash):
+    completeSets = contractsFixture.contracts['CompleteSets']
+    orders = contractsFixture.contracts['Orders']
+    createOrder = contractsFixture.contracts['CreateOrder']
+
+    # We'll buy 10 Complete Sets initially
+    cost = 10 * market.getNumTicks()
+    assert completeSets.publicBuyCompleteSets(market.address, 10, value=cost)
+
+    # Now when we make a BID order for outcome 0 shares we will escrow outcome 1 shares instead of tokens when creating an order
+    orderID = createOrder.publicCreateOrder(BID, 10, 5*10**17, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), 7)
+    assert orderID
+
+    assert orders.getAmount(orderID) == 10
+    assert orders.getPrice(orderID) == 5*10**17
+    assert orders.getOrderCreator(orderID) == bytesToHexString(tester.a0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 0
+    assert orders.getOrderSharesEscrowed(orderID) == 10
+    assert orders.getBetterOrderId(orderID) == bytearray(32)
+    assert orders.getWorseOrderId(orderID) == bytearray(32)

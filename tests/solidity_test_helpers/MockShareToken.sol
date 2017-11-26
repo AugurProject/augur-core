@@ -94,4 +94,12 @@ contract MockShareToken is DelegationTarget, ITyped, Initializable, MockVariable
     function isShareToken() public returns(bool) {
         return setIsShareTokenValue;
     }
+
+    function trustedOrderTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        return true;
+    }
+
+    function trustedFillOrderTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        return true;
+    }
 }
