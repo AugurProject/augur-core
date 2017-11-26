@@ -36,11 +36,11 @@ contract ShareToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         return true;
     }
 
-    function trustedOrderTransfer(address _source, address _destination, uint256 _attotokens) public onlyCaller(bytes32("CreateOrder")) onlyInGoodTimes afterInitialized returns (bool) {
+    function trustedOrderTransfer(address _source, address _destination, uint256 _attotokens) public onlyCaller("CreateOrder") onlyInGoodTimes afterInitialized returns (bool) {
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedFillOrderTransfer(address _source, address _destination, uint256 _attotokens) public onlyCaller(bytes32("FillOrder")) onlyInGoodTimes afterInitialized returns (bool) {
+    function trustedFillOrderTransfer(address _source, address _destination, uint256 _attotokens) public onlyCaller("FillOrder") onlyInGoodTimes afterInitialized returns (bool) {
         return internalTransfer(_source, _destination, _attotokens);
     }
 
