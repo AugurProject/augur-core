@@ -14,6 +14,11 @@ contract Controlled is IControlled {
         _;
     }
 
+    modifier onlyCaller(bytes32 _key) {
+        require(msg.sender == controller.lookup(_key));
+        _;
+    }
+
     modifier onlyControllerCaller {
         require(IController(msg.sender) == controller);
         _;
