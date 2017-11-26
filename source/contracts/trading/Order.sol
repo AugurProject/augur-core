@@ -106,7 +106,7 @@ library Order {
         }
     }
 
-    function saveOrder(Order.Data _orderData, uint256 _tradeGroupId) internal returns (bytes32) {
+    function saveOrder(Order.Data _orderData, bytes32 _tradeGroupId) internal returns (bytes32) {
         return _orderData.orders.saveOrder(_orderData.orderType, _orderData.market, _orderData.amount, _orderData.price, _orderData.creator, _orderData.outcome, _orderData.moneyEscrowed, _orderData.sharesEscrowed, _orderData.betterOrderId, _orderData.worseOrderId, _tradeGroupId);
     }
 

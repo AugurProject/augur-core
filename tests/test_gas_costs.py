@@ -73,7 +73,7 @@ def test_orderCreation(localFixture, market):
 def test_orderFilling(localFixture, market):
     createOrder = localFixture.contracts['CreateOrder']
     fillOrder = localFixture.contracts['FillOrder']
-    tradeGroupID = 42
+    tradeGroupID = "42"
 
     creatorCost = fix('2', '0.6')
     fillerCost = fix('2', '0.4')

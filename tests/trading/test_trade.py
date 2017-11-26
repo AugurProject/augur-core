@@ -2,7 +2,7 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from utils import longTo32Bytes, longToHexString, bytesToHexString, fix, captureFilteredLogs
+from utils import longTo32Bytes, longToHexString, bytesToHexString, fix, captureFilteredLogs, stringToBytes
 from constants import BID, ASK, YES, NO
 from pytest import raises
 from pprint import pprint
@@ -10,7 +10,7 @@ from pprint import pprint
 def test_minimum_gas_failure(contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
 
     # create order
     orderID = createOrder.publicCreateOrder(BID, 4, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('4', '0.6'))
@@ -32,7 +32,7 @@ def test_one_bid_on_books_buy_full_order(contractsFixture, cash, market, univers
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order
@@ -55,7 +55,7 @@ def test_one_bid_on_books_buy_full_order(contractsFixture, cash, market, univers
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID) == 0
     assert orders.getPrice(orderID) == 0
@@ -72,7 +72,7 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture, cash, market, univ
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order
@@ -95,7 +95,7 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture, cash, market, univ
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID) == 1
     assert orders.getPrice(orderID) == fix('0.6')
@@ -112,7 +112,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture, cash, market, unive
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order
@@ -136,13 +136,13 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture, cash, market, unive
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert log2["_event_type"] == "OrderCreated"
     assert log2['creator'] == bytesToHexString(tester.a2)
     assert log2["orderId"] == fillOrderID
     assert log2["shareToken"] == market.getShareToken(YES)
-    assert log2["tradeGroupId"] == 42
+    assert log2["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID) == 0
     assert orders.getPrice(orderID) == 0
@@ -165,7 +165,7 @@ def test_two_bids_on_books_buy_both(contractsFixture, cash, market, universe):
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order 1
@@ -191,7 +191,7 @@ def test_two_bids_on_books_buy_both(contractsFixture, cash, market, universe):
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert log2["_event_type"] == "OrderFilled"
     assert log2["filler"] == bytesToHexString(tester.a2)
@@ -202,7 +202,7 @@ def test_two_bids_on_books_buy_both(contractsFixture, cash, market, universe):
     assert log2["marketCreatorFees"] == 0
     assert log2["reporterFees"] == 0
     assert log2["shareToken"] == market.getShareToken(YES)
-    assert log2["tradeGroupId"] == 42
+    assert log2["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -227,7 +227,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order 1
@@ -253,7 +253,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert log2["_event_type"] == "OrderFilled"
     assert log2["filler"] == bytesToHexString(tester.a2)
@@ -264,7 +264,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     assert log2["marketCreatorFees"] == 0
     assert log2["reporterFees"] == 0
     assert log2["shareToken"] == market.getShareToken(YES)
-    assert log2["tradeGroupId"] == 42
+    assert log2["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -289,7 +289,7 @@ def test_two_bids_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order 1
@@ -315,13 +315,13 @@ def test_two_bids_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert log2["_event_type"] == "OrderCreated"
     assert log2['creator'] == bytesToHexString(tester.a2)
     assert log2["orderId"] == fillOrderID
     assert log2["shareToken"] == market.getShareToken(YES)
-    assert log2["tradeGroupId"] == 42
+    assert log2["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -352,7 +352,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture, cash, market, univers
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order
@@ -375,7 +375,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture, cash, market, univers
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID) == 0
     assert orders.getPrice(orderID) == 0
@@ -391,7 +391,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture, cash, market, univ
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order
@@ -414,7 +414,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture, cash, market, univ
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID) == 5
     assert orders.getPrice(orderID) == fix('0.6')
@@ -431,7 +431,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture, cash, market, unive
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order
@@ -455,13 +455,13 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture, cash, market, unive
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert log2["_event_type"] == "OrderCreated"
     assert log2['creator'] == bytesToHexString(tester.a2)
     assert log2["orderId"] == fillOrderID
     assert log2["shareToken"] == market.getShareToken(YES)
-    assert log2["tradeGroupId"] == 42
+    assert log2["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID) == 0
     assert orders.getPrice(orderID) == 0
@@ -484,7 +484,7 @@ def test_two_asks_on_books_buy_both(contractsFixture, cash, market, universe):
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order 1
@@ -510,7 +510,7 @@ def test_two_asks_on_books_buy_both(contractsFixture, cash, market, universe):
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert log2["_event_type"] == "OrderFilled"
     assert log2["filler"] == bytesToHexString(tester.a2)
@@ -521,7 +521,7 @@ def test_two_asks_on_books_buy_both(contractsFixture, cash, market, universe):
     assert log2["marketCreatorFees"] == 0
     assert log2["reporterFees"] == 0
     assert log2["shareToken"] == market.getShareToken(YES)
-    assert log2["tradeGroupId"] == 42
+    assert log2["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -545,7 +545,7 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order 1
@@ -571,7 +571,7 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert log2["_event_type"] == "OrderFilled"
     assert log2["filler"] == bytesToHexString(tester.a2)
@@ -582,7 +582,7 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     assert log2["marketCreatorFees"] == 0
     assert log2["reporterFees"] == 0
     assert log2["shareToken"] == market.getShareToken(YES)
-    assert log2["tradeGroupId"] == 42
+    assert log2["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -607,7 +607,7 @@ def test_two_asks_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
     orders = contractsFixture.contracts['Orders']
-    tradeGroupID = 42L
+    tradeGroupID = "42"
     logs = []
 
     # create order 1
@@ -633,13 +633,13 @@ def test_two_asks_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     assert log1["marketCreatorFees"] == 0
     assert log1["reporterFees"] == 0
     assert log1["shareToken"] == market.getShareToken(YES)
-    assert log1["tradeGroupId"] == 42
+    assert log1["tradeGroupId"] == stringToBytes("42")
 
     assert log2["_event_type"] == "OrderCreated"
     assert log2['creator'] == bytesToHexString(tester.a2)
     assert log2["orderId"] == fillOrderID
     assert log2["shareToken"] == market.getShareToken(YES)
-    assert log2["tradeGroupId"] == 42
+    assert log2["tradeGroupId"] == stringToBytes("42")
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0

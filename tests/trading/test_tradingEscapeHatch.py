@@ -19,7 +19,7 @@ def test_escapeHatch(contractsFixture, cash, market):
     initialTester2ETH = contractsFixture.chain.head_state.get_balance(tester.a2)
 
     # create order with cash
-    orderID = createOrder.publicCreateOrder(contractsFixture.contracts['Constants'].ASK(), 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender=tester.k1, value=fix('0.4'))
+    orderID = createOrder.publicCreateOrder(contractsFixture.contracts['Constants'].ASK(), 1, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender=tester.k1, value=fix('0.4'))
     assert orderID
 
     # fill order with cash using on-chain matcher
