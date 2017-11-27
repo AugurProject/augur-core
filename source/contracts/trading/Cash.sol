@@ -5,13 +5,16 @@ import 'Controlled.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'libraries/Extractable.sol';
+import 'libraries/DelegationTarget.sol';
 
 
 /**
  * @title Cash
  * @dev ETH wrapper contract to make it look like an ERC20 token.
  */
-contract Cash is Controlled, Extractable, ITyped, VariableSupplyToken, ICash {
+contract Cash is DelegationTarget, Extractable, ITyped, VariableSupplyToken, ICash {
+
+    //FIXME: Delegated contracts cannot currently use string values, so we will need to find a workaround if this hasn't been fixed before we release
     string constant public name = "Cash";
     string constant public symbol = "CASH";
     uint256 constant public decimals = 18;

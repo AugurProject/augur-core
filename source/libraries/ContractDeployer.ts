@@ -95,7 +95,7 @@ export class ContractDeployer {
     }
 
     private async upload(contract: Contract): Promise<void> {
-        const contractsToDelegate: {[key:string]: boolean} = {"Orders": true, "TradingEscapeHatch": true};
+        const contractsToDelegate: {[key:string]: boolean} = {"Orders": true, "TradingEscapeHatch": true, "Cash": true};
         const contractName = contract.contractName
         if (contractName === 'Controller') return;
         if (contractName === 'Delegator') return;
