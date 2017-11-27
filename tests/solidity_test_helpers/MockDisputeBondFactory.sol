@@ -30,6 +30,10 @@ contract MockDisputeBondFactory {
         return createDisputeBondPayoutDistributionHash;
     }
 
+    function getCreateDisputeBond(IDisputeBond _bond) public returns(IDisputeBond) {
+        return setCreateDisputeBondValue;
+    }
+
     function setCreateDisputeBond(IDisputeBond _bond) public {
         setCreateDisputeBondValue = _bond;
     }
