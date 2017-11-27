@@ -53,18 +53,21 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
         return true;
     }
 
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
+    function createMarket(address _sender, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
-        require(universe.getOrCreateReportingWindowByMarketEndTime(_endTime) == this);
-        MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
-        getReputationToken().trustedReportingWindowTransfer(msg.sender, _marketFactory, universe.getOrCacheDesignatedReportNoShowBond());
-        _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, msg.sender, _designatedReporterAddress);
+        require(universe == IUniverse(msg.sender));
+        _newMarket = createMarketInternal(_endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _sender, _designatedReporterAddress);
         markets.add(_newMarket);
         firstReporterMarkets.add(_newMarket);
         // We assume the market is a no show and decrement on designate report. This only needs to be accurate by the next reporting window
         designatedReportNoShows += 1;
-        controller.getAugur().logMarketCreated(universe, _newMarket, msg.sender, msg.value, _topic, _extraInfo);
         return _newMarket;
+    }
+
+    function createMarketInternal(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _sender, address _designatedReporterAddress) private onlyInGoodTimes afterInitialized returns (IMarket _newMarket) {
+        MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
+        getReputationToken().trustedReportingWindowTransfer(_sender, _marketFactory, universe.getOrCacheDesignatedReportNoShowBond());
+        return _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _sender, _designatedReporterAddress);
     }
 
     function migrateMarketInFromSibling() public onlyInGoodTimes afterInitialized returns (bool) {

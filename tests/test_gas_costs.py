@@ -50,10 +50,8 @@ def test_marketCreation(localFixture, universe, cash):
     numTicks = 10 ** 18
     numOutcomes = 2
 
-    reportingWindow = localFixture.applySignature('ReportingWindow', universe.getOrCreateReportingWindowByMarketEndTime(endTime))
-
     with PrintGasUsed(localFixture, "ReportingWindow:createMarket", MARKET_CREATION):
-        marketAddress = reportingWindow.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "", value = marketCreationFee, startgas=long(6.7 * 10**6))
+        marketAddress = universe.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "", value = marketCreationFee, startgas=long(6.7 * 10**6))
 
 def test_marketFinalization(localFixture, universe, market):
     proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])

@@ -423,6 +423,13 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return getOrCacheValidityBond() + getOrCacheTargetReporterGasCosts();
     }
 
+    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable onlyInGoodTimes returns (IMarket) {
+        IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
+        IMarket _newMarket = _reportingWindow.createMarket.value(msg.value)(msg.sender, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _designatedReporterAddress);
+        controller.getAugur().logMarketCreated(this, _newMarket, msg.sender, msg.value, _topic, _extraInfo);
+        return _newMarket;
+    }
+
     function getProtectedTokens() internal returns (address[] memory) {
         return new address[](0);
     }

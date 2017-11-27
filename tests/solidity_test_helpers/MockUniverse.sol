@@ -391,4 +391,10 @@ contract MockUniverse is Initializable, IUniverse {
     function getForkReputationGoal() public view returns (uint256) {
         return setForkReputationGoalValue;
     }
+
+    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket) {
+        IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
+        IMarket _newMarket = _reportingWindow.createMarket.value(msg.value)(msg.sender, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _designatedReporterAddress);
+        return _newMarket;
+    }
 }
