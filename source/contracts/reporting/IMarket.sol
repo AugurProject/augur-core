@@ -69,4 +69,5 @@ contract IMarket is ITyped, IOwnable {
     function isContainerForDisputeBond(IDisputeBond _shadyTarget) public view returns (bool);
     function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool);
     function isValid() public view returns (bool);
+    function disavowTokens() public returns (bool);
 }

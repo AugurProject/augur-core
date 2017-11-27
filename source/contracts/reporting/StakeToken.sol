@@ -23,6 +23,7 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     IMarket public market;
     uint256[] public payoutNumerators;
     bool private invalid;
+    IReputationToken reputationToken;
 
     function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
@@ -36,6 +37,7 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         market = _market;
         payoutNumerators = _payoutNumerators;
         invalid = _invalid;
+        reputationToken = _market.getReportingWindow().getReputationToken();
         return true;
     }
 
@@ -73,7 +75,7 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     }
 
     function buyTokens(address _reporter, uint256 _attotokens) private onlyInGoodTimes afterInitialized returns (bool) {
-        getReputationToken().trustedStakeTokenTransfer(_reporter, this, _attotokens);
+        reputationToken.trustedStakeTokenTransfer(_reporter, this, _attotokens);
         mint(_reporter, _attotokens);
         bytes32 _payoutDistributionHash = getPayoutDistributionHash();
         market.increaseTotalStake(_attotokens);
@@ -83,12 +85,15 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     }
 
     function redeemDisavowedTokens(address _reporter) public onlyInGoodTimes afterInitialized returns (bool) {
+        if (market.getReportingState() == IMarket.ReportingState.AWAITING_FORK_MIGRATION) {
+            market.disavowTokens();
+        }
         require(!market.isContainerForStakeToken(this));
-        uint256 _reputationSupply = getReputationToken().balanceOf(this);
+        uint256 _reputationSupply = reputationToken.balanceOf(this);
         uint256 _attotokens = balances[_reporter];
         uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(_reporter, _attotokens);
-        getReputationToken().transfer(_reporter, _reporterReputationShare);
+        reputationToken.transfer(_reporter, _reporterReputationShare);
         return true;
     }
 
@@ -99,7 +104,7 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         uint256 _attotokens = balances[msg.sender];
         burn(msg.sender, _attotokens);
         IReputationToken _destinationReputationToken = getUniverse().getOrCreateChildUniverse(getPayoutDistributionHash()).getReputationToken();
-        getReputationToken().migrateOutStakeToken(_destinationReputationToken, this, _attotokens);
+        reputationToken.migrateOutStakeToken(_destinationReputationToken, this, _attotokens);
         _destinationReputationToken.transfer(msg.sender, _destinationReputationToken.balanceOf(this));
         return true;
     }
@@ -110,13 +115,12 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         require(market.getFinalWinningStakeToken() == this);
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() != market);
-        IReputationToken _reputationToken = getReputationToken();
-        uint256 _reputationSupply = _reputationToken.balanceOf(this);
+        uint256 _reputationSupply = reputationToken.balanceOf(this);
         uint256 _attotokens = balances[msg.sender];
         uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(msg.sender, _attotokens);
         if (_reporterReputationShare != 0) {
-            _reputationToken.transfer(msg.sender, _reporterReputationShare);
+            reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
         uint256 _feesReceived = market.getReportingWindow().collectStakeTokenReportingFees(msg.sender, _attotokens, forgoFees);
         controller.getAugur().logWinningTokensRedeemed(market.getUniverse(), msg.sender, market, this, _attotokens, _feesReceived, payoutNumerators);
@@ -141,34 +145,31 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         if (_disputeBond.getDisputedPayoutDistributionHash() == market.getFinalPayoutDistributionHash()) {
             return true;
         }
-        IReputationToken _reputationToken = getReputationToken();
-        uint256 _amountNeeded = _disputeBond.getBondRemainingToBePaidOut() - _reputationToken.balanceOf(_disputeBond);
-        uint256 _amountToTransfer = _amountNeeded.min(_reputationToken.balanceOf(this));
+        uint256 _amountNeeded = _disputeBond.getBondRemainingToBePaidOut() - reputationToken.balanceOf(_disputeBond);
+        uint256 _amountToTransfer = _amountNeeded.min(reputationToken.balanceOf(this));
         if (_amountToTransfer == 0) {
             return true;
         }
-        _reputationToken.transfer(_disputeBond, _amountToTransfer);
+        reputationToken.transfer(_disputeBond, _amountToTransfer);
         return true;
     }
 
     function migrateLosingTokenRepToWinningToken() private onlyInGoodTimes returns (bool) {
-        IReputationToken _reputationToken = getReputationToken();
-        uint256 _balance = _reputationToken.balanceOf(this);
+        uint256 _balance = reputationToken.balanceOf(this);
         if (_balance == 0) {
             return true;
         }
-        _reputationToken.transfer(market.getFinalWinningStakeToken(), _balance);
+        reputationToken.transfer(market.getFinalWinningStakeToken(), _balance);
         return true;
     }
 
     function withdrawInEmergency() public onlyInBadTimes returns (bool) {
-        IReputationToken _reputationToken = getReputationToken();
-        uint256 _reputationSupply = _reputationToken.balanceOf(this);
+        uint256 _reputationSupply = reputationToken.balanceOf(this);
         uint256 _attotokens = balances[msg.sender];
         uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
         burn(msg.sender, _attotokens);
         if (_reporterReputationShare != 0) {
-            _reputationToken.transfer(msg.sender, _reporterReputationShare);
+            reputationToken.transfer(msg.sender, _reporterReputationShare);
         }
         return true;
     }
@@ -182,7 +183,7 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     }
 
     function getReputationToken() public view returns (IReputationToken) {
-        return market.getReportingWindow().getReputationToken();
+        return reputationToken;
     }
 
     function getReportingWindow() public view returns (IReportingWindow) {
@@ -226,6 +227,10 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     }
 
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
+        // If the token is disavowed we cannot safely confirm that it is really a member of nay universe.
+        if (!market.isContainerForStakeToken(this)) {
+            return true;
+        }
         controller.getAugur().logStakeTokenBurned(market.getUniverse(), _target, _amount);
         return true;
     }
@@ -233,7 +238,7 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     // Disallow REP extraction
     function getProtectedTokens() internal returns (address[] memory) {
         address[] memory _protectedTokens = new address[](1);
-        _protectedTokens[0] = getReputationToken();
+        _protectedTokens[0] = reputationToken;
         return _protectedTokens;
     }
 }

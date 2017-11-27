@@ -1,8 +1,8 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture as pytest_fixture, mark, raises
-from utils import captureFilteredLogs
-from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, initializeReportingFixture
+from utils import captureFilteredLogs, TokenDelta
+from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, initializeReportingFixture, proceedToForking, finalizeForkingMarket
 
 def test_one_market_one_correct_report(localFixture, universe, market):
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
@@ -109,6 +109,42 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     assert stakeToken.redeemWinningTokens()
     assert reputationToken.balanceOf(tester.a0) == initialREPBalance + designatedReportStake
     assert localFixture.chain.head_state.get_balance(tester.a0) == expectedETHBalance
+
+@mark.parametrize('disavowType', [
+    0, # Manual
+    1, # Automatic
+    2  # Through migration
+])
+def test_stake_token_disavowal(disavowType, localFixture, universe, market, cash):
+    newMarket = localFixture.createReasonableBinaryMarket(universe, cash)
+
+    # We'll do a designated report in the new market based on the makeReport param used for the forking market
+    proceedToDesignatedReporting(localFixture, universe, newMarket, [0,10**18])
+    localFixture.designatedReport(newMarket, [0,10**18], tester.k0)
+
+    # We proceed the standard market to the FORKING state
+    proceedToForking(localFixture, universe, market, True, 1, 2, 3, [0,10**18], [10**18,0], 2, [10**18,0], [0,10**18], [10**18,0])
+
+    # The market we created is now awaiting migration
+    assert newMarket.getReportingState() == localFixture.contracts['Constants'].AWAITING_FORK_MIGRATION()
+
+    # If we attempt to migrate now it will not work since the forking market is not finalized
+    with raises(TransactionFailed, message="Migration cannot occur until the forking market is finalized"):
+        newMarket.migrateThroughOneFork()
+
+    stakeToken = localFixture.getOrCreateStakeToken(newMarket, [0,10**18])
+    reputationToken = localFixture.applySignature('ReputationToken', stakeToken.getReputationToken())
+
+    if (disavowType == 0):
+        assert newMarket.disavowTokens()
+    elif (disavowType == 2):
+        finalizeForkingMarket(localFixture, universe, market, True, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,10**18], [10**18,0])
+        assert newMarket.migrateThroughOneFork()
+
+    # Redeem some disavowed take tokens
+    assert stakeToken.balanceOf(tester.a0) > 0
+    with TokenDelta(reputationToken, stakeToken.balanceOf(tester.a0), tester.a0, "Rep from disavowed token redemption did not transfer"):
+        assert stakeToken.redeemDisavowedTokens(tester.a0)
 
 @mark.parametrize('numReports, numCorrect', [
     (1, 1),
