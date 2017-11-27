@@ -11,13 +11,11 @@ describe("TradeAndReport", () => {
     });
     it("#tradeAndReport", async () => {
         await fixture.approveCentralAuthority();
-        throw new Error("Fuck");
-        //const market = await fixture.createReasonableMarket(fixture.universe, fixture.cash.address, new BN(2));
-        //const actualTypeName = await market.getTypeName_();
-        //const expectedTypeName = stringTo32ByteHex("Market");
-        //expect(actualTypeName).to.equal(expectedTypeName);
+        const market = await fixture.createReasonableMarket(fixture.universe, fixture.cash.address, new BN(2));
+        const actualTypeName = await market.getTypeName_();
+        const expectedTypeName = stringTo32ByteHex("Market");
+        expect(actualTypeName).to.equal(expectedTypeName);
 
-        /*
         const type = new BN(0);
         const outcome = new BN(0);
         const numShares = new BN(10000000000000);
@@ -29,6 +27,5 @@ describe("TradeAndReport", () => {
 
         const orderPrice = await fixture.getOrderPrice(orderID);
         expect(orderPrice.toNumber()).to.equal(price.toNumber());
-        */
     });
 });

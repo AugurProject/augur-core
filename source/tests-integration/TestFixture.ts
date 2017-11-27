@@ -5,7 +5,7 @@ import { Connector } from '../libraries/Connector';
 import { AccountManager } from '../libraries/AccountManager';
 import { ContractCompiler } from '../libraries/ContractCompiler';
 import { ContractDeployer } from '../libraries/ContractDeployer';
-import { LegacyReputationToken, Cash, Universe, ReputationToken, ReportingWindow, Market, CreateOrder, Orders } from '../libraries/ContractInterfaces';
+import { LegacyReputationToken, Cash, Universe, ReputationToken, Market, CreateOrder, Orders } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
 
 export class TestFixture {
