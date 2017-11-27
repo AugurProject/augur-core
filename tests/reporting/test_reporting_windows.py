@@ -92,62 +92,6 @@ def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockPart
     assert reportingWindow.isDisputeActive() == False
     assert reportingWindow.isOver() == True
 
-
-def test_reporting_window_create_market(localFixture, chain, mockUniverse, mockMarket, mockCash, mockReputationToken, mockParticipationToken, mockAugur):
-    mockMarketFactory = localFixture.contracts['MockMarketFactory']
-    mockReportingParticipationTokenFactory = localFixture.contracts['MockParticipationTokenFactory']
-    mockMarketFactory.setMarket(mockMarket.address)
-    mockReportingParticipationTokenFactory.setParticipationTokenValue(mockParticipationToken.address)
-
-    timestamp = chain.head_state.timestamp
-    endTimeValue = timestamp + 10
-    numOutcomesValue = 2
-    numTicks = 1 * 10**6 * 10**18
-    feePerEthInWeiValue = 10 ** 18
-    designatedReporterAddressValue = tester.a2
-
-    mockUniverse.setReportingPeriodDurationInSeconds(timestamp - 10)
-    reportingWindow1 = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'reportingWindow1')
-    reportingWindow1.setController(localFixture.contracts['Controller'].address)
-
-    assert reportingWindow1.initialize(mockUniverse.address, 1)
-    with raises(TransactionFailed, message="start time is less than current block time"):
-        newMarket = reportingWindow1.createMarket(endTimeValue, numOutcomesValue, numTicks, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "info")
-
-    mockUniverse.setReportingPeriodDurationInSeconds(timestamp)
-    reportingWindow2 = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'reportingWindow2')
-    reportingWindow2.setController(localFixture.contracts['Controller'].address)
-    assert reportingWindow2.initialize(mockUniverse.address, 2)
-    mockUniverse.setReportingWindowByMarketEndTime(tester.a0)
-    with raises(TransactionFailed, message="reporting window not associated with universe"):
-        newMarket = reportingWindow2.createMarket(endTimeValue, numOutcomesValue, numTicks, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "info")
-
-    mockUniverse.setReportingPeriodDurationInSeconds(timestamp - 1)
-    mockUniverse.setDesignatedReportNoShowBond(10)
-    mockUniverse.setReputationToken(mockReputationToken.address)
-    reportingWindow3 = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'reportingWindow3')
-    reportingWindow3.setController(localFixture.contracts['Controller'].address)
-
-    assert reportingWindow3.initialize(mockUniverse.address, 2)
-    assert reportingWindow3.getNumMarkets() == 0
-    mockUniverse.setReportingWindowByMarketEndTime(reportingWindow3.address)
-    assert mockAugur.logMarketCreatedCalled() == False
-    newMarket = reportingWindow3.createMarket(endTimeValue, numOutcomesValue, numTicks, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "info")
-    assert mockAugur.logMarketCreatedCalled() == True
-    assert newMarket == mockMarket.address
-    assert mockMarketFactory.getCreateMarketReportingWindowValue() == reportingWindow3.address
-    assert mockMarketFactory.getCreateMarketEndTimeValue() == endTimeValue
-    assert mockMarketFactory.getCreateMarketNumOutcomesValue() == numOutcomesValue
-    assert mockMarketFactory.getCreateMarketNumTicksValue() == numTicks
-    assert mockMarketFactory.getCreateMarketfeePerEthInWeiValue() == feePerEthInWeiValue
-    assert mockMarketFactory.getCreateMarketDenominationTokenValue() == mockCash.address
-    assert mockMarketFactory.getCreateMarketCreatorValue() == bytesToHexString(tester.a0)
-    assert mockMarketFactory.getCreateMarketDesignatedReporterAddressValue() == bytesToHexString(designatedReporterAddressValue)
-    assert mockReputationToken.getTrustedTransferSourceValue() == bytesToHexString(tester.a0)
-    assert mockReputationToken.getTrustedTransferDestinationValue() == mockMarketFactory.address
-    assert mockReputationToken.getTrustedTransferAttotokensValue() == 10
-    assert reportingWindow3.getNumMarkets() == 1
-
 def test_reporting_window_migrate_market_in_from_sib(localFixture, mockUniverse, populatedReportingWindow):
     with raises(TransactionFailed, message="migrateMarketInFromSibling method can only be called from Market"):
         populatedReportingWindow.migrateMarketInFromSibling()
@@ -567,7 +511,7 @@ def chain(localFixture):
 @fixture
 def mockCash(localFixture):
     mockCash = localFixture.contracts['MockCash']
-    return mockCash;
+    return mockCash
 
 @fixture
 def mockUniverse(localFixture):
@@ -632,5 +576,5 @@ def populatedReportingWindow(localFixture, chain, mockUniverse, mockMarket, mock
     mockUniverse.setReputationToken(mockReputationToken.address)
     assert reportingWindow.initialize(mockUniverse.address, 2)
     mockUniverse.setReportingWindowByMarketEndTime(reportingWindow.address)
-    reportingWindow.createMarket(endTimeValue, numOutcomesValue, numTicks, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "", "")
+    mockUniverse.createMarket(endTimeValue, numOutcomesValue, numTicks, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "", "")
     return reportingWindow
