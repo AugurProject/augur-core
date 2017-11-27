@@ -15,6 +15,13 @@ contract MockStandardToken is ERC20, BasicToken {
     address allowanceOwnerValue;
     address allowanceSpenderValue;
     uint256 allowanceValue;
+    uint256[] private approveAmounts;
+    address[] private approveAddresses;
+
+    function reset() public {
+        approveAmounts = [0];
+        approveAddresses = [0];
+    }
 
     function getTransferFromFromValue() public returns(address) {
         return transferFromFromValue;
@@ -48,6 +55,15 @@ contract MockStandardToken is ERC20, BasicToken {
         allowanceValue = _amount;
     }
 
+    function getApproveValueFor(address _to) public returns(uint256) {
+        for (uint8 j = 0; j < approveAddresses.length; j++) {
+            if (approveAddresses[j] == _to) {
+                return approveAmounts[j];
+            }
+        }
+        return 0;
+    }
+
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         transferFromFromValue = _from;
         transferFromToValue = _to;
@@ -58,6 +74,8 @@ contract MockStandardToken is ERC20, BasicToken {
     function approve(address _spender, uint256 _value) public returns (bool) {
         approveSpenderValue = _spender;
         approveValueValue = _value;
+        approveAmounts.push(_value);
+        approveAddresses.push(_spender);
         return true;
     }
 

@@ -490,6 +490,29 @@ def test_market_increase_total_stake(localFixture, initializeMarket, mockReporti
     assert initializeMarket.getTotalStake() == supply + 100
     assert mockReportingWindow.getIncreaseTotalStakeCalled() == True
 
+def test_market_approve_spenders(localFixture, initializeMarket, mockCash, mockShareTokenFactory):
+    approvalAmount = 2**256-1;
+    # approveSpender was called as part of market initialization 
+    initializeMarket.approveSpenders()
+    cancelOrder = localFixture.contracts['CancelOrder']
+    assert mockCash.getApproveValueFor(cancelOrder.address) == approvalAmount
+    CompleteSets = localFixture.contracts['CompleteSets']
+    assert mockCash.getApproveValueFor(CompleteSets.address) == approvalAmount
+    TradingEscapeHatch = localFixture.contracts['TradingEscapeHatch']
+    assert mockCash.getApproveValueFor(TradingEscapeHatch.address) == approvalAmount
+    ClaimTradingProceeds = localFixture.contracts['ClaimTradingProceeds']
+    assert mockCash.getApproveValueFor(ClaimTradingProceeds.address) == approvalAmount
+
+    FillOrder = localFixture.contracts['FillOrder']
+    assert mockCash.getApproveValueFor(FillOrder.address) == approvalAmount
+
+    # verify all shared tokens have approved amount for fill order contract
+    # this market only has 5 outcomes
+    for index in range(5):
+        shareToken = localFixture.applySignature('MockShareToken', mockShareTokenFactory.getCreateShareToken(index));
+        assert shareToken.getApproveValueFor(FillOrder.address) == approvalAmount
+
+
 def push_to_last_dispute(localFixture, initializeMarket, constants, mockAugur, mockReportingWindow, mockDisputeBondFactory, mockReputationToken, mockDisputeBond, chain, mockUniverse, mockStakeToken, mockStakeTokenFactory, mockNextReportingWindow, mockForkReportingWindow):
     push_to_designated_dispute_state(localFixture, mockUniverse, chain, initializeMarket, mockStakeToken, [0, numTicks, 0, 0, 0], mockStakeTokenFactory, mockReportingWindow, mockReputationToken, constants)
     push_first_dispute_last_reporting(localFixture, chain, mockReputationToken, initializeMarket, mockStakeTokenFactory, mockReportingWindow, mockUniverse, constants, mockDisputeBond, mockDisputeBondFactory, mockNextReportingWindow)
@@ -595,18 +618,16 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     mockAugur = fixture.contracts['MockAugur']
     mockShareTokenFactory = fixture.contracts['MockShareTokenFactory']
     mockShareToken = fixture.contracts['MockShareToken']
-    mockFillOrder = fixture.contracts['MockFillOrder']
     mockStakeTokenFactory = fixture.contracts['MockStakeTokenFactory']
 
     # pre populate share tokens for max of 8 possible outcomes
     for index in range(8):
-        item = fixture.upload('solidity_test_helpers/MockShareToken.sol', 'newMockShareToken' + str(index));
+        item = fixture.uploadAndAddToController('solidity_test_helpers/MockShareToken.sol', 'newMockShareToken' + str(index));
         mockShareTokenFactory.pushCreateShareToken(item.address)
 
     controller.registerContract(stringToBytes('Cash'), mockCash.address, twentyZeros, thirtyTwoZeros)
     controller.registerContract(stringToBytes('ParticipationTokenFactory'), mockReportingParticipationTokenFactory.address, twentyZeros, thirtyTwoZeros)
     controller.registerContract(stringToBytes('ShareTokenFactory'), mockShareTokenFactory.address, twentyZeros, thirtyTwoZeros)
-    controller.registerContract(stringToBytes('FillOrder'), mockShareTokenFactory.address, twentyZeros, thirtyTwoZeros)
     controller.registerContract(stringToBytes('StakeTokenFactory'), mockStakeTokenFactory.address, twentyZeros, thirtyTwoZeros)
     controller.registerContract(stringToBytes('DisputeBondFactory'), mockDisputeBondFactory.address, twentyZeros, thirtyTwoZeros)
     mockShareTokenFactory.resetCreateShareToken();
