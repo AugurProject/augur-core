@@ -46,13 +46,13 @@ stages:
   - build
   - test
   - name: deploy
-    if: tag =~ ^v\d+\.\d+\.\d+$
+    if: tag =~ ^v\d+\.\d+\.\d+(-\d+)?$
 git:
   depth: 5
 branches:
   only:
     - master
-    - /^v\d+\.\d+\.\d+$/
+    - /^v\d+\.\d+\.\d+(-\d+)?$/
 env:
   global:
     - secure: ADmhKnkSyCrheJ0Vpa5X/JribTsux/07i4FbhxBTIq/YM+kkcygkO807UDPcbe8vfYWWxp4lcDTdPTYKvGbyJZIsD6yV17+V10Lp58YjexpKFVzqsqLXG7IFaTCvPvG+vqzu63QI6DNY06Z+aUjeRRXJMIG0pMpCIflzN4bkAcA=
