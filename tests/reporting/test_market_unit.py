@@ -446,8 +446,8 @@ def test_market_disavow_tokens(localFixture, initializedMarket, mockUniverse, mo
 
     mockUniverse.setForkingMarket(mockMarket.address)
     mockReportingWindow.setIsForkingMarketFinalized(False)
-    with raises(TransactionFailed, message="market needs stake tokens"):
-        initializedMarket.disavowTokens()
+    # test disavow is a noop when there are no stake tokens
+    assert initializedMarket.disavowTokens() == True
     
     mockStakeToken = set_mock_stake_token_value(localFixture, initializedMarket, stakePayNumeration, mockStakeTokenFactory, 10)
     assert initializedMarket.isContainerForStakeToken(mockStakeToken.address) == True

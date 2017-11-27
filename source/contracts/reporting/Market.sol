@@ -351,7 +351,9 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function disavowTokens() public onlyInGoodTimes returns (bool) {
         require(getReportingState() == ReportingState.AWAITING_FORK_MIGRATION);
-        require(stakeTokens.getCount() > 0);
+        if (stakeTokens.getCount() == 0) {
+            return true;
+        }
         stakeTokens = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         return true;
     }
