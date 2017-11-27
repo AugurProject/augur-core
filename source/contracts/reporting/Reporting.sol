@@ -19,7 +19,7 @@ library Reporting {
     uint256 private constant BOND_PAYOUT_MULTIPLIER = 2; // Multiplier applied to the dispute bond payment to get what they should ideally be compensated with
     uint256 private constant DEFAULT_REPORTING_FEE_DIVISOR = 100; // 1% fees
     uint256 private constant MAXIMUM_REPORTING_FEE_DIVISOR = 10000; // Minimum .01% fees
-    uint256 private constant MINIMUM_REPORTING_FEE_DIVISOR = 3; // Maximum 33.3~% fees
+    uint256 private constant MINIMUM_REPORTING_FEE_DIVISOR = 3; // Maximum 33.3~% fees. Note than anything less than a value of 2 here will likely result in bugs such as divide by 0 cases.
 
     // CONSIDER: figure out approprate values for these
     uint256 private constant DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT = 11 * 10**20;

@@ -369,9 +369,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
                 .div(_targetDivisor - 1) + _previousValue;
         }
 
-        if (_newValue < _floor) {
-            _newValue = _floor;
-        }
+        _newValue = _newValue.max(_floor);
 
         return _newValue;
     }
@@ -394,12 +392,11 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         } else {
             _currentFeeDivisor = _previousFeeDivisor * _repMarketCapInAttoeth / _targetRepMarketCapInAttoeth;
         }
-        if (_currentFeeDivisor > Reporting.getMaximumReportingFeeDivisor()) {
-            _currentFeeDivisor = Reporting.getMaximumReportingFeeDivisor();
-        }
-        if (_currentFeeDivisor < Reporting.getMinimumReportingFeeDivisor()) {
-            _currentFeeDivisor = Reporting.getMinimumReportingFeeDivisor();
-        }
+
+        _currentFeeDivisor = _currentFeeDivisor
+            .max(Reporting.getMinimumReportingFeeDivisor())
+            .min(Reporting.getMaximumReportingFeeDivisor());
+
         shareSettlementFeeDivisor[_reportingWindow] = _currentFeeDivisor;
         return _currentFeeDivisor;
     }
