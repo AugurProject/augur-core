@@ -512,6 +512,19 @@ def test_market_approve_spenders(localFixture, initializeMarket, mockCash, mockS
         shareToken = localFixture.applySignature('MockShareToken', mockShareTokenFactory.getCreateShareToken(index));
         assert shareToken.getApproveValueFor(FillOrder.address) == approvalAmount
 
+def test_market_decrease_extra_dispute_bond_remaining(localFixture, mockUniverse, chain, initializeMarket, mockStakeToken, mockStakeTokenFactory, mockReportingWindow, mockReputationToken, constants, mockDisputeBond, mockDisputeBondFactory, mockNextReportingWindow):
+    payoutDesignatedNumerators = [0, numTicks, 0, 0, 0]
+    assert initializeMarket.isContainerForDisputeBond(mockDisputeBond.address) == False
+    with raises(TransactionFailed, message="bond is not contained by market"):
+        mockDisputeBond.callDecreaseExtraDisputeBondRemainingToBePaidOut(100)
+
+    push_to_designated_dispute_state(localFixture, mockUniverse, chain, initializeMarket, mockStakeToken, payoutDesignatedNumerators, mockStakeTokenFactory, mockReportingWindow, mockReputationToken, constants)
+    push_first_dispute_last_reporting(localFixture, chain, mockReputationToken, initializeMarket, mockStakeTokenFactory, mockReportingWindow, mockUniverse, constants, mockDisputeBond, mockDisputeBondFactory, mockNextReportingWindow)
+    existingValue = initializeMarket.getExtraDisputeBondRemainingToBePaidOut()
+    disputeBond = localFixture.applySignature('MockDisputeBond', mockDisputeBondFactory.getCreateDisputeBond())
+    assert initializeMarket.isContainerForDisputeBond(disputeBond.address) == True
+    assert disputeBond.callDecreaseExtraDisputeBondRemainingToBePaidOut(initializeMarket.address, 100) == True
+    assert initializeMarket.getExtraDisputeBondRemainingToBePaidOut() == existingValue - 100
 
 def push_to_last_dispute(localFixture, initializeMarket, constants, mockAugur, mockReportingWindow, mockDisputeBondFactory, mockReputationToken, mockDisputeBond, chain, mockUniverse, mockStakeToken, mockStakeTokenFactory, mockNextReportingWindow, mockForkReportingWindow):
     push_to_designated_dispute_state(localFixture, mockUniverse, chain, initializeMarket, mockStakeToken, [0, numTicks, 0, 0, 0], mockStakeTokenFactory, mockReportingWindow, mockReputationToken, constants)
