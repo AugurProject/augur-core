@@ -99,6 +99,10 @@ contract MockStakeToken is ITyped, MockVariableSupplyToken, IStakeToken {
         return _market.increaseTotalStake(_attotokens);
     }
 
+    function callFirstReporterCompensationCheck(IMarket _market, address _reporter) public returns (uint256) {
+        return _market.firstReporterCompensationCheck(_reporter);
+    }
+
     function initialize(IMarket _market, uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
         initializeMarketValue = _market;
         initializePayoutNumeratorsValue = _payoutNumerators;

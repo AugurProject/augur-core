@@ -39,6 +39,7 @@ contract MockShareTokenFactory {
     function createShareToken(IController _controller, IMarket _market, uint8 _outcome) public returns (IShareToken) {
         createShareTokenMarketValue = _market;
         createShareTokenOutcomeValue = _outcome;
-        return setCreateShareTokenValue[createShareTokenCounter++];
+        createShareTokenCounter += 1;
+        return setCreateShareTokenValue[_outcome];
     }
 }
