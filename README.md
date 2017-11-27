@@ -128,7 +128,17 @@ When writing tests, it is highly recommended to make use of the ContractFixtures
 
 Solidity contract deployment is handled by `ContractDeployer.ts` and the wrapper programs located in `source/deployment`. This deployment framework allows for incremental deploys of contracts to a given controller (specified via a configuration option). This allows us to deploy new contracts without touching the controller, effectively upgrading in-place the deployed system.
 
-### How to run a deployment
+### Deploying to Rinkeby via Travis CI
+Travis CI is set up to allow deployments to Rinkeby automatically after a passed test suite. These deployments happen on a tagged version (release or pre-release) of augur-core, and automatically apply and pushes changes to augur-contracts and updates augur.js to match that new version of augur-contracts.
+
+1. Tag augur-core as needed for a versioned deploy, e.h: `npm version prerelease`
+2. CI will Build, Test, and Deploy the contracts
+3. augur-contracts will automatically have a new dev-channel version published to NPM (augur-contracts@dev)
+4. augur.js will automatically have a new dev-channel version published to NPM (augur.js@dev)
+5. IF this is a real release (i.e. we want to declare this fit for public consumption), augur-contracts and augur.js should be published manually to NPM with their next version numbers.
+6. IF this is a real release, augur-contracts and augur.js should be incremented to their NEXT release version number, and have the prerelease version -0 appended to them, and pushed to master.
+
+### How to run a deployment locally
 
 Deployment can be run in two modes, direct or docker. In direct mode the assumoption is that the entire system has been built (typescript and solidity), and there is a working nodejs environment locally. Furthermore, one must posses an account on the deployment target (e.g. Rinkeby testnet) which has enough ETH to cover the costs of the deployment. For the purposes of deploying to the testnets, those with access to the augur private testnet keys can deploy and update the existing contracts. For reference, these keys are stored in an encrypted git repository within the Augur Project's keybase team. If you need access -- please inquire within Discord.
 
@@ -145,10 +155,17 @@ augur-core % RINKEBY_PRIVATE_KEY=$(cat path/to/keys/deploy_keys/rinkeby.prv) npm
 This deployment will generate artifacts in the ./output/contracts directory. To merge these changes into augur-contracts, there are scripts located in that repository. *When running deploymen locally this step is not done automatically*. To include these changes you can work from within your checked out augur-contracts.
 
 ```
+# Merge the local changes into the contracts repo
 augur-contracts % SOURCE="path/to/augur-core/output/contracts" BRANCH=master npm run update-contracts
-augur-contracts % npm version patch
+
+# Update the augur-contracts version as necessary.
+# For dev builds, increment the pre-release number.
+# For patch releases, increment the patch number of the release build being patched. E.g. if 4.6.0 was released, and we are on 4.7.0-6, and we want to do a patch of 4.6, use a 'patch' release to increment to 4.6.1
+# For release builds, set the version to be the correct major/minor version, e.g. for dev build v4.7.0-10, the release version would be v4.7.0
+augur-contracts % npm version [<version>, major,minor,patch, prerelease]
 augur-contracts % git push && git push --tags
-augur-contracts % npm publish
+# Publish th NPM, if this is a pre-release tag, deploy it to the dev channel. This dev channel is the default for version published from CI.
+augur-contracts % npm publish [--tag dev]
 ```
 
 ## Additional notes
