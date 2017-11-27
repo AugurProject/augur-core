@@ -31,23 +31,23 @@ services:
     image: augurproject/dev-node-geth:latest
     ports:
       - "47624:8545"
-  #geth-integration-tests:
-  #  image: augurproject/augur-core:latest
-  #  build:
-  #    context: ../../../
-  #    dockerfile: support/Dockerfile
-  #    cache_from:
-  #      - augurproject/augur-core:latest
-  #  entrypoint: [ "npm", "run", "test:integration"]
+  geth-integration-tests:
+    image: augurproject/augur-core:latest
+    build:
+      context: ../../../
+      dockerfile: support/Dockerfile
+      cache_from:
+        - augurproject/augur-core:latest
+    entrypoint: [ "npm", "run", "test:integration"]
     # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
     # ports:
     #   - "9229:9229"
-  #  environment:
-  #    - ETHEREUM_HOST=geth-dev-node
-  #    - ETHEREUM_PORT=8545
-  #    - ETHEREUM_GAS_PRICE_IN_NANOETH=1
-  #    - ETHEREUM_PRIVATE_KEY=0xe2b0241b73cd78d450f85eca67188fb884e7ebe961f8981814474c500d581952
-  #    # - AUGUR_CONTROLLER_ADDRESS=0x35d93ab4de2f58c495e8ec0654f6dcc95c690fd2
-  #  links:
-  #    - geth-dev-node
+    environment:
+      - ETHEREUM_HOST=geth-dev-node
+      - ETHEREUM_PORT=8545
+      - ETHEREUM_GAS_PRICE_IN_NANOETH=1
+      - ETHEREUM_PRIVATE_KEY=0xe2b0241b73cd78d450f85eca67188fb884e7ebe961f8981814474c500d581952
+      # - AUGUR_CONTROLLER_ADDRESS=0x35d93ab4de2f58c495e8ec0654f6dcc95c690fd2
+    links:
+      - geth-dev-node
