@@ -115,8 +115,8 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     1, # Automatic
     2  # Through migration
 ])
-def test_stake_token_disavowal(disavowType, localFixture, universe, market, cash):
-    newMarket = localFixture.createReasonableBinaryMarket(universe, cash)
+def test_stake_token_disavowal(disavowType, localFixture, universe, market):
+    newMarket = localFixture.createReasonableBinaryMarket(universe, localFixture.contracts['Cash'])
 
     # We'll do a designated report in the new market based on the makeReport param used for the forking market
     proceedToDesignatedReporting(localFixture, universe, newMarket, [0,10**18])

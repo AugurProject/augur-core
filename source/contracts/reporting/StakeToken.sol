@@ -226,7 +226,7 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     }
 
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
-        // If the token is disavowed we cannot safely confirm that it is really a member of nay universe.
+        // If the token is disavowed we cannot safely confirm that it is really a member of any universe.
         if (!market.isContainerForStakeToken(this)) {
             return true;
         }
