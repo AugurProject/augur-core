@@ -50,6 +50,7 @@ case $1 in
       -e TRAVIS_TAG \
       -e TRAVIS_COMMIT \
       -e TRAVIS_PULL_REQUEST \
+      -e INCLUDE_FUZZY_TESTS=$INCLUDE_FUZZY_TESTS \
       --entrypoint "bash"  \
       augurproject/augur-core:latest -- /app/support/deploy/deploy.sh
     ;;
