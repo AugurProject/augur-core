@@ -32,7 +32,7 @@ def test_walkOrderList_bids(contractsFixture, market):
         "sharesEscrowed": 0,
         "betterOrderID": longTo32Bytes(0),
         "worseOrderID": longTo32Bytes(0),
-        "tradeGroupID": 0
+        "tradeGroupID": "0"
     }
     orderId5 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["moneyEscrowed"], order["sharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId5 != bytearray(32)), "Save order"
@@ -63,7 +63,7 @@ def test_walkOrderList_bids(contractsFixture, market):
         "sharesEscrowed": 0,
         "betterOrderID": longTo32Bytes(0),
         "worseOrderID": longTo32Bytes(0),
-        "tradeGroupID": 0
+        "tradeGroupID": "0"
     }
     orderId6 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["moneyEscrowed"], order["sharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId6 != bytearray(32)), "Save order"
@@ -94,7 +94,7 @@ def test_walkOrderList_bids(contractsFixture, market):
         "sharesEscrowed": 0,
         "betterOrderID": longTo32Bytes(0),
         "worseOrderID": longTo32Bytes(0),
-        "tradeGroupID": 0
+        "tradeGroupID": "0"
     }
     orderId7 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["moneyEscrowed"], order["sharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId7 != bytearray(32)), "Save order"
@@ -131,7 +131,7 @@ def test_walkOrderList_asks(contractsFixture, market):
         "sharesEscrowed": 0,
         "betterOrderID": longTo32Bytes(0),
         "worseOrderID": longTo32Bytes(0),
-        "tradeGroupID": 0
+        "tradeGroupID": "0"
     }
     orderId8 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["moneyEscrowed"], order["sharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId8 != bytearray(32)), "Save order"
@@ -160,7 +160,7 @@ def test_walkOrderList_asks(contractsFixture, market):
         "sharesEscrowed": 0,
         "betterOrderID": longTo32Bytes(0),
         "worseOrderID": longTo32Bytes(0),
-        "tradeGroupID": 0
+        "tradeGroupID": "0"
     }
     orderId9 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["moneyEscrowed"], order["sharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId9 != bytearray(32)), "Save order"
@@ -191,7 +191,7 @@ def test_walkOrderList_asks(contractsFixture, market):
         "sharesEscrowed": 0,
         "betterOrderID": longTo32Bytes(0),
         "worseOrderID": longTo32Bytes(0),
-        "tradeGroupID": 0
+        "tradeGroupID": "0"
     }
     orderId10 = orders.saveOrder(order["type"], market.address, order["fxpAmount"], order["price"], order["sender"], order["outcome"], order["moneyEscrowed"], order["sharesEscrowed"], order["betterOrderID"], order["worseOrderID"], order["tradeGroupID"])
     assert(orderId10 != bytearray(32)), "Save order"
@@ -234,8 +234,8 @@ def test_orderBidSorting(where, orderType, hints, contractsFixture, market):
     # setup pre-existing orders
     worstPrice = fix('0.60') if orderType == BID else fix('0.66')
     bestPrice = fix('0.66') if orderType == BID else fix('0.60')
-    worstOrderId = orders.saveOrder(orderType, market.address, fix('1'), worstPrice, tester.a0, YES, worstPrice, 0, longTo32Bytes(0), longTo32Bytes(0), 0)
-    bestOrderId = orders.saveOrder(orderType, market.address, fix('1'), bestPrice, tester.a0, YES, bestPrice, 0, longTo32Bytes(0), longTo32Bytes(0), 0)
+    worstOrderId = orders.saveOrder(orderType, market.address, fix('1'), worstPrice, tester.a0, YES, worstPrice, 0, longTo32Bytes(0), longTo32Bytes(0), "0")
+    bestOrderId = orders.saveOrder(orderType, market.address, fix('1'), bestPrice, tester.a0, YES, bestPrice, 0, longTo32Bytes(0), longTo32Bytes(0), "0")
 
     # validate that our setup went smoothly
     assert orders.getBestOrderId(orderType, market.address, YES) == bestOrderId
@@ -258,7 +258,7 @@ def test_orderBidSorting(where, orderType, hints, contractsFixture, market):
         orderPrice = fix('0.59') if orderType == BID else fix('0.67')
         betterOrderId = worstOrderId if hints else longTo32Bytes(0)
         worseOrderId = longTo32Bytes(0)
-    insertedOrder = orders.saveOrder(orderType, market.address, fix('1'), orderPrice, tester.a0, YES, orderPrice, 0, betterOrderId, worseOrderId, 0)
+    insertedOrder = orders.saveOrder(orderType, market.address, fix('1'), orderPrice, tester.a0, YES, orderPrice, 0, betterOrderId, worseOrderId, "0")
 
     # validate the new order was inserted correctly
     assert orders.getBetterOrderId(insertedOrder) == longTo32Bytes(0) if where == 'best' else bestOrderId
@@ -269,9 +269,9 @@ def test_orderBidSorting(where, orderType, hints, contractsFixture, market):
 def test_saveOrder(contractsFixture, market):
     orders = contractsFixture.contracts['Orders']
 
-    orderId1 = orders.saveOrder(BID, market.address, 10, fix('0.5'), tester.a1, NO, 0, 10, longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId1 = orders.saveOrder(BID, market.address, 10, fix('0.5'), tester.a1, NO, 0, 10, longTo32Bytes(0), longTo32Bytes(0), "1")
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId2 = orders.saveOrder(ASK, market.address, 10, fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId2 = orders.saveOrder(ASK, market.address, 10, fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), "1")
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
 
     assert(orders.getAmount(orderId1) == 10), "amount for order1 should be set to 10"
@@ -301,9 +301,9 @@ def test_saveOrder(contractsFixture, market):
 def test_fillOrder(contractsFixture, market):
     orders = contractsFixture.contracts['Orders']
 
-    orderId1 = orders.saveOrder(BID, market.address, 10, fix('0.5'), tester.a1, NO, 0, 10, longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId1 = orders.saveOrder(BID, market.address, 10, fix('0.5'), tester.a1, NO, 0, 10, longTo32Bytes(0), longTo32Bytes(0), "1")
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId2 = orders.saveOrder(BID, market.address, 10, fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId2 = orders.saveOrder(BID, market.address, 10, fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), "1")
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
 
     # orderID, fill, money, shares
@@ -346,11 +346,11 @@ def test_fillOrder(contractsFixture, market):
 def test_removeOrder(contractsFixture, market):
     orders = contractsFixture.contracts['Orders']
 
-    orderId1 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId1 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, NO, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), "1")
     assert(orderId1 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId2 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId2 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a2, NO, fix('5'), 0, longTo32Bytes(0), longTo32Bytes(0), "1")
     assert(orderId2 != bytearray(32)), "saveOrder wasn't executed successfully"
-    orderId3 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), 1)
+    orderId3 = orders.saveOrder(BID, market.address, fix('10'), fix('0.5'), tester.a1, YES, 0, fix('10'), longTo32Bytes(0), longTo32Bytes(0), "1")
     assert(orderId3 != bytearray(32)), "saveOrder wasn't executed successfully"
     assert orders.getAmount(orderId3) == fix('10')
     assert orders.getPrice(orderId3) == fix('0.5')

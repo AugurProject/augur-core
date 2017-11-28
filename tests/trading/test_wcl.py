@@ -27,7 +27,7 @@ def test_create_ask_with_shares_fill_with_shares(contractsFixture, cash, market)
     assert noShareToken.balanceOf(tester.a2) == 12
 
     # 2. create ASK order for YES with YES shares for escrow
-    askOrderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender = tester.k1)
+    askOrderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender = tester.k1)
     assert askOrderID
     assert cash.balanceOf(tester.a1) == 0
     assert yesShareToken.balanceOf(tester.a1) == 0
@@ -64,8 +64,7 @@ def test_create_ask_with_shares_fill_with_cash(contractsFixture, cash, market):
     assert noShareToken.balanceOf(tester.a1) == 12, "Account 1 should have 12 shares of outcome 2"
 
     # 2. create ASK order for YES with YES shares for escrow
-    askOrderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender = tester.k1)
-    assert askOrderID, "Order ID should be non-zero"
+    askOrderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender = tester.k1)
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a1) == 12
@@ -99,7 +98,7 @@ def test_create_ask_with_cash_fill_with_shares(contractsFixture, cash, market):
     assert noShareToken.balanceOf(tester.a2) == 12
 
     # 2. create ASK order for YES with cash escrowed
-    askOrderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender = tester.k1, value=fix('12', '0.4'))
+    askOrderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender = tester.k1, value=fix('12', '0.4'))
     assert askOrderID
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 0
@@ -128,7 +127,7 @@ def test_create_ask_with_cash_fill_with_cash(contractsFixture, cash, market):
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
 
     # 1. create ASK order for YES with cash escrowed
-    askOrderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender = tester.k1, value=fix('12', '0.4'))
+    askOrderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender = tester.k1, value=fix('12', '0.4'))
     assert askOrderID
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 0
@@ -164,7 +163,7 @@ def test_create_bid_with_shares_fill_with_shares(contractsFixture, cash, market)
     assert noShareToken.balanceOf(tester.a2) == 12
 
     # 2. create BID order for YES with NO shares escrowed
-    orderID = createOrder.publicCreateOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender = tester.k1)
+    orderID = createOrder.publicCreateOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender = tester.k1)
     assert orderID
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 12
@@ -203,8 +202,7 @@ def test_create_bid_with_shares_fill_with_cash(contractsFixture, cash, market):
     assert noShareToken.balanceOf(tester.a1) == 12
 
     # 2. create BID order for YES with NO shares escrowed
-    orderID = createOrder.publicCreateOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender = tester.k1)
-    assert orderID
+    orderID = createOrder.publicCreateOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender = tester.k1)
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 12
     assert noShareToken.balanceOf(tester.a1) == 0
@@ -238,7 +236,7 @@ def test_create_bid_with_cash_fill_with_shares(contractsFixture, cash, market):
     assert noShareToken.balanceOf(tester.a2) == 12
 
     # 2. create BID order for YES with cash escrowed
-    orderID = createOrder.publicCreateOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender = tester.k1, value=fix('12', '0.6'))
+    orderID = createOrder.publicCreateOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender = tester.k1, value=fix('12', '0.6'))
     assert orderID
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 0
@@ -267,7 +265,7 @@ def test_create_bid_with_cash_fill_with_cash(contractsFixture, cash, market):
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
 
     # 1. create BID order for YES with cash escrowed
-    orderID = createOrder.publicCreateOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), 42, sender = tester.k1, value=fix('12', '0.6'))
+    orderID = createOrder.publicCreateOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender = tester.k1, value=fix('12', '0.6'))
     assert orderID
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 0
@@ -368,7 +366,7 @@ def test_parametrized(type, outcome, displayPrice, orderSize, creatorYesShares, 
     acquireShares(YES, creatorYesShares, createOrder.address, sender = creatorKey)
     acquireShares(NO, creatorNoShares, createOrder.address, sender = creatorKey)
     with raises(TransactionFailed) if expectMakeRaise else placeholder_context():
-        orderID = createOrder.publicCreateOrder(type, orderSize, displayPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), 42, sender = creatorKey, value = creatorCost)
+        orderID = createOrder.publicCreateOrder(type, orderSize, displayPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), "42", sender = creatorKey, value = creatorCost)
 
     # fill order
     acquireShares(YES, fillerYesShares, fillOrder.address, sender = fillerKey)
