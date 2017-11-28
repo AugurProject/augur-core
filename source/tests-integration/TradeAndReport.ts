@@ -21,7 +21,7 @@ describe("TradeAndReport", () => {
         const numShares = new BN(10000000000000);
         const price = new BN(2150);
 
-        await fixture.placeOrder(market.address, type, numShares, price, outcome, stringTo32ByteHex(""), stringTo32ByteHex(""), new BN(42));
+        await fixture.placeOrder(market.address, type, numShares, price, outcome, stringTo32ByteHex(""), stringTo32ByteHex(""), stringTo32ByteHex("42"));
 
         const orderID = await fixture.getBestOrderId(type, market.address, outcome)
 

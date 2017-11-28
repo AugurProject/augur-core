@@ -95,7 +95,7 @@ export class ContractDeployer {
     }
 
     private async upload(contract: Contract): Promise<void> {
-        const contractsToDelegate: {[key:string]: boolean} = {"Orders": true, "TradingEscapeHatch": true};
+        const contractsToDelegate: {[key:string]: boolean} = {"Orders": true, "TradingEscapeHatch": true, "Cash": true};
         const contractName = contract.contractName
         if (contractName === 'Controller') return;
         if (contractName === 'Delegator') return;
@@ -181,7 +181,7 @@ export class ContractDeployer {
 
     private async initializeAllContracts(): Promise<void> {
         console.log('Initializing contracts...');
-        const contractsToInitialize = ["Augur","Cash","CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimTradingProceeds","OrdersFetcher"];
+        const contractsToInitialize = ["Augur","CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimTradingProceeds","OrdersFetcher"];
         const promises: Array<Promise<any>> = [];
         for (let contractName of contractsToInitialize) {
             promises.push(this.initializeContract(contractName));

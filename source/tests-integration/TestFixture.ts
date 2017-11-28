@@ -79,7 +79,7 @@ export class TestFixture {
         return await this.createMarket(universe, numOutcomes, endTime, fee, denominationToken, this.accountManager.defaultAddress, numTicks);
     }
 
-    public async placeOrder(market: string, type: BN, numShares: BN, price: BN, outcome: BN, betterOrderID: string, worseOrderID: string, tradeGroupID: BN): Promise<void> {
+    public async placeOrder(market: string, type: BN, numShares: BN, price: BN, outcome: BN, betterOrderID: string, worseOrderID: string, tradeGroupID: string): Promise<void> {
         const createOrderContract = await this.contractDeployer.getContract("CreateOrder");
         const createOrder = new CreateOrder(this.connector, this.accountManager, createOrderContract.address, this.configuration.gasPrice);
 

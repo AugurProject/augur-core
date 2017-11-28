@@ -262,7 +262,7 @@ class ContractsFixture:
                 extension = path.splitext(filename)[1]
                 if extension != '.sol': continue
                 if name == 'controller': continue
-                contractsToDelegate = ['Orders', 'TradingEscapeHatch']
+                contractsToDelegate = ['Orders', 'TradingEscapeHatch', 'Cash']
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
                     self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
@@ -293,7 +293,7 @@ class ContractsFixture:
             self.contracts['Controller'].addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Augur','Cash','CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimTradingProceeds','OrdersFetcher']
+        contractsToInitialize = ['Augur','CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimTradingProceeds','OrdersFetcher']
         for contractName in contractsToInitialize:
             if getattr(self.contracts[contractName], "setController", None):
                 self.contracts[contractName].setController(self.contracts['Controller'].address)

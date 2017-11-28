@@ -374,11 +374,11 @@ contract FillOrder is CashAutoConverter, Extractable, ReentrancyGuard, IFillOrde
     using DirectionExtensions for Trade.Direction;
 
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
-    function publicFillOrder(bytes32 _orderId, uint256 _amountFillerWants, uint256 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (uint256) {
+    function publicFillOrder(bytes32 _orderId, uint256 _amountFillerWants, bytes32 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (uint256) {
         return this.fillOrder(msg.sender, _orderId, _amountFillerWants, _tradeGroupId);
     }
 
-    function fillOrder(address _filler, bytes32 _orderId, uint256 _amountFillerWants, uint256 _tradeGroupId) external onlyWhitelistedCallers returns (uint256) {
+    function fillOrder(address _filler, bytes32 _orderId, uint256 _amountFillerWants, bytes32 _tradeGroupId) external onlyWhitelistedCallers returns (uint256) {
         Trade.Data memory _tradeData = Trade.create(controller, _orderId, _filler, _amountFillerWants);
         var (_marketCreatorFees, _reporterFees) = _tradeData.tradeMakerSharesForFillerShares();
         _tradeData.tradeMakerSharesForFillerTokens();
@@ -397,7 +397,7 @@ contract FillOrder is CashAutoConverter, Extractable, ReentrancyGuard, IFillOrde
         return _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);
     }
 
-    function logOrderFilled(Trade.Data _tradeData, uint256 _marketCreatorFees, uint256 _reporterFees, uint256 _tradeGroupId) private returns (bool) {
+    function logOrderFilled(Trade.Data _tradeData, uint256 _marketCreatorFees, uint256 _reporterFees, bytes32 _tradeGroupId) private returns (bool) {
         controller.getAugur().logOrderFilled(_tradeData.contracts.market.getUniverse(), _tradeData.contracts.market.getShareToken(_tradeData.order.outcome), _tradeData.filler.participantAddress, _tradeData.order.orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _marketCreatorFees, _reporterFees, _tradeGroupId);
         return true;
     }

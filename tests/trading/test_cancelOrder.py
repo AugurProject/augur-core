@@ -17,7 +17,7 @@ def test_cancelBid(contractsFixture, cash, market, universe):
     fxpAmount = 1
     fxpPrice = fix('0.6')
     outcomeID = YES
-    tradeGroupID = 42
+    tradeGroupID = "42"
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
     creatorInitialETH = contractsFixture.chain.head_state.get_balance(tester.a1)
@@ -69,7 +69,7 @@ def test_cancelAsk(contractsFixture, cash, market):
     fxpAmount = 1
     fxpPrice = fix('0.6')
     outcomeID = 1
-    tradeGroupID = 42
+    tradeGroupID = "42"
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
     creatorInitialETH = contractsFixture.chain.head_state.get_balance(tester.a1)
@@ -106,7 +106,7 @@ def test_exceptions(contractsFixture, cash, market):
     fxpAmount = 1
     fxpPrice = fix('0.6')
     outcomeID = YES
-    tradeGroupID = 42
+    tradeGroupID = "42"
     marketInitialCash = cash.balanceOf(market.address)
     orderID = createOrder.publicCreateOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10000'))
     assert(orderID != bytearray(32)), "Order ID should be non-zero"
