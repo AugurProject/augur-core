@@ -477,4 +477,8 @@ contract MockMarket is IMarket {
     function getMarketCreatorMailbox() public view returns (IMailbox) {
         return setMarketCreatorMailbox;
     }
+
+    function disavowTokens() public returns (bool) {
+        return true;
+    }
 }
