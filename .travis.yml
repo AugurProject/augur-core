@@ -37,7 +37,8 @@ jobs:
       deploy: &script
         provider: script
         skip_cleanup: true
-        script: docker pull $IMAGE_BUILD;
+        script: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
+                docker pull $IMAGE_BUILD;
                 docker tag $IMAGE_BUILD $IMAGE_LATEST;
                 ARTIFACTS=true npm run docker:run:deploy && docker push $IMAGE_LATEST
         on:
