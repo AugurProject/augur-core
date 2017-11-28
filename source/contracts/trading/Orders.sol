@@ -161,7 +161,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
         _order.moneyEscrowed = _moneyEscrowed;
         _order.sharesEscrowed = _sharesEscrowed;
         insertOrderIntoList(_order, _betterOrderId, _worseOrderId);
-        controller.getAugur().logOrderCreated(_order.market.getUniverse(), _order.market.getShareToken(_order.outcome), _sender, _orderId, _tradeGroupId);
+        controller.getAugur().logOrderCreated(_type, _amount, _price, _sender, _moneyEscrowed, _sharesEscrowed, _tradeGroupId, _orderId, _order.market.getUniverse(), _order.market.getShareToken(_order.outcome));
         return _orderId;
     }
 

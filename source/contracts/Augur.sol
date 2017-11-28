@@ -22,7 +22,8 @@ contract Augur is Controlled, Extractable {
     event MarketFinalized(address indexed universe, address indexed market);
     event UniverseForked(address indexed universe);
     event OrderCanceled(address indexed universe, address indexed shareToken, address indexed sender, bytes32 orderId, Order.Types orderType, uint256 tokenRefund, uint256 sharesRefund);
-    event OrderCreated(address indexed universe, address indexed shareToken, address indexed creator, bytes32 orderId, bytes32 tradeGroupId);
+    // The ordering here is to match functions higher in the call chain to avoid stack depth issues
+    event OrderCreated(Order.Types orderType, uint256 amount, uint256 price, address indexed creator, uint256 moneyEscrowed, uint256 sharesEscrowed, bytes32 tradeGroupId, bytes32 orderId, address indexed universe, address indexed shareToken);
     event OrderFilled(address indexed universe, address indexed shareToken, address filler, bytes32 orderId, uint256 numCreatorShares, uint256 numCreatorTokens, uint256 numFillerShares, uint256 numFillerTokens, uint256 marketCreatorFees, uint256 reporterFees, bytes32 tradeGroupId);
     event TradingProceedsClaimed(address indexed universe, address indexed shareToken, address indexed sender, address market, uint256 numShares, uint256 numPayoutTokens, uint256 finalTokenBalance);
     event UniverseCreated(address indexed parentUniverse, address indexed childUniverse);
@@ -85,8 +86,8 @@ contract Augur is Controlled, Extractable {
         return true;
     }
 
-    function logOrderCreated(IUniverse _universe, address _shareToken, address _creator, bytes32 _orderId, bytes32 _tradeGroupId) public onlyWhitelistedCallers returns (bool) {
-        OrderCreated(_universe, _shareToken, _creator, _orderId, _tradeGroupId);
+    function logOrderCreated(Order.Types _orderType, uint256 _amount, uint256 _price, address _creator, uint256 _moneyEscrowed, uint256 _sharesEscrowed, bytes32 _tradeGroupId, bytes32 _orderId, IUniverse _universe, address _shareToken) public onlyWhitelistedCallers returns (bool) {
+        OrderCreated(_orderType, _amount, _price, _creator, _moneyEscrowed, _sharesEscrowed, _tradeGroupId, _orderId, _universe, _shareToken);
         return true;
     }
 

@@ -73,7 +73,7 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logOrderCreated(IUniverse _universe, address _shareToken, address _creator, bytes32 _orderId, bytes32 _tradeGroupId) public onlyWhitelistedCallers returns (bool) {
+    function logOrderCreated(Order.Types _orderType, uint256 _amount, uint256 _price, address _creator, uint256 _moneyEscrowed, uint256 _sharesEscrowed, bytes32 _tradeGroupId, bytes32 _orderId, IUniverse _universe, address _shareToken) public onlyWhitelistedCallers returns (bool) {
         return true;
     }
 
