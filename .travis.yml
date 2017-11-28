@@ -65,5 +65,6 @@ env:
   matrix:
     - TESTS="tests/test*.py tests/libraries tests/trading"
     - TESTS="tests/reporting"
+    - TESTS="tests/**/*fuzzy*.py" INCLUDE_FUZZY_TESTS=1
     - TESTS="integration"
 

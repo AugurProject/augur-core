@@ -104,7 +104,7 @@ def test_randomSorting(market, orderType, numOrders, withBoundingOrders, deadOrd
                 assert((orderId == worstOrderId and worseOrderId == 0) or fxpPrices[i] < fxpPrices[worseOrderId - 1]), "Input price is < worse order price, or this is the worst order so worse order Id is zero"
             if deadOrders[i, 0]: betterOrderId = numOrders + 1
             if deadOrders[i, 1]: worseOrderId = numOrders + 1
-        actualOrderId = orders.saveOrder(orderType, market.address, 1, fxpPrices[i], tester.a1, outcomeId, 0, 0, longTo32Bytes(betterOrderId), longTo32Bytes(worseOrderId), 0)
+        actualOrderId = orders.saveOrder(orderType, market.address, 1, fxpPrices[i], tester.a1, outcomeId, 0, 0, longTo32Bytes(betterOrderId), longTo32Bytes(worseOrderId), "0")
         assert(actualOrderId != bytearray(32)), "Insert order into list"
         orderIdsToBytesMapping[orderId] = actualOrderId
         bytesToOrderIdsMapping[actualOrderId] =  orderId
