@@ -33,7 +33,7 @@ pytest
 
 ## Docker
 
-You may run augur-core using docker as follows:
+You may run augur-core using docker as follows. All docker commands map to the non-dockerized versions where make sense. All docker commands beginning with docker:run will execute the command within the docker image, all commands without run (e.g. docker:test) will first build the image and then execute docker:run:<command>.
 
 ### Build:
 
@@ -41,16 +41,23 @@ You may run augur-core using docker as follows:
 npm run docker:build
 ```
 
-### Run:
+### Test:
 
 ```
-npm run docker:test:unit
+# With a pre-built image
+npm run docker:run:test:unit:all
+
+# Build and run all unit tests and integration tests
+npm run docker:test
+
+# Build and run just integration test
+npm run docker:test:integration
 ```
 
 ### Debug:
 
 ```
-npm run docker:test:console
+npm run docker:run:test:console
 py.test -s tests/trading_tests.py
 ```
 

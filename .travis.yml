@@ -15,9 +15,9 @@ before_install:
 script: docker pull $IMAGE_BUILD;
         docker tag $IMAGE_BUILD $IMAGE_LATEST;
         if [[ "$TESTS" == "integration" ]]; then
-          npm run docker:test:integration;
+          npm run docker:run:test:integration;
         else
-          npm run docker:test:unit:single -- $TESTS;
+          npm run docker:run:test:unit -- $TESTS;
         fi
 jobs:
   include:
@@ -39,7 +39,7 @@ jobs:
         skip_cleanup: true
         script: docker pull $IMAGE_BUILD;
                 docker tag $IMAGE_BUILD $IMAGE_LATEST;
-                ARTIFACTS=true npm run docker:deploy && docker push $IMAGE_LATEST
+                ARTIFACTS=true npm run docker:run:deploy && docker push $IMAGE_LATEST
         on:
           tags: true
 stages:
