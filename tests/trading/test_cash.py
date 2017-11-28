@@ -7,10 +7,12 @@ from pytest import raises
 
 tester.GASPRICE = 0
 
+''' FIXME: See Cash.sol for more context
 def test_init(cash):
     assert cash.name() == 'Cash'
     assert cash.decimals() == 18
     assert cash.symbol() == 'CASH'
+'''
 
 def test_depositEther(contractsFixture, cash):
     startingUserEthBalance = contractsFixture.chain.head_state.get_balance(tester.a0)
