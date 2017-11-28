@@ -65,7 +65,6 @@ def test_create_ask_with_shares_fill_with_cash(contractsFixture, cash, market):
 
     # 2. create ASK order for YES with YES shares for escrow
     askOrderID = createOrder.publicCreateOrder(ASK, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender = tester.k1)
->>>>>>> tradeGroupId to bytes32
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a1) == 12
@@ -204,7 +203,6 @@ def test_create_bid_with_shares_fill_with_cash(contractsFixture, cash, market):
 
     # 2. create BID order for YES with NO shares escrowed
     orderID = createOrder.publicCreateOrder(BID, 12, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender = tester.k1)
->>>>>>> tradeGroupId to bytes32
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 12
     assert noShareToken.balanceOf(tester.a1) == 0

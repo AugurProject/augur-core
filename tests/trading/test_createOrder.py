@@ -202,7 +202,7 @@ def test_publicCreateOrder_bid_real_example_case(contractsFixture, universe, cas
     orders = contractsFixture.contracts['Orders']
     createOrder = contractsFixture.contracts['CreateOrder']
 
-    orderID = createOrder.publicCreateOrder(BID, 10000000000000, 2000, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), 7, value = 20000000000000000)
+    orderID = createOrder.publicCreateOrder(BID, 10000000000000, 2000, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), "7", value = 20000000000000000)
     assert orderID
 
     assert orders.getAmount(orderID) == 10000000000000
@@ -223,7 +223,7 @@ def test_publicCreateOrder_bid_shares_escrowed(contractsFixture, universe, marke
     assert completeSets.publicBuyCompleteSets(market.address, 10, value=cost)
 
     # Now when we make a BID order for outcome 0 shares we will escrow outcome 1 shares instead of tokens when creating an order
-    orderID = createOrder.publicCreateOrder(BID, 10, 5*10**17, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), 7)
+    orderID = createOrder.publicCreateOrder(BID, 10, 5*10**17, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), "7")
     assert orderID
 
     assert orders.getAmount(orderID) == 10
