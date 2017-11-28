@@ -74,16 +74,8 @@ git clone $augurjs_repo_url output/augur.js
 current_dir=$PWD
 cd output/augur.js
 
-npm install augur-contracts@dev
-npm upgrade augur-contracts
-npm version prerelease
-
-if [[ "$AUTOCOMMIT" == "true" ]]; then
-  git push && git push --tags && npm publish --tag dev
-  update_success=$?
-else
-  update_success=0
-fi
+AUTOCOMMIT=true BRANCH=$branch COMMIT=$commit TAG=$tag npm run update-contracts
+update_success=$?
 
 cd $current_dir
 
