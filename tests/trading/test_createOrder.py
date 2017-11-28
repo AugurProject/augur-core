@@ -81,6 +81,11 @@ def test_publicCreateOrder_bid2(contractsFixture, cash, market, universe):
     assert logs[0]['shareToken'] == shareToken.address
     assert logs[0]['tradeGroupId'] == stringToBytes("42")
     assert logs[0]['orderId'] == orderID
+    assert logs[0]['orderType'] == 0
+    assert logs[0]['price'] == fxpPrice
+    assert logs[0]['amount'] == amount
+    assert logs[0]['sharesEscrowed'] == 0
+    assert logs[0]['moneyEscrowed'] == fix('0.6')
 
 def test_createOrder_failure(contractsFixture, universe, cash, market):
     orders = contractsFixture.contracts['Orders']
@@ -156,6 +161,11 @@ def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     assert logs[1]['shareToken'] == yesShareToken.address
     assert logs[1]['tradeGroupId'] == stringToBytes("42")
     assert logs[1]['orderId'] == orderID
+    assert logs[1]['orderType'] == 1
+    assert logs[1]['price'] == fix('0.6')
+    assert logs[1]['amount'] == 3
+    assert logs[1]['sharesEscrowed'] == 2
+    assert logs[1]['moneyEscrowed'] == fix('0.4')
 
     # validate the order contains expected results
     assert orderID != bytearray(32), "Order ID should be non-zero"

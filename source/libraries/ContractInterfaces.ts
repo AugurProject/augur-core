@@ -87,6 +87,19 @@ export class Augur extends Controlled {
         super(connector, accountManager, address, defaultGasPrice);
     }
 
+    public logOrderCreated = async(orderType: BN, amount: BN, price: BN, creator: string, moneyEscrowed: BN, sharesEscrowed: BN, tradeGroupId: string, orderId: string, universe: string, shareToken: string, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_orderType","type":"uint8"},{"name":"_amount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_creator","type":"address"},{"name":"_moneyEscrowed","type":"uint256"},{"name":"_sharesEscrowed","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"},{"name":"_orderId","type":"bytes32"},{"name":"_universe","type":"address"},{"name":"_shareToken","type":"address"}],"name":"logOrderCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        return await this.remoteCall(abi, [orderType, amount, price, creator, moneyEscrowed, sharesEscrowed, tradeGroupId, orderId, universe, shareToken], options.sender, options.gasPrice);
+    }
+
+    public logOrderCreated_ = async(orderType: BN, amount: BN, price: BN, creator: string, moneyEscrowed: BN, sharesEscrowed: BN, tradeGroupId: string, orderId: string, universe: string, shareToken: string, options?: { sender?: string }): Promise<boolean> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_orderType","type":"uint8"},{"name":"_amount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_creator","type":"address"},{"name":"_moneyEscrowed","type":"uint256"},{"name":"_sharesEscrowed","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"},{"name":"_orderId","type":"bytes32"},{"name":"_universe","type":"address"},{"name":"_shareToken","type":"address"}],"name":"logOrderCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const result = await this.localCall(abi, [orderType, amount, price, creator, moneyEscrowed, sharesEscrowed, tradeGroupId, orderId, universe, shareToken], options.sender);
+        return <boolean>result[0];
+    }
+
     public suicideFunds = async(target: string, tokens: Array<string>, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
         options = options || {};
         const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_tokens","type":"address[]"}],"name":"suicideFunds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -110,19 +123,6 @@ export class Augur extends Controlled {
         options = options || {};
         const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_target","type":"address"},{"name":"_amount","type":"uint256"}],"name":"logStakeTokenBurned","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         const result = await this.localCall(abi, [universe, target, amount], options.sender);
-        return <boolean>result[0];
-    }
-
-    public logOrderCreated = async(universe: string, shareToken: string, creator: string, orderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
-        options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_shareToken","type":"address"},{"name":"_creator","type":"address"},{"name":"_orderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"logOrderCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-        return await this.remoteCall(abi, [universe, shareToken, creator, orderId, tradeGroupId], options.sender, options.gasPrice);
-    }
-
-    public logOrderCreated_ = async(universe: string, shareToken: string, creator: string, orderId: string, tradeGroupId: string, options?: { sender?: string }): Promise<boolean> => {
-        options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_shareToken","type":"address"},{"name":"_creator","type":"address"},{"name":"_orderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"logOrderCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-        const result = await this.localCall(abi, [universe, shareToken, creator, orderId, tradeGroupId], options.sender);
         return <boolean>result[0];
     }
 
@@ -4139,6 +4139,13 @@ export class Cash extends Controlled {
         const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         const result = await this.localCall(abi, [to, value], options.sender);
         return <boolean>result[0];
+    }
+
+    public controllerLookupName_ = async( options?: { sender?: string }): Promise<string> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":true,"inputs":[],"name":"controllerLookupName","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
+        const result = await this.localCall(abi, [], options.sender);
+        return <string>result[0];
     }
 
     public getTypeName_ = async( options?: { sender?: string }): Promise<string> => {
