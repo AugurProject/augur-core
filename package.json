@@ -1,6 +1,6 @@
 {
   "name": "augur-core",
-  "version": "0.10.10",
+  "version": "0.10.11-0",
   "description": "Core augur contracts and deployment process",
   "author": "The Augur Developers <tam@augur.net>",
   "repository": "http://github.com/AugurProject/augur-core",
@@ -29,8 +29,6 @@
     "artifacts": "bash support/artifacts/run.sh",
     "docker:build": "docker build --cache-from augurproject/augur-core:latest --tag augurproject/augur-core:latest -f support/Dockerfile .",
     "docker:push": "docker push augurproject/augur-core:latest",
-
-
     "docker:run:shell": "docker run --rm -it --entrypoint=bash augurproject/augur-core:latest",
     "docker:run:test:unit": "docker run --rm --entrypoint=npm augurproject/augur-core:latest run test:unit",
     "docker:run:test:unit:all": "docker run --rm --entrypoint=npm augurproject/augur-core:latest run test:unit:all",
@@ -41,7 +39,6 @@
     "docker:run:deploy:ropsten": "npm run docker:run:deploy:net -- ropsten",
     "docker:run:deploy:foundation": "npm run docker:run:deploy:net -- foundation",
     "docker:run:deploy": "npm run docker:run:deploy:rinkeby",
-
     "docker:shell": "npm run docker:build && npm run docker:run:shell",
     "docker:test:unit": "npm run docker:build && npm run docker:run:test:unit",
     "docker:test:unit:all": "npm run docker:build && npm run docker:run:test:unit:all",
