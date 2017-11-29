@@ -8,9 +8,6 @@ from random import randint, random as randfloat
 from utils import bytesToLong, longTo32Bytes, bytesToHexString, fix
 from constants import BID, ASK, YES, NO
 
-pytestmark = mark.skipif(not getenv('INCLUDE_FUZZY_TESTS'), reason="take forever to run")
-
-
 # order fields
 ATTOSHARES = 0
 DISPLAY_PRICE = 1
