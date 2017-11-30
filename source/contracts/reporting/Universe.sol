@@ -420,10 +420,29 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return getOrCacheValidityBond() + getOrCacheTargetReporterGasCosts();
     }
 
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable onlyInGoodTimes returns (IMarket) {
+    function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, bytes32 _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
+        require(_description.length > 0);
         IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
-        IMarket _newMarket = _reportingWindow.createMarket.value(msg.value)(msg.sender, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _designatedReporterAddress);
-        controller.getAugur().logMarketCreated(this, _newMarket, msg.sender, msg.value, _topic, _extraInfo);
+        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getBinaryMarketNumTicks());
+        controller.getAugur().logMarketCreated(getOrCacheMarketCreationCost(), 0, 1, IMarket.MarketType.BINARY, _topic, _description, _extraInfo, this, _newMarket, msg.sender);
+        return _newMarket;
+    }
+
+    function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, uint8 _numOutcomes, bytes32 _topic, bytes32 _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
+        require(_description.length > 0);
+        IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
+        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, _numOutcomes, Reporting.getCategoricalMarketNumTicks(_numOutcomes));
+        controller.getAugur().logMarketCreated(getOrCacheMarketCreationCost(), 0, 1, IMarket.MarketType.CATEGORICAL, _topic, _description, _extraInfo, this, _newMarket, msg.sender);
+        return _newMarket;
+    }
+
+    function createScalarMarket(uint256 _endTime, int256 _minPrice, int256 _maxPrice, uint256 _normalizedTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, bytes32 _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
+        require(_description.length > 0);
+        require(_minPrice < _maxPrice);
+        IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
+        uint256 _numTicks = (uint256 (_maxPrice - _minPrice)).mul(_normalizedTicks);
+        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, _numTicks);
+        controller.getAugur().logMarketCreated(getOrCacheMarketCreationCost(), _minPrice, _maxPrice, IMarket.MarketType.SCALAR, _topic, _description, _extraInfo, this, _newMarket, msg.sender);
         return _newMarket;
     }
 

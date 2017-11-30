@@ -9,11 +9,11 @@ def test_one_market_one_correct_report(localFixture, universe, market):
     reputationToken = localFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
 
     # Proceed to the DESIGNATED REPORTING phase
-    proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
+    proceedToDesignatedReporting(localFixture, universe, market, [0,market.getNumTicks()])
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report
     initialRepBalance = reputationToken.balanceOf(tester.a0)
-    assert localFixture.designatedReport(market, [0,10**18], tester.k0)
+    assert localFixture.designatedReport(market, [0,market.getNumTicks()], tester.k0)
     # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
     assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getOrCacheDesignatedReportNoShowBond() - universe.getOrCacheDesignatedReportStake()
     initialREPBalance = reputationToken.balanceOf(tester.a0)
@@ -30,7 +30,7 @@ def test_one_market_one_correct_report(localFixture, universe, market):
     market.tryFinalize()
 
     # The designated reporter may redeem their stake tokens which were purchased to make the designated report
-    stakeToken = localFixture.getOrCreateStakeToken(market, [0, 10**18])
+    stakeToken = localFixture.getOrCreateStakeToken(market, [0, market.getNumTicks()])
     assert stakeToken.balanceOf(tester.a0) == expectedStakeTokenBalance
 
     expectedREPBalance = initialREPBalance
@@ -49,11 +49,11 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     reputationToken = localFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
 
     # Proceed to the DESIGNATED REPORTING phase
-    proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
+    proceedToDesignatedReporting(localFixture, universe, market, [0,market.getNumTicks()])
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report
     initialRepBalance = reputationToken.balanceOf(tester.a0)
-    assert localFixture.designatedReport(market, [0,10**18], tester.k0)
+    assert localFixture.designatedReport(market, [0,market.getNumTicks()], tester.k0)
     # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
     assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getOrCacheDesignatedReportNoShowBond() - universe.getOrCacheDesignatedReportStake()
     initialREPBalance = reputationToken.balanceOf(tester.a0)
@@ -62,9 +62,9 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     assert market.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
 
     # We'll do the same with the second market
-    proceedToDesignatedReporting(localFixture, universe, market2, [0,10**18])
+    proceedToDesignatedReporting(localFixture, universe, market2, [0,market.getNumTicks()])
     initialRepBalance = reputationToken.balanceOf(tester.a0)
-    assert localFixture.designatedReport(market2, [0,10**18], tester.k0)
+    assert localFixture.designatedReport(market2, [0,market.getNumTicks()], tester.k0)
     # The market owner gets back the no-show REP bond, which cancels out the amount used to pay for the required dispute tokens
     assert reputationToken.balanceOf(tester.a0) == initialRepBalance + universe.getOrCacheDesignatedReportNoShowBond() - universe.getOrCacheDesignatedReportStake()
     initialREPBalance = reputationToken.balanceOf(tester.a0)
@@ -79,7 +79,7 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     market.tryFinalize()
 
     # The market1 designated reporter may redeem their stake tokens which were purchased to make the designated report
-    stakeToken = localFixture.getOrCreateStakeToken(market, [0, 10**18])
+    stakeToken = localFixture.getOrCreateStakeToken(market, [0, market.getNumTicks()])
     assert stakeToken.balanceOf(tester.a0) == designatedReportStake
 
     expectedREPBalance = initialREPBalance
@@ -99,7 +99,7 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
 
     # If we redeem the second tester's tokens they'll get ALL of the fees on the reporting window now and their normal share of REP
     market2.tryFinalize()
-    stakeToken = localFixture.getOrCreateStakeToken(market2, [0, 10**18])
+    stakeToken = localFixture.getOrCreateStakeToken(market2, [0, market.getNumTicks()])
     assert stakeToken.balanceOf(tester.a0) == designatedReportStake
 
     initialREPBalance = reputationToken.balanceOf(tester.a0)
@@ -119,11 +119,11 @@ def test_stake_token_disavowal(disavowType, localFixture, universe, market):
     newMarket = localFixture.createReasonableBinaryMarket(universe, localFixture.contracts['Cash'])
 
     # We'll do a designated report in the new market based on the makeReport param used for the forking market
-    proceedToDesignatedReporting(localFixture, universe, newMarket, [0,10**18])
-    localFixture.designatedReport(newMarket, [0,10**18], tester.k0)
+    proceedToDesignatedReporting(localFixture, universe, newMarket, [0,market.getNumTicks()])
+    localFixture.designatedReport(newMarket, [0,market.getNumTicks()], tester.k0)
 
     # We proceed the standard market to the FORKING state
-    proceedToForking(localFixture, universe, market, True, 1, 2, 3, [0,10**18], [10**18,0], 2, [10**18,0], [0,10**18], [10**18,0])
+    proceedToForking(localFixture, universe, market, True, 1, 2, 3, [0,market.getNumTicks()], [market.getNumTicks(),0], 2, [market.getNumTicks(),0], [0,market.getNumTicks()], [market.getNumTicks(),0])
 
     # The market we created is now awaiting migration
     assert newMarket.getReportingState() == localFixture.contracts['Constants'].AWAITING_FORK_MIGRATION()
@@ -132,13 +132,13 @@ def test_stake_token_disavowal(disavowType, localFixture, universe, market):
     with raises(TransactionFailed, message="Migration cannot occur until the forking market is finalized"):
         newMarket.migrateThroughOneFork()
 
-    stakeToken = localFixture.getOrCreateStakeToken(newMarket, [0,10**18])
+    stakeToken = localFixture.getOrCreateStakeToken(newMarket, [0,market.getNumTicks()])
     reputationToken = localFixture.applySignature('ReputationToken', stakeToken.getReputationToken())
 
     if (disavowType == 0):
         assert newMarket.disavowTokens()
     elif (disavowType == 2):
-        finalizeForkingMarket(localFixture, universe, market, True, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,10**18], [10**18,0])
+        finalizeForkingMarket(localFixture, universe, market, True, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,market.getNumTicks()], [market.getNumTicks(),0])
         assert newMarket.migrateThroughOneFork()
 
     # Redeem some disavowed take tokens
@@ -159,7 +159,7 @@ def test_stake_token_redemption(localFixture, universe, market, numReports, numC
     reputationToken = localFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
 
     # Proceed to FIRST REPORTING
-    proceedToFirstReporting(localFixture, universe, market, False, 1, [0,10**18], [10**18,0])
+    proceedToFirstReporting(localFixture, universe, market, False, 1, [0,market.getNumTicks()], [market.getNumTicks(),0])
 
     noShowBond = universe.getOrCacheDesignatedReportNoShowBond()
 
@@ -169,8 +169,8 @@ def test_stake_token_redemption(localFixture, universe, market, numReports, numC
 
 def doReports(fixture, market, numReporters, numCorrect):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
-    stakeTokenWinner = fixture.getOrCreateStakeToken(market, [0,10**18])
-    stakeTokenLoser = fixture.getOrCreateStakeToken(market, [10**18,0])
+    stakeTokenWinner = fixture.getOrCreateStakeToken(market, [0,market.getNumTicks()])
+    stakeTokenLoser = fixture.getOrCreateStakeToken(market, [market.getNumTicks(),0])
 
     for i in range(0, numReporters):
         testerKey = fixture.testerKey[i]
@@ -187,7 +187,7 @@ def confirmPayouts(fixture, market, numCorrectReporters, noShowBond):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = fixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     universe = fixture.applySignature('Universe', market.getUniverse())
-    stakeToken = fixture.getOrCreateStakeToken(market, [0,10**18])
+    stakeToken = fixture.getOrCreateStakeToken(market, [0,market.getNumTicks()])
 
     for i in range(0, numCorrectReporters):
         testerAddress = fixture.testerAddress[i]

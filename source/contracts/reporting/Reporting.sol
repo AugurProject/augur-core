@@ -39,6 +39,8 @@ library Reporting {
     uint256 private constant FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR = 20; // 5% bonus to any REP migrated during a fork
     uint256 private constant FORK_REP_MIGRATION_VICTORY_DIVISOR = 2; // 50% of the REP supply in the forking universe has to migrate for a victory
 
+    uint256 private constant BINARY_MARKET_NUM_TICKS = 10000;
+
     function getDesignatedReportingDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DURATION_SECONDS; }
     function getDesignatedReportingDisputeDurationSeconds() internal pure returns (uint256) { return DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS; }
     function getReportingDurationSeconds() internal pure returns (uint256) { return REPORTING_DURATION_SECONDS; }
@@ -67,4 +69,17 @@ library Reporting {
     function getMinimumReportingFeeDivisor() internal pure returns (uint256) { return MINIMUM_REPORTING_FEE_DIVISOR; }
     function getDefaultReportingFeeDivisor() internal pure returns (uint256) { return DEFAULT_REPORTING_FEE_DIVISOR; }
     function getInitialREPSupply() internal pure returns (uint256) { return INITIAL_REP_SUPPLY; }
+    function getBinaryMarketNumTicks() internal pure returns (uint256) { return BINARY_MARKET_NUM_TICKS; }
+
+    function getCategoricalMarketNumTicks(uint8 _numOutcomes) internal pure returns (uint256) {
+        require(_numOutcomes >= 2 && _numOutcomes <= 8);
+
+        if (_numOutcomes == 2) {return 10000;}
+        if (_numOutcomes == 3) {return 10002;}
+        if (_numOutcomes == 4) {return 10000;}
+        if (_numOutcomes == 5) {return 10000;}
+        if (_numOutcomes == 6) {return 10002;}
+        if (_numOutcomes == 7) {return 10003;}
+        if (_numOutcomes == 8) {return 10000;}
+    }
 }

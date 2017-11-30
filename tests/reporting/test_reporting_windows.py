@@ -563,7 +563,6 @@ def populatedReportingWindow(localFixture, chain, mockUniverse, mockMarket, mock
 
     timestamp = chain.head_state.timestamp
     endTimeValue = timestamp + 10
-    numOutcomesValue = 2
     numTicks = 1 * 10**6 * 10**18
     feePerEthInWeiValue = 10 ** 18
     designatedReporterAddressValue = tester.a2
@@ -576,5 +575,5 @@ def populatedReportingWindow(localFixture, chain, mockUniverse, mockMarket, mock
     mockUniverse.setReputationToken(mockReputationToken.address)
     assert reportingWindow.initialize(mockUniverse.address, 2)
     mockUniverse.setReportingWindowByMarketEndTime(reportingWindow.address)
-    mockUniverse.createMarket(endTimeValue, numOutcomesValue, numTicks, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "", "")
+    mockUniverse.createBinaryMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "", "description", "")
     return reportingWindow

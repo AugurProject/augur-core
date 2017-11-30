@@ -291,8 +291,6 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
 def test_universe_create_market(localFixture, chain, populatedUniverse, mockMarket, mockCash, mockReputationToken, mockParticipationToken, mockAugur, mockReportingWindowFactory, mockReportingWindow):
     timestamp = chain.head_state.timestamp
     endTimeValue = timestamp + 10
-    numOutcomesValue = 2
-    numTicks = 1 * 10**6 * 10**18
     feePerEthInWeiValue = 10 ** 18
     designatedReporterAddressValue = tester.a2
     mockReportingWindow.setCreateMarket(mockMarket.address)
@@ -306,7 +304,7 @@ def test_universe_create_market(localFixture, chain, populatedUniverse, mockMark
     assert populatedUniverse.getOrCreatePreviousReportingWindow() == mockReportingWindow.address
 
     assert mockAugur.logMarketCreatedCalled() == False
-    newMarket = populatedUniverse.createMarket(endTimeValue, numOutcomesValue, numTicks, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "info")
+    newMarket = populatedUniverse.createBinaryMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "description", "info")
     assert mockAugur.logMarketCreatedCalled() == True
     assert newMarket == mockMarket.address
 

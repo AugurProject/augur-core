@@ -14,16 +14,16 @@ def test_publicFillOrder_bid(contractsFixture, cash, market, universe):
 
     initialMakerETH = contractsFixture.chain.head_state.get_balance(tester.a1)
     initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
-    creatorCost = fix('2', '0.6')
-    fillerCost = fix('2', '0.4')
+    creatorCost = fix('2', '6000')
+    fillerCost = fix('2', '4000')
 
     # create order
-    orderID = createOrder.publicCreateOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=creatorCost)
+    orderID = createOrder.publicCreateOrder(BID, fix(2), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=creatorCost)
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
+    fillOrderID = fillOrder.publicFillOrder(orderID, fix(2), tradeGroupID, sender = tester.k2, value=fillerCost)
 
     assert len(logs) == 5
 
@@ -58,16 +58,16 @@ def test_publicFillOrder_ask(contractsFixture, cash, market, universe):
 
     initialMakerETH = contractsFixture.chain.head_state.get_balance(tester.a1)
     initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
-    creatorCost = fix('2', '0.4')
-    fillerCost = fix('2', '0.6')
+    creatorCost = fix('2', '4000')
+    fillerCost = fix('2', '6000')
 
     # create order
-    orderID = createOrder.publicCreateOrder(ASK, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=creatorCost)
+    orderID = createOrder.publicCreateOrder(ASK, fix(2), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=creatorCost)
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
+    fillOrderID = fillOrder.publicFillOrder(orderID, fix(2), tradeGroupID, sender = tester.k2, value=fillerCost)
 
     assert len(logs) == 5
 
@@ -104,16 +104,16 @@ def test_publicFillOrder_bid_scalar(contractsFixture, cash, scalarMarket, univer
 
     initialMakerETH = contractsFixture.chain.head_state.get_balance(tester.a1)
     initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
-    creatorCost = fix('2', '0.6')
-    fillerCost = fix('2', '39.4')
+    creatorCost = fix('2', '6000')
+    fillerCost = fix('2', '394000')
 
     # create order
-    orderID = createOrder.publicCreateOrder(BID, 2, fix('0.6'), market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=creatorCost)
+    orderID = createOrder.publicCreateOrder(BID, fix(2), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=creatorCost)
 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = fillOrder.publicFillOrder(orderID, 2, tradeGroupID, sender = tester.k2, value=fillerCost)
+    fillOrderID = fillOrder.publicFillOrder(orderID, fix(2), tradeGroupID, sender = tester.k2, value=fillerCost)
 
     assert len(logs) == 5
 

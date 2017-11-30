@@ -66,9 +66,9 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture, unive
     reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     # We'll have a market go through basic reporting and then make its reporting window over.
-    proceedToFirstReporting(reportingFixture, universe, market, False, 1, [0,10**18], [10**18,0])
+    proceedToFirstReporting(reportingFixture, universe, market, False, 1, [0,market.getNumTicks()], [market.getNumTicks(),0])
 
-    stakeTokenYes = reportingFixture.getOrCreateStakeToken(market, [0,10**18])
+    stakeTokenYes = reportingFixture.getOrCreateStakeToken(market, [0,market.getNumTicks()])
     for i in range(0,numReports):
         assert stakeTokenYes.buy(1, sender=getattr(tester, 'k%i' % i), gasprice=gasPrice)
 
