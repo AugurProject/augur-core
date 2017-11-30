@@ -132,7 +132,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         IStakeToken _shadyStakeToken = IStakeToken(msg.sender);
         require(isContainerForStakeToken(_shadyStakeToken));
         IStakeToken _stakeToken = _shadyStakeToken;
-        designatedReportReceivedTime = block.timestamp;
+        designatedReportReceivedTime = controller.getTimestamp();
         tentativeWinningPayoutDistributionHash = _stakeToken.getPayoutDistributionHash();
         designatedReportPayoutHash = tentativeWinningPayoutDistributionHash;
         reportingWindow.updateMarketPhase();
@@ -269,7 +269,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         }
 
         finalPayoutDistributionHash = tentativeWinningPayoutDistributionHash;
-        finalizationTime = block.timestamp;
+        finalizationTime = controller.getTimestamp();
         transferIncorrectDisputeBondsToWinningStakeToken();
         reportingWindow.updateMarketPhase();
         controller.getAugur().logMarketFinalized(getUniverse(), this);
@@ -317,7 +317,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         bytes32 _winningForkPayoutDistributionHash = _currentUniverse.getForkingMarket().getFinalPayoutDistributionHash();
         IUniverse _destinationUniverse = _currentUniverse.getOrCreateChildUniverse(_winningForkPayoutDistributionHash);
         // This will put us in the designated dispute phase
-        endTime = block.timestamp - Reporting.getDesignatedReportingDurationSeconds();
+        endTime = controller.getTimestamp() - Reporting.getDesignatedReportingDurationSeconds();
         totalStake = 0;
         IReportingWindow _newReportingWindow = _destinationUniverse.getOrCreateReportingWindowByMarketEndTime(endTime);
         _newReportingWindow.migrateMarketInFromNibling();
@@ -329,7 +329,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         lastReportersDisputeBond = IDisputeBond(0);
         tentativeWinningPayoutDistributionHash = designatedReportPayoutHash;
         if (designatedReportReceivedTime != 0) {
-            designatedReportReceivedTime = block.timestamp - 1;
+            designatedReportReceivedTime = controller.getTimestamp() - 1;
         }
         stakeTokens = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         return true;
@@ -603,12 +603,12 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         }
 
         // Before trading in the market is finished
-        if (block.timestamp < endTime) {
+        if (controller.getTimestamp() < endTime) {
             return IMarket.ReportingState.PRE_REPORTING;
         }
 
         // Designated reporting period has not passed yet
-        if (block.timestamp < getDesignatedReportDueTimestamp()) {
+        if (controller.getTimestamp() < getDesignatedReportDueTimestamp()) {
             return IMarket.ReportingState.DESIGNATED_REPORTING;
         }
 
@@ -617,7 +617,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
         // If we have a designated report that hasn't been disputed it is either in the dispute window or we can finalize the market
         if (getDesignatedReportReceivedTime() != 0 && !_designatedReportDisputed) {
-            bool _beforeDesignatedDisputeDue = block.timestamp < getDesignatedReportDisputeDueTimestamp();
+            bool _beforeDesignatedDisputeDue = controller.getTimestamp() < getDesignatedReportDisputeDueTimestamp();
             return _beforeDesignatedDisputeDue ? IMarket.ReportingState.DESIGNATED_DISPUTE : IMarket.ReportingState.AWAITING_FINALIZATION;
         }
 
@@ -629,7 +629,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             return IMarket.ReportingState.FORKING;
         }
 
-        bool _reportingWindowOver = block.timestamp > reportingWindow.getEndTime();
+        bool _reportingWindowOver = controller.getTimestamp() > reportingWindow.getEndTime();
 
         if (_reportingWindowOver) {
             if (tentativeWinningPayoutDistributionHash == bytes32(0)) {
@@ -669,7 +669,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             return 0;
         }
         IUniverse _universe = reportingWindow.getUniverse();
-        if (_winningDestination.totalSupply() < _universe.getForkReputationGoal() && block.timestamp < _universe.getForkEndTime()) {
+        if (_winningDestination.totalSupply() < _universe.getForkReputationGoal() && controller.getTimestamp() < _universe.getForkEndTime()) {
             return 0;
         }
         return _winningDestination.getUniverse().getParentPayoutDistributionHash();

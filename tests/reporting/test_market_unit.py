@@ -9,7 +9,7 @@ numTicks = 10 ** 10
 def test_market_creation(localFixture, mockUniverse, mockReportingWindow, mockCash, chain, constants, mockMarket, mockReputationToken, mockShareToken, mockShareTokenFactory):
     fee = 1
     oneEther = 10 ** 18
-    endTime = chain.head_state.timestamp + constants.DESIGNATED_REPORTING_DURATION_SECONDS()
+    endTime = localFixture.contracts["Time"].getTimestamp() + constants.DESIGNATED_REPORTING_DURATION_SECONDS()
     market = localFixture.upload('../source/contracts/reporting/Market.sol', 'market')
     market.setController(localFixture.contracts["Controller"].address)
     with raises(TransactionFailed, message="outcomes has to be greater than 1"):
@@ -70,13 +70,13 @@ def test_market_designated_report(localFixture, constants, mockUniverse, chain, 
     with raises(TransactionFailed, message="market is not in designated reporting state"):
         initializedMarket.designatedReport()
 
-    chain.head_state.timestamp = initializedMarket.getDesignatedReportDueTimestamp() - 1
+    localFixture.contracts["Time"].setTimestamp(initializedMarket.getDesignatedReportDueTimestamp() - 1)
     with raises(TransactionFailed, message="designated report method needs to be called from StakeToken"):
         initializedMarket.designatedReport()
 
     with raises(TransactionFailed, message="StakeToken needs to be contained by market"):
         mockStakeToken.callMarketDesignatedReport(initializedMarket.address)
-    
+
     payoutDesignatedNumerators = [numTicks, 0, 0, 0, 0]
     push_to_designated_dispute_state(localFixture, mockUniverse, chain, initializedMarket, mockStakeToken, payoutDesignatedNumerators, mockStakeTokenFactory, mockReportingWindow, mockReputationToken, constants)
 
@@ -156,8 +156,8 @@ def test_market_dispute_report_with_no_attoeth(localFixture, constants, initiali
     beforeAmount = initializedMarket.getExtraDisputeBondRemainingToBePaidOut()
 
     # might as well test first dispute
-    mockReportingWindow.setEndTime(chain.head_state.timestamp + constants.DESIGNATED_REPORTING_DURATION_SECONDS())
-    chain.head_state.timestamp = initializedMarket.getDesignatedReportDisputeDueTimestamp() - 1
+    mockReportingWindow.setEndTime(localFixture.contracts["Time"].getTimestamp() + constants.DESIGNATED_REPORTING_DURATION_SECONDS())
+    localFixture.contracts["Time"].setTimestamp(initializedMarket.getDesignatedReportDisputeDueTimestamp() - 1)
 
     assert initializedMarket.getTentativeWinningPayoutDistributionHash() == payoutDesignatedHash
     assert initializedMarket.getBestGuessSecondPlaceTentativeWinningPayoutDistributionHash() == stringToBytes("")
@@ -281,7 +281,7 @@ def test_market_dispute_last_reporter(localFixture, initializedMarket, constants
     with raises(TransactionFailed, message="market needs to be in last dispute state"):
         initializedMarket.disputeLastReporters()
 
-    chain.head_state.timestamp = mockNextReportingWindow.getEndTime() - 1
+    localFixture.contracts["Time"].setTimestamp(mockNextReportingWindow.getEndTime() - 1)
 
     mockLastDisputeBond = localFixture.upload('solidity_test_helpers/MockDisputeBond.sol', 'mockLastDisputeBond');
     mockDisputeBondFactory.setCreateDisputeBond(mockLastDisputeBond.address)
@@ -329,7 +329,7 @@ def test_market_try_finalize_valid(localFixture, chain, initializedMarket, const
     mockForkReportingWindow = set_mock_reporting_window(localFixture, initializedMarket, mockUniverse, mockReputationToken, endTime)
     push_to_last_dispute(localFixture, initializedMarket, constants, mockAugur, mockReportingWindow, mockDisputeBondFactory, mockReputationToken, mockDisputeBond, chain, mockUniverse, mockStakeToken, mockStakeTokenFactory, mockNextReportingWindow, mockForkReportingWindow)
     assert initializedMarket.tryFinalize() == False
-    chain.head_state.timestamp = mockForkReportingWindow.getEndTime() + 1
+    localFixture.contracts["Time"].setTimestamp(mockForkReportingWindow.getEndTime() + 1)
     assert initializedMarket.getReportingState() == constants.AWAITING_FINALIZATION()
     tentativeWinning = initializedMarket.getTentativeWinningPayoutDistributionHash()
     ownerBalance = chain.head_state.get_balance(tester.a1)
@@ -356,7 +356,7 @@ def test_market_try_finalize_not_valid(localFixture, chain, initializedMarket, c
     endTime = mockNextReportingWindow.getEndTime() + constants.DESIGNATED_REPORTING_DURATION_SECONDS()
     mockForkReportingWindow = set_mock_reporting_window(localFixture, initializedMarket, mockUniverse, mockReputationToken, endTime)
     push_to_last_dispute(localFixture, initializedMarket, constants, mockAugur, mockReportingWindow, mockDisputeBondFactory, mockReputationToken, mockDisputeBond, chain, mockUniverse, mockStakeToken, mockStakeTokenFactory, mockNextReportingWindow, mockForkReportingWindow)
-    chain.head_state.timestamp = mockForkReportingWindow.getEndTime() + 1
+    localFixture.contracts["Time"].setTimestamp(mockForkReportingWindow.getEndTime() + 1)
     assert initializedMarket.getReportingState() == constants.AWAITING_FINALIZATION()
     mockReputationToken.reset()
 
@@ -373,13 +373,13 @@ def test_market_try_finalize_forking(localFixture, chain, initializedMarket, con
     endTime = mockNextReportingWindow.getEndTime() + constants.DESIGNATED_REPORTING_DURATION_SECONDS()
     mockForkReportingWindow = set_mock_reporting_window(localFixture, initializedMarket, mockUniverse, mockReputationToken, endTime)
     push_to_last_dispute(localFixture, initializedMarket, constants, mockAugur, mockReportingWindow, mockDisputeBondFactory, mockReputationToken, mockDisputeBond, chain, mockUniverse, mockStakeToken, mockStakeTokenFactory, mockNextReportingWindow, mockForkReportingWindow)
-    chain.head_state.timestamp = mockForkReportingWindow.getEndTime() - 1
+    localFixture.contracts["Time"].setTimestamp(mockForkReportingWindow.getEndTime() - 1)
     mockReputationToken.reset()
 
     mockUniverse.setForkingMarket(initializedMarket.address)
     mockReputationToken.setTopMigrationDestination(longToHexString(0))
 
-    mockUniverse.setForkEndTime(chain.head_state.timestamp + 1)
+    mockUniverse.setForkEndTime(localFixture.contracts["Time"].getTimestamp() + 1)
     mockUniverse.setForkReputationGoal(55)
     mockWinningReputationToken = localFixture.upload('solidity_test_helpers/MockReputationToken.sol', 'mockWinningReputationToken');
 
@@ -391,7 +391,7 @@ def test_market_try_finalize_forking(localFixture, chain, initializedMarket, con
     mockDisputeStakeToken = set_mock_stake_token_value(localFixture, initializedMarket, [0, 0, 0, numTicks/2, numTicks/2], mockStakeTokenFactory, 100)
     payoutStakeTokenHashTarget = mockDisputeStakeToken.getPayoutDistributionHash()
 
-    mockUniverse.setForkEndTime(chain.head_state.timestamp - 1)
+    mockUniverse.setForkEndTime(localFixture.contracts["Time"].getTimestamp() - 1)
     mockUniverse.setForkReputationGoal(5500)
     mockUniverse.setParentPayoutDistributionHash(stringToBytes(payoutStakeTokenHashTarget))
     mockWinningReputationToken.setTotalSupply(4000)
@@ -405,7 +405,7 @@ def test_market_migrate_due_to_no_reports(localFixture, initializedMarket, chain
     with raises(TransactionFailed, message="reporting state needs to be AWAITING_NO_REPORT_MIGRATION"):
         initializedMarket.migrateDueToNoReports()
 
-    chain.head_state.timestamp = mockNextReportingWindow.getEndTime()
+    localFixture.contracts["Time"].setTimestamp(mockNextReportingWindow.getEndTime())
     assert initializedMarket.migrateDueToNoReports() == True
 
     mockUniverse.setNextReportingWindow(mockNextReportingWindow.address)
@@ -448,7 +448,7 @@ def test_market_disavow_tokens(localFixture, initializedMarket, mockUniverse, mo
     mockReportingWindow.setIsForkingMarketFinalized(False)
     # test disavow is a noop when there are no stake tokens
     assert initializedMarket.disavowTokens() == True
-    
+
     mockStakeToken = set_mock_stake_token_value(localFixture, initializedMarket, stakePayNumeration, mockStakeTokenFactory, 10)
     assert initializedMarket.isContainerForStakeToken(mockStakeToken.address) == True
     assert initializedMarket.disavowTokens() == True
@@ -460,7 +460,7 @@ def test_market_first_reporter_comp_check(localFixture, initializedMarket, chain
     mockReputationToken.setBalanceOfValueFor(initializedMarket.address, 1000)
     with raises(TransactionFailed, message="sender must be a stake token"):
         initializedMarket.firstReporterCompensationCheck(tester.a1)
-    
+
     mockStakeToken2 = set_mock_stake_token_value(localFixture, initializedMarket, stakePayNumeration, mockStakeTokenFactory, 10)
     assert initializedMarket.isContainerForStakeToken(mockStakeToken2.address) == True
     assert initializedMarket.getTentativeWinningPayoutDistributionHash() == stringToBytes("")
@@ -476,14 +476,14 @@ def test_market_first_reporter_comp_check_zero(localFixture, initializedMarket, 
     assert initializedMarket.getReportingState() == constants.DESIGNATED_DISPUTE()
     assert mockStakeToken.callFirstReporterCompensationCheck(initializedMarket.address, tester.a1) == 0
 
-    chain.head_state.timestamp = initializedMarket.getDesignatedReportDueTimestamp() - 1
+    localFixture.contracts["Time"].setTimestamp(initializedMarket.getDesignatedReportDueTimestamp() - 1)
     mockStakeToken2 = set_mock_stake_token_value(localFixture, initializedMarket, payoutDesignatedNumerators, mockStakeTokenFactory, 10)
     assert initializedMarket.getReportingState() == constants.DESIGNATED_REPORTING()
     assert initializedMarket.isContainerForStakeToken(mockStakeToken2.address) == True
     assert mockStakeToken2.callFirstReporterCompensationCheck(initializedMarket.address, tester.a1) == 0
 
 def test_market_increase_total_stake(localFixture, initializedMarket, mockReportingWindow, mockStakeTokenFactory):
-    payoutNumerators = [0,0,numTicks,0,0]    
+    payoutNumerators = [0,0,numTicks,0,0]
     mockStakeToken2 = set_mock_stake_token_value(localFixture, initializedMarket, payoutNumerators, mockStakeTokenFactory, 10)
     supply = initializedMarket.getTotalStake()
     mockStakeToken2.callIncreaseTotalStake(initializedMarket.address, 100)
@@ -492,7 +492,7 @@ def test_market_increase_total_stake(localFixture, initializedMarket, mockReport
 
 def test_market_approve_spenders(localFixture, initializedMarket, mockCash, mockShareTokenFactory):
     approvalAmount = 2**256-1;
-    # approveSpender was called as part of market initialization 
+    # approveSpender was called as part of market initialization
     initializedMarket.approveSpenders()
     cancelOrder = localFixture.contracts['CancelOrder']
     assert mockCash.getApproveValueFor(cancelOrder.address) == approvalAmount
@@ -529,7 +529,7 @@ def test_market_decrease_extra_dispute_bond_remaining(localFixture, mockUniverse
 def push_to_last_dispute(localFixture, initializedMarket, constants, mockAugur, mockReportingWindow, mockDisputeBondFactory, mockReputationToken, mockDisputeBond, chain, mockUniverse, mockStakeToken, mockStakeTokenFactory, mockNextReportingWindow, mockForkReportingWindow):
     push_to_designated_dispute_state(localFixture, mockUniverse, chain, initializedMarket, mockStakeToken, [0, numTicks, 0, 0, 0], mockStakeTokenFactory, mockReportingWindow, mockReputationToken, constants)
     push_first_dispute_last_reporting(localFixture, chain, mockReputationToken, initializedMarket, mockStakeTokenFactory, mockReportingWindow, mockUniverse, constants, mockDisputeBond, mockDisputeBondFactory, mockNextReportingWindow)
-    chain.head_state.timestamp = mockNextReportingWindow.getEndTime() - 1
+    localFixture.contracts["Time"].setTimestamp(mockNextReportingWindow.getEndTime() - 1)
 
     mockLastDisputeBond = localFixture.upload('solidity_test_helpers/MockDisputeBond.sol', 'mockLastDisputeBond');
     mockDisputeBondFactory.setCreateDisputeBond(mockLastDisputeBond.address)
@@ -569,8 +569,8 @@ def set_mock_reporting_window(localFixture, initializedMarket, mockUniverse, moc
     return mockReportingWindowCreated
 
 def push_first_dispute_last_reporting(localFixture, chain, mockReputationToken, initializedMarket, mockStakeTokenFactory, mockReportingWindow, mockUniverse, constants, mockDisputeBond, mockDisputeBondFactory, mockNextReportingWindow):
-    mockReportingWindow.setEndTime(chain.head_state.timestamp + constants.DESIGNATED_REPORTING_DURATION_SECONDS())
-    chain.head_state.timestamp = initializedMarket.getDesignatedReportDisputeDueTimestamp() - 1
+    mockReportingWindow.setEndTime(localFixture.contracts["Time"].getTimestamp() + constants.DESIGNATED_REPORTING_DURATION_SECONDS())
+    localFixture.contracts["Time"].setTimestamp(initializedMarket.getDesignatedReportDisputeDueTimestamp() - 1)
 
     mockDisputeStakeToken = set_mock_stake_token_value(localFixture, initializedMarket, [0, 0, 0, numTicks, 0], mockStakeTokenFactory, 10)
 
@@ -593,11 +593,11 @@ def push_first_dispute_last_reporting(localFixture, chain, mockReputationToken, 
     # execute disputeFirstReporters on market
     assert initializedMarket.disputeFirstReporters([0, 0, 0, 0, numTicks], 50, False, sender=tester.k4)
     assert initializedMarket.getReportingWindow() == mockNextReportingWindow.address
-    chain.head_state.timestamp = mockNextReportingWindow.getEndTime() - 1
+    localFixture.contracts["Time"].setTimestamp(mockNextReportingWindow.getEndTime() - 1)
     assert initializedMarket.getReportingState() == constants.LAST_REPORTING()
 
 def push_to_designated_dispute_state(localFixture, mockUniverse, chain, initializedMarket, mockStakeToken, payoutDesignatedNumerators, mockStakeTokenFactory, mockReportingWindow, mockReputationToken, constants):
-    chain.head_state.timestamp = initializedMarket.getDesignatedReportDueTimestamp() - 1
+    localFixture.contracts["Time"].setTimestamp(initializedMarket.getDesignatedReportDueTimestamp() - 1)
     payoutDesignatedHashValue = initializedMarket.derivePayoutDistributionHash(payoutDesignatedNumerators, False)
     mockStakeToken.setPayoutDistributionHash(payoutDesignatedHashValue)
     mockStakeTokenFactory.setStakeToken(payoutDesignatedHashValue, mockStakeToken.address)
@@ -613,7 +613,7 @@ def push_to_designated_dispute_state(localFixture, mockUniverse, chain, initiali
     ownerBalance = chain.head_state.get_balance(tester.a1)
 
     assert mockStakeToken.callMarketDesignatedReport(initializedMarket.address)
-    assert initializedMarket.getDesignatedReportReceivedTime() == chain.head_state.timestamp
+    assert initializedMarket.getDesignatedReportReceivedTime() == localFixture.contracts["Time"].getTimestamp()
     assert initializedMarket.getTentativeWinningPayoutDistributionHash() == mockStakeToken.getPayoutDistributionHash()
     assert mockReportingWindow.getUpdateMarketPhaseCalled() == True
     assert mockReportingWindow.getNoteDesignatedReport() == True
@@ -730,7 +730,7 @@ def mockDisputeBondFactory(localFixture):
 def initializedMarket(localFixture, mockReportingWindow, mockUniverse, mockReputationToken, chain, constants, mockCash, mockNextReportingWindow):
     market = localFixture.upload('../source/contracts/reporting/Market.sol', 'market')
     contractMap = localFixture.upload('../source/contracts/libraries/collections/Map.sol', 'Map')
-    endTime = chain.head_state.timestamp + constants.DESIGNATED_REPORTING_DURATION_SECONDS()
+    endTime = localFixture.contracts["Time"].getTimestamp() + constants.DESIGNATED_REPORTING_DURATION_SECONDS()
     market.setController(localFixture.contracts["Controller"].address)
 
     mockUniverse.setForkingMarket(longToHexString(0))
@@ -739,7 +739,7 @@ def initializedMarket(localFixture, mockReportingWindow, mockUniverse, mockReput
     mockUniverse.setTargetReporterGasCosts(15)
     mockUniverse.setValidityBond(12)
     mockUniverse.setNextReportingWindow(mockNextReportingWindow.address)
-    mockReportingWindow.setEndTime(chain.head_state.timestamp + constants.DESIGNATED_REPORTING_DURATION_SECONDS())
+    mockReportingWindow.setEndTime(localFixture.contracts["Time"].getTimestamp() + constants.DESIGNATED_REPORTING_DURATION_SECONDS())
     mockNextReportingWindow.setEndTime(mockReportingWindow.getEndTime() + constants.DESIGNATED_REPORTING_DURATION_SECONDS())
     assert market.initialize(mockReportingWindow.address, endTime, 5, numTicks, 16, mockCash.address, tester.a1, tester.a2, value=100)
     return market

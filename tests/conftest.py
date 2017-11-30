@@ -195,18 +195,18 @@ class ContractsFixture:
             testers[i] = getattr(tester, ch + "%d" % i)
         return testers
 
-    def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
+    def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[], force = False):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
-        contract = self.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs)
+        contract = self.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs, force)
         if not contract: return None
         self.contracts['Controller'].registerContract(lookupKey.ljust(32, '\x00'), contract.address, garbageBytes20, garbageBytes32)
         return(contract)
 
-    def upload(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
+    def upload(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[], force = False):
         resolvedPath = resolveRelativePath(relativeFilePath)
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(resolvedPath))[0]
         signatureKey = signatureKey if signatureKey else lookupKey
-        if lookupKey in self.contracts:
+        if lookupKey in self.contracts and not force:
             return(self.contracts[lookupKey])
         compiledCode = ContractsFixture.getCompiledCode(resolvedPath)
         # abstract contracts have a 0-length array for bytecode
@@ -262,12 +262,15 @@ class ContractsFixture:
                 extension = path.splitext(filename)[1]
                 if extension != '.sol': continue
                 if name == 'controller': continue
+                if name == 'Time': continue # In testing and development we swap the Time library for a ControlledTime version which lets us manage block timestamp
                 contractsToDelegate = ['Orders', 'TradingEscapeHatch', 'Cash']
                 if name in contractsToDelegate:
                     delegationTargetName = "".join([name, "Target"])
                     self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
                     self.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", name, "delegator", constructorArgs=[self.contracts['Controller'].address, delegationTargetName.ljust(32, '\x00')])
                     self.contracts[name] = self.applySignature(name, self.contracts[name].address)
+                elif name == "TimeControlled":
+                    self.uploadAndAddToController(path.join(directory, filename), lookupKey = "Time", signatureKey = "TimeControlled")
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 
@@ -293,7 +296,7 @@ class ContractsFixture:
             self.contracts['Controller'].addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Augur','CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimTradingProceeds','OrdersFetcher']
+        contractsToInitialize = ['Augur','CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimTradingProceeds','OrdersFetcher', 'Time']
         for contractName in contractsToInitialize:
             if getattr(self.contracts[contractName], "setController", None):
                 self.contracts[contractName].setController(self.contracts['Controller'].address)

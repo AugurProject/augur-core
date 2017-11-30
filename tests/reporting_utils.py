@@ -27,7 +27,7 @@ def proceedToDesignatedReporting(testFixture, universe, market, reportOutcomes, 
 
     # Fast forward to the reporting phase time
     reportingWindow = testFixture.applySignature('ReportingWindow', universe.getOrCreateNextReportingWindow())
-    testFixture.chain.head_state.timestamp = market.getEndTime() + 1
+    testFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
 
     # This will cause us to be in the DESIGNATED REPORTING phase
     assert market.getReportingState() == testFixture.contracts['Constants'].DESIGNATED_REPORTING()
@@ -55,7 +55,7 @@ def proceedToFirstReporting(testFixture, universe, market, makeReport, disputer,
         assert logs[3]['market'] == market.address
 
     else:
-        testFixture.chain.head_state.timestamp = market.getEndTime() + testFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS() + 1
+        testFixture.contracts["Time"].setTimestamp(market.getEndTime() + testFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS() + 1)
 
     # We're in the FIRST REPORTING phase now
     assert market.getReportingState() == testFixture.contracts['Constants'].FIRST_REPORTING()
@@ -75,7 +75,7 @@ def proceedToLastReporting(testFixture, universe, market, makeReport, designated
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == stakeToken.getPayoutDistributionHash()
 
-    testFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    testFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
 
     assert market.getReportingState() == testFixture.contracts['Constants'].FIRST_DISPUTE()
 
@@ -117,7 +117,7 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
     assert tentativeWinner == stakeTokenNo.getPayoutDistributionHash()
 
     # To progress into the LAST DISPUTE phase we move time forward
-    testFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    testFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
     assert market.getReportingState() == testFixture.contracts['Constants'].LAST_DISPUTE()
 
     logs = []
@@ -184,7 +184,7 @@ def finalizeForkingMarket(reportingFixture, universe, market, finalizeByMigratio
         winningTokenAddress = stakeTokenNo.address
     else:
         # Time marches on past the fork end time
-        reportingFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1
+        reportingFixture.contracts["Time"].setTimestamp(universe.getForkEndTime() + 1)
 
     # We can finalize the market now
     assert market.tryFinalize()

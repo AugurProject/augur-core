@@ -24,7 +24,7 @@ def test_one_market_one_correct_report(localFixture, universe, market):
     expectedStakeTokenBalance = universe.getOrCacheDesignatedReportStake()
 
     # Time passes until the end of the reporting window
-    localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
 
     # Finalize the market
     market.tryFinalize()
@@ -73,7 +73,7 @@ def test_two_markets_two_correct_reports_one_with_no_fees(localFixture, universe
     designatedReportStake = universe.getOrCacheDesignatedReportStake()
 
     # Time passes until the end of the reporting window
-    localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
 
     # Finalize the first market
     market.tryFinalize()
@@ -180,7 +180,7 @@ def doReports(fixture, market, numReporters, numCorrect):
             stakeTokenLoser.buy(1, sender=testerKey)
         numCorrect -= 1
 
-    fixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    fixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
     assert market.tryFinalize()
 
 def confirmPayouts(fixture, market, numCorrectReporters, noShowBond):

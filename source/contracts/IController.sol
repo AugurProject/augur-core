@@ -10,4 +10,5 @@ contract IController {
     function stopInEmergency() public view returns(bool);
     function onlyInEmergency() public view returns(bool);
     function getAugur() public view returns (Augur);
+    function getTimestamp() public view returns (uint256);
 }

@@ -73,7 +73,7 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture, unive
         assert stakeTokenYes.buy(1, sender=getattr(tester, 'k%i' % i), gasprice=gasPrice)
 
     # Now we'll skip ahead in time and finalzie the market
-    reportingFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    reportingFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
     assert market.tryFinalize()
 
     actualAvgGasPrice = reportingWindow.getAvgReportingGasPrice()

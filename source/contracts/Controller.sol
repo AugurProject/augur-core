@@ -12,6 +12,7 @@ import 'IController.sol';
 import 'IControlled.sol';
 import 'libraries/token/ERC20Basic.sol';
 import 'libraries/Extractable.sol';
+import 'ITime.sol';
 
 
 contract Controller is IController {
@@ -177,5 +178,9 @@ contract Controller is IController {
 
     function getAugur() public view returns (Augur) {
         return Augur(lookup("Augur"));
+    }
+
+    function getTimestamp() public view returns (uint256) {
+        return ITime(lookup("Time")).getTimestamp();
     }
 }

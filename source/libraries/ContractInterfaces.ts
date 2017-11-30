@@ -523,6 +523,13 @@ export class Controller extends Contract {
         return <Array<string>>result;
     }
 
+    public getTimestamp_ = async( options?: { sender?: string }): Promise<BN> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getTimestamp","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+        const result = await this.localCall(abi, [], options.sender);
+        return <BN>result[0];
+    }
+
     public stopInEmergency_ = async( options?: { sender?: string }): Promise<boolean> => {
         options = options || {};
         const abi: AbiFunction = {"constant":true,"inputs":[],"name":"stopInEmergency","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};

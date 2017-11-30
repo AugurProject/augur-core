@@ -5,7 +5,7 @@ from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDel
 
 def test_token_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
     # We'll progress past the designated dispute phase and finalize all the markets
-    localFixture.chain.head_state.timestamp = market.getEndTime() + localFixture.contracts["Constants"].DESIGNATED_REPORTING_DURATION_SECONDS() + 1
+    localFixture.contracts["Time"].setTimestamp(market.getEndTime() + localFixture.contracts["Constants"].DESIGNATED_REPORTING_DURATION_SECONDS() + 1)
 
     assert market.tryFinalize()
     assert categoricalMarket.tryFinalize()
@@ -32,7 +32,7 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
         participationToken.buy(1)
 
     # We'll progress to the start of the window and purchase some participation tokens
-    localFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
     participationTokenAmount = 100
     with TokenDelta(reputationToken, -participationTokenAmount, tester.a0, "Buying participation tokens didn't deduct REP correctly"):
         with TokenDelta(participationToken, participationTokenAmount, tester.a0, "Buying participation tokens didn't increase participation token balance correctly"):
@@ -61,7 +61,7 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
                     assert participationToken.redeem(True, sender=tester.k3)
 
     # Fast forward time until the window is over and we can redeem our winning stake and participation tokens and receive fees
-    localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
 
     reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
     totalWinningStake = reportingWindow.getTotalWinningStake()
@@ -125,7 +125,7 @@ def test_dispute_bond_fee_collection(localFixture, universe, market, categorical
             assert scalarMarket.disputeDesignatedReport([scalarMarket.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k3)
 
     # Fast forward time until the window is over and we can redeem our winning stake, and dispute bond tokens and receive fees
-    localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
     assert market.tryFinalize()
     assert categoricalMarket.tryFinalize()
     assert scalarMarket.tryFinalize()
@@ -185,7 +185,7 @@ def test_fee_migration(localFixture, universe, market, categoricalMarket, scalar
     assert cash.balanceOf(reportingWindow.address) == reporterFees
 
     # Progress to the Limited dispute phase and dispute one of the markets. This should migrate fees to the reporting window the market migrates to proportional to its stake
-    localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
     nextReportingWindow = localFixture.applySignature("ReportingWindow", universe.getOrCreateNextReportingWindow())
     scalarMarketStake = scalarMarket.getTotalStake()
     firstDisputeCost = localFixture.contracts["Constants"].FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
@@ -211,7 +211,7 @@ def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket
     assert cash.balanceOf(reportingWindow.address) == reporterFees
 
     # Progress to the Limited dispute phase and dispute one of the markets. This should migrate fees to the reporting window the market migrates to proportional to its stake
-    localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
 
     assert market.disputeFirstReporters([market.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
     assert categoricalMarket.disputeFirstReporters([categoricalMarket.getNumTicks() - 1, 1, 0], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
@@ -219,10 +219,11 @@ def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket
 
     # Progress into last dispute and cause a fork
     reportingWindow = localFixture.applySignature("ReportingWindow", market.getReportingWindow())
-    localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
 
     forkDuration = lastDisputeCost = localFixture.contracts["Constants"].FORK_DURATION_SECONDS()
-    nextReportingWindow = localFixture.applySignature("ReportingWindow", universe.getOrCreateReportingWindowByTimestamp(localFixture.chain.head_state.timestamp + forkDuration))
+    nextWindowTimestamp = localFixture.contracts["Time"].getTimestamp() + forkDuration
+    nextReportingWindow = localFixture.applySignature("ReportingWindow", universe.getOrCreateReportingWindowByTimestamp(nextWindowTimestamp))
     scalarMarketStake = scalarMarket.getTotalStake()
     lastDisputeCost = localFixture.contracts["Constants"].LAST_REPORTERS_DISPUTE_BOND_AMOUNT()
     totalScalarMarketStakeMoved = scalarMarketStake + lastDisputeCost
@@ -248,7 +249,7 @@ def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket
     # migrate one of the markets to the winning universe and confirm fees went with it
     oldReportingWindowAddress = market.getReportingWindow()
     designatedReportingDuration = localFixture.contracts["Constants"].DESIGNATED_REPORTING_DURATION_SECONDS()
-    newReportingWindowAddress = newUniverse.getOrCreateReportingWindowByMarketEndTime(localFixture.chain.head_state.timestamp - designatedReportingDuration)
+    newReportingWindowAddress = newUniverse.getOrCreateReportingWindowByMarketEndTime(localFixture.contracts["Time"].getTimestamp() - designatedReportingDuration)
     migratedFees = cash.balanceOf(oldReportingWindowAddress)
     with TokenDelta(cash, -migratedFees, oldReportingWindowAddress, "Migrating to a new universe didn't migrate ETH out correctly"):
         with TokenDelta(cash, migratedFees, newReportingWindowAddress, "Migrating to a new universe didn't migrate ETH in correctly"):
@@ -296,7 +297,7 @@ def localFixture(fixture, localSnapshot, kitchenSinkSnapshot):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     # Skip to Designated Reporting
-    fixture.chain.head_state.timestamp = market.getEndTime() + 1
+    fixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
 
     # Designated Report on each market
     designatedReportCost = universe.getOrCacheDesignatedReportStake()

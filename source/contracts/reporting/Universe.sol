@@ -56,7 +56,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         require(forkingMarket == address(0));
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
-        forkEndTime = block.timestamp + Reporting.getForkDurationSeconds();
+        forkEndTime = controller.getTimestamp() + Reporting.getForkDurationSeconds();
         // We pre calculate the amount of REP needed to determine a winner early in a fork. We assume maximum possible fork inflation in every fork so this is hard to achieve with every subsequent fork and may become impossible in some universes.
         if (parentUniverse != IUniverse(0)) {
             uint256 _previousForkReputationGoal = parentUniverse.getForkReputationGoal();
@@ -135,27 +135,27 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getOrCreatePreviousReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
-        return getOrCreateReportingWindowByTimestamp(block.timestamp - getReportingPeriodDurationInSeconds());
+        return getOrCreateReportingWindowByTimestamp(controller.getTimestamp() - getReportingPeriodDurationInSeconds());
     }
 
     function getPreviousReportingWindow() public view onlyInGoodTimes returns (IReportingWindow) {
-        return getReportingWindowByTimestamp(block.timestamp - getReportingPeriodDurationInSeconds());
+        return getReportingWindowByTimestamp(controller.getTimestamp() - getReportingPeriodDurationInSeconds());
     }
 
     function getOrCreateCurrentReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
-        return getOrCreateReportingWindowByTimestamp(block.timestamp);
+        return getOrCreateReportingWindowByTimestamp(controller.getTimestamp());
     }
 
     function getCurrentReportingWindow() public view onlyInGoodTimes returns (IReportingWindow) {
-        return getReportingWindowByTimestamp(block.timestamp);
+        return getReportingWindowByTimestamp(controller.getTimestamp());
     }
 
     function getOrCreateNextReportingWindow() public onlyInGoodTimes returns (IReportingWindow) {
-        return getOrCreateReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
+        return getOrCreateReportingWindowByTimestamp(controller.getTimestamp() + getReportingPeriodDurationInSeconds());
     }
 
     function getNextReportingWindow() public view onlyInGoodTimes returns (IReportingWindow) {
-        return getReportingWindowByTimestamp(block.timestamp + getReportingPeriodDurationInSeconds());
+        return getReportingWindowByTimestamp(controller.getTimestamp() + getReportingPeriodDurationInSeconds());
     }
 
     function getOrCreateChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
