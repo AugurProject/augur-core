@@ -96,11 +96,11 @@ export class ContractDeployer {
 
     private async upload(contract: Contract): Promise<void> {
         const contractsToDelegate: {[key:string]: boolean} = {"Orders": true, "TradingEscapeHatch": true, "Cash": true};
-        let contractName = contract.contractName
+        const contractName = contract.contractName
         if (contractName === 'Controller') return;
         if (contractName === 'Delegator') return;
-        if (this.configuration.useControlledTime && contractName == 'Time') return;
-        if (!this.configuration.useControlledTime && contractName == 'TimeControlled') return;
+        if (contractName === 'TimeControlled') return;
+        if (contractName === 'Time') contract = this.configuration.useControlledTime ? this.contracts.get('TimeControlled') : contract;
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
         if (contract.relativeFilePath.startsWith('libraries/')) return;
         // Check to see if we have already uploded this version of the contract
@@ -109,9 +109,6 @@ export class ContractDeployer {
             contract.address = await this.getExistingContractAddress(contractName);
         } else {
             console.log(`Uploading new version of contract for ${contractName}`);
-            if (contractName == 'TimeControlled') {
-                contractName = 'Time';
-            }
             contract.address = contractsToDelegate[contractName]
                 ? await this.uploadAndAddDelegatedToController(contract)
                 : await this.uploadAndAddToController(contract, contractName);
@@ -197,6 +194,7 @@ export class ContractDeployer {
 
     private async initializeContract(contractName: string): Promise<TransactionReceipt|void> {
         // Check if contract already initialized (happens if this contract was previously uploaded)
+        if (contractName === 'Time') contractName = this.configuration.useControlledTime ? "TimeControlled" : contractName;
         if (await this.getContract(contractName).getController_() === this.controller.address) {
             console.log(`Skipping already initialized ${contractName}.`)
             return;
