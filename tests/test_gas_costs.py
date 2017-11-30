@@ -51,7 +51,7 @@ def test_marketCreation(localFixture, universe, cash):
     numOutcomes = 2
 
     with PrintGasUsed(localFixture, "ReportingWindow:createMarket", MARKET_CREATION):
-        marketAddress = universe.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "", value = marketCreationFee, startgas=long(6.7 * 10**6))
+        marketAddress = universe.createBinaryMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "description", "", value = marketCreationFee, startgas=long(6.7 * 10**6))
 
 def test_marketFinalization(localFixture, universe, market):
     proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])

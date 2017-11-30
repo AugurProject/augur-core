@@ -3,6 +3,7 @@ pragma solidity ^0.4.18;
 import 'reporting/IMarket.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReportingWindow.sol';
+import 'reporting/Reporting.sol';
 import 'libraries/ITyped.sol';
 import 'reporting/IReputationToken.sol';
 import 'libraries/Initializable.sol';
@@ -392,9 +393,21 @@ contract MockUniverse is Initializable, IUniverse {
         return setForkReputationGoalValue;
     }
 
-    function createMarket(uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _extraInfo) public payable returns (IMarket) {
+    function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
         IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
-        IMarket _newMarket = _reportingWindow.createMarket.value(msg.value)(msg.sender, _endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _designatedReporterAddress);
+        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getCategoricalMarketNumTicks(2));
+        return _newMarket;
+    }
+
+    function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, uint8 _numOutcomes, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
+        IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
+        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, _numOutcomes, Reporting.getCategoricalMarketNumTicks(_numOutcomes));
+        return _newMarket;
+    }
+
+    function createScalarMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, int256 _minPrice, int256 _maxPrice, uint256 _numTicks, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
+        IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
+        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, _numTicks);
         return _newMarket;
     }
 }

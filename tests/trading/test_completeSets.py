@@ -70,10 +70,10 @@ def test_publicSellCompleteSets(contractsFixture, universe, cash, market):
     assert noShareToken.balanceOf(tester.a1) == 1, "Should have 1 share of outcome no"
     assert yesShareToken.totalSupply() == 1
     assert noShareToken.totalSupply() == 1
-    assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialTester1ETH + fix('8.9091')
-    assert cash.balanceOf(market.address) == fix('1')
-    assert cash.balanceOf(market.getMarketCreatorMailbox()) == fix('0.09')
-    assert cash.balanceOf(market.getReportingWindow()) == fix('0.0009')
+    assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialTester1ETH + 89091
+    assert cash.balanceOf(market.address) == 10000
+    assert cash.balanceOf(market.getMarketCreatorMailbox()) == 900
+    assert cash.balanceOf(market.getReportingWindow()) == 9
 
 def test_publicSellCompleteSets_failure(contractsFixture, universe, cash, market):
     completeSets = contractsFixture.contracts['CompleteSets']

@@ -53,7 +53,7 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
         return true;
     }
 
-    function createMarket(address _sender, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
+    function createMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint8 _numOutcomes, uint256 _numTicks) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(block.timestamp < startTime);
         require(universe == IUniverse(msg.sender));
         _newMarket = createMarketInternal(_endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _sender, _designatedReporterAddress);

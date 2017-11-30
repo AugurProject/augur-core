@@ -43,7 +43,7 @@ export class TestFixture {
         await this.connector.waitForTransactionReceipt(transactionHash, `Approving central authority.`);
     }
 
-    public async createMarket(universe: Universe, numOutcomes: BN, endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporter: string, numTicks: BN): Promise<Market> {
+    public async createMarket(universe: Universe, numOutcomes: BN, endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporter: string): Promise<Market> {
         const legacyReputationToken = new LegacyReputationToken(this.connector, this.accountManager, this.contractDeployer.getContract('LegacyReputationToken').address, this.configuration.gasPrice);
         const reputationTokenAddress = await universe.getReputationToken_();
         const reputationToken = new ReputationToken(this.connector, this.accountManager, reputationTokenAddress, this.configuration.gasPrice);
@@ -58,11 +58,11 @@ export class TestFixture {
         await this.connector.waitForTransactionReceipt(repMigrationTransactionHash, `Migrating reputation.`);
 
         const marketCreationFee = await universe.getOrCacheMarketCreationCost_();
-        const marketAddress = await universe.createMarket_(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter, stringTo32ByteHex(" "), '', { attachedEth: marketCreationFee });
+        const marketAddress = await universe.createCategoricalMarket_(endTime, feePerEthInWei, denominationToken, designatedReporter, numOutcomes, stringTo32ByteHex(" "), stringTo32ByteHex("description"), '', { attachedEth: marketCreationFee });
         if (!marketAddress) {
             throw new Error("Unable to get address for new categorical market.");
         }
-        const createMarketTransactionHash = await universe.createMarket(endTime, numOutcomes, numTicks, feePerEthInWei, denominationToken, designatedReporter, stringTo32ByteHex(" "), '', { attachedEth: marketCreationFee });
+        const createMarketTransactionHash = await universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken, designatedReporter, numOutcomes, stringTo32ByteHex(" "), stringTo32ByteHex("description"), '', { attachedEth: marketCreationFee });
         await this.connector.waitForTransactionReceipt(createMarketTransactionHash, `Creating market.`);
         const market = new Market(this.connector, this.accountManager, marketAddress, this.configuration.gasPrice);
 
@@ -75,8 +75,7 @@ export class TestFixture {
     public async createReasonableMarket(universe: Universe, denominationToken: string, numOutcomes: BN): Promise<Market> {
         const endTime = new BN(Math.round(new Date().getTime() / 1000));
         const fee = (new BN(10)).pow(new BN(16));
-        const numTicks = new BN(10752);
-        return await this.createMarket(universe, numOutcomes, endTime, fee, denominationToken, this.accountManager.defaultAddress, numTicks);
+        return await this.createMarket(universe, numOutcomes, endTime, fee, denominationToken, this.accountManager.defaultAddress);
     }
 
     public async placeOrder(market: string, type: BN, numShares: BN, price: BN, outcome: BN, betterOrderID: string, worseOrderID: string, tradeGroupID: string): Promise<void> {
