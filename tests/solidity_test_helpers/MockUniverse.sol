@@ -393,21 +393,20 @@ contract MockUniverse is Initializable, IUniverse {
         return setForkReputationGoalValue;
     }
 
-    function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, bytes32 _description, string _extraInfo) public payable returns (IMarket _newMarket) {
+    function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
         IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
-        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getBinaryMarketNumTicks());
+        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getCategoricalMarketNumTicks(2));
         return _newMarket;
     }
 
-    function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, uint8 _numOutcomes, bytes32 _topic, bytes32 _description, string _extraInfo) public payable returns (IMarket _newMarket) {
+    function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, uint8 _numOutcomes, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
         IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
         _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, _numOutcomes, Reporting.getCategoricalMarketNumTicks(_numOutcomes));
         return _newMarket;
     }
 
-    function createScalarMarket(uint256 _endTime, int256 _minPrice, int256 _maxPrice, uint256 _normalizedTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, bytes32 _description, string _extraInfo) public payable returns (IMarket _newMarket) {
+    function createScalarMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, int256 _minPrice, int256 _maxPrice, uint256 _numTicks, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
         IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
-        uint256 _numTicks = (uint256 (_maxPrice - _minPrice)).mul(_normalizedTicks);
         _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, _numTicks);
         return _newMarket;
     }

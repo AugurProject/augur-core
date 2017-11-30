@@ -372,9 +372,9 @@ class ContractsFixture:
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, maxPrice, minPrice, normalizedTicks, designatedReporterAddress, sender=tester.k0):
+    def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, maxPrice, minPrice, numTicks, designatedReporterAddress, sender=tester.k0):
         marketCreationFee = universe.getOrCacheMarketCreationCost()
-        marketAddress = universe.createScalarMarket(endTime, minPrice, maxPrice, normalizedTicks, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "description", "", value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
+        marketAddress = universe.createScalarMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, minPrice, maxPrice, numTicks, "", "description", "", value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
@@ -401,7 +401,7 @@ class ContractsFixture:
             designatedReporterAddress = tester.a0,
             sender = sender)
 
-    def createReasonableScalarMarket(self, universe, maxPrice, minPrice, normalizedTicks, denominationToken, sender=tester.k0):
+    def createReasonableScalarMarket(self, universe, maxPrice, minPrice, numTicks, denominationToken, sender=tester.k0):
         return self.createScalarMarket(
             universe = universe,
             endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
@@ -409,7 +409,7 @@ class ContractsFixture:
             denominationToken = denominationToken,
             maxPrice= maxPrice,
             minPrice= minPrice,
-            normalizedTicks= normalizedTicks,
+            numTicks= numTicks,
             designatedReporterAddress = tester.a0,
             sender = sender)
 
@@ -458,7 +458,7 @@ def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
     startingGas = fixture.chain.head_state.gas_used
     categoricalMarket = fixture.createReasonableCategoricalMarket(universe, 3, cash)
     print 'Gas Used: %s' % (fixture.chain.head_state.gas_used - startingGas)
-    scalarMarket = fixture.createReasonableScalarMarket(universe, 30, -10, 10000, cash)
+    scalarMarket = fixture.createReasonableScalarMarket(universe, 30, -10, 400000, cash)
     fixture.uploadAndAddToController("solidity_test_helpers/Constants.sol")
     snapshot = fixture.createSnapshot()
     snapshot['universe'] = universe

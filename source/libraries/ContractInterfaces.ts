@@ -317,13 +317,13 @@ export class Augur extends Controlled {
 
     public logMarketCreated = async(marketCreationFee: BN, minPrice: BN, maxPrice: BN, marketType: BN, topic: string, description: string, extraInfo: string, universe: string, market: string, marketCreator: string, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_marketCreationFee","type":"uint256"},{"name":"_minPrice","type":"int256"},{"name":"_maxPrice","type":"int256"},{"name":"_marketType","type":"uint8"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"bytes32"},{"name":"_extraInfo","type":"string"},{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_marketCreator","type":"address"}],"name":"logMarketCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_marketCreationFee","type":"uint256"},{"name":"_minPrice","type":"int256"},{"name":"_maxPrice","type":"int256"},{"name":"_marketType","type":"uint8"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"string"},{"name":"_extraInfo","type":"string"},{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_marketCreator","type":"address"}],"name":"logMarketCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         return await this.remoteCall(abi, [marketCreationFee, minPrice, maxPrice, marketType, topic, description, extraInfo, universe, market, marketCreator], options.sender, options.gasPrice);
     }
 
     public logMarketCreated_ = async(marketCreationFee: BN, minPrice: BN, maxPrice: BN, marketType: BN, topic: string, description: string, extraInfo: string, universe: string, market: string, marketCreator: string, options?: { sender?: string }): Promise<boolean> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_marketCreationFee","type":"uint256"},{"name":"_minPrice","type":"int256"},{"name":"_maxPrice","type":"int256"},{"name":"_marketType","type":"uint8"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"bytes32"},{"name":"_extraInfo","type":"string"},{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_marketCreator","type":"address"}],"name":"logMarketCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_marketCreationFee","type":"uint256"},{"name":"_minPrice","type":"int256"},{"name":"_maxPrice","type":"int256"},{"name":"_marketType","type":"uint8"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"string"},{"name":"_extraInfo","type":"string"},{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_marketCreator","type":"address"}],"name":"logMarketCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         const result = await this.localCall(abi, [marketCreationFee, minPrice, maxPrice, marketType, topic, description, extraInfo, universe, market, marketCreator], options.sender);
         return <boolean>result[0];
     }
@@ -3475,16 +3475,16 @@ export class Universe extends Controlled {
         return <boolean>result[0];
     }
 
-    public createScalarMarket = async(endTime: BN, minPrice: BN, maxPrice: BN, normalizedTicks: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, topic: string, description: string, extraInfo: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<string> => {
+    public createCategoricalMarket = async(endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, numOutcomes: BN, topic: string, description: string, extraInfo: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<string> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_minPrice","type":"int256"},{"name":"_maxPrice","type":"int256"},{"name":"_normalizedTicks","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"bytes32"},{"name":"_extraInfo","type":"string"}],"name":"createScalarMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
-        return await this.remoteCall(abi, [endTime, minPrice, maxPrice, normalizedTicks, feePerEthInWei, denominationToken, designatedReporterAddress, topic, description, extraInfo], options.sender, options.gasPrice, options.attachedEth);
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_numOutcomes","type":"uint8"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"string"},{"name":"_extraInfo","type":"string"}],"name":"createCategoricalMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
+        return await this.remoteCall(abi, [endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numOutcomes, topic, description, extraInfo], options.sender, options.gasPrice, options.attachedEth);
     }
 
-    public createScalarMarket_ = async(endTime: BN, minPrice: BN, maxPrice: BN, normalizedTicks: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, topic: string, description: string, extraInfo: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
+    public createCategoricalMarket_ = async(endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, numOutcomes: BN, topic: string, description: string, extraInfo: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_minPrice","type":"int256"},{"name":"_maxPrice","type":"int256"},{"name":"_normalizedTicks","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"bytes32"},{"name":"_extraInfo","type":"string"}],"name":"createScalarMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
-        const result = await this.localCall(abi, [endTime, minPrice, maxPrice, normalizedTicks, feePerEthInWei, denominationToken, designatedReporterAddress, topic, description, extraInfo], options.sender, options.attachedEth);
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_numOutcomes","type":"uint8"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"string"},{"name":"_extraInfo","type":"string"}],"name":"createCategoricalMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
+        const result = await this.localCall(abi, [endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numOutcomes, topic, description, extraInfo], options.sender, options.attachedEth);
         return <string>result[0];
     }
 
@@ -3522,24 +3522,24 @@ export class Universe extends Controlled {
         return <boolean>result[0];
     }
 
-    public createBinaryMarket = async(endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, topic: string, description: string, extraInfo: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<string> => {
-        options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"bytes32"},{"name":"_extraInfo","type":"string"}],"name":"createBinaryMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
-        return await this.remoteCall(abi, [endTime, feePerEthInWei, denominationToken, designatedReporterAddress, topic, description, extraInfo], options.sender, options.gasPrice, options.attachedEth);
-    }
-
-    public createBinaryMarket_ = async(endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, topic: string, description: string, extraInfo: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
-        options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"bytes32"},{"name":"_extraInfo","type":"string"}],"name":"createBinaryMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
-        const result = await this.localCall(abi, [endTime, feePerEthInWei, denominationToken, designatedReporterAddress, topic, description, extraInfo], options.sender, options.attachedEth);
-        return <string>result[0];
-    }
-
     public getReportingPeriodDurationInSeconds_ = async( options?: { sender?: string }): Promise<BN> => {
         options = options || {};
         const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getReportingPeriodDurationInSeconds","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
         const result = await this.localCall(abi, [], options.sender);
         return <BN>result[0];
+    }
+
+    public createBinaryMarket = async(endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, topic: string, description: string, extraInfo: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<string> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"string"},{"name":"_extraInfo","type":"string"}],"name":"createBinaryMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
+        return await this.remoteCall(abi, [endTime, feePerEthInWei, denominationToken, designatedReporterAddress, topic, description, extraInfo], options.sender, options.gasPrice, options.attachedEth);
+    }
+
+    public createBinaryMarket_ = async(endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, topic: string, description: string, extraInfo: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"string"},{"name":"_extraInfo","type":"string"}],"name":"createBinaryMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
+        const result = await this.localCall(abi, [endTime, feePerEthInWei, denominationToken, designatedReporterAddress, topic, description, extraInfo], options.sender, options.attachedEth);
+        return <string>result[0];
     }
 
     public calculateFloatingValue_ = async(badMarkets: BN, totalMarkets: BN, targetDivisor: BN, previousValue: BN, defaultValue: BN, floor: BN, options?: { sender?: string }): Promise<BN> => {
@@ -3570,16 +3570,16 @@ export class Universe extends Controlled {
         return <BN>result[0];
     }
 
-    public createCategoricalMarket = async(endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, numOutcomes: BN, topic: string, description: string, extraInfo: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<string> => {
+    public createScalarMarket = async(endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, minPrice: BN, maxPrice: BN, numTicks: BN, topic: string, description: string, extraInfo: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<string> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_numOutcomes","type":"uint8"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"bytes32"},{"name":"_extraInfo","type":"string"}],"name":"createCategoricalMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
-        return await this.remoteCall(abi, [endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numOutcomes, topic, description, extraInfo], options.sender, options.gasPrice, options.attachedEth);
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_minPrice","type":"int256"},{"name":"_maxPrice","type":"int256"},{"name":"_numTicks","type":"uint256"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"string"},{"name":"_extraInfo","type":"string"}],"name":"createScalarMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
+        return await this.remoteCall(abi, [endTime, feePerEthInWei, denominationToken, designatedReporterAddress, minPrice, maxPrice, numTicks, topic, description, extraInfo], options.sender, options.gasPrice, options.attachedEth);
     }
 
-    public createCategoricalMarket_ = async(endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, numOutcomes: BN, topic: string, description: string, extraInfo: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
+    public createScalarMarket_ = async(endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, minPrice: BN, maxPrice: BN, numTicks: BN, topic: string, description: string, extraInfo: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_numOutcomes","type":"uint8"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"bytes32"},{"name":"_extraInfo","type":"string"}],"name":"createCategoricalMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
-        const result = await this.localCall(abi, [endTime, feePerEthInWei, denominationToken, designatedReporterAddress, numOutcomes, topic, description, extraInfo], options.sender, options.attachedEth);
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_minPrice","type":"int256"},{"name":"_maxPrice","type":"int256"},{"name":"_numTicks","type":"uint256"},{"name":"_topic","type":"bytes32"},{"name":"_description","type":"string"},{"name":"_extraInfo","type":"string"}],"name":"createScalarMarket","outputs":[{"name":"_newMarket","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
+        const result = await this.localCall(abi, [endTime, feePerEthInWei, denominationToken, designatedReporterAddress, minPrice, maxPrice, numTicks, topic, description, extraInfo], options.sender, options.attachedEth);
         return <string>result[0];
     }
 
