@@ -24,7 +24,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
         stakeTokenNo.buy(100, sender=tester.k0)
 
     # Fast forward to one second after the next reporting window
-    localFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
 
     # This will cause us to be in the first reporting phase
     assert market.getReportingState() == localFixture.contracts['Constants'].FIRST_REPORTING()
@@ -45,7 +45,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     assert localFixture.chain.head_state.get_balance(tester.a1) == initialFirstReporterETH + reporterGasCosts
 
     # Move time forward into the FIRST DISPUTE phase
-    localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
     assert market.getReportingState() == localFixture.contracts['Constants'].FIRST_DISPUTE()
 
     # Contest the results with Tester 0
@@ -62,7 +62,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10 **18 - 100 - 11 * 10**21 - noShowBondCosts
 
     # Tester 2 reports for the NO outcome
-    localFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
     stakeTokenNo.buy(2, sender=tester.k2)
     assert stakeTokenNo.balanceOf(tester.a2) == 2
     assert reputationToken.balanceOf(tester.a2) == 10**6 * 10 **18 - 2
@@ -70,7 +70,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     assert tentativeWinner == stakeTokenNo.getPayoutDistributionHash()
 
     # Move forward in time to put us in the LAST DISPUTE PHASE
-    localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
     assert market.getReportingState() == localFixture.contracts['Constants'].LAST_DISPUTE()
 
     # Tester 1 contests the outcome of the ALL report which will cause a fork
@@ -146,7 +146,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     logs = []
     captureFilteredLogs(localFixture.chain.head_state, localFixture.contracts['Augur'], logs)
 
-    # We can finalize the market now since a mjaority of REP has moved. Alternatively we could "localFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1" to move
+    # We can finalize the market now since a mjaority of REP has moved. Alternatively we could "localFixture.contracts["Time"].setTimestamp(universe.getForkEndTime() + 1)" to move
     initialMarketCreatorETHBalance = localFixture.chain.head_state.get_balance(market.getMarketCreatorMailbox())
     assert market.tryFinalize()
 
@@ -170,7 +170,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     bonus = stakeTokenBalance / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
     expectedrepBalanceInNewUniverse = noUniverseReputationToken.balanceOf(tester.a0) + stakeTokenBalance
     if (not getStakeBonus):
-        localFixture.chain.head_state.timestamp = universe.getForkEndTime() + 1
+        localFixture.contracts["Time"].setTimestamp(universe.getForkEndTime() + 1)
     else:
         expectedrepBalanceInNewUniverse += bonus
 
@@ -212,7 +212,7 @@ def test_designatedReportingHappyPath(localFixture, universe, market):
     assert market.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
 
     # If time passes and no dispute bond is placed the market can be finalized
-    localFixture.chain.head_state.timestamp = market.getEndTime() + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS() + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1
+    localFixture.contracts["Time"].setTimestamp(market.getEndTime() + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS() + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1)
 
     # The market is awaiting finalization now
     assert market.getReportingState() == localFixture.contracts['Constants'].AWAITING_FINALIZATION()
@@ -273,11 +273,11 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
     assert tentativeWinner == stakeTokenYes.getPayoutDistributionHash()
 
     # To progress into the FIRST DISPUTE phase we move time forward
-    localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
     assert market.getReportingState() == localFixture.contracts['Constants'].FIRST_DISPUTE()
 
     # If time passes and no dispute bond is placed the market can be finalized
-    localFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
 
     # The market is awaiting finalization now
     assert market.getReportingState() == localFixture.contracts['Constants'].AWAITING_FINALIZATION()
@@ -336,11 +336,11 @@ def test_lastReportingHappyPath(localFixture, makeReport, universe, market, cash
     assert tentativeWinner == stakeTokenNo.getPayoutDistributionHash()
 
     # To progress into the LAST DISPUTE phase we move time forward
-    localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
     assert market.getReportingState() == localFixture.contracts['Constants'].LAST_DISPUTE()
 
     # If time passes and no dispute bond is placed the market can be finalized
-    localFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
 
     # The market is awaiting finalization now
     assert market.getReportingState() == localFixture.contracts['Constants'].AWAITING_FINALIZATION()
@@ -420,9 +420,9 @@ def test_noReports(localFixture, pastDisputePhase, universe, market):
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
 
     if (pastDisputePhase):
-        localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+        localFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
     else:
-        localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+        localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
 
     # If we receive no reports by the time Limited Reporting is finished we will be in the AWAITING NO REPORT MIGRATION phase
     assert market.getReportingState() == localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION()
@@ -452,7 +452,7 @@ def test_invalid_first_report(localFixture, universe, cash, market):
 
     # If we finalize the market it will be recorded as an invalid result
     initialReportingWindowCashBalance = cash.balanceOf(reportingWindow.address)
-    localFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
     assert market.tryFinalize()
     assert not market.isValid()
     assert reportingWindow.getNumInvalidMarkets() == 1
@@ -477,7 +477,7 @@ def test_invalid_designated_report(localFixture, universe, cash, market):
     assert market.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
 
     # If time passes and no dispute bond is placed the market can be finalized
-    localFixture.chain.head_state.timestamp = market.getEndTime() + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS() + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1
+    localFixture.contracts["Time"].setTimestamp(market.getEndTime() + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS() + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1)
 
     # The market is awaiting finalization now
     assert market.getReportingState() == localFixture.contracts['Constants'].AWAITING_FINALIZATION()
@@ -508,7 +508,7 @@ def test_cannot_fork_twice(localFixture, universe, cash, market):
 
     # We'll progress to the dispute phase for both
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    localFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
 
     # Both markets are in last dispute
     assert market.getReportingState() == localFixture.contracts["Constants"].LAST_DISPUTE()

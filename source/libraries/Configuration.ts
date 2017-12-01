@@ -13,8 +13,9 @@ export class Configuration {
     public readonly contractInterfacesOutputPath: string;
     public readonly controllerAddress: string|undefined;
     public readonly createGenesisUniverse: boolean;
+    public readonly isProduction: boolean;
 
-    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputRoot: string, controllerAddress: string|undefined, createGenesisUniverse: boolean=true) {
+    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputRoot: string, controllerAddress: string|undefined, createGenesisUniverse: boolean=true, isProduction: boolean=false) {
         this.httpProviderHost = host;
         this.httpProviderPort = port;
         this.gasPrice = gasPrice;
@@ -25,6 +26,7 @@ export class Configuration {
         this.contractInterfacesOutputPath = path.join(contractSourceRoot, '../libraries', 'ContractInterfaces.ts');
         this.controllerAddress = controllerAddress;
         this.createGenesisUniverse = createGenesisUniverse;
+        this.isProduction = isProduction;
     }
 
     public static create = async (): Promise<Configuration> => {

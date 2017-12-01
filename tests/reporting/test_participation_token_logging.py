@@ -5,13 +5,13 @@ def test_stake_token_logging(contractsFixture, market, categoricalMarket, scalar
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
     participationToken = contractsFixture.applySignature("ParticipationToken", reportingWindow.getParticipationToken())
 
-    contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
+    contractsFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
 
     assert contractsFixture.designatedReport(market, [0, market.getNumTicks()], tester.k0)
     assert contractsFixture.designatedReport(categoricalMarket, [0, 0, categoricalMarket.getNumTicks()], tester.k0)
     assert contractsFixture.designatedReport(scalarMarket, [0, scalarMarket.getNumTicks()], tester.k0)
 
-    contractsFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    contractsFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
 
     assert market.tryFinalize()
     assert categoricalMarket.tryFinalize()

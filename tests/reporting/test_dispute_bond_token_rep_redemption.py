@@ -158,7 +158,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
     initializeTestAccountBalances(reputationToken)
 
     # Fast forward to one second after the next reporting window
-    contractsFixture.chain.head_state.timestamp = market.getEndTime() + 1
+    contractsFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
 
     # Perform designated reports on the other markets so they can finalize and we can redeemWinningTokens later
     assert contractsFixture.designatedReport(otherMarket, otherOutcome, tester.k0)
@@ -171,7 +171,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         # If someone disputes the designated reporter outcome
         if (designatedReporterDisputerAccountNum != None):
             # Fast forward to one second after dispute start time
-            contractsFixture.chain.head_state.timestamp = market.getDesignatedReportDueTimestamp() + 1
+            contractsFixture.contracts["Time"].setTimestamp(market.getDesignatedReportDueTimestamp() + 1)
 
             print "a" + str(designatedReporterDisputerAccountNum) + " is disputing designated reporter outcome"
 
@@ -194,17 +194,17 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
             # assert reportingWindow.isContainerForMarket(market.address)
 
             # Fast forward to reporting start time
-            contractsFixture.chain.head_state.timestamp = reportingWindow.getReportingStartTime() + 1
+            contractsFixture.contracts["Time"].setTimestamp(reportingWindow.getReportingStartTime() + 1)
 
             # Have test accounts report on the outcome
             buyStakeTokens(marketType, designatedReporterDisputeStakes, reputationToken, stakeTokenA, stakeTokenB, stakeTokenC)
 
             # Fast forward to one second after dispute end time
-            contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
+            contractsFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
 
     if (firstReportersDisputerAccountNum != None):
         # Fast forward to one second after dispute start time
-        contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+        contractsFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
 
         print "a" + str(designatedReporterDisputerAccountNum) + " is disputing first reporters outcome"
 
@@ -234,17 +234,17 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         assert reportingWindow.isContainerForMarket(market.address)
 
         # Fast forward to reporting start time
-        contractsFixture.chain.head_state.timestamp = reportingWindow.getReportingStartTime() + 1
+        contractsFixture.contracts["Time"].setTimestamp(reportingWindow.getReportingStartTime() + 1)
 
         # Have test accounts report on the outcome
         buyStakeTokens(marketType, firstReportersDisputeStakes, reputationToken, stakeTokenA, stakeTokenB, stakeTokenC)
 
         # Fast forward to one second after dispute end time
-        contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
+        contractsFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
 
     if (lastReportersDisputerAccountNum != None):
         # Fast forward to one second after dispute start time
-        contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+        contractsFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
 
         # Have test account dispute the first reporting result
         print "a" + str(designatedReporterDisputerAccountNum) + " is disputing last reporters outcome (and forking)"
@@ -291,10 +291,10 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
             assert destinationUniverseReputationToken.balanceOf(getattr(tester, 'a' + str(row[0]))) == long(accountBalance + (accountBalance / contractsFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()))
 
         # Fast forward to one second after dispute end time
-        contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
+        contractsFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
 
     if (designatedReporterDisputerAccountNum == None and firstReportersDisputerAccountNum == None and lastReportersDisputerAccountNum == None):
-        contractsFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
+        contractsFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
 
     tentativeWinningStakeTokenAddress = market.getStakeTokenOrZeroByPayoutDistributionHash(market.getTentativeWinningPayoutDistributionHash())
     tentativeWinningStakeTokenBalance = reputationToken.balanceOf(tentativeWinningStakeTokenAddress)
@@ -423,7 +423,7 @@ def test_dispute_bond_tokens(marketType, designatedReporterAccountNum, designate
         # Redeem winning/forked stake tokens
         handleStakeTokens(market, designatedReporterAccountNum, designatedReporterDisputerAccountNum, firstReportersDisputerAccountNum, firstReporterDisputeOutcome, stakeDelta, lastReportersDisputerAccountNum, designatedReporterDisputeStakes, firstReportersDisputeStakes, lastReportersDisputeStakes, reputationToken, stakeTokenA, stakeTokenB, stakeTokenC, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, winningStakeToken, OUTCOME_A, OUTCOME_B, OUTCOME_C, designatedReporterStake, winningOutcome)
 
-        contractsFixture.chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+        contractsFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
 
         # Have correct dispute bond holders withdraw from dispute token
         withdrawBondsFromDisputeTokens(market, lastReportersDisputeStakes, designatedReporterDisputerAccountNum, firstReportersDisputerAccountNum, lastReportersDisputerAccountNum, designatedReporterDisputeBond, firstReportersDisputeBond, lastReportersDisputeBond, reputationToken, winningStakeToken, aUniverse, bUniverse, cUniverse, aUniverseReputationToken, bUniverseReputationToken, cUniverseReputationToken, OUTCOME_A, OUTCOME_B, OUTCOME_C)

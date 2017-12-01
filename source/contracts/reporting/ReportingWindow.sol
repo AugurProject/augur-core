@@ -54,7 +54,7 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
     }
 
     function createMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint8 _numOutcomes, uint256 _numTicks) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
-        require(block.timestamp < startTime);
+        require(controller.getTimestamp() < startTime);
         require(universe == IUniverse(msg.sender));
         _newMarket = createMarketInternal(_endTime, _numOutcomes, _numTicks, _feePerEthInWei, _denominationToken, _sender, _designatedReporterAddress);
         markets.add(_newMarket);
@@ -335,37 +335,37 @@ contract ReportingWindow is DelegationTarget, Extractable, ITyped, Initializable
     }
 
     function isActive() public afterInitialized view returns (bool) {
-        if (block.timestamp <= getStartTime()) {
+        if (controller.getTimestamp() <= getStartTime()) {
             return false;
         }
-        if (block.timestamp >= getEndTime()) {
+        if (controller.getTimestamp() >= getEndTime()) {
             return false;
         }
         return true;
     }
 
     function isReportingActive() public afterInitialized view returns (bool) {
-        if (block.timestamp <= getStartTime()) {
+        if (controller.getTimestamp() <= getStartTime()) {
             return false;
         }
-        if (block.timestamp >= getReportingEndTime()) {
+        if (controller.getTimestamp() >= getReportingEndTime()) {
             return false;
         }
         return true;
     }
 
     function isDisputeActive() public afterInitialized view returns (bool) {
-        if (block.timestamp <= getDisputeStartTime()) {
+        if (controller.getTimestamp() <= getDisputeStartTime()) {
             return false;
         }
-        if (block.timestamp >= getEndTime()) {
+        if (controller.getTimestamp() >= getEndTime()) {
             return false;
         }
         return true;
     }
 
     function isOver() public afterInitialized view returns (bool) {
-        return block.timestamp >= getEndTime();
+        return controller.getTimestamp() >= getEndTime();
     }
 
     function getMarketsCount() public afterInitialized view returns (uint256) {

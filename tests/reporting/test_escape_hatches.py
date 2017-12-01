@@ -18,7 +18,7 @@ def test_market_escape_hatch_all_fees(localFixture, controller, market, reputati
 
 def test_market_escape_hatch_partial_fees(localFixture, market, reputationToken, reportingWindow, constants, controller):
     # We'll skip to Limited reporting and make a report
-    localFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
 
     stakeToken = localFixture.getOrCreateStakeToken(market, [0, market.getNumTicks()], False)
     MarketEtherDelta = constants.DEFAULT_VALIDITY_BOND() - localFixture.chain.head_state.get_balance(market.address)
@@ -36,7 +36,7 @@ def test_market_escape_hatch_partial_fees(localFixture, market, reputationToken,
 
 def test_stake_token_escape_hatch(localFixture, market, reportingWindow, reputationToken, cash, controller):
     # We'll skip to Limited reporting
-    localFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
 
     # We'll give some testers some REP
     for testAccount in [tester.a1, tester.a2, tester.a3, tester.a4]:
@@ -73,7 +73,7 @@ def test_stake_token_escape_hatch(localFixture, market, reportingWindow, reputat
 
 def test_dispute_bond_token_escape_hatch(localFixture, reportingWindow, controller, reputationToken, market, constants, cash):
     # We'll skip to Designated reporting and make a report
-    localFixture.chain.head_state.timestamp = market.getEndTime() + 1
+    localFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
 
     stakeToken = localFixture.getOrCreateStakeToken(market, [0, market.getNumTicks()], False)
     designatedStake = constants.DEFAULT_DESIGNATED_REPORT_STAKE()
@@ -102,7 +102,7 @@ def test_dispute_bond_token_escape_hatch(localFixture, reportingWindow, controll
 
 def test_participation_token_escape_hatch(localFixture, reportingWindow, controller, reputationToken, market, constants, cash, categoricalMarket, scalarMarket):
     # We'll do a designated report on each market
-    localFixture.chain.head_state.timestamp = market.getEndTime() + 1
+    localFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
 
     stakeToken = localFixture.getOrCreateStakeToken(market, [0, market.getNumTicks()], False)
     designatedStake = constants.DEFAULT_DESIGNATED_REPORT_STAKE()
@@ -115,7 +115,7 @@ def test_participation_token_escape_hatch(localFixture, reportingWindow, control
     assert scalarStakeToken.buy(designatedStake)
 
     # Skip past the dispute phase and finalize the markets
-    localFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
     assert market.tryFinalize()
     assert categoricalMarket.tryFinalize()
     assert scalarMarket.tryFinalize()

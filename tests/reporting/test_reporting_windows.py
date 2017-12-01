@@ -6,7 +6,7 @@ from ethereum.tools.tester import ABIContract, TransactionFailed
 
 
 def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockParticipationToken, mockReputationToken):
-    timestamp = chain.head_state.timestamp
+    timestamp = localFixture.contracts["Time"].getTimestamp()
     duration_in_sec = localFixture.contracts['Constants'].REPORTING_DURATION_SECONDS() + localFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS()
     mockUniverse.setReportingPeriodDurationInSeconds(duration_in_sec)
     mockUniverse.setReputationToken(mockReputationToken.address)
@@ -42,51 +42,53 @@ def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockPart
     mockUniverse.setReportingWindowByTimestamp(previousReportingWindow.address)
     assert reportingWindow.getOrCreatePreviousReportingWindow() == previousReportingWindow.address
 
-    chain.head_state.timestamp = reportingWindow.getStartTime() - 1
+    time = localFixture.contracts["Time"]
+
+    time.setTimestamp(reportingWindow.getStartTime() - 1)
     assert reportingWindow.isOver() == False
     assert reportingWindow.isActive() == False
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == False
 
-    chain.head_state.timestamp = reportingWindow.getStartTime()
+    time.setTimestamp(reportingWindow.getStartTime())
     assert reportingWindow.isActive() == False
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == False
 
-    chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    time.setTimestamp(reportingWindow.getStartTime() + 1)
     assert reportingWindow.isActive() == True
     assert reportingWindow.isReportingActive() == True
     assert reportingWindow.isDisputeActive() == False
 
-    chain.head_state.timestamp = reportingWindow.getReportingEndTime()
+    time.setTimestamp(reportingWindow.getReportingEndTime())
     assert reportingWindow.isActive() == True
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == False
 
-    chain.head_state.timestamp = reportingWindow.getReportingEndTime() + 1
+    time.setTimestamp(reportingWindow.getReportingEndTime() + 1)
     assert reportingWindow.isActive() == True
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == True
 
-    chain.head_state.timestamp = reportingWindow.getDisputeStartTime()
+    time.setTimestamp(reportingWindow.getDisputeStartTime())
     assert reportingWindow.isActive() == True
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == False
     assert reportingWindow.isOver() == False
 
-    chain.head_state.timestamp = reportingWindow.getDisputeStartTime() + 1
+    time.setTimestamp(reportingWindow.getDisputeStartTime() + 1)
     assert reportingWindow.isActive() == True
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == True
     assert reportingWindow.isOver() == False
 
-    chain.head_state.timestamp = reportingWindow.getEndTime()
+    time.setTimestamp(reportingWindow.getEndTime())
     assert reportingWindow.isActive() == False
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == False
     assert reportingWindow.isOver() == True
 
-    chain.head_state.timestamp = reportingWindow.getEndTime() + 1
+    time.setTimestamp(reportingWindow.getEndTime() + 1)
     assert reportingWindow.isActive() == False
     assert reportingWindow.isReportingActive() == False
     assert reportingWindow.isDisputeActive() == False
@@ -294,7 +296,7 @@ def test_reporting_window_update_fin_market_calculations(localFixture, mockMarke
     assert populatedReportingWindow.getNumIncorrectDesignatedReportMarkets() == 2
 
 def test_reporting_window_collect_reporting_fees(localFixture, chain, mockMarket, populatedReportingWindow, mockParticipationToken, mockCash):
-    timestamp = chain.head_state.timestamp
+    timestamp = localFixture.contracts["Time"].getTimestamp()
     start_time = 2 * timestamp
     reporting_end = start_time + localFixture.contracts['Constants'].REPORTING_DURATION_SECONDS()
     dispute_end_time = reporting_end + localFixture.contracts['Constants'].REPORTING_DISPUTE_DURATION_SECONDS()
@@ -322,7 +324,7 @@ def test_reporting_window_collect_reporting_fees(localFixture, chain, mockMarket
     with raises(TransactionFailed, message="can not forgo fees and reporting window not finished or markets not finalized"):
         mockStakeToken.callCollectReportingFees(reporterAddress, attoStake, forgoFees, reportingWindow.address)
 
-    chain.head_state.timestamp = dispute_end_time + 1
+    localFixture.contracts["Time"].setTimestamp(dispute_end_time + 1)
     assert reportingWindow.isOver()
     assert reportingWindow.allMarketsFinalized() == False
     with raises(TransactionFailed, message="can not forgo fees and all markets not finalized"):
@@ -561,7 +563,7 @@ def populatedReportingWindow(localFixture, chain, mockUniverse, mockMarket, mock
     mockMarketFactory.setMarket(mockMarket.address)
     mockReportingParticipationTokenFactory.setParticipationTokenValue(mockParticipationToken.address)
 
-    timestamp = chain.head_state.timestamp
+    timestamp = localFixture.contracts["Time"].getTimestamp()
     endTimeValue = timestamp + 10
     numTicks = 1 * 10**6 * 10**18
     feePerEthInWeiValue = 10 ** 18

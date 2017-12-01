@@ -47,15 +47,15 @@ def acquireShortShareSet(kitchenSinkFixture, cash, market, outcome, amount, appr
 
 def finalizeMarket(fixture, market, payoutNumerators):
     # set timestamp to after market end
-    fixture.chain.head_state.timestamp = market.getEndTime() + 1
+    fixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
     # have tester.a0 submit designated report
     fixture.designatedReport(market, payoutNumerators, tester.k0)
     # set timestamp to after designated dispute end
-    fixture.chain.head_state.timestamp = market.getDesignatedReportDisputeDueTimestamp() + 1
+    fixture.contracts["Time"].setTimestamp(market.getDesignatedReportDisputeDueTimestamp() + 1)
     # finalize the market
     assert market.tryFinalize()
     # set timestamp to 3 days later (waiting period)
-    fixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
+    fixture.contracts["Time"].incrementTimestamp(long(timedelta(days = 3, seconds = 1).total_seconds()))
 
 def test_helpers(kitchenSinkFixture, scalarMarket):
     market = scalarMarket
@@ -204,11 +204,11 @@ def test_reedem_failure(kitchenSinkFixture, cash, market):
     # get NO shares with a2
     acquireShortShareSet(kitchenSinkFixture, cash, market, YES, 1, claimTradingProceeds.address, sender = tester.k2)
     # set timestamp to after market end
-    kitchenSinkFixture.chain.head_state.timestamp = market.getEndTime() + 1
+    kitchenSinkFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
     # have tester.a0 subimt designated report (75% high, 25% low, range -10*10^18 to 30*10^18)
     kitchenSinkFixture.designatedReport(market, [0, 10**4], tester.k0)
     # set timestamp to after designated dispute end
-    kitchenSinkFixture.chain.head_state.timestamp = market.getDesignatedReportDisputeDueTimestamp() + 1
+    kitchenSinkFixture.contracts["Time"].setTimestamp(market.getDesignatedReportDisputeDueTimestamp() + 1)
 
     # market not finalized
     with raises(TransactionFailed):
@@ -220,6 +220,6 @@ def test_reedem_failure(kitchenSinkFixture, cash, market):
         claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
 
     # set timestamp to 3 days later (waiting period)
-    kitchenSinkFixture.chain.head_state.timestamp += long(timedelta(days = 3, seconds = 1).total_seconds())
+    kitchenSinkFixture.contracts["Time"].incrementTimestamp(long(timedelta(days = 3, seconds = 1).total_seconds()))
     # validate that everything else is OK
     assert claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)

@@ -6,7 +6,7 @@ def test_stake_token_logging(contractsFixture, market, universe):
     reportingWindow = contractsFixture.applySignature('ReportingWindow', universe.getOrCreateNextReportingWindow())
 
     # Fast forward to one second after the next reporting window
-    contractsFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    contractsFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
 
     stakeToken.buy(100)
 

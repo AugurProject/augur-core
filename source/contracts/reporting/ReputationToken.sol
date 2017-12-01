@@ -77,7 +77,7 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
             return true;
         }
         if (_bonusIfInForkWindow) {
-            return block.timestamp < _parentUniverse.getForkEndTime();
+            return controller.getTimestamp() < _parentUniverse.getForkEndTime();
         }
         return false;
     }
