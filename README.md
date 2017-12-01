@@ -35,30 +35,32 @@ Travis CI is set up automatically deploy the contracts to the [Rinkeby testnet](
 
 Deployment can be run in two modes, direct or Docker. In direct mode, the assumption is that the entire system has been built (TypeScript and Solidity), and there is a working Node.js environment locally. Furthermore, one must possess an account on the deployment target (e.g. Rinkeby testnet) which has enough ETH to cover the costs of the deployment. For the purposes of deploying to the testnets, those with access to the augur private testnet keys can deploy and update the existing contracts. For reference, these keys are stored in an encrypted git repository within the Augur Project's keybase team. If you need access, please inquire in the Augur Discord.
 
-All deployment commands can be managed through scripts in package.json, and are accessible to `npm run` and `yarn`.
+All deployment commands can be managed through scripts in package.json, and can be executed using `npm run <command>`.
 
 ### Manual Rinkeby deployment
 
 Build and create compile artifacts:
 
 ```bash
-augur-core % npm run build
+npm run build
 ```
 
 Deploy to Rinkeby:
 
 ```bash
-augur-core % RINKEBY_PRIVATE_KEY=$(cat path/to/keys/deploy_keys/rinkeby.prv) npm run deploy:rinkeby
+RINKEBY_PRIVATE_KEY=$(cat path/to/keys/deploy_keys/rinkeby.prv) npm run deploy:rinkeby
 ```
 
 ### Updating augur-contracts
 
+(Note: commands _in this section only_ should be run from your local augur-contracts folder, not from augur-core!)
+
 Manual deployment generates artifacts in the `output/contracts` directory.  To merge these changes into augur-contracts, there are scripts located in [the augur-contracts repository](https://github.com/AugurProject/augur-contracts). **In local deployments, this is not automatic.**
 
-To merge the local changes into the augur-contracts repository:
+To merge the local changes into augur-contracts:
 
 ```bash
-augur-contracts % SOURCE="path/to/augur-core/output/contracts" BRANCH=master npm run update-contracts
+SOURCE="path/to/augur-core/output/contracts" BRANCH=master npm run update-contracts
 ```
 
 Next, update the version of augur-contracts:
@@ -67,14 +69,14 @@ Next, update the version of augur-contracts:
  - for _releases_, set the version to be the correct major/minor version; e.g., for dev build v4.7.0-10, the release version would be v4.7.0
 
 ```bash
-augur-contracts % npm version [<version>, major,minor,patch, prerelease]
-augur-contracts % git push && git push --tags
+npm version [<version>, major,minor,patch, prerelease]
+git push && git push --tags
 ```
 
 Finally, publish to NPM.  If this is a pre-release tag, deploy it to the `dev` channel.  The `dev` channel is the default for versions which are published from CI.
 
 ```bash
-augur-contracts % npm publish [--tag dev]
+npm publish [--tag dev]
 ```
 
 ## Tests
@@ -94,11 +96,10 @@ The tests directory (augur-core/tests) contain tests and test fixtures to test t
 - wcl-in-python.py -- contains functions for making and taking various types of bids.
 - wcl.txt -- explains tests for the various situations when filling a bid and filling an ask.
 
-In order to run Augur's test suite, run the following inside the tests directory:
+Use pytest to run Augur's test suite:
 
 ```bash
-cd augur-core/tests
-pytest
+pytest tests
 ```
 
 This executes all the tests. To run a test individually, run the following:
