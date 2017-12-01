@@ -6,7 +6,7 @@ Smart contracts for [Augur](https://augur.net), a decentralized prediction marke
 
 ## Installation
 
-You need a system-wide installation of Python (v2.7.6 or higher).  Install the dependencies:
+You need system-wide installations of Python 2.7.6+, Node.js 8+, and [Solidity 0.4.18](https://github.com/ethereum/solidity/releases/tag/v0.4.18).  (Or Docker; see below.)  Install the dependencies:
 
 ```bash
 npm install npx
@@ -14,7 +14,7 @@ npm install
 pip install -r requirements.txt
 ```
 
-The dependencies include [pyethereum](https://github.com/ethereum/pyethereum), which is used to unit test our Ethereum smart contracts.  If you want to run the the augur-node tests locally, you also need to install [version 0.4.18 of the Solidity compiler](https://github.com/ethereum/solidity/releases/tag/v0.4.18) (`solc`) on your machine for pyethereum to run correctly.  (On macOS, you need to use [virtualenv](https://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/) or [homebrew](https://brew.sh/) Python to work around System Integrity Protection.)
+Note: on macOS, you need to use [virtualenv](https://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/) or [homebrew](https://brew.sh/) Python to work around System Integrity Protection.
 
 ## Deployment
 
