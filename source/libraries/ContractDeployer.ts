@@ -100,7 +100,7 @@ export class ContractDeployer {
         if (contractName === 'Controller') return;
         if (contractName === 'Delegator') return;
         if (contractName === 'TimeControlled') return;
-        if (contractName === 'Time') contract = this.configuration.useControlledTime ? this.contracts.get('TimeControlled') : contract;
+        if (contractName === 'Time') contract = this.configuration.isProduction ? contract: this.contracts.get('TimeControlled');
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
         if (contract.relativeFilePath.startsWith('libraries/')) return;
         // Check to see if we have already uploded this version of the contract
@@ -194,7 +194,7 @@ export class ContractDeployer {
 
     private async initializeContract(contractName: string): Promise<TransactionReceipt|void> {
         // Check if contract already initialized (happens if this contract was previously uploaded)
-        if (contractName === 'Time') contractName = this.configuration.useControlledTime ? "TimeControlled" : contractName;
+        if (contractName === 'Time') contractName = this.configuration.isProduction ? contractName: "TimeControlled";
         if (await this.getContract(contractName).getController_() === this.controller.address) {
             console.log(`Skipping already initialized ${contractName}.`)
             return;

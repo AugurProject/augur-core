@@ -2,9 +2,10 @@ pragma solidity 0.4.18;
 
 import 'ITime.sol';
 import 'libraries/ContractExists.sol';
+import 'libraries/Ownable.sol';
 
 
-contract TimeControlled is ITime {
+contract TimeControlled is ITime, Ownable {
     using ContractExists for address;
 
     uint256 private timestamp = 1;
