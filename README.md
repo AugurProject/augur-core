@@ -2,92 +2,82 @@
 
 [![Build Status](https://travis-ci.org/AugurProject/augur-core.svg)](https://travis-ci.org/AugurProject/augur-core)
 
-Ethereum contracts for a decentralized prediction market platform.
+Smart contracts for [Augur](https://augur.net), a decentralized prediction market platform on the [Ethereum](https://ethereum.org) blockchain.
 
 ## Installation
 
-You should already have a system-wide installation of Python and it should be Python 2.7.6 or greater.
+You need a system-wide installation of Python (v2.7.6 or higher).  Install the dependencies:
 
-First install the dependencies, which include PyEthereum (the tool used to test Ethereum smart contracts from Python scripts) and the Solidity smart contract programming language:
-
-```
+```bash
 npm install npx
 npm install
-
-sudo pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
-For PyEthereum to work properly you'll also need to install the 0.4.18 Solc compiler on your machine. Instructions for installing it in your environment can be found here:
+The dependencies include [pyethereum](https://github.com/ethereum/pyethereum), which is used to unit test our Ethereum smart contracts.  If you want to run the the augur-node tests locally, you also need to install [version 0.4.18 of the Solidity compiler](https://github.com/ethereum/solidity/releases/tag/v0.4.18) (`solc`) on your machine for pyethereum to run correctly.  (On macOS, you need to use [virtualenv](https://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/) or [homebrew](https://brew.sh/) Python to work around System Integrity Protection.)
 
-[Solc 0.4.18 Installation Instructions](https://github.com/ethereum/solidity/releases/tag/v0.4.18)
+## Deployment
 
-On macOS you will need to use a
-[virtualenv](https://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/) or use a [homebrew](https://brew.sh/) Python to work around System Integrity Protection.
+Solidity contract deployment is handled by `ContractDeployer.ts` and the wrapper programs located in `source/deployment`.  This deployment framework allows for incremental deploys of contracts to a given controller (specified via a configuration option).  This allows us to deploy new contracts without touching the controller, effectively upgrading the deployed system in-place.
 
-Now we can try running some tests to make sure our installation worked:
+### Automated Rinkeby deployment via Travis CI
 
-```
-cd tests
-pytest
-```
+Travis CI is set up automatically deploy the contracts to the [Rinkeby testnet](https://www.rinkeby.io) after the tests run successfully.  These deployments happen on a tagged version (release or pre-release) of augur-core, pushes changes to [augur-contracts](https://github.com/AugurProject/augur-contracts), and updates augur.js to match that new version of augur-contracts.
 
-## Docker
+1. Tag augur-core as needed for a versioned deploy, e.g for a pre-release deployment: `npm version prerelease`
+2. CI will Build, Test, and Deploy the contracts
+3. augur-contracts will automatically have a new dev-channel version published to NPM (augur-contracts@dev)
+4. augur.js will automatically have a new dev-channel version published to NPM (augur.js@dev)
+5. If this is a real release (i.e. we want to declare this fit for public consumption), augur-contracts and augur.js should be published manually to NPM with their next version numbers.
+6. If this is a real release, augur-contracts and augur.js should be incremented to their NEXT release version number, and have the pre-release version -0 appended to them, and pushed to master.
 
-You may run augur-core using docker as follows. All docker commands map to the non-dockerized versions where make sense. All docker commands beginning with docker:run will execute the command within the docker image, all commands without run (e.g. docker:test) will first build the image and then execute docker:run:<command>.
+### Local deployment
 
-### Build:
+Deployment can be run in two modes, direct or Docker. In direct mode, the assumption is that the entire system has been built (TypeScript and Solidity), and there is a working Node.js environment locally. Furthermore, one must possess an account on the deployment target (e.g. Rinkeby testnet) which has enough ETH to cover the costs of the deployment. For the purposes of deploying to the testnets, those with access to the augur private testnet keys can deploy and update the existing contracts. For reference, these keys are stored in an encrypted git repository within the Augur Project's keybase team. If you need access, please inquire in the Augur Discord.
 
-```
-npm run docker:build
-```
+All deployment commands can be managed through scripts in package.json, and are accessible to `npm run` and `yarn`.
 
-### Test:
+### Manual Rinkeby deployment
 
-```
-# With a pre-built image
-npm run docker:run:test:unit:all
+Build and create compile artifacts:
 
-# Build and run all unit tests and integration tests
-npm run docker:test
-
-# Build and run just integration test
-npm run docker:test:integration
+```bash
+augur-core % npm run build
 ```
 
-### Debug:
+Deploy to Rinkeby:
 
+```bash
+augur-core % RINKEBY_PRIVATE_KEY=$(cat path/to/keys/deploy_keys/rinkeby.prv) npm run deploy:rinkeby
 ```
-npm run docker:run:test:console
-py.test -s tests/trading_tests.py
+
+### Updating augur-contracts
+
+Manual deployment generates artifacts in the `output/contracts` directory.  To merge these changes into augur-contracts, there are scripts located in [the augur-contracts repository](https://github.com/AugurProject/augur-contracts). **In local deployments, this is not automatic.**
+
+To merge the local changes into the augur-contracts repository:
+
+```bash
+augur-contracts % SOURCE="path/to/augur-core/output/contracts" BRANCH=master npm run update-contracts
 ```
 
-## General information about Augur
+Next, update the version of augur-contracts:
+ - for _dev_ builds, increment the pre-release number
+ - for _patches_, increment the patch number of the release build being patched; e.g., if 4.6.0 is the release, we are currently on 4.7.0-6, and we want to patch version 4.6, then we should use a patch to increment to 4.6.1
+ - for _releases_, set the version to be the correct major/minor version; e.g., for dev build v4.7.0-10, the release version would be v4.7.0
 
-- [A Roadmap For Augur and What’s Next](https://medium.com/@AugurProject/a-roadmap-for-augur-and-whats-next-930fe6c7f75a)
-- [Augur Master Plan](https://medium.com/@AugurProject/augur-master-plan-42dda65a3e3d)
+```bash
+augur-contracts % npm version [<version>, major,minor,patch, prerelease]
+augur-contracts % git push && git push --tags
+```
 
-## Terminology
+Finally, publish to NPM.  If this is a pre-release tag, deploy it to the `dev` channel.  The `dev` channel is the default for versions which are published from CI.
 
-[Augur Terminology](http://blog.augur.net/faq/all-terms/)
+```bash
+augur-contracts % npm publish [--tag dev]
+```
 
-## Src Folders
-
-The source code folders are split into six folders: extensions, factories, libraries, reporting, and trading. Splitting the folders this way allows for a separation of concerns and better modularity.
-- source/contracts/extensions -- contains files that deal with market creation, bond validity, getting the market price and reporting fee in attoeth (10^-18 eth), creating order books, reporting messages, and getting free REP (reputationTokens)
-- source/contracts/factories -- contains files that are constructors for universes, markets, reputation Tokens, reporting Periods/Windows, tradeable asset shareTokens, and topics for prediction.
-- source/contracts/libraries -- contains data structures used elsewhere in the source code.
-- source/contracts/reporting -- contains source files for the creation and manipulation of universes, markets, and various types of tokens (registration Tokens, stake Tokens, and reputation Tokens).
-- source/contracts/trading -- contains source code files that handle user actions regarding orders, claims, topics, and other trade functions.
-
-## Security model
-
-The security model is based on the idea that reporters will want to invest in a market where honesty prevails, and will not trust fraudulent markets. For example, assume that there exist two almost identical universes: an honest universe, where the factually correct answer is the predominant answer, and a fraudulent universe, where incorrect answers are predominant in order to cheat the system. The REP in the fraudulent universe will approach 0, and the REP in the honest universe will approach the theoretical yield. This phenomenon occurs because reporters do not want to trade on markets in a dishonest universe. Therefore, they will not create markets in a dishonest universe. Ultimately, the REP holders will not receive any market fees.
-
-In order to create a fraudulent universe, an attacker must fork the main universe. They will need to buy a large share of REP and stake it on the lie outcome, as nobody else will want to engage in a deceitful market. In principle, the attacker will lose up to 2.5 times the maximum profit made from a successful attack, and their REP will approach 0.
-
-The reentrancy guard (libraries/ReentrancyGuard.sol) and controller (Controller.sol) contracts also help uphold security. One can also attack Ethereum contracts by creating a chain of wanted contract calls through a malicious user. The reentrancy guard protects against that by preventing someone from re-entering the contracts before they return. The controller contract serves to update Augur and stores a registry of whitelisted contract addresses. The controller also can perform administrative actions, such as transferring ownership and performing emergency stop functions. It can be operated in either the developer mode, where the developer updates contracts, or the decentralized mode, when people must upload contracts to make changes and therefore, the market creators/traders must cancel orders and shift to the new contract. For bugs found involving money or REP, contracts are locked / an escape hatch is enabled which allows withdrawal of shares [and cancelling orders] for a value half-way between the bid-ask spread at the time of the lock. In addition, another escape hatch is enabled, which allows withdrawal of any locked up REP.
-
-## Testing
+## Tests
 
 The tests directory (augur-core/tests) contain tests and test fixtures to test the various functionalities present in Augur, including trading, reporting, and wcl tests.
 - conftest.py -- contains the class ContractFixture, which deals with caching compiled contracts, signatures, etc. as well as resetting the blockchain before each test.
@@ -99,90 +89,98 @@ The tests directory (augur-core/tests) contain tests and test fixtures to test t
 - test_controller.py -- tests controller functionalities.
 - test_mutex.py -- tests mutex functionalities.
 - test_helpers.py -- tests the controller, safeMath, and assertNoValue macros.
-- test_legacyRep.py -- tests the legacyRepTokens’ functionalities.
+- test_legacyRep.py -- tests the legacyRepTokens' functionalities.
 - utils.py -- contains useful functions for testing, such as conversion between different data types.
 - wcl-in-python.py -- contains functions for making and taking various types of bids.
 - wcl.txt -- explains tests for the various situations when filling a bid and filling an ask.
 
-In order to run Augur’s test suite, run the following inside the tests directory:
-```
+In order to run Augur's test suite, run the following inside the tests directory:
+
+```bash
 cd augur-core/tests
 pytest
 ```
+
 This executes all the tests. To run a test individually, run the following:
-```
-pytest path/to/test_file.py -k 'name_of_test’
+
+```bash
+pytest path/to/test_file.py -k 'name_of_test'
 ```
 
-By default the trading WCL fuzz testing is not run, if you want to run it specifically do
-```
+The unit test suite includes tests that use a fuzzer, which take somewhat longer (around 10 minutes on CI) to run than the rest of the tests.  These tests are _not_ run by default; to include these tests, set the environment variable `INCLUDE_FUZZY_TESTS=1`:
+
+```bash
 INCLUDE_FUZZY_TESTS=1 pytest trading/test_wcl_fuzzy.py
 ```
 
 Or if you want to run all tests (including fuzzy):
 
-```
+```bash
 INCLUDE_FUZZY_TESTS=1 pytest
 ```
 
-When writing tests, it is highly recommended to make use of the ContractFixtures class for ‘placeholder’ variables. Python’s unit testing framework comes handy here; encapsulate tests within functions that start with "test\_", and use “assert” statements when testing for certain values. Parameterized tests are recommended as well to test various possibilities and edge cases.
+When writing tests, it is highly recommended to make use of the ContractFixtures class for "placeholder" variables. Python's unit testing framework comes handy here; encapsulate tests within functions that start with "test\_", and use `assert` statements when testing for certain values. Parameterized tests are recommended as well to test various possibilities and edge cases.
 
-## Deployment
+## Docker
 
-Solidity contract deployment is handled by `ContractDeployer.ts` and the wrapper programs located in `source/deployment`. This deployment framework allows for incremental deploys of contracts to a given controller (specified via a configuration option). This allows us to deploy new contracts without touching the controller, effectively upgrading in-place the deployed system.
+augur-core can optionally be built, run, and tested using Docker.  A number of Docker commands are included as npm scripts, which map to the non-Dockerized versions where this makes sense. Docker commands beginning with `docker:run` execute the command within the Docker image. Docker commands without `run` (e.g. `docker:test`) first build the image, then execute `docker:run:<command>`.
 
-### Deploying to Rinkeby via Travis CI
-Travis CI is set up to allow deployments to Rinkeby automatically after a passed test suite. These deployments happen on a tagged version (release or pre-release) of augur-core, and automatically apply and pushes changes to augur-contracts and updates augur.js to match that new version of augur-contracts.
+### Build
 
-1. Tag augur-core as needed for a versioned deploy, e.h: `npm version prerelease`
-2. CI will Build, Test, and Deploy the contracts
-3. augur-contracts will automatically have a new dev-channel version published to NPM (augur-contracts@dev)
-4. augur.js will automatically have a new dev-channel version published to NPM (augur.js@dev)
-5. IF this is a real release (i.e. we want to declare this fit for public consumption), augur-contracts and augur.js should be published manually to NPM with their next version numbers.
-6. IF this is a real release, augur-contracts and augur.js should be incremented to their NEXT release version number, and have the prerelease version -0 appended to them, and pushed to master.
-
-### How to run a deployment locally
-
-Deployment can be run in two modes, direct or docker. In direct mode the assumoption is that the entire system has been built (typescript and solidity), and there is a working nodejs environment locally. Furthermore, one must posses an account on the deployment target (e.g. Rinkeby testnet) which has enough ETH to cover the costs of the deployment. For the purposes of deploying to the testnets, those with access to the augur private testnet keys can deploy and update the existing contracts. For reference, these keys are stored in an encrypted git repository within the Augur Project's keybase team. If you need access -- please inquire within Discord.
-
-All deployment commands can be managed through scripts described in package.json, and are accessible to `npm run` and `yarn`.
-
-### Example Rinkeby Deployment
-```
-augur-core % npm run build # build and create compile artifacts
-augur-core % RINKEBY_PRIVATE_KEY=$(cat path/to/keys/deploy_keys/rinkeby.prv) npm run deploy:rinkeby
+```bash
+npm run docker:build
 ```
 
+### Test
 
-### Example Updating augur-contracts
-This deployment will generate artifacts in the ./output/contracts directory. To merge these changes into augur-contracts, there are scripts located in that repository. *When running deploymen locally this step is not done automatically*. To include these changes you can work from within your checked out augur-contracts.
+```bash
+# With a pre-built image
+npm run docker:run:test:unit:all
 
+# Build and run all unit tests and integration tests
+npm run docker:test
+
+# Build and run just integration test
+npm run docker:test:integration
 ```
-# Merge the local changes into the contracts repo
-augur-contracts % SOURCE="path/to/augur-core/output/contracts" BRANCH=master npm run update-contracts
 
-# Update the augur-contracts version as necessary.
-# For dev builds, increment the pre-release number.
-# For patch releases, increment the patch number of the release build being patched. E.g. if 4.6.0 was released, and we are on 4.7.0-6, and we want to do a patch of 4.6, use a 'patch' release to increment to 4.6.1
-# For release builds, set the version to be the correct major/minor version, e.g. for dev build v4.7.0-10, the release version would be v4.7.0
-augur-contracts % npm version [<version>, major,minor,patch, prerelease]
-augur-contracts % git push && git push --tags
-# Publish th NPM, if this is a pre-release tag, deploy it to the dev channel. This dev channel is the default for version published from CI.
-augur-contracts % npm publish [--tag dev]
-```
+## Source code organization
+
+Augur's smart contracts are organized into four folders:
+- `source/contracts/factories`: Constructors for universes, markets, reporting windows, etc.
+- `source/contracts/libraries`: Data structures used elsewhere in the source code.
+- `source/contracts/reporting`: Creation and manipulation of universes, markets, reporting windows, and reporting-related tokens.
+- `source/contracts/trading`: Functions to create, view, and fill orders, to issue and close out complete sets of shares, and for traders to claim proceeds after markets are closed.
 
 ## Additional notes
 
-There are no floats in the EVM.
+### General information about Augur
 
-All augur-core contracts use integers. So ether values in contracts will always be represented as integers whose value is in attoeth (aka: wei, 10^-18 ether).
+- [A Roadmap For Augur and What's Next](https://medium.com/@AugurProject/a-roadmap-for-augur-and-whats-next-930fe6c7f75a)
+- [Augur Master Plan](https://medium.com/@AugurProject/augur-master-plan-42dda65a3e3d)
 
-## Information about the new reporting system
+### Terminology
 
-- [Flow diagram](https://pasteboard.co/1FcgIDWR2.png)
-- [More in depth diagram](https://www.websequencediagrams.com/files/render?link=kUm7MBHLoO87M3m2dXzE)
+[Augur Terminology](http://blog.augur.net/faq/all-terms/)
+
+### Security model
+
+The security model is based on the idea that reporters will want to invest in a market where honesty prevails, and will not trust fraudulent markets. For example, assume that there exist two almost identical universes: an honest universe, where the factually correct answer is the predominant answer, and a fraudulent universe, where incorrect answers are predominant in order to cheat the system. The REP in the fraudulent universe will approach 0, and the REP in the honest universe will approach the theoretical yield. This phenomenon occurs because reporters do not want to trade on markets in a dishonest universe. Therefore, they will not create markets in a dishonest universe, and the REP holders will not receive any market fees.
+
+In order to create a fraudulent universe, an attacker must fork the main universe. They will need to buy a large share of REP and stake it on the lie outcome, as nobody else will want to engage in a deceitful market. In principle, the attacker will lose up to 2.5 times the maximum profit made from a successful attack, and their REP will approach 0.
+
+The reentrancy guard (libraries/ReentrancyGuard.sol) and controller (Controller.sol) contracts also help uphold security. One can also attack Ethereum contracts by creating a chain of wanted contract calls through a malicious user. The reentrancy guard protects against that by preventing someone from re-entering the contracts before they return. The controller contract serves to update Augur and stores a registry of whitelisted contract addresses. The controller also can perform administrative actions, such as transferring ownership and performing emergency stop functions. It can be operated in either the developer mode, where the developer updates contracts, or the decentralized mode, when people must upload contracts to make changes and therefore, the market creators/traders must cancel orders and shift to the new contract. For bugs found involving money or REP, contracts are locked / an escape hatch is enabled which allows withdrawal of shares (and cancelling orders) for a value half-way between the bid-ask spread at the time of the lock. In addition, another escape hatch is enabled, which allows withdrawal of any locked up REP.
+
+### EVM numbers are always integers
+
+There are no floating point numbers in the EVM. All augur-core contracts use integers. So ether values in contracts will always be represented in units of wei (AKA attoether AKA 10^-18 ether).
+
+### Reporting diagrams
+
+- [Reporting flow diagram](https://pasteboard.co/1FcgIDWR2.png)
+- [More in-depth diagram](https://www.websequencediagrams.com/files/render?link=kUm7MBHLoO87M3m2dXzE)
 - [Market object graph](https://pasteboard.co/1WHGfXjB3.png)
 
-## Information about trading worst case loss (WCL)
+### Worst-case-loss escrow for trades
 
-- [Some notes on WCL/value at risk](https://github.com/AugurProject/augur-core/blob/master/tests/wcl.txt)
+- [Some notes on worst-case-loss/value-at-risk](https://github.com/AugurProject/augur-core/blob/master/tests/wcl.txt)
