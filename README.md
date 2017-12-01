@@ -116,17 +116,13 @@ pytest path/to/test_file.py -k 'name_of_test’
 
 By default the trading WCL fuzz testing is not run, if you want to run it specifically do
 ```
-export INCLUDE_FUZZY_TESTS=1
-pytest trading/test_wcl_fuzzy.py
-unset INCLUDE_FUZZY_TESTS
+INCLUDE_FUZZY_TESTS=1 pytest trading/test_wcl_fuzzy.py
 ```
 
 Or if you want to run all tests (including fuzzy):
 
 ```
-export INCLUDE_FUZZY_TESTS=1
-pytest
-unset INCLUDE_FUZZY_TESTS
+INCLUDE_FUZZY_TESTS=1 pytest
 ```
 
 When writing tests, it is highly recommended to make use of the ContractFixtures class for ‘placeholder’ variables. Python’s unit testing framework comes handy here; encapsulate tests within functions that start with "test\_", and use “assert” statements when testing for certain values. Parameterized tests are recommended as well to test various possibilities and edge cases.
