@@ -162,7 +162,7 @@ The reentrancy guard (libraries/ReentrancyGuard.sol) and controller (Controller.
 
 ### EVM numbers are always integers
 
-There are no floating point numbers in the EVM. All augur-core contracts use integers. So ether values in contracts will always be represented in units of wei (AKA attoether AKA 10^-18 ether).
+There are no floating-point numbers in the EVM, only integers.  Therefore, Ether and Reputation values in contracts are always represented in units of wei (i.e., indivisible units of 10^-18 Ether or 10^-18 Reputation).
 
 ### Reporting diagrams
 
