@@ -26,7 +26,7 @@ def test_redeem_stake(collectFees, kitchenSinkFixture, universe, market, cash, c
     proceedToFirstReporting(kitchenSinkFixture, universe, market, True, 1, [0,market.getNumTicks()], [market.getNumTicks(),0])
 
     # Move to finalization so we can redeem stake
-    kitchenSinkFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
+    kitchenSinkFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
     assert market.tryFinalize()
     assert market.getReportingState() == kitchenSinkFixture.contracts['Constants'].FINALIZED()
 
@@ -64,13 +64,13 @@ def test_redeem_participation_tokens(collectFees, kitchenSinkFixture, market, ca
     fees = cash.balanceOf(market.getReportingWindow())
     assert fees > 0
 
-    kitchenSinkFixture.chain.head_state.timestamp = market.getEndTime() + 1
+    kitchenSinkFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
 
     assert kitchenSinkFixture.designatedReport(market, [0, market.getNumTicks()], tester.k0)
     assert kitchenSinkFixture.designatedReport(categoricalMarket, [0, 0, categoricalMarket.getNumTicks()], tester.k0)
     assert kitchenSinkFixture.designatedReport(scalarMarket, [0, scalarMarket.getNumTicks()], tester.k0)
 
-    kitchenSinkFixture.chain.head_state.timestamp = reportingWindow.getStartTime() + 1
+    kitchenSinkFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
 
     assert market.tryFinalize()
     assert categoricalMarket.tryFinalize()
@@ -81,7 +81,7 @@ def test_redeem_participation_tokens(collectFees, kitchenSinkFixture, market, ca
 
     expectedEther = fees / 2
     if (collectFees):
-        kitchenSinkFixture.chain.head_state.timestamp = reportingWindow.getDisputeEndTime() + 1
+        kitchenSinkFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
     else:
         expectedEther = 0
 
@@ -103,6 +103,8 @@ def test_redeem_disavowed_and_forking_stake(kitchenSinkFixture, universe, cash, 
 
     # We proceed the standard market to the FORKING state
     proceedToForking(kitchenSinkFixture, universe, market, True, 1, 2, 3, [0,market.getNumTicks()], [market.getNumTicks(),0], 2, [market.getNumTicks(),0], [0,market.getNumTicks()], [market.getNumTicks(),0])
+    forkingMarketStake = kitchenSinkFixture.getOrCreateStakeToken(market, [market.getNumTicks(),0])
+    assert forkingMarketStake.balanceOf(tester.a1) > 0
 
     # The market we created is now awaiting migration
     assert newMarket.getReportingState() == kitchenSinkFixture.contracts['Constants'].AWAITING_FORK_MIGRATION()
@@ -117,6 +119,12 @@ def test_redeem_disavowed_and_forking_stake(kitchenSinkFixture, universe, cash, 
     assert newMarket.migrateThroughOneFork()
 
     # Redeem all of the disputer's disavowed stake tokens and dispute bonds in the new market
+    childUniverseHash = market.derivePayoutDistributionHash([market.getNumTicks(),0], False)
+    forkUniverse = kitchenSinkFixture.applySignature('Universe', universe.getOrCreateChildUniverse(childUniverseHash))
+    forkReputationToken = kitchenSinkFixture.applySignature('ReputationToken', forkUniverse.getReputationToken())
+    expectedForkREP = forkingMarketStake.balanceOf(tester.a1)
     expectedREP = 1 + kitchenSinkFixture.contracts["Constants"].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
+
     with TokenDelta(reputationToken, expectedREP, tester.a1, "Redeeming didn't give REP correctly"):
-        universe.redeemStake([stakeTokenAddress], [disputeBondAddress], [], False, sender=tester.k1)
+        with TokenDelta(forkReputationToken, expectedForkREP, tester.a1, "Redeeming forkingMarketStake didn't give REP correctly"):
+            universe.redeemStake([stakeTokenAddress, forkingMarketStake.address], [disputeBondAddress], [], False, sender=tester.k1)
