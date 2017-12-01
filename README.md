@@ -91,7 +91,7 @@ The tests directory (augur-core/tests) contain tests and test fixtures to test t
 - test_controller.py -- tests controller functionalities.
 - test_mutex.py -- tests mutex functionalities.
 - test_helpers.py -- tests the controller, safeMath, and assertNoValue macros.
-- test_legacyRep.py -- tests the legacyRepTokens' functionalities.
+- test_legacyRep.py -- tests for legacyRepToken's functionalities.
 - utils.py -- contains useful functions for testing, such as conversion between different data types.
 - wcl-in-python.py -- contains functions for making and taking various types of bids.
 - wcl.txt -- explains tests for the various situations when filling a bid and filling an ask.
@@ -166,7 +166,7 @@ Augur's smart contracts are organized into four folders:
 
 ### Security model
 
-The security model is based on the idea that reporters will want to invest in a market where honesty prevails, and will not trust fraudulent markets. For example, assume that there exist two almost identical universes: an honest universe, where the factually correct answer is the predominant answer, and a fraudulent universe, where incorrect answers are predominant in order to cheat the system. The REP in the fraudulent universe will approach 0, and the REP in the honest universe will approach the theoretical yield. This phenomenon occurs because reporters do not want to trade on markets in a dishonest universe. Therefore, they will not create markets in a dishonest universe, and the REP holders will not receive any market fees.
+The security model is based on the idea that reporters will want to invest in a market where honesty prevails, and will not trust fraudulent markets. For example, assume that there exist two almost identical universes: an honest universe, where the factually correct answer is the predominant answer, and a fraudulent universe, where incorrect answers are predominant in order to cheat the system. The REP in the fraudulent universe will approach 0, and the REP in the honest universe will approach the theoretical yield. This phenomenon occurs because traders do not want to trade on markets in a dishonest universe. Therefore, they will not create markets in a dishonest universe, and the REP holders will not receive any market fees.
 
 In order to create a fraudulent universe, an attacker must fork the main universe. They will need to buy a large share of REP and stake it on the lie outcome, as nobody else will want to engage in a deceitful market. In principle, the attacker will lose up to 2.5 times the maximum profit made from a successful attack, and their REP will approach 0.
 
