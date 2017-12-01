@@ -34,14 +34,25 @@ contract ParticipationToken is DelegationTarget, Extractable, ITyped, Initializa
         return true;
     }
 
-    // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
+    function redeemForHolder(address _sender, bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
+        require(reportingWindow.getUniverse() == IUniverse(msg.sender));
+        redeemInternal(_sender, forgoFees);
+        return true;
+    }
+
     function redeem(bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
-        uint256 _attotokens = balances[msg.sender];
+        redeemInternal(msg.sender, forgoFees);
+        return true;
+    }
+
+    // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
+    function redeemInternal(address _sender, bool forgoFees) private returns (bool) {
+        uint256 _attotokens = balances[_sender];
         if (_attotokens != 0) {
-            burn(msg.sender, _attotokens);
-            reportingWindow.getReputationToken().transfer(msg.sender, _attotokens);
+            burn(_sender, _attotokens);
+            reportingWindow.getReputationToken().transfer(_sender, _attotokens);
         }
-        reportingWindow.collectParticipationTokenReportingFees(msg.sender, _attotokens, forgoFees);
+        reportingWindow.collectParticipationTokenReportingFees(_sender, _attotokens, forgoFees);
         return true;
     }
 

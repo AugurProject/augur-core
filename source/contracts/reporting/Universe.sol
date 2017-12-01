@@ -445,6 +445,35 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return _newMarket;
     }
 
+    function redeemStake(IStakeToken[] _stakeTokens, IDisputeBond[] _disputeBonds, IParticipationToken[] _participationTokens, bool forgoFees) public onlyInGoodTimes returns (bool) {
+        for (uint8 i=0; i < _stakeTokens.length; i++) {
+            IStakeToken _stakeToken = _stakeTokens[i];
+            if (_stakeToken.isDisavowed()) {
+                _stakeToken.redeemDisavowedTokens(msg.sender);
+            } else if (_stakeToken.isForked()) {
+                _stakeToken.redeemForkedTokensForHolder(msg.sender);
+            } else {
+                _stakeToken.redeemWinningTokensForHolder(msg.sender, forgoFees);
+            }
+        }
+
+        for (uint8 j=0; j < _disputeBonds.length; j++) {
+            IDisputeBond _disputeBond = _disputeBonds[j];
+            if (_disputeBond.isDisavowed()) {
+                _disputeBond.withdrawDisavowedTokens();
+            } else {
+                _disputeBond.withdrawForHolder(msg.sender, forgoFees);
+            }
+        }
+
+        for (uint8 k=0; k < _participationTokens.length; k++) {
+            IParticipationToken _participationToken = _participationTokens[k];
+            _participationToken.redeemForHolder(msg.sender, forgoFees);
+        }
+
+        return true;
+    }
+
     function getProtectedTokens() internal returns (address[] memory) {
         return new address[](0);
     }

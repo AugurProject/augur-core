@@ -37,6 +37,18 @@ contract DisputeBond is DelegationTarget, Extractable, ITyped, Initializable, Ow
     }
 
     function withdraw(bool forgoFees) public onlyOwner onlyInGoodTimes returns (bool) {
+        withdrawInternal(forgoFees);
+        return true;
+    }
+
+    function withdrawForHolder(address _sender, bool forgoFees) public onlyInGoodTimes returns (bool) {
+        require(market.getUniverse() == IUniverse(msg.sender));
+        require(_sender == owner);
+        withdrawInternal(forgoFees);
+        return true;
+    }
+
+    function withdrawInternal(bool forgoFees) private returns (bool) {
         require(market.isContainerForDisputeBond(this));
         bool _isFinalized = market.getReportingState() == IMarket.ReportingState.FINALIZED;
         require(_isFinalized && market.getFinalPayoutDistributionHash() != disputedPayoutDistributionHash);
@@ -51,7 +63,7 @@ contract DisputeBond is DelegationTarget, Extractable, ITyped, Initializable, Ow
         return true;
     }
 
-    function withdrawDisavowedTokens() public onlyOwner onlyInGoodTimes returns (bool) {
+    function withdrawDisavowedTokens() public onlyInGoodTimes returns (bool) {
         require(!market.isContainerForDisputeBond(this));
         require(getUniverse().getForkingMarket() != market);
         uint256 _amountToTransfer = reputationToken.balanceOf(this);
@@ -136,6 +148,10 @@ contract DisputeBond is DelegationTarget, Extractable, ITyped, Initializable, Ow
 
     function getBondRemainingToBePaidOut() constant public returns (uint256) {
         return bondRemainingToBePaidOut;
+    }
+
+    function isDisavowed() public view returns (bool) {
+        return !market.isContainerForDisputeBond(this);
     }
 
     // Disallow REP extraction
