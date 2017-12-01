@@ -108,18 +108,6 @@ This executes all the tests. To run a test individually, run the following:
 pytest path/to/test_file.py -k 'name_of_test'
 ```
 
-The unit test suite includes tests that use a fuzzer, which take somewhat longer (around 10 minutes on CI) to run than the rest of the tests.  These tests are _not_ run by default; to include these tests, set the environment variable `INCLUDE_FUZZY_TESTS=1`:
-
-```bash
-INCLUDE_FUZZY_TESTS=1 pytest trading/test_wcl_fuzzy.py
-```
-
-Or if you want to run all tests (including fuzzy):
-
-```bash
-INCLUDE_FUZZY_TESTS=1 pytest
-```
-
 When writing tests, it is highly recommended to make use of the ContractFixtures class for "placeholder" variables. Python's unit testing framework comes handy here; encapsulate tests within functions that start with "test\_", and use `assert` statements when testing for certain values. Parameterized tests are recommended as well to test various possibilities and edge cases.
 
 ## Docker
