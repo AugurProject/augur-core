@@ -33,6 +33,8 @@ jobs:
     - stage: deploy
       script: skip
       env:
+        - DOCKER_USERNAME=augurintegration
+        - secure: KDRY8LJYUEBq6k18IlPs3fPFHD2Le99laXvA+Qflw+oN1sJWEZtTu50W9MR5vHfQn1QhoQpuN+xhKnEnRTrz4jMQtd1wnOJq6+RrmZZBUw+bCJTQipQUFjdYrGus7ofFV7AheeCmDrqC0fOR+bRSqKDHyIJ6Jdt4beKiVSuUWz0=
         - TESTS=
       deploy: &script
         provider: script
