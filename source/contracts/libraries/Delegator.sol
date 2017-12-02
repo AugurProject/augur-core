@@ -35,15 +35,16 @@ contract Delegator is DelegationTarget {
             mstore(0x40, add(_calldataMemoryOffset, _size))
             // Copy method signature and parameters of this call into memory
             calldatacopy(_calldataMemoryOffset, 0x0, calldatasize)
-            // Call the actual method via delegation and store the result at offset _calldataMemoryOffset assuming size of 32
-            let _retval := delegatecall(gas, _target, _calldataMemoryOffset, calldatasize, _calldataMemoryOffset, 32)
+            // Call the actual method via delegation
+            let _retval := delegatecall(gas, _target, _calldataMemoryOffset, calldatasize, 0, 0)
             switch _retval
             case 0 {
                 // 0 == it threw, so we revert
                 revert(0,0)
             } default {
-                // If the call succeeded return the data in mem[_calldataMemoryOffset..32]
-                return(_calldataMemoryOffset, 32)
+                // If the call succeeded return the return data from the delegate call
+                returndatacopy(0, 0, returndatasize)
+                return(0, returndatasize)
             }
         }
     }

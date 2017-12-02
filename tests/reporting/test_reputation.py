@@ -1,13 +1,15 @@
 from ethereum.tools import tester
 from utils import captureFilteredLogs, bytesToHexString
 
-def test_decimals(contractsFixture, universe):
+def test_init(contractsFixture, universe):
     reputationTokenFactory = contractsFixture.contracts['ReputationTokenFactory']
     assert reputationTokenFactory
     reputationTokenAddress = reputationTokenFactory.createReputationToken(contractsFixture.contracts['Controller'].address, universe.address)
     reputationToken = contractsFixture.applySignature('ReputationToken', reputationTokenAddress)
 
+    assert reputationToken.name() == "Reputation"
     assert reputationToken.decimals() == 18
+    assert reputationToken.symbol() == "REP"
 
 def test_reputation_token_logging(contractsFixture, universe):
     reputationToken = contractsFixture.applySignature("ReputationToken", universe.getReputationToken())

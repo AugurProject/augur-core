@@ -17,7 +17,6 @@ import 'libraries/Extractable.sol';
 contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable, VariableSupplyToken, IReputationToken {
     using SafeMathUint256 for uint256;
 
-    //FIXME: Delegated contracts cannot currently use string values, so we will need to find a workaround if this hasn't been fixed before we release
     string constant public name = "Reputation";
     string constant public symbol = "REP";
     uint256 constant public decimals = 18;

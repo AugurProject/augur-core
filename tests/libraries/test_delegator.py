@@ -4,22 +4,6 @@ from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, raises
 from utils import stringToBytes
 
-@fixture(scope="session")
-def localSnapshot(fixture, controllerSnapshot):
-    fixture.resetToSnapshot(controllerSnapshot)
-    name = "DelegatorHelper"
-    targetName = "DelegatorHelperTarget"
-    fixture.uploadAndAddToController("solidity_test_helpers/DelegatorHelper.sol", targetName, name)
-    fixture.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", name, "delegator", constructorArgs=[fixture.contracts['Controller'].address, stringToBytes(targetName)])
-    fixture.contracts[name] = fixture.applySignature(name, fixture.contracts[name].address)
-    return fixture.createSnapshot()
-
-@fixture
-def localFixture(fixture, localSnapshot):
-    fixture.resetToSnapshot(localSnapshot)
-    return fixture
-
-
 def test_delegationTargetInitialMemberValues(localFixture):
 
     delegatorHelperTarget = localFixture.contracts['DelegatorHelperTarget']
@@ -33,18 +17,14 @@ def test_delegationTargetInitialMemberValues(localFixture):
     assert delegatorHelper.constantName() == stringToBytes("ConstantName")
     assert delegatorHelper.constantName() == delegatorHelperTarget.constantName()
 
-    # Constant string values however are not retrievable. In fact, string values will not work at all with delegated contract storage. See: https://github.com/ethereum/solidity/issues/164#issuecomment-149846605
+    # String values are retrievable, but like ints are not set at declaration time.
     assert delegatorHelperTarget.stringMember() == "StringMember"
     assert delegatorHelperTarget.stringConstant() == "StringConstant"
     assert delegatorHelper.stringMember() == ""
     assert delegatorHelper.stringConstant() == ""
     assert delegatorHelper.setStringMember("StringValue")
-    assert delegatorHelper.stringMember() == ""
-    assert delegatorHelper.getStringMember() == ""
-
-    # Note that even if we do not attempt to pass in the string value and let the contract set the value itself we will not be able to retrieve the value
-    assert delegatorHelper.populateStringMember()
-    assert delegatorHelper.getStringMember() == ""
+    assert delegatorHelper.stringMember() == "StringValue"
+    assert delegatorHelper.getStringMember() == "StringValue"
 
     # Once a non-string member is explicitly set on the delegator it will have the newly provided value
     assert delegatorHelper.setName("NewName")
@@ -105,9 +85,21 @@ def test_delegationInputsAndOutputs(localFixture):
 
     delegatorHelper.manyInputsNoReturn(1, 2, 3, 4)
 
-    # We cannot return dynamic arrays or arrays of fixed size.
-    # In the dynamic case we recieve an empty array
-    assert delegatorHelper.returnDynamic() == []
-    # Trying this with a fixed size results in an error (within our testing framework)
-    with raises(AssertionError):
-        delegatorHelper.returnFixed()
+    # We can return dynamic arrays or arrays of fixed size.
+    assert delegatorHelper.returnDynamic() == [1L, 0L, 0L, 0L, 0L]
+    assert delegatorHelper.returnFixed() == [1L, 0L, 0L, 0L, 0L]
+
+@fixture(scope="session")
+def localSnapshot(fixture, controllerSnapshot):
+    fixture.resetToSnapshot(controllerSnapshot)
+    name = "DelegatorHelper"
+    targetName = "DelegatorHelperTarget"
+    fixture.uploadAndAddToController("solidity_test_helpers/DelegatorHelper.sol", targetName, name)
+    fixture.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", name, "delegator", constructorArgs=[fixture.contracts['Controller'].address, stringToBytes(targetName)])
+    fixture.contracts[name] = fixture.applySignature(name, fixture.contracts[name].address)
+    return fixture.createSnapshot()
+
+@fixture
+def localFixture(fixture, localSnapshot):
+    fixture.resetToSnapshot(localSnapshot)
+    return fixture
