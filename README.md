@@ -45,10 +45,13 @@ Build and create compile artifacts:
 npm run build
 ```
 
-Deploy to Rinkeby:
+Deploy to Rinkeby and push build artifacts: This is *not* using the dockerized commands, so that your local git and npm envs are used for the deployment. If you need to use the dockerized version you will need to pass:
+
+a. GITHUB_DEPLOYMENT_TOKEN - set to a valid OAUTH token that allows pushing to github
+b. NPM_TOKEN - The auth token value from your ~/.npmrc after you've logged into NOM
 
 ```bash
-RINKEBY_PRIVATE_KEY=$(cat path/to/keys/deploy_keys/rinkeby.prv) npm run deploy:rinkeby
+RINKEBY_PRIVATE_KEY=$(cat ../keys/deploy_keys/rinkeby.prv) DEPLOY=true ARTIFACTS=true AUTOCOMMIT=true npm run deploy:rinkeby
 ```
 
 ### Updating augur-contracts
