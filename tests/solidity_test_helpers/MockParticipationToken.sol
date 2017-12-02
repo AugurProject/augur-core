@@ -34,7 +34,7 @@ contract MockParticipationToken is ITyped, Initializable, MockVariableSupplyToke
     function getRedeemForgoFeesValue() public returns(bool) {
         return redeemForgoFeesValue;
     }
-    
+
     function buy(uint256 _attotokens) public afterInitialized returns (bool) {
         buyValue = _attotokens;
         return true;
@@ -52,7 +52,7 @@ contract MockParticipationToken is ITyped, Initializable, MockVariableSupplyToke
     function callCollectParticipationTokenReportingFees(IReportingWindow _reportingWindow, address _reporterAddress, uint256 _attoStake, bool _forgoFees) public returns(uint256) {
         return _reportingWindow.collectParticipationTokenReportingFees(_reporterAddress, _attoStake, _forgoFees);
     }
-    
+
     function callTrustedParticipationTokenTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
         return _reputationToken.trustedParticipationTokenTransfer(_source, _destination, _attotokens);
     }
@@ -60,7 +60,7 @@ contract MockParticipationToken is ITyped, Initializable, MockVariableSupplyToke
     function getTypeName() public view returns (bytes32) {
         return "ParticipationToken";
     }
-    
+
     function initialize(IReportingWindow _reportingWindow) public returns (bool) {
         endInitialization();
         initializeReportingWindowValue = _reportingWindow;
@@ -69,5 +69,9 @@ contract MockParticipationToken is ITyped, Initializable, MockVariableSupplyToke
 
     function getReportingWindow() public view returns (IReportingWindow) {
         return setReportingWindowValue;
+    }
+
+    function redeemForHolder(address _sender, bool forgoFees) public returns (bool) {
+        return true;
     }
 }
