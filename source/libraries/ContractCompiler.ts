@@ -37,6 +37,7 @@ export class ContractCompiler {
             let errors = "";
 
             for (let error of compilerOutput.errors) {
+                // FIXME: https://github.com/ethereum/solidity/issues/3273
                 if (error.message.includes("instruction is only available after the Metropolis hard fork")) continue;
                 errors += error.formattedMessage + "\n";
             }

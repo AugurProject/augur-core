@@ -43,8 +43,11 @@ contract Delegator is DelegationTarget {
                 revert(0,0)
             } default {
                 // If the call succeeded return the return data from the delegate call
-                returndatacopy(0, 0, returndatasize)
-                return(0, returndatasize)
+                let _returndataMemoryOffset := mload(0x40)
+                // Update the pointer at 0x40 again to point at new free memory location so any theoretical allocation doesn't stomp our memory in this call
+                mstore(0x40, add(_returndataMemoryOffset, returndatasize))
+                returndatacopy(_returndataMemoryOffset, 0x0, returndatasize)
+                return(_returndataMemoryOffset, returndatasize)
             }
         }
     }
