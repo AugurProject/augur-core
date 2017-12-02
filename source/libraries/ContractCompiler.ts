@@ -35,10 +35,16 @@ export class ContractCompiler {
         const compilerOutput: CompilerOutput = JSON.parse(compilerOutputJson);
         if (compilerOutput.errors) {
             let errors = "";
+
             for (let error of compilerOutput.errors) {
+                // FIXME: https://github.com/ethereum/solidity/issues/3273
+                if (error.message.includes("instruction is only available after the Metropolis hard fork")) continue;
                 errors += error.formattedMessage + "\n";
             }
-            throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
+
+            if (errors.length > 0) {
+                throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
+            }
         }
         const filteredCompilerOutput = this.filterCompilerOutput(compilerOutput);
 
