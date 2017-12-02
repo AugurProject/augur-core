@@ -98,7 +98,7 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     }
 
     function redeemForkedTokensForHolder(address _sender) public onlyInGoodTimes afterInitialized returns (bool) {
-        require(market.getUniverse() == IUniverse(msg.sender));
+        require(IUniverse(msg.sender) == market.getUniverse());
         redeemForkedTokensInternal(_sender);
         return true;
     }
@@ -121,7 +121,7 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     }
 
     function redeemWinningTokensForHolder(address _sender, bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
-        require(market.getUniverse() == IUniverse(msg.sender));
+        require(IUniverse(msg.sender) == market.getUniverse());
         redeemWinningTokensInternal(_sender, forgoFees);
         return true;
     }

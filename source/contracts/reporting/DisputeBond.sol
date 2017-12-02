@@ -42,7 +42,7 @@ contract DisputeBond is DelegationTarget, Extractable, ITyped, Initializable, Ow
     }
 
     function withdrawForHolder(address _sender, bool forgoFees) public onlyInGoodTimes returns (bool) {
-        require(market.getUniverse() == IUniverse(msg.sender));
+        require(IUniverse(msg.sender) == market.getUniverse());
         require(_sender == owner);
         withdrawInternal(forgoFees);
         return true;

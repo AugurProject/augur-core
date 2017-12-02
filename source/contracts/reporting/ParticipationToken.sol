@@ -35,7 +35,7 @@ contract ParticipationToken is DelegationTarget, Extractable, ITyped, Initializa
     }
 
     function redeemForHolder(address _sender, bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
-        require(reportingWindow.getUniverse() == IUniverse(msg.sender));
+        require(IUniverse(msg.sender) == reportingWindow.getUniverse());
         redeemInternal(_sender, forgoFees);
         return true;
     }
