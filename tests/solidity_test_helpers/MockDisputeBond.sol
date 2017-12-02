@@ -94,4 +94,8 @@ contract MockDisputeBond is ITyped, IDisputeBond, Ownable {
     function getBondRemainingToBePaidOut() constant public returns (uint256) {
         return setBondRemainingToBePaidOutValue;
     }
+
+    function isDisavowed() public view returns (bool) {
+        return false;
+    }
 }
