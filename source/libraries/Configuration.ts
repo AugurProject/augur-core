@@ -14,8 +14,9 @@ export class Configuration {
     public readonly controllerAddress: string|undefined;
     public readonly createGenesisUniverse: boolean;
     public readonly isProduction: boolean;
+    public readonly useNormalTime: boolean;
 
-    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputRoot: string, controllerAddress: string|undefined, createGenesisUniverse: boolean=true, isProduction: boolean=false) {
+    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputRoot: string, controllerAddress: string|undefined, createGenesisUniverse: boolean=true, isProduction: boolean=false, useNormalTime: boolean=true) {
         this.httpProviderHost = host;
         this.httpProviderPort = port;
         this.gasPrice = gasPrice;
@@ -27,6 +28,7 @@ export class Configuration {
         this.controllerAddress = controllerAddress;
         this.createGenesisUniverse = createGenesisUniverse;
         this.isProduction = isProduction;
+        this.useNormalTime = isProduction || useNormalTime;
     }
 
     public static create = async (): Promise<Configuration> => {
