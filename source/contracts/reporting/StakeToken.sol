@@ -97,18 +97,19 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         return true;
     }
 
+    // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     function redeemForkedTokensForHolder(address _sender) public onlyInGoodTimes afterInitialized returns (bool) {
         require(IUniverse(msg.sender) == market.getUniverse());
         redeemForkedTokensInternal(_sender);
         return true;
     }
 
+    // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     function redeemForkedTokens() public onlyInGoodTimes afterInitialized returns (bool) {
         redeemForkedTokensInternal(msg.sender);
         return true;
     }
 
-    // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     function redeemForkedTokensInternal(address _sender) private returns (bool) {
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() == market);
@@ -120,19 +121,21 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         return true;
     }
 
+    // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
+    // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
     function redeemWinningTokensForHolder(address _sender, bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
         require(IUniverse(msg.sender) == market.getUniverse());
         redeemWinningTokensInternal(_sender, forgoFees);
         return true;
     }
 
+    // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
+    // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
     function redeemWinningTokens(bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
         redeemWinningTokensInternal(msg.sender, forgoFees);
         return true;
     }
 
-    // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
-    // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
     function redeemWinningTokensInternal(address _sender, bool forgoFees) private returns (bool) {
         require(market.getFinalWinningStakeToken() == this);
         require(market.isContainerForStakeToken(this));
