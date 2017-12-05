@@ -73,7 +73,7 @@ export class ContractInterfaceGenerator {
             const from = sender || this.accountManager.defaultAddress;
             const data = encodeMethod(abi, parameters);
             // TODO: remove \`gas\` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
-            const gas = await this.connector.ethjsQuery.estimateGas(Object.assign({ to: this.address, from: from, data: data, gas: new BN(6500000) }, attachedEth ? { value: attachedEth } : {} ));
+            const gas = await this.connector.ethjsQuery.estimateGas(Object.assign({ to: this.address, from: from, data: data }, attachedEth ? { value: attachedEth } : {} ));
             gasPrice = gasPrice || this.defaultGasPrice;
             const transaction = Object.assign({ from: from, to: this.address, data: data, gasPrice: gasPrice, gas: gas }, attachedEth ? { value: attachedEth } : {});
             const signedTransaction = await this.accountManager.signTransaction(transaction);

@@ -29,6 +29,8 @@ export class ContractCompiler {
             // Unable to read compiled contracts output file (likely because it has not been generated)
         }
 
+        console.log('Compiling contracts, this may take a minute...');
+
         // Compile all contracts in the specified input directory
         const compilerInputJson = await this.generateCompilerInput();
         const compilerOutputJson = compileStandardWrapper(JSON.stringify(compilerInputJson));

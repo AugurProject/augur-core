@@ -25,11 +25,37 @@
                 "output/tests-integration/**/*.js",
                 "--no-timeouts"
             ],
-            // uncomment the following and run `docker-compose up --build --force-recreate --abort-on-container-exit parity-dev-node` then you can debug tests against insta-seal chain in VSCode
+            // uncomment one of the following and run `docker-compose up --build --force-recreate --abort-on-container-exit parity-dev-node` then you can debug tests against any chain from within VSCode
+            // ** Local **
             // "env": {
             //     "ETHEREUM_HOST": "localhost",
-            //     "ETHEREUM_PORT": "47622",
-            //     "ETHEREUM_GAS_PRICE_IN_NANOETH": "1"
+            //     "ETHEREUM_PORT": "8545",
+            //     "ETHEREUM_GAS_PRICE_IN_NANOETH": "1",
+            ////     "ETHEREUM_PRIVATE_KEY": "0xe2b0241b73cd78d450f85eca67188fb884e7ebe961f8981814474c500d581952"
+            // },
+            // ** Aura **
+            // "env": {
+            //     "ETHEREUM_HOST": "dev-node-geth-1.1245c996.cont.dockerapp.io",
+            //     "ETHEREUM_PORT": "32770",
+            //     "ETHEREUM_GAS_PRICE_IN_NANOETH": "1",
+            //     "ETHEREUM_PRIVATE_KEY": "0x47f49c399482f73143cadeb2db8938d3f249578bdc64cdcda4ecf1ee535a5c91",
+            ////     "AUGUR_CONTROLLER_ADDRESS": "0xe416b1cf13579c309aa3614cfe172e3b5910760a"
+            // },
+            // ** Clique **
+            // "env": {
+            //     "ETHEREUM_HOST": "dev-node-geth-1.26fbbfb5.cont.dockerapp.io",
+            //     "ETHEREUM_PORT": "32773",
+            //     "ETHEREUM_GAS_PRICE_IN_NANOETH": "1",
+            //     "ETHEREUM_PRIVATE_KEY": "0x47f49c399482f73143cadeb2db8938d3f249578bdc64cdcda4ecf1ee535a5c91",
+            ////     "AUGUR_CONTROLLER_ADDRESS": "0xe416b1cf13579c309aa3614cfe172e3b5910760a"
+            // },
+            // ** Rinkeby **
+            // "env": {
+            //     "ETHEREUM_HOST": "rinkeby.augur.net",
+            //     "ETHEREUM_PORT": "8545",
+            //     "ETHEREUM_GAS_PRICE_IN_NANOETH": "1",
+            //     "ETHEREUM_PRIVATE_KEY": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+            ////     "AUGUR_CONTROLLER_ADDRESS": "0x7B51CbD28e4A7Fe6631FFed2Dd3F276F416ebF10"
             // },
             "protocol": "inspector",
             "sourceMaps": true,
