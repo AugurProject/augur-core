@@ -11,4 +11,7 @@ contract IDisputeBond is ITyped, IOwnable {
     function getMarket() constant public returns (IMarket);
     function getDisputedPayoutDistributionHash() constant public returns (bytes32);
     function getBondRemainingToBePaidOut() constant public returns (uint256);
+    function withdrawForHolder(address _sender, bool forgoFees) public returns (bool);
+    function withdrawDisavowedTokens() public returns (bool);
+    function isDisavowed() public view returns (bool);
 }

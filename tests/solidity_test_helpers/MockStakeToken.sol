@@ -30,7 +30,7 @@ contract MockStakeToken is ITyped, MockVariableSupplyToken, IStakeToken {
     function getInitializeMarketValue() public returns(IMarket) {
         return initializeMarketValue;
     }
-    
+
     function getInitializePayoutNumeratorsValue() public returns(uint256[]) {
         return initializePayoutNumeratorsValue;
     }
@@ -129,5 +129,25 @@ contract MockStakeToken is ITyped, MockVariableSupplyToken, IStakeToken {
 
     function isValid() public view returns (bool) {
         return setIsValidValue;
+    }
+
+    function redeemDisavowedTokens(address _reporter) public returns (bool) {
+        return true;
+    }
+
+    function redeemWinningTokensForHolder(address _sender, bool forgoFees) public returns (bool) {
+        return true;
+    }
+
+    function redeemForkedTokensForHolder(address _sender) public returns (bool) {
+        return true;
+    }
+
+    function isDisavowed() public view returns (bool) {
+        return false;
+    }
+
+    function isForked() public view returns (bool) {
+        return false;
     }
 }

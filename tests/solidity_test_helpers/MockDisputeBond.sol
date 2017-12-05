@@ -94,4 +94,16 @@ contract MockDisputeBond is ITyped, IDisputeBond, Ownable {
     function getBondRemainingToBePaidOut() constant public returns (uint256) {
         return setBondRemainingToBePaidOutValue;
     }
+
+    function withdrawForHolder(address _sender, bool forgoFees) public returns (bool) {
+        return true;
+    }
+
+    function withdrawDisavowedTokens() public returns (bool) {
+        return true;
+    }
+
+    function isDisavowed() public view returns (bool) {
+        return false;
+    }
 }

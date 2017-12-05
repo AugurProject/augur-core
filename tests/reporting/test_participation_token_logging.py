@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from utils import captureFilteredLogs, bytesToHexString
 
-def test_stake_token_logging(contractsFixture, market, categoricalMarket, scalarMarket, universe):
+def test_participation_token_logging(contractsFixture, market, categoricalMarket, scalarMarket, universe):
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
     participationToken = contractsFixture.applySignature("ParticipationToken", reportingWindow.getParticipationToken())
 

@@ -88,6 +88,7 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         if (market.getReportingState() == IMarket.ReportingState.AWAITING_FORK_MIGRATION) {
             market.disavowTokens();
         }
+        require(!market.isContainerForStakeToken(this));
         uint256 _reputationSupply = reputationToken.balanceOf(this);
         uint256 _attotokens = balances[_reporter];
         uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
@@ -97,32 +98,57 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     }
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
+    function redeemForkedTokensForHolder(address _sender) public onlyInGoodTimes afterInitialized returns (bool) {
+        require(IUniverse(msg.sender) == market.getUniverse());
+        redeemForkedTokensInternal(_sender);
+        return true;
+    }
+
+    // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     function redeemForkedTokens() public onlyInGoodTimes afterInitialized returns (bool) {
+        redeemForkedTokensInternal(msg.sender);
+        return true;
+    }
+
+    function redeemForkedTokensInternal(address _sender) private returns (bool) {
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() == market);
-        uint256 _attotokens = balances[msg.sender];
-        burn(msg.sender, _attotokens);
+        uint256 _attotokens = balances[_sender];
+        burn(_sender, _attotokens);
         IReputationToken _destinationReputationToken = getUniverse().getOrCreateChildUniverse(getPayoutDistributionHash()).getReputationToken();
         reputationToken.migrateOutStakeToken(_destinationReputationToken, this, _attotokens);
-        _destinationReputationToken.transfer(msg.sender, _destinationReputationToken.balanceOf(this));
+        _destinationReputationToken.transfer(_sender, _destinationReputationToken.balanceOf(this));
+        return true;
+    }
+
+    // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
+    // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
+    function redeemWinningTokensForHolder(address _sender, bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
+        require(IUniverse(msg.sender) == market.getUniverse());
+        redeemWinningTokensInternal(_sender, forgoFees);
         return true;
     }
 
     // NOTE: UI should warn users about calling this before first calling `migrateLosingTokens` on all losing tokens with non-dust contents
     // NOTE: we aren't using the convertToAndFromCash modifier here becuase this isn't a whitelisted contract. We expect the reporting window to handle disbursment of ETH
     function redeemWinningTokens(bool forgoFees) public onlyInGoodTimes afterInitialized returns (bool) {
+        redeemWinningTokensInternal(msg.sender, forgoFees);
+        return true;
+    }
+
+    function redeemWinningTokensInternal(address _sender, bool forgoFees) private returns (bool) {
         require(market.getFinalWinningStakeToken() == this);
         require(market.isContainerForStakeToken(this));
         require(getUniverse().getForkingMarket() != market);
         uint256 _reputationSupply = reputationToken.balanceOf(this);
-        uint256 _attotokens = balances[msg.sender];
+        uint256 _attotokens = balances[_sender];
         uint256 _reporterReputationShare = _reputationSupply * _attotokens / supply;
-        burn(msg.sender, _attotokens);
+        burn(_sender, _attotokens);
         if (_reporterReputationShare != 0) {
-            reputationToken.transfer(msg.sender, _reporterReputationShare);
+            reputationToken.transfer(_sender, _reporterReputationShare);
         }
-        uint256 _feesReceived = market.getReportingWindow().collectStakeTokenReportingFees(msg.sender, _attotokens, forgoFees);
-        controller.getAugur().logWinningTokensRedeemed(market.getUniverse(), msg.sender, market, this, _attotokens, _feesReceived, payoutNumerators);
+        uint256 _feesReceived = market.getReportingWindow().collectStakeTokenReportingFees(_sender, _attotokens, forgoFees);
+        controller.getAugur().logWinningTokensRedeemed(market.getUniverse(), _sender, market, this, _attotokens, _feesReceived, payoutNumerators);
         return true;
     }
 
@@ -213,6 +239,14 @@ contract StakeToken is DelegationTarget, Extractable, ITyped, Initializable, Var
             }
         }
         return true;
+    }
+
+    function isDisavowed() public view returns (bool) {
+        return !market.isContainerForStakeToken(this);
+    }
+
+    function isForked() public view returns (bool) {
+        return getUniverse().getForkingMarket() == market;
     }
 
     function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
