@@ -370,7 +370,8 @@ class ContractsFixture:
 
     def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, sender=tester.k0, topic="", description="description", extraInfo=""):
         marketCreationFee = universe.getOrCacheMarketCreationCost()
-        marketAddress = universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, numOutcomes, topic, description, extraInfo, value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
+        outcomes = [" "] * numOutcomes
+        marketAddress = universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, outcomes, topic, description, extraInfo, value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market

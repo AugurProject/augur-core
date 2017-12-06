@@ -11,7 +11,7 @@ describe("TradeAndReport", () => {
     });
     it("#tradeAndReport", async () => {
         await fixture.approveCentralAuthority();
-        const market = await fixture.createReasonableMarket(fixture.universe, fixture.cash.address, new BN(2));
+        const market = await fixture.createReasonableMarket(fixture.universe, fixture.cash.address, [" ", " "]);
         const actualTypeName = await market.getTypeName_();
         const expectedTypeName = stringTo32ByteHex("Market");
         expect(actualTypeName).to.equal(expectedTypeName);
