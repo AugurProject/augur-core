@@ -17,13 +17,13 @@ def test_minimum_gas_failure(contractsFixture, cash, market, universe):
 
     # We need to provide a minimum gas amount or we'll get back a failure
     minGas = 500000
-    fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, tradeGroupID, sender = tester.k2, value=fix('5', '4000'), startgas=minGas-1)
+    fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('5', '4000'), startgas=minGas-1)
 
     # We get back a sentinal byte value since not enough gas was provided
     assert fillOrderID == longTo32Bytes(1)
 
     # If we provide enough gas we get a legitimate value
-    fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, tradeGroupID, sender = tester.k2, value=fix('5', '4000'))
+    fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('5', '4000'))
 
     assert fillOrderID != longTo32Bytes(1)
 
@@ -41,7 +41,7 @@ def test_one_bid_on_books_buy_full_order(contractsFixture, cash, market, univers
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix(2), 6000, tradeGroupID, sender = tester.k2, value=fix('2', '4000'))
+    fillOrderID = trade.publicSell(market.address, YES, fix(2), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('2', '4000'))
 
     assert len(logs) == 5
     log1 = logs[4]
@@ -81,7 +81,7 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture, cash, market, univ
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix(1), 6000, tradeGroupID, sender = tester.k2, value=fix('1', '4000'))
+    fillOrderID = trade.publicSell(market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('1', '4000'))
 
     assert len(logs) == 5
     log1 = logs[4]
@@ -121,7 +121,7 @@ def test_one_bid_on_books_buy_excess_order(contractsFixture, cash, market, unive
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, tradeGroupID, sender = tester.k2, value=fix('5', '4000'))
+    fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('5', '4000'))
 
     assert len(logs) == 6
     log1 = logs[4]
@@ -176,7 +176,7 @@ def test_two_bids_on_books_buy_both(contractsFixture, cash, market, universe):
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, tradeGroupID, sender = tester.k2, value=fix('5', '4000'))
+    fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('5', '4000'))
 
     assert len(logs) == 10
     log1 = logs[4]
@@ -238,7 +238,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix(15), 6000, tradeGroupID, sender = tester.k2, value=fix('15', '4000'))
+    fillOrderID = trade.publicSell(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '4000'))
 
     assert len(logs) == 10
     log1 = logs[4]
@@ -300,7 +300,7 @@ def test_two_bids_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     # fill/create
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicSell(market.address, YES, fix(15), 6000, tradeGroupID, sender = tester.k2, value=fix('15', '4000'))
+    fillOrderID = trade.publicSell(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '4000'))
 
     assert len(logs) == 6
     log1 = logs[4]
@@ -361,7 +361,7 @@ def test_one_ask_on_books_buy_full_order(contractsFixture, cash, market, univers
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix(12), 6000, tradeGroupID, sender = tester.k2, value=fix('12', '6000'))
+    fillOrderID = trade.publicBuy(market.address, YES, fix(12), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('12', '6000'))
 
     assert len(logs) == 5
     log1 = logs[4]
@@ -400,7 +400,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture, cash, market, univ
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix(7), 6000, tradeGroupID, sender = tester.k2, value=fix('7', '6000'))
+    fillOrderID = trade.publicBuy(market.address, YES, fix(7), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('7', '6000'))
 
     assert len(logs) == 5
     log1 = logs[4]
@@ -440,7 +440,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture, cash, market, unive
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, tradeGroupID, sender = tester.k2, value=fix('15', '6000'))
+    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '6000'))
 
     assert len(logs) == 6
     log1 = logs[4]
@@ -495,7 +495,7 @@ def test_two_asks_on_books_buy_both(contractsFixture, cash, market, universe):
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, tradeGroupID, sender = tester.k2, value=fix('15', '6000'))
+    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '6000'))
 
     assert len(logs) == 10
     log1 = logs[4]
@@ -556,7 +556,7 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     # fill best order
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, tradeGroupID, sender = tester.k2, value=fix('15', '6000'))
+    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '6000'))
 
     assert len(logs) == 10
     log1 = logs[4]
@@ -618,7 +618,7 @@ def test_two_asks_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     # fill/create
     captureFilteredLogs(contractsFixture.chain.head_state, orders, logs)
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, tradeGroupID, sender = tester.k2, value=fix('15', '6000'))
+    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '6000'))
 
     assert len(logs) == 6
     log1 = logs[4]

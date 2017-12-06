@@ -17,16 +17,16 @@ import 'libraries/Extractable.sol';
 contract Trade is CashAutoConverter, Extractable, ReentrancyGuard {
     uint256 private constant MINIMUM_GAS_NEEDED = 500000;
 
-    function publicBuy(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
-        return trade(msg.sender, Order.TradeDirections.Long, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
+    function publicBuy(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
+        return trade(msg.sender, Order.TradeDirections.Long, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
     }
 
-    function publicSell(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
-        return trade(msg.sender, Order.TradeDirections.Short, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
+    function publicSell(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
+        return trade(msg.sender, Order.TradeDirections.Short, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
     }
 
-    function publicTrade(Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
-        return trade(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
+    function publicTrade(Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
+        return trade(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
     }
 
     function publicTakeBestOrder(Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (uint256) {
@@ -34,7 +34,7 @@ contract Trade is CashAutoConverter, Extractable, ReentrancyGuard {
     }
 
     // CONSIDER: We may want to return multiple values here to indicate success and the order id seperately.
-    function trade(address _sender, Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId) internal returns (bytes32) {
+    function trade(address _sender, Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) internal returns (bytes32) {
         uint256 _bestFxpAmount = fillBestOrder(_sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
         if (_bestFxpAmount == 0) {
             return bytes32(1);
@@ -43,7 +43,7 @@ contract Trade is CashAutoConverter, Extractable, ReentrancyGuard {
             return bytes32(1);
         }
         Order.Types _type = Order.getOrderTradingTypeFromMakerDirection(_direction);
-        return ICreateOrder(controller.lookup("CreateOrder")).createOrder(_sender, _type, _bestFxpAmount, _price, _market, _outcome, 0, 0, _tradeGroupId);
+        return ICreateOrder(controller.lookup("CreateOrder")).createOrder(_sender, _type, _bestFxpAmount, _price, _market, _outcome, _betterOrderId, _worseOrderId, _tradeGroupId);
     }
 
     function fillBestOrder(address _sender, Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId) internal returns (uint256 _bestFxpAmount) {
