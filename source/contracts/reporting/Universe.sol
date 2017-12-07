@@ -116,7 +116,9 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     function getOrCreateReportingWindowByTimestamp(uint256 _timestamp) public onlyInGoodTimes returns (IReportingWindow) {
         uint256 _windowId = getReportingWindowId(_timestamp);
         if (reportingWindows[_windowId] == address(0)) {
-            reportingWindows[_windowId] = ReportingWindowFactory(controller.lookup("ReportingWindowFactory")).createReportingWindow(controller, this, _windowId);
+            IReportingWindow _reportingWindow = ReportingWindowFactory(controller.lookup("ReportingWindowFactory")).createReportingWindow(controller, this, _windowId);
+            reportingWindows[_windowId] = _reportingWindow;
+            controller.getAugur().logReportingWindowCreated(_reportingWindow, _windowId);
         }
         return reportingWindows[_windowId];
     }
