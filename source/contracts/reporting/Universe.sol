@@ -424,15 +424,15 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         require(bytes(_description).length > 0);
         IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
         _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getCategoricalMarketNumTicks(2));
-        controller.getAugur().logMarketCreated(getOrCacheMarketCreationCost(), 0, 1, IMarket.MarketType.BINARY, _topic, _description, _extraInfo, this, _newMarket, msg.sender);
+        controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, 0, 1, IMarket.MarketType.BINARY);
         return _newMarket;
     }
 
-    function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, uint8 _numOutcomes, bytes32 _topic, string _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
+    function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(bytes(_description).length > 0);
         IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
-        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, _numOutcomes, Reporting.getCategoricalMarketNumTicks(_numOutcomes));
-        controller.getAugur().logMarketCreated(getOrCacheMarketCreationCost(), 0, 1, IMarket.MarketType.CATEGORICAL, _topic, _description, _extraInfo, this, _newMarket, msg.sender);
+        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint8(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint8(_outcomes.length)));
+        controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, _outcomes, 0, 1, IMarket.MarketType.CATEGORICAL);
         return _newMarket;
     }
 
@@ -441,7 +441,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         require(_minPrice < _maxPrice);
         IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
         _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, _numTicks);
-        controller.getAugur().logMarketCreated(getOrCacheMarketCreationCost(), _minPrice, _maxPrice, IMarket.MarketType.SCALAR, _topic, _description, _extraInfo, this, _newMarket, msg.sender);
+        controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, _minPrice, _maxPrice, IMarket.MarketType.SCALAR);
         return _newMarket;
     }
 
