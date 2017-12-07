@@ -68,7 +68,7 @@ library Reporting {
     function getDefaultReportingFeeDivisor() internal pure returns (uint256) { return DEFAULT_REPORTING_FEE_DIVISOR; }
     function getInitialREPSupply() internal pure returns (uint256) { return INITIAL_REP_SUPPLY; }
 
-    function getCategoricalMarketNumTicks(uint256 _numOutcomes) internal pure returns (uint256) {
+    function getCategoricalMarketNumTicks(uint8 _numOutcomes) internal pure returns (uint256) {
         require(_numOutcomes >= 2 && _numOutcomes <= 8);
 
         if (_numOutcomes == 2) {return 10000;}
