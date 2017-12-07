@@ -30,6 +30,7 @@ contract Augur is Controlled, Extractable {
     event TokensTransferred(address indexed universe, address indexed token, address indexed from, address to, uint256 value);
     event TokensMinted(address indexed universe, address indexed token, address indexed target, uint256 amount);
     event TokensBurned(address indexed universe, address indexed token, address indexed target, uint256 amount);
+    event ReportingWindowCreated(address indexed universe, address reportingWindow, uint256 startTime, uint256 endTime, uint256 id);
 
     //
     // Transfer
@@ -188,6 +189,11 @@ contract Augur is Controlled, Extractable {
     function logStakeTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(_universe.isContainerForStakeToken(IStakeToken(msg.sender)));
         TokensMinted(_universe, msg.sender, _target, _amount);
+        return true;
+    }
+
+    function logReportingWindowCreated(IReportingWindow _reportingWindow, uint256 _id) public returns (bool) {
+        ReportingWindowCreated(msg.sender, _reportingWindow, _reportingWindow.getStartTime(), _reportingWindow.getEndTime(), _id);
         return true;
     }
 

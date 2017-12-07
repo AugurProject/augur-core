@@ -155,4 +155,8 @@ contract MockAugur is Controlled {
     function logShareTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         return true;
     }
+
+    function logReportingWindowCreated(IReportingWindow _reportingWindow, uint256 _id) public returns (bool) {
+        return true;
+    }
 }
