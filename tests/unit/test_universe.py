@@ -4,7 +4,7 @@ from utils import longToHexString, stringToBytes, twentyZeros, thirtyTwoZeros
 from pytest import fixture, raises
 
 def test_universe_creation(localFixture, mockReputationToken, mockReputationTokenFactory, mockUniverse, mockUniverseFactory, mockAugur):
-    universe = localFixture.upload('../source/contracts/reporting/Universe.sol', 'universe')
+    universe = localFixture.upload('../source/contracts/reporting/Universe.sol', 'newUniverse')
 
     with raises(TransactionFailed, message="reputation token can not be address 0"):
         universe.initialize(mockUniverse.address, stringToBytes("5"))
@@ -308,7 +308,7 @@ def test_universe_create_market(localFixture, chain, populatedUniverse, mockMark
     assert mockAugur.logMarketCreatedCalled() == True
     assert newMarket == mockMarket.address
 
-@fixture
+@fixture(scope="module")
 def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     fixture.resetToSnapshot(augurInitializedWithMocksSnapshot)
     controller = fixture.contracts['Controller']
@@ -318,6 +318,16 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     controller.registerContract(stringToBytes('ReputationTokenFactory'), mockReputationTokenFactory.address, twentyZeros, thirtyTwoZeros)
     controller.registerContract(stringToBytes('ReportingWindowFactory'), mockReportingWindowFactory.address, twentyZeros, thirtyTwoZeros)
     controller.registerContract(stringToBytes('UniverseFactory'), mockUniverseFactory.address, twentyZeros, thirtyTwoZeros)
+
+    mockReputationToken = fixture.contracts['MockReputationToken']
+    mockUniverse = fixture.contracts['MockUniverse']
+
+    universe = fixture.upload('../source/contracts/reporting/Universe.sol', 'universe')
+    fixture.contracts['populatedUniverse'] = universe
+    mockReputationTokenFactory.setCreateReputationTokenValue(mockReputationToken.address)
+    universe.setController(fixture.contracts['Controller'].address)
+    assert universe.initialize(mockUniverse.address, stringToBytes("5"))
+
     return fixture.createSnapshot()
 
 @fixture
@@ -383,8 +393,4 @@ def mockParticipationToken(localFixture):
 
 @fixture
 def populatedUniverse(localFixture, mockReputationTokenFactory, mockReputationToken, mockUniverse):
-    universe = localFixture.upload('../source/contracts/reporting/Universe.sol', 'universe')
-    mockReputationTokenFactory.setCreateReputationTokenValue(mockReputationToken.address)
-    universe.setController(localFixture.contracts['Controller'].address)
-    assert universe.initialize(mockUniverse.address, stringToBytes("5"))
-    return universe
+    return localFixture.contracts['populatedUniverse']

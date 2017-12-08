@@ -158,19 +158,21 @@ def test_stake_token_redemption(localFixture, universe, market, numReports, numC
     reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = localFixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
 
+    numTicks = market.getNumTicks()
+
     # Proceed to FIRST REPORTING
-    proceedToFirstReporting(localFixture, universe, market, False, 1, [0,market.getNumTicks()], [market.getNumTicks(),0])
+    proceedToFirstReporting(localFixture, universe, market, False, 1, [0,numTicks], [numTicks,0])
 
     noShowBond = universe.getOrCacheDesignatedReportNoShowBond()
 
-    doReports(localFixture, market, numReports, numCorrect)
+    doReports(localFixture, market, numReports, numCorrect, numTicks)
 
-    confirmPayouts(localFixture, market, numCorrect, noShowBond)
+    confirmPayouts(localFixture, market, numCorrect, noShowBond, numTicks)
 
-def doReports(fixture, market, numReporters, numCorrect):
+def doReports(fixture, market, numReporters, numCorrect, numTicks):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
-    stakeTokenWinner = fixture.getOrCreateStakeToken(market, [0,market.getNumTicks()])
-    stakeTokenLoser = fixture.getOrCreateStakeToken(market, [market.getNumTicks(),0])
+    stakeTokenWinner = fixture.getOrCreateStakeToken(market, [0,numTicks])
+    stakeTokenLoser = fixture.getOrCreateStakeToken(market, [numTicks,0])
 
     for i in range(0, numReporters):
         testerKey = fixture.testerKey[i]
@@ -183,11 +185,11 @@ def doReports(fixture, market, numReporters, numCorrect):
     fixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
     assert market.tryFinalize()
 
-def confirmPayouts(fixture, market, numCorrectReporters, noShowBond):
+def confirmPayouts(fixture, market, numCorrectReporters, noShowBond, numTicks):
     reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
     reputationToken = fixture.applySignature('ReputationToken', reportingWindow.getReputationToken())
     universe = fixture.applySignature('Universe', market.getUniverse())
-    stakeToken = fixture.getOrCreateStakeToken(market, [0,market.getNumTicks()])
+    stakeToken = fixture.getOrCreateStakeToken(market, [0,numTicks])
 
     for i in range(0, numCorrectReporters):
         testerAddress = fixture.testerAddress[i]

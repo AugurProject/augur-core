@@ -17,45 +17,45 @@ GAS_PRICE = 7
 @mark.parametrize('orderType,numOrders,withBoundingOrders,deadOrderProbability', [
     (BID,  10, False,  0.0),
     (ASK,  10, False,  0.0),
-    (BID,  50, False,  0.0),
-    (ASK,  50, False,  0.0),
-    (BID, 100, False,  0.0),
-    (ASK, 100, False,  0.0),
+    (BID,  20, False,  0.0),
+    (ASK,  20, False,  0.0),
+    (BID,  40, False,  0.0),
+    (ASK,  40, False,  0.0),
 
     (BID,  10, True,   0.0),
     (ASK,  10, True,   0.0),
-    (BID,  50, True,   0.0),
-    (ASK,  50, True,   0.0),
-    (BID, 100, True,   0.0),
-    (ASK, 100, True,   0.0),
+    (BID,  20, True,   0.0),
+    (ASK,  20, True,   0.0),
+    (BID,  40, True,   0.0),
+    (ASK,  40, True,   0.0),
 
     (BID,  10, True,  0.25),
     (ASK,  10, True,  0.25),
-    (BID,  50, True,  0.25),
-    (ASK,  50, True,  0.25),
-    (BID, 100, True,  0.25),
-    (ASK, 100, True,  0.25),
+    (BID,  20, True,  0.25),
+    (ASK,  20, True,  0.25),
+    (BID,  40, True,  0.25),
+    (ASK,  40, True,  0.25),
 
     (BID,  10, True,   0.5),
     (ASK,  10, True,   0.5),
-    (BID,  50, True,   0.5),
-    (ASK,  50, True,   0.5),
-    (BID, 100, True,   0.5),
-    (ASK, 100, True,   0.5),
+    (BID,  20, True,   0.5),
+    (ASK,  20, True,   0.5),
+    (BID,  40, True,   0.5),
+    (ASK,  40, True,   0.5),
 
     (BID,  10, True,  0.75),
     (ASK,  10, True,  0.75),
-    (BID,  50, True,  0.75),
-    (ASK,  50, True,  0.75),
-    (BID, 100, True,  0.75),
-    (ASK, 100, True,  0.75),
+    (BID,  20, True,  0.75),
+    (ASK,  20, True,  0.75),
+    (BID,  40, True,  0.75),
+    (ASK,  40, True,  0.75),
 
     (BID,  10, True,   1.0),
     (ASK,  10, True,   1.0),
-    (BID,  50, True,   1.0),
-    (ASK,  50, True,   1.0),
-    (BID, 100, True,   1.0),
-    (ASK, 100, True,   1.0),
+    (BID,  20, True,   1.0),
+    (ASK,  20, True,   1.0),
+    (BID,  40, True,   1.0),
+    (ASK,  40, True,   1.0),
 ])
 def test_randomSorting(market, orderType, numOrders, withBoundingOrders, deadOrderProbability, fixture, kitchenSinkSnapshot):
     print("Order sorting tests (orderType=" + str(orderType) + ", numOrders=" + str(numOrders) + ", withBoundingOrders=" + str(withBoundingOrders) + ", deadOrderProbability=" + str(deadOrderProbability) + ")")
@@ -65,6 +65,7 @@ def test_randomSorting(market, orderType, numOrders, withBoundingOrders, deadOrd
     orderIds = np.arange(1, numOrders + 1)
     # Generate random prices on [0, 1) and rank them (smallest price @ rank 0)
     fxpPrices = np.vectorize(fix)(np.random.rand(numOrders))
+    orderIdsToPriceMapping = {}
     priceRanks = np.argsort(np.argsort(fxpPrices))
     logs = []
     assert orderType == BID or orderType == ASK
@@ -104,18 +105,19 @@ def test_randomSorting(market, orderType, numOrders, withBoundingOrders, deadOrd
             if deadOrders[i, 1]: worseOrderId = numOrders + 1
         actualOrderId = orders.saveOrder(orderType, market.address, 1, fxpPrices[i], tester.a1, outcomeId, 0, 0, longTo32Bytes(betterOrderId), longTo32Bytes(worseOrderId), "0")
         assert(actualOrderId != bytearray(32)), "Insert order into list"
+        orderIdsToPriceMapping[orderId] = fxpPrices[i]
         orderIdsToBytesMapping[orderId] = actualOrderId
         bytesToOrderIdsMapping[actualOrderId] =  orderId
     assert(orderIdsToBytesMapping[bestOrderId] == orders.getBestOrderId(orderType, market.address, outcomeId)), "Verify best order Id"
     assert(orderIdsToBytesMapping[worstOrderId] == orders.getWorstOrderId(orderType, market.address, outcomeId)), "Verify worst order Id"
     for orderId in orderIds:
-        orderPrice = orders.getPrice(orderIdsToBytesMapping[orderId])
+        orderPrice = orderIdsToPriceMapping[orderId]
         betterOrderIdAsBytes = orders.getBetterOrderId(orderIdsToBytesMapping[orderId])
         worseOrderIdAsBytes = orders.getWorseOrderId(orderIdsToBytesMapping[orderId])
         betterOrderId = 0 if betterOrderIdAsBytes == longTo32Bytes(0) else bytesToOrderIdsMapping[betterOrderIdAsBytes]
         worseOrderId = 0 if worseOrderIdAsBytes == longTo32Bytes(0) else bytesToOrderIdsMapping[worseOrderIdAsBytes]
-        betterOrderPrice = orders.getPrice(betterOrderIdAsBytes)
-        worseOrderPrice = orders.getPrice(worseOrderIdAsBytes)
+        betterOrderPrice = 0 if betterOrderId == 0 else orderIdsToPriceMapping[betterOrderId]
+        worseOrderPrice = 0 if worseOrderId == 0 else orderIdsToPriceMapping[worseOrderId]
         if orderType == BID:
             if betterOrderPrice: assert(orderPrice <= betterOrderPrice), "Order price <= better order price"
             if worseOrderPrice: assert(orderPrice >= worseOrderPrice), "Order price >= worse order price"

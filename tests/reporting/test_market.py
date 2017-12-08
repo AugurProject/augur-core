@@ -10,7 +10,8 @@ def test_market_creation(contractsFixture, universe, cash, market):
     reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
     shadyStakeToken = contractsFixture.upload('../source/contracts/reporting/StakeToken.sol', 'shadyStakeToken')
     shadyStakeToken.setController(contractsFixture.contracts["Controller"].address)
-    shadyStakeToken.initialize(market.address, [0,market.getNumTicks()])
+    numTicks = market.getNumTicks()
+    shadyStakeToken.initialize(market.address, [0,numTicks])
 
     logs = []
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
@@ -25,7 +26,7 @@ def test_market_creation(contractsFixture, universe, cash, market):
 
     assert market.getUniverse() == universe.address
     assert market.getNumberOfOutcomes() == 2
-    assert market.getNumTicks() == 10000
+    assert numTicks == 10000
     assert reportingWindow.getReputationToken() == universe.getReputationToken()
     assert market.getFinalPayoutDistributionHash() == stringToBytes("")
     assert market.getReportingState() == contractsFixture.contracts['Constants'].PRE_REPORTING()

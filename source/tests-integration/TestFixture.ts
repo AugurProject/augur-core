@@ -58,11 +58,12 @@ export class TestFixture {
         await this.connector.waitForTransactionReceipt(repMigrationTransactionHash, `Migrating reputation.`);
 
         const marketCreationFee = await universe.getOrCacheMarketCreationCost_();
-        const marketAddress = await universe.createCategoricalMarket_(endTime, feePerEthInWei, denominationToken, designatedReporter, outcomes, stringTo32ByteHex(" "), stringTo32ByteHex("description"), '', { attachedEth: marketCreationFee });
+
+        const marketAddress = await universe.createCategoricalMarket_(endTime, feePerEthInWei, denominationToken, designatedReporter, outcomes, stringTo32ByteHex(" "), 'description', '', { attachedEth: marketCreationFee });
         if (!marketAddress) {
             throw new Error("Unable to get address for new categorical market.");
         }
-        const createMarketTransactionHash = await universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken, designatedReporter, outcomes, stringTo32ByteHex(" "), stringTo32ByteHex("description"), '', { attachedEth: marketCreationFee });
+        const createMarketTransactionHash = await universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken, designatedReporter, outcomes, stringTo32ByteHex(" "), 'description', '', { attachedEth: marketCreationFee });
         await this.connector.waitForTransactionReceipt(createMarketTransactionHash, `Creating market.`);
         const market = new Market(this.connector, this.accountManager, marketAddress, this.configuration.gasPrice);
 
