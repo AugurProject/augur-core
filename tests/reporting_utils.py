@@ -47,12 +47,13 @@ def proceedToFirstReporting(testFixture, universe, market, makeReport, disputer,
         assert market.disputeDesignatedReport(designatedDisputeOutcomes, 1, False, sender=testFixture.testerKey[disputer])
 
         # Confirm the designated dispute logging works
-        assert len(logs) == 4
-        assert logs[3]['_event_type'] == 'ReportsDisputed'
-        assert logs[3]['reportingPhase'] == testFixture.contracts['Constants'].DESIGNATED_DISPUTE()
-        assert logs[3]['disputer'] == bytesToHexString(testFixture.testerAddress[disputer])
-        assert logs[3]['disputeBondAmount'] == testFixture.contracts['Constants'].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
-        assert logs[3]['market'] == market.address
+        assert len(logs) >= 4
+        log = logs[3] if len(logs) == 4 else logs[4]
+        assert log['_event_type'] == 'ReportsDisputed'
+        assert log['reportingPhase'] == testFixture.contracts['Constants'].DESIGNATED_DISPUTE()
+        assert log['disputer'] == bytesToHexString(testFixture.testerAddress[disputer])
+        assert log['disputeBondAmount'] == testFixture.contracts['Constants'].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
+        assert log['market'] == market.address
 
     else:
         testFixture.contracts["Time"].setTimestamp(market.getEndTime() + testFixture.contracts['Constants'].DESIGNATED_REPORTING_DURATION_SECONDS() + 1)
@@ -86,12 +87,13 @@ def proceedToLastReporting(testFixture, universe, market, makeReport, designated
     assert market.disputeFirstReporters(firstReportDisputeOutcomes, disputeFirstReportOutcomeStake, False, sender=testFixture.testerKey[firstDisputer])
 
     # Confirm the first dispute logging works
-    assert len(logs) == 4
-    assert logs[3]['_event_type'] == 'ReportsDisputed'
-    assert logs[3]['reportingPhase'] == testFixture.contracts['Constants'].FIRST_DISPUTE()
-    assert logs[3]['disputer'] == bytesToHexString(testFixture.testerAddress[firstDisputer])
-    assert logs[3]['disputeBondAmount'] == testFixture.contracts['Constants'].FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
-    assert logs[3]['market'] == market.address
+    assert len(logs) >= 4
+    log = logs[3] if len(logs) == 4 else logs[4]
+    assert log['_event_type'] == 'ReportsDisputed'
+    assert log['reportingPhase'] == testFixture.contracts['Constants'].FIRST_DISPUTE()
+    assert log['disputer'] == bytesToHexString(testFixture.testerAddress[firstDisputer])
+    assert log['disputeBondAmount'] == testFixture.contracts['Constants'].FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
+    assert log['market'] == market.address
 
     # We're in the LAST REPORTING phase now
     assert market.getReportingState() == testFixture.contracts['Constants'].LAST_REPORTING()
@@ -128,16 +130,17 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
     assert market.getReportingState() == testFixture.contracts['Constants'].FORKING()
 
     # Confirm the last dispute logging and universe fork logging works
-    assert len(logs) == 3
+    assert len(logs) >= 3
+    log1 = logs[1]
+    log2 = logs[2] if len(logs) == 3 else logs[3]
+    assert log1['_event_type'] == 'UniverseForked'
+    assert log1['universe'] == universe.address
 
-    assert logs[1]['_event_type'] == 'UniverseForked'
-    assert logs[1]['universe'] == universe.address
-
-    assert logs[2]['_event_type'] == 'ReportsDisputed'
-    assert logs[2]['reportingPhase'] == testFixture.contracts['Constants'].LAST_DISPUTE()
-    assert logs[2]['disputer'] == bytesToHexString(tester.a0)
-    assert logs[2]['disputeBondAmount'] == testFixture.contracts['Constants'].LAST_REPORTERS_DISPUTE_BOND_AMOUNT()
-    assert logs[2]['market'] == market.address
+    assert log2['_event_type'] == 'ReportsDisputed'
+    assert log2['reportingPhase'] == testFixture.contracts['Constants'].LAST_DISPUTE()
+    assert log2['disputer'] == bytesToHexString(tester.a0)
+    assert log2['disputeBondAmount'] == testFixture.contracts['Constants'].LAST_REPORTERS_DISPUTE_BOND_AMOUNT()
+    assert log2['market'] == market.address
 
 def finalizeForkingMarket(reportingFixture, universe, market, finalizeByMigration, yesMigratorAddress, yesMigratorKey, noMigratorAddress1, noMigratorKey1, noMigratorAddress2, noMigratorKey2, firstReportOutcomes, secondReportOutcomes):
     reputationToken = reportingFixture.applySignature('ReputationToken', universe.getReputationToken())
