@@ -34,7 +34,12 @@ contract MockAugur is Controlled {
 
     function logMarketCreatedCalled() public returns(bool) {return logMarketCreatedCalledValue;}
 
-    function logMarketCreated(uint256 _marketCreationFee, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType, bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator) public returns (bool) {
+    function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator, bytes32[] _outcomes, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
+        logMarketCreatedCalledValue = true;
+        return true;
+    }
+
+    function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
         logMarketCreatedCalledValue = true;
         return true;
     }

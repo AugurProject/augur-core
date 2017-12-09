@@ -14,7 +14,7 @@ def test_reporting_window_initialize(localFixture, chain, mockUniverse, mockPart
     mockReportingParticipationTokenFactory = localFixture.contracts['MockParticipationTokenFactory']
     mockReportingParticipationTokenFactory.setParticipationTokenValue(mockParticipationToken.address)
 
-    reportingWindow = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'reportingWindow')
+    reportingWindow = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'newReportingWindow')
     reportingWindow.setController(localFixture.contracts['Controller'].address)
 
     start_time = timestamp * mockUniverse.getReportingPeriodDurationInSeconds()
@@ -98,7 +98,7 @@ def test_reporting_window_migrate_market_in_from_sib(localFixture, mockUniverse,
     with raises(TransactionFailed, message="migrateMarketInFromSibling method can only be called from Market"):
         populatedReportingWindow.migrateMarketInFromSibling()
 
-    newMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'newMarket')
+    newMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'newMockMarket')
     mockUniverse.setIsContainerForReportingWindow(False)
     with raises(TransactionFailed, message="market is not in universe"):
         newMarket.callReportingWindowMigrateMarketInFromSibling(populatedReportingWindow.address)
@@ -489,7 +489,7 @@ def finializeMarket(localFixture, mockMarket, reportingWindow, totalSupply, disp
     mockMarket.setIsValid(True)
     assert mockMarket.callReportingWindowUpdateMarketPhase(reportingWindow.address)
 
-@fixture(scope="session")
+@fixture(scope="module")
 def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     fixture.resetToSnapshot(augurInitializedWithMocksSnapshot)
     controller = fixture.contracts['Controller']
@@ -499,6 +499,46 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     controller.registerContract(stringToBytes('MarketFactory'), mockMarketFactory.address, twentyZeros, thirtyTwoZeros)
     controller.registerContract(stringToBytes('Cash'), mockCash.address, twentyZeros, thirtyTwoZeros)
     controller.registerContract(stringToBytes('ParticipationTokenFactory'), mockReportingParticipationTokenFactory.address, twentyZeros, thirtyTwoZeros)
+
+    mockParticipationToken = fixture.contracts['MockParticipationToken']
+
+    mockUniverse = fixture.contracts['MockUniverse']
+    mockUniverse.setIsContainerForReportingWindow(True)
+    mockUniverse.setIsContainerForMarket(True)
+
+    mockReputationToken = fixture.contracts['MockReputationToken']
+    mockReputationToken.setTrustedTransfer(True)
+
+    mockMarket = fixture.contracts['MockMarket']
+    mockMarket.setDesignatedReporter(bytesToHexString(tester.a0))
+    mockMarket.setUniverse(mockUniverse.address)
+    mockMarket.setIsContainerForStakeToken(True)
+    mockMarket.setMigrateDueToNoReports(True)
+    mockMarket.setMigrateDueToNoReportsNextState(fixture.contracts['Constants'].FIRST_REPORTING())
+    mockMarket.setFirstReporterCompensationCheck(0)
+    mockMarket.setDerivePayoutDistributionHash(stringToBytes("1"))
+    mockMarket.setTotalWinningDisputeBondStake(100)
+
+    mockMarketFactory.setMarket(mockMarket.address)
+    mockReportingParticipationTokenFactory.setParticipationTokenValue(mockParticipationToken.address)
+
+    timestamp = fixture.contracts["Time"].getTimestamp()
+    endTimeValue = timestamp + 10
+    numTicks = 1 * 10**6 * 10**18
+    feePerEthInWeiValue = 10 ** 18
+    designatedReporterAddressValue = tester.a2
+
+    mockUniverse.setReportingPeriodDurationInSeconds(timestamp - 10)
+    reportingWindow = fixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'reportingWindow')
+    reportingWindow.setController(fixture.contracts['Controller'].address)
+    fixture.contracts['populatedReportingWindow'] = reportingWindow
+    mockUniverse.setReportingPeriodDurationInSeconds(timestamp - 1)
+    mockUniverse.setDesignatedReportNoShowBond(10)
+    mockUniverse.setReputationToken(mockReputationToken.address)
+    assert reportingWindow.initialize(mockUniverse.address, 2)
+    mockUniverse.setReportingWindowByMarketEndTime(reportingWindow.address)
+    mockUniverse.createBinaryMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "", "description", "")
+
     return fixture.createSnapshot()
 
 @fixture
@@ -512,70 +552,32 @@ def chain(localFixture):
 
 @fixture
 def mockCash(localFixture):
-    mockCash = localFixture.contracts['MockCash']
-    return mockCash
+    return localFixture.contracts['MockCash']
 
 @fixture
 def mockUniverse(localFixture):
-    mockUniverse = localFixture.contracts['MockUniverse']
-    mockUniverse.setIsContainerForReportingWindow(True)
-    mockUniverse.setIsContainerForMarket(True)
-    return mockUniverse
+    return localFixture.contracts['MockUniverse']
 
 @fixture
 def mockReputationToken(localFixture):
-    mockReputationToken = localFixture.contracts['MockReputationToken']
-    mockReputationToken.setTrustedTransfer(True)
-    return mockReputationToken
+    return localFixture.contracts['MockReputationToken']
 
 @fixture
 def mockParticipationToken(localFixture):
-    mockParticipationToken = localFixture.contracts['MockParticipationToken']
-    return mockParticipationToken
+    return localFixture.contracts['MockParticipationToken']
 
 @fixture
 def mockDisputeBond(localFixture):
-    mockDisputeBond = localFixture.contracts['MockDisputeBond']
-    return mockDisputeBond
+    return localFixture.contracts['MockDisputeBond']
 
 @fixture
 def mockAugur(localFixture):
     return localFixture.contracts['MockAugur']
 
 @fixture
-def mockMarket(localFixture, mockUniverse):
-    # wire up mock market
-    mockMarket = localFixture.contracts['MockMarket']
-    mockMarket.setDesignatedReporter(bytesToHexString(tester.a0))
-    mockMarket.setUniverse(mockUniverse.address)
-    mockMarket.setIsContainerForStakeToken(True)
-    mockMarket.setMigrateDueToNoReports(True)
-    mockMarket.setMigrateDueToNoReportsNextState(localFixture.contracts['Constants'].FIRST_REPORTING())
-    mockMarket.setFirstReporterCompensationCheck(0)
-    mockMarket.setDerivePayoutDistributionHash(stringToBytes("1"))
-    mockMarket.setTotalWinningDisputeBondStake(100)
-    return mockMarket
+def mockMarket(localFixture):
+    return localFixture.contracts['MockMarket']
 
 @fixture
-def populatedReportingWindow(localFixture, chain, mockUniverse, mockMarket, mockCash, mockParticipationToken, mockReputationToken):
-    mockMarketFactory = localFixture.contracts['MockMarketFactory']
-    mockReportingParticipationTokenFactory = localFixture.contracts['MockParticipationTokenFactory']
-    mockMarketFactory.setMarket(mockMarket.address)
-    mockReportingParticipationTokenFactory.setParticipationTokenValue(mockParticipationToken.address)
-
-    timestamp = localFixture.contracts["Time"].getTimestamp()
-    endTimeValue = timestamp + 10
-    numTicks = 1 * 10**6 * 10**18
-    feePerEthInWeiValue = 10 ** 18
-    designatedReporterAddressValue = tester.a2
-
-    mockUniverse.setReportingPeriodDurationInSeconds(timestamp - 10)
-    reportingWindow = localFixture.upload('../source/contracts/reporting/ReportingWindow.sol', 'reportingWindow')
-    reportingWindow.setController(localFixture.contracts['Controller'].address)
-    mockUniverse.setReportingPeriodDurationInSeconds(timestamp - 1)
-    mockUniverse.setDesignatedReportNoShowBond(10)
-    mockUniverse.setReputationToken(mockReputationToken.address)
-    assert reportingWindow.initialize(mockUniverse.address, 2)
-    mockUniverse.setReportingWindowByMarketEndTime(reportingWindow.address)
-    mockUniverse.createBinaryMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "", "description", "")
-    return reportingWindow
+def populatedReportingWindow(localFixture):
+    return localFixture.contracts['populatedReportingWindow']

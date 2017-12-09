@@ -169,6 +169,9 @@ ${contractMethods.join("\n\n")}
             case 'uint256[]': {
                 return 'Array<BN>';
             }
+            case 'bytes32[]': {
+                return 'Array<string>';
+            }
             default: {
                 throw "Unrecognized Value: " + abiType;
             }

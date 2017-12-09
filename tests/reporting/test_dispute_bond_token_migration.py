@@ -52,9 +52,10 @@ def test_disavowed_dispute_bond_token_redemption(localFixture, universe, cash, m
 def test_dispute_bond_token_migration(invalidRep, yesRep, noRep, designatedMigration, firstMigration, lastMigration, finalizeByMigration, localFixture, universe, cash, market):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
     completeSets = localFixture.contracts['CompleteSets']
-    YES_OUTCOME = [market.getNumTicks(),0]
-    NO_OUTCOME = [0,market.getNumTicks()]
-    INVALID_OUTCOME = [market.getNumTicks() / 2,market.getNumTicks() / 2]
+    numTicks = market.getNumTicks()
+    YES_OUTCOME = [numTicks,0]
+    NO_OUTCOME = [0,numTicks]
+    INVALID_OUTCOME = [numTicks / 2,numTicks / 2]
     YES_DISTRIBUTION_HASH = market.derivePayoutDistributionHash(YES_OUTCOME, False)
     NO_DISTRIBUTION_HASH = market.derivePayoutDistributionHash(NO_OUTCOME, False)
     INVALID_DISTRIBUTION_HASH = market.derivePayoutDistributionHash(INVALID_OUTCOME, True)

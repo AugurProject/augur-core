@@ -401,7 +401,7 @@ contract MockUniverse is Initializable, IUniverse {
 
     function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
         IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
-        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint8(_outcomes.length), Reporting.getCategoricalMarketNumTicks(_outcomes.length));
+        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint8(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint8(_outcomes.length)));
         return _newMarket;
     }
 

@@ -1,4 +1,3 @@
-import BN = require('bn.js');
 import { hash } from 'crypto-promise';
 import { Repository } from 'nodegit';
 import { resolve as resolvePath } from 'path';

@@ -149,9 +149,14 @@ def test_participation_token_escape_hatch(localFixture, reportingWindow, control
         with TokenDelta(reputationToken, stake, localFixture.testerAddress[i], "REP was not given back to Stake token holder"):
             assert participationToken.withdrawInEmergency(sender=localFixture.testerKey[i])
 
-@fixture(scope="session")
+@fixture(scope="module")
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
+    fixture.contracts['universe'] = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
+    fixture.contracts['market'] = ABIContract(fixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
+    fixture.contracts['cash'] = ABIContract(fixture.chain, kitchenSinkSnapshot['cash'].translator, kitchenSinkSnapshot['cash'].address)
+    fixture.contracts['categoricalMarket'] = ABIContract(fixture.chain, kitchenSinkSnapshot['categoricalMarket'].translator, kitchenSinkSnapshot['categoricalMarket'].address)
+    fixture.contracts['scalarMarket'] = ABIContract(fixture.chain, kitchenSinkSnapshot['scalarMarket'].translator, kitchenSinkSnapshot['scalarMarket'].address)
     return fixture.createSnapshot()
 
 @fixture
@@ -165,15 +170,15 @@ def controller(localFixture, kitchenSinkSnapshot):
 
 @fixture
 def universe(localFixture, kitchenSinkSnapshot):
-    return ABIContract(localFixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
+    return localFixture.contracts['universe']
 
 @fixture
 def market(localFixture, kitchenSinkSnapshot):
-    return ABIContract(localFixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
+    return localFixture.contracts['market']
 
 @fixture
 def cash(localFixture, kitchenSinkSnapshot):
-    return ABIContract(localFixture.chain, kitchenSinkSnapshot['cash'].translator, kitchenSinkSnapshot['cash'].address)
+    return localFixture.contracts['cash']
 
 @fixture
 def reputationToken(localFixture, kitchenSinkSnapshot, universe):
@@ -189,8 +194,8 @@ def constants(localFixture, kitchenSinkSnapshot):
 
 @fixture
 def categoricalMarket(localFixture, kitchenSinkSnapshot):
-    return ABIContract(localFixture.chain, kitchenSinkSnapshot['categoricalMarket'].translator, kitchenSinkSnapshot['categoricalMarket'].address)
+    return localFixture.contracts['categoricalMarket']
 
 @fixture
 def scalarMarket(localFixture, kitchenSinkSnapshot):
-    return ABIContract(localFixture.chain, kitchenSinkSnapshot['scalarMarket'].translator, kitchenSinkSnapshot['scalarMarket'].address)
+    return localFixture.contracts['scalarMarket']
