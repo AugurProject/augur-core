@@ -8,7 +8,7 @@ import 'libraries/ReentrancyGuard.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'trading/ICash.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IReportingWindow.sol';
+import 'reporting/IFeeWindow.sol';
 import 'trading/IOrders.sol';
 import 'libraries/CashAutoConverter.sol';
 import 'libraries/Extractable.sol';
@@ -69,8 +69,8 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
             require(_denominationToken.transferFrom(_market, _market.getMarketCreatorMailbox(), _creatorFee));
         }
         if (_reportingFee != 0) {
-            IReportingWindow _reportingWindow = _market.getUniverse().getOrCreateNextReportingWindow();
-            require(_denominationToken.transferFrom(_market, _reportingWindow, _reportingFee));
+            IFeeWindow _feeWindow = _market.getUniverse().getOrCreateNextFeeWindow();
+            require(_denominationToken.transferFrom(_market, _feeWindow, _reportingFee));
         }
         require(_denominationToken.transferFrom(_market, _sender, _payout));
 

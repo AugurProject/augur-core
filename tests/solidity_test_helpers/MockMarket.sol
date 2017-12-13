@@ -11,8 +11,8 @@ contract MockMarket is IMarket {
     bool private designatedReportValue;
     bytes32 private derivePayoutDistributionHashValue;
     bytes32 private updateDerivePayoutDistributionHashValue;
-    IReportingWindow private reportingWindow;
-    IReportingWindow private setMigrateDueToNoReportsNextStateValue;
+    IFeeWindow private feeWindow;
+    IFeeWindow private setMigrateDueToNoReportsNextStateValue;
     uint8 private numberOfOutcomes;
     uint256 private numTicks;
     ICash private denominationToken;
@@ -43,7 +43,7 @@ contract MockMarket is IMarket {
     bool private isValidValue;
     address private owner;
     bool private transferOwner;
-    IReportingWindow private initializeReportingWindowValue;
+    IFeeWindow private initializeFeeWindowValue;
     uint256 private initializeEndTime;
     uint8 private initializeNumOutcomesValue;
     uint256 private initializeNumTicksValue;
@@ -72,8 +72,8 @@ contract MockMarket is IMarket {
         derivePayoutDistributionHashValue = _derivePayoutDistributionHashValue;
     }
 
-    function setReportingWindow(IReportingWindow _reportingWindow) public {
-        reportingWindow = _reportingWindow;
+    function setFeeWindow(IFeeWindow _feeWindow) public {
+        feeWindow = _feeWindow;
     }
 
     function setNumberOfOutcomes(uint8 _numberOfOutcomes) public {
@@ -212,32 +212,32 @@ contract MockMarket is IMarket {
         return _stakeToken.trustedBuy(_reporter, _attotokens);
     }
 
-    function callReportingWindowMigrateMarketInFromSibling(IReportingWindow _reportingWindow) public returns(bool) {
-        return _reportingWindow.migrateMarketInFromSibling();
+    function callFeeWindowMigrateMarketInFromSibling(IFeeWindow _feeWindow) public returns(bool) {
+        return _feeWindow.migrateMarketInFromSibling();
     }
 
-    function callReportingWindowMigrateMarketInFromNibling(IReportingWindow _reportingWindow) public returns(bool) {
-        return _reportingWindow.migrateMarketInFromNibling();
+    function callFeeWindowMigrateMarketInFromNibling(IFeeWindow _feeWindow) public returns(bool) {
+        return _feeWindow.migrateMarketInFromNibling();
     }
 
-    function callReportingWindowRemoveMarket(IReportingWindow _reportingWindow) public returns(bool) {
-        return _reportingWindow.removeMarket();
+    function callFeeWindowRemoveMarket(IFeeWindow _feeWindow) public returns(bool) {
+        return _feeWindow.removeMarket();
     }
 
-    function callReportingWindowUpdateMarketPhase(IReportingWindow _reportingWindow) public returns(bool) {
-        return _reportingWindow.updateMarketPhase();
+    function callFeeWindowUpdateMarketPhase(IFeeWindow _feeWindow) public returns(bool) {
+        return _feeWindow.updateMarketPhase();
     }
 
-    function callIncreaseTotalStake(IReportingWindow _reportingWindow, uint256 _amount) public returns(bool) {
-        return _reportingWindow.increaseTotalStake(_amount);
+    function callIncreaseTotalStake(IFeeWindow _feeWindow, uint256 _amount) public returns(bool) {
+        return _feeWindow.increaseTotalStake(_amount);
     }
 
     function callForkOnUniverse(IUniverse _universe) public returns(bool) {
         return _universe.fork();
     }
 
-    function getInitializeReportingWindowValue() public view returns (IReportingWindow) {
-        return initializeReportingWindowValue;
+    function getInitializeFeeWindowValue() public view returns (IFeeWindow) {
+        return initializeFeeWindowValue;
     }
 
     function getInitializeEndTime() public returns(uint256) {
@@ -272,8 +272,8 @@ contract MockMarket is IMarket {
         return updateDerivePayoutDistributionHashValue;
     }
 
-    function setMigrateDueToNoReportsNextState(IReportingWindow _reportingWindow) public {
-        setMigrateDueToNoReportsNextStateValue = _reportingWindow;
+    function setMigrateDueToNoReportsNextState(IFeeWindow _feeWindow) public {
+        setMigrateDueToNoReportsNextStateValue = _feeWindow;
     }
 
     function callTrustedMarketTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
@@ -307,8 +307,8 @@ contract MockMarket is IMarket {
         return "Market";
     }
 
-    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable returns (bool _success) {
-        initializeReportingWindowValue = _reportingWindow;
+    function initialize(IFeeWindow _feeWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable returns (bool _success) {
+        initializeFeeWindowValue = _feeWindow;
         initializeEndTime = _endTime;
         initializeNumOutcomesValue = _numOutcomes;
         initializeNumTicksValue = _numTicks;
@@ -336,8 +336,8 @@ contract MockMarket is IMarket {
         return universe;
     }
 
-    function getReportingWindow() public view returns (IReportingWindow) {
-        return reportingWindow;
+    function getFeeWindow() public view returns (IFeeWindow) {
+        return feeWindow;
     }
 
     function getNumberOfOutcomes() public view returns (uint8) {
@@ -434,7 +434,7 @@ contract MockMarket is IMarket {
 
     function migrateDueToNoReports() public returns (bool) {
         // :TODO, some reason this doesn't work. figure out how to move state
-        // setReportingWindow(setMigrateDueToNoReportsNextStateValue);
+        // setFeeWindow(setMigrateDueToNoReportsNextStateValue);
         return migrateDueToNoRep;
     }
 

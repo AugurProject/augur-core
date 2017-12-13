@@ -44,7 +44,7 @@ def test_floating_amount_calculation(numWithCondition, targetWithConditionPerHun
     assert newAmount == expectedValue
 
 def test_default_target_reporter_gas_costs(contractsFixture, universe, market):
-    # The target reporter gas cost is an attempt to charge the market creator for the estimated cost of reporting that may occur for their market. With no previous reporting window to base costs off of it assumes basic default values
+    # The target reporter gas cost is an attempt to charge the market creator for the estimated cost of reporting that may occur for their market. With no previous fee window to base costs off of it assumes basic default values
 
     targetReporterGasCosts = universe.getOrCacheTargetReporterGasCosts()
     expectedTargetReporterGasCost = contractsFixture.contracts['Constants'].GAS_TO_REPORT()
@@ -62,10 +62,10 @@ def test_default_target_reporter_gas_costs(contractsFixture, universe, market):
     (2, 100),
 ])
 def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture, universe, market):
-    # The target reporter gas cost is an attempt to charge the market creator for the estimated cost of reporting that may occur for their market. It will use the previous reporting window's data to estimate costs if it is available
-    reportingWindow = reportingFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    # The target reporter gas cost is an attempt to charge the market creator for the estimated cost of reporting that may occur for their market. It will use the previous fee window's data to estimate costs if it is available
+    feeWindow = reportingFixture.applySignature('FeeWindow', market.getFeeWindow())
 
-    # We'll have a market go through basic reporting and then make its reporting window over.
+    # We'll have a market go through basic reporting and then make its fee window over.
     proceedToFirstReporting(reportingFixture, universe, market, False, 1, [0,market.getNumTicks()], [market.getNumTicks(),0])
 
     stakeTokenYes = reportingFixture.getOrCreateStakeToken(market, [0,market.getNumTicks()])
@@ -73,10 +73,10 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture, unive
         assert stakeTokenYes.buy(1, sender=getattr(tester, 'k%i' % i), gasprice=gasPrice)
 
     # Now we'll skip ahead in time and finalzie the market
-    reportingFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
+    reportingFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.tryFinalize()
 
-    actualAvgGasPrice = reportingWindow.getAvgReportingGasPrice()
+    actualAvgGasPrice = feeWindow.getAvgReportingGasPrice()
     expectedAvgReportingGasCost = (reportingFixture.contracts['Constants'].DEFAULT_REPORTING_GAS_PRICE() + gasPrice * numReports) / (numReports + 1)
     assert actualAvgGasPrice == expectedAvgReportingGasCost
 

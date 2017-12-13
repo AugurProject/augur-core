@@ -100,7 +100,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
     function getMigrateOutAttoTokens() public returns(uint256) {
         return migrateOutAttoTokens;
     }
-    
+
     function getMigrateInReporterValue() public returns(address) {
         return migrateInReporterValue;
     }
@@ -120,7 +120,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
     function callMigrateIn(IReputationToken _reputationToken, address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) public returns (bool) {
         return _reputationToken.migrateIn(_reporter, _attotokens, _bonusIfInForkWindow);
     }
-    
+
     /*
     * Impl of IReputationToken and ITyped
      */
@@ -166,7 +166,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
         return setMintForDisputeBondMigrationValue;
     }
 
-    function trustedReportingWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
         trustedTransferSourceValue = _source;
         trustedTransferDestinationValue = _destination;
         trustedTransferAttotokensValue = _attotokens;
@@ -188,7 +188,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
         return setTrustedTransferValue;
     }
 
-    function trustedParticipationTokenTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
         trustedTransferSourceValue = _source;
         trustedTransferDestinationValue = _destination;
         trustedTransferAttotokensValue = _attotokens;
@@ -197,10 +197,6 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
 
     function getUniverse() public view returns (IUniverse) {
         return setUniverseValue;
-    }
-
-    function getTopMigrationDestination() public view returns (IReputationToken) {
-        return setTopMigrationDestinationValue;
     }
 
     function migrateFromLegacyReputationToken() public afterInitialized returns (bool) {

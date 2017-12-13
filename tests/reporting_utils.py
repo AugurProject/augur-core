@@ -18,7 +18,7 @@ def initializeReportingFixture(sessionFixture, universe, market):
 def proceedToDesignatedReporting(testFixture, universe, market, reportOutcomes, designatedReporter=tester.k0):
     cash = testFixture.contracts['Cash']
     reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
-    reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = testFixture.applySignature('FeeWindow', market.getFeeWindow())
 
     # We can't yet do a designated report on the market as it's in the pre reporting phase
     if (market.getReportingState() == testFixture.contracts['Constants'].PRE_REPORTING()):
@@ -26,7 +26,7 @@ def proceedToDesignatedReporting(testFixture, universe, market, reportOutcomes, 
             testFixture.designatedReport(market, reportOutcomes, designatedReporter)
 
     # Fast forward to the reporting phase time
-    reportingWindow = testFixture.applySignature('ReportingWindow', universe.getOrCreateNextReportingWindow())
+    feeWindow = testFixture.applySignature('FeeWindow', universe.getOrCreateNextFeeWindow())
     testFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
 
     # This will cause us to be in the DESIGNATED REPORTING phase
@@ -64,7 +64,7 @@ def proceedToFirstReporting(testFixture, universe, market, makeReport, disputer,
 def proceedToLastReporting(testFixture, universe, market, makeReport, designatedDisputer, firstDisputer, reportOutcomes, designatedDisputeOutcomes, firstReporter, firstReportOutcomes, firstReportDisputeOutcomes):
     cash = testFixture.contracts['Cash']
     reputationToken = testFixture.applySignature('ReputationToken', universe.getReputationToken())
-    reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = testFixture.applySignature('FeeWindow', market.getFeeWindow())
 
     if (market.getReportingState() != testFixture.contracts['Constants'].FIRST_REPORTING()):
         proceedToFirstReporting(testFixture, universe, market, makeReport, designatedDisputer, reportOutcomes, designatedDisputeOutcomes)
@@ -76,7 +76,7 @@ def proceedToLastReporting(testFixture, universe, market, makeReport, designated
     tentativeWinner = market.getTentativeWinningPayoutDistributionHash()
     assert tentativeWinner == stakeToken.getPayoutDistributionHash()
 
-    testFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
+    testFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
 
     assert market.getReportingState() == testFixture.contracts['Constants'].FIRST_DISPUTE()
 
@@ -105,7 +105,7 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
     if (market.getReportingState() != testFixture.contracts['Constants'].LAST_REPORTING()):
         proceedToLastReporting(testFixture, universe, market, makeReport, designatedDisputer, firstDisputer, reportOutcomes, designatedDisputeOutcomes, firstReporter, firstReportOutcomes, firstReportDisputeOutcomes)
 
-    reportingWindow = testFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = testFixture.applySignature('FeeWindow', market.getFeeWindow())
 
     stakeTokenNo = testFixture.getOrCreateStakeToken(market, lastReportOutcomes)
     stakeTokenYes = testFixture.getOrCreateStakeToken(market, firstReportDisputeOutcomes)
@@ -119,7 +119,7 @@ def proceedToForking(testFixture, universe, market, makeReport, designatedDisput
     assert tentativeWinner == stakeTokenNo.getPayoutDistributionHash()
 
     # To progress into the LAST DISPUTE phase we move time forward
-    testFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
+    testFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
     assert market.getReportingState() == testFixture.contracts['Constants'].LAST_DISPUTE()
 
     logs = []

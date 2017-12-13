@@ -96,7 +96,7 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     captureFilteredLogs(kitchenSinkFixture.chain.head_state, kitchenSinkFixture.contracts['Augur'], logs)
 
     with TokenDelta(cash, expectedMarketCreatorFees, market.getMarketCreatorMailbox(), "Market creator fees not paid"):
-        with TokenDelta(cash, expectedReporterFees, market.getReportingWindow(), "Reporter fees not paid"):
+        with TokenDelta(cash, expectedReporterFees, market.getFeeWindow(), "Reporter fees not paid"):
             # redeem shares with a1
             initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
             claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)

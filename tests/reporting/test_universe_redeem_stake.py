@@ -9,7 +9,7 @@ from reporting_utils import proceedToFirstReporting, proceedToForking, finalizeF
     False
 ])
 def test_redeem_stake(collectFees, kitchenSinkFixture, universe, market, cash, categoricalMarket, scalarMarket):
-    reportingWindow = kitchenSinkFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = kitchenSinkFixture.applySignature('FeeWindow', market.getFeeWindow())
     reputationToken = kitchenSinkFixture.applySignature('ReputationToken', universe.getReputationToken())
     completeSets = kitchenSinkFixture.contracts['CompleteSets']
 
@@ -19,14 +19,14 @@ def test_redeem_stake(collectFees, kitchenSinkFixture, universe, market, cash, c
     cost = 10 * market.getNumTicks()
     assert completeSets.publicBuyCompleteSets(market.address, 10, sender=tester.k1, value=cost)
     assert completeSets.publicSellCompleteSets(market.address, 10, sender=tester.k1)
-    fees = cash.balanceOf(market.getReportingWindow())
+    fees = cash.balanceOf(market.getFeeWindow())
     assert fees > 0
 
     # Proceed to the FIRST REPORTING phase
     proceedToFirstReporting(kitchenSinkFixture, universe, market, True, 1, [0,market.getNumTicks()], [market.getNumTicks(),0])
 
     # Move to finalization so we can redeem stake
-    kitchenSinkFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
+    kitchenSinkFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeEndTime() + 1)
     assert market.tryFinalize()
     assert market.getReportingState() == kitchenSinkFixture.contracts['Constants'].FINALIZED()
 
@@ -50,9 +50,9 @@ def test_redeem_stake(collectFees, kitchenSinkFixture, universe, market, cash, c
     False
 ])
 def test_redeem_participation_tokens(collectFees, kitchenSinkFixture, market, categoricalMarket, scalarMarket, universe, cash):
-    reportingWindow = kitchenSinkFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = kitchenSinkFixture.applySignature('FeeWindow', market.getFeeWindow())
     reputationToken = kitchenSinkFixture.applySignature('ReputationToken', universe.getReputationToken())
-    participationToken = kitchenSinkFixture.applySignature("ParticipationToken", reportingWindow.getParticipationToken())
+    feeWindow = kitchenSinkFixture.applySignature("FeeWindow", feeWindow.getFeeWindow())
     completeSets = kitchenSinkFixture.contracts['CompleteSets']
 
     reputationToken.transfer(tester.a1, 1 * 10**6 * 10**18)
@@ -61,7 +61,7 @@ def test_redeem_participation_tokens(collectFees, kitchenSinkFixture, market, ca
     cost = 10 * market.getNumTicks()
     assert completeSets.publicBuyCompleteSets(market.address, 10, sender=tester.k1, value=cost)
     assert completeSets.publicSellCompleteSets(market.address, 10, sender=tester.k1)
-    fees = cash.balanceOf(market.getReportingWindow())
+    fees = cash.balanceOf(market.getFeeWindow())
     assert fees > 0
 
     kitchenSinkFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
@@ -70,29 +70,29 @@ def test_redeem_participation_tokens(collectFees, kitchenSinkFixture, market, ca
     assert kitchenSinkFixture.designatedReport(categoricalMarket, [0, 0, categoricalMarket.getNumTicks()], tester.k0)
     assert kitchenSinkFixture.designatedReport(scalarMarket, [0, scalarMarket.getNumTicks()], tester.k0)
 
-    kitchenSinkFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
+    kitchenSinkFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
     assert market.tryFinalize()
     assert categoricalMarket.tryFinalize()
     assert scalarMarket.tryFinalize()
 
-    amountTokens = reportingWindow.getTotalWinningStake()
-    assert participationToken.buy(amountTokens, sender=tester.k1)
+    amountTokens = feeWindow.getTotalWinningStake()
+    assert feeWindow.buy(amountTokens, sender=tester.k1)
 
     expectedEther = fees / 2
     if (collectFees):
-        kitchenSinkFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
+        kitchenSinkFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeEndTime() + 1)
     else:
         expectedEther = 0
 
     with EtherDelta(expectedEther, tester.a1, kitchenSinkFixture.chain, "Redeeming didn't give eth correctly"):
         with TokenDelta(reputationToken, amountTokens, tester.a1, "Redeeming didn't give REP correctly"):
-            universe.redeemStake([], [], [participationToken.address], not collectFees, sender=tester.k1)
+            universe.redeemStake([], [], [feeWindow.address], not collectFees, sender=tester.k1)
 
 def test_redeem_disavowed_and_forking_stake(kitchenSinkFixture, universe, cash, market):
     newMarket = kitchenSinkFixture.createReasonableBinaryMarket(universe, cash)
     reputationToken = kitchenSinkFixture.applySignature('ReputationToken', universe.getReputationToken())
-    reportingWindow = kitchenSinkFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = kitchenSinkFixture.applySignature('FeeWindow', market.getFeeWindow())
     completeSets = kitchenSinkFixture.contracts['CompleteSets']
 
     for testAccount in [tester.a1, tester.a2, tester.a3]:

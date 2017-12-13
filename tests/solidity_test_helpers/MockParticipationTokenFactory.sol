@@ -1,32 +1,32 @@
 pragma solidity 0.4.18;
 
 import 'libraries/Delegator.sol';
-import 'reporting/IParticipationToken.sol';
-import 'reporting/IReportingWindow.sol';
+import 'reporting/IFeeWindow.sol';
+import 'reporting/IFeeWindow.sol';
 import 'IController.sol';
 
 
-contract MockParticipationTokenFactory {
+contract MockFeeWindowFactory {
 
-    IParticipationToken private participationTokenValue;
-    IController private createParticipationTokenControllerValue;
-    IReportingWindow private createParticipationTokenReportingWindow;
+    IFeeWindow private feeWindowValue;
+    IController private createFeeWindowControllerValue;
+    IFeeWindow private createFeeWindowFeeWindow;
 
-    function setParticipationTokenValue(IParticipationToken _participationTokenValue) public {
-        participationTokenValue = _participationTokenValue;
+    function setFeeWindowValue(IFeeWindow _feeWindowValue) public {
+        feeWindowValue = _feeWindowValue;
     }
 
-    function getCreateParticipationTokenControllerValue() public returns(IController) {
-        return createParticipationTokenControllerValue;
+    function getCreateFeeWindowControllerValue() public returns(IController) {
+        return createFeeWindowControllerValue;
     }
 
-    function getCreateParticipationTokenReportingWindow() public returns(IReportingWindow) {
-        return createParticipationTokenReportingWindow;
+    function getCreateFeeWindowFeeWindow() public returns(IFeeWindow) {
+        return createFeeWindowFeeWindow;
     }
 
-    function createParticipationToken(IController _controller, IReportingWindow _reportingWindow) public returns (IParticipationToken) {
-        createParticipationTokenControllerValue = _controller;
-        createParticipationTokenReportingWindow = _reportingWindow;
-        return participationTokenValue;
+    function createFeeWindow(IController _controller, IFeeWindow _feeWindow) public returns (IFeeWindow) {
+        createFeeWindowControllerValue = _controller;
+        createFeeWindowFeeWindow = _feeWindow;
+        return feeWindowValue;
     }
 }

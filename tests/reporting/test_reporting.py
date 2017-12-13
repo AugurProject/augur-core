@@ -15,7 +15,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
     stakeTokenNo = localFixture.getOrCreateStakeToken(market, [numTicks,0])
     stakeTokenYes = localFixture.getOrCreateStakeToken(market, [0,numTicks])
-    reportingWindow = localFixture.applySignature('ReportingWindow', universe.getOrCreateNextReportingWindow())
+    feeWindow = localFixture.applySignature('FeeWindow', universe.getOrCreateNextFeeWindow())
     expectedMarketCreatorFeePayout = universe.getOrCacheValidityBond()
     reporterGasCosts = universe.getOrCacheTargetReporterGasCosts()
 
@@ -24,8 +24,8 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     with raises(TransactionFailed, message="Reporting cannot be done in the PRE REPORTING state"):
         stakeTokenNo.buy(100, sender=tester.k0)
 
-    # Fast forward to one second after the next reporting window
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
+    # Fast forward to one second after the next fee window
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
     # This will cause us to be in the first reporting phase
     assert market.getReportingState() == localFixture.contracts['Constants'].FIRST_REPORTING()
@@ -46,15 +46,15 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     assert localFixture.chain.head_state.get_balance(tester.a1) == initialFirstReporterETH + reporterGasCosts
 
     # Move time forward into the FIRST DISPUTE phase
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
     assert market.getReportingState() == localFixture.contracts['Constants'].FIRST_DISPUTE()
 
     # Contest the results with Tester 0
     market.disputeFirstReporters([], 0, False, sender=tester.k0)
-    assert not reportingWindow.isContainerForMarket(market.address)
+    assert not feeWindow.isContainerForMarket(market.address)
     assert universe.isContainerForMarket(market.address)
-    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    assert reportingWindow.isContainerForMarket(market.address)
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    assert feeWindow.isContainerForMarket(market.address)
 
     # We're now in the LAST REPORTING phase
     assert market.getReportingState() == localFixture.contracts['Constants'].LAST_REPORTING()
@@ -63,7 +63,7 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     assert reputationToken.balanceOf(tester.a0) == 8 * 10**6 * 10 **18 - 100 - 11 * 10**21 - noShowBondCosts
 
     # Tester 2 reports for the NO outcome
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
     stakeTokenNo.buy(2, sender=tester.k2)
     assert stakeTokenNo.balanceOf(tester.a2) == 2
     assert reputationToken.balanceOf(tester.a2) == 10**6 * 10 **18 - 2
@@ -71,16 +71,16 @@ def test_reportingFullHappyPath(getStakeBonus, localFixture, universe, cash, mar
     assert tentativeWinner == stakeTokenNo.getPayoutDistributionHash()
 
     # Move forward in time to put us in the LAST DISPUTE PHASE
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
     assert market.getReportingState() == localFixture.contracts['Constants'].LAST_DISPUTE()
 
     # Tester 1 contests the outcome of the ALL report which will cause a fork
     market.disputeLastReporters(sender=tester.k1)
     assert universe.getForkingMarket() == market.address
-    assert not reportingWindow.isContainerForMarket(market.address)
+    assert not feeWindow.isContainerForMarket(market.address)
     assert universe.isContainerForMarket(market.address)
-    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    assert reportingWindow.isContainerForMarket(market.address)
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    assert feeWindow.isContainerForMarket(market.address)
     assert market.getReportingState() == localFixture.contracts['Constants'].FORKING()
 
     # The universe forks and there is now a universe where NO and YES are the respective outcomes of each
@@ -189,9 +189,9 @@ def test_designatedReportingHappyPath(localFixture, universe, market):
     numTicks = market.getNumTicks()
     proceedToDesignatedReporting(localFixture, universe, market, [0,numTicks])
 
-    reportingWindow = localFixture.applySignature("ReportingWindow", market.getReportingWindow())
+    feeWindow = localFixture.applySignature("FeeWindow", market.getFeeWindow())
 
-    originalNumDesignatedReportNoShows = reportingWindow.getNumDesignatedReportNoShows()
+    originalNumDesignatedReportNoShows = feeWindow.getNumDesignatedReportNoShows()
 
     # To progress into the DESIGNATED DISPUTE phase we do a designated report
     logs = []
@@ -207,8 +207,8 @@ def test_designatedReportingHappyPath(localFixture, universe, market):
     assert logs[3]['market'] == market.address
     assert logs[3]['payoutNumerators'] == [0,numTicks]
 
-    # making a designated report also decremented the no show accounting on the reporting window
-    assert reportingWindow.getNumDesignatedReportNoShows() == originalNumDesignatedReportNoShows - 1
+    # making a designated report also decremented the no show accounting on the fee window
+    assert feeWindow.getNumDesignatedReportNoShows() == originalNumDesignatedReportNoShows - 1
 
     # We're now in the DESIGNATED DISPUTE PHASE
     assert market.getReportingState() == localFixture.contracts['Constants'].DESIGNATED_DISPUTE()
@@ -228,7 +228,7 @@ def test_designatedReportingHappyPath(localFixture, universe, market):
     False
 ])
 def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
-    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
 
     numTicks = market.getNumTicks()
@@ -277,11 +277,11 @@ def test_firstReportingHappyPath(makeReport, localFixture, universe, market):
     assert tentativeWinner == stakeTokenYes.getPayoutDistributionHash()
 
     # To progress into the FIRST DISPUTE phase we move time forward
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
     assert market.getReportingState() == localFixture.contracts['Constants'].FIRST_DISPUTE()
 
     # If time passes and no dispute bond is placed the market can be finalized
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeEndTime() + 1)
 
     # The market is awaiting finalization now
     assert market.getReportingState() == localFixture.contracts['Constants'].AWAITING_FINALIZATION()
@@ -298,14 +298,14 @@ def test_lastReportingHappyPath(localFixture, makeReport, universe, market, cash
     newMarket = localFixture.createReasonableBinaryMarket(universe, cash)
     completeSets = localFixture.contracts['CompleteSets']
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
-    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
     numTicks = market.getNumTicks()
 
     # Generate some fees to confirm the market migration also migrates proportional fees
     cost = 10 * numTicks
     assert completeSets.publicBuyCompleteSets(market.address, 10, sender=tester.k1, value=cost)
     assert completeSets.publicSellCompleteSets(market.address, 10, sender=tester.k1)
-    fees = cash.balanceOf(newMarket.getReportingWindow())
+    fees = cash.balanceOf(newMarket.getFeeWindow())
     assert fees > 0
 
     # We'll proceed to the designated reporting phase so that there is also stake from a market that does not migrate
@@ -315,14 +315,14 @@ def test_lastReportingHappyPath(localFixture, makeReport, universe, market, cash
     assert newMarketStakeToken.buy(firstDisputeStake)
 
     # Proceed to the LAST REPORTING phase for the main market
-    originalReportingWindowStake = reportingWindow.getTotalStake()
-    assert originalReportingWindowStake > 0
+    originalFeeWindowStake = feeWindow.getTotalStake()
+    assert originalFeeWindowStake > 0
     proceedToLastReporting(localFixture, universe, market, makeReport, 1, 3, [0,numTicks], [numTicks,0], 2, [numTicks,0], [0,numTicks])
 
     # Confirm that fees have moved proportionally when the market migrated from the first dispute
-    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
     expectedMigratedFees = fees / 2
-    assert cash.balanceOf(market.getReportingWindow()) == expectedMigratedFees
+    assert cash.balanceOf(market.getFeeWindow()) == expectedMigratedFees
 
     stakeTokenNo = localFixture.getOrCreateStakeToken(market, [numTicks,0])
     stakeTokenYes = localFixture.getOrCreateStakeToken(market, [0,numTicks])
@@ -341,11 +341,11 @@ def test_lastReportingHappyPath(localFixture, makeReport, universe, market, cash
     assert tentativeWinner == stakeTokenNo.getPayoutDistributionHash()
 
     # To progress into the LAST DISPUTE phase we move time forward
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
     assert market.getReportingState() == localFixture.contracts['Constants'].LAST_DISPUTE()
 
     # If time passes and no dispute bond is placed the market can be finalized
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeEndTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeEndTime() + 1)
 
     # The market is awaiting finalization now
     assert market.getReportingState() == localFixture.contracts['Constants'].AWAITING_FINALIZATION()
@@ -383,7 +383,7 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     cost = 10 * numTicks
     assert completeSets.publicBuyCompleteSets(newMarket.address, 10, sender=tester.k1, value=cost)
     assert completeSets.publicSellCompleteSets(newMarket.address, 10, sender=tester.k1)
-    assert cash.balanceOf(newMarket.getReportingWindow()) > 0
+    assert cash.balanceOf(newMarket.getFeeWindow()) > 0
 
     # We'll do a designated report in the new market based on the makeReport param used for the forking market
     proceedToDesignatedReporting(localFixture, universe, newMarket, [0,numTicks])
@@ -404,11 +404,11 @@ def test_forkMigration(localFixture, makeReport, finalizeByMigration, universe, 
     finalizeForkingMarket(localFixture, universe, market, finalizeByMigration, tester.a1, tester.k1, tester.a0, tester.k0, tester.a2, tester.k2, [0,numTicks], [numTicks,0])
 
     # Now we can migrate the market to the winning universe. We also confirm that migration will move fees
-    windowCashBalance = cash.balanceOf(newMarket.getReportingWindow())
-    with TokenDelta(cash, -windowCashBalance, newMarket.getReportingWindow(), "Fork migration did not trigger window fee migratgion"):
+    windowCashBalance = cash.balanceOf(newMarket.getFeeWindow())
+    with TokenDelta(cash, -windowCashBalance, newMarket.getFeeWindow(), "Fork migration did not trigger window fee migratgion"):
         assert newMarket.migrateThroughOneFork()
 
-    assert cash.balanceOf(newMarket.getReportingWindow()) == windowCashBalance
+    assert cash.balanceOf(newMarket.getFeeWindow()) == windowCashBalance
 
     # Now that we're on the correct universe we are send back to the DESIGNATED DISPUTE phase, which in the case of no designated reporter means the FIRST Reporting phase
     if (makeReport):
@@ -425,27 +425,27 @@ def test_noReports(localFixture, pastDisputePhase, universe, market):
     numTicks = market.getNumTicks()
     proceedToFirstReporting(localFixture, universe, market, False, 1, [0,numTicks], [numTicks,0])
 
-    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
 
     if (pastDisputePhase):
-        localFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
+        localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     else:
-        localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
+        localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
 
     # If we receive no reports by the time Limited Reporting is finished we will be in the AWAITING NO REPORT MIGRATION phase
     assert market.getReportingState() == localFixture.contracts['Constants'].AWAITING_NO_REPORT_MIGRATION()
 
-    # We can try to report on the market, which will move it to the next reporting window where it will be back in FIRST REPORTING
+    # We can try to report on the market, which will move it to the next fee window where it will be back in FIRST REPORTING
     stakeToken = localFixture.getOrCreateStakeToken(market, [0,numTicks])
     assert stakeToken.buy(1, sender=tester.k2)
 
     assert market.getReportingState() == localFixture.contracts['Constants'].FIRST_REPORTING()
-    assert market.getReportingWindow() != reportingWindow.address
+    assert market.getFeeWindow() != feeWindow.address
 
 def test_invalid_first_report(localFixture, universe, cash, market):
-    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
-    expectedReportingWindowFeePayout = universe.getOrCacheValidityBond()
+    expectedFeeWindowFeePayout = universe.getOrCacheValidityBond()
     numTicks = market.getNumTicks()
 
     # Proceed to the FIRST REPORTING phase
@@ -460,19 +460,19 @@ def test_invalid_first_report(localFixture, universe, cash, market):
     assert not stakeTokenInvalid.isValid()
 
     # If we finalize the market it will be recorded as an invalid result
-    initialReportingWindowCashBalance = cash.balanceOf(reportingWindow.address)
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
+    initialFeeWindowCashBalance = cash.balanceOf(feeWindow.address)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.tryFinalize()
     assert not market.isValid()
-    assert reportingWindow.getNumInvalidMarkets() == 1
+    assert feeWindow.getNumInvalidMarkets() == 1
 
-    # Since the market resolved with an invalid outcome the validity bond is paid out to the reporting window in Cash
-    increaseInReportingWindowBalance = cash.balanceOf(reportingWindow.address) - initialReportingWindowCashBalance
-    assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
+    # Since the market resolved with an invalid outcome the validity bond is paid out to the fee window in Cash
+    increaseInFeeWindowBalance = cash.balanceOf(feeWindow.address) - initialFeeWindowCashBalance
+    assert increaseInFeeWindowBalance == expectedFeeWindowFeePayout
 
 def test_invalid_designated_report(localFixture, universe, cash, market):
-    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    expectedReportingWindowFeePayout = universe.getOrCacheValidityBond()
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    expectedFeeWindowFeePayout = universe.getOrCacheValidityBond()
     expectedMarketCreatorFeePayout = universe.getOrCacheTargetReporterGasCosts()
     numTicks = market.getNumTicks()
 
@@ -493,14 +493,14 @@ def test_invalid_designated_report(localFixture, universe, cash, market):
     assert market.getReportingState() == localFixture.contracts['Constants'].AWAITING_FINALIZATION()
 
     # If we finalize the market it will be recorded as an invalid result
-    initialReportingWindowCashBalance = cash.balanceOf(reportingWindow.address)
+    initialFeeWindowCashBalance = cash.balanceOf(feeWindow.address)
     assert market.tryFinalize()
     assert not market.isValid()
-    assert reportingWindow.getNumInvalidMarkets() == 1
+    assert feeWindow.getNumInvalidMarkets() == 1
 
-    # Since the market resolved with an invalid outcome the validity bond is paid out to the reporting window
-    increaseInReportingWindowBalance = cash.balanceOf(reportingWindow.address) - initialReportingWindowCashBalance
-    assert increaseInReportingWindowBalance == expectedReportingWindowFeePayout
+    # Since the market resolved with an invalid outcome the validity bond is paid out to the fee window
+    increaseInFeeWindowBalance = cash.balanceOf(feeWindow.address) - initialFeeWindowCashBalance
+    assert increaseInFeeWindowBalance == expectedFeeWindowFeePayout
 
     # Since the designated reporter showed up the market creator still gets back the reporter gas cost fee
     increaseInMarketCreatorBalance = localFixture.chain.head_state.get_balance(market.getMarketCreatorMailbox()) - initialMarketCreatorETHBalance
@@ -518,8 +518,8 @@ def test_cannot_fork_twice(localFixture, universe, cash, market):
     assert newMarket.getReportingState() == localFixture.contracts["Constants"].LAST_REPORTING()
 
     # We'll progress to the dispute phase for both
-    reportingWindow = localFixture.applySignature('ReportingWindow', market.getReportingWindow())
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
 
     # Both markets are in last dispute
     assert market.getReportingState() == localFixture.contracts["Constants"].LAST_DISPUTE()

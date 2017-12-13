@@ -7,7 +7,7 @@ from utils import stringToBytes, captureFilteredLogs, bytesToHexString
 tester.STARTGAS = long(6.7 * 10**6)
 
 def test_market_creation(contractsFixture, universe, cash, market):
-    reportingWindow = contractsFixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
     shadyStakeToken = contractsFixture.upload('../source/contracts/reporting/StakeToken.sol', 'shadyStakeToken')
     shadyStakeToken.setController(contractsFixture.contracts["Controller"].address)
     numTicks = market.getNumTicks()
@@ -27,7 +27,7 @@ def test_market_creation(contractsFixture, universe, cash, market):
     assert market.getUniverse() == universe.address
     assert market.getNumberOfOutcomes() == 2
     assert numTicks == 10000
-    assert reportingWindow.getReputationToken() == universe.getReputationToken()
+    assert feeWindow.getReputationToken() == universe.getReputationToken()
     assert market.getFinalPayoutDistributionHash() == stringToBytes("")
     assert market.getReportingState() == contractsFixture.contracts['Constants'].PRE_REPORTING()
     assert market.isContainerForStakeToken(shadyStakeToken.address) == 0

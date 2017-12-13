@@ -16,9 +16,9 @@ def test_market_escape_hatch_all_fees(localFixture, controller, market, reputati
         with TokenDelta(reputationToken, reputationToken.balanceOf(market.address), market.getOwner(), "REP balance was not given to the market owner"):
             assert market.withdrawInEmergency()
 
-def test_market_escape_hatch_partial_fees(localFixture, market, reputationToken, reportingWindow, constants, controller):
+def test_market_escape_hatch_partial_fees(localFixture, market, reputationToken, feeWindow, constants, controller):
     # We'll skip to Limited reporting and make a report
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
     stakeToken = localFixture.getOrCreateStakeToken(market, [0, market.getNumTicks()], False)
     MarketEtherDelta = constants.DEFAULT_VALIDITY_BOND() - localFixture.chain.head_state.get_balance(market.address)
@@ -34,9 +34,9 @@ def test_market_escape_hatch_partial_fees(localFixture, market, reputationToken,
         with TokenDelta(reputationToken, 0, market.getOwner(), "REP balance was somehow given to the market owner"):
             assert market.withdrawInEmergency()
 
-def test_stake_token_escape_hatch(localFixture, market, reportingWindow, reputationToken, cash, controller):
+def test_stake_token_escape_hatch(localFixture, market, feeWindow, reputationToken, cash, controller):
     # We'll skip to Limited reporting
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
     # We'll give some testers some REP
     for testAccount in [tester.a1, tester.a2, tester.a3, tester.a4]:
@@ -63,7 +63,7 @@ def test_stake_token_escape_hatch(localFixture, market, reportingWindow, reputat
     # Emergency Stop
     assert controller.emergencyStop()
 
-    fees = cash.balanceOf(reportingWindow.address) / 4
+    fees = cash.balanceOf(feeWindow.address) / 4
     stakeTokens = [stakeToken1, stakeToken2, stakeToken3, stakeToken4]
 
     # We can redeem any tokens purchased
@@ -71,7 +71,7 @@ def test_stake_token_escape_hatch(localFixture, market, reportingWindow, reputat
         with TokenDelta(reputationToken, stake, localFixture.testerAddress[i], "REP was not given back to Stake token holder"):
             assert stakeTokens[i-1].withdrawInEmergency(sender=localFixture.testerKey[i])
 
-def test_dispute_bond_token_escape_hatch(localFixture, reportingWindow, controller, reputationToken, market, constants, cash):
+def test_dispute_bond_token_escape_hatch(localFixture, feeWindow, controller, reputationToken, market, constants, cash):
     # We'll skip to Designated reporting and make a report
     localFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
 
@@ -100,7 +100,7 @@ def test_dispute_bond_token_escape_hatch(localFixture, reportingWindow, controll
     with TokenDelta(reputationToken, bondAmount, tester.a1, "REP balance was somehow given to the market owner"):
         assert disputeBond.withdrawInEmergency(sender=tester.k1)
 
-def test_participation_token_escape_hatch(localFixture, reportingWindow, controller, reputationToken, market, constants, cash, categoricalMarket, scalarMarket):
+def test_participation_token_escape_hatch(localFixture, feeWindow, controller, reputationToken, market, constants, cash, categoricalMarket, scalarMarket):
     # We'll do a designated report on each market
     localFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
 
@@ -115,7 +115,7 @@ def test_participation_token_escape_hatch(localFixture, reportingWindow, control
     assert scalarStakeToken.buy(designatedStake)
 
     # Skip past the dispute phase and finalize the markets
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
     assert market.tryFinalize()
     assert categoricalMarket.tryFinalize()
     assert scalarMarket.tryFinalize()
@@ -125,29 +125,29 @@ def test_participation_token_escape_hatch(localFixture, reportingWindow, control
         reputationToken.transfer(testAccount, 1 * 10**6 * 10**18)
 
     # Now we'll purchase some participation tokens
-    participationToken = localFixture.applySignature("ParticipationToken", reportingWindow.getParticipationToken())
+    feeWindow = localFixture.applySignature("FeeWindow", feeWindow.getFeeWindow())
 
     # We'll purchase stake in this amount to make the math clean
     stake = constants.DEFAULT_DESIGNATED_REPORT_STAKE()
 
-    participationToken.buy(stake, sender=tester.k1)
-    participationToken.buy(stake, sender=tester.k2)
-    participationToken.buy(stake, sender=tester.k3)
-    participationToken.buy(stake, sender=tester.k4)
+    feeWindow.buy(stake, sender=tester.k1)
+    feeWindow.buy(stake, sender=tester.k2)
+    feeWindow.buy(stake, sender=tester.k3)
+    feeWindow.buy(stake, sender=tester.k4)
 
     # We can't call the escape hatch on an participation token until the system has been stopped
     with raises(TransactionFailed):
-        participationToken.withdrawInEmergency(sender=tester.k1)
+        feeWindow.withdrawInEmergency(sender=tester.k1)
 
     # Emergency Stop
     assert controller.emergencyStop()
 
-    fees = cash.balanceOf(reportingWindow.address) / 7
+    fees = cash.balanceOf(feeWindow.address) / 7
 
     # We can redeem any tokens purchased
     for i in range(1,4):
         with TokenDelta(reputationToken, stake, localFixture.testerAddress[i], "REP was not given back to Stake token holder"):
-            assert participationToken.withdrawInEmergency(sender=localFixture.testerKey[i])
+            assert feeWindow.withdrawInEmergency(sender=localFixture.testerKey[i])
 
 @fixture(scope="module")
 def localSnapshot(fixture, kitchenSinkSnapshot):
@@ -185,8 +185,8 @@ def reputationToken(localFixture, kitchenSinkSnapshot, universe):
     return localFixture.applySignature("ReputationToken", universe.getReputationToken())
 
 @fixture
-def reportingWindow(localFixture, kitchenSinkSnapshot, market):
-    return localFixture.applySignature("ReportingWindow", market.getReportingWindow())
+def feeWindow(localFixture, kitchenSinkSnapshot, market):
+    return localFixture.applySignature("FeeWindow", market.getFeeWindow())
 
 @fixture
 def constants(localFixture, kitchenSinkSnapshot):

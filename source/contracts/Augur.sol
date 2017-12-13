@@ -4,9 +4,10 @@ import 'Controlled.sol';
 import 'libraries/token/ERC20.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IParticipationToken.sol';
-import 'reporting/IStakeToken.sol';
+import 'reporting/IFeeWindow.sol';
 import 'reporting/IReputationToken.sol';
+import 'reporting/IReportingParticipant.sol';
+import 'reporting/IDisputeCrowdsourcer.sol';
 import 'trading/IShareToken.sol';
 import 'trading/Order.sol';
 import 'libraries/Extractable.sol';
@@ -15,10 +16,9 @@ import 'libraries/Extractable.sol';
 // Centralized approval authority and event emissions
 contract Augur is Controlled, Extractable {
     event MarketCreated(bytes32 indexed topic, string description, string extraInfo, address indexed universe, address market, address indexed marketCreator, bytes32[] outcomes, uint256 marketCreationFee, int256 minPrice, int256 maxPrice, IMarket.MarketType marketType);
-    event DesignatedReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
-    event ReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountStaked, uint256[] payoutNumerators);
-    event WinningTokensRedeemed(address indexed universe, address indexed reporter, address indexed market, address stakeToken, uint256 amountRedeemed, uint256 reportingFeesReceived, uint256[] payoutNumerators);
-    event ReportsDisputed(address indexed universe, address indexed disputer, address indexed market, IMarket.ReportingState reportingPhase, uint256 disputeBondAmount);
+    event DesignatedReportSubmitted(address indexed universe, address indexed reporter, address indexed market, uint256 amountStaked, uint256[] payoutNumerators);
+    event ReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address reportingParticipant, uint256 amountStaked, uint256[] payoutNumerators);
+    event WinningsRedeemed(address indexed universe, address indexed reporter, address indexed market, address reportingParticipant, uint256 amountRedeemed, uint256 reportingFeesReceived, uint256[] payoutNumerators);
     event MarketFinalized(address indexed universe, address indexed market);
     event UniverseForked(address indexed universe);
     event OrderCanceled(address indexed universe, address indexed shareToken, address indexed sender, bytes32 orderId, Order.Types orderType, uint256 tokenRefund, uint256 sharesRefund);
@@ -30,7 +30,7 @@ contract Augur is Controlled, Extractable {
     event TokensTransferred(address indexed universe, address indexed token, address indexed from, address to, uint256 value);
     event TokensMinted(address indexed universe, address indexed token, address indexed target, uint256 amount);
     event TokensBurned(address indexed universe, address indexed token, address indexed target, uint256 amount);
-    event ReportingWindowCreated(address indexed universe, address reportingWindow, uint256 startTime, uint256 endTime, uint256 id);
+    event FeeWindowCreated(address indexed universe, address feeWindow, uint256 startTime, uint256 endTime, uint256 id);
 
     //
     // Transfer
@@ -46,39 +46,35 @@ contract Augur is Controlled, Extractable {
     // Logging
     //
 
+    // This signature is intended for the categorical market creation. We use two signatures for the same event because of stack depth issues which can be circumvented by maintaining order of paramaters
     function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator, bytes32[] _outcomes, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
         require(_universe == IUniverse(msg.sender));
         MarketCreated(_topic, _description, _extraInfo, _universe, _market, _marketCreator, _outcomes, _universe.getOrCacheMarketCreationCost(), _minPrice, _maxPrice, _marketType);
         return true;
     }
 
+    // This signature is intended for binary and scalar market creation. See function comment above for explanation.
     function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
         require(_universe == IUniverse(msg.sender));
         MarketCreated(_topic, _description, _extraInfo, _universe, _market, _marketCreator, new bytes32[](0), _universe.getOrCacheMarketCreationCost(), _minPrice, _maxPrice, _marketType);
         return true;
     }
 
-    function logDesignatedReportSubmitted(IUniverse _universe, address _reporter, address _market, address _stakeToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
-        require(_universe.isContainerForStakeToken(IStakeToken(msg.sender)));
-        DesignatedReportSubmitted(_universe, _reporter, _market, _stakeToken, _amountStaked, _payoutNumerators);
-        return true;
-    }
-
-    function logReportSubmitted(IUniverse _universe, address _reporter, address _market, address _stakeToken, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
-        require(_universe.isContainerForStakeToken(IStakeToken(msg.sender)));
-        ReportSubmitted(_universe, _reporter, _market, _stakeToken, _amountStaked, _payoutNumerators);
-        return true;
-    }
-
-    function logWinningTokensRedeemed(IUniverse _universe, address _reporter, address _market, address _stakeToken, uint256 _amountRedeemed, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
-        require(_universe.isContainerForStakeToken(IStakeToken(msg.sender)));
-        WinningTokensRedeemed(_universe, _reporter, _market, _stakeToken, _amountRedeemed, _reportingFeesReceived, _payoutNumerators);
-        return true;
-    }
-
-    function logReportsDisputed(IUniverse _universe, address _disputer, address _market, IMarket.ReportingState _reportingPhase, uint256 _disputeBondAmount) public returns (bool) {
+    function logDesignatedReportSubmitted(IUniverse _universe, address _reporter, address _market, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
-        ReportsDisputed(_universe, _disputer, _market, _reportingPhase, _disputeBondAmount);
+        DesignatedReportSubmitted(_universe, _reporter, _market, _amountStaked, _payoutNumerators);
+        return true;
+    }
+
+    function logReportSubmitted(IUniverse _universe, address _reporter, address _market, address _reportingParticipant, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
+        require(_universe.isContainerForMarket(IMarket(msg.sender)));
+        ReportSubmitted(_universe, _reporter, _market, _reportingParticipant, _amountStaked, _payoutNumerators);
+        return true;
+    }
+
+    function logWinningTokensRedeemed(IUniverse _universe, address _reporter, address _market, address _reportingParticipant, uint256 _amountRedeemed, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
+        require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
+        WinningsRedeemed(_universe, _reporter, _market, _reportingParticipant, _amountRedeemed, _reportingFeesReceived, _payoutNumerators);
         return true;
     }
 
@@ -120,8 +116,8 @@ contract Augur is Controlled, Extractable {
         return true;
     }
 
-    function logParticipationTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
-        require(_universe.isContainerForParticipationToken(IParticipationToken(msg.sender)));
+    function logFeeWindowTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
+        require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         TokensTransferred(_universe, msg.sender, _from, _to, _value);
         return true;
     }
@@ -132,8 +128,8 @@ contract Augur is Controlled, Extractable {
         return true;
     }
 
-    function logStakeTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
-        require(_universe.isContainerForStakeToken(IStakeToken(msg.sender)));
+    function logDisputeCrowdsourcerTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
+        require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         TokensTransferred(_universe, msg.sender, _from, _to, _value);
         return true;
     }
@@ -168,32 +164,32 @@ contract Augur is Controlled, Extractable {
         return true;
     }
 
-    function logParticipationTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(_universe.isContainerForParticipationToken(IParticipationToken(msg.sender)));
+    function logFeeWindowBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         TokensBurned(_universe, msg.sender, _target, _amount);
         return true;
     }
 
-    function logParticipationTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(_universe.isContainerForParticipationToken(IParticipationToken(msg.sender)));
+    function logFeeWindowMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         TokensMinted(_universe, msg.sender, _target, _amount);
         return true;
     }
 
-    function logStakeTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(_universe.isContainerForStakeToken(IStakeToken(msg.sender)));
+    function logDisputeCrowdsourcerTokensBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         TokensBurned(_universe, msg.sender, _target, _amount);
         return true;
     }
 
-    function logStakeTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(_universe.isContainerForStakeToken(IStakeToken(msg.sender)));
+    function logDisputeCrowdsourcerTokensMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         TokensMinted(_universe, msg.sender, _target, _amount);
         return true;
     }
 
-    function logReportingWindowCreated(IReportingWindow _reportingWindow, uint256 _id) public returns (bool) {
-        ReportingWindowCreated(msg.sender, _reportingWindow, _reportingWindow.getStartTime(), _reportingWindow.getEndTime(), _id);
+    function logFeeWindowCreated(IFeeWindow _feeWindow, uint256 _id) public returns (bool) {
+        FeeWindowCreated(msg.sender, _feeWindow, _feeWindow.getStartTime(), _feeWindow.getEndTime(), _id);
         return true;
     }
 

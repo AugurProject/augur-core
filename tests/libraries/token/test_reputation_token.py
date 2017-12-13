@@ -47,7 +47,6 @@ def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedRep
     assert mockReputationToken.getMigrateInReporterValue() == stringToBytes(mockStakeToken.address)
     assert mockReputationToken.getMigrateInAttoTokensValue() == 54
     assert mockReputationToken.getMigrateInBonusIfInForkWindowValue() == True
-    assert initializedReputationToken.getTopMigrationDestination() == stringToBytes(mockReputationToken.address)
 
     give_some_rep_to(mockLegacyReputationToken, initializedReputationToken, tester.k1, 35)
     assert initializedReputationToken.totalSupply() == 1011 - 54 + 35
@@ -64,7 +63,6 @@ def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedRep
     assert initializedReputationToken.balanceOf(tester.a1) == 0
 
     assert initializedReputationToken.totalSupply() == 1011 - 54 + 35 - 35
-    assert initializedReputationToken.getTopMigrationDestination() == stringToBytes(mockReputationToken.address)
     assert mockReputationToken.getMigrateInReporterValue() == bytesToHexString(tester.a1)
     assert mockReputationToken.getMigrateInAttoTokensValue() == 35
     assert mockReputationToken.getMigrateInBonusIfInForkWindowValue() == True
@@ -76,7 +74,6 @@ def test_reputation_token_migrate_out(localFixture, mockUniverse, initializedRep
     assert mockStakeToken.callMigrateOut(initializedReputationToken.address, newReputationToken.address, mockStakeToken.address, 33)
     # new destination with larger total supply gets migration
     assert initializedReputationToken.totalSupply() == 1011 - 54 - 33
-    assert initializedReputationToken.getTopMigrationDestination() == stringToBytes(newReputationToken.address)
     assert newReputationToken.getMigrateInReporterValue() == stringToBytes(mockStakeToken.address)
     assert newReputationToken.getMigrateInAttoTokensValue() == 33
     assert newReputationToken.getMigrateInBonusIfInForkWindowValue() == False
@@ -135,12 +132,12 @@ def test_reputation_token_mint_for_dispute_bond_migration(localFixture, initiali
     assert initializedReputationToken.balanceOf(mockDisputeBond.address) == 100
 
 
-def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializedReputationToken, mockMarket, mockReportingWindow, mockStakeToken, mockParticipationToken, mockLegacyReputationToken):
-    with raises(TransactionFailed, message="universe does not contain reporting window and caller has to be a IReportingWindow"):
-        initializedReputationToken.trustedReportingWindowTransfer(tester.a1, tester.a2, 100)
+def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializedReputationToken, mockMarket, mockFeeWindow, mockStakeToken, mockFeeWindow, mockLegacyReputationToken):
+    with raises(TransactionFailed, message="universe does not contain fee window and caller has to be a IFeeWindow"):
+        initializedReputationToken.trustedFeeWindowTransfer(tester.a1, tester.a2, 100)
 
-    with raises(TransactionFailed, message="universe does not contain reporting window"):
-        mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+    with raises(TransactionFailed, message="universe does not contain fee window"):
+        mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
     with raises(TransactionFailed, message="universe does not contain market"):
         mockMarket.callTrustedMarketTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
@@ -149,11 +146,11 @@ def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializ
         mockStakeToken.callTrustedStakeTokenTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
     with raises(TransactionFailed, message="universe does not contain participation token"):
-        mockParticipationToken.callTrustedParticipationTokenTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+        mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
-    mockUniverse.setIsContainerForReportingWindow(True)
+    mockUniverse.setIsContainerForFeeWindow(True)
     with raises(TransactionFailed, message="source balance can not be 0"):
-        mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+        mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
 
     assert initializedReputationToken.totalSupply() == 0
@@ -164,12 +161,12 @@ def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializ
     assert initializedReputationToken.balanceOf(tester.a1) == 35
 
     with raises(TransactionFailed, message="transfer has to be approved"):
-        mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+        mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
     assert initializedReputationToken.approve(mockStakeToken.address, 35, sender=tester.k1)
     assert initializedReputationToken.allowance(tester.a1, mockStakeToken.address) == 35
 
-    assert mockReportingWindow.callTrustedReportingWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 35)
+    assert mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 35)
     # TODO find out why total supply grows
     assert initializedReputationToken.totalSupply() == 35
     assert initializedReputationToken.balanceOf(tester.a2) == 35
@@ -217,12 +214,12 @@ def mockDisputeBond(localFixture):
     return localFixture.contracts['MockDisputeBond']
 
 @fixture
-def mockReportingWindow(localFixture):
-    return localFixture.contracts['MockReportingWindow']
+def mockFeeWindow(localFixture):
+    return localFixture.contracts['MockFeeWindow']
 
 @fixture
-def mockParticipationToken(localFixture):
-    return localFixture.contracts['MockParticipationToken']
+def mockFeeWindow(localFixture):
+    return localFixture.contracts['MockFeeWindow']
 
 @fixture
 def mockLegacyReputationToken(localFixture):

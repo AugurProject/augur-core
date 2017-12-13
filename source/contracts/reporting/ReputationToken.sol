@@ -10,6 +10,7 @@ import 'libraries/token/ERC20.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/Reporting.sol';
+import 'reporting/IDisputeCrowdsourcer.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/Extractable.sol';
 
@@ -21,7 +22,6 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     string constant public symbol = "REP";
     uint256 constant public decimals = 18;
     IUniverse private universe;
-    IReputationToken private topMigrationDestination;
 
     function initialize(IUniverse _universe) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
@@ -30,55 +30,25 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
         return true;
     }
 
-    function migrateOutStakeToken(IReputationToken _destination, address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
-        require(universe.isContainerForStakeToken(IStakeToken(msg.sender)));
-        return internalMigrateOut(_destination, msg.sender, _reporter, _attotokens, true);
-    }
-
-    function migrateOutDisputeBond(IReputationToken _destination, address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
-        require(universe.isContainerForDisputeBond(IDisputeBond(msg.sender)));
-        return internalMigrateOut(_destination, msg.sender, _reporter, _attotokens, true);
-    }
-
-    function migrateOut(IReputationToken _destination, address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
-        return internalMigrateOut(_destination, msg.sender, _reporter, _attotokens, false);
-    }
-
-    // AUDIT: check for reentrancy issues here, _destination will be called as contracts during validation
-    function internalMigrateOut(IReputationToken _destination, address _sender, address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) private onlyInGoodTimes returns (bool) {
+    function migrateOut(IReputationToken _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         assertReputationTokenIsLegit(_destination);
-        if (_sender != _reporter) {
-            // Adjust token allowance here since we're bypassing the standard transferFrom method
-            allowed[_reporter][_sender] = allowed[_reporter][_sender].sub(_attotokens);
-        }
-        burn(_reporter, _attotokens);
-        _destination.migrateIn(_reporter, _attotokens, _bonusIfInForkWindow);
-        if (topMigrationDestination == address(0) || _destination.totalSupply() > topMigrationDestination.totalSupply()) {
-            topMigrationDestination = _destination;
-        }
+        burn(msg.sender, _attotokens);
+        _destination.migrateIn(msg.sender, _attotokens);
         return true;
     }
 
-    function migrateIn(address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) public onlyInGoodTimes afterInitialized returns (bool) {
+    function migrateIn(address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+        IUniverse _parentUniverse = universe.getParentUniverse();
         require(ReputationToken(msg.sender) == universe.getParentUniverse().getReputationToken());
         mint(_reporter, _attotokens);
-        // Only count tokens migrated toward the available to be matched in other universes. The bonus should not be added
-        universe.increaseRepAvailableForExtraBondPayouts(_attotokens);
-        if (eligibleForForkBonus(_bonusIfInForkWindow)) {
+        // Award a bonus if migration is done before the fork has resolved and check if the fork can be resolved early
+        if (!_parentUniverse.getForkingMarket().isFinalized()) {
             mint(_reporter, _attotokens.div(Reporting.getForkMigrationPercentageBonusDivisor()));
+            if (supply > universe.getForkReputationGoal()) {
+                _parentUniverse.getForkingMarket().finalizeFork();
+            }
         }
         return true;
-    }
-
-    function eligibleForForkBonus(bool _bonusIfInForkWindow) private view returns (bool) {
-        IUniverse _parentUniverse = universe.getParentUniverse();
-        if (_parentUniverse.getForkingMarket().getReportingState() != IMarket.ReportingState.FINALIZED) {
-            return true;
-        }
-        if (_bonusIfInForkWindow) {
-            return controller.getTimestamp() < _parentUniverse.getForkEndTime();
-        }
-        return false;
     }
 
     function migrateFromLegacyReputationToken() public onlyInGoodTimes afterInitialized returns (bool) {
@@ -89,16 +59,17 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
         return true;
     }
 
-    function mintForDisputeBondMigration(uint256 _amount) public onlyInGoodTimes afterInitialized returns (bool) {
+    function mintForDisputeCrowdsourcer(uint256 _amountMigrated) public onlyInGoodTimes afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
-        require(_parentUniverse.isContainerForDisputeBond(IDisputeBond(msg.sender)));
-        mint(msg.sender, _amount);
+        IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
+        require(_parentUniverse.isContainerForReportingParticipant(IReportingParticipant(_disputeCrowdsourcer)));
+        mint(_disputeCrowdsourcer, _amountMigrated / 2);
         return true;
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
-    function trustedReportingWindowTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
-        require(universe.isContainerForReportingWindow(IReportingWindow(msg.sender)));
+    function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+        require(IUniverse(msg.sender) == universe);
         return internalTransfer(_source, _destination, _attotokens);
     }
 
@@ -109,14 +80,8 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     }
 
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
-    function trustedStakeTokenTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
-        require(universe.isContainerForStakeToken(IStakeToken(msg.sender)));
-        return internalTransfer(_source, _destination, _attotokens);
-    }
-
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
-    function trustedParticipationTokenTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
-        require(universe.isContainerForParticipationToken(IParticipationToken(msg.sender)));
+    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+        require(universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
@@ -134,10 +99,6 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
 
     function getUniverse() public view returns (IUniverse) {
         return universe;
-    }
-
-    function getTopMigrationDestination() public view returns (IReputationToken) {
-        return topMigrationDestination;
     }
 
     function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {

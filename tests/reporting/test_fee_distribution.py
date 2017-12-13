@@ -3,7 +3,7 @@ from ethereum.tools.tester import TransactionFailed, ABIContract
 from pytest import fixture, mark, raises
 from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, EtherDelta
 
-def test_token_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
+def test_token_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, feeWindow):
     # We'll progress past the designated dispute phase and finalize all the markets
     localFixture.contracts["Time"].setTimestamp(market.getEndTime() + localFixture.contracts["Constants"].DESIGNATED_REPORTING_DURATION_SECONDS() + 1)
 
@@ -23,64 +23,64 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
     scalarStake = scalarMarketDesignatedStake.balanceOf(tester.a0)
     with TokenDelta(reputationToken, scalarStake, tester.a0, "Forgoing fees resulting in an incorrect REP refund"):
         with EtherDelta(0, tester.a0, localFixture.chain, "Forgoing fees gave fees incorrectly"):
-            with StakeDelta(0, -scalarStake, -scalarStake, scalarMarket, reportingWindow, "Forgoing fees incorrectly updated stake accounting"):
+            with StakeDelta(0, -scalarStake, -scalarStake, scalarMarket, feeWindow, "Forgoing fees incorrectly updated stake accounting"):
                 assert scalarMarketDesignatedStake.redeemWinningTokens(True)
 
     # We cannot purchase participation tokens yet since the window isn't active
-    participationToken = localFixture.applySignature("ParticipationToken", reportingWindow.getParticipationToken())
+    feeWindow = localFixture.applySignature("FeeWindow", feeWindow.getFeeWindow())
     with raises(TransactionFailed):
-        participationToken.buy(1)
+        feeWindow.buy(1)
 
     # We'll progress to the start of the window and purchase some participation tokens
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getStartTime() + 1)
-    participationTokenAmount = 100
-    with TokenDelta(reputationToken, -participationTokenAmount, tester.a0, "Buying participation tokens didn't deduct REP correctly"):
-        with TokenDelta(participationToken, participationTokenAmount, tester.a0, "Buying participation tokens didn't increase participation token balance correctly"):
-            with StakeDelta(0, participationTokenAmount, participationTokenAmount, market, reportingWindow, "Buying participation tokens din't adjust stake accounting correctly"):
-                assert participationToken.buy(participationTokenAmount)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
+    feeWindowAmount = 100
+    with TokenDelta(reputationToken, -feeWindowAmount, tester.a0, "Buying participation tokens didn't deduct REP correctly"):
+        with TokenDelta(feeWindow, feeWindowAmount, tester.a0, "Buying participation tokens didn't increase participation token balance correctly"):
+            with StakeDelta(0, feeWindowAmount, feeWindowAmount, market, feeWindow, "Buying participation tokens din't adjust stake accounting correctly"):
+                assert feeWindow.buy(feeWindowAmount)
 
     # As other testers we'll buy some more
-    with StakeDelta(0, participationTokenAmount*3, participationTokenAmount*3, market, reportingWindow, "Buying participation tokens din't adjust stake accounting correctly"):
-        with TokenDelta(participationToken, participationTokenAmount, tester.a1, "Buying participation tokens didn't increase participation token balance correctly"):
-            assert participationToken.buy(participationTokenAmount, sender=tester.k1)
-        with TokenDelta(participationToken, participationTokenAmount, tester.a2, "Buying participation tokens didn't increase participation token balance correctly"):
-            assert participationToken.buy(participationTokenAmount, sender=tester.k2)
-        with TokenDelta(participationToken, participationTokenAmount, tester.a3, "Buying participation tokens didn't increase participation token balance correctly"):
-            assert participationToken.buy(participationTokenAmount, sender=tester.k3)
+    with StakeDelta(0, feeWindowAmount*3, feeWindowAmount*3, market, feeWindow, "Buying participation tokens din't adjust stake accounting correctly"):
+        with TokenDelta(feeWindow, feeWindowAmount, tester.a1, "Buying participation tokens didn't increase participation token balance correctly"):
+            assert feeWindow.buy(feeWindowAmount, sender=tester.k1)
+        with TokenDelta(feeWindow, feeWindowAmount, tester.a2, "Buying participation tokens didn't increase participation token balance correctly"):
+            assert feeWindow.buy(feeWindowAmount, sender=tester.k2)
+        with TokenDelta(feeWindow, feeWindowAmount, tester.a3, "Buying participation tokens didn't increase participation token balance correctly"):
+            assert feeWindow.buy(feeWindowAmount, sender=tester.k3)
 
     # We can't redeem the participation tokens for fees yet since the window isn't over
     with raises(TransactionFailed):
-        participationToken.redeem(False)
+        feeWindow.redeem(False)
 
     # We can redeem them to just get back REP. We'll have tester 3 do this
-    participationValue = participationToken.balanceOf(tester.a3)
+    participationValue = feeWindow.balanceOf(tester.a3)
     with TokenDelta(reputationToken, participationValue, tester.a3, "Forgoing fees resulting in an incorrect REP refund"):
-        with TokenDelta(participationToken, -participationTokenAmount, tester.a3, "Redeeming participation tokens didn't decrease participation token balance correctly"):
+        with TokenDelta(feeWindow, -feeWindowAmount, tester.a3, "Redeeming participation tokens didn't decrease participation token balance correctly"):
             with EtherDelta(0, tester.a0, localFixture.chain, "Forgoing fees gave fees incorrectly"):
-                with StakeDelta(0, -participationValue, -participationValue, market, reportingWindow, "Forgoing fees incorrectly updated stake accounting"):
-                    assert participationToken.redeem(True, sender=tester.k3)
+                with StakeDelta(0, -participationValue, -participationValue, market, feeWindow, "Forgoing fees incorrectly updated stake accounting"):
+                    assert feeWindow.redeem(True, sender=tester.k3)
 
     # Fast forward time until the window is over and we can redeem our winning stake and participation tokens and receive fees
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
 
     reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
-    totalWinningStake = reportingWindow.getTotalWinningStake()
-    assert cash.balanceOf(reportingWindow.address) == reporterFees
+    totalWinningStake = feeWindow.getTotalWinningStake()
+    assert cash.balanceOf(feeWindow.address) == reporterFees
 
-    expectedParticipationFees = reporterFees * participationTokenAmount / totalWinningStake
+    expectedParticipationFees = reporterFees * feeWindowAmount / totalWinningStake
 
     # Cashing out Participation tokens or Stake tokens will awards fees proportional to the total winning stake in the window
-    with TokenDelta(participationToken, -participationTokenAmount, tester.a0, "Redeeming participation tokens didn't decrease participation token balance correctly"):
+    with TokenDelta(feeWindow, -feeWindowAmount, tester.a0, "Redeeming participation tokens didn't decrease participation token balance correctly"):
         with EtherDelta(expectedParticipationFees, tester.a0, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
-            assert participationToken.redeem(False)
+            assert feeWindow.redeem(False)
 
-    with TokenDelta(participationToken, -participationTokenAmount, tester.a1, "Redeeming participation tokens didn't decrease participation token balance correctly"):
+    with TokenDelta(feeWindow, -feeWindowAmount, tester.a1, "Redeeming participation tokens didn't decrease participation token balance correctly"):
         with EtherDelta(expectedParticipationFees, tester.a1, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
-            assert participationToken.redeem(False, sender=tester.k1)
+            assert feeWindow.redeem(False, sender=tester.k1)
 
-    with TokenDelta(participationToken, -participationTokenAmount, tester.a2, "Redeeming participation tokens didn't decrease participation token balance correctly"):
+    with TokenDelta(feeWindow, -feeWindowAmount, tester.a2, "Redeeming participation tokens didn't decrease participation token balance correctly"):
         with EtherDelta(expectedParticipationFees, tester.a2, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
-            assert participationToken.redeem(False, sender=tester.k2)
+            assert feeWindow.redeem(False, sender=tester.k2)
 
     logs = []
     captureFilteredLogs(localFixture.chain.head_state, localFixture.contracts['Augur'], logs)
@@ -107,25 +107,25 @@ def test_token_fee_collection(localFixture, universe, market, categoricalMarket,
         with TokenDelta(categoricalMarketDesignatedStake, -categoricalMarketStake, tester.a0, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
             assert categoricalMarketDesignatedStake.redeemWinningTokens(False)
 
-def test_dispute_bond_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
+def test_dispute_bond_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, feeWindow):
     # We'll have testers put up dispute bonds against the designated reports and place stake in other outcomes
     disputeStake = localFixture.contracts["Constants"].DESIGNATED_REPORTER_DISPUTE_BOND_AMOUNT()
     otherOutcomeStake = 10 ** 18
     totalCost = disputeStake + otherOutcomeStake
     with TokenDelta(reputationToken, -totalCost, tester.a1, "Disputing did not reduce REP balance correctly"):
-        with StakeDelta(totalCost, totalCost, 0, market, reportingWindow, "Disputing is not adjust stake accounting correctly"):
+        with StakeDelta(totalCost, totalCost, 0, market, feeWindow, "Disputing is not adjust stake accounting correctly"):
             assert market.disputeDesignatedReport([market.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k1)
 
-    with StakeDelta(totalCost, totalCost, 0, categoricalMarket, reportingWindow, "Disputing is not adjust stake accounting correctly"):
+    with StakeDelta(totalCost, totalCost, 0, categoricalMarket, feeWindow, "Disputing is not adjust stake accounting correctly"):
         with TokenDelta(reputationToken, -totalCost, tester.a2, "Disputing did not reduce REP balance correctly"):
             assert categoricalMarket.disputeDesignatedReport([categoricalMarket.getNumTicks(),0,0], otherOutcomeStake, False, sender=tester.k2)
 
     with TokenDelta(reputationToken, -totalCost, tester.a3, "Disputing did not reduce REP balance correctly"):
-        with StakeDelta(totalCost, totalCost, 0, scalarMarket, reportingWindow, "Disputing is not adjust stake accounting correctly"):
+        with StakeDelta(totalCost, totalCost, 0, scalarMarket, feeWindow, "Disputing is not adjust stake accounting correctly"):
             assert scalarMarket.disputeDesignatedReport([scalarMarket.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k3)
 
     # Fast forward time until the window is over and we can redeem our winning stake, and dispute bond tokens and receive fees
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getEndTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.tryFinalize()
     assert categoricalMarket.tryFinalize()
     assert scalarMarket.tryFinalize()
@@ -135,8 +135,8 @@ def test_dispute_bond_fee_collection(localFixture, universe, market, categorical
     scalarMarketDesignatedStake = localFixture.getOrCreateStakeToken(scalarMarket, [scalarMarket.getNumTicks(), 0])
 
     reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
-    totalWinningStake = reportingWindow.getTotalWinningStake()
-    assert cash.balanceOf(reportingWindow.address) == reporterFees
+    totalWinningStake = feeWindow.getTotalWinningStake()
+    assert cash.balanceOf(feeWindow.address) == reporterFees
 
     # Tester 0 placed losing designated reports so that stake is worthless. The other testers have both stake and bonds that can be redeemed for a share of fees
     marketStake = marketDesignatedStake.balanceOf(tester.a1)
@@ -168,12 +168,12 @@ def test_dispute_bond_fee_collection(localFixture, universe, market, categorical
         assert marketDisputeBond.withdraw(False, sender=tester.k1)
     with EtherDelta(expectedDisputeFees, tester.a2, localFixture.chain, "Redeeming Dispute Bond token didn't increase ETH correctly"):
         assert categoricalMarketDisputeBond.withdraw(False, sender=tester.k2)
-    remainingFees = cash.balanceOf(reportingWindow.address)
+    remainingFees = cash.balanceOf(feeWindow.address)
     with EtherDelta(remainingFees, tester.a3, localFixture.chain, "Redeeming Dispute Bond token didn't increase ETH correctly"):
         assert scalarMarketDisputeBond.withdraw(False, sender=tester.k3)
 
 
-def test_fee_migration(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
+def test_fee_migration(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, feeWindow):
     # We'll have testers put up dispute bonds against the designated reports and place stake in other outcomes
     otherOutcomeStake = 10 ** 18
     assert market.disputeDesignatedReport([market.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k1)
@@ -181,25 +181,25 @@ def test_fee_migration(localFixture, universe, market, categoricalMarket, scalar
     assert scalarMarket.disputeDesignatedReport([scalarMarket.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k3)
 
     reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
-    totalWinningStake = reportingWindow.getTotalWinningStake()
-    assert cash.balanceOf(reportingWindow.address) == reporterFees
+    totalWinningStake = feeWindow.getTotalWinningStake()
+    assert cash.balanceOf(feeWindow.address) == reporterFees
 
-    # Progress to the Limited dispute phase and dispute one of the markets. This should migrate fees to the reporting window the market migrates to proportional to its stake
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
-    nextReportingWindow = localFixture.applySignature("ReportingWindow", universe.getOrCreateNextReportingWindow())
+    # Progress to the Limited dispute phase and dispute one of the markets. This should migrate fees to the fee window the market migrates to proportional to its stake
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
+    nextFeeWindow = localFixture.applySignature("FeeWindow", universe.getOrCreateNextFeeWindow())
     scalarMarketStake = scalarMarket.getTotalStake()
     firstDisputeCost = localFixture.contracts["Constants"].FIRST_REPORTERS_DISPUTE_BOND_AMOUNT()
     scalarMarketStakeDelta = firstDisputeCost + otherOutcomeStake
     totalScalarMarketStakeMoved = scalarMarketStake + scalarMarketStakeDelta
-    migratedFees = reporterFees * (scalarMarketStake + firstDisputeCost) / (reportingWindow.getTotalStake() + firstDisputeCost)
+    migratedFees = reporterFees * (scalarMarketStake + firstDisputeCost) / (feeWindow.getTotalStake() + firstDisputeCost)
 
-    with TokenDelta(cash, -migratedFees, reportingWindow.address, "Disputing in first didn't migrate ETH out correctly"):
-        with TokenDelta(cash, migratedFees, nextReportingWindow.address, "Disputing in first didn't migrate ETH in correctly"):
-            with StakeDelta(scalarMarketStakeDelta, -scalarMarketStake, 0, scalarMarket, reportingWindow, "Disputing in first is not migrating stake out correctly"):
-                with StakeDelta(scalarMarketStakeDelta, totalScalarMarketStakeMoved, 0, scalarMarket, nextReportingWindow, "Disputing in first is not migrating stake in correctly"):
+    with TokenDelta(cash, -migratedFees, feeWindow.address, "Disputing in first didn't migrate ETH out correctly"):
+        with TokenDelta(cash, migratedFees, nextFeeWindow.address, "Disputing in first didn't migrate ETH in correctly"):
+            with StakeDelta(scalarMarketStakeDelta, -scalarMarketStake, 0, scalarMarket, feeWindow, "Disputing in first is not migrating stake out correctly"):
+                with StakeDelta(scalarMarketStakeDelta, totalScalarMarketStakeMoved, 0, scalarMarket, nextFeeWindow, "Disputing in first is not migrating stake in correctly"):
                     assert scalarMarket.disputeFirstReporters([scalarMarket.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4)
 
-def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, reportingWindow):
+def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, feeWindow):
     # We'll have testers put up dispute bonds against the designated reports and place stake in other outcomes
     otherOutcomeStake = 10 ** 18
     assert market.disputeDesignatedReport([market.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k1)
@@ -207,32 +207,32 @@ def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket
     assert scalarMarket.disputeDesignatedReport([scalarMarket.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k3)
 
     reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
-    totalWinningStake = reportingWindow.getTotalWinningStake()
-    assert cash.balanceOf(reportingWindow.address) == reporterFees
+    totalWinningStake = feeWindow.getTotalWinningStake()
+    assert cash.balanceOf(feeWindow.address) == reporterFees
 
-    # Progress to the Limited dispute phase and dispute one of the markets. This should migrate fees to the reporting window the market migrates to proportional to its stake
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
+    # Progress to the Limited dispute phase and dispute one of the markets. This should migrate fees to the fee window the market migrates to proportional to its stake
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
 
     assert market.disputeFirstReporters([market.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
     assert categoricalMarket.disputeFirstReporters([categoricalMarket.getNumTicks() - 1, 1, 0], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
     assert scalarMarket.disputeFirstReporters([scalarMarket.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
 
     # Progress into last dispute and cause a fork
-    reportingWindow = localFixture.applySignature("ReportingWindow", market.getReportingWindow())
-    localFixture.contracts["Time"].setTimestamp(reportingWindow.getDisputeStartTime() + 1)
+    feeWindow = localFixture.applySignature("FeeWindow", market.getFeeWindow())
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
 
     forkDuration = lastDisputeCost = localFixture.contracts["Constants"].FORK_DURATION_SECONDS()
     nextWindowTimestamp = localFixture.contracts["Time"].getTimestamp() + forkDuration
-    nextReportingWindow = localFixture.applySignature("ReportingWindow", universe.getOrCreateReportingWindowByTimestamp(nextWindowTimestamp))
+    nextFeeWindow = localFixture.applySignature("FeeWindow", universe.getOrCreateFeeWindowByTimestamp(nextWindowTimestamp))
     scalarMarketStake = scalarMarket.getTotalStake()
     lastDisputeCost = localFixture.contracts["Constants"].LAST_REPORTERS_DISPUTE_BOND_AMOUNT()
     totalScalarMarketStakeMoved = scalarMarketStake + lastDisputeCost
-    migratedFees = reporterFees * (scalarMarketStake + lastDisputeCost) / (reportingWindow.getTotalStake() + lastDisputeCost)
+    migratedFees = reporterFees * (scalarMarketStake + lastDisputeCost) / (feeWindow.getTotalStake() + lastDisputeCost)
 
-    with TokenDelta(cash, -migratedFees, reportingWindow.address, "Disputing in last didn't migrate ETH out correctly"):
-        with TokenDelta(cash, migratedFees, nextReportingWindow.address, "Disputing in last didn't migrate ETH in correctly"):
-            with StakeDelta(lastDisputeCost, -scalarMarketStake, 0, scalarMarket, reportingWindow, "Disputing in last is not migrating stake out correctly"):
-                with StakeDelta(lastDisputeCost, totalScalarMarketStakeMoved, 0, scalarMarket, nextReportingWindow, "Disputing in last is not migrating stake in correctly"):
+    with TokenDelta(cash, -migratedFees, feeWindow.address, "Disputing in last didn't migrate ETH out correctly"):
+        with TokenDelta(cash, migratedFees, nextFeeWindow.address, "Disputing in last didn't migrate ETH in correctly"):
+            with StakeDelta(lastDisputeCost, -scalarMarketStake, 0, scalarMarket, feeWindow, "Disputing in last is not migrating stake out correctly"):
+                with StakeDelta(lastDisputeCost, totalScalarMarketStakeMoved, 0, scalarMarket, nextFeeWindow, "Disputing in last is not migrating stake in correctly"):
                     assert scalarMarket.disputeLastReporters(sender=tester.k5)
 
     # We migrate REP to a new universe and finalize the forking market
@@ -247,12 +247,12 @@ def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket
     assert scalarMarket.tryFinalize()
 
     # migrate one of the markets to the winning universe and confirm fees went with it
-    oldReportingWindowAddress = market.getReportingWindow()
+    oldFeeWindowAddress = market.getFeeWindow()
     designatedReportingDuration = localFixture.contracts["Constants"].DESIGNATED_REPORTING_DURATION_SECONDS()
-    newReportingWindowAddress = newUniverse.getOrCreateReportingWindowByMarketEndTime(localFixture.contracts["Time"].getTimestamp() - designatedReportingDuration)
-    migratedFees = cash.balanceOf(oldReportingWindowAddress)
-    with TokenDelta(cash, -migratedFees, oldReportingWindowAddress, "Migrating to a new universe didn't migrate ETH out correctly"):
-        with TokenDelta(cash, migratedFees, newReportingWindowAddress, "Migrating to a new universe didn't migrate ETH in correctly"):
+    newFeeWindowAddress = newUniverse.getOrCreateFeeWindowByMarketEndTime(localFixture.contracts["Time"].getTimestamp() - designatedReportingDuration)
+    migratedFees = cash.balanceOf(oldFeeWindowAddress)
+    with TokenDelta(cash, -migratedFees, oldFeeWindowAddress, "Migrating to a new universe didn't migrate ETH out correctly"):
+        with TokenDelta(cash, migratedFees, newFeeWindowAddress, "Migrating to a new universe didn't migrate ETH in correctly"):
             market.migrateThroughAllForks()
 
 @fixture(scope="session")
@@ -266,7 +266,7 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
     completeSets = fixture.contracts['CompleteSets']
     mailbox = fixture.applySignature('Mailbox', market.getMarketCreatorMailbox())
 
-    # Generate the fees in our initial reporting window
+    # Generate the fees in our initial fee window
     cost = 1000 * market.getNumTicks()
     marketCreatorFees = cost / market.getMarketCreatorSettlementFeeDivisor()
     completeSets.publicBuyCompleteSets(market.address, 1000, sender = tester.k1, value = cost)
@@ -274,7 +274,7 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
         completeSets.publicSellCompleteSets(market.address, 1000, sender=tester.k1)
     with EtherDelta(marketCreatorFees, market.getOwner(), fixture.chain, "The market creator did not get their fees when withdrawing ETH from the mailbox"):
         assert mailbox.withdrawEther()
-    fees = cash.balanceOf(market.getReportingWindow())
+    fees = cash.balanceOf(market.getFeeWindow())
     reporterFees = cost / universe.getOrCacheReportingFeeDivisor()
     assert fees == reporterFees
 
@@ -294,7 +294,7 @@ def localFixture(fixture, localSnapshot, kitchenSinkSnapshot):
     scalarMarket = ABIContract(fixture.chain, kitchenSinkSnapshot['scalarMarket'].translator, kitchenSinkSnapshot['scalarMarket'].address)
     universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
     reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
-    reportingWindow = fixture.applySignature('ReportingWindow', market.getReportingWindow())
+    feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
 
     # Skip to Designated Reporting
     fixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
@@ -303,7 +303,7 @@ def localFixture(fixture, localSnapshot, kitchenSinkSnapshot):
     designatedReportCost = universe.getOrCacheDesignatedReportStake()
     totalDesignatedReportCostInWindow = designatedReportCost * 3
     with TokenDelta(reputationToken, 0, tester.a0, "Doing the designated report didn't deduct REP correctly or didn't award the no show bond"):
-        with StakeDelta(designatedReportCost, totalDesignatedReportCostInWindow, 0, market, reportingWindow, "Doing the designated report din't adjust stake accounting correctly"):
+        with StakeDelta(designatedReportCost, totalDesignatedReportCostInWindow, 0, market, feeWindow, "Doing the designated report din't adjust stake accounting correctly"):
             fixture.designatedReport(market, [0,market.getNumTicks()], tester.k0)
             fixture.designatedReport(categoricalMarket, [0,0,categoricalMarket.getNumTicks()], tester.k0)
             fixture.designatedReport(scalarMarket, [0,scalarMarket.getNumTicks()], tester.k0)
@@ -335,8 +335,8 @@ def reputationToken(localFixture, kitchenSinkSnapshot, universe):
     return localFixture.applySignature('ReputationToken', universe.getReputationToken())
 
 @fixture
-def reportingWindow(localFixture, kitchenSinkSnapshot, market):
-    return localFixture.applySignature('ReportingWindow', market.getReportingWindow())
+def feeWindow(localFixture, kitchenSinkSnapshot, market):
+    return localFixture.applySignature('FeeWindow', market.getFeeWindow())
 
 class StakeDelta():
 

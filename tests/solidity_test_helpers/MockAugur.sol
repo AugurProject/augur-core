@@ -5,7 +5,7 @@ import 'Controlled.sol';
 import 'libraries/token/ERC20.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IParticipationToken.sol';
+import 'reporting/IFeeWindow.sol';
 import 'reporting/IStakeToken.sol';
 import 'reporting/IReputationToken.sol';
 import 'trading/IShareToken.sol';
@@ -106,11 +106,11 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logParticipationTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+    function logFeeWindowBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         return true;
     }
 
-    function logParticipationTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+    function logFeeWindowMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         return true;
     }
 
@@ -140,7 +140,7 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logParticipationTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
+    function logFeeWindowsTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         return true;
     }
 
@@ -161,7 +161,7 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logReportingWindowCreated(IReportingWindow _reportingWindow, uint256 _id) public returns (bool) {
+    function logFeeWindowCreated(IFeeWindow _feeWindow, uint256 _id) public returns (bool) {
         return true;
     }
 }

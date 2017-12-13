@@ -2,7 +2,7 @@ pragma solidity ^0.4.18;
 
 import 'reporting/IMarket.sol';
 import 'reporting/IUniverse.sol';
-import 'reporting/IReportingWindow.sol';
+import 'reporting/IFeeWindow.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/ITyped.sol';
 import 'reporting/IReputationToken.sol';
@@ -22,11 +22,11 @@ contract MockUniverse is Initializable, IUniverse {
     uint256 private setForkEndTimeValue;
     bytes32 private setParentPayoutDistributionHashValue;
     uint256 private setReportingPeriodDurationInSecondsValue;
-    IReportingWindow private setReportingWindowByTimestampValue;
-    IReportingWindow private setReportingWindowByMarketEndTimeValue;
-    IReportingWindow private setCurrentReportingWindowValue;
-    IReportingWindow private setNextReportingWindowValue;
-    IReportingWindow private setReportingWindowForForkEndTimeValue;
+    IFeeWindow private setFeeWindowByTimestampValue;
+    IFeeWindow private setFeeWindowByMarketEndTimeValue;
+    IFeeWindow private setCurrentFeeWindowValue;
+    IFeeWindow private setNextFeeWindowValue;
+    IFeeWindow private setFeeWindowForForkEndTimeValue;
     uint256 private setOpenInterestInAttoEthValue;
     uint256 private setRepMarketCapInAttoethValue;
     uint256 private setTargetRepMarketCapInAttoethValue;
@@ -41,12 +41,12 @@ contract MockUniverse is Initializable, IUniverse {
     uint256 private setTargetReporterGasCostsValue;
     uint256 private setMarketCreationCostValue;
     bool private setIsParentOfValue;
-    bool private setIsContainerForReportingWindowValue;
+    bool private setIsContainerForFeeWindowValue;
     bool private setIisContainerForDisputeBondValue;
     bool private setIsContainerForMarketValue;
     bool private setIsContainerForStakeTokenValue;
     bool private setIsContainerForShareTokenValue;
-    bool private setIsContainerForParticipationTokenValue;
+    bool private setIsContainerForFeeWindowValue;
     bool private setDecrementOpenInterestValue;
     bool private setIncrementOpenInterestValue;
     IUniverse private initializParentUniverseValue;
@@ -91,24 +91,24 @@ contract MockUniverse is Initializable, IUniverse {
         setReportingPeriodDurationInSecondsValue = _setReportingPeriodDurationInSecondsValue;
     }
 
-    function setReportingWindowByTimestamp(IReportingWindow _setReportingWindowByTimestampValue) public {
-        setReportingWindowByTimestampValue = _setReportingWindowByTimestampValue;
+    function setFeeWindowByTimestamp(IFeeWindow _setFeeWindowByTimestampValue) public {
+        setFeeWindowByTimestampValue = _setFeeWindowByTimestampValue;
     }
 
-    function setReportingWindowByMarketEndTime(IReportingWindow _setReportingWindowByMarketEndTimeValue) public {
-        setReportingWindowByMarketEndTimeValue = _setReportingWindowByMarketEndTimeValue;
+    function setFeeWindowByMarketEndTime(IFeeWindow _setFeeWindowByMarketEndTimeValue) public {
+        setFeeWindowByMarketEndTimeValue = _setFeeWindowByMarketEndTimeValue;
     }
 
-    function setCurrentReportingWindow(IReportingWindow _setCurrentReportingWindowValue) public {
-        setCurrentReportingWindowValue = _setCurrentReportingWindowValue;
+    function setCurrentFeeWindow(IFeeWindow _setCurrentFeeWindowValue) public {
+        setCurrentFeeWindowValue = _setCurrentFeeWindowValue;
     }
 
-    function setNextReportingWindow(IReportingWindow _setNextReportingWindowValue) public {
-        setNextReportingWindowValue = _setNextReportingWindowValue;
+    function setNextFeeWindow(IFeeWindow _setNextFeeWindowValue) public {
+        setNextFeeWindowValue = _setNextFeeWindowValue;
     }
 
-    function setReportingWindowForForkEndTime(IReportingWindow _setReportingWindowForForkEndTimeValue) public {
-        setReportingWindowForForkEndTimeValue = _setReportingWindowForForkEndTimeValue;
+    function setFeeWindowForForkEndTime(IFeeWindow _setFeeWindowForForkEndTimeValue) public {
+        setFeeWindowForForkEndTimeValue = _setFeeWindowForForkEndTimeValue;
     }
 
     function setOpenInterestInAttoEth(uint256 _setOpenInterestInAttoEthValue) public {
@@ -167,8 +167,8 @@ contract MockUniverse is Initializable, IUniverse {
         setIsParentOfValue = _setIsParentOfValue;
     }
 
-    function setIsContainerForReportingWindow(bool _setIsContainerForReportingWindowValue) public {
-        setIsContainerForReportingWindowValue = _setIsContainerForReportingWindowValue;
+    function setIsContainerForFeeWindow(bool _setIsContainerForFeeWindowValue) public {
+        setIsContainerForFeeWindowValue = _setIsContainerForFeeWindowValue;
     }
 
     function setIsContainerForDisputeBond(bool _setIisContainerForDisputeBondValue) public {
@@ -187,8 +187,8 @@ contract MockUniverse is Initializable, IUniverse {
         setIsContainerForShareTokenValue = _setIsContainerForShareTokenValue;
     }
 
-    function setIsContainerForParticipationToken(bool _setIsContainerForParticipationTokenValue) public {
-        setIsContainerForParticipationTokenValue = _setIsContainerForParticipationTokenValue;
+    function setIsContainerForFeeWindow(bool _setIsContainerForFeeWindowValue) public {
+        setIsContainerForFeeWindowValue = _setIsContainerForFeeWindowValue;
     }
 
     function setDecrementOpenInterest(bool _setDecrementOpenInterestValue) public {
@@ -257,28 +257,28 @@ contract MockUniverse is Initializable, IUniverse {
         return setParentPayoutDistributionHashValue;
     }
 
-    function getReportingPeriodDurationInSeconds() public view returns (uint256) {
+    function getDisputeRoundDurationInSeconds() public view returns (uint256) {
         return setReportingPeriodDurationInSecondsValue;
     }
 
-    function getOrCreateReportingWindowByTimestamp(uint256 _timestamp) public returns (IReportingWindow) {
-        return setReportingWindowByTimestampValue;
+    function getOrCreateFeeWindowByTimestamp(uint256 _timestamp) public returns (IFeeWindow) {
+        return setFeeWindowByTimestampValue;
     }
 
-    function getOrCreateReportingWindowByMarketEndTime(uint256 _endTime) public returns (IReportingWindow) {
-        return setReportingWindowByMarketEndTimeValue;
+    function getOrCreateFeeWindowByMarketEndTime(uint256 _endTime) public returns (IFeeWindow) {
+        return setFeeWindowByMarketEndTimeValue;
     }
 
-    function getOrCreateCurrentReportingWindow() public returns (IReportingWindow) {
-        return setCurrentReportingWindowValue;
+    function getOrCreateCurrentFeeWindow() public returns (IFeeWindow) {
+        return setCurrentFeeWindowValue;
     }
 
-    function getOrCreateNextReportingWindow() public returns (IReportingWindow) {
-        return setNextReportingWindowValue;
+    function getOrCreateNextFeeWindow() public returns (IFeeWindow) {
+        return setNextFeeWindowValue;
     }
 
-    function getOrCreateReportingWindowForForkEndTime() public returns (IReportingWindow) {
-        return setReportingWindowForForkEndTimeValue;
+    function getOrCreateFeeWindowForForkEndTime() public returns (IFeeWindow) {
+        return setFeeWindowForForkEndTimeValue;
     }
 
     function getOpenInterestInAttoEth() public view returns (uint256) {
@@ -357,8 +357,8 @@ contract MockUniverse is Initializable, IUniverse {
         return setIsParentOfValue;
     }
 
-    function isContainerForReportingWindow(IReportingWindow _shadyTarget) public view returns (bool) {
-        return setIsContainerForReportingWindowValue;
+    function isContainerForFeeWindow(IFeeWindow _shadyTarget) public view returns (bool) {
+        return setIsContainerForFeeWindowValue;
     }
 
     function isContainerForDisputeBond(IDisputeBond _shadyTarget) public view returns (bool) {
@@ -377,8 +377,8 @@ contract MockUniverse is Initializable, IUniverse {
         return setIsContainerForShareTokenValue;
     }
 
-    function isContainerForParticipationToken(IParticipationToken _shadyTarget) public view returns (bool) {
-        return setIsContainerForParticipationTokenValue;
+    function isContainerForFeeWindow(IFeeWindow _shadyTarget) public view returns (bool) {
+        return setIsContainerForFeeWindowValue;
     }
 
     function decrementOpenInterest(uint256 _amount) public returns (bool) {
@@ -394,20 +394,20 @@ contract MockUniverse is Initializable, IUniverse {
     }
 
     function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
-        IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
-        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getCategoricalMarketNumTicks(2));
+        IFeeWindow _feeWindow = getOrCreateFeeWindowByMarketEndTime(_endTime);
+        _newMarket = _feeWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getCategoricalMarketNumTicks(2));
         return _newMarket;
     }
 
     function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
-        IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
-        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint8(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint8(_outcomes.length)));
+        IFeeWindow _feeWindow = getOrCreateFeeWindowByMarketEndTime(_endTime);
+        _newMarket = _feeWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint8(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint8(_outcomes.length)));
         return _newMarket;
     }
 
     function createScalarMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, int256 _minPrice, int256 _maxPrice, uint256 _numTicks, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
-        IReportingWindow _reportingWindow = getOrCreateReportingWindowByMarketEndTime(_endTime);
-        _newMarket = _reportingWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, _numTicks);
+        IFeeWindow _feeWindow = getOrCreateFeeWindowByMarketEndTime(_endTime);
+        _newMarket = _feeWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, _numTicks);
         return _newMarket;
     }
 }

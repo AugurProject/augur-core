@@ -6,20 +6,20 @@ import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 
 
-contract MockReportingWindowFactory {
-    IUniverse private createReportingWindowUniverseValue;
-    IReportingWindow private createReportingWindowValue;
+contract MockFeeWindowFactory {
+    IUniverse private createFeeWindowUniverseValue;
+    IFeeWindow private createFeeWindowValue;
 
-    function getCreateReportingWindowUniverseValue() public returns(IUniverse) {
-        return createReportingWindowUniverseValue;
+    function getCreateFeeWindowUniverseValue() public returns(IUniverse) {
+        return createFeeWindowUniverseValue;
     }
 
-    function setCreateReportingWindowValue(IReportingWindow _reportingWindowValue) public {
-        createReportingWindowValue = _reportingWindowValue;
+    function setCreateFeeWindowValue(IFeeWindow _feeWindowValue) public {
+        createFeeWindowValue = _feeWindowValue;
     }
 
-    function createReportingWindow(IController _controller, IUniverse _universe, uint256 _reportingWindowId) public returns (IReportingWindow) {
-        createReportingWindowUniverseValue = _universe;
-        return createReportingWindowValue;
+    function createFeeWindow(IController _controller, IUniverse _universe, uint256 _feeWindowId) public returns (IFeeWindow) {
+        createFeeWindowUniverseValue = _universe;
+        return createFeeWindowValue;
     }
 }
