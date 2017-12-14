@@ -51,9 +51,10 @@ def finalizeMarket(fixture, market, payoutNumerators):
     # have tester.a0 submit designated report
     fixture.designatedReport(market, payoutNumerators, tester.k0)
     # set timestamp to after designated dispute end
-    fixture.contracts["Time"].setTimestamp(market.getDesignatedReportDisputeDueTimestamp() + 1)
+    feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
+    fixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     # finalize the market
-    assert market.tryFinalize()
+    assert market.finalize()
     # set timestamp to 3 days later (waiting period)
     fixture.contracts["Time"].incrementTimestamp(long(timedelta(days = 3, seconds = 1).total_seconds()))
 
@@ -64,9 +65,9 @@ def test_helpers(kitchenSinkFixture, scalarMarket):
 
     assert claimTradingProceeds.calculateCreatorFee(market.address, fix('3')) == fix('0.03')
     assert claimTradingProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
-    assert claimTradingProceeds.calculateProceeds(market.getFinalWinningStakeToken(), YES, 7) == 7 * market.getNumTicks()
-    assert claimTradingProceeds.calculateProceeds(market.getFinalWinningStakeToken(), NO, fix('11')) == fix('0')
-    (proceeds, shareholderShare, creatorShare, reporterShare) = claimTradingProceeds.divideUpWinnings(market.address, market.getFinalWinningStakeToken(), YES, 13)
+    assert claimTradingProceeds.calculateProceeds(market.address, YES, 7) == 7 * market.getNumTicks()
+    assert claimTradingProceeds.calculateProceeds(market.address, NO, fix('11')) == fix('0')
+    (proceeds, shareholderShare, creatorShare, reporterShare) = claimTradingProceeds.divideUpWinnings(market.address, YES, 13)
     assert proceeds == 13.0 * market.getNumTicks()
     assert reporterShare == 13.0 * market.getNumTicks() * 0.0001
     assert creatorShare == 13.0 * market.getNumTicks() * .01
@@ -96,7 +97,7 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     captureFilteredLogs(kitchenSinkFixture.chain.head_state, kitchenSinkFixture.contracts['Augur'], logs)
 
     with TokenDelta(cash, expectedMarketCreatorFees, market.getMarketCreatorMailbox(), "Market creator fees not paid"):
-        with TokenDelta(cash, expectedReporterFees, market.getFeeWindow(), "Reporter fees not paid"):
+        with TokenDelta(cash, expectedReporterFees, universe.getOrCreateNextFeeWindow(), "Reporter fees not paid"):
             # redeem shares with a1
             initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
             claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
@@ -105,14 +106,14 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
             claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k2)
 
     # Confirm claim proceeds logging works correctly
-    assert len(logs) == 4
-    assert logs[1]['_event_type'] == 'TradingProceedsClaimed'
-    assert logs[1]['market'] == market.address
-    assert logs[1]['shareToken'] == yesShareToken.address
-    assert logs[1]['numPayoutTokens'] == expectedPayout
-    assert logs[1]['numShares'] == 1
-    assert logs[1]['sender'] == bytesToHexString(tester.a1)
-    assert logs[1]['finalTokenBalance'] == initialLongHolderETH + expectedPayout
+    assert len(logs) == 6
+    assert logs[3]['_event_type'] == 'TradingProceedsClaimed'
+    assert logs[3]['market'] == market.address
+    assert logs[3]['shareToken'] == yesShareToken.address
+    assert logs[3]['numPayoutTokens'] == expectedPayout
+    assert logs[3]['numShares'] == 1
+    assert logs[3]['sender'] == bytesToHexString(tester.a1)
+    assert logs[3]['finalTokenBalance'] == initialLongHolderETH + expectedPayout
 
     # assert a1 ends up with cash (minus fees) and a2 does not
     assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout
@@ -208,13 +209,14 @@ def test_reedem_failure(kitchenSinkFixture, cash, market):
     # have tester.a0 subimt designated report (75% high, 25% low, range -10*10^18 to 30*10^18)
     kitchenSinkFixture.designatedReport(market, [0, 10**4], tester.k0)
     # set timestamp to after designated dispute end
-    kitchenSinkFixture.contracts["Time"].setTimestamp(market.getDesignatedReportDisputeDueTimestamp() + 1)
+    feeWindow = kitchenSinkFixture.applySignature('FeeWindow', market.getFeeWindow())
+    kitchenSinkFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
 
     # market not finalized
     with raises(TransactionFailed):
         claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
     # finalize the market
-    assert market.tryFinalize()
+    assert market.finalize()
     # waiting period not over
     with raises(TransactionFailed):
         claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)

@@ -90,15 +90,14 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             require(owner.call.value(_refund)());
         }
         // Send the reporter gas bond to the initial report contract. It will be paid out only if they are correct.
-        require(participants[0].call.value(reporterGasCostsFeeAttoeth)());
+        require(IInitialReporter(participants[0]).depositGasBond.value(reporterGasCostsFeeAttoeth)());
         return true;
     }
 
     function assessFees() private onlyInGoodTimes returns (bool) {
-        IUniverse _universe = getUniverse();
-        require(feeWindow.getReputationToken().balanceOf(this) == _universe.getOrCacheDesignatedReportNoShowBond());
-        reporterGasCostsFeeAttoeth = _universe.getOrCacheTargetReporterGasCosts();
-        validityBondAttoeth = _universe.getOrCacheValidityBond();
+        require(getReputationToken().balanceOf(this) == universe.getOrCacheDesignatedReportNoShowBond());
+        reporterGasCostsFeeAttoeth = universe.getOrCacheTargetReporterGasCosts();
+        validityBondAttoeth = universe.getOrCacheValidityBond();
         return true;
     }
 
@@ -122,7 +121,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         IInitialReporter _initialReporter = getInitialReporter();
         require(_initialReporter.getReportTimestamp() == 0);
         require(controller.getTimestamp() > endTime + Reporting.getDesignatedReportingDurationSeconds() || msg.sender == _initialReporter.getDesignatedReporter());
-        distributeNoShowBond(_initialReporter);
+        distributeNoShowBond(_initialReporter, msg.sender);
         // The designated reporter must actually pay the required REP stake to report
         if (msg.sender == _initialReporter.getDesignatedReporter()) {
             IReputationToken _reputationToken = getReputationToken();
@@ -172,8 +171,8 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         require(getInitialReporter().getReportTimestamp() != 0);
         require(feeWindow.isOver());
         require(universe.getForkingMarket() == IMarket(0));
-        feeWindow.onMarketFinalized();
         winningPayoutDistributionHash = participants[participants.length-1].getPayoutDistributionHash();
+        feeWindow.onMarketFinalized();
         redistributeLosingReputation();
         distributeValidityBond();
         finalizationTime = controller.getTimestamp();
@@ -211,11 +210,11 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return true;
     }
 
-    function distributeNoShowBond(IInitialReporter _initialReporter) private returns (bool) {
+    function distributeNoShowBond(IInitialReporter _initialReporter, address _reporter) private returns (bool) {
         IReputationToken _reputationToken = getReputationToken();
         uint256 _repBalance = _reputationToken.balanceOf(this);
         // If the designated reporter showed up return the no show bond to the market creator. Otherwise it will be used as stake in the first report.
-        if (msg.sender == _initialReporter.getDesignatedReporter()) {
+        if (_reporter == _initialReporter.getDesignatedReporter()) {
             _reputationToken.transfer(owner, _repBalance);
         } else {
             _reputationToken.transfer(_initialReporter, _repBalance);
@@ -232,7 +231,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         if (isInvalid()) {
             require(marketCreatorMailbox.call.value(validityBondAttoeth)());
         } else {
-            require(feeWindow.call.value(validityBondAttoeth)());
+            cash.depositEtherFor.value(validityBondAttoeth)(feeWindow);
         }
         return true;
     }
@@ -256,7 +255,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function migrateThroughOneFork() public {
         // only proceed if the forking market is finalized
-        require(feeWindow.isForkingMarketFinalized());
+        require(universe.getForkingMarket().isFinalized());
 
         bytes32 _winningForkPayoutDistributionHash = _currentUniverse.getForkingMarket().getWinningPayoutDistributionHash();
         IUniverse _currentUniverse = universe;
@@ -398,7 +397,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     }
 
     function isContainerForReportingParticipant(IReportingParticipant _shadyReportingParticipant) public view returns (bool) {
-        if (IReportingParticipant(crowdsourcers.getAsAddress(_shadyReportingParticipant.getPayoutDistributionHash())) == _shadyReportingParticipant) {
+        if (IReportingParticipant(crowdsourcers.getAsAddressOrZero(_shadyReportingParticipant.getPayoutDistributionHash())) == _shadyReportingParticipant) {
             return true;
         }
         for (uint8 i = 0; i < participants.length; i++) {
@@ -417,7 +416,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         }
         // address(1) is the sentinel value for Ether extraction
         _protectedTokens[numOutcomes] = address(1);
-        _protectedTokens[numOutcomes + 1] = feeWindow.getReputationToken();
+        _protectedTokens[numOutcomes + 1] = getReputationToken();
         _protectedTokens[numOutcomes + 2] = cash;
         return _protectedTokens;
     }

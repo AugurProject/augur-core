@@ -1,11 +1,13 @@
 pragma solidity 0.4.18;
 
 import 'libraries/Initializable.sol';
+import 'libraries/DelegationTarget.sol';
 import 'reporting/IInitialReporter.sol';
+import 'reporting/IMarket.sol';
 import 'reporting/BaseReportingParticipant.sol';
 
 
-contract InitialReporter is BaseReportingParticipant, Initializable, IInitialReporter {
+contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initializable, IInitialReporter {
     address private designatedReporter;
     address private actualReporter;
     uint256 private reportTimestamp;
@@ -14,6 +16,10 @@ contract InitialReporter is BaseReportingParticipant, Initializable, IInitialRep
         endInitialization();
         market = _market;
         designatedReporter = _designatedReporter;
+        return true;
+    }
+
+    function depositGasBond() public payable returns (bool) {
         return true;
     }
 

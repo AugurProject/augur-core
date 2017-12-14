@@ -21,7 +21,6 @@ contract IFeeWindow is ITyped, ERC20 {
     function getNumInvalidMarkets() public view returns (uint256);
     function getNumIncorrectDesignatedReportMarkets() public view returns (uint256);
     function getAvgReportingGasPrice() public view returns (uint256);
-    function getOrCreateNextFeeWindow() public returns (IFeeWindow);
     function getNumDesignatedReportNoShows() public view returns (uint256);
     function isForkingMarketFinalized() public view returns (bool);
     function isActive() public view returns (bool);

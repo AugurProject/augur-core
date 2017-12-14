@@ -211,7 +211,10 @@ class ContractsFixture:
         compiledCode = ContractsFixture.getCompiledCode(resolvedPath)
         # abstract contracts have a 0-length array for bytecode
         if len(compiledCode) == 0:
-            print "Skipping upload of " + lookupKey + " because it had no bytecode (likely a abstract class/interface)."
+            if ("libraries" in relativeFilePath or lookupKey.startswith("I") or lookupKey.startswith("Base")):
+                print "Skipping upload of " + lookupKey + " because it had no bytecode (likely a abstract class/interface)."
+            else:
+                raise Exception("Contract: " + lookupKey + " has no bytecode, but this is not expected. It probably doesn't implement all its abstract methods")
             return None
         if signatureKey not in ContractsFixture.signatures:
             ContractsFixture.signatures[signatureKey] = ContractsFixture.generateSignature(resolvedPath)
@@ -335,12 +338,6 @@ class ContractsFixture:
         assert universe.getTypeName() == stringToBytes('Universe')
         return universe
 
-    def getOrCreateStakeToken(self, market, payoutDistribution, invalid=False):
-        stakeTokenAddress = market.getOrCreateStakeToken(payoutDistribution, invalid)
-        assert stakeTokenAddress
-        stakeToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['StakeToken']), stakeTokenAddress)
-        return stakeToken
-
     def getShareToken(self, market, outcome):
         shareTokenAddress = market.getShareToken(outcome)
         assert shareTokenAddress
@@ -348,10 +345,9 @@ class ContractsFixture:
         return shareToken
 
     def designatedReport(self, market, payoutDistribution, reporterKey, invalid=False):
-        stakeToken = self.getOrCreateStakeToken(market, payoutDistribution, invalid)
         universe = self.applySignature('Universe', market.getUniverse())
         designatedReportStake = universe.getOrCacheDesignatedReportStake()
-        return stakeToken.buy(designatedReportStake, sender=reporterKey)
+        return market.doInitialReport(payoutDistribution, invalid, sender=reporterKey)
 
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
         payoutDistributionHash = market.derivePayoutDistributionHash(payoutDistribution, False)

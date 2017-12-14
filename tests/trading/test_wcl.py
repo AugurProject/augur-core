@@ -187,7 +187,7 @@ def test_create_bid_with_shares_fill_with_shares(contractsFixture, cash, market,
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     leftoverInOrder = fillOrder.publicFillOrder(orderID, fix(12), sender = tester.k2)
 
-    orderFilledLog = logs[4]
+    orderFilledLog = logs[5]
     assert orderFilledLog['_event_type'] == 'OrderFilled'
     assert orderFilledLog['marketCreatorFees'] == marketCreatorFee
     assert orderFilledLog['reporterFees'] == reporterFee
