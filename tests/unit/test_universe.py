@@ -91,10 +91,9 @@ def test_get_reporting_window(localFixture, populatedUniverse, chain):
     assert populatedUniverse.getOrCreateCurrentFeeWindow() == populatedUniverse.getOrCreateFeeWindowByTimestamp(chain.head_state.timestamp)
     assert populatedUniverse.getOrCreateNextFeeWindow() == populatedUniverse.getOrCreateFeeWindowByTimestamp(chain.head_state.timestamp + total_dispute_duration)
 
-def test_universe_contains(localFixture, populatedUniverse, mockMarket, mockStakeToken, chain, mockFeeWindow, mockDisputeBond, mockShareToken, mockFeeWindowFactory):
+def test_universe_contains(localFixture, populatedUniverse, mockMarket, chain, mockFeeWindow, mockDisputeBond, mockShareToken, mockFeeWindowFactory):
     mockFeeWindow.setStartTime(0)
     assert populatedUniverse.isContainerForFeeWindow(mockFeeWindow.address) == False
-    assert populatedUniverse.isContainerForStakeToken(mockStakeToken.address) == False
     assert populatedUniverse.isContainerForMarket(mockMarket.address) == False
     assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == False
     assert populatedUniverse.isContainerForDisputeBond(mockDisputeBond.address) == False
@@ -105,27 +104,22 @@ def test_universe_contains(localFixture, populatedUniverse, mockMarket, mockStak
     mockFeeWindow.setStartTime(timestamp)
 
     mockFeeWindow.setIsContainerForMarket(False)
-    mockMarket.setIsContainerForStakeToken(False)
     mockMarket.setIsContainerForShareToken(False)
     mockMarket.setIsContainerForDisputeBond(False)
 
-    assert populatedUniverse.isContainerForStakeToken(mockStakeToken.address) == False
     assert populatedUniverse.isContainerForMarket(mockMarket.address) == False
     assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == False
     assert populatedUniverse.isContainerForDisputeBond(mockDisputeBond.address) == False
 
     mockFeeWindow.setIsContainerForMarket(True)
-    mockMarket.setIsContainerForStakeToken(True)
     mockMarket.setIsContainerForShareToken(True)
     mockMarket.setIsContainerForDisputeBond(True)
     mockMarket.setFeeWindow(mockFeeWindow.address)
-    mockStakeToken.setMarket(mockMarket.address)
     mockShareToken.setMarket(mockMarket.address)
     mockDisputeBond.setMarket(mockMarket.address)
 
     assert populatedUniverse.isContainerForFeeWindow(mockFeeWindow.address) == True
     assert populatedUniverse.isContainerForMarket(mockMarket.address) == True
-    assert populatedUniverse.isContainerForStakeToken(mockStakeToken.address) == True
     assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == True
     assert populatedUniverse.isContainerForDisputeBond(mockDisputeBond.address) == True
 
@@ -140,7 +134,7 @@ def test_open_interest(localFixture, populatedUniverse):
     assert populatedUniverse.getOpenInterestInAttoEth() == 5
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 5 * multiplier
 
-def test_universe_rep_price_oracle(localFixture, populatedUniverse, mockReputationToken, mockShareToken, mockStakeToken):
+def test_universe_rep_price_oracle(localFixture, populatedUniverse, mockReputationToken, mockShareToken):
     controller = localFixture.contracts['Controller']
     repPriceOracle = localFixture.uploadAndAddToController("../source/contracts/reporting/RepPriceOracle.sol", 'repPriceOracle')
     controller.registerContract(stringToBytes('RepPriceOracle'), repPriceOracle.address, twentyZeros, thirtyTwoZeros)
@@ -374,10 +368,6 @@ def mockAugur(localFixture):
 @fixture
 def mockDisputeBond(localFixture):
     return localFixture.contracts['MockDisputeBond']
-
-@fixture
-def mockStakeToken(localFixture):
-    return localFixture.contracts['MockStakeToken']
 
 @fixture
 def mockShareToken(localFixture):

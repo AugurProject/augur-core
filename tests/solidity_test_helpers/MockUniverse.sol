@@ -8,6 +8,8 @@ import 'libraries/ITyped.sol';
 import 'reporting/IReputationToken.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'factories/MarketFactory.sol';
+import 'Controller.sol';
 
 
 contract MockUniverse is Initializable, IUniverse {
@@ -42,16 +44,15 @@ contract MockUniverse is Initializable, IUniverse {
     uint256 private setMarketCreationCostValue;
     bool private setIsParentOfValue;
     bool private setIsContainerForFeeWindowValue;
-    bool private setIisContainerForDisputeBondValue;
     bool private setIsContainerForMarketValue;
-    bool private setIsContainerForStakeTokenValue;
     bool private setIsContainerForShareTokenValue;
-    bool private setIsContainerForFeeWindowValue;
     bool private setDecrementOpenInterestValue;
     bool private setIncrementOpenInterestValue;
     IUniverse private initializParentUniverseValue;
     bytes32 private initializeParentPayoutDistributionHashValue;
     uint256 private setForkReputationGoalValue;
+    MarketFactory private marketFactory;
+    Controller private controller;
     /*
     * setters to feed the getters and impl of IUniverse
     */
@@ -167,20 +168,8 @@ contract MockUniverse is Initializable, IUniverse {
         setIsParentOfValue = _setIsParentOfValue;
     }
 
-    function setIsContainerForFeeWindow(bool _setIsContainerForFeeWindowValue) public {
-        setIsContainerForFeeWindowValue = _setIsContainerForFeeWindowValue;
-    }
-
-    function setIsContainerForDisputeBond(bool _setIisContainerForDisputeBondValue) public {
-        setIisContainerForDisputeBondValue = _setIisContainerForDisputeBondValue;
-    }
-
     function setIsContainerForMarket(bool _setIsContainerForMarketValue) public {
         setIsContainerForMarketValue = _setIsContainerForMarketValue;
-    }
-
-    function setIsContainerForStakeToken(bool _setIsContainerForStakeTokenValue) public {
-        setIsContainerForStakeTokenValue = _setIsContainerForStakeTokenValue;
     }
 
     function setIsContainerForShareToken(bool _setIsContainerForShareTokenValue) public {
@@ -357,20 +346,8 @@ contract MockUniverse is Initializable, IUniverse {
         return setIsParentOfValue;
     }
 
-    function isContainerForFeeWindow(IFeeWindow _shadyTarget) public view returns (bool) {
-        return setIsContainerForFeeWindowValue;
-    }
-
-    function isContainerForDisputeBond(IDisputeBond _shadyTarget) public view returns (bool) {
-        return setIisContainerForDisputeBondValue;
-    }
-
     function isContainerForMarket(IMarket _shadyTarget) public view returns (bool) {
         return setIsContainerForMarketValue;
-    }
-
-    function isContainerForStakeToken(IStakeToken _shadyTarget) public view returns (bool) {
-        return setIsContainerForStakeTokenValue;
     }
 
     function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool) {
@@ -394,20 +371,43 @@ contract MockUniverse is Initializable, IUniverse {
     }
 
     function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
-        IFeeWindow _feeWindow = getOrCreateFeeWindowByMarketEndTime(_endTime);
-        _newMarket = _feeWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getCategoricalMarketNumTicks(2));
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getCategoricalMarketNumTicks(2));
         return _newMarket;
     }
 
     function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
-        IFeeWindow _feeWindow = getOrCreateFeeWindowByMarketEndTime(_endTime);
-        _newMarket = _feeWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint8(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint8(_outcomes.length)));
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint8(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint8(_outcomes.length)));
         return _newMarket;
     }
 
     function createScalarMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, int256 _minPrice, int256 _maxPrice, uint256 _numTicks, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
-        IFeeWindow _feeWindow = getOrCreateFeeWindowByMarketEndTime(_endTime);
-        _newMarket = _feeWindow.createMarket.value(msg.value)(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, _numTicks);
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, _numTicks);
         return _newMarket;
+    }
+
+    function createMarketInternal(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint8 _numOutcomes, uint256 _numTicks) private returns (IMarket _newMarket) {
+        getReputationToken().trustedUniverseTransfer(_sender, marketFactory, getOrCacheDesignatedReportNoShowBond());
+        _newMarket = marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, _sender, _numOutcomes, _numTicks);
+        return _newMarket;
+    }
+
+    function createChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
+        return IUniverse(0);
+    }
+    
+    function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool) {
+        return true;
+    }
+
+    function addMarketTo() public returns (bool) {
+        return true;
+    }
+
+    function removeMarketFrom() public returns (bool) {
+        return true;
+    }
+
+    function getWinningChildUniverse() public view returns (IUniverse) {
+        return IUniverse(0);
     }
 }

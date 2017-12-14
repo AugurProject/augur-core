@@ -6,9 +6,10 @@ import 'reporting/IFeeWindow.sol';
 import 'libraries/ITyped.sol';
 import 'reporting/IReputationToken.sol';
 import 'libraries/Initializable.sol';
+import 'TEST/MockVariableSupplyToken.sol';
 
 
-contract MockFeeWindow is Initializable, IFeeWindow {
+contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
     bool private setMigrateMarketInFromSiblingValue;
     bool private setMigrateMarketInFromNiblingValue;
     bool private setRemoveMarketValue;
@@ -26,8 +27,6 @@ contract MockFeeWindow is Initializable, IFeeWindow {
     IFeeWindow private setPreviousFeeWindowValue;
     uint256 private setNumDesignatedReportNoShowsValue;
     bool private setAllMarketsFinalizedValue;
-    uint256 private setCollectStakeTokenReportingFeesValue;
-    uint256 private setCollectDisputeBondReportingFeesValue;
     uint256 private setCollectFeeWindowReportingFeesValue;
     bool private setMigrateFeesDueToForkValue;
     bool private setIsContainerForMarketValue;
@@ -37,7 +36,6 @@ contract MockFeeWindow is Initializable, IFeeWindow {
     IUniverse private initializeUniverseValue;
     uint256 private initializeFeeWindowIdValue;
     address private collectReporterAddress;
-    uint256 private collectAttoStakeTokens;
     bool private collectForgoFees;
     bool private setIsReportingActiveValue;
     bool private setIsActiveValue;
@@ -131,14 +129,6 @@ contract MockFeeWindow is Initializable, IFeeWindow {
         setAllMarketsFinalizedValue = _setAllMarketsFinalizedValue;
     }
 
-    function setCollectStakeTokenReportingFees(uint256 _setCollectStakeTokenReportingFeesValue) public {
-        setCollectStakeTokenReportingFeesValue = _setCollectStakeTokenReportingFeesValue;
-    }
-
-    function setCollectDisputeBondReportingFees(uint256 _setCollectDisputeBondReportingFeesValue) public {
-        setCollectDisputeBondReportingFeesValue = _setCollectDisputeBondReportingFeesValue;
-    }
-
     function setCollectFeeWindowReportingFees(uint256 _setCollectFeeWindowReportingFeesValue) public {
         setCollectFeeWindowReportingFeesValue = _setCollectFeeWindowReportingFeesValue;
     }
@@ -197,18 +187,6 @@ contract MockFeeWindow is Initializable, IFeeWindow {
 
     function getCollectReporterAddress() public returns(address) {
         return collectReporterAddress;
-    }
-
-    function getCollectAttoStakeTokens() public returns(uint256) {
-        return collectAttoStakeTokens;
-    }
-
-    function getCollectForgoFees() public returns(bool) {
-        return collectForgoFees;
-    }
-
-    function callMigrateFeesDueToFork(IFeeWindow _feeWindow) public returns (bool) {
-        return _feeWindow.migrateFeesDueToFork();
     }
 
     function callTrustedFeeWindowTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
@@ -310,27 +288,6 @@ contract MockFeeWindow is Initializable, IFeeWindow {
         return setAllMarketsFinalizedValue;
     }
 
-    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (uint256) {
-        collectReporterAddress = _reporterAddress;
-        collectAttoStakeTokens = _attoStakeTokens;
-        collectForgoFees = _forgoFees;
-        return collectAttoStakeTokens;
-    }
-
-    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (uint256) {
-        collectReporterAddress = _reporterAddress;
-        collectAttoStakeTokens = _attoStakeTokens;
-        collectForgoFees = _forgoFees;
-        return collectAttoStakeTokens;
-    }
-
-    function collectFeeWindowReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (uint256) {
-        collectReporterAddress = _reporterAddress;
-        collectAttoStakeTokens = _attoStakeTokens;
-        collectForgoFees = _forgoFees;
-        return collectAttoStakeTokens;
-    }
-
     function migrateFeesDueToFork() public returns (bool) {
         return setMigrateFeesDueToForkValue;
     }
@@ -369,5 +326,33 @@ contract MockFeeWindow is Initializable, IFeeWindow {
 
     function increaseTotalWinningStake(uint256 _amount) public returns (bool) {
         return setIncreaseTotalWinningStakeValue;
+    }
+
+    function noteInitialReportingGasPrice() public returns (bool) {
+        return true;
+    }
+
+    function onMarketFinalized() public returns (bool) {
+        return true;
+    }
+
+    function buy(uint256 _attotokens) public returns (bool) {
+        return true;
+    }
+
+    function redeem(address _sender) public returns (bool) {
+        return true;
+    }
+
+    function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
+        return true;
+    }
+
+    function onMint(address _target, uint256 _amount) internal returns (bool) {
+        return true;
+    }
+
+    function onBurn(address _target, uint256 _amount) internal returns (bool) {
+        return true;
     }
 }

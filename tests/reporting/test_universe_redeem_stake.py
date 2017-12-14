@@ -4,11 +4,7 @@ from pytest import fixture, raises, mark
 from utils import longToHexString, EtherDelta, TokenDelta
 from reporting_utils import proceedToFirstReporting, proceedToForking, finalizeForkingMarket
 
-@mark.parametrize('collectFees', [
-    True,
-    False
-])
-def test_redeem_stake(collectFees, kitchenSinkFixture, universe, market, cash, categoricalMarket, scalarMarket):
+def test_redeem_stake(kitchenSinkFixture, universe, market, cash, categoricalMarket, scalarMarket):
     feeWindow = kitchenSinkFixture.applySignature('FeeWindow', market.getFeeWindow())
     reputationToken = kitchenSinkFixture.applySignature('ReputationToken', universe.getReputationToken())
     completeSets = kitchenSinkFixture.contracts['CompleteSets']
@@ -31,11 +27,8 @@ def test_redeem_stake(collectFees, kitchenSinkFixture, universe, market, cash, c
     assert market.getReportingState() == kitchenSinkFixture.contracts['Constants'].FINALIZED()
 
     expectedEther = fees
-    if (collectFees):
-        assert categoricalMarket.migrateDueToNoReports()
-        assert scalarMarket.migrateDueToNoReports()
-    else:
-        expectedEther = 0
+    assert categoricalMarket.migrateDueToNoReports()
+    assert scalarMarket.migrateDueToNoReports()
 
     # Redeem all of the disputer's stake tokens and dispute bonds
     stakeTokenAddress = kitchenSinkFixture.getOrCreateStakeToken(market, [market.getNumTicks(),0]).address
@@ -45,10 +38,7 @@ def test_redeem_stake(collectFees, kitchenSinkFixture, universe, market, cash, c
         with TokenDelta(reputationToken, expectedREP, tester.a1, "Redeeming didn't give REP correctly"):
             universe.redeemStake([stakeTokenAddress], [disputeBondAddress], [], not collectFees, sender=tester.k1)
 
-@mark.parametrize('collectFees', [
-    True,
-    False
-])
+
 def test_redeem_participation_tokens(collectFees, kitchenSinkFixture, market, categoricalMarket, scalarMarket, universe, cash):
     feeWindow = kitchenSinkFixture.applySignature('FeeWindow', market.getFeeWindow())
     reputationToken = kitchenSinkFixture.applySignature('ReputationToken', universe.getReputationToken())
@@ -80,11 +70,8 @@ def test_redeem_participation_tokens(collectFees, kitchenSinkFixture, market, ca
     assert feeWindow.buy(amountTokens, sender=tester.k1)
 
     expectedEther = fees / 2
-    if (collectFees):
-        kitchenSinkFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeEndTime() + 1)
-    else:
-        expectedEther = 0
-
+    kitchenSinkFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeEndTime() + 1)
+    
     with EtherDelta(expectedEther, tester.a1, kitchenSinkFixture.chain, "Redeeming didn't give eth correctly"):
         with TokenDelta(reputationToken, amountTokens, tester.a1, "Redeeming didn't give REP correctly"):
             universe.redeemStake([], [], [feeWindow.address], not collectFees, sender=tester.k1)

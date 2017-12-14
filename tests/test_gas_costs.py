@@ -98,15 +98,17 @@ def test_designatedReport(localFixture, universe, cash, market):
     with PrintGasUsed(localFixture, "Market:designatedReport", DESIGNATED_REPORT):
         assert localFixture.designatedReport(market, [0,10**18], tester.k0)
 
-def test_report(localFixture, universe, cash, market):
+def test_initial_report(localFixture, universe, cash, market):
+    proceedToDesignatedReporting(localFixture, universe, market, False, 1, [0,10**18], [10**18,0])
+
+    with PrintGasUsed(localFixture, "Market:doInitialReport", FIRST_REPORT):
+        market.doInitialReport(0, sender=tester.k2)
+
+def test_contribute(localFixture, universe, cash, market):
     proceedToFirstReporting(localFixture, universe, market, False, 1, [0,10**18], [10**18,0])
 
-    stakeTokenYes = localFixture.getOrCreateStakeToken(market, [0,10**18])
-    with PrintGasUsed(localFixture, "FIRST StakeToken:buy", FIRST_REPORT):
-        stakeTokenYes.buy(0, sender=tester.k2)
-
-    with PrintGasUsed(localFixture, "SECOND StakeToken:buy", SECOND_REPORT):
-        stakeTokenYes.buy(1, sender=tester.k2)
+    with PrintGasUsed(localFixture, "Market.contribute", SECOND_REPORT):
+        market.contribute(1, sender=tester.k2)
 
 def test_disputeDesignated(localFixture, universe, cash, market):
     proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
@@ -147,57 +149,8 @@ def test_redeemStake(localFixture, universe, cash, market, categoricalMarket, sc
     assert categoricalMarket.tryFinalize()
     assert scalarMarket.tryFinalize()
 
-    stakeToken = localFixture.getOrCreateStakeToken(market, [0,10**18])
-
-    with PrintGasUsed(localFixture, "StakeToken:redeemWinningTokens", STAKE_REDEMPTION):
-        stakeToken.redeemWinningTokens(False)
-
-def test_redeemDispute(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
-    proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
-
-    assert localFixture.designatedReport(market, [0,10**18], tester.k0)
-    assert localFixture.designatedReport(categoricalMarket, [0,0,categoricalMarket.getNumTicks()], tester.k0)
-    assert localFixture.designatedReport(scalarMarket, [0,scalarMarket.getNumTicks()], tester.k0)
-
-    assert market.disputeDesignatedReport([10**18,0], 1, False)
-
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
-    assert market.tryFinalize()
-    assert categoricalMarket.tryFinalize()
-    assert scalarMarket.tryFinalize()
-
-    disputeBond = localFixture.applySignature("DisputeBond", market.getDesignatedReporterDisputeBond())
-
-    with PrintGasUsed(localFixture, "DisputeBond:withdraw", DISPUTE_BOND_REDEMPTION):
-        assert disputeBond.withdraw()
-
-def test_redeemParticipation(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
-    proceedToDesignatedReporting(localFixture, universe, market, [0,10**18])
-
-    assert localFixture.designatedReport(market, [0,10**18], tester.k0)
-    assert localFixture.designatedReport(categoricalMarket, [0,0,categoricalMarket.getNumTicks()], tester.k0)
-    assert localFixture.designatedReport(scalarMarket, [0,scalarMarket.getNumTicks()], tester.k0)
-
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
-
-    assert market.tryFinalize()
-    assert categoricalMarket.tryFinalize()
-    assert scalarMarket.tryFinalize()
-
-    # We cannot purchase participation tokens yet since the window isn't active
-    feeWindow = localFixture.applySignature("FeeWindow", feeWindow.getFeeWindow())
-
-    # We'll progress to the start of the window and purchase some participation tokens
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
-    assert feeWindow.buy(1)
-
-    # Fast forward time until the window is over and we can redeem our winning stake and participation tokens and receive fees
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
-
-    with PrintGasUsed(localFixture, "DisputeBond:withdraw", PARTICIPATION_TOKEN_REDEMPTION):
-        assert feeWindow.redeem(False)
+    with PrintGasUsed(localFixture, "FeeWindow:redeem", STAKE_REDEMPTION):
+        feeWindow.redeem(False)
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):

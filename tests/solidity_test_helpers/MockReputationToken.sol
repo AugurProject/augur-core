@@ -17,7 +17,6 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
 
     bool private setMigrateOutValue;
     bool private setMigrateInValue;
-    bool private setMintForDisputeBondMigrationValue;
     bool private setTrustedTransferValue;
     IUniverse private setUniverseValue;
     IReputationToken private setTopMigrationDestinationValue;
@@ -51,10 +50,6 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
 
     function setMigrateIn(bool _setMigrateInValue) public {
         setMigrateInValue = _setMigrateInValue;
-    }
-
-    function setMintForDisputeBondMigration(bool _setMintForDisputeBondMigrationValue) public {
-        setMintForDisputeBondMigrationValue = _setMintForDisputeBondMigrationValue;
     }
 
     function setTrustedTransfer(bool _setTrustedTransferValue) public {
@@ -113,12 +108,8 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
         return migrateInBonusIfInForkWindowValue;
     }
 
-    function callIncreaseRepAvailableForExtraBondPayouts(IUniverse _universe, uint256 _amount) public returns(bool) {
-        return _universe.increaseRepAvailableForExtraBondPayouts(_amount);
-    }
-
-    function callMigrateIn(IReputationToken _reputationToken, address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) public returns (bool) {
-        return _reputationToken.migrateIn(_reporter, _attotokens, _bonusIfInForkWindow);
+    function callMigrateIn(IReputationToken _reputationToken, address _reporter, uint256 _attotokens) public returns (bool) {
+        return _reputationToken.migrateIn(_reporter, _attotokens);
     }
 
     /*
@@ -134,43 +125,16 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
         return true;
     }
 
-    function migrateOutStakeToken(IReputationToken _destination, address _reporter, uint256 _attotokens) public returns (bool) {
+    function migrateOut(IReputationToken _destination, uint256 _attotokens) public returns (bool) {
         migrateOutDestinationValue = _destination;
-        migrateOutReporterValue = _reporter;
         migrateOutAttoTokens = _attotokens;
         return setMigrateOutValue;
     }
 
-    function migrateOutDisputeBond(IReputationToken _destination, address _reporter, uint256 _attotokens) public returns (bool) {
-        migrateOutDestinationValue = _destination;
-        migrateOutReporterValue = _reporter;
-        migrateOutAttoTokens = _attotokens;
-        return setMigrateOutValue;
-    }
-
-    function migrateOut(IReputationToken _destination, address _reporter, uint256 _attotokens) public returns (bool) {
-        migrateOutDestinationValue = _destination;
-        migrateOutReporterValue = _reporter;
-        migrateOutAttoTokens = _attotokens;
-        return setMigrateOutValue;
-    }
-
-    function migrateIn(address _reporter, uint256 _attotokens, bool _bonusIfInForkWindow) public returns (bool) {
+    function migrateIn(address _reporter, uint256 _attotokens) public returns (bool) {
         migrateInReporterValue = _reporter;
         migrateInAttoTokensValue = _attotokens;
-        migrateInBonusIfInForkWindowValue = _bonusIfInForkWindow;
         return setMigrateInValue;
-    }
-
-    function mintForDisputeBondMigration(uint256 _amount) public returns (bool) {
-        return setMintForDisputeBondMigrationValue;
-    }
-
-    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
-        trustedTransferSourceValue = _source;
-        trustedTransferDestinationValue = _destination;
-        trustedTransferAttotokensValue = _attotokens;
-        return setTrustedTransferValue;
     }
 
     function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
@@ -181,14 +145,14 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
         return setTrustedTransferValue;
     }
 
-    function trustedStakeTokenTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
         trustedTransferSourceValue = _source;
         trustedTransferDestinationValue = _destination;
         trustedTransferAttotokensValue = _attotokens;
         return setTrustedTransferValue;
     }
 
-    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+    function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
         trustedTransferSourceValue = _source;
         trustedTransferDestinationValue = _destination;
         trustedTransferAttotokensValue = _attotokens;
@@ -201,5 +165,9 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
 
     function migrateFromLegacyReputationToken() public afterInitialized returns (bool) {
         return setMigrateFromLegacyReputationTokenValue;
+    }
+
+    function mintForDisputeCrowdsourcer(uint256 _amountMigrated) public returns (bool) {
+        return true;
     }
 }
