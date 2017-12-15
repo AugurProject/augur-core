@@ -3,7 +3,7 @@ from datetime import timedelta
 from utils import longToHexString, stringToBytes, bytesToHexString, twentyZeros, thirtyTwoZeros
 from pytest import fixture, raises
 from ethereum.tools.tester import ABIContract, TransactionFailed
-from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, proceedToLastReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
+from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, proceedToLastReporting, proceedToForking, finalizeForkingMarket
 
 
 def test_reputation_token_creation(localFixture, mockUniverse):

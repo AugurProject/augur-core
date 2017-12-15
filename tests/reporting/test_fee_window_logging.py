@@ -1,21 +1,10 @@
 from ethereum.tools import tester
 from utils import captureFilteredLogs, bytesToHexString
 
-def test_participation_token_logging(contractsFixture, market, categoricalMarket, scalarMarket, universe):
-    feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
-    feeWindow = contractsFixture.applySignature("FeeWindow", feeWindow.getFeeWindow())
-
-    contractsFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
-
-    assert contractsFixture.designatedReport(market, [0, market.getNumTicks()], tester.k0)
-    assert contractsFixture.designatedReport(categoricalMarket, [0, 0, categoricalMarket.getNumTicks()], tester.k0)
-    assert contractsFixture.designatedReport(scalarMarket, [0, scalarMarket.getNumTicks()], tester.k0)
+def test_fee_wondow_logging(contractsFixture, market, categoricalMarket, scalarMarket, universe):
+    feeWindow = contractsFixture.applySignature('FeeWindow', universe.getOrCreateCurrentFeeWindow())
 
     contractsFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
-
-    assert market.tryFinalize()
-    assert categoricalMarket.tryFinalize()
-    assert scalarMarket.tryFinalize()
 
     assert feeWindow.buy(100)
 

@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract
 from pytest import fixture, mark
-from reporting_utils import proceedToFirstReporting, initializeReportingFixture
+from reporting_utils import proceedToInitialReporting
 
 ONE = 10 ** 18
 
@@ -56,25 +56,30 @@ def test_default_target_reporter_gas_costs(contractsFixture, universe, market):
     (1, 1),
     (2, 1),
     (3, 1),
-    (4, 1),
+    (3, 1),
     (2, 10),
     (2, 20),
     (2, 100),
 ])
-def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture, universe, market):
+def test_initial_reporter_gas_costs(numReports, gasPrice, reportingFixture, universe, market, categoricalMarket, scalarMarket):
+    markets = [market, categoricalMarket, scalarMarket]
+
+    # We'll have the markets go to initial reporting
+    proceedToInitialReporting(reportingFixture, market)
+
+    for i in range(0, numReports):
+        curMarket = markets[i]
+        payoutNumerators = [0] * curMarket.getNumberOfOutcomes()
+        payoutNumerators[0] = curMarket.getNumTicks()
+        assert curMarket.doInitialReport(payoutNumerators, False, sender=tester.k1, gasprice=gasPrice)
+
     # The target reporter gas cost is an attempt to charge the market creator for the estimated cost of reporting that may occur for their market. It will use the previous fee window's data to estimate costs if it is available
     feeWindow = reportingFixture.applySignature('FeeWindow', market.getFeeWindow())
 
-    # We'll have a market go through basic reporting and then make its fee window over.
-    proceedToFirstReporting(reportingFixture, universe, market, False, 1, [0,market.getNumTicks()], [market.getNumTicks(),0])
-
-    stakeTokenYes = reportingFixture.getOrCreateStakeToken(market, [0,market.getNumTicks()])
-    for i in range(0,numReports):
-        assert stakeTokenYes.buy(1, sender=getattr(tester, 'k%i' % i), gasprice=gasPrice)
-
-    # Now we'll skip ahead in time and finalzie the market
+    # Now we'll skip ahead in time and finalize the market
     reportingFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
-    assert market.tryFinalize()
+    for i in range(0, numReports):
+        assert markets[i].finalize()
 
     actualAvgGasPrice = feeWindow.getAvgReportingGasPrice()
     expectedAvgReportingGasCost = (reportingFixture.contracts['Constants'].DEFAULT_REPORTING_GAS_PRICE() + gasPrice * numReports) / (numReports + 1)
@@ -90,18 +95,15 @@ def test_target_reporter_gas_costs(numReports, gasPrice, reportingFixture, unive
 @fixture(scope="session")
 def reportingSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
-    return initializeReportingFixture(fixture, kitchenSinkSnapshot['universe'], kitchenSinkSnapshot['binaryMarket'])
+    # Give some REP to testers to make things interesting
+    universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
+    reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
+    for testAccount in [tester.a1, tester.a2, tester.a3]:
+        reputationToken.transfer(testAccount, 1 * 10**6 * 10**18)
+
+    return fixture.createSnapshot()
 
 @fixture
 def reportingFixture(fixture, reportingSnapshot):
     fixture.resetToSnapshot(reportingSnapshot)
     return fixture
-
-@fixture
-def universe(reportingFixture, kitchenSinkSnapshot):
-    return ABIContract(reportingFixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
-
-
-@fixture
-def market(reportingFixture, kitchenSinkSnapshot):
-    return ABIContract(reportingFixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)

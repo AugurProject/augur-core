@@ -9,21 +9,18 @@ def test_reporting_window_functions(kitchenSinkFixture, universe):
 
     # We have many getters and getOrCreate method on the universe for retreiving and creating fee windows. We'll confirm first that all the getters simply return 0 when the requested window does not yet exist
     assert universe.getFeeWindowByTimestamp(0) == NULL_ADDRESS
-    assert universe.getFeeWindowByMarketEndTime(31) == NULL_ADDRESS
     assert universe.getPreviousFeeWindow() == NULL_ADDRESS
     assert universe.getCurrentFeeWindow() == NULL_ADDRESS
     assert universe.getNextFeeWindow() == NULL_ADDRESS
 
     # Now lets use the getOrCreate variants to actually generate these windows
     assert universe.getOrCreateFeeWindowByTimestamp(0) != NULL_ADDRESS
-    assert universe.getOrCreateFeeWindowByMarketEndTime(31) != NULL_ADDRESS
     assert universe.getOrCreatePreviousFeeWindow() != NULL_ADDRESS
     assert universe.getOrCreateCurrentFeeWindow() != NULL_ADDRESS
     assert universe.getOrCreateNextFeeWindow() != NULL_ADDRESS
 
     # And now confirm the getters return the correct windows
     assert universe.getFeeWindowByTimestamp(0) != NULL_ADDRESS
-    assert universe.getFeeWindowByMarketEndTime(31) != NULL_ADDRESS
     assert universe.getPreviousFeeWindow() != NULL_ADDRESS
     assert universe.getCurrentFeeWindow() != NULL_ADDRESS
     assert universe.getNextFeeWindow() != NULL_ADDRESS

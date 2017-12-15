@@ -120,7 +120,9 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     function doInitialReport(uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes returns (bool) {
         IInitialReporter _initialReporter = getInitialReporter();
         require(_initialReporter.getReportTimestamp() == 0);
-        require(controller.getTimestamp() > endTime + Reporting.getDesignatedReportingDurationSeconds() || msg.sender == _initialReporter.getDesignatedReporter());
+        bool _isDesignatedReporter = msg.sender == _initialReporter.getDesignatedReporter();
+        bool _designatedReportingExpired = controller.getTimestamp() > getDesignatedReportingEndTime();
+        require(_designatedReportingExpired || _isDesignatedReporter);
         distributeNoShowBond(_initialReporter, msg.sender);
         // The designated reporter must actually pay the required REP stake to report
         if (msg.sender == _initialReporter.getDesignatedReporter()) {
@@ -311,6 +313,10 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return winningPayoutDistributionHash != bytes32(0);
     }
 
+    function designatedReporter() public view returns (address) {
+        return getInitialReporter().getDesignatedReporter();
+    }
+
     function designatedReporterShowed() public view returns (bool) {
         return getInitialReporter().designatedReporterShowed();
     }
@@ -336,8 +342,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return IInitialReporter(participants[0]);
     }
 
-    function getWinningReportingParticipant() private view returns (IReportingParticipant) {
-        require(isFinalized());
+    function getWinningReportingParticipant() public view returns (IReportingParticipant) {
         return participants[participants.length-1];
     }
 
@@ -376,6 +381,10 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function getShareToken(uint8 _outcome) public view returns (IShareToken) {
         return shareTokens[_outcome];
+    }
+
+    function getDesignatedReportingEndTime() public view returns (uint256) {
+        return endTime + Reporting.getDesignatedReportingDurationSeconds();
     }
 
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {

@@ -60,7 +60,7 @@ class ContractsFixture:
             with open(outputPath, mode='w') as file:
                 json_dump(signature, file)
         else:
-            print('using cached signature for ' + name)
+            pass#print('using cached signature for ' + name)
         with open(outputPath, 'r') as file:
             signature = json_load(file)
         return(signature)
@@ -92,7 +92,7 @@ class ContractsFixture:
             with io_open(compiledOutputPath, mode='wb') as file:
                 file.write(compiledCode)
         else:
-            print('using cached compilation for ' + name)
+            pass#print('using cached compilation for ' + name)
         with io_open(compiledOutputPath, mode='rb') as file:
             compiledCode = file.read()
             contractSize = len(compiledCode)
@@ -101,7 +101,7 @@ class ContractsFixture:
             elif (contractSize >= CONTRACT_SIZE_WARN_LEVEL):
                 print('%sContract %s is under size limit by only %d bytes%s' % (bcolors.WARN, name, CONTRACT_SIZE_LIMIT - contractSize, bcolors.ENDC))
             elif (contractSize > 0):
-                print('Size: %i' % contractSize)
+                pass#print('Size: %i' % contractSize)
             ContractsFixture.compiledCode[name] = compiledCode
             return(compiledCode)
 
@@ -179,6 +179,7 @@ class ContractsFixture:
         self.contracts = {}
         self.testerAddress = self.generateTesterMap('a')
         self.testerKey = self.generateTesterMap('k')
+        self.testerAddressToKey = dict(zip(self.testerAddress.values(), self.testerKey.values()))
 
     def distributeRep(self, universe):
         legacyReputationToken = self.contracts['LegacyReputationToken']
@@ -212,7 +213,7 @@ class ContractsFixture:
         # abstract contracts have a 0-length array for bytecode
         if len(compiledCode) == 0:
             if ("libraries" in relativeFilePath or lookupKey.startswith("I") or lookupKey.startswith("Base")):
-                print "Skipping upload of " + lookupKey + " because it had no bytecode (likely a abstract class/interface)."
+                pass#print "Skipping upload of " + lookupKey + " because it had no bytecode (likely a abstract class/interface)."
             else:
                 raise Exception("Contract: " + lookupKey + " has no bytecode, but this is not expected. It probably doesn't implement all its abstract methods")
             return None
@@ -344,9 +345,10 @@ class ContractsFixture:
         shareToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ShareToken']), shareTokenAddress)
         return shareToken
 
-    def designatedReport(self, market, payoutDistribution, reporterKey, invalid=False):
+    def designatedReport(self, market, payoutDistribution, invalid=False):
         universe = self.applySignature('Universe', market.getUniverse())
         designatedReportStake = universe.getOrCacheDesignatedReportStake()
+        reporterKey = self.testerAddressToKey[market.getDesignatedReporter()]
         return market.doInitialReport(payoutDistribution, invalid, sender=reporterKey)
 
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):

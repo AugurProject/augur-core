@@ -5,7 +5,7 @@ from utils import longTo32Bytes, captureFilteredLogs, PrintGasUsed, fix
 from constants import BID, ASK, YES, NO
 from datetime import timedelta
 from trading.test_claimTradingProceeds import acquireLongShares, finalizeMarket
-from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, proceedToLastReporting, proceedToForking, finalizeForkingMarket, initializeReportingFixture
+from reporting_utils import proceedToDesignatedReporting, proceedToFirstReporting, proceedToLastReporting, proceedToForking, finalizeForkingMarket
 
 # Market Methods
 MARKET_CREATION =           2333038
@@ -157,7 +157,12 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
     universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
     market = ABIContract(fixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
-    return initializeReportingFixture(fixture, universe, market)
+    # Give some REP to testers to make things interesting
+    reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
+    for testAccount in [tester.a1, tester.a2, tester.a3]:
+        reputationToken.transfer(testAccount, 1 * 10**6 * 10**18)
+
+    return fixture.createSnapshot()
 
 @fixture
 def localFixture(fixture, localSnapshot):
