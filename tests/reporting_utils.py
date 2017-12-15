@@ -4,7 +4,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, raises
 from datetime import timedelta
-from utils import captureFilteredLogs, bytesToHexString, longToHexString
+from utils import captureFilteredLogs, bytesToHexString, longToHexString, PrintGasUsed
 
 def proceedToDesignatedReporting(fixture, market):
     fixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
@@ -32,7 +32,8 @@ def proceedToNextRound(fixture, market):
         chosenPayoutNumerators = payoutNumerators if not firstReportWinning else payoutNumerators[::-1]
         chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
         amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
-        market.contribute(chosenPayoutNumerators, False, amount, startgas=long(6.7 * 10**7))
+        with PrintGasUsed(fixture, "Contribute:", 0):
+            market.contribute(chosenPayoutNumerators, False, amount, startgas=long(6.7 * 10**7))
         assert market.getForkingMarket() or market.getFeeWindow() != feeWindow
 
     feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -41,6 +42,17 @@ def proceedToNextRound(fixture, market):
 def proceedToFork(fixture, market, universe):
     while (market.getForkingMarket() == longToHexString(0)):
         proceedToNextRound(fixture, market)
+
+    payoutNumerators = [0] * market.getNumberOfOutcomes()
+    payoutNumerators[0] = market.getNumTicks()
+
+    hash1 = market.derivePayoutDistributionHash(payoutNumerators, False)
+    hash2 = market.derivePayoutDistributionHash(payoutNumerators[::-1], False)
+
+    with PrintGasUsed(fixture, "Fork participants 1:", 0):
+        assert market.forkParticipants(hash1)
+    with PrintGasUsed(fixture, "Fork participants 2:", 0):
+        assert market.forkParticipants(hash2)
 
 def finalizeFork(fixture, market, universe, finalizeByMigration = True):
     reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())

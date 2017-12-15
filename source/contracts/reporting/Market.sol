@@ -156,10 +156,20 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         participants.push(_reportingParticipant);
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this); // disavow other crowdsourcers
         if (IDisputeCrowdsourcer(msg.sender).getSize() >= Reporting.getDisputeThresholdForFork()) {
-            fork();
+            universe.fork();
         } else {
             feeWindow = universe.getOrCreateNextFeeWindow();
             feeWindowMigrationRequired = true;
+        }
+        return true;
+    }
+
+    function forkParticipants(bytes32 _payoutDistributionHash) public onlyInGoodTimes returns (bool) {
+        for (uint8 i = 0; i < participants.length; i++) {
+            IReportingParticipant _reportingParticipant = participants[i];
+            if (_reportingParticipant.getPayoutDistributionHash() == _payoutDistributionHash) {
+                _reportingParticipant.fork();
+            }
         }
         return true;
     }
@@ -177,8 +187,8 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         winningPayoutDistributionHash = participants[participants.length-1].getPayoutDistributionHash();
         feeWindow.onMarketFinalized();
         redistributeLosingReputation();
-        //distributeValidityBond();
-        //finalizationTime = controller.getTimestamp();
+        distributeValidityBond();
+        finalizationTime = controller.getTimestamp();
         return true;
     }
 
@@ -232,7 +242,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     function distributeValidityBond() private returns (bool) {
         // If the market resolved to invalid the bond gets sent to the fee window. Otherwise it gets returned to the market creator mailbox.
         if (isInvalid()) {
-            require(marketCreatorMailbox.call.value(validityBondAttoeth)());
+            marketCreatorMailbox.depositEther.value(validityBondAttoeth)();
         } else {
             cash.depositEtherFor.value(validityBondAttoeth)(feeWindow);
         }
@@ -248,14 +258,6 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             crowdsourcers.add(_payoutDistributionHash, address(_crowdsourcer));
         }
         return _crowdsourcer;
-    }
-
-    function fork() private returns (bool) {
-        universe.fork();
-        for (uint8 i = 0; i < participants.length; ++i) {
-            participants[i].fork();
-        }
-        return true;
     }
 
     function migrateThroughOneFork() public onlyInGoodTimes returns (bool) {

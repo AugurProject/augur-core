@@ -57,7 +57,8 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
         assert feeWindow == universe.getCurrentFeeWindow()
 
 @mark.parametrize('finalizeByMigration', [
-    True
+    True,
+    False
 ])
 def test_forking(finalizeByMigration, localFixture, universe, market, categoricalMarket):
     # proceed to forking

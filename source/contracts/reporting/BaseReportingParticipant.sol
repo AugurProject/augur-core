@@ -23,6 +23,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
     }
 
     function liquidateLosing() public onlyInGoodTimes returns (bool) {
+        require(IMarket(msg.sender) == market);
         require(market.getWinningPayoutDistributionHash() != getPayoutDistributionHash() && market.getWinningPayoutDistributionHash() != bytes32(0));
         IReputationToken _reputationToken = market.getReputationToken();
         feeWindow.redeem(this);

@@ -11,7 +11,6 @@ contract Delegator is DelegationTarget {
         controllerLookupName = _controllerLookupName;
     }
 
-    // We currently only support a single non-array return value. If we want to support variable length return data we should find a way to do so using this: https://github.com/ethereum/EIPs/blob/e3dff831121549e850fa662a0e6944878dc1ce22/EIPS/returndatacopy.md
     function() external payable {
         // Do nothing if we haven't properly set up the delegator to delegate calls
         if (controllerLookupName == 0) {
