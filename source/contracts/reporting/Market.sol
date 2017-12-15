@@ -165,11 +165,12 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     }
 
     function finalize() public onlyInGoodTimes returns (bool) {
+        require(winningPayoutDistributionHash == bytes32(0));
+        
         if (universe.getForkingMarket() == this) {
             return finalizeFork();
         }
 
-        require(winningPayoutDistributionHash == bytes32(0));
         require(getInitialReporter().getReportTimestamp() != 0);
         require(feeWindow.isOver());
         require(universe.getForkingMarket() == IMarket(0));
@@ -183,9 +184,9 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function finalizeFork() public onlyInGoodTimes returns (bool) {
         require(universe.getForkingMarket() == this);
-        require(winningPayoutDistributionHash == bytes32(0));
         IUniverse _winningUniverse = universe.getWinningChildUniverse();
         winningPayoutDistributionHash = _winningUniverse.getParentPayoutDistributionHash();
+        finalizationTime = controller.getTimestamp();
         return true;
     }
 
@@ -239,23 +240,25 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     }
 
     function getOrCreateDisputeCrowdsourcer(bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) private returns (IDisputeCrowdsourcer) {
-        IDisputeCrowdsourcer _crowdsourcer = IDisputeCrowdsourcer(crowdsourcers.getAsAddress(_payoutDistributionHash));
-        if (_crowdsourcer == address(0)) {
+        IDisputeCrowdsourcer _crowdsourcer = IDisputeCrowdsourcer(crowdsourcers.getAsAddressOrZero(_payoutDistributionHash));
+        if (_crowdsourcer == IDisputeCrowdsourcer(0)) {
             uint256 _size = 2 * getTotalStake() - 3 * getStakeInOutcome(_payoutDistributionHash);
             DisputeCrowdsourcerFactory _disputeCrowdsourcerFactory = DisputeCrowdsourcerFactory(controller.lookup("DisputeCrowdsourcerFactory"));
             _crowdsourcer = _disputeCrowdsourcerFactory.createDisputeCrowdsourcer(controller, this, _size, _payoutDistributionHash, _payoutNumerators, _invalid);
+            crowdsourcers.add(_payoutDistributionHash, address(_crowdsourcer));
         }
         return _crowdsourcer;
     }
 
-    function fork() private {
+    function fork() private returns (bool) {
         universe.fork();
         for (uint8 i = 0; i < participants.length; ++i) {
             participants[i].fork();
         }
+        return true;
     }
 
-    function migrateThroughOneFork() public {
+    function migrateThroughOneFork() public onlyInGoodTimes returns (bool) {
         // only proceed if the forking market is finalized
         require(universe.getForkingMarket().isFinalized());
 
@@ -276,6 +279,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         participants.push(_initialParticipant);
         _initialParticipant.resetReportTimestamp();
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
+        return true;
     }
 
     function getTotalStake() public view returns (uint256) {
@@ -406,7 +410,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     }
 
     function isContainerForReportingParticipant(IReportingParticipant _shadyReportingParticipant) public view returns (bool) {
-        if (IReportingParticipant(crowdsourcers.getAsAddressOrZero(_shadyReportingParticipant.getPayoutDistributionHash())) == _shadyReportingParticipant) {
+        if (crowdsourcers.getAsAddressOrZero(_shadyReportingParticipant.getPayoutDistributionHash()) == address(_shadyReportingParticipant)) {
             return true;
         }
         for (uint8 i = 0; i < participants.length; i++) {

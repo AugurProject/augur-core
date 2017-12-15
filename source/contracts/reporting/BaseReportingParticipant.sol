@@ -46,10 +46,6 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         return market;
     }
 
-    function getPayoutNumerators() public view returns (uint256[]) {
-        return payoutNumerators;
-    }
-
     function getPayoutNumerator(uint8 _outcome) public view returns (uint256) {
         return payoutNumerators[_outcome];
     }

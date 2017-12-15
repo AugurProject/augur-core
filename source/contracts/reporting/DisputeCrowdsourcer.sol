@@ -38,9 +38,9 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         require(IMarket(msg.sender) == market);
         _amount = _amount.min(size - totalSupply());
         if (_amount == 0) {
-            return;
+            return true;
         }
-        market.getReputationToken().transferFrom(_participant, this, _amount);
+        market.getReputationToken().trustedReportingParticipantTransfer(_participant, this, _amount);
         feeWindow.buy(_amount);
         mint(_participant, _amount);
         if (totalSupply() == size) {
@@ -55,10 +55,12 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         IReputationToken _reputationToken = market.getReputationToken();
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
         uint256 _balance = _reputationToken.balanceOf(this);
+        // TODO feeWindow.redeem(this);
         _reputationToken.migrateOut(_newReputationToken, _balance);
         _newReputationToken.mintForDisputeCrowdsourcer(_balance);
         // by removing the market, the token will become disavowed and therefore users can remove freely
         market = IMarket(0);
+        return true;
     }
 
     function disavow() public onlyInGoodTimes returns (bool) {

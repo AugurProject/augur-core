@@ -50,6 +50,7 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
         IReputationToken _reputationToken = market.getReputationToken();
+        // TODO feeWindow.redeem(this);
         _reputationToken.migrateOut(_newReputationToken, _reputationToken.balanceOf(this));
         _newReputationToken.transfer(actualReporter, _newReputationToken.balanceOf(this));
         return true;
@@ -79,7 +80,7 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
     function designatedReporterShowed() public view returns (bool) {
         return actualReporter == designatedReporter;
     }
-
+    
     function designatedReporterWasCorrect() public view returns (bool) {
         return payoutDistributionHash == market.getWinningPayoutDistributionHash();
     }

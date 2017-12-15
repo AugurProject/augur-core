@@ -31,6 +31,7 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     }
 
     function migrateOut(IReputationToken _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+        // TODO require(_attotokens > 0);
         assertReputationTokenIsLegit(_destination);
         burn(msg.sender, _attotokens);
         _destination.migrateIn(msg.sender, _attotokens);
@@ -44,7 +45,7 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
         // Award a bonus if migration is done before the fork has resolved and check if the fork can be resolved early
         if (!_parentUniverse.getForkingMarket().isFinalized()) {
             mint(_reporter, _attotokens.div(Reporting.getForkMigrationPercentageBonusDivisor()));
-            if (supply > universe.getForkReputationGoal()) {
+            if (supply > _parentUniverse.getForkReputationGoal()) {
                 _parentUniverse.getForkingMarket().finalizeFork();
             }
         }
@@ -76,6 +77,12 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForMarket(IMarket(msg.sender)));
+        return internalTransfer(_source, _destination, _attotokens);
+    }
+
+    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
+    function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+        require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 

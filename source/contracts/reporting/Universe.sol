@@ -49,7 +49,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function fork() public onlyInGoodTimes afterInitialized returns (bool) {
-        require(forkingMarket == address(0));
+        require(forkingMarket == IMarket(0));
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
         forkEndTime = controller.getTimestamp() + Reporting.getForkDurationSeconds();
@@ -181,6 +181,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
                 _winningAmount = _balance;
             }
         }
+        require(_winningUniverse != IUniverse(0));
         require(_winningAmount >= forkReputationGoal || controller.getTimestamp() > forkEndTime);
         return _winningUniverse;
     }
