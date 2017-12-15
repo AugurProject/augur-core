@@ -23,11 +23,11 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
         return true;
     }
 
-    function redeem(address _redeemer) public returns (bool) {
-        require(market.getWinningPayoutDistributionHash() == payoutDistributionHash);
+    function redeem(address) public returns (bool) {
+        require(isDisavowed() || market.getWinningPayoutDistributionHash() == payoutDistributionHash);
         feeWindow.redeem(this);
         IReputationToken _reputationToken = market.getReputationToken();
-        _reputationToken.transfer(_redeemer, _reputationToken.balanceOf(this));
+        _reputationToken.transfer(actualReporter, _reputationToken.balanceOf(this));
         require(actualReporter.call.value(this.balance)());
         return true;
     }
@@ -50,9 +50,9 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
         IReputationToken _reputationToken = market.getReputationToken();
-        // TODO feeWindow.redeem(this);
+        feeWindow.redeem(this);
         _reputationToken.migrateOut(_newReputationToken, _reputationToken.balanceOf(this));
-        _newReputationToken.transfer(actualReporter, _newReputationToken.balanceOf(this));
+        market = IMarket(0);
         return true;
     }
 

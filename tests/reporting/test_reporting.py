@@ -66,9 +66,65 @@ def test_forking(finalizeByMigration, localFixture, universe, market, categorica
     # finalize the fork
     finalizeFork(localFixture, market, universe, finalizeByMigration)
 
-def test_fee_window_record_keeping(localFixture, universe, cash, market):
-    # do invalid, no show, and incorrect
-    pass
+def test_fee_window_record_keeping(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
+    feeWindow = localFixture.applySignature('FeeWindow', universe.getOrCreateCurrentFeeWindow())
+    
+    # First we'll confirm we get the expected default values for the window record keeping
+    assert feeWindow.getNumMarkets() == 0
+    assert feeWindow.getNumInvalidMarkets() == 0
+    assert feeWindow.getNumIncorrectDesignatedReportMarkets() == 0
+    assert feeWindow.getNumDesignatedReportNoShows() == 0
+
+    # Go to designated reporting
+    proceedToDesignatedReporting(localFixture, market)
+
+    # Do a report that we'll make incorrect
+    assert market.doInitialReport([0, market.getNumTicks()], False)
+
+    # Do a report for a market we'll say is invalid
+    assert categoricalMarket.doInitialReport([0, 0, categoricalMarket.getNumTicks()], False)
+
+    # Designated reporter doesn't show up for the third market. Go into initial reporting and do a report by someone else
+    reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
+    reputationToken.transfer(tester.a1, 10**6 * 10**18)
+    proceedToInitialReporting(localFixture, scalarMarket)
+    assert scalarMarket.doInitialReport([0, scalarMarket.getNumTicks()], False, sender=tester.k1)
+
+    # proceed to the window start time
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
+
+    # dispute the first market
+    chosenPayoutNumerators = [market.getNumTicks(), 0]
+    chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
+    amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
+    assert market.contribute(chosenPayoutNumerators, False, amount)
+    assert market.getFeeWindow() != feeWindow
+
+    # dispute the second market with an invalid outcome
+    chosenPayoutNumerators = [categoricalMarket.getNumTicks() / 2, categoricalMarket.getNumTicks() / 2]
+    chosenPayoutHash = categoricalMarket.derivePayoutDistributionHash(chosenPayoutNumerators, True)
+    amount = 2 * categoricalMarket.getTotalStake() - 3 * categoricalMarket.getStakeInOutcome(chosenPayoutHash)
+    assert categoricalMarket.contribute(chosenPayoutNumerators, True, amount)
+    assert categoricalMarket.getFeeWindow() != feeWindow
+
+    # progress time forward
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+
+    # finalize the markets
+    assert market.finalize()
+    assert categoricalMarket.finalize()
+    assert scalarMarket.finalize()
+
+    # Now we'll confirm the record keeping was updated
+    assert feeWindow.getNumMarkets() == 2
+    assert feeWindow.getNumInvalidMarkets() == 1
+    assert feeWindow.getNumIncorrectDesignatedReportMarkets() == 2
+
+    feeWindow = localFixture.applySignature('FeeWindow', scalarMarket.getFeeWindow())
+    assert feeWindow.getNumMarkets() == 1
+    assert feeWindow.getNumDesignatedReportNoShows() == 1
 
 
 @fixture(scope="session")

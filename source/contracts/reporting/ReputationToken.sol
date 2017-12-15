@@ -31,7 +31,7 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     }
 
     function migrateOut(IReputationToken _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
-        // TODO require(_attotokens > 0);
+        require(_attotokens > 0);
         assertReputationTokenIsLegit(_destination);
         burn(msg.sender, _attotokens);
         _destination.migrateIn(msg.sender, _attotokens);

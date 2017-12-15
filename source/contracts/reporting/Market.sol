@@ -177,8 +177,8 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         winningPayoutDistributionHash = participants[participants.length-1].getPayoutDistributionHash();
         feeWindow.onMarketFinalized();
         redistributeLosingReputation();
-        distributeValidityBond();
-        finalizationTime = controller.getTimestamp();
+        //distributeValidityBond();
+        //finalizationTime = controller.getTimestamp();
         return true;
     }
 

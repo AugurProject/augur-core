@@ -99,6 +99,10 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return feeWindows[_feeWindowId];
     }
 
+    function isForking() public view returns (bool) {
+        return forkingMarket != IMarket(0);
+    }
+
     function getChildUniverse(bytes32 _parentPayoutDistributionHash) public view returns (IUniverse) {
         for (uint8 i=0; i < childUniverses.length; i++) {
             IUniverse _childUniverse = childUniverses[i];

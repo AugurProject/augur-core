@@ -17,6 +17,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         size = _size;
         payoutNumerators = _payoutNumerators;
         payoutDistributionHash = _payoutDistributionHash;
+        invalid = _invalid;
         return true;
     }
 
@@ -54,8 +55,8 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
         IReputationToken _reputationToken = market.getReputationToken();
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
+        feeWindow.redeem(this);
         uint256 _balance = _reputationToken.balanceOf(this);
-        // TODO feeWindow.redeem(this);
         _reputationToken.migrateOut(_newReputationToken, _balance);
         _newReputationToken.mintForDisputeCrowdsourcer(_balance);
         // by removing the market, the token will become disavowed and therefore users can remove freely
@@ -71,10 +72,6 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
 
     function getStake() public view returns (uint256) {
         return totalSupply();
-    }
-
-    function isDisavowed() public returns (bool) {
-        return market == IMarket(0);
     }
 
     function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {

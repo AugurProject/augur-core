@@ -77,7 +77,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
     }
 
     function redeem(address _sender) public returns (bool) {
-        require(isOver());
+        require(isOver() || universe.isForking());
 
         uint256 _attotokens = balances[_sender];
         if (_attotokens == 0) {

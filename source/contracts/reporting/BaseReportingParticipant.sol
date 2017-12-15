@@ -25,8 +25,10 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
     function liquidateLosing() public onlyInGoodTimes returns (bool) {
         require(market.getWinningPayoutDistributionHash() != getPayoutDistributionHash() && market.getWinningPayoutDistributionHash() != bytes32(0));
         IReputationToken _reputationToken = market.getReputationToken();
+        feeWindow.redeem(this);
         _reputationToken.transfer(market, _reputationToken.balanceOf(this));
-        require(market.getFeeWindow().call.value(this.balance)());
+        ICash _cash = ICash(controller.lookup("Cash"));
+        _cash.depositEtherFor.value(this.balance)(market.getFeeWindow());
         return true;
     }
 
@@ -44,6 +46,10 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
 
     function getMarket() public view returns (IMarket) {
         return market;
+    }
+
+    function isDisavowed() public returns (bool) {
+        return market == IMarket(0);
     }
 
     function getPayoutNumerator(uint8 _outcome) public view returns (uint256) {
