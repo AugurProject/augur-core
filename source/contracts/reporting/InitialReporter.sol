@@ -25,11 +25,11 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
 
     function redeem(address) public returns (bool) {
         require(isDisavowed() || market.getWinningPayoutDistributionHash() == payoutDistributionHash);
-        // TODO historic redemption
-        feeWindow.redeem(this);
+        redeemForAllFeeWindows();
         IReputationToken _reputationToken = market.getReputationToken();
         _reputationToken.transfer(actualReporter, _reputationToken.balanceOf(this));
-        require(actualReporter.call.value(this.balance)());
+        ICash _denominationToken = market.getDenominationToken();
+        _denominationToken.withdrawEtherTo(actualReporter, _denominationToken.balanceOf(this));
         return true;
     }
 

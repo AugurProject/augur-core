@@ -161,6 +161,10 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return getFeeWindowByTimestamp(controller.getTimestamp() + getDisputeRoundDurationInSeconds());
     }
 
+    function getOrCreateFeeWindowBefore(IFeeWindow _feeWindow) public onlyInGoodTimes returns (IFeeWindow) {
+        return getOrCreateFeeWindowByTimestamp(_feeWindow.getStartTime() - 2);
+    }
+
     function createChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
         IReportingParticipant _reportingParticipant = IReportingParticipant(msg.sender);
         require(isContainerForReportingParticipant(_reportingParticipant));

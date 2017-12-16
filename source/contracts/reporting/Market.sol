@@ -137,6 +137,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(feeWindow.isActive());
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
+        require(_payoutDistributionHash != getWinningReportingParticipant().getPayoutDistributionHash());
         IDisputeCrowdsourcer _crowdsourcer = getOrCreateDisputeCrowdsourcer(_payoutDistributionHash, _payoutNumerators, _invalid);
         _crowdsourcer.contribute(msg.sender, _amount);
         return true;
@@ -235,10 +236,10 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function distributeValidityBond() private returns (bool) {
         // If the market resolved to invalid the bond gets sent to the fee window. Otherwise it gets returned to the market creator mailbox.
-        if (isInvalid()) {
+        if (!isInvalid()) {
             marketCreatorMailbox.depositEther.value(validityBondAttoeth)();
         } else {
-            cash.depositEtherFor.value(validityBondAttoeth)(feeWindow);
+            cash.depositEtherFor.value(validityBondAttoeth)(universe.getCurrentFeeWindow());
         }
         return true;
     }
@@ -338,8 +339,12 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return getWinningReportingParticipant().isInvalid();
     }
 
-    function getInitialReporter() private view returns (IInitialReporter) {
+    function getInitialReporter() public view returns (IInitialReporter) {
         return IInitialReporter(participants[0]);
+    }
+
+    function getReportingParticipant(uint8 _index) public view returns (IReportingParticipant) {
+        return participants[_index];
     }
 
     function getWinningReportingParticipant() public view returns (IReportingParticipant) {

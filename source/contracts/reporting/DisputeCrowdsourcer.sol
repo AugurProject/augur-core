@@ -23,16 +23,18 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
 
     function redeem(address _redeemer) public onlyInGoodTimes returns (bool) {
         require(isDisavowed() || market.getWinningPayoutDistributionHash() == getPayoutDistributionHash());
-        // TODO historic redemption
-        feeWindow.redeem(this);
+        redeemForAllFeeWindows();
         IReputationToken _reputationToken = market.getReputationToken();
+        ICash _denominationToken = market.getDenominationToken();
         uint256 _reputationSupply = _reputationToken.balanceOf(this);
+        uint256 _cashSupply = _denominationToken.balanceOf(this);
         uint256 _amount = balances[_redeemer];
-        uint256 _feeShare = this.balance * _amount / supply;
+        uint256 _feeShare = _cashSupply * _amount / supply;
         uint256 _reputationShare = _reputationSupply * _amount / supply;
         burn(_redeemer, _amount);
         _reputationToken.transfer(_redeemer, _reputationShare);
-        require(_redeemer.call.value(_feeShare)());
+        require(_cashSupply > 0);
+        _denominationToken.withdrawEtherTo(_redeemer, _feeShare);
         return true;
     }
 
@@ -56,9 +58,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
         IReputationToken _reputationToken = market.getReputationToken();
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
-        // TODO historic feeWindow redemption
-        feeWindow.redeem(this);
-        // TODO where do fees collected here go?
+        redeemForAllFeeWindows();
         uint256 _balance = _reputationToken.balanceOf(this);
         _reputationToken.migrateOut(_newReputationToken, _balance);
         _newReputationToken.mintForDisputeCrowdsourcer(_balance);

@@ -79,16 +79,24 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
         return true;
     }
 
+    function redeemForReportingParticipant() public returns (bool) {
+        redeemInternal(msg.sender, true);
+        return true;
+    }
+
     function redeem(address _sender) public returns (bool) {
+        redeemInternal(_sender, false);
+        return true;
+    }
+
+    function redeemInternal(address _sender, bool _isReportingParticipant) private returns (bool) {
         require(isOver() || universe.isForking());
 
         uint256 _attoParticipationTokens = balances[_sender];
         uint256 _attoFeeTokens = feeToken.balanceOf(_sender);
         uint256 _totalTokens = _attoParticipationTokens + _attoFeeTokens;
 
-        uint256 _totalParticipationSupply = totalSupply();
-        uint256 _totalFeeSupply = feeToken.totalSupply();
-        uint256 _totalSupply = _totalParticipationSupply.add(_totalFeeSupply);
+        uint256 _totalFeeStake = getTotalFeeStake();
 
         if (_attoParticipationTokens != 0) {
             burn(_sender, _attoParticipationTokens);
@@ -99,35 +107,23 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
             feeToken.feeWindowBurn(_sender, _attoFeeTokens);
         }
 
-        if (_totalSupply == 0) {
+        if (_totalFeeStake == 0) {
             return;
         }
 
         // CASH
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _balance = _cash.balanceOf(this);
-        uint256 _feePayoutShare = _balance.mul(_totalTokens).div(_totalSupply);
+        uint256 _feePayoutShare = _balance.mul(_totalTokens).div(_totalFeeStake);
 
         if (_feePayoutShare > 0) {
-            _cash.withdrawEtherTo(_sender, _feePayoutShare);
+            // We can't use the cash.withdrawEtherTo method as the ReportingParticipants are delegated and the fallback function has special behavior that will fail
+            if (_isReportingParticipant) {
+                _cash.transfer(_sender, _feePayoutShare);
+            } else {
+                _cash.withdrawEtherTo(_sender, _feePayoutShare);
+            }
         }
-        return true;
-    }
-
-    function redeemReportingParticipant() public returns (bool) {
-        require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
-
-        uint256 _attotokens = balances[msg.sender];
-        if (_attotokens == 0) {
-            return true;
-        }
-        burn(msg.sender, _attotokens);
-
-        // REP
-        getReputationToken().transfer(msg.sender, _attotokens);
-
-        // Fee Tokens
-        feeToken.mintForReportingParticipant(msg.sender, _attotokens);
         return true;
     }
 
@@ -135,6 +131,12 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
         require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         feeToken.mintForReportingParticipant(msg.sender, _amount);
         return true;
+    }
+
+    function getTotalFeeStake() public view returns (uint256) {
+        uint256 _totalParticipationSupply = totalSupply();
+        uint256 _totalFeeSupply = feeToken.totalSupply();
+        return _totalParticipationSupply.add(_totalFeeSupply);
     }
 
     function getAvgReportingGasPrice() public view returns (uint256) {

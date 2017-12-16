@@ -16,7 +16,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
 
     function migrate() public onlyInGoodTimes returns (bool) {
         require(IMarket(msg.sender) == market);
-        uint256 _balance = feeWindow.balanceOf(this);
+        uint256 _balance = feeWindow.getFeeToken().balanceOf(this);
         feeWindow = market.getFeeWindow();
         feeWindow.mintFeeTokens(_balance);
     }
@@ -25,11 +25,20 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         require(IMarket(msg.sender) == market);
         require(market.getWinningPayoutDistributionHash() != getPayoutDistributionHash() && market.getWinningPayoutDistributionHash() != bytes32(0));
         IReputationToken _reputationToken = market.getReputationToken();
-        // TODO redeem on all historic feeWindows too
-        feeWindow.redeem(this);
+        redeemForAllFeeWindows();
         _reputationToken.transfer(market, _reputationToken.balanceOf(this));
-        ICash _cash = ICash(controller.lookup("Cash"));
-        _cash.depositEtherFor.value(this.balance)(market.getFeeWindow());
+        ICash _cash = market.getDenominationToken();
+        _cash.transfer(market.getUniverse().getCurrentFeeWindow(), _cash.balanceOf(this));
+        return true;
+    }
+
+    function redeemForAllFeeWindows() internal returns (bool) {
+        IFeeWindow _curFeeWindow = feeWindow;
+        IUniverse _universe = market.getUniverse();
+        while (_curFeeWindow.getFeeToken().balanceOf(this) > 0) {
+            _curFeeWindow.redeemForReportingParticipant();
+            _curFeeWindow = _universe.getOrCreateFeeWindowBefore(_curFeeWindow);
+        }
         return true;
     }
 
