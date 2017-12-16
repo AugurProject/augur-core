@@ -99,14 +99,18 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
             feeToken.feeWindowBurn(_sender, _attoFeeTokens);
         }
 
+        if (_totalSupply == 0) {
+            return;
+        }
+
         // CASH
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _balance = _cash.balanceOf(this);
         uint256 _feePayoutShare = _balance.mul(_totalTokens).div(_totalSupply);
+
         if (_feePayoutShare > 0) {
             _cash.withdrawEtherTo(_sender, _feePayoutShare);
         }
-
         return true;
     }
 

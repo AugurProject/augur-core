@@ -2,7 +2,6 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, raises, mark
 from utils import longToHexString, EtherDelta, TokenDelta
-from reporting_utils import proceedToFirstReporting, proceedToForking, finalizeForkingMarket
 
 def test_redeem_stake(kitchenSinkFixture, universe, market, cash, categoricalMarket, scalarMarket):
     feeWindow = kitchenSinkFixture.applySignature('FeeWindow', market.getFeeWindow())
