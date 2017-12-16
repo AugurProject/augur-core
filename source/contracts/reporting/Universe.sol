@@ -12,6 +12,7 @@ import 'factories/UniverseFactory.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IFeeWindow.sol';
+import 'reporting/IFeeToken.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IRepPriceOracle.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -198,6 +199,13 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         uint256 _feeWindowId = getFeeWindowId(_startTime);
         IFeeWindow _legitFeeWindow = feeWindows[_feeWindowId];
         return _shadyFeeWindow == _legitFeeWindow;
+    }
+
+    function isContainerForFeeToken(IFeeToken _shadyFeeToken) public view returns (bool) {
+        IFeeWindow _shadyFeeWindow = _shadyFeeToken.getFeeWindow();
+        require(isContainerForFeeWindow(_shadyFeeWindow));
+        IFeeWindow _legitFeeWindow = _shadyFeeWindow;
+        return _legitFeeWindow.getFeeToken() == _shadyFeeToken;
     }
 
     function isContainerForMarket(IMarket _shadyMarket) public view returns (bool) {

@@ -33,7 +33,7 @@ def proceedToNextRound(fixture, market):
         chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
         amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
         with PrintGasUsed(fixture, "Contribute:", 0):
-            market.contribute(chosenPayoutNumerators, False, amount, startgas=long(6.7 * 10**7))
+            market.contribute(chosenPayoutNumerators, False, amount, startgas=long(6.7 * 10**6))
         assert market.getForkingMarket() or market.getFeeWindow() != feeWindow
 
     feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())

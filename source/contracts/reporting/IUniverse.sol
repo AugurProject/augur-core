@@ -6,6 +6,7 @@ import 'reporting/IReputationToken.sol';
 import 'reporting/IFeeWindow.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IFeeWindow.sol';
+import 'reporting/IFeeToken.sol';
 import 'reporting/IReportingParticipant.sol';
 import 'trading/IShareToken.sol';
 
@@ -41,6 +42,7 @@ contract IUniverse is ITyped {
     function isContainerForMarket(IMarket _shadyTarget) public view returns (bool);
     function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool);
     function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool);
+    function isContainerForFeeToken(IFeeToken _shadyTarget) public view returns (bool);
     function addMarketTo() public returns (bool);
     function removeMarketFrom() public returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);

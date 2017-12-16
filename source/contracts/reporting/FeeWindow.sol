@@ -19,6 +19,8 @@ import 'reporting/IFeeWindow.sol';
 import 'factories/FeeWindowFactory.sol';
 import 'libraries/Extractable.sol';
 import 'libraries/token/VariableSupplyToken.sol';
+import 'reporting/IFeeToken.sol';
+import 'factories/FeeTokenFactory.sol';
 
 
 contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initializable, IFeeWindow {
@@ -35,6 +37,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
     RunningAverage.Data private reportingGasPrice;
     uint256 private totalWinningStake;
     uint256 private totalStake;
+    IFeeToken private feeToken;
 
     function initialize(IUniverse _universe, uint256 _feeWindowId) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
@@ -42,6 +45,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
         startTime = _feeWindowId * universe.getDisputeRoundDurationInSeconds();
         // Initialize this to some reasonable value to handle the first market ever created without branching code
         reportingGasPrice.record(Reporting.getDefaultReportingGasPrice());
+        feeToken = FeeTokenFactory(controller.lookup("FeeTokenFactory")).createFeeToken(controller, this);
         return true;
     }
 
@@ -69,8 +73,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
 
     function buy(uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(_attotokens > 0);
-        // The initial reporter can purchase tokens in the window before it is active
-        require(isActive() || universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
+        require(isActive());
         getReputationToken().trustedFeeWindowTransfer(msg.sender, this, _attotokens);
         mint(msg.sender, _attotokens);
         return true;
@@ -79,23 +82,54 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
     function redeem(address _sender) public returns (bool) {
         require(isOver() || universe.isForking());
 
-        uint256 _attotokens = balances[_sender];
-        if (_attotokens == 0) {
-            return true;
-        }
-        uint256 _totalSupply = totalSupply();
-        burn(_sender, _attotokens);
+        uint256 _attoParticipationTokens = balances[_sender];
+        uint256 _attoFeeTokens = feeToken.balanceOf(_sender);
+        uint256 _totalTokens = _attoParticipationTokens + _attoFeeTokens;
 
-        // REP
-        getReputationToken().transfer(_sender, _attotokens);
+        uint256 _totalParticipationSupply = totalSupply();
+        uint256 _totalFeeSupply = feeToken.totalSupply();
+        uint256 _totalSupply = _totalParticipationSupply.add(_totalFeeSupply);
+
+        if (_attoParticipationTokens != 0) {
+            burn(_sender, _attoParticipationTokens);
+            getReputationToken().transfer(_sender, _attoParticipationTokens);
+        }
+
+        if (_attoFeeTokens != 0) {
+            feeToken.feeWindowBurn(_sender, _attoFeeTokens);
+        }
 
         // CASH
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _balance = _cash.balanceOf(this);
-        uint256 _feePayoutShare = _balance.mul(_attotokens).div(_totalSupply);
+        uint256 _feePayoutShare = _balance.mul(_totalTokens).div(_totalSupply);
         if (_feePayoutShare > 0) {
             _cash.withdrawEtherTo(_sender, _feePayoutShare);
         }
+
+        return true;
+    }
+
+    function redeemReportingParticipant() public returns (bool) {
+        require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
+
+        uint256 _attotokens = balances[msg.sender];
+        if (_attotokens == 0) {
+            return true;
+        }
+        burn(msg.sender, _attotokens);
+
+        // REP
+        getReputationToken().transfer(msg.sender, _attotokens);
+
+        // Fee Tokens
+        feeToken.mintForReportingParticipant(msg.sender, _attotokens);
+        return true;
+    }
+
+    function mintFeeTokens(uint256 _amount) public returns (bool) {
+        require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
+        feeToken.mintForReportingParticipant(msg.sender, _amount);
         return true;
     }
 
@@ -125,6 +159,10 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
 
     function getEndTime() public afterInitialized view returns (uint256) {
         return getStartTime() + Reporting.getDisputeRoundDurationSeconds();
+    }
+
+    function getFeeToken() public afterInitialized view returns (IFeeToken) {
+        return feeToken;
     }
 
     function getNumInvalidMarkets() public afterInitialized view returns (uint256) {

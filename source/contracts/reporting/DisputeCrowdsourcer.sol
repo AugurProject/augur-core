@@ -23,6 +23,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
 
     function redeem(address _redeemer) public onlyInGoodTimes returns (bool) {
         require(isDisavowed() || market.getWinningPayoutDistributionHash() == getPayoutDistributionHash());
+        // TODO historic redemption
         feeWindow.redeem(this);
         IReputationToken _reputationToken = market.getReputationToken();
         uint256 _reputationSupply = _reputationToken.balanceOf(this);
@@ -42,7 +43,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
             return true;
         }
         market.getReputationToken().trustedReportingParticipantTransfer(_participant, this, _amount);
-        feeWindow.buy(_amount);
+        feeWindow.mintFeeTokens(_amount);
         mint(_participant, _amount);
         if (totalSupply() == size) {
             market.finishedCrowdsourcingDisputeBond();
@@ -55,7 +56,9 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
         IReputationToken _reputationToken = market.getReputationToken();
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
+        // TODO historic feeWindow redemption
         feeWindow.redeem(this);
+        // TODO where do fees collected here go?
         uint256 _balance = _reputationToken.balanceOf(this);
         _reputationToken.migrateOut(_newReputationToken, _balance);
         _newReputationToken.mintForDisputeCrowdsourcer(_balance);

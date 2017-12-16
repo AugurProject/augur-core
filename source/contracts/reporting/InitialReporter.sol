@@ -25,6 +25,7 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
 
     function redeem(address) public returns (bool) {
         require(isDisavowed() || market.getWinningPayoutDistributionHash() == payoutDistributionHash);
+        // TODO historic redemption
         feeWindow.redeem(this);
         IReputationToken _reputationToken = market.getReputationToken();
         _reputationToken.transfer(actualReporter, _reputationToken.balanceOf(this));
@@ -42,7 +43,7 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
         size = market.getReputationToken().balanceOf(this);
         feeWindow = market.getFeeWindow();
         feeWindow.noteInitialReportingGasPrice();
-        feeWindow.buy(size);
+        feeWindow.mintFeeTokens(size);
         return true;
     }
 

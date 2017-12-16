@@ -1,6 +1,5 @@
 pragma solidity 0.4.18;
 
-
 import 'libraries/Delegator.sol';
 import 'IController.sol';
 import 'reporting/IUniverse.sol';

@@ -43,6 +43,7 @@ def test_initialReportHappyPath(localFixture, universe, market):
 @mark.parametrize('rounds', [
     1,
     2,
+    3,
     6,
     16
 ])

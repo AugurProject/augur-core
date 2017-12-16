@@ -17,15 +17,15 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
     function migrate() public onlyInGoodTimes returns (bool) {
         require(IMarket(msg.sender) == market);
         uint256 _balance = feeWindow.balanceOf(this);
-        feeWindow.redeem(this);
         feeWindow = market.getFeeWindow();
-        feeWindow.buy(_balance);
+        feeWindow.mintFeeTokens(_balance);
     }
 
     function liquidateLosing() public onlyInGoodTimes returns (bool) {
         require(IMarket(msg.sender) == market);
         require(market.getWinningPayoutDistributionHash() != getPayoutDistributionHash() && market.getWinningPayoutDistributionHash() != bytes32(0));
         IReputationToken _reputationToken = market.getReputationToken();
+        // TODO redeem on all historic feeWindows too
         feeWindow.redeem(this);
         _reputationToken.transfer(market, _reputationToken.balanceOf(this));
         ICash _cash = ICash(controller.lookup("Cash"));

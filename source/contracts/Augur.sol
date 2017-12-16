@@ -193,6 +193,24 @@ contract Augur is Controlled, Extractable {
         return true;
     }
 
+    function logFeeTokenTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
+        require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
+        TokensTransferred(_universe, msg.sender, _from, _to, _value);
+        return true;
+    }
+
+    function logFeeTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
+        TokensBurned(_universe, msg.sender, _target, _amount);
+        return true;
+    }
+
+    function logFeeTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
+        TokensMinted(_universe, msg.sender, _target, _amount);
+        return true;
+    }
+
     function getProtectedTokens() internal returns (address[] memory) {
         return new address[](0);
     }

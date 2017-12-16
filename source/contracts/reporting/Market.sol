@@ -52,7 +52,6 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     uint256 private validityBondAttoeth;
     uint256 private reporterGasCostsFeeAttoeth;
     IMailbox private marketCreatorMailbox;
-    bool private feeWindowMigrationRequired;
     uint256 private finalizationTime;
 
     // Collections
@@ -137,13 +136,6 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(feeWindow.isActive());
-        // All participants trade in their existing fee window tokens for tokens in the new feeWindow
-        if (feeWindowMigrationRequired) {
-            for (uint8 i = 0; i < participants.length; i++) {
-                participants[i].migrate();
-            }
-            feeWindowMigrationRequired = false;
-        }
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         IDisputeCrowdsourcer _crowdsourcer = getOrCreateDisputeCrowdsourcer(_payoutDistributionHash, _payoutNumerators, _invalid);
         _crowdsourcer.contribute(msg.sender, _amount);
@@ -159,7 +151,9 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             universe.fork();
         } else {
             feeWindow = universe.getOrCreateNextFeeWindow();
-            feeWindowMigrationRequired = true;
+            for (uint8 i = 0; i < participants.length; i++) {
+                participants[i].migrate();
+            }
         }
         return true;
     }
