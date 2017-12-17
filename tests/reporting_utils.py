@@ -4,7 +4,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, raises
 from datetime import timedelta
-from utils import captureFilteredLogs, bytesToHexString, longToHexString, PrintGasUsed
+from utils import captureFilteredLogs, bytesToHexString, longToHexString, PrintGasUsed, TokenDelta, EtherDelta
 
 def proceedToDesignatedReporting(fixture, market):
     fixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
@@ -12,7 +12,7 @@ def proceedToDesignatedReporting(fixture, market):
 def proceedToInitialReporting(fixture, market):
     fixture.contracts["Time"].setTimestamp(market.getDesignatedReportingEndTime() + 1)
 
-def proceedToNextRound(fixture, market):
+def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees = False, moveTimeForward = True):
     if fixture.contracts["Controller"].getTimestamp() < market.getEndTime():
         fixture.contracts["Time"].setTimestamp(market.getDesignatedReportingEndTime() + 1)
 
@@ -25,6 +25,8 @@ def proceedToNextRound(fixture, market):
         market.doInitialReport(payoutNumerators, False)
         assert market.getFeeWindow()
     else:
+        feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
+        fixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
         # This will also use the InitialReporter which is not a DisputeCrowdsourcer, but has the called function from abstract inheritance
         winningReport = fixture.applySignature('DisputeCrowdsourcer', market.getWinningReportingParticipant())
         winningPayoutHash = winningReport.getPayoutDistributionHash()
@@ -33,26 +35,24 @@ def proceedToNextRound(fixture, market):
         chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
         amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
         with PrintGasUsed(fixture, "Contribute:", 0):
-            market.contribute(chosenPayoutNumerators, False, amount, startgas=long(6.7 * 10**6))
+            market.contribute(chosenPayoutNumerators, False, amount, startgas=long(6.7 * 10**6), sender=contributor)
         assert market.getForkingMarket() or market.getFeeWindow() != feeWindow
 
-    feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
-    fixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
+    if (doGenerateFees):
+        universe = fixture.applySignature("Universe", market.getUniverse())
+        generateFees(fixture, universe, market)
+
+    if (moveTimeForward):
+        feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
+        fixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
 def proceedToFork(fixture, market, universe):
     while (market.getForkingMarket() == longToHexString(0)):
         proceedToNextRound(fixture, market)
 
-    payoutNumerators = [0] * market.getNumberOfOutcomes()
-    payoutNumerators[0] = market.getNumTicks()
-
-    hash1 = market.derivePayoutDistributionHash(payoutNumerators, False)
-    hash2 = market.derivePayoutDistributionHash(payoutNumerators[::-1], False)
-
-    with PrintGasUsed(fixture, "Fork participants 1:", 0):
-        assert market.forkParticipants(hash1)
-    with PrintGasUsed(fixture, "Fork participants 2:", 0):
-        assert market.forkParticipants(hash2)
+    for i in range(17):
+        reportingParticipant = fixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
+        reportingParticipant.fork()
 
 def finalizeFork(fixture, market, universe, finalizeByMigration = True):
     reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
@@ -99,4 +99,21 @@ def finalizeFork(fixture, market, universe, finalizeByMigration = True):
         fixture.contracts["Time"].setTimestamp(universe.getForkEndTime() + 1)
         assert market.finalize()
         assert market.getWinningPayoutDistributionHash() == yesUniverse.getParentPayoutDistributionHash()
+
+    assert market.finalizeFork()
     
+def generateFees(fixture, universe, market):
+    completeSets = fixture.contracts['CompleteSets']
+    cash = fixture.contracts['Cash']
+    mailbox = fixture.applySignature('Mailbox', market.getMarketCreatorMailbox())
+    
+    cost = 1000 * market.getNumTicks()
+    marketCreatorFees = cost / market.getMarketCreatorSettlementFeeDivisor()
+    completeSets.publicBuyCompleteSets(market.address, 1000, sender = tester.k1, value = cost)
+    with TokenDelta(cash, marketCreatorFees, mailbox.address, "The market creator mailbox didn't get their share of fees from complete set sale"):
+        completeSets.publicSellCompleteSets(market.address, 1000, sender=tester.k1)
+    with EtherDelta(marketCreatorFees, market.getOwner(), fixture.chain, "The market creator did not get their fees when withdrawing ETH from the mailbox"):
+        assert mailbox.withdrawEther()
+    fees = cash.balanceOf(universe.getNextFeeWindow())
+    reporterFees = cost / universe.getOrCacheReportingFeeDivisor()
+    assert fees == reporterFees, "Cash balance of window higher by: " + str(fees - reporterFees)

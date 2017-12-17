@@ -159,16 +159,6 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return true;
     }
 
-    function forkParticipants(bytes32 _payoutDistributionHash) public onlyInGoodTimes returns (bool) {
-        for (uint8 i = 0; i < participants.length; i++) {
-            IReportingParticipant _reportingParticipant = participants[i];
-            if (_reportingParticipant.getPayoutDistributionHash() == _payoutDistributionHash) {
-                _reportingParticipant.fork();
-            }
-        }
-        return true;
-    }
-
     function finalize() public onlyInGoodTimes returns (bool) {
         require(winningPayoutDistributionHash == bytes32(0));
         
@@ -259,8 +249,8 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         // only proceed if the forking market is finalized
         require(universe.getForkingMarket().isFinalized());
 
-        bytes32 _winningForkPayoutDistributionHash = _currentUniverse.getForkingMarket().getWinningPayoutDistributionHash();
         IUniverse _currentUniverse = universe;
+        bytes32 _winningForkPayoutDistributionHash = _currentUniverse.getForkingMarket().getWinningPayoutDistributionHash();
         IUniverse _destinationUniverse = _currentUniverse.getChildUniverse(_winningForkPayoutDistributionHash);
         // follow the forking market to its universe
         _destinationUniverse.addMarketTo();

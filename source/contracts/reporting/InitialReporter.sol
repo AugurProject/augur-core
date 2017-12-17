@@ -15,6 +15,8 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
     function initialize(IMarket _market, address _designatedReporter) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
+        reputationToken = market.getUniverse().getReputationToken();
+        cash = market.getDenominationToken();
         designatedReporter = _designatedReporter;
         return true;
     }
@@ -26,10 +28,8 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
     function redeem(address) public returns (bool) {
         require(isDisavowed() || market.getWinningPayoutDistributionHash() == payoutDistributionHash);
         redeemForAllFeeWindows();
-        IReputationToken _reputationToken = market.getReputationToken();
-        _reputationToken.transfer(actualReporter, _reputationToken.balanceOf(this));
-        ICash _denominationToken = market.getDenominationToken();
-        _denominationToken.withdrawEtherTo(actualReporter, _denominationToken.balanceOf(this));
+        reputationToken.transfer(actualReporter, reputationToken.balanceOf(this));
+        cash.withdrawEtherTo(actualReporter, cash.balanceOf(this));
         return true;
     }
 
@@ -48,11 +48,13 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
     }
 
     function fork() public onlyInGoodTimes returns (bool) {
+        require(market == market.getUniverse().getForkingMarket());
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
         IReputationToken _reputationToken = market.getReputationToken();
-        feeWindow.redeem(this);
+        redeemForAllFeeWindows();
         _reputationToken.migrateOut(_newReputationToken, _reputationToken.balanceOf(this));
+        reputationToken = _newReputationToken;
         market = IMarket(0);
         return true;
     }
@@ -80,6 +82,10 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
 
     function designatedReporterShowed() public view returns (bool) {
         return actualReporter == designatedReporter;
+    }
+
+    function getFeeWindow() public view returns (IFeeWindow) {
+        return feeWindow;
     }
     
     function designatedReporterWasCorrect() public view returns (bool) {

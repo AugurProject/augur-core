@@ -1,7 +1,8 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed, ABIContract
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, EtherDelta, longToHexString
+from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, EtherDelta, longToHexString, PrintGasUsed
+from reporting_utils import generateFees, proceedToNextRound, finalizeFork
 
 def test_initial_report_and_participation_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -9,6 +10,9 @@ def test_initial_report_and_participation_fee_collection(localFixture, universe,
     # We cannot purchase participation tokens yet since the window isn't active
     with raises(TransactionFailed):
         feeWindow.buy(1)
+
+    # generate some fees
+    generateFees(localFixture, universe, market)
 
     # We'll make the window active then purchase some participation tokens
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
@@ -64,35 +68,33 @@ def test_initial_report_and_participation_fee_collection(localFixture, universe,
 
     marketStake = marketInitialReport.getStake()
     expectedFees = reporterFees * marketStake / totalStake
-    with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
+    with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
         assert marketInitialReport.redeem(tester.a0)
 
     categoricalMarketStake = categoricalInitialReport.getStake()
     expectedFees = reporterFees * categoricalMarketStake / totalStake
-    with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
+    with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
         assert categoricalInitialReport.redeem(tester.a0)
 
-def test_one_round_crowdsourcer_fees(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken):
+def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
 
     # We'll make the window active
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
-    # generate some fees in this window as well
+    # generate some fees
     generateFees(localFixture, universe, market)
     
     # We'll have testers push markets into the next round by funding dispute crowdsourcers
     amount = 2 * market.getTotalStake()
     with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([market.getNumTicks(), 0], False, amount, sender=tester.k1, startgas=long(6.7 * 10**6))
+        assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k1, startgas=long(6.7 * 10**6))
 
     assert market.getFeeWindow() != feeWindow.address
 
     # fast forward time to the fee new window and generate additional fees
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
-
-    generateFees(localFixture, universe, market)
 
     # Fast forward time until the new fee window is over and we can redeem our winning stake, and dispute bond tokens and receive fees
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
@@ -103,189 +105,114 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, categorical
     # The dispute crowdsourcer contributor locked in REP for 2 rounds and is the only winner in those rounds
     expectedFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
 
-    with EtherDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
+    with EtherDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
         assert marketDisputeCrowdsourcer.redeem(tester.a1, sender=tester.k1)
 
-def test_two_round_crowdsourcer_fees(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken):
+def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
+    # Initial Report disputed
+    proceedToNextRound(localFixture, market, tester.k1, True)
+    # Initial Report winning
+    proceedToNextRound(localFixture, market, tester.k2, True)
+    # Initial Report disputed
+    proceedToNextRound(localFixture, market, tester.k1, True)
+    # Initial Report winning
+    proceedToNextRound(localFixture, market, tester.k3, True)
+
+    # Fast forward time until the new fee window is over and we can receive fees
+    feeWindow = localFixture.applySignature("FeeWindow", market.getFeeWindow())
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    assert market.finalize()
+
+    # Get all the winning Reporting Participants
+    initialReporter = localFixture.applySignature('InitialReporter', market.getReportingParticipant(0))
+    winningDisputeCrowdsourcer1 = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(2))
+    winningDisputeCrowdsourcer2 = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(4))
+
+    # The initial reporter locked in REP for 5 rounds.
+    expectedInitialReporterFees = getExpectedFees(localFixture, cash, initialReporter, 5)
+    with EtherDelta(expectedInitialReporterFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+        assert initialReporter.redeem(tester.a0)
+
+    # The first winning dispute crowdsourcer will get fees for 4 rounds
+    expectedWinningDisputeCrowdsourcer1Fees = getExpectedFees(localFixture, cash, winningDisputeCrowdsourcer1, 4)
+    with EtherDelta(expectedWinningDisputeCrowdsourcer1Fees, tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+        assert winningDisputeCrowdsourcer1.redeem(tester.a2)
+
+    # The final winning dispute crowdsourcer will get fees for 2 rounds
+    expectedWinningDisputeCrowdsourcer2Fees = getExpectedFees(localFixture, cash, winningDisputeCrowdsourcer2, 2)
+    with EtherDelta(expectedWinningDisputeCrowdsourcer2Fees, tester.a3, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+        assert winningDisputeCrowdsourcer2.redeem(tester.a3) 
+
+def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
 
     # We'll make the window active
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
+
+    # generate some fees
+    generateFees(localFixture, universe, market)
     
-    # We'll push the market into the next round by funding dispute crowdsourcers
-    amount = 2 * market.getTotalStake()
+    # We'll have testers push markets into the next round by funding dispute crowdsourcers
+    amount = market.getTotalStake()
     with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([market.getNumTicks(), 0], False, amount, sender=tester.k1, startgas=long(6.7 * 10**6))
-
-    assert market.getFeeWindow() != feeWindow.address
-
-    # Move time forward into the new fee window and push the market over once more
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
-
-    amount = 2 * market.getTotalStake() - 3 * amount
+        assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k1, startgas=long(6.7 * 10**6))
     with TokenDelta(reputationToken, -amount, tester.a2, "Disputing did not reduce REP balance correctly"):
         assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k2, startgas=long(6.7 * 10**6))
 
     assert market.getFeeWindow() != feeWindow.address
 
-    # Fast forward time until the new fee window is over and we can redeem our winning stake, and dispute bond tokens and receive fees
+    # fast forward time to the fee new window and generate additional fees
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
-    assert market.finalize()
-    assert categoricalMarket.finalize()
-    assert scalarMarket.finalize()
-
-    marketDisputeCrowdsourcer = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(1))
-
-    reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
-    totalStake = feeWindow.getTotalFeeStake()
-    assert cash.balanceOf(feeWindow.address) == reporterFees
-
-    marketStake = marketDisputeCrowdsourcer.getStake()
-    expectedFees = reporterFees * marketStake / totalStake
-    with EtherDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
-        with TokenDelta(marketDisputeCrowdsourcer, -marketStake, tester.a1, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
-            assert marketDisputeCrowdsourcer.redeem(False, sender=tester.k1)
-
-    categoricalMarketStake = categoricalMarketDesignatedStake.getStake()
-    expectedFees = reporterFees * categoricalMarketStake / totalStake
-    with EtherDelta(expectedFees, tester.a2, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
-        with TokenDelta(categoricalMarketDesignatedStake, -categoricalMarketStake, tester.a2, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
-            assert categoricalMarketDesignatedStake.redeemWinningTokens(False, sender=tester.k2)
-
-    scalarMarketStake = scalarMarketDesignatedStake.getStake() / 2
-    expectedFees = reporterFees * scalarMarketStake / totalStake
-    with EtherDelta(expectedFees, tester.a2, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
-        with TokenDelta(scalarMarketDesignatedStake, -scalarMarketStake, tester.a2, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
-            assert scalarMarketDesignatedStake.redeemWinningTokens(False, sender=tester.k2)
-    with EtherDelta(expectedFees, tester.a3, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
-        with TokenDelta(scalarMarketDesignatedStake, -scalarMarketStake, tester.a3, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
-            assert scalarMarketDesignatedStake.redeemWinningTokens(False, sender=tester.k3)
-
-def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken):
-    pass
-
-
-def test_crowdsourcer_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken):
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
-
-    # We'll make the window active
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
-    
-    # We'll have testers push markets into the next round by funding dispute crowdsourcers
-    amount = 2 * market.getTotalStake()
-    with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([market.getNumTicks(), 0], False, amount, sender=tester.k1, startgas=long(6.7 * 10**6))
-
-    assert market.getFeeWindow() != feeWindow.address
-
-    with TokenDelta(reputationToken, -amount, tester.a2, "Disputing did not reduce REP balance correctly"):
-        assert categoricalMarket.contribute([categoricalMarket.getNumTicks(), 0, 0], False, amount, sender=tester.k2, startgas=long(6.7 * 10**6))
-
-    assert categoricalMarket.getFeeWindow() != feeWindow.address
-
-    # The scalar crowdsourcer will be completed by two contributors
-    with TokenDelta(reputationToken, -amount / 2, tester.a2, "Disputing did not reduce REP balance correctly"):
-        assert scalarMarket.contribute([scalarMarket.getNumTicks(), 0], False, amount / 2, sender=tester.k2, startgas=long(6.7 * 10**6))
-    with TokenDelta(reputationToken, -amount / 2, tester.a3, "Disputing did not reduce REP balance correctly"):
-        assert scalarMarket.contribute([scalarMarket.getNumTicks(), 0], False, amount / 2, sender=tester.k3, startgas=long(6.7 * 10**6))
-
-    assert scalarMarket.getFeeWindow() != feeWindow.address
-
-    # Move time forward into the new fee window and push the categorical market over once more
 
     # Fast forward time until the new fee window is over and we can redeem our winning stake, and dispute bond tokens and receive fees
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.finalize()
-    assert categoricalMarket.finalize()
-    assert scalarMarket.finalize()
 
     marketDisputeCrowdsourcer = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(1))
-    categoricalMarketDesignatedStake = localFixture.applySignature('DisputeCrowdsourcer', categoricalMarket.getReportingParticipant(1))
-    scalarMarketDesignatedStake = localFixture.applySignature('DisputeCrowdsourcer', scalarMarket.getReportingParticipant(1))
 
-    reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
-    totalStake = feeWindow.getTotalFeeStake()
-    assert cash.balanceOf(feeWindow.address) == reporterFees
+    # The dispute crowdsourcer contributors locked in REP for 2 rounds and are the only winners in those rounds, so they split it
+    expectedFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
+    
+    with EtherDelta(expectedFees / 2, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+        assert marketDisputeCrowdsourcer.redeem(tester.a1)
 
-    marketStake = marketDisputeCrowdsourcer.getStake()
-    expectedFees = reporterFees * marketStake / totalStake
-    with EtherDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
-        with TokenDelta(marketDisputeCrowdsourcer, -marketStake, tester.a1, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
-            assert marketDisputeCrowdsourcer.redeem(False, sender=tester.k1)
+    with EtherDelta(expectedFees - expectedFees / 2, tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+        assert marketDisputeCrowdsourcer.redeem(tester.a2)
 
-    categoricalMarketStake = categoricalMarketDesignatedStake.getStake()
-    expectedFees = reporterFees * categoricalMarketStake / totalStake
-    with EtherDelta(expectedFees, tester.a2, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
-        with TokenDelta(categoricalMarketDesignatedStake, -categoricalMarketStake, tester.a2, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
-            assert categoricalMarketDesignatedStake.redeemWinningTokens(False, sender=tester.k2)
+def test_forking(localFixture, universe, market, categoricalMarket, cash, reputationToken):
+    # Let's do some initial disputes for the categorical market
+    proceedToNextRound(localFixture, categoricalMarket, tester.k1, moveTimeForward = False)
 
-    scalarMarketStake = scalarMarketDesignatedStake.getStake() / 2
-    expectedFees = reporterFees * scalarMarketStake / totalStake
-    with EtherDelta(expectedFees, tester.a2, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
-        with TokenDelta(scalarMarketDesignatedStake, -scalarMarketStake, tester.a2, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
-            assert scalarMarketDesignatedStake.redeemWinningTokens(False, sender=tester.k2)
-    with EtherDelta(expectedFees, tester.a3, localFixture.chain, "Redeeming Stake tokens didn't increase ETH correctly"):
-        with TokenDelta(scalarMarketDesignatedStake, -scalarMarketStake, tester.a3, "Redeeming Stake tokens didn't decrease Stake token balance correctly"):
-            assert scalarMarketDesignatedStake.redeemWinningTokens(False, sender=tester.k3)
+    # Get to a fork
+    testers = [tester.k0, tester.k1, tester.k2, tester.k3]
+    testerIndex = 1
+    while (market.getForkingMarket() == longToHexString(0)):
+        proceedToNextRound(localFixture, market, testers[testerIndex], True)
+        testerIndex += 1
+        testerIndex = testerIndex % len(testers)
 
-def test_forking(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken, feeWindow):
-    # We'll have testers put up dispute bonds against the designated reports and place stake in other outcomes
-    otherOutcomeStake = 10 ** 18
-    assert market.disputeDesignatedReport([market.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k1)
-    assert categoricalMarket.disputeDesignatedReport([categoricalMarket.getNumTicks(),0,0], otherOutcomeStake, False, sender=tester.k2)
-    assert scalarMarket.disputeDesignatedReport([scalarMarket.getNumTicks(),0], otherOutcomeStake, False, sender=tester.k3)
+    # Have the participants fork and create new child universes
+    for i in range(17):
+        reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
+        with PrintGasUsed(localFixture, "Fork:", 0):
+            reportingParticipant.fork(startgas=long(6.7 * 10**6))
 
-    reporterFees = 1000 * market.getNumTicks() / universe.getOrCacheReportingFeeDivisor()
-    totalWinningStake = feeWindow.getTotalWinningStake()
-    assert cash.balanceOf(feeWindow.address) == reporterFees
+    # Finalize the fork
+    finalizeFork(localFixture, market, universe)
 
-    # Progress to the Limited dispute phase and dispute one of the markets. This should migrate fees to the fee window the market migrates to proportional to its stake
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
+    categoricalDisputeCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", categoricalMarket.getReportingParticipant(1))
 
-    assert market.disputeFirstReporters([market.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
-    assert categoricalMarket.disputeFirstReporters([categoricalMarket.getNumTicks() - 1, 1, 0], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
-    assert scalarMarket.disputeFirstReporters([scalarMarket.getNumTicks() - 1, 1], otherOutcomeStake, False, sender=tester.k4, startgas=long(6.7 * 10**6))
+    # Migrate the categorical market into the winning universe. This will disavow the dispute crowdsourcer on it, letting us redeem for original universe rep and eth
+    assert categoricalMarket.migrateThroughOneFork()
 
-    # Progress into last dispute and cause a fork
-    feeWindow = localFixture.applySignature("FeeWindow", market.getFeeWindow())
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getDisputeStartTime() + 1)
+    expectedRep = categoricalDisputeCrowdsourcer.getStake()
+    expectedEth = getExpectedFees(localFixture, cash, categoricalDisputeCrowdsourcer, 2)
+    with EtherDelta(expectedEth, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+        with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't increase REP correctly"):
+            categoricalDisputeCrowdsourcer.redeem(tester.a1, startgas=long(6.7 * 10**6))
 
-    forkDuration = lastDisputeCost = localFixture.contracts["Constants"].FORK_DURATION_SECONDS()
-    nextWindowTimestamp = localFixture.contracts["Time"].getTimestamp() + forkDuration
-    nextFeeWindow = localFixture.applySignature("FeeWindow", universe.getOrCreateFeeWindowByTimestamp(nextWindowTimestamp))
-    scalarMarketStake = scalarMarket.getTotalStake()
-    lastDisputeCost = localFixture.contracts["Constants"].LAST_REPORTERS_DISPUTE_BOND_AMOUNT()
-    totalScalarMarketStakeMoved = scalarMarketStake + lastDisputeCost
-    migratedFees = reporterFees * (scalarMarketStake + lastDisputeCost) / (feeWindow.getTotalStake() + lastDisputeCost)
-
-    with TokenDelta(cash, -migratedFees, feeWindow.address, "Disputing in last didn't migrate ETH out correctly"):
-        with TokenDelta(cash, migratedFees, nextFeeWindow.address, "Disputing in last didn't migrate ETH in correctly"):
-            with StakeDelta(lastDisputeCost, -scalarMarketStake, 0, scalarMarket, feeWindow, "Disputing in last is not migrating stake out correctly"):
-                with StakeDelta(lastDisputeCost, totalScalarMarketStakeMoved, 0, scalarMarket, nextFeeWindow, "Disputing in last is not migrating stake in correctly"):
-                    assert scalarMarket.disputeLastReporters(sender=tester.k5)
-
-    # We migrate REP to a new universe and finalize the forking market
-    newUniverse = localFixture.getOrCreateChildUniverse(universe, scalarMarket, [0, scalarMarket.getNumTicks()])
-    newUniverseReputationToken = localFixture.applySignature('ReputationToken', newUniverse.getReputationToken())
-
-    # Testers all move their REP to the new universe
-    for i in range(0,5):
-        reputationToken.migrateOut(newUniverseReputationToken.address, localFixture.testerAddress[i], reputationToken.balanceOf(localFixture.testerAddress[i]), sender=localFixture.testerKey[i])
-
-    # Finalize the forking market
-    assert scalarMarket.tryFinalize()
-
-    # migrate one of the markets to the winning universe and confirm fees went with it
-    oldFeeWindowAddress = market.getFeeWindow()
-    designatedReportingDuration = localFixture.contracts["Constants"].DESIGNATED_REPORTING_DURATION_SECONDS()
-    newFeeWindowAddress = newUniverse.getOrCreateFeeWindowByMarketEndTime(localFixture.contracts["Time"].getTimestamp() - designatedReportingDuration)
-    migratedFees = cash.balanceOf(oldFeeWindowAddress)
-    with TokenDelta(cash, -migratedFees, oldFeeWindowAddress, "Migrating to a new universe didn't migrate ETH out correctly"):
-        with TokenDelta(cash, migratedFees, newFeeWindowAddress, "Migrating to a new universe didn't migrate ETH in correctly"):
-            market.migrateThroughAllForks()
+    # TODO confirm the forking market reporting participants can be redeemed for eth and their destination universe's REP
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
@@ -306,12 +233,9 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
     # Designated Report on the markets
     designatedReportCost = universe.getOrCacheDesignatedReportStake()
     with TokenDelta(reputationToken, 0, tester.a0, "Doing the designated report didn't deduct REP correctly or didn't award the no show bond"):
-        market.doInitialReport([0, market.getNumTicks()], False)
-        categoricalMarket.doInitialReport([0, 0, categoricalMarket.getNumTicks()], False)
-        scalarMarket.doInitialReport([0, scalarMarket.getNumTicks()], False)
-
-    # generate fees in the existing window
-    generateFees(fixture, universe, market)
+        market.doInitialReport([market.getNumTicks(), 0], False)
+        categoricalMarket.doInitialReport([categoricalMarket.getNumTicks(), 0], False)
+        scalarMarket.doInitialReport([scalarMarket.getNumTicks(), 0], False)
 
     return fixture.createSnapshot()
 
@@ -344,19 +268,17 @@ def scalarMarket(localFixture, kitchenSinkSnapshot):
 def cash(localFixture, kitchenSinkSnapshot):
     return ABIContract(localFixture.chain, kitchenSinkSnapshot['cash'].translator, kitchenSinkSnapshot['cash'].address)
 
-
-def generateFees(fixture, universe, market):
-    completeSets = fixture.contracts['CompleteSets']
-    cash = fixture.contracts['Cash']
-    mailbox = fixture.applySignature('Mailbox', market.getMarketCreatorMailbox())
-    
-    cost = 1000 * market.getNumTicks()
-    marketCreatorFees = cost / market.getMarketCreatorSettlementFeeDivisor()
-    completeSets.publicBuyCompleteSets(market.address, 1000, sender = tester.k1, value = cost)
-    with TokenDelta(cash, marketCreatorFees, mailbox.address, "The market creator mailbox didn't get their share of fees from complete set sale"):
-        completeSets.publicSellCompleteSets(market.address, 1000, sender=tester.k1)
-    with EtherDelta(marketCreatorFees, market.getOwner(), fixture.chain, "The market creator did not get their fees when withdrawing ETH from the mailbox"):
-        assert mailbox.withdrawEther()
-    fees = cash.balanceOf(market.getFeeWindow())
-    reporterFees = cost / universe.getOrCacheReportingFeeDivisor()
-    assert fees == reporterFees
+def getExpectedFees(fixture, cash, reportingParticipant, expectedRounds):
+    stake = reportingParticipant.getStake()
+    feeWindow = fixture.applySignature("FeeWindow", reportingParticipant.getFeeWindow())
+    universe = fixture.applySignature("Universe", feeWindow.getUniverse())
+    feeToken = fixture.applySignature("FeeToken", feeWindow.getFeeToken())
+    expectedFees = 0
+    rounds = 0
+    while feeToken.balanceOf(reportingParticipant.address) > 0:
+        rounds += 1
+        expectedFees += cash.balanceOf(feeWindow.address) * stake / feeToken.totalSupply()
+        feeWindow = fixture.applySignature("FeeWindow", universe.getOrCreateFeeWindowBefore(feeWindow.address))
+        feeToken = fixture.applySignature("FeeToken", feeWindow.getFeeToken())
+    assert expectedRounds == rounds, "Only had fees from " + str(rounds) + " rounds"
+    return expectedFees

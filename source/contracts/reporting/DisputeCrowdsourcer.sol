@@ -9,11 +9,12 @@ import 'libraries/Extractable.sol';
 
 
 contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractable, BaseReportingParticipant, IDisputeCrowdsourcer, Initializable {
-
     function initialize(IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
+        reputationToken = market.getReputationToken();
         feeWindow = market.getFeeWindow();
+        cash = market.getDenominationToken();
         size = _size;
         payoutNumerators = _payoutNumerators;
         payoutDistributionHash = _payoutDistributionHash;
@@ -24,17 +25,14 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
     function redeem(address _redeemer) public onlyInGoodTimes returns (bool) {
         require(isDisavowed() || market.getWinningPayoutDistributionHash() == getPayoutDistributionHash());
         redeemForAllFeeWindows();
-        IReputationToken _reputationToken = market.getReputationToken();
-        ICash _denominationToken = market.getDenominationToken();
-        uint256 _reputationSupply = _reputationToken.balanceOf(this);
-        uint256 _cashSupply = _denominationToken.balanceOf(this);
+        uint256 _reputationSupply = reputationToken.balanceOf(this);
+        uint256 _cashSupply = cash.balanceOf(this);
         uint256 _amount = balances[_redeemer];
         uint256 _feeShare = _cashSupply * _amount / supply;
         uint256 _reputationShare = _reputationSupply * _amount / supply;
         burn(_redeemer, _amount);
-        _reputationToken.transfer(_redeemer, _reputationShare);
-        require(_cashSupply > 0);
-        _denominationToken.withdrawEtherTo(_redeemer, _feeShare);
+        reputationToken.transfer(_redeemer, _reputationShare);
+        cash.withdrawEtherTo(_redeemer, _feeShare);
         return true;
     }
 
@@ -54,7 +52,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
     }
 
     function fork() public onlyInGoodTimes returns (bool) {
-        require(IMarket(msg.sender) == market);
+        require(market == market.getUniverse().getForkingMarket());
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
         IReputationToken _reputationToken = market.getReputationToken();
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
@@ -63,6 +61,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         _reputationToken.migrateOut(_newReputationToken, _balance);
         _newReputationToken.mintForDisputeCrowdsourcer(_balance);
         // by removing the market, the token will become disavowed and therefore users can remove freely
+        reputationToken = _newReputationToken;
         market = IMarket(0);
         return true;
     }
@@ -88,8 +87,15 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
     }
 
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
+        if (isDisavowed()) {
+            return true;
+        }
         controller.getAugur().logDisputeCrowdsourcerTokensBurned(market.getUniverse(), _target, _amount);
         return true;
+    }
+
+    function getFeeWindow() public view returns (IFeeWindow) {
+        return feeWindow;
     }
 
     function getProtectedTokens() internal returns (address[] memory) {

@@ -68,6 +68,8 @@ def test_forking(finalizeByMigration, localFixture, universe, market, categorica
     # finalize the fork
     finalizeFork(localFixture, market, universe, finalizeByMigration)
 
+    # TODO ensure categorical with initial report keeps first report but disavows disputes
+
 def test_fee_window_record_keeping(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
     feeWindow = localFixture.applySignature('FeeWindow', universe.getOrCreateCurrentFeeWindow())
     

@@ -3,6 +3,7 @@ pragma solidity 0.4.18;
 import 'reporting/IReportingParticipant.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IFeeWindow.sol';
+import 'reporting/IReputationToken.sol';
 import 'Controlled.sol';
 
 
@@ -13,6 +14,8 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
     bytes32 internal payoutDistributionHash;
     IFeeWindow internal feeWindow;
     uint256[] internal payoutNumerators;
+    IReputationToken internal reputationToken;
+    ICash internal cash;
 
     function migrate() public onlyInGoodTimes returns (bool) {
         require(IMarket(msg.sender) == market);
@@ -27,14 +30,13 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         IReputationToken _reputationToken = market.getReputationToken();
         redeemForAllFeeWindows();
         _reputationToken.transfer(market, _reputationToken.balanceOf(this));
-        ICash _cash = market.getDenominationToken();
-        _cash.transfer(market.getUniverse().getCurrentFeeWindow(), _cash.balanceOf(this));
+        cash.transfer(market.getUniverse().getCurrentFeeWindow(), cash.balanceOf(this));
         return true;
     }
 
     function redeemForAllFeeWindows() internal returns (bool) {
         IFeeWindow _curFeeWindow = feeWindow;
-        IUniverse _universe = market.getUniverse();
+        IUniverse _universe = feeWindow.getUniverse();
         while (_curFeeWindow.getFeeToken().balanceOf(this) > 0) {
             _curFeeWindow.redeemForReportingParticipant();
             _curFeeWindow = _universe.getOrCreateFeeWindowBefore(_curFeeWindow);

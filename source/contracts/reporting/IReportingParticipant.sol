@@ -1,6 +1,7 @@
 pragma solidity 0.4.18;
 
 import 'reporting/IMarket.sol';
+import 'reporting/IFeeWindow.sol';
 
 
 contract IReportingParticipant {
