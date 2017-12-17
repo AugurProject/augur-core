@@ -37,6 +37,8 @@ else
   augurjs_repo_url=${AUGUR_CONTRACTS_REPO_URL:-https://github.com/AugurProject/augur.js}
   echo "AUGURJS_REPO_URL=${contracts_repo_url}, set environment to override"
 
+  rm -rf output/augur-contracts
+  rm -rf output/augur.js
 fi
 
 if [[ -e "$HOME/.npmrc" ]]; then
