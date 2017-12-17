@@ -1,0 +1,17 @@
+============================= test session starts ==============================
+platform linux2 -- Python 2.7.12, pytest-3.1.2, py-1.4.34, pluggy-0.4.0
+rootdir: /mnt/c/Ubuntu/augur-core, inifile:
+plugins: profiling-1.2.11
+collected 59 items
+
+tests/reporting/test_escape_hatches.py ....
+tests/reporting/test_fee_distribution.py .....
+tests/reporting/test_fee_window_logging.py .
+tests/reporting/test_market.py ..
+tests/reporting/test_reporting.py .........
+tests/reporting/test_reputation.py ..
+tests/reporting/test_universe_fee_calculations.py ............................
+tests/reporting/test_universe_fee_window_functions.py ......
+tests/reporting/test_universe_redeem.py ..
+
+========================== 59 passed in 69.25 seconds ==========================

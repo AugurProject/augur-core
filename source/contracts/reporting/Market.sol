@@ -269,6 +269,16 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return true;
     }
 
+    function withdrawInEmergency() public onlyInBadTimes onlyOwner returns (bool) {
+        IReputationToken _reputationToken = getReputationToken();
+        uint256 _repBalance = _reputationToken.balanceOf(this);
+        _reputationToken.transfer(msg.sender, _repBalance);
+        if (this.balance > 0) {
+            require(msg.sender.call.value(this.balance)());
+        }
+        return true;
+    }
+
     function getTotalStake() public view returns (uint256) {
         uint256 _sum;
         for (uint8 i = 0; i < participants.length; ++i) {

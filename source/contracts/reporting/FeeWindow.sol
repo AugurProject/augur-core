@@ -127,6 +127,15 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
         return true;
     }
 
+    function withdrawInEmergency() public onlyInBadTimes returns (bool) {
+        uint256 _attotokens = balances[msg.sender];
+        if (_attotokens != 0) {
+            burn(msg.sender, _attotokens);
+            getReputationToken().transfer(msg.sender, _attotokens);
+        }
+        return true;
+    }
+
     function mintFeeTokens(uint256 _amount) public returns (bool) {
         require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         feeToken.mintForReportingParticipant(msg.sender, _amount);

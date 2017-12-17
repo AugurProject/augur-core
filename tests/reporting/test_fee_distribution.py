@@ -2,7 +2,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed, ABIContract
 from pytest import fixture, mark, raises
 from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, EtherDelta, longToHexString, PrintGasUsed
-from reporting_utils import generateFees, proceedToNextRound, finalizeFork
+from reporting_utils import generateFees, proceedToNextRound, finalizeFork, getExpectedFees
 
 def test_initial_report_and_participation_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -47,7 +47,7 @@ def test_initial_report_and_participation_fee_collection(localFixture, universe,
 
     expectedParticipationFees = reporterFees * feeWindowAmount / totalStake
 
-    # Cashing out Participation tokens or Stake tokens will awards fees proportional to the total winning stake in the window
+    # Cashing out Participation tokens will awards fees proportional to the total winning stake in the window
     with TokenDelta(reputationToken, feeWindowAmount, tester.a0, "Redeeming participation tokens didn't refund REP"):
         with TokenDelta(feeWindow, -feeWindowAmount, tester.a0, "Redeeming participation tokens didn't decrease participation token balance correctly"):
             with EtherDelta(expectedParticipationFees, tester.a0, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
@@ -123,15 +123,22 @@ def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, 
     # Initial Report winning
     proceedToNextRound(localFixture, market, tester.k3, True)
 
-    # Fast forward time until the new fee window is over and we can receive fees
-    feeWindow = localFixture.applySignature("FeeWindow", market.getFeeWindow())
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
-    assert market.finalize()
-
     # Get all the winning Reporting Participants
     initialReporter = localFixture.applySignature('InitialReporter', market.getReportingParticipant(0))
     winningDisputeCrowdsourcer1 = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(2))
     winningDisputeCrowdsourcer2 = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(4))
+
+    # We can't redeem yet as the market isn't finalized
+    with raises(TransactionFailed):
+        initialReporter.redeem(tester.a0)
+
+    with raises(TransactionFailed):
+        winningDisputeCrowdsourcer1.redeem(tester.a2)
+
+    # Fast forward time until the new fee window is over and we can receive fees
+    feeWindow = localFixture.applySignature("FeeWindow", market.getFeeWindow())
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    assert market.finalize()
 
     # The initial reporter locked in REP for 5 rounds.
     expectedInitialReporterFees = getExpectedFees(localFixture, cash, initialReporter, 5)
@@ -294,18 +301,3 @@ def scalarMarket(localFixture, kitchenSinkSnapshot):
 @fixture
 def cash(localFixture, kitchenSinkSnapshot):
     return ABIContract(localFixture.chain, kitchenSinkSnapshot['cash'].translator, kitchenSinkSnapshot['cash'].address)
-
-def getExpectedFees(fixture, cash, reportingParticipant, expectedRounds):
-    stake = reportingParticipant.getStake()
-    feeWindow = fixture.applySignature("FeeWindow", reportingParticipant.getFeeWindow())
-    universe = fixture.applySignature("Universe", feeWindow.getUniverse())
-    feeToken = fixture.applySignature("FeeToken", feeWindow.getFeeToken())
-    expectedFees = 0
-    rounds = 0
-    while feeToken.balanceOf(reportingParticipant.address) > 0:
-        rounds += 1
-        expectedFees += cash.balanceOf(feeWindow.address) * stake / feeToken.totalSupply()
-        feeWindow = fixture.applySignature("FeeWindow", universe.getOrCreateFeeWindowBefore(feeWindow.address))
-        feeToken = fixture.applySignature("FeeToken", feeWindow.getFeeToken())
-    assert expectedRounds == rounds, "Only had fees from " + str(rounds) + " rounds"
-    return expectedFees

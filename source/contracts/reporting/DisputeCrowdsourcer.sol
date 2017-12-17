@@ -42,11 +42,22 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         if (_amount == 0) {
             return true;
         }
-        market.getReputationToken().trustedReportingParticipantTransfer(_participant, this, _amount);
+        reputationToken.trustedReportingParticipantTransfer(_participant, this, _amount);
         feeWindow.mintFeeTokens(_amount);
         mint(_participant, _amount);
         if (totalSupply() == size) {
             market.finishedCrowdsourcingDisputeBond();
+        }
+        return true;
+    }
+
+    function withdrawInEmergency() public onlyInBadTimes returns (bool) {
+        uint256 _reputationSupply = reputationToken.balanceOf(this);
+        uint256 _attotokens = balances[msg.sender];
+        uint256 _reputationShare = _reputationSupply * _attotokens / supply;
+        burn(msg.sender, _attotokens);
+        if (_reputationShare != 0) {
+            reputationToken.transfer(msg.sender, _reputationShare);
         }
         return true;
     }

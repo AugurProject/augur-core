@@ -40,7 +40,7 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
         reportTimestamp = controller.getTimestamp();
         invalid = _invalid;
         payoutNumerators = _payoutNumerators;
-        size = market.getReputationToken().balanceOf(this);
+        size = reputationToken.balanceOf(this);
         feeWindow = market.getFeeWindow();
         feeWindow.noteInitialReportingGasPrice();
         feeWindow.mintFeeTokens(size);
@@ -51,11 +51,15 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
         require(market == market.getUniverse().getForkingMarket());
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
-        IReputationToken _reputationToken = market.getReputationToken();
         redeemForAllFeeWindows();
-        _reputationToken.migrateOut(_newReputationToken, _reputationToken.balanceOf(this));
+        reputationToken.migrateOut(_newReputationToken, reputationToken.balanceOf(this));
         reputationToken = _newReputationToken;
         market = IMarket(0);
+        return true;
+    }
+
+    function withdrawInEmergency() public onlyInBadTimes returns (bool) {
+        reputationToken.transfer(actualReporter, reputationToken.balanceOf(this));
         return true;
     }
 

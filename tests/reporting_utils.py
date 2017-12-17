@@ -117,3 +117,18 @@ def generateFees(fixture, universe, market):
     fees = cash.balanceOf(universe.getNextFeeWindow())
     reporterFees = cost / universe.getOrCacheReportingFeeDivisor()
     assert fees == reporterFees, "Cash balance of window higher by: " + str(fees - reporterFees)
+
+def getExpectedFees(fixture, cash, reportingParticipant, expectedRounds):
+    stake = reportingParticipant.getStake()
+    feeWindow = fixture.applySignature("FeeWindow", reportingParticipant.getFeeWindow())
+    universe = fixture.applySignature("Universe", feeWindow.getUniverse())
+    feeToken = fixture.applySignature("FeeToken", feeWindow.getFeeToken())
+    expectedFees = 0
+    rounds = 0
+    while feeToken.balanceOf(reportingParticipant.address) > 0:
+        rounds += 1
+        expectedFees += cash.balanceOf(feeWindow.address) * stake / feeToken.totalSupply()
+        feeWindow = fixture.applySignature("FeeWindow", universe.getOrCreateFeeWindowBefore(feeWindow.address))
+        feeToken = fixture.applySignature("FeeToken", feeWindow.getFeeToken())
+    assert expectedRounds == rounds, "Only had fees from " + str(rounds) + " rounds"
+    return expectedFees
