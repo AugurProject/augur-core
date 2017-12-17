@@ -22,12 +22,9 @@ def test_initial_report_and_participation_fee_collection(localFixture, universe,
             assert feeWindow.buy(feeWindowAmount)
 
     # As other testers we'll buy some more
-    with TokenDelta(feeWindow, feeWindowAmount, tester.a1, "Buying participation tokens didn't increase participation token balance correctly"):
-        assert feeWindow.buy(feeWindowAmount, sender=tester.k1)
-    with TokenDelta(feeWindow, feeWindowAmount, tester.a2, "Buying participation tokens didn't increase participation token balance correctly"):
-        assert feeWindow.buy(feeWindowAmount, sender=tester.k2)
-    with TokenDelta(feeWindow, feeWindowAmount, tester.a3, "Buying participation tokens didn't increase participation token balance correctly"):
-        assert feeWindow.buy(feeWindowAmount, sender=tester.k3)
+    assert feeWindow.buy(feeWindowAmount, sender=tester.k1)
+    assert feeWindow.buy(feeWindowAmount, sender=tester.k2)
+    assert feeWindow.buy(feeWindowAmount, sender=tester.k3)
 
     # We can't redeem the participation tokens yet since the window isn't over
     with raises(TransactionFailed):
@@ -51,30 +48,35 @@ def test_initial_report_and_participation_fee_collection(localFixture, universe,
     expectedParticipationFees = reporterFees * feeWindowAmount / totalStake
 
     # Cashing out Participation tokens or Stake tokens will awards fees proportional to the total winning stake in the window
-    with TokenDelta(feeWindow, -feeWindowAmount, tester.a0, "Redeeming participation tokens didn't decrease participation token balance correctly"):
-        with EtherDelta(expectedParticipationFees, tester.a0, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
-            assert feeWindow.redeem(tester.a0)
+    with TokenDelta(reputationToken, feeWindowAmount, tester.a0, "Redeeming participation tokens didn't refund REP"):
+        with TokenDelta(feeWindow, -feeWindowAmount, tester.a0, "Redeeming participation tokens didn't decrease participation token balance correctly"):
+            with EtherDelta(expectedParticipationFees, tester.a0, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
+                assert feeWindow.redeem(tester.a0)
 
-    with TokenDelta(feeWindow, -feeWindowAmount, tester.a1, "Redeeming participation tokens didn't decrease participation token balance correctly"):
-        with EtherDelta(expectedParticipationFees, tester.a1, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
-            assert feeWindow.redeem(tester.a1)
+    with TokenDelta(reputationToken, feeWindowAmount, tester.a1, "Redeeming participation tokens didn't refund REP"):
+        with TokenDelta(feeWindow, -feeWindowAmount, tester.a1, "Redeeming participation tokens didn't decrease participation token balance correctly"):
+            with EtherDelta(expectedParticipationFees, tester.a1, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
+                assert feeWindow.redeem(tester.a1)
 
-    with TokenDelta(feeWindow, -feeWindowAmount, tester.a2, "Redeeming participation tokens didn't decrease participation token balance correctly"):
-        with EtherDelta(expectedParticipationFees, tester.a2, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
-            assert feeWindow.redeem(tester.a2)
+    with TokenDelta(reputationToken, feeWindowAmount, tester.a2, "Redeeming participation tokens didn't refund REP"):
+        with TokenDelta(feeWindow, -feeWindowAmount, tester.a2, "Redeeming participation tokens didn't decrease participation token balance correctly"):
+            with EtherDelta(expectedParticipationFees, tester.a2, localFixture.chain, "Redeeming participation tokens didn't increase ETH correctly"):
+                assert feeWindow.redeem(tester.a2)
 
     logs = []
     captureFilteredLogs(localFixture.chain.head_state, localFixture.contracts['Augur'], logs)
 
     marketStake = marketInitialReport.getStake()
     expectedFees = reporterFees * marketStake / totalStake
-    with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-        assert marketInitialReport.redeem(tester.a0)
+    with TokenDelta(reputationToken, marketStake, tester.a0, "Redeeming didn't refund REP"):
+        with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+            assert marketInitialReport.redeem(tester.a0)
 
     categoricalMarketStake = categoricalInitialReport.getStake()
     expectedFees = reporterFees * categoricalMarketStake / totalStake
-    with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-        assert categoricalInitialReport.redeem(tester.a0)
+    with TokenDelta(reputationToken, categoricalMarketStake, tester.a0, "Redeeming didn't refund REP"):
+        with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+            assert categoricalInitialReport.redeem(tester.a0)
 
 def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -105,8 +107,11 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
     # The dispute crowdsourcer contributor locked in REP for 2 rounds and is the only winner in those rounds
     expectedFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
 
-    with EtherDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-        assert marketDisputeCrowdsourcer.redeem(tester.a1, sender=tester.k1)
+    expectedRep = market.getTotalStake()
+    assert expectedRep == marketDisputeCrowdsourcer.getStake() * 1.5
+    with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't refund REP"):
+        with EtherDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+            assert marketDisputeCrowdsourcer.redeem(tester.a1, sender=tester.k1)
 
 def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
     # Initial Report disputed
@@ -130,18 +135,24 @@ def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, 
 
     # The initial reporter locked in REP for 5 rounds.
     expectedInitialReporterFees = getExpectedFees(localFixture, cash, initialReporter, 5)
-    with EtherDelta(expectedInitialReporterFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-        assert initialReporter.redeem(tester.a0)
+    expectedRep = initialReporter.getStake()
+    with TokenDelta(reputationToken, expectedRep, tester.a0, "Redeeming didn't refund REP"):
+        with EtherDelta(expectedInitialReporterFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+            assert initialReporter.redeem(tester.a0)
 
     # The first winning dispute crowdsourcer will get fees for 4 rounds
     expectedWinningDisputeCrowdsourcer1Fees = getExpectedFees(localFixture, cash, winningDisputeCrowdsourcer1, 4)
-    with EtherDelta(expectedWinningDisputeCrowdsourcer1Fees, tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-        assert winningDisputeCrowdsourcer1.redeem(tester.a2)
+    expectedRep = winningDisputeCrowdsourcer1.getStake() * 1.5
+    with TokenDelta(reputationToken, expectedRep, tester.a2, "Redeeming didn't refund REP"):
+        with EtherDelta(expectedWinningDisputeCrowdsourcer1Fees, tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+            assert winningDisputeCrowdsourcer1.redeem(tester.a2)
 
     # The final winning dispute crowdsourcer will get fees for 2 rounds
     expectedWinningDisputeCrowdsourcer2Fees = getExpectedFees(localFixture, cash, winningDisputeCrowdsourcer2, 2)
-    with EtherDelta(expectedWinningDisputeCrowdsourcer2Fees, tester.a3, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-        assert winningDisputeCrowdsourcer2.redeem(tester.a3) 
+    expectedRep = winningDisputeCrowdsourcer2.getStake() * 1.5
+    with TokenDelta(reputationToken, expectedRep, tester.a3, "Redeeming didn't refund REP"):
+        with EtherDelta(expectedWinningDisputeCrowdsourcer2Fees, tester.a3, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+            assert winningDisputeCrowdsourcer2.redeem(tester.a3) 
 
 def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -174,11 +185,14 @@ def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market,
     # The dispute crowdsourcer contributors locked in REP for 2 rounds and are the only winners in those rounds, so they split it
     expectedFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
     
-    with EtherDelta(expectedFees / 2, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-        assert marketDisputeCrowdsourcer.redeem(tester.a1)
+    expectedRep = amount * 1.5
+    with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't refund REP"):
+        with EtherDelta(expectedFees / 2, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+            assert marketDisputeCrowdsourcer.redeem(tester.a1)
 
-    with EtherDelta(expectedFees - expectedFees / 2, tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-        assert marketDisputeCrowdsourcer.redeem(tester.a2)
+    with TokenDelta(reputationToken, expectedRep, tester.a2, "Redeeming didn't refund REP"):
+        with EtherDelta(expectedFees - expectedFees / 2, tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+            assert marketDisputeCrowdsourcer.redeem(tester.a2)
 
 def test_forking(localFixture, universe, market, categoricalMarket, cash, reputationToken):
     # Let's do some initial disputes for the categorical market
@@ -218,9 +232,9 @@ def test_forking(localFixture, universe, market, categoricalMarket, cash, reputa
         account = testers[i % 4]
         reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
         expectedRep = reportingParticipant.getStake()
-        expectedRep = expectedRep * 1.05 # TODO use constant
+        expectedRep += expectedRep / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
         if (i > 0):
-            expectedRep += reportingParticipant.getStake() / 2 # TODO use constant
+            expectedRep += reportingParticipant.getStake() / 2
         expectedEth = cash.balanceOf(reportingParticipant.address)
         newReputationToken = localFixture.applySignature("ReputationToken", reportingParticipant.getReputationToken())
         with EtherDelta(expectedEth, account, localFixture.chain, "Redeeming didn't increase ETH correctly"):

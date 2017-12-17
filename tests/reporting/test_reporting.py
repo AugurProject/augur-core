@@ -59,16 +59,38 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
 
 @mark.parametrize('finalizeByMigration', [
     True,
-    False
+    #False
 ])
 def test_forking(finalizeByMigration, localFixture, universe, market, categoricalMarket):
+    # Let's go into the one dispute round for the categorical market
+    proceedToNextRound(localFixture, categoricalMarket)
+    proceedToNextRound(localFixture, categoricalMarket)
+
     # proceed to forking
     proceedToFork(localFixture, market, universe)
 
     # finalize the fork
     finalizeFork(localFixture, market, universe, finalizeByMigration)
 
-    # TODO ensure categorical with initial report keeps first report but disavows disputes
+    # get the reporting participants for the categorical market before they may be disavowed
+    categoricalInitialReport = localFixture.applySignature("InitialReporter", categoricalMarket.getReportingParticipant(0)) 
+    categoricalDisputeCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", categoricalMarket.getReportingParticipant(1)) 
+
+    # The categorical market can be migrated to the winning universe
+    assert categoricalMarket.migrateThroughOneFork()
+
+    # This disavows the dispute crowdsourcer
+    newUniverse = localFixture.applySignature("Universe", categoricalMarket.getUniverse())
+    assert newUniverse.address != universe.address
+    assert categoricalDisputeCrowdsourcer.isDisavowed()
+    assert not universe.isContainerForReportingParticipant(categoricalDisputeCrowdsourcer.address)
+    assert not newUniverse.isContainerForReportingParticipant(categoricalDisputeCrowdsourcer.address)
+
+    # The initial report is still present however
+    assert categoricalMarket.getReportingParticipant(0) == categoricalInitialReport.address
+    assert not categoricalInitialReport.isDisavowed()
+    assert not universe.isContainerForReportingParticipant(categoricalInitialReport.address)
+    assert newUniverse.isContainerForReportingParticipant(categoricalInitialReport.address)
 
 def test_fee_window_record_keeping(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
     feeWindow = localFixture.applySignature('FeeWindow', universe.getOrCreateCurrentFeeWindow())
