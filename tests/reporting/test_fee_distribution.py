@@ -212,7 +212,20 @@ def test_forking(localFixture, universe, market, categoricalMarket, cash, reputa
         with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't increase REP correctly"):
             categoricalDisputeCrowdsourcer.redeem(tester.a1, startgas=long(6.7 * 10**6))
 
-    # TODO confirm the forking market reporting participants can be redeemed for eth and their destination universe's REP
+    # Now we'll redeem the forked reporting participants
+    testers = [tester.a0, tester.a1, tester.a2, tester.a3]
+    for i in range(17):
+        account = testers[i % 4]
+        reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
+        expectedRep = reportingParticipant.getStake()
+        expectedRep = expectedRep * 1.05 # TODO use constant
+        if (i > 0):
+            expectedRep += reportingParticipant.getStake() / 2 # TODO use constant
+        expectedEth = cash.balanceOf(reportingParticipant.address)
+        newReputationToken = localFixture.applySignature("ReputationToken", reportingParticipant.getReputationToken())
+        with EtherDelta(expectedEth, account, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+            with TokenDelta(newReputationToken, expectedRep, account, "Redeeming didn't increase REP correctly"):
+                reportingParticipant.redeem(account, startgas=long(6.7 * 10**6))
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):

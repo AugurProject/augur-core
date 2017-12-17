@@ -60,7 +60,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         return market;
     }
 
-    function isDisavowed() public returns (bool) {
+    function isDisavowed() public view returns (bool) {
         return market == IMarket(0);
     }
 

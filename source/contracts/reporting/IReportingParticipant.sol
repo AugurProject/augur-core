@@ -11,7 +11,7 @@ contract IReportingParticipant {
     function fork() public returns (bool);
     function redeem(address _redeemer) public returns (bool);
     function isInvalid() public view returns (bool);
-    function isDisavowed() public returns (bool);
+    function isDisavowed() public view returns (bool);
     function migrate() public returns (bool);
     function getPayoutNumerator(uint8 _outcome) public view returns (uint256);
     function getMarket() public view returns (IMarket);

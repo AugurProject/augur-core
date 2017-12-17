@@ -87,6 +87,10 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
     function getFeeWindow() public view returns (IFeeWindow) {
         return feeWindow;
     }
+
+    function getReputationToken() public view returns (IReputationToken) {
+        return reputationToken;
+    }
     
     function designatedReporterWasCorrect() public view returns (bool) {
         return payoutDistributionHash == market.getWinningPayoutDistributionHash();

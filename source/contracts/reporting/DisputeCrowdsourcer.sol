@@ -98,6 +98,10 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         return feeWindow;
     }
 
+    function getReputationToken() public view returns (IReputationToken) {
+        return reputationToken;
+    }
+
     function getProtectedTokens() internal returns (address[] memory) {
         address[] memory _protectedTokens = new address[](2);
         _protectedTokens[0] = feeWindow;
