@@ -345,12 +345,6 @@ class ContractsFixture:
         shareToken = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['ShareToken']), shareTokenAddress)
         return shareToken
 
-    def designatedReport(self, market, payoutDistribution, invalid=False):
-        universe = self.applySignature('Universe', market.getUniverse())
-        designatedReportStake = universe.getOrCacheDesignatedReportStake()
-        reporterKey = self.testerAddressToKey[market.getDesignatedReporter()]
-        return market.doInitialReport(payoutDistribution, invalid, sender=reporterKey)
-
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
         payoutDistributionHash = market.derivePayoutDistributionHash(payoutDistribution, False)
         assert payoutDistributionHash

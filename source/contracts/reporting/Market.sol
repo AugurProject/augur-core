@@ -314,7 +314,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return winningPayoutDistributionHash != bytes32(0);
     }
 
-    function designatedReporter() public view returns (address) {
+    function getDesignatedReporter() public view returns (address) {
         return getInitialReporter().getDesignatedReporter();
     }
 
