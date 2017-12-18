@@ -131,6 +131,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         feeWindow = universe.getOrCreateNextFeeWindow();
         _initialReporter.report(msg.sender, _payoutDistributionHash, _payoutNumerators, _invalid);
+        controller.getAugur().logInitialReportSubmitted(universe, msg.sender, this, _initialReporter.getStake(), _isDesignatedReporter, _payoutNumerators);
         return true;
     }
 
@@ -139,7 +140,8 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         require(_payoutDistributionHash != getWinningReportingParticipant().getPayoutDistributionHash());
         IDisputeCrowdsourcer _crowdsourcer = getOrCreateDisputeCrowdsourcer(_payoutDistributionHash, _payoutNumerators, _invalid);
-        _crowdsourcer.contribute(msg.sender, _amount);
+        uint256 _actualAmount = _crowdsourcer.contribute(msg.sender, _amount);
+        controller.getAugur().logDisputeCrowdsourcerContribution(universe, msg.sender, this, _crowdsourcer, _actualAmount);
         return true;
     }
 
@@ -148,6 +150,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         require(isContainerForReportingParticipant(_reportingParticipant));
         participants.push(_reportingParticipant);
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this); // disavow other crowdsourcers
+        controller.getAugur().logDisputeCrowdsourcerCompleted(universe, this, _reportingParticipant);
         if (IDisputeCrowdsourcer(msg.sender).getSize() >= Reporting.getDisputeThresholdForFork()) {
             universe.fork();
         } else {
@@ -241,6 +244,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             DisputeCrowdsourcerFactory _disputeCrowdsourcerFactory = DisputeCrowdsourcerFactory(controller.lookup("DisputeCrowdsourcerFactory"));
             _crowdsourcer = _disputeCrowdsourcerFactory.createDisputeCrowdsourcer(controller, this, _size, _payoutDistributionHash, _payoutNumerators, _invalid);
             crowdsourcers.add(_payoutDistributionHash, address(_crowdsourcer));
+            controller.getAugur().logDisputeCrowdsourcerCreated(universe, this, _crowdsourcer, _payoutNumerators, _size);
         }
         return _crowdsourcer;
     }

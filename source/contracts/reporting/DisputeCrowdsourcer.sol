@@ -36,11 +36,11 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         return true;
     }
 
-    function contribute(address _participant, uint256 _amount) public onlyInGoodTimes returns (bool) {
+    function contribute(address _participant, uint256 _amount) public onlyInGoodTimes returns (uint256) {
         require(IMarket(msg.sender) == market);
         _amount = _amount.min(size - totalSupply());
         if (_amount == 0) {
-            return true;
+            return 0;
         }
         reputationToken.trustedReportingParticipantTransfer(_participant, this, _amount);
         feeWindow.mintFeeTokens(_amount);
@@ -48,7 +48,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         if (totalSupply() == size) {
             market.finishedCrowdsourcingDisputeBond();
         }
-        return true;
+        return _amount;
     }
 
     function withdrawInEmergency() public onlyInBadTimes returns (bool) {

@@ -16,17 +16,19 @@ import 'libraries/Extractable.sol';
 // Centralized approval authority and event emissions
 contract Augur is Controlled, Extractable {
     event MarketCreated(bytes32 indexed topic, string description, string extraInfo, address indexed universe, address market, address indexed marketCreator, bytes32[] outcomes, uint256 marketCreationFee, int256 minPrice, int256 maxPrice, IMarket.MarketType marketType);
-    event DesignatedReportSubmitted(address indexed universe, address indexed reporter, address indexed market, uint256 amountStaked, uint256[] payoutNumerators);
-    event ReportSubmitted(address indexed universe, address indexed reporter, address indexed market, address reportingParticipant, uint256 amountStaked, uint256[] payoutNumerators);
+    event InitialReportSubmitted(address indexed universe, address indexed reporter, address indexed market, uint256 amountStaked, bool isDesignatedReporter, uint256[] payoutNumerators);
+    event DisputeCrowdsourcerCreated(address indexed universe, address indexed market, address disputeCrowdsourcer, uint256[] payoutNumerators, uint256 size);
+    event DisputeCrowdsourcerContribution(address indexed universe, address indexed reporter, address indexed market, address disputeCrowdsourcer, uint256 amountStaked);
+    event DisputeCrowdsourcerCompleted(address indexed universe, address indexed market, address disputeCrowdsourcer);
     event WinningsRedeemed(address indexed universe, address indexed reporter, address indexed market, address reportingParticipant, uint256 amountRedeemed, uint256 reportingFeesReceived, uint256[] payoutNumerators);
     event MarketFinalized(address indexed universe, address indexed market);
     event UniverseForked(address indexed universe);
+    event UniverseCreated(address indexed parentUniverse, address indexed childUniverse);
     event OrderCanceled(address indexed universe, address indexed shareToken, address indexed sender, bytes32 orderId, Order.Types orderType, uint256 tokenRefund, uint256 sharesRefund);
     // The ordering here is to match functions higher in the call chain to avoid stack depth issues
     event OrderCreated(Order.Types orderType, uint256 amount, uint256 price, address indexed creator, uint256 moneyEscrowed, uint256 sharesEscrowed, bytes32 tradeGroupId, bytes32 orderId, address indexed universe, address indexed shareToken);
     event OrderFilled(address indexed universe, address indexed shareToken, address filler, bytes32 orderId, uint256 numCreatorShares, uint256 numCreatorTokens, uint256 numFillerShares, uint256 numFillerTokens, uint256 marketCreatorFees, uint256 reporterFees, bytes32 tradeGroupId);
     event TradingProceedsClaimed(address indexed universe, address indexed shareToken, address indexed sender, address market, uint256 numShares, uint256 numPayoutTokens, uint256 finalTokenBalance);
-    event UniverseCreated(address indexed parentUniverse, address indexed childUniverse);
     event TokensTransferred(address indexed universe, address indexed token, address indexed from, address to, uint256 value);
     event TokensMinted(address indexed universe, address indexed token, address indexed target, uint256 amount);
     event TokensBurned(address indexed universe, address indexed token, address indexed target, uint256 amount);
@@ -60,15 +62,27 @@ contract Augur is Controlled, Extractable {
         return true;
     }
 
-    function logDesignatedReportSubmitted(IUniverse _universe, address _reporter, address _market, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
+    function logInitialReportSubmitted(IUniverse _universe, address _reporter, address _market, uint256 _amountStaked, bool _isDesignatedReporter, uint256[] _payoutNumerators) public returns (bool) {
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
-        DesignatedReportSubmitted(_universe, _reporter, _market, _amountStaked, _payoutNumerators);
+        InitialReportSubmitted(_universe, _reporter, _market, _amountStaked, _isDesignatedReporter, _payoutNumerators);
         return true;
     }
 
-    function logReportSubmitted(IUniverse _universe, address _reporter, address _market, address _reportingParticipant, uint256 _amountStaked, uint256[] _payoutNumerators) public returns (bool) {
+    function logDisputeCrowdsourcerCreated(IUniverse _universe, address _market, address _disputeCrowdsourcer, uint256[] _payoutNumerators, uint256 _size) public returns (bool) {
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
-        ReportSubmitted(_universe, _reporter, _market, _reportingParticipant, _amountStaked, _payoutNumerators);
+        DisputeCrowdsourcerCreated(_universe, _market, _disputeCrowdsourcer, _payoutNumerators, _size);
+        return true;
+    }
+
+    function logDisputeCrowdsourcerContribution(IUniverse _universe, address _reporter, address _market, address _disputeCrowdsourcer, uint256 _amountStaked) public returns (bool) {
+        require(_universe.isContainerForMarket(IMarket(msg.sender)));
+        DisputeCrowdsourcerContribution(_universe, _reporter, _market, _disputeCrowdsourcer, _amountStaked);
+        return true;
+    }
+
+    function logDisputeCrowdsourcerCompleted(IUniverse _universe, address _market, address _disputeCrowdsourcer) public returns (bool) {
+        require(_universe.isContainerForMarket(IMarket(msg.sender)));
+        DisputeCrowdsourcerCompleted(_universe, _market, _disputeCrowdsourcer);
         return true;
     }
 

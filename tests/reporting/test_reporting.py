@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta
+from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, AssertLog
 from reporting_utils import proceedToDesignatedReporting, proceedToInitialReporting, proceedToNextRound, proceedToFork, finalizeFork
 
 tester.STARTGAS = long(6.7 * 10**6)
@@ -15,7 +15,16 @@ def test_designatedReportHappyPath(localFixture, universe, market):
         market.doInitialReport([0, market.getNumTicks()], False, sender=tester.k1)
 
     # do an initial report as the designated reporter
-    assert market.doInitialReport([0, market.getNumTicks()], False)
+    initialReportLog = {
+        "universe": universe.address,
+        "reporter": bytesToHexString(tester.a0),
+        "market": market.address,
+        "amountStaked": localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE(),
+        "isDesignatedReporter": True,
+        "payoutNumerators": [0, market.getNumTicks()]
+    }
+    with AssertLog(localFixture, "InitialReportSubmitted", initialReportLog):
+        assert market.doInitialReport([0, market.getNumTicks()], False)
 
     # the market is now assigned a fee window
     assert market.getFeeWindow()
@@ -41,7 +50,6 @@ def test_initialReportHappyPath(localFixture, universe, market):
     assert market.finalize()
 
 @mark.parametrize('rounds', [
-    1,
     2,
     3,
     6,
@@ -50,8 +58,36 @@ def test_initialReportHappyPath(localFixture, universe, market):
 def test_roundsOfReporting(rounds, localFixture, market, universe):
     feeWindow = universe.getOrCreateCurrentFeeWindow()
 
+    # Do the initial report
+    proceedToNextRound(localFixture, market)
+
+    # Do the first round outside of the loop and test logging
+    crowdsourcerCreatedLog = {
+        "universe": universe.address,
+        "market": market.address,
+        "size": localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE() * 2,
+        "payoutNumerators": [0, market.getNumTicks()]
+    }
+
+    crowdsourcerContributionLog = {
+        "universe": universe.address,
+        "reporter": bytesToHexString(tester.a0),
+        "market": market.address,
+        "amountStaked": localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE() * 2
+    }
+
+    crowdsourcerCompletedLog = {
+        "universe": universe.address,
+        "market": market.address
+    }
+
+    with AssertLog(localFixture, "DisputeCrowdsourcerCreated", crowdsourcerCreatedLog):
+        with AssertLog(localFixture, "DisputeCrowdsourcerContribution", crowdsourcerContributionLog):
+            with AssertLog(localFixture, "DisputeCrowdsourcerCompleted", crowdsourcerCompletedLog):
+                proceedToNextRound(localFixture, market)
+
     # proceed through several rounds of disputing
-    for i in range(rounds):
+    for i in range(rounds - 2):
         proceedToNextRound(localFixture, market)
         assert feeWindow != market.getFeeWindow()
         feeWindow = market.getFeeWindow()
