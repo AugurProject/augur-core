@@ -169,7 +169,7 @@ def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, 
     # Initial Report winning
     proceedToNextRound(localFixture, market, tester.k2, True)
     # Initial Report disputed
-    proceedToNextRound(localFixture, market, tester.k1, True)
+    proceedToNextRound(localFixture, market, tester.k1, True, randomPayoutNumerators=True)
     # Initial Report winning
     proceedToNextRound(localFixture, market, tester.k3, True)
 
@@ -196,7 +196,7 @@ def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, 
 
     # The initial reporter locked in REP for 5 rounds.
     expectedInitialReporterFees = getExpectedFees(localFixture, cash, initialReporter, 5)
-    expectedRep = initialReporter.getStake()
+    expectedRep = initialReporter.getStake() * 1.5
     with TokenDelta(reputationToken, expectedRep, tester.a0, "Redeeming didn't refund REP"):
         with EtherDelta(expectedInitialReporterFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert initialReporter.redeem(tester.a0)
@@ -256,9 +256,10 @@ def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market,
 
     marketDisputeCrowdsourcer = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(1))
 
-    # The dispute crowdsourcer contributors locked in REP for 2 rounds and are the only winners in those rounds, so they split it
+    # The dispute crowdsourcer contributors locked in REP for 2 rounds and staked twice the initial reporter so they split 2/3 of the total stake
     expectedFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
-    
+    expectedFees = expectedFees / 3 * 2
+
     expectedRep = amount * 1.5
     with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't refund REP"):
         with EtherDelta(expectedFees / 2, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
@@ -307,8 +308,7 @@ def test_forking(localFixture, universe, market, categoricalMarket, cash, reputa
         reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
         expectedRep = reportingParticipant.getStake()
         expectedRep += expectedRep / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
-        if (i > 0):
-            expectedRep += reportingParticipant.getStake() / 2
+        expectedRep += reportingParticipant.getStake() / 2
         expectedEth = cash.balanceOf(reportingParticipant.address)
         newReputationToken = localFixture.applySignature("ReputationToken", reportingParticipant.getReputationToken())
         with EtherDelta(expectedEth, account, localFixture.chain, "Redeeming didn't increase ETH correctly"):

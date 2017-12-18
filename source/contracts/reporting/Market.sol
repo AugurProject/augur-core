@@ -189,6 +189,11 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     }
 
     function redistributeLosingReputation() private returns (bool) {
+        // If no disputes occured early exit
+        if (participants.length == 1) {
+            return true;
+        }
+
         IReportingParticipant _reportingParticipant;
 
         // Initial pass is to liquidate losers so we have sufficient REP to pay the winners
@@ -201,8 +206,8 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
         IReputationToken _reputationToken = getReputationToken();
 
-        // Now redistribute REP. We start at 1 since the designated/initial reporters do not get redistributed losses
-        for (uint8 j = 1; j < participants.length; j++) {
+        // Now redistribute REP
+        for (uint8 j = 0; j < participants.length; j++) {
             _reportingParticipant = participants[j];
             if (_reportingParticipant.getPayoutDistributionHash() == winningPayoutDistributionHash) {
                 _reputationToken.transfer(_reportingParticipant, _reportingParticipant.getSize() / 2);

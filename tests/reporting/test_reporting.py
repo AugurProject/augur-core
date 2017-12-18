@@ -59,7 +59,11 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
     feeWindow = universe.getOrCreateCurrentFeeWindow()
 
     # Do the initial report
-    proceedToNextRound(localFixture, market)
+    proceedToNextRound(localFixture, market, moveTimeForward = False)
+
+    # We can't contribute to a crowdsourcer now since the new fee window is not yet active
+    with raises(TransactionFailed):
+        market.contribute([0, market.getNumTicks()], False)
 
     # Do the first round outside of the loop and test logging
     crowdsourcerCreatedLog = {

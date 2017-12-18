@@ -39,6 +39,7 @@ contract IMarket is ITyped, IOwnable {
     function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool);
     function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool);
     function isInvalid() public view returns (bool);
+    function finalize() public returns (bool);
     function finishedCrowdsourcingDisputeBond() public returns (bool);
     function designatedReporterWasCorrect() public view returns (bool);
     function designatedReporterShowed() public view returns (bool);

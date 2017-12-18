@@ -23,7 +23,9 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
     }
 
     function redeem(address _redeemer) public onlyInGoodTimes returns (bool) {
-        require(isDisavowed() || market.isFinalized());
+        if (!isDisavowed() && !market.isFinalized()) {
+            market.finalize();
+        }
         redeemForAllFeeWindows();
         uint256 _reputationSupply = reputationToken.balanceOf(this);
         uint256 _cashSupply = cash.balanceOf(this);
@@ -65,12 +67,11 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
     function fork() public onlyInGoodTimes returns (bool) {
         require(market == market.getUniverse().getForkingMarket());
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
-        IReputationToken _reputationToken = market.getReputationToken();
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
         redeemForAllFeeWindows();
-        uint256 _balance = _reputationToken.balanceOf(this);
-        _reputationToken.migrateOut(_newReputationToken, _balance);
-        _newReputationToken.mintForDisputeCrowdsourcer(_balance);
+        uint256 _balance = reputationToken.balanceOf(this);
+        reputationToken.migrateOut(_newReputationToken, _balance);
+        _newReputationToken.mintForReportingParticipant(_balance);
         // by removing the market, the token will become disavowed and therefore users can remove freely
         reputationToken = _newReputationToken;
         market = IMarket(0);

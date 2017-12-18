@@ -87,9 +87,8 @@ def test_redeem_reporting_participants(kitchenSinkFixture, market, categoricalMa
     expectedFees = getExpectedFees(kitchenSinkFixture, cash, winningDisputeCrowdsourcer1, 4)
     expectedFees += getExpectedFees(kitchenSinkFixture, cash, winningDisputeCrowdsourcer2, 2)
     expectedFees += getExpectedFees(kitchenSinkFixture, cash, initialReporter, 5)
-    expectedFees += 4 # Rounding errors from pre-calculating
     expectedRep = (winningDisputeCrowdsourcer2.getStake() + winningDisputeCrowdsourcer1.getStake()) * 1.5
-    expectedRep += initialReporter.getStake()
+    expectedRep += initialReporter.getStake() * 1.5
     with TokenDelta(reputationToken, expectedRep, tester.a0, "Redeeming didn't refund REP"):
         with EtherDelta(expectedFees, tester.a0, kitchenSinkFixture.chain, "Redeeming didn't increase ETH correctly"):
             with PrintGasUsed(kitchenSinkFixture, "Universe Redeem:", 0):

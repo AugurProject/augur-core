@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from random import randint
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, raises
@@ -12,7 +13,7 @@ def proceedToDesignatedReporting(fixture, market):
 def proceedToInitialReporting(fixture, market):
     fixture.contracts["Time"].setTimestamp(market.getDesignatedReportingEndTime() + 1)
 
-def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees = False, moveTimeForward = True):
+def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees = False, moveTimeForward = True, randomPayoutNumerators = False):
     if fixture.contracts["Controller"].getTimestamp() < market.getEndTime():
         fixture.contracts["Time"].setTimestamp(market.getDesignatedReportingEndTime() + 1)
 
@@ -31,7 +32,14 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
         winningReport = fixture.applySignature('DisputeCrowdsourcer', market.getWinningReportingParticipant())
         winningPayoutHash = winningReport.getPayoutDistributionHash()
         firstReportWinning = market.derivePayoutDistributionHash(payoutNumerators, False) == winningPayoutHash
-        chosenPayoutNumerators = payoutNumerators if not firstReportWinning else payoutNumerators[::-1]
+        
+        if (randomPayoutNumerators):
+            chosenPayoutNumerators = [0] * market.getNumberOfOutcomes()
+            chosenPayoutNumerators[0] = randint(0, market.getNumTicks())
+            chosenPayoutNumerators[1] = market.getNumTicks() - chosenPayoutNumerators[0]
+        else:
+            chosenPayoutNumerators = payoutNumerators if not firstReportWinning else payoutNumerators[::-1]
+        
         chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
         amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
         with PrintGasUsed(fixture, "Contribute:", 0):

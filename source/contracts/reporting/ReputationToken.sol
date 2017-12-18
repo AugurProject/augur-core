@@ -60,11 +60,11 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
         return true;
     }
 
-    function mintForDisputeCrowdsourcer(uint256 _amountMigrated) public onlyInGoodTimes afterInitialized returns (bool) {
+    function mintForReportingParticipant(uint256 _amountMigrated) public onlyInGoodTimes afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
-        IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
-        require(_parentUniverse.isContainerForReportingParticipant(IReportingParticipant(_disputeCrowdsourcer)));
-        mint(_disputeCrowdsourcer, _amountMigrated / 2);
+        IReportingParticipant _reportingParticipant = IReportingParticipant(msg.sender);
+        require(_parentUniverse.isContainerForReportingParticipant(_reportingParticipant));
+        mint(_reportingParticipant, _amountMigrated / 2);
         return true;
     }
 

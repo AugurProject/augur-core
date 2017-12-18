@@ -26,7 +26,9 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
     }
 
     function redeem(address) public returns (bool) {
-        require(isDisavowed() || market.isFinalized());
+        if (!isDisavowed() && !market.isFinalized()) {
+            market.finalize();
+        }
         redeemForAllFeeWindows();
         reputationToken.transfer(actualReporter, reputationToken.balanceOf(this));
         cash.withdrawEtherTo(actualReporter, cash.balanceOf(this));
@@ -52,7 +54,9 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
         redeemForAllFeeWindows();
-        reputationToken.migrateOut(_newReputationToken, reputationToken.balanceOf(this));
+        uint256 _balance = reputationToken.balanceOf(this);
+        reputationToken.migrateOut(_newReputationToken, _balance);
+        _newReputationToken.mintForReportingParticipant(_balance);
         reputationToken = _newReputationToken;
         market = IMarket(0);
         return true;
