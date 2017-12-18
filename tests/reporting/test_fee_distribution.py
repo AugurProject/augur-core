@@ -78,6 +78,47 @@ def test_initial_report_and_participation_fee_collection(localFixture, universe,
         with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert categoricalInitialReport.redeem(tester.a0)
 
+def test_failed_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+
+    # generate some fees
+    generateFees(localFixture, universe, market)
+
+    # We'll make the window active
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
+    
+    # generate some fees
+    generateFees(localFixture, universe, market)
+
+    # We'll have testers contribute to a dispute but not reach the target
+    amount = market.getTotalStake() - 1
+
+    with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
+        assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k1, startgas=long(6.7 * 10**6))
+
+    with TokenDelta(reputationToken, -amount, tester.a2, "Disputing did not reduce REP balance correctly"):
+        assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k2, startgas=long(6.7 * 10**6))
+
+    assert market.getFeeWindow() == feeWindow.address
+
+    payoutDistributionHash = market.derivePayoutDistributionHash([0, market.getNumTicks()], False)
+    failedCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", market.getCrowdsourcer(payoutDistributionHash))
+
+    # Fast forward time until the fee window is over and we can redeem to recieve the REP back and fees
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    assert market.finalize()
+
+    # The dispute crowdsourcer contributor locked in REP for 2 rounds, as did the Initial Reporter
+    expectedTotalFees = getExpectedFees(localFixture, cash, failedCrowdsourcer, 1)
+
+    with TokenDelta(reputationToken, amount, tester.a1, "Redeeming did not refund REP"):
+        with EtherDelta(expectedTotalFees / 2, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+            assert failedCrowdsourcer.redeem(tester.a1)
+
+    with TokenDelta(reputationToken, amount, tester.a2, "Redeeming did not refund REP"):
+        with EtherDelta(cash.balanceOf(failedCrowdsourcer.address), tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+            assert failedCrowdsourcer.redeem(tester.a2)
+
 def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
 

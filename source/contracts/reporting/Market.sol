@@ -351,6 +351,10 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return participants[_index];
     }
 
+    function getCrowdsourcer(bytes32 _payoutDistributionHash) public view returns (IDisputeCrowdsourcer) {
+        return  IDisputeCrowdsourcer(crowdsourcers.getAsAddressOrZero(_payoutDistributionHash));
+    }
+
     function getWinningReportingParticipant() public view returns (IReportingParticipant) {
         return participants[participants.length-1];
     }
