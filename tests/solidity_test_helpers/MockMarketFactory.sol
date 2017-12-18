@@ -11,7 +11,7 @@ import 'Augur.sol';
 contract MockMarketFactory {
     IMarket private setMarketValue;
     IController private createMarketControllerValue;
-    IFeeWindow private createMarketFeeWindowValue;
+    IUniverse private createMarketUniverseValue;
     uint256 private createMarketEndTimeValue;
     uint8 private createMarketNumOutcomesValue;
     uint256 private createMarketNumTicksValue;
@@ -28,8 +28,8 @@ contract MockMarketFactory {
         return createMarketControllerValue;
     }
 
-    function getCreateMarketFeeWindowValue() public returns(IFeeWindow) {
-        return createMarketFeeWindowValue;
+    function getCreateMarketUniverseValue() public returns(IUniverse) {
+        return createMarketUniverseValue;
     }
 
     function getCreateMarketEndTimeValue() public returns(uint256) {
@@ -60,15 +60,15 @@ contract MockMarketFactory {
         return createMarketDesignatedReporterAddressValue;
     }
 
-    function createMarket(IController _controller, IFeeWindow _feeWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInWei, ICash _denominationToken, address _creator, address _designatedReporterAddress) public payable returns (IMarket _market) {
+    function createMarket(IController _controller, IUniverse _universe, uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint8 _numOutcomes, uint256 _numTicks) public payable returns (IMarket _market) {
         createMarketControllerValue = _controller;
-        createMarketFeeWindowValue = _feeWindow;
+        createMarketUniverseValue = _universe;
         createMarketEndTimeValue = _endTime;
         createMarketNumOutcomesValue = _numOutcomes;
         createMarketNumTicksValue = _numTicks;
         createMarketfeePerEthInWeiValue = _feePerEthInWei;
         createMarketDenominationTokenValue = _denominationToken;
-        createMarketCreatorValue = _creator;
+        createMarketCreatorValue = _sender;
         createMarketDesignatedReporterAddressValue = _designatedReporterAddress;
         return setMarketValue;
     }

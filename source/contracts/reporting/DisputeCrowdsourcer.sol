@@ -34,7 +34,9 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         uint256 _reputationShare = _reputationSupply * _amount / supply;
         burn(_redeemer, _amount);
         reputationToken.transfer(_redeemer, _reputationShare);
-        cash.withdrawEtherTo(_redeemer, _feeShare);
+        if (_feeShare > 0) {
+            cash.withdrawEtherTo(_redeemer, _feeShare);
+        }
         return true;
     }
 
@@ -117,7 +119,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
     function getProtectedTokens() internal returns (address[] memory) {
         address[] memory _protectedTokens = new address[](2);
         _protectedTokens[0] = feeWindow;
-        _protectedTokens[1] = market.getReputationToken();
+        _protectedTokens[1] = reputationToken;
         return _protectedTokens;
     }
 }

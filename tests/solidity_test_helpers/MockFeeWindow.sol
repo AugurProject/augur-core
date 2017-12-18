@@ -355,4 +355,28 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
         return true;
     }
+
+    function getFeeToken() public view returns (IFeeToken) {
+        return IFeeToken(0);
+    }
+
+    function redeemForReportingParticipant() public returns (bool) {
+        return true;
+    }
+
+    function mintFeeTokens(uint256 _amount) public returns (bool) {
+        return true;
+    }
+
+    function getController() public constant returns (IController) {
+        return IController(0);
+    }
+
+    function setController(IController _controller) public returns(bool) {
+        return true;
+    }
+
+    function suicideFunds(address _target, ERC20Basic[] _tokens) public returns(bool) {
+        return true;
+    }
 }

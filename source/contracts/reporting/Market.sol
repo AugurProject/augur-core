@@ -118,9 +118,11 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function doInitialReport(uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes returns (bool) {
         IInitialReporter _initialReporter = getInitialReporter();
+        uint256 _timestamp = controller.getTimestamp();
         require(_initialReporter.getReportTimestamp() == 0);
+        require(_timestamp > endTime);
         bool _isDesignatedReporter = msg.sender == _initialReporter.getDesignatedReporter();
-        bool _designatedReportingExpired = controller.getTimestamp() > getDesignatedReportingEndTime();
+        bool _designatedReportingExpired = _timestamp > getDesignatedReportingEndTime();
         require(_designatedReportingExpired || _isDesignatedReporter);
         distributeNoShowBond(_initialReporter, msg.sender);
         // The designated reporter must actually pay the required REP stake to report

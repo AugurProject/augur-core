@@ -5,9 +5,10 @@ import 'libraries/DelegationTarget.sol';
 import 'reporting/IInitialReporter.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/BaseReportingParticipant.sol';
+import 'libraries/Extractable.sol';
 
 
-contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initializable, IInitialReporter {
+contract InitialReporter is DelegationTarget, Extractable, BaseReportingParticipant, Initializable, IInitialReporter {
     address private designatedReporter;
     address private actualReporter;
     uint256 private reportTimestamp;
@@ -31,7 +32,10 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
         }
         redeemForAllFeeWindows();
         reputationToken.transfer(actualReporter, reputationToken.balanceOf(this));
-        cash.withdrawEtherTo(actualReporter, cash.balanceOf(this));
+        uint256 _cashBalance = cash.balanceOf(this);
+        if (_cashBalance > 0) {
+            cash.withdrawEtherTo(actualReporter, _cashBalance);
+        }
         return true;
     }
 
@@ -102,5 +106,12 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
     
     function designatedReporterWasCorrect() public view returns (bool) {
         return payoutDistributionHash == market.getWinningPayoutDistributionHash();
+    }
+
+    function getProtectedTokens() internal returns (address[] memory) {
+        address[] memory _protectedTokens = new address[](2);
+        _protectedTokens[0] = feeWindow;
+        _protectedTokens[1] = reputationToken;
+        return _protectedTokens;
     }
 }

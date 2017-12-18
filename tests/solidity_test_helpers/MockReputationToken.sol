@@ -170,4 +170,12 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
     function mintForDisputeCrowdsourcer(uint256 _amountMigrated) public returns (bool) {
         return true;
     }
+
+    function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        return true;
+    }
+    
+    function mintForReportingParticipant(uint256 _amountMigrated) public returns (bool) {
+        return true;
+    }
 }

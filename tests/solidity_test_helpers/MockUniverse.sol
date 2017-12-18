@@ -410,4 +410,20 @@ contract MockUniverse is Initializable, IUniverse {
     function getWinningChildUniverse() public view returns (IUniverse) {
         return IUniverse(0);
     }
+
+    function getCurrentFeeWindow() public view returns (IFeeWindow) {
+        return IFeeWindow(0);
+    }
+
+    function getOrCreateFeeWindowBefore(IFeeWindow _feeWindow) public returns (IFeeWindow) {
+        return IFeeWindow(0);
+    }
+
+    function isContainerForFeeToken(IFeeToken _shadyTarget) public view returns (bool) {
+        return true;
+    }
+
+    function isForking() public view returns (bool) {
+        return true;
+    }
 }

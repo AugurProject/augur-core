@@ -22,56 +22,39 @@ def test_universe_creation(localFixture, mockReputationToken, mockReputationToke
     assert universe.getForkEndTime() == 0
     assert universe.getChildUniverse("5") == longToHexString(0)
 
-def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, mockUniverseFactory, mockMarket, mockFeeWindow, chain, mockFeeWindowFactory, mockAugur):
+def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, mockCash, mockFeeWindow, mockUniverseFactory, mockFeeWindowFactory, mockMarket, chain, mockMarketFactory, mockAugur):
     with raises(TransactionFailed, message="must be called from market"):
         populatedUniverse.fork()
+
+    timestamp = localFixture.contracts["Time"].getTimestamp()
+
+    mockFeeWindowFactory.setCreateFeeWindowValue(mockFeeWindow.address)
+    mockMarketFactory.setMarket(mockMarket.address)
+    endTime = localFixture.contracts["Time"].getTimestamp() + 30 * 24 * 60 * 60 # 30 days
 
     with raises(TransactionFailed, message="forking market has to be in universe"):
         mockMarket.callForkOnUniverse(populatedUniverse.address)
 
-    timestamp = localFixture.contracts["Time"].getTimestamp()
-    mockFeeWindowFactory.setCreateFeeWindowValue(mockFeeWindow.address)
-    feeWindowId = populatedUniverse.getOrCreateFeeWindowByTimestamp(timestamp)
-    mockFeeWindow.setStartTime(timestamp)
+    assert populatedUniverse.createBinaryMarket(endTime, 1000, mockCash.address, tester.a0, "topic", "description", "info")
+    assert mockMarketFactory.getCreateMarketUniverseValue() == populatedUniverse.address
 
-    mockFeeWindow.setIsContainerForMarket(True)
-    mockMarket.setFeeWindow(mockFeeWindow.address)
-    assert populatedUniverse.getForkingMarket() == longToHexString(0)
     assert populatedUniverse.isContainerForMarket(mockMarket.address)
+
+    assert populatedUniverse.getForkingMarket() == longToHexString(0)
 
     assert mockMarket.callForkOnUniverse(populatedUniverse.address)
     assert mockAugur.logUniverseForkedCalled() == True
     assert populatedUniverse.getForkingMarket() == mockMarket.address
     assert populatedUniverse.getForkEndTime() == timestamp + localFixture.contracts['Constants'].FORK_DURATION_SECONDS()
 
-    # child universe
-    mockUniverseFactory.setCreateUniverseUniverseValue(mockUniverse.address)
-    mockUniverse.setParentPayoutDistributionHash(stringToBytes("101"))
-    assert populatedUniverse.getOrCreateChildUniverse(stringToBytes("101")) == mockUniverse.address
-    assert mockAugur.logUniverseCreatedCalled() == True
-    assert mockUniverseFactory.getCreateUniverseParentUniverseValue() == populatedUniverse.address
-    assert mockUniverseFactory.getCreateUniverseParentPayoutDistributionHashValue() == stringToBytes("101")
-    assert populatedUniverse.getChildUniverse(stringToBytes("101")) == mockUniverse.address
-    assert populatedUniverse.isParentOf(mockUniverse.address)
-    strangerUniverse = localFixture.upload('../source/contracts/reporting/Universe.sol', 'strangerUniverse')
-    assert populatedUniverse.isParentOf(strangerUniverse.address) == False
-
-    assert populatedUniverse.getOrCreateFeeWindowForForkEndTime() == mockFeeWindow.address
-
-    with raises(TransactionFailed, message="forking market is already set"):
-        mockMarket.callForkOnUniverse()
-
-
 def test_get_reporting_window(localFixture, populatedUniverse, chain):
     constants = localFixture.contracts['Constants']
     timestamp = localFixture.contracts["Time"].getTimestamp()
-    duration =  constants.REPORTING_DURATION_SECONDS()
-    dispute_duration = constants.REPORTING_DISPUTE_DURATION_SECONDS()
-    total_dispute_duration = duration + dispute_duration
-    reportingPeriodDurationForTimestamp = timestamp / total_dispute_duration
+    duration =  constants.DISPUTE_ROUND_DURATION_SECONDS()
+    reportingPeriodDurationForTimestamp = timestamp / duration
 
     assert populatedUniverse.getFeeWindowId(timestamp) == reportingPeriodDurationForTimestamp
-    assert populatedUniverse.getDisputeRoundDurationInSeconds() == total_dispute_duration
+    assert populatedUniverse.getDisputeRoundDurationInSeconds() == duration
 
     # fee window not stored internally, only read-only method
     assert populatedUniverse.getFeeWindow(reportingPeriodDurationForTimestamp) == longToHexString(0)
@@ -82,46 +65,41 @@ def test_get_reporting_window(localFixture, populatedUniverse, chain):
 
     # Make up end timestamp for testing internal calculations
     end_timestamp = localFixture.contracts["Time"].getTimestamp() + 1
-    end_report_window_des = populatedUniverse.getOrCreateFeeWindowByMarketEndTime(end_timestamp)
 
     # Test getting same calculated end fee window
-    end_timestamp_des_test = end_timestamp + constants.DESIGNATED_REPORTING_DURATION_SECONDS() + constants.DESIGNATED_REPORTING_DISPUTE_DURATION_SECONDS() + 1 + total_dispute_duration
-    assert populatedUniverse.getOrCreateFeeWindowByTimestamp(end_timestamp_des_test) == end_report_window_des
-    assert populatedUniverse.getOrCreatePreviousFeeWindow() == populatedUniverse.getOrCreateFeeWindowByTimestamp(chain.head_state.timestamp - total_dispute_duration)
+    assert populatedUniverse.getOrCreatePreviousFeeWindow() == populatedUniverse.getOrCreateFeeWindowByTimestamp(chain.head_state.timestamp - duration)
     assert populatedUniverse.getOrCreateCurrentFeeWindow() == populatedUniverse.getOrCreateFeeWindowByTimestamp(chain.head_state.timestamp)
-    assert populatedUniverse.getOrCreateNextFeeWindow() == populatedUniverse.getOrCreateFeeWindowByTimestamp(chain.head_state.timestamp + total_dispute_duration)
+    assert populatedUniverse.getOrCreateNextFeeWindow() == populatedUniverse.getOrCreateFeeWindowByTimestamp(chain.head_state.timestamp + duration)
 
-def test_universe_contains(localFixture, populatedUniverse, mockMarket, chain, mockFeeWindow, mockDisputeBond, mockShareToken, mockFeeWindowFactory):
+def test_universe_contains(localFixture, populatedUniverse, mockMarket, chain, mockCash, mockMarketFactory, mockFeeWindow, mockShareToken, mockFeeWindowFactory):
     mockFeeWindow.setStartTime(0)
     assert populatedUniverse.isContainerForFeeWindow(mockFeeWindow.address) == False
     assert populatedUniverse.isContainerForMarket(mockMarket.address) == False
     assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == False
-    assert populatedUniverse.isContainerForDisputeBond(mockDisputeBond.address) == False
 
     timestamp = localFixture.contracts["Time"].getTimestamp()
     mockFeeWindowFactory.setCreateFeeWindowValue(mockFeeWindow.address)
     feeWindowId = populatedUniverse.getOrCreateFeeWindowByTimestamp(timestamp)
     mockFeeWindow.setStartTime(timestamp)
 
-    mockFeeWindow.setIsContainerForMarket(False)
     mockMarket.setIsContainerForShareToken(False)
-    mockMarket.setIsContainerForDisputeBond(False)
 
     assert populatedUniverse.isContainerForMarket(mockMarket.address) == False
     assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == False
-    assert populatedUniverse.isContainerForDisputeBond(mockDisputeBond.address) == False
 
-    mockFeeWindow.setIsContainerForMarket(True)
     mockMarket.setIsContainerForShareToken(True)
-    mockMarket.setIsContainerForDisputeBond(True)
     mockMarket.setFeeWindow(mockFeeWindow.address)
     mockShareToken.setMarket(mockMarket.address)
-    mockDisputeBond.setMarket(mockMarket.address)
+
+    mockMarketFactory.setMarket(mockMarket.address)
+    endTime = localFixture.contracts["Time"].getTimestamp() + 30 * 24 * 60 * 60 # 30 days
+
+    assert populatedUniverse.createBinaryMarket(endTime, 1000, mockCash.address, tester.a0, "topic", "description", "info")
+    assert mockMarketFactory.getCreateMarketUniverseValue() == populatedUniverse.address
 
     assert populatedUniverse.isContainerForFeeWindow(mockFeeWindow.address) == True
     assert populatedUniverse.isContainerForMarket(mockMarket.address) == True
     assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == True
-    assert populatedUniverse.isContainerForDisputeBond(mockDisputeBond.address) == True
 
 def test_open_interest(localFixture, populatedUniverse):
     multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER()
@@ -166,7 +144,7 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
 
     validity_divisor = constants.TARGET_INVALID_MARKETS_DIVISOR()
     validity_default = constants.DEFAULT_VALIDITY_BOND()
-    validity_floor = constants.DEFAULT_VALIDITY_BOND_FLOOR()
+    validity_floor = constants.VALIDITY_BOND_FLOOR()
 
     noshow_divisor = constants.TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR()
     noshow_default = constants.DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND()
@@ -282,7 +260,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
 
     assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue / 5 * multiplier
 
-def test_universe_create_market(localFixture, chain, populatedUniverse, mockMarket, mockCash, mockReputationToken, mockFeeWindow, mockAugur, mockFeeWindowFactory, mockFeeWindow):
+def test_universe_create_market(localFixture, chain, populatedUniverse, mockMarket, mockMarketFactory, mockCash, mockReputationToken, mockAugur, mockFeeWindowFactory, mockFeeWindow):
     timestamp = localFixture.contracts["Time"].getTimestamp()
     endTimeValue = timestamp + 10
     feePerEthInWeiValue = 10 ** 18
@@ -298,7 +276,12 @@ def test_universe_create_market(localFixture, chain, populatedUniverse, mockMark
     assert populatedUniverse.getOrCreatePreviousFeeWindow() == mockFeeWindow.address
 
     assert mockAugur.logMarketCreatedCalled() == False
+    mockMarketFactory.setMarket(mockMarket.address)
+
     newMarket = populatedUniverse.createBinaryMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "description", "info")
+    
+    assert mockMarketFactory.getCreateMarketUniverseValue() == populatedUniverse.address
+    assert populatedUniverse.isContainerForMarket(mockMarket.address)
     assert mockAugur.logMarketCreatedCalled() == True
     assert newMarket == mockMarket.address
 
@@ -308,7 +291,9 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     controller = fixture.contracts['Controller']
     mockReputationTokenFactory = fixture.contracts['MockReputationTokenFactory']
     mockFeeWindowFactory = fixture.contracts['MockFeeWindowFactory']
+    mockMarketFactory = fixture.contracts['MockMarketFactory']
     mockUniverseFactory = fixture.contracts['MockUniverseFactory']
+    controller.registerContract(stringToBytes('MarketFactory'), mockMarketFactory.address, twentyZeros, thirtyTwoZeros)
     controller.registerContract(stringToBytes('ReputationTokenFactory'), mockReputationTokenFactory.address, twentyZeros, thirtyTwoZeros)
     controller.registerContract(stringToBytes('FeeWindowFactory'), mockFeeWindowFactory.address, twentyZeros, thirtyTwoZeros)
     controller.registerContract(stringToBytes('UniverseFactory'), mockUniverseFactory.address, twentyZeros, thirtyTwoZeros)
@@ -354,6 +339,10 @@ def mockUniverseFactory(localFixture):
     return localFixture.contracts['MockUniverseFactory']
 
 @fixture
+def mockMarketFactory(localFixture):
+    return localFixture.contracts['MockMarketFactory']
+
+@fixture
 def mockUniverse(localFixture):
     return localFixture.contracts['MockUniverse']
 
@@ -366,20 +355,12 @@ def mockAugur(localFixture):
     return localFixture.contracts['MockAugur']
 
 @fixture
-def mockDisputeBond(localFixture):
-    return localFixture.contracts['MockDisputeBond']
-
-@fixture
 def mockShareToken(localFixture):
     return localFixture.contracts['MockShareToken']
 
 @fixture
 def mockCash(localFixture):
     return localFixture.contracts['MockCash']
-
-@fixture
-def mockFeeWindow(localFixture):
-    return localFixture.contracts['MockFeeWindow']
 
 @fixture
 def populatedUniverse(localFixture, mockReputationTokenFactory, mockReputationToken, mockUniverse):

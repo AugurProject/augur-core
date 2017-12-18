@@ -151,4 +151,20 @@ contract MockAugur is Controlled {
     function logFeeWindowCreated(IFeeWindow _feeWindow, uint256 _id) public returns (bool) {
         return true;
     }
+
+    function logInitialReportSubmitted(IUniverse _universe, address _reporter, address _market, uint256 _amountStaked, bool _isDesignatedReporter, uint256[] _payoutNumerators) public returns (bool) {
+        return true;
+    }
+
+    function logDisputeCrowdsourcerCreated(IUniverse _universe, address _market, address _disputeCrowdsourcer, uint256[] _payoutNumerators, uint256 _size) public returns (bool) {
+        return true;
+    }
+
+    function logDisputeCrowdsourcerContribution(IUniverse _universe, address _reporter, address _market, address _disputeCrowdsourcer, uint256 _amountStaked) public returns (bool) {
+        return true;
+    }
+
+    function logDisputeCrowdsourcerCompleted(IUniverse _universe, address _market, address _disputeCrowdsourcer) public returns (bool) {
+        return true;
+    }
 }
