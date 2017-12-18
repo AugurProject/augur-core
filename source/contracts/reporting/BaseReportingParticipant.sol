@@ -28,9 +28,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         require(IMarket(msg.sender) == market);
         require(market.getWinningPayoutDistributionHash() != getPayoutDistributionHash() && market.getWinningPayoutDistributionHash() != bytes32(0));
         IReputationToken _reputationToken = market.getReputationToken();
-        redeemForAllFeeWindows();
         _reputationToken.transfer(market, _reputationToken.balanceOf(this));
-        cash.transfer(market.getUniverse().getCurrentFeeWindow(), cash.balanceOf(this));
         return true;
     }
 

@@ -23,7 +23,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
     }
 
     function redeem(address _redeemer) public onlyInGoodTimes returns (bool) {
-        require(isDisavowed() || market.getWinningPayoutDistributionHash() == getPayoutDistributionHash());
+        require(isDisavowed() || market.isFinalized());
         redeemForAllFeeWindows();
         uint256 _reputationSupply = reputationToken.balanceOf(this);
         uint256 _cashSupply = cash.balanceOf(this);

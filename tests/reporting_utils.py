@@ -130,5 +130,6 @@ def getExpectedFees(fixture, cash, reportingParticipant, expectedRounds):
         expectedFees += cash.balanceOf(feeWindow.address) * stake / feeToken.totalSupply()
         feeWindow = fixture.applySignature("FeeWindow", universe.getOrCreateFeeWindowBefore(feeWindow.address))
         feeToken = fixture.applySignature("FeeToken", feeWindow.getFeeToken())
-    assert expectedRounds == rounds, "Only had fees from " + str(rounds) + " rounds"
+    assert expectedRounds == rounds, "Had fees from " + str(rounds) + " rounds instead of " + str(expectedRounds)
+    assert expectedFees > 0, "No fees. Tests should just use 0 if this is the expected case"
     return expectedFees

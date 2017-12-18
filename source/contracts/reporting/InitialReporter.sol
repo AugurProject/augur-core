@@ -26,7 +26,7 @@ contract InitialReporter is DelegationTarget, BaseReportingParticipant, Initiali
     }
 
     function redeem(address) public returns (bool) {
-        require(isDisavowed() || market.getWinningPayoutDistributionHash() == payoutDistributionHash);
+        require(isDisavowed() || market.isFinalized());
         redeemForAllFeeWindows();
         reputationToken.transfer(actualReporter, reputationToken.balanceOf(this));
         cash.withdrawEtherTo(actualReporter, cash.balanceOf(this));
