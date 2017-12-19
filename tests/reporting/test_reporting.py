@@ -31,8 +31,9 @@ def test_designatedReportHappyPath(localFixture, universe, market):
         assert market.doInitialReport([0, market.getNumTicks()], False)
 
     # the market is now assigned a fee window
-    assert market.getFeeWindow()
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    newFeeWindowAddress = market.getFeeWindow()
+    assert newFeeWindowAddress
+    feeWindow = localFixture.applySignature('FeeWindow', newFeeWindowAddress)
 
     # time marches on and the market can be finalized
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
@@ -46,8 +47,9 @@ def test_initialReportHappyPath(localFixture, universe, market):
     assert market.doInitialReport([0, market.getNumTicks()], False, sender=tester.k1)
 
     # the market is now assigned a fee window
-    assert market.getFeeWindow()
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    newFeeWindowAddress = market.getFeeWindow()
+    assert newFeeWindowAddress
+    feeWindow = localFixture.applySignature('FeeWindow', newFeeWindowAddress)
 
     # time marches on and the market can be finalized
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
@@ -63,8 +65,9 @@ def test_initialReport_transfer_ownership(localFixture, universe, market, cash):
     assert market.doInitialReport([0, market.getNumTicks()], False, sender=tester.k1)
 
     # the market is now assigned a fee window
-    assert market.getFeeWindow()
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    newFeeWindowAddress = market.getFeeWindow()
+    assert newFeeWindowAddress
+    feeWindow = localFixture.applySignature('FeeWindow', newFeeWindowAddress)
 
     # time marches on and the market can be finalized
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
@@ -202,7 +205,8 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
     amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
     assert market.contribute(chosenPayoutNumerators, False, amount)
-    assert market.getFeeWindow() != feeWindow
+    newFeeWindowAddress = market.getFeeWindow()
+    assert newFeeWindowAddress != feeWindow
 
     # dispute the second market with an invalid outcome
     chosenPayoutNumerators = [categoricalMarket.getNumTicks() / 3, categoricalMarket.getNumTicks() / 3, categoricalMarket.getNumTicks() / 3]
@@ -212,7 +216,7 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     assert categoricalMarket.getFeeWindow() != feeWindow
 
     # progress time forward
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    feeWindow = localFixture.applySignature('FeeWindow', newFeeWindowAddress)
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
 
     # finalize the markets

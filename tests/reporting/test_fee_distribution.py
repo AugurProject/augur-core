@@ -133,10 +133,11 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
     with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
         assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k1, startgas=long(6.7 * 10**6))
 
-    assert market.getFeeWindow() != feeWindow.address
+    newFeeWindowAddress = market.getFeeWindow()
+    assert newFeeWindowAddress != feeWindow.address
 
     # fast forward time to the fee new window and generate additional fees
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    feeWindow = localFixture.applySignature('FeeWindow', newFeeWindowAddress)
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
     # Fast forward time until the new fee window is over and we can redeem our winning stake, and dispute bond tokens and receive fees
@@ -243,10 +244,11 @@ def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market,
     with TokenDelta(reputationToken, -amount, tester.a2, "Disputing did not reduce REP balance correctly"):
         assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k2, startgas=long(6.7 * 10**6))
 
-    assert market.getFeeWindow() != feeWindow.address
+    newFeeWindowAddress = market.getFeeWindow()
+    assert newFeeWindowAddress != feeWindow.address
 
     # fast forward time to the fee new window and generate additional fees
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    feeWindow = localFixture.applySignature('FeeWindow', newFeeWindowAddress)
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
     # Fast forward time until the new fee window is over and we can redeem our winning stake, and dispute bond tokens and receive fees
