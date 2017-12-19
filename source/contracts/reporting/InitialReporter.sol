@@ -6,9 +6,10 @@ import 'reporting/IInitialReporter.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/BaseReportingParticipant.sol';
 import 'libraries/Extractable.sol';
+import 'libraries/Ownable.sol';
 
 
-contract InitialReporter is DelegationTarget, Extractable, BaseReportingParticipant, Initializable, IInitialReporter {
+contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportingParticipant, Initializable, IInitialReporter {
     address private designatedReporter;
     address private actualReporter;
     uint256 private reportTimestamp;
@@ -31,10 +32,10 @@ contract InitialReporter is DelegationTarget, Extractable, BaseReportingParticip
             market.finalize();
         }
         redeemForAllFeeWindows();
-        reputationToken.transfer(actualReporter, reputationToken.balanceOf(this));
+        reputationToken.transfer(owner, reputationToken.balanceOf(this));
         uint256 _cashBalance = cash.balanceOf(this);
         if (_cashBalance > 0) {
-            cash.withdrawEtherTo(actualReporter, _cashBalance);
+            cash.withdrawEtherTo(owner, _cashBalance);
         }
         return true;
     }
@@ -42,6 +43,7 @@ contract InitialReporter is DelegationTarget, Extractable, BaseReportingParticip
     function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes returns (bool) {
         require(IMarket(msg.sender) == market);
         actualReporter = _reporter;
+        owner = _reporter;
         payoutDistributionHash = _payoutDistributionHash;
         reportTimestamp = controller.getTimestamp();
         invalid = _invalid;
@@ -67,7 +69,7 @@ contract InitialReporter is DelegationTarget, Extractable, BaseReportingParticip
     }
 
     function withdrawInEmergency() public onlyInBadTimes returns (bool) {
-        reputationToken.transfer(actualReporter, reputationToken.balanceOf(this));
+        reputationToken.transfer(owner, reputationToken.balanceOf(this));
         return true;
     }
 

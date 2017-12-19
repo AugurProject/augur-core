@@ -162,7 +162,6 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
         with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert initialReporter.redeem(tester.a0)
 
-
 def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
     # Initial Report disputed
     proceedToNextRound(localFixture, market, tester.k1, True)

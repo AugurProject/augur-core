@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, AssertLog
+from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, AssertLog, EtherDelta
 from reporting_utils import proceedToDesignatedReporting, proceedToInitialReporting, proceedToNextRound, proceedToFork, finalizeFork
 
 tester.STARTGAS = long(6.7 * 10**6)
@@ -48,6 +48,39 @@ def test_initialReportHappyPath(localFixture, universe, market):
     # time marches on and the market can be finalized
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.finalize()
+
+def test_initialReport_transfer_ownership(localFixture, universe, market, cash):
+    reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
+
+    # proceed to the initial reporting period
+    proceedToInitialReporting(localFixture, market)
+
+    # do an initial report as someone other than the designated reporter
+    assert market.doInitialReport([0, market.getNumTicks()], False, sender=tester.k1)
+
+    # the market is now assigned a fee window
+    assert market.getFeeWindow()
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+
+    # time marches on and the market can be finalized
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    assert market.finalize()
+
+    # We can see that the market reports the designated reporter did not show
+    assert not market.designatedReporterShowed()
+
+    # Let's get a reference to the Initial Reporter bond and transfer it to the original designated reporter account
+    initialReporter = localFixture.applySignature("InitialReporter", market.getInitialReporter())
+    assert initialReporter.transferOwnership(initialReporter.getDesignatedReporter(), sender=tester.k1)
+
+    # The market still correctly indicates the designated reporter did not show up
+    assert not market.designatedReporterShowed()
+
+    # When we redeem the initialReporter it goes to the correct party as well
+    expectedRep = initialReporter.getStake()
+    owner = initialReporter.getOwner()
+    with TokenDelta(reputationToken, expectedRep, owner, "Redeeming didn't refund REP"):
+        assert initialReporter.redeem(owner)
 
 @mark.parametrize('rounds', [
     2,
