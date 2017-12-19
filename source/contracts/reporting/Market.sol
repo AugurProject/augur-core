@@ -407,6 +407,10 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return endTime + Reporting.getDesignatedReportingDurationSeconds();
     }
 
+    function getNumParticipants() public view returns (uint256) {
+        return participants.length;
+    }
+
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {
         uint256 _sum = 0;
         uint256 _previousValue = _payoutNumerators[0];

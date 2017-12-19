@@ -151,7 +151,7 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
 
     expectedFees = expectedTotalFees * 2 / 3
     expectedRep = market.getTotalStake()
-    assert expectedRep == marketDisputeCrowdsourcer.getStake() * 1.5
+    assert expectedRep == long(marketDisputeCrowdsourcer.getStake() + marketDisputeCrowdsourcer.getStake() / 2)
     with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't refund REP"):
         with EtherDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert marketDisputeCrowdsourcer.redeem(tester.a1, sender=tester.k1)
@@ -195,21 +195,21 @@ def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, 
 
     # The initial reporter locked in REP for 5 rounds.
     expectedInitialReporterFees = getExpectedFees(localFixture, cash, initialReporter, 5)
-    expectedRep = initialReporter.getStake() * 1.5
+    expectedRep = long(initialReporter.getStake() + initialReporter.getStake() / 2)
     with TokenDelta(reputationToken, expectedRep, tester.a0, "Redeeming didn't refund REP"):
         with EtherDelta(expectedInitialReporterFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert initialReporter.redeem(tester.a0)
 
     # The first winning dispute crowdsourcer will get fees for 4 rounds
     expectedWinningDisputeCrowdsourcer1Fees = getExpectedFees(localFixture, cash, winningDisputeCrowdsourcer1, 4)
-    expectedRep = winningDisputeCrowdsourcer1.getStake() * 1.5
+    expectedRep = long(winningDisputeCrowdsourcer1.getStake() + winningDisputeCrowdsourcer1.getStake() / 2)
     with TokenDelta(reputationToken, expectedRep, tester.a2, "Redeeming didn't refund REP"):
         with EtherDelta(expectedWinningDisputeCrowdsourcer1Fees, tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert winningDisputeCrowdsourcer1.redeem(tester.a2)
 
     # The final winning dispute crowdsourcer will get fees for 2 rounds
     expectedWinningDisputeCrowdsourcer2Fees = getExpectedFees(localFixture, cash, winningDisputeCrowdsourcer2, 2)
-    expectedRep = winningDisputeCrowdsourcer2.getStake() * 1.5
+    expectedRep = long(winningDisputeCrowdsourcer2.getStake() + winningDisputeCrowdsourcer2.getStake() / 2)
     with TokenDelta(reputationToken, expectedRep, tester.a3, "Redeeming didn't refund REP"):
         with EtherDelta(expectedWinningDisputeCrowdsourcer2Fees, tester.a3, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert winningDisputeCrowdsourcer2.redeem(tester.a3)
@@ -259,12 +259,13 @@ def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market,
     expectedFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
     expectedFees = expectedFees / 3 * 2
 
-    expectedRep = amount * 1.5
+    expectedRep = long(amount + amount / 2)
     with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't refund REP"):
         with EtherDelta(expectedFees / 2, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert marketDisputeCrowdsourcer.redeem(tester.a1)
 
-    with TokenDelta(reputationToken, expectedRep, tester.a2, "Redeeming didn't refund REP"):
+    # The + 1 is for rounding errors
+    with TokenDelta(reputationToken, expectedRep + 1, tester.a2, "Redeeming didn't refund REP"):
         with EtherDelta(expectedFees - expectedFees / 2, tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert marketDisputeCrowdsourcer.redeem(tester.a2)
 
@@ -281,7 +282,7 @@ def test_forking(localFixture, universe, market, categoricalMarket, cash, reputa
         testerIndex = testerIndex % len(testers)
 
     # Have the participants fork and create new child universes
-    for i in range(17):
+    for i in range(market.getNumParticipants()):
         reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
         with PrintGasUsed(localFixture, "Fork:", 0):
             reportingParticipant.fork(startgas=long(6.7 * 10**6))
@@ -302,7 +303,7 @@ def test_forking(localFixture, universe, market, categoricalMarket, cash, reputa
 
     # Now we'll redeem the forked reporting participants
     testers = [tester.a0, tester.a1, tester.a2, tester.a3]
-    for i in range(17):
+    for i in range(market.getNumParticipants()):
         account = testers[i % 4]
         reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
         expectedRep = reportingParticipant.getStake()

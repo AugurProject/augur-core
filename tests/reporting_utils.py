@@ -43,7 +43,7 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
         chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
         amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
         with PrintGasUsed(fixture, "Contribute:", 0):
-            market.contribute(chosenPayoutNumerators, False, amount, startgas=long(6.7 * 10**6), sender=contributor)
+            market.contribute(chosenPayoutNumerators, False, amount, startgas=long(6.7 * 10**7), sender=contributor)
         assert market.getForkingMarket() or market.getFeeWindow() != feeWindow
 
     if (doGenerateFees):
@@ -54,11 +54,11 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
         feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
         fixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
-def proceedToFork(fixture, market, universe):
+def proceedToFork(fixture, market, universe):    
     while (market.getForkingMarket() == longToHexString(0)):
         proceedToNextRound(fixture, market)
 
-    for i in range(17):
+    for i in range(market.getNumParticipants()):
         reportingParticipant = fixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
         reportingParticipant.fork()
 

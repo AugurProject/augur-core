@@ -7,14 +7,16 @@ library Reporting {
     uint256 private constant CLAIM_PROCEEDS_WAIT_TIME = 3 days;
     uint256 private constant FORK_DURATION_SECONDS = 60 days;
 
+    uint256 private constant INITIAL_REP_SUPPLY = 11 * 10 ** 6 * 10 ** 18; // 11 Million REP
     // CONSIDER: Should this be a constant?
-    uint256 private constant DISPUTE_THRESHOLD_FOR_FORK = 137500 ether;
+    uint256 private constant DISPUTE_THRESHOLD_FOR_FORK = INITIAL_REP_SUPPLY / 80; // 1.25% of the REP total supply
+    uint256 private constant INITIAL_REPORT_MIN_VALUE = DISPUTE_THRESHOLD_FOR_FORK / 2**20; // This value will result in a maximum 20 round dispute sequence
+    uint256 private constant DEFAULT_DESIGNATED_REPORT_STAKE = INITIAL_REPORT_MIN_VALUE;
+    uint256 private constant DESIGNATED_REPORT_STAKE_FLOOR = INITIAL_REPORT_MIN_VALUE;
+    uint256 private constant DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND = INITIAL_REPORT_MIN_VALUE;
+    uint256 private constant DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR = INITIAL_REPORT_MIN_VALUE;
     uint256 private constant DEFAULT_VALIDITY_BOND = 1 ether / 100;
     uint256 private constant VALIDITY_BOND_FLOOR = 1 ether / 100;
-    uint256 private constant DEFAULT_DESIGNATED_REPORT_STAKE = 2 ether;
-    uint256 private constant DESIGNATED_REPORT_STAKE_FLOOR = 2 ether;
-    uint256 private constant DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND = 2 ether;
-    uint256 private constant DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR = 2 ether;
     uint256 private constant DEFAULT_REPORTING_FEE_DIVISOR = 100; // 1% fees
     uint256 private constant MAXIMUM_REPORTING_FEE_DIVISOR = 10000; // Minimum .01% fees
     uint256 private constant MINIMUM_REPORTING_FEE_DIVISOR = 3; // Maximum 33.3~% fees. Note than anything less than a value of 2 here will likely result in bugs such as divide by 0 cases.
@@ -28,7 +30,6 @@ library Reporting {
     uint256 private constant TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR = 100; // 1% of markets are expected to have an incorrect designate report
     uint256 private constant TARGET_REP_MARKET_CAP_MULTIPLIER = 5;
 
-    uint256 private constant INITIAL_REP_SUPPLY = 11 * 10 ** 6 * 10 ** 18; // 11 Million REP
     uint256 private constant FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR = 20; // 5% bonus to any REP migrated during a fork
     uint256 private constant FORK_REP_MIGRATION_VICTORY_DIVISOR = 2; // 50% of the REP supply in the forking universe has to migrate for a victory
 
