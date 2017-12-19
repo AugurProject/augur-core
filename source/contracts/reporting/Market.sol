@@ -410,6 +410,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {
         uint256 _sum = 0;
         uint256 _previousValue = _payoutNumerators[0];
+        require(_payoutNumerators.length == numOutcomes);
         for (uint8 i = 0; i < _payoutNumerators.length; i++) {
             uint256 _value = _payoutNumerators[i];
             // This cannot reasonably exceed uint256 max value as it would require an invalid numTicks

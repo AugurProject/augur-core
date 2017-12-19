@@ -14,6 +14,10 @@ def test_designatedReportHappyPath(localFixture, universe, market):
     with raises(TransactionFailed):
         market.doInitialReport([0, market.getNumTicks()], False, sender=tester.k1)
 
+    # Reporting with an invalid number of outcomes should fail
+    with raises(TransactionFailed):
+        market.doInitialReport([0, 0, market.getNumTicks()], False)
+
     # do an initial report as the designated reporter
     initialReportLog = {
         "universe": universe.address,
@@ -201,7 +205,7 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     assert market.getFeeWindow() != feeWindow
 
     # dispute the second market with an invalid outcome
-    chosenPayoutNumerators = [categoricalMarket.getNumTicks() / 2, categoricalMarket.getNumTicks() / 2]
+    chosenPayoutNumerators = [categoricalMarket.getNumTicks() / 3, categoricalMarket.getNumTicks() / 3, categoricalMarket.getNumTicks() / 3]
     chosenPayoutHash = categoricalMarket.derivePayoutDistributionHash(chosenPayoutNumerators, True)
     amount = 2 * categoricalMarket.getTotalStake() - 3 * categoricalMarket.getStakeInOutcome(chosenPayoutHash)
     assert categoricalMarket.contribute(chosenPayoutNumerators, True, amount)

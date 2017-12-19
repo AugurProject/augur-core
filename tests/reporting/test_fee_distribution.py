@@ -334,7 +334,7 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
     designatedReportCost = universe.getOrCacheDesignatedReportStake()
     with TokenDelta(reputationToken, 0, tester.a0, "Doing the designated report didn't deduct REP correctly or didn't award the no show bond"):
         market.doInitialReport([market.getNumTicks(), 0], False)
-        categoricalMarket.doInitialReport([categoricalMarket.getNumTicks(), 0], False)
+        categoricalMarket.doInitialReport([categoricalMarket.getNumTicks(), 0, 0], False)
         scalarMarket.doInitialReport([scalarMarket.getNumTicks(), 0], False)
 
     return fixture.createSnapshot()
