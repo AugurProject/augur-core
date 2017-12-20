@@ -40,7 +40,7 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
 
     function migrateIn(address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
-        require(ReputationToken(msg.sender) == universe.getParentUniverse().getReputationToken());
+        require(ReputationToken(msg.sender) == _parentUniverse.getReputationToken());
         mint(_reporter, _attotokens);
         // Award a bonus if migration is done before the fork has resolved and check if the fork can be resolved early
         if (!_parentUniverse.getForkingMarket().isFinalized()) {

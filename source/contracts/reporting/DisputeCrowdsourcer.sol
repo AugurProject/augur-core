@@ -66,20 +66,6 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         return true;
     }
 
-    function fork() public onlyInGoodTimes returns (bool) {
-        require(market == market.getUniverse().getForkingMarket());
-        IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
-        IReputationToken _newReputationToken = _newUniverse.getReputationToken();
-        redeemForAllFeeWindows();
-        uint256 _balance = reputationToken.balanceOf(this);
-        reputationToken.migrateOut(_newReputationToken, _balance);
-        _newReputationToken.mintForReportingParticipant(_balance);
-        // by removing the market, the token will become disavowed and therefore users can remove freely
-        reputationToken = _newReputationToken;
-        market = IMarket(0);
-        return true;
-    }
-
     function disavow() public onlyInGoodTimes returns (bool) {
         require(IMarket(msg.sender) == market);
         market = IMarket(0);

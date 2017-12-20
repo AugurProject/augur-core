@@ -55,19 +55,6 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
         return true;
     }
 
-    function fork() public onlyInGoodTimes returns (bool) {
-        require(market == market.getUniverse().getForkingMarket());
-        IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
-        IReputationToken _newReputationToken = _newUniverse.getReputationToken();
-        redeemForAllFeeWindows();
-        uint256 _balance = reputationToken.balanceOf(this);
-        reputationToken.migrateOut(_newReputationToken, _balance);
-        _newReputationToken.mintForReportingParticipant(_balance);
-        reputationToken = _newReputationToken;
-        market = IMarket(0);
-        return true;
-    }
-
     function withdrawInEmergency() public onlyInBadTimes returns (bool) {
         reputationToken.transfer(owner, reputationToken.balanceOf(this));
         return true;

@@ -32,6 +32,19 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         return true;
     }
 
+    function fork() public onlyInGoodTimes returns (bool) {
+        require(market == market.getUniverse().getForkingMarket());
+        IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
+        IReputationToken _newReputationToken = _newUniverse.getReputationToken();
+        redeemForAllFeeWindows();
+        uint256 _balance = reputationToken.balanceOf(this);
+        reputationToken.migrateOut(_newReputationToken, _balance);
+        _newReputationToken.mintForReportingParticipant(_balance);
+        reputationToken = _newReputationToken;
+        market = IMarket(0);
+        return true;
+    }
+
     function redeemForAllFeeWindows() internal returns (bool) {
         IFeeWindow _curFeeWindow = feeWindow;
         IUniverse _universe = feeWindow.getUniverse();
