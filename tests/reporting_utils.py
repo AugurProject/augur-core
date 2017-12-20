@@ -31,13 +31,13 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
         # This will also use the InitialReporter which is not a DisputeCrowdsourcer, but has the called function from abstract inheritance
         winningReport = fixture.applySignature('DisputeCrowdsourcer', market.getWinningReportingParticipant())
         winningPayoutHash = winningReport.getPayoutDistributionHash()
-        firstReportWinning = market.derivePayoutDistributionHash(payoutNumerators, False) == winningPayoutHash
         
         if (randomPayoutNumerators):
             chosenPayoutNumerators = [0] * market.getNumberOfOutcomes()
             chosenPayoutNumerators[0] = randint(0, market.getNumTicks())
             chosenPayoutNumerators[1] = market.getNumTicks() - chosenPayoutNumerators[0]
         else:
+            firstReportWinning = market.derivePayoutDistributionHash(payoutNumerators, False) == winningPayoutHash
             chosenPayoutNumerators = payoutNumerators if not firstReportWinning else payoutNumerators[::-1]
         
         chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
