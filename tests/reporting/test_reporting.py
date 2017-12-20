@@ -30,6 +30,9 @@ def test_designatedReportHappyPath(localFixture, universe, market):
     with AssertLog(localFixture, "InitialReportSubmitted", initialReportLog):
         assert market.doInitialReport([0, market.getNumTicks()], False)
 
+    with raises(TransactionFailed, message="Cannot initial report twice"):
+        assert market.doInitialReport([0, market.getNumTicks()], False)
+
     # the market is now assigned a fee window
     newFeeWindowAddress = market.getFeeWindow()
     assert newFeeWindowAddress
@@ -38,6 +41,9 @@ def test_designatedReportHappyPath(localFixture, universe, market):
     # time marches on and the market can be finalized
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.finalize()
+
+    with raises(TransactionFailed, message="Cannot finalize twice"):
+        market.finalize()
 
 def test_initialReportHappyPath(localFixture, universe, market):
     # proceed to the initial reporting period
@@ -148,6 +154,9 @@ def test_forking(finalizeByMigration, localFixture, universe, market, categorica
 
     # proceed to forking
     proceedToFork(localFixture, market, universe)
+
+    with raises(TransactionFailed, message="We cannot migrate until the fork is finalized"):
+        categoricalMarket.migrateThroughOneFork()
 
     # finalize the fork
     finalizeFork(localFixture, market, universe, finalizeByMigration)
