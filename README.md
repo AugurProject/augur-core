@@ -139,9 +139,9 @@ npm run docker:test:integration
 ## Source code organization
 
 Augur's smart contracts are organized into four folders:
-- `source/contracts/factories`: Constructors for universes, markets, reporting windows, etc.
+- `source/contracts/factories`: Constructors for universes, markets, fee windows, etc.
 - `source/contracts/libraries`: Data structures used elsewhere in the source code.
-- `source/contracts/reporting`: Creation and manipulation of universes, markets, reporting windows, and reporting-related tokens.
+- `source/contracts/reporting`: Creation and manipulation of universes, markets, fee windows, and reporting-related tokens.
 - `source/contracts/trading`: Functions to create, view, and fill orders, to issue and close out complete sets of shares, and for traders to claim proceeds after markets are closed.
 
 ## Additional notes

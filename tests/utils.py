@@ -97,3 +97,35 @@ class PrintGasUsed():
             print "GAS USED WITH %s : %i. ORIGINAL: %i DELTA: %i" % (self.action, gasUsed, self.originalGas, self.originalGas - gasUsed)
         else:
             print "GAS USED WITH %s : %i" % (self.action, gasUsed)
+
+class AssertLog():
+
+    def __init__(self, fixture, eventName, data, skip=0):
+        self.fixture = fixture
+        self.eventName = eventName
+        self.data = data
+        self.skip = skip
+        self.logs = []
+
+    def __enter__(self):
+        captureFilteredLogs(self.fixture.chain.head_state, self.fixture.contracts['Augur'], self.logs)
+
+    def __exit__(self, *args):
+        if args[1]:
+            raise args[1]
+
+        foundLog = None
+        for log in self.logs:
+            if (log["_event_type"] == self.eventName):
+                if (self.skip == 0):
+                    foundLog = log
+                    break
+                else:
+                    self.skip -= 1
+
+        if not foundLog:
+            raise Exception("Assert log failed to find the log with event name %s" % (self.eventName))
+
+        for (key, expectedValue) in self.data.items():
+            actualValue = log.get(key)
+            assert actualValue == expectedValue, "%s Log had incorrect value for key \"%s\". Expected: %s. Actual: %s" % (self.eventName, key, expectedValue, actualValue)

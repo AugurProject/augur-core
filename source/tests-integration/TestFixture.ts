@@ -60,13 +60,12 @@ export class TestFixture {
         const marketCreationFee = await universe.getOrCacheMarketCreationCost_();
 
         const marketAddress = await universe.createCategoricalMarket_(endTime, feePerEthInWei, denominationToken, designatedReporter, outcomes, stringTo32ByteHex(" "), 'description', '', { attachedEth: marketCreationFee });
-        if (!marketAddress) {
+        if (!marketAddress || marketAddress == "0x") {
             throw new Error("Unable to get address for new categorical market.");
         }
         const createMarketTransactionHash = await universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken, designatedReporter, outcomes, stringTo32ByteHex(" "), 'description', '', { attachedEth: marketCreationFee });
         await this.connector.waitForTransactionReceipt(createMarketTransactionHash, `Creating market.`);
         const market = new Market(this.connector, this.accountManager, marketAddress, this.configuration.gasPrice);
-
         if (await market.getTypeName_() !== stringTo32ByteHex("Market")) {
             throw new Error("Unable to create new categorical market");
         }
@@ -74,7 +73,7 @@ export class TestFixture {
     }
 
     public async createReasonableMarket(universe: Universe, denominationToken: string, outcomes: string[]): Promise<Market> {
-        const endTime = new BN(Math.round(new Date().getTime() / 1000));
+        const endTime = new BN(Math.round(new Date().getTime() / 1000) + 30 * 24 * 60 * 60);
         const fee = (new BN(10)).pow(new BN(16));
         return await this.createMarket(universe, outcomes, endTime, fee, denominationToken, this.accountManager.defaultAddress);
     }

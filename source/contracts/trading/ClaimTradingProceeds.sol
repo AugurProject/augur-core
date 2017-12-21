@@ -22,17 +22,18 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
     using SafeMathUint256 for uint256;
 
     function claimTradingProceeds(IMarket _market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
-        require(_market.getReportingState() == IMarket.ReportingState.FINALIZED);
-        require(controller.getTimestamp() > _market.getFinalizationTime() + Reporting.getClaimTradingProceedsWaitTime());
+        if (!_market.isFinalized()) {
+            _market.finalize();
+        }
 
-        IStakeToken _winningStakeToken = _market.getFinalWinningStakeToken();
+        require(controller.getTimestamp() > _market.getFinalizationTime() + Reporting.getClaimTradingProceedsWaitTime());
 
         ICash _denominationToken = _market.getDenominationToken();
 
         for (uint8 _outcome = 0; _outcome < _market.getNumberOfOutcomes(); ++_outcome) {
             IShareToken _shareToken = _market.getShareToken(_outcome);
             uint256 _numberOfShares = _shareToken.balanceOf(msg.sender);
-            var (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _winningStakeToken, _outcome, _numberOfShares);
+            var (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _outcome, _numberOfShares);
 
             if (_proceeds > 0) {
                 _market.getUniverse().decrementOpenInterest(_proceeds);
@@ -50,7 +51,7 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
                 require(_denominationToken.transferFrom(_market, _market.getMarketCreatorMailbox(), _creatorShare));
             }
             if (_reporterShare > 0) {
-                require(_denominationToken.transferFrom(_market, _market.getUniverse().getOrCreateNextReportingWindow(), _reporterShare));
+                require(_denominationToken.transferFrom(_market, _market.getUniverse().getOrCreateNextFeeWindow(), _reporterShare));
             }
         }
 
@@ -61,16 +62,16 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
         controller.getAugur().logTradingProceedsClaimed(_market.getUniverse(), _shareToken, _sender, _market, _numShares, _numPayoutTokens, _sender.balance.add(_numPayoutTokens));
     }
 
-    function divideUpWinnings(IMarket _market, IStakeToken _winningStakeToken, uint8 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
-        _proceeds = calculateProceeds(_winningStakeToken, _outcome, _numberOfShares);
+    function divideUpWinnings(IMarket _market, uint8 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
+        _proceeds = calculateProceeds(_market, _outcome, _numberOfShares);
         _creatorShare = calculateCreatorFee(_market, _proceeds);
         _reporterShare = calculateReportingFee(_market, _proceeds);
         _shareHolderShare = _proceeds.sub(_creatorShare).sub(_reporterShare);
         return (_proceeds, _shareHolderShare, _creatorShare, _reporterShare);
     }
 
-    function calculateProceeds(IStakeToken _winningStakeToken, uint8 _outcome, uint256 _numberOfShares) public view returns (uint256) {
-        uint256 _payoutNumerator = _winningStakeToken.getPayoutNumerator(_outcome);
+    function calculateProceeds(IMarket _market, uint8 _outcome, uint256 _numberOfShares) public view returns (uint256) {
+        uint256 _payoutNumerator = _market.getWinningPayoutNumerator(_outcome);
         return _numberOfShares.mul(_payoutNumerator);
     }
 

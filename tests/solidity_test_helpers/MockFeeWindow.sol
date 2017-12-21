@@ -2,13 +2,14 @@ pragma solidity ^0.4.18;
 
 import 'reporting/IMarket.sol';
 import 'reporting/IUniverse.sol';
-import 'reporting/IReportingWindow.sol';
+import 'reporting/IFeeWindow.sol';
 import 'libraries/ITyped.sol';
 import 'reporting/IReputationToken.sol';
 import 'libraries/Initializable.sol';
+import 'TEST/MockVariableSupplyToken.sol';
 
 
-contract MockReportingWindow is Initializable, IReportingWindow {
+contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
     bool private setMigrateMarketInFromSiblingValue;
     bool private setMigrateMarketInFromNiblingValue;
     bool private setRemoveMarketValue;
@@ -22,35 +23,30 @@ contract MockReportingWindow is Initializable, IReportingWindow {
     uint256 private setNumInvalidMarketsValue;
     uint256 private setNumIncorrectDesignatedReportMarketsValue;
     uint256 private setAvgReportingGasPriceValue;
-    IReportingWindow private setNextReportingWindowValue;
-    IReportingWindow private setPreviousReportingWindowValue;
+    IFeeWindow private setNextFeeWindowValue;
+    IFeeWindow private setPreviousFeeWindowValue;
     uint256 private setNumDesignatedReportNoShowsValue;
     bool private setAllMarketsFinalizedValue;
-    uint256 private setCollectStakeTokenReportingFeesValue;
-    uint256 private setCollectDisputeBondReportingFeesValue;
-    uint256 private setCollectParticipationTokenReportingFeesValue;
-    bool private setTriggerMigrateFeesDueToForkValue;
+    uint256 private setCollectFeeWindowReportingFeesValue;
     bool private setMigrateFeesDueToForkValue;
     bool private setIsContainerForMarketValue;
     bool private setIsForkingMarketFinalizedValue;
     bool private setIsDisputeActiveValue;
     IMarket private market;
     IUniverse private initializeUniverseValue;
-    uint256 private initializeReportingWindowIdValue;
+    uint256 private initializeFeeWindowIdValue;
     address private collectReporterAddress;
-    uint256 private collectAttoStakeTokens;
     bool private collectForgoFees;
     bool private setIsReportingActiveValue;
     bool private setIsActiveValue;
     bool private setIsOverValue;
-    bool private setIsContainerForParticipationTokenValue;
+    bool private setIsContainerForFeeWindowValue;
     bool private setIncreaseTotalStakeValue;
     bool private setIncreaseTotalWinningStakeValue;
-    bool private setMigrateFeesDueToMarketMigrationValue;
     bool private setNoteDesignatedReportValue;
 
     /*
-    * setters to feed the getters and impl of IReportingWindow
+    * setters to feed the getters and impl of IFeeWindow
     */
     function reset() public {
         setUpdateMarketPhaseValue = false;
@@ -117,12 +113,12 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setAvgReportingGasPriceValue = _setAvgReportingGasPriceValue;
     }
 
-    function setNextReportingWindow(IReportingWindow _setNextReportingWindowValue) public {
-        setNextReportingWindowValue = _setNextReportingWindowValue;
+    function setNextFeeWindow(IFeeWindow _setNextFeeWindowValue) public {
+        setNextFeeWindowValue = _setNextFeeWindowValue;
     }
 
-    function setPreviousReportingWindow(IReportingWindow _setPreviousReportingWindowValue) public {
-        setPreviousReportingWindowValue = _setPreviousReportingWindowValue;
+    function setPreviousFeeWindow(IFeeWindow _setPreviousFeeWindowValue) public {
+        setPreviousFeeWindowValue = _setPreviousFeeWindowValue;
     }
 
     function setNumDesignatedReportNoShows(uint256 _setNumDesignatedReportNoShowsValue) public {
@@ -133,20 +129,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setAllMarketsFinalizedValue = _setAllMarketsFinalizedValue;
     }
 
-    function setCollectStakeTokenReportingFees(uint256 _setCollectStakeTokenReportingFeesValue) public {
-        setCollectStakeTokenReportingFeesValue = _setCollectStakeTokenReportingFeesValue;
-    }
-
-    function setCollectDisputeBondReportingFees(uint256 _setCollectDisputeBondReportingFeesValue) public {
-        setCollectDisputeBondReportingFeesValue = _setCollectDisputeBondReportingFeesValue;
-    }
-
-    function setCollectParticipationTokenReportingFees(uint256 _setCollectParticipationTokenReportingFeesValue) public {
-        setCollectParticipationTokenReportingFeesValue = _setCollectParticipationTokenReportingFeesValue;
-    }
-
-    function setTriggerMigrateFeesDueToFork(bool _setTriggerMigrateFeesDueToForkValue) public {
-        setTriggerMigrateFeesDueToForkValue = _setTriggerMigrateFeesDueToForkValue;
+    function setCollectFeeWindowReportingFees(uint256 _setCollectFeeWindowReportingFeesValue) public {
+        setCollectFeeWindowReportingFeesValue = _setCollectFeeWindowReportingFeesValue;
     }
 
     function setMigrateFeesDueToFork(bool _setMigrateFeesDueToForkValue) public {
@@ -181,8 +165,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setIsActiveValue = _isActive;
     }
 
-    function setIsContainerForParticipationToken(bool _isContainerForParticipationToken) public {
-        setIsContainerForParticipationTokenValue = _isContainerForParticipationToken;
+    function setIsContainerForFeeWindow(bool _isContainerForFeeWindow) public {
+        setIsContainerForFeeWindowValue = _isContainerForFeeWindow;
     }
 
     function getIncreaseTotalStakeCalled() public returns(bool) {
@@ -193,53 +177,33 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         setIncreaseTotalWinningStakeValue = _setIncreaseTotalWinningStakeValue;
     }
 
-    function setMigrateFeesDueToMarketMigration(bool _setMigrateFeesDueToMarketMigration) public {
-        setMigrateFeesDueToMarketMigrationValue = _setMigrateFeesDueToMarketMigration;
-    }
-
     function getInitializeUniverseValue() public view returns(IUniverse) {
         return initializeUniverseValue;
     }
 
-    function getinitializeReportingWindowIdValue() public returns(uint256) {
-        return initializeReportingWindowIdValue;
+    function getinitializeFeeWindowIdValue() public returns(uint256) {
+        return initializeFeeWindowIdValue;
     }
 
     function getCollectReporterAddress() public returns(address) {
         return collectReporterAddress;
     }
 
-    function getCollectAttoStakeTokens() public returns(uint256) {
-        return collectAttoStakeTokens;
-    }
-
-    function getCollectForgoFees() public returns(bool) {
-        return collectForgoFees;
-    }
-
-    function callMigrateFeesDueToMarketMigration(IReportingWindow _reportingWindow, IMarket _market) public returns (bool) {
-        return _reportingWindow.migrateFeesDueToMarketMigration(_market);
-    }
-
-    function callMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool) {
-        return _reportingWindow.migrateFeesDueToFork();
-    }
-
-    function callTrustedReportingWindowTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
-        return _reputationToken.trustedReportingWindowTransfer(_source, _destination, _attotokens);
+    function callTrustedFeeWindowTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        return _reputationToken.trustedFeeWindowTransfer(_source, _destination, _attotokens);
     }
 
     /*
-    * Impl of IReportingWindow and ITyped
+    * Impl of IFeeWindow and ITyped
      */
     function getTypeName() public afterInitialized view returns (bytes32) {
-        return "ReportingWindow";
+        return "FeeWindow";
     }
 
-    function initialize(IUniverse _universe, uint256 _reportingWindowId) public returns (bool) {
+    function initialize(IUniverse _universe, uint256 _feeWindowId) public returns (bool) {
         endInitialization();
         initializeUniverseValue = _universe;
-        initializeReportingWindowIdValue = _reportingWindowId;
+        initializeFeeWindowIdValue = _feeWindowId;
         return true;
     }
 
@@ -308,12 +272,12 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return setAvgReportingGasPriceValue;
     }
 
-    function getOrCreateNextReportingWindow() public returns (IReportingWindow) {
-        return setNextReportingWindowValue;
+    function getOrCreateNextFeeWindow() public returns (IFeeWindow) {
+        return setNextFeeWindowValue;
     }
 
-    function getOrCreatePreviousReportingWindow() public returns (IReportingWindow) {
-        return setPreviousReportingWindowValue;
+    function getOrCreatePreviousFeeWindow() public returns (IFeeWindow) {
+        return setPreviousFeeWindowValue;
     }
 
     function getNumDesignatedReportNoShows() public view returns (uint256) {
@@ -324,37 +288,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return setAllMarketsFinalizedValue;
     }
 
-    function collectStakeTokenReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (uint256) {
-        collectReporterAddress = _reporterAddress;
-        collectAttoStakeTokens = _attoStakeTokens;
-        collectForgoFees = _forgoFees;
-        return collectAttoStakeTokens;
-    }
-
-    function collectDisputeBondReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (uint256) {
-        collectReporterAddress = _reporterAddress;
-        collectAttoStakeTokens = _attoStakeTokens;
-        collectForgoFees = _forgoFees;
-        return collectAttoStakeTokens;
-    }
-
-    function collectParticipationTokenReportingFees(address _reporterAddress, uint256 _attoStakeTokens, bool _forgoFees) public returns (uint256) {
-        collectReporterAddress = _reporterAddress;
-        collectAttoStakeTokens = _attoStakeTokens;
-        collectForgoFees = _forgoFees;
-        return collectAttoStakeTokens;
-    }
-
-    function triggerMigrateFeesDueToFork(IReportingWindow _reportingWindow) public returns (bool) {
-        return setTriggerMigrateFeesDueToForkValue;
-    }
-
     function migrateFeesDueToFork() public returns (bool) {
         return setMigrateFeesDueToForkValue;
-    }
-
-    function migrateFeesDueToMarketMigration(IMarket _market) public returns (bool) {
-        return setMigrateFeesDueToMarketMigrationValue;
     }
 
     function isContainerForMarket(IMarket _shadyTarget) public view returns (bool) {
@@ -381,8 +316,8 @@ contract MockReportingWindow is Initializable, IReportingWindow {
         return setIsOverValue;
     }
 
-    function isContainerForParticipationToken(IParticipationToken _shadyTarget) public view returns (bool) {
-        return setIsContainerForParticipationTokenValue;
+    function isContainerForFeeWindow(IFeeWindow _shadyTarget) public view returns (bool) {
+        return setIsContainerForFeeWindowValue;
     }
 
     function increaseTotalStake(uint256 _amount) public returns (bool) {
@@ -391,5 +326,57 @@ contract MockReportingWindow is Initializable, IReportingWindow {
 
     function increaseTotalWinningStake(uint256 _amount) public returns (bool) {
         return setIncreaseTotalWinningStakeValue;
+    }
+
+    function noteInitialReportingGasPrice() public returns (bool) {
+        return true;
+    }
+
+    function onMarketFinalized() public returns (bool) {
+        return true;
+    }
+
+    function buy(uint256 _attotokens) public returns (bool) {
+        return true;
+    }
+
+    function redeem(address _sender) public returns (bool) {
+        return true;
+    }
+
+    function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
+        return true;
+    }
+
+    function onMint(address _target, uint256 _amount) internal returns (bool) {
+        return true;
+    }
+
+    function onBurn(address _target, uint256 _amount) internal returns (bool) {
+        return true;
+    }
+
+    function getFeeToken() public view returns (IFeeToken) {
+        return IFeeToken(0);
+    }
+
+    function redeemForReportingParticipant() public returns (bool) {
+        return true;
+    }
+
+    function mintFeeTokens(uint256 _amount) public returns (bool) {
+        return true;
+    }
+
+    function getController() public constant returns (IController) {
+        return IController(0);
+    }
+
+    function setController(IController _controller) public returns(bool) {
+        return true;
+    }
+
+    function suicideFunds(address _target, ERC20Basic[] _tokens) public returns(bool) {
+        return true;
     }
 }

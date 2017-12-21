@@ -11,23 +11,17 @@ contract MockMarket is IMarket {
     bool private designatedReportValue;
     bytes32 private derivePayoutDistributionHashValue;
     bytes32 private updateDerivePayoutDistributionHashValue;
-    IReportingWindow private reportingWindow;
-    IReportingWindow private setMigrateDueToNoReportsNextStateValue;
+    IFeeWindow private feeWindow;
+    IFeeWindow private setMigrateDueToNoReportsNextStateValue;
     uint8 private numberOfOutcomes;
     uint256 private numTicks;
     ICash private denominationToken;
     IShareToken private shareToken;
     address private designatedReporter;
-    IDisputeBond private disputeBond;
-    IDisputeBond private firstDisputeBond;
-    IDisputeBond private lastDisputeBond;
     uint256 private marketCreatorSettlementFeeDivisor;
-    ReportingState private reportingState;
     uint256 private finalizationTime;
     bytes32 private finalPayoutDistributionHash;
     bytes32 private designatedReportPayoutHash;
-    IStakeToken private finalWinningStakeToken;
-    IStakeToken private stakeTokenOrZeroByPayoutDistributionHash;
     bytes32 private tentativeWinningPayoutDistributionHash;
     bytes32 private bestGuessSecondPlaceTentativeWinningPayoutDistributionHash;
     IMarket private forkingMarket;
@@ -37,13 +31,11 @@ contract MockMarket is IMarket {
     uint256 private designatedReportDisputeDueTimestamp;
     uint256 private firstReporterCompCheck;
     bool private migrateDueToNoRep;
-    bool private isContForStakeToken;
-    bool private isContForDisputeBond;
     bool private isContForShareToken;
     bool private isValidValue;
     address private owner;
     bool private transferOwner;
-    IReportingWindow private initializeReportingWindowValue;
+    IUniverse private initializeUniverseValue;
     uint256 private initializeEndTime;
     uint8 private initializeNumOutcomesValue;
     uint256 private initializeNumTicksValue;
@@ -51,11 +43,6 @@ contract MockMarket is IMarket {
     ICash private initializeCashValue;
     address private initializeCreatorValue;
     address private initializeDesignatedReporterAddressValue;
-    bool private increaseTotalStakeValue;
-    uint256 private setTotalWinningDisputeBondStakeValue;
-    uint256 private setTotalStakeValue;
-    uint256 private setExtraDisputeBondRemainingToBePaidOutValue;
-    bool private setDecreaseExtraDisputeBondRemainingToBePaidOutValue;
     IMailbox private setMarketCreatorMailbox;
     /*
     * setters to feed the getters and impl of IMarket
@@ -72,8 +59,8 @@ contract MockMarket is IMarket {
         derivePayoutDistributionHashValue = _derivePayoutDistributionHashValue;
     }
 
-    function setReportingWindow(IReportingWindow _reportingWindow) public {
-        reportingWindow = _reportingWindow;
+    function setFeeWindow(IFeeWindow _feeWindow) public {
+        feeWindow = _feeWindow;
     }
 
     function setNumberOfOutcomes(uint8 _numberOfOutcomes) public {
@@ -96,24 +83,8 @@ contract MockMarket is IMarket {
         designatedReporter = _designatedReporter;
     }
 
-    function setDesignatedReporterDisputeBond(IDisputeBond _disputeBond) public {
-        disputeBond = _disputeBond;
-    }
-
-    function setFirstReportersDisputeBond(IDisputeBond _firstDisputeBond) public {
-        firstDisputeBond = _firstDisputeBond;
-    }
-
-    function setLastReportersDisputeBond(IDisputeBond _lastDisputeBond) public {
-        lastDisputeBond = _lastDisputeBond;
-    }
-
     function setMarketCreatorSettlementFeeDivisor(uint256 _marketCreatorSettlementFeeDivisor) public {
         marketCreatorSettlementFeeDivisor = _marketCreatorSettlementFeeDivisor;
-    }
-
-    function setReportingState(ReportingState _reportingState) public {
-        reportingState = _reportingState;
     }
 
     function setFinalizationTime(uint256 _finalizationTime) public {
@@ -126,14 +97,6 @@ contract MockMarket is IMarket {
 
     function setDesignatedReportPayoutHash(bytes32 _designatedReportPayoutHash) public {
         designatedReportPayoutHash = _designatedReportPayoutHash;
-    }
-
-    function setFinalWinningStakeToken(IStakeToken _finalWinningStakeToken) public {
-        finalWinningStakeToken = _finalWinningStakeToken;
-    }
-
-    function setStakeTokenOrZeroByPayoutDistributionHash(IStakeToken _stakeTokenOrZeroByPayoutDistributionHash) public {
-        stakeTokenOrZeroByPayoutDistributionHash = _stakeTokenOrZeroByPayoutDistributionHash;
     }
 
     function setTentativeWinningPayoutDistributionHash(bytes32 _tentativeWinningPayoutDistributionHash) public {
@@ -172,14 +135,6 @@ contract MockMarket is IMarket {
         migrateDueToNoRep = _migrateDueToNoRep;
     }
 
-    function setIsContainerForStakeToken(bool _isContForStakeToken) public {
-        isContForStakeToken = _isContForStakeToken;
-    }
-
-    function setIsContainerForDisputeBond(bool _isContForDisputeBond) public {
-        isContForDisputeBond = _isContForDisputeBond;
-    }
-
     function setIsContainerForShareToken(bool _isContForShareToken) public {
         isContForShareToken = _isContForShareToken;
     }
@@ -192,52 +147,16 @@ contract MockMarket is IMarket {
         owner = _owner;
     }
 
-    function setIncreaseTotalStakeValue(bool _value) public {
-        increaseTotalStakeValue = _value;
-    }
-
-    function setTotalWinningDisputeBondStake(uint256 _value) public {
-        setTotalWinningDisputeBondStakeValue = _value;
-    }
-
-    function setTotalStake(uint256 _value) public {
-        setTotalStakeValue = _value;
-    }
-
     function setTransferOwnership(bool _transferOwner) public {
         transferOwner = _transferOwner;
-    }
-
-    function callStakeTokenTrustedBuy(IStakeToken _stakeToken, address _reporter, uint256 _attotokens) public returns (bool) {
-        return _stakeToken.trustedBuy(_reporter, _attotokens);
-    }
-
-    function callReportingWindowMigrateMarketInFromSibling(IReportingWindow _reportingWindow) public returns(bool) {
-        return _reportingWindow.migrateMarketInFromSibling();
-    }
-
-    function callReportingWindowMigrateMarketInFromNibling(IReportingWindow _reportingWindow) public returns(bool) {
-        return _reportingWindow.migrateMarketInFromNibling();
-    }
-
-    function callReportingWindowRemoveMarket(IReportingWindow _reportingWindow) public returns(bool) {
-        return _reportingWindow.removeMarket();
-    }
-
-    function callReportingWindowUpdateMarketPhase(IReportingWindow _reportingWindow) public returns(bool) {
-        return _reportingWindow.updateMarketPhase();
-    }
-
-    function callIncreaseTotalStake(IReportingWindow _reportingWindow, uint256 _amount) public returns(bool) {
-        return _reportingWindow.increaseTotalStake(_amount);
     }
 
     function callForkOnUniverse(IUniverse _universe) public returns(bool) {
         return _universe.fork();
     }
 
-    function getInitializeReportingWindowValue() public view returns (IReportingWindow) {
-        return initializeReportingWindowValue;
+    function getInitializeUniverseValue() public view returns (IUniverse) {
+        return initializeUniverseValue;
     }
 
     function getInitializeEndTime() public returns(uint256) {
@@ -272,20 +191,12 @@ contract MockMarket is IMarket {
         return updateDerivePayoutDistributionHashValue;
     }
 
-    function setMigrateDueToNoReportsNextState(IReportingWindow _reportingWindow) public {
-        setMigrateDueToNoReportsNextStateValue = _reportingWindow;
+    function setMigrateDueToNoReportsNextState(IFeeWindow _feeWindow) public {
+        setMigrateDueToNoReportsNextStateValue = _feeWindow;
     }
 
     function callTrustedMarketTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
         return _reputationToken.trustedMarketTransfer(_source, _destination, _attotokens);
-    }
-
-    function setExtraDisputeBondRemainingToBePaidOut(uint256 _setExtraDisputeBondRemainingToBePaidOutValue) public {
-        setExtraDisputeBondRemainingToBePaidOutValue = _setExtraDisputeBondRemainingToBePaidOutValue;
-    }
-
-    function setDecreaseExtraDisputeBondRemainingToBePaidOut(bool _setDecreaseExtraDisputeBondRemainingToBePaidOutValue) public {
-        setDecreaseExtraDisputeBondRemainingToBePaidOutValue = _setDecreaseExtraDisputeBondRemainingToBePaidOutValue;
     }
 
     function setMarketCreatorMailboxValue(IMailbox _setMarketCreatorMailbox) public {
@@ -307,8 +218,8 @@ contract MockMarket is IMarket {
         return "Market";
     }
 
-    function initialize(IReportingWindow _reportingWindow, uint256 _endTime, uint8 _numOutcomes, uint256 _numTicks, uint256 _feePerEthInAttoeth, ICash _cash, address _creator, address _designatedReporterAddress) public payable returns (bool _success) {
-        initializeReportingWindowValue = _reportingWindow;
+    function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoeth, ICash _cash, address _designatedReporterAddress, address _creator, uint8 _numOutcomes, uint256 _numTicks) public payable returns (bool _success) {
+        initializeUniverseValue = _universe;
         initializeEndTime = _endTime;
         initializeNumOutcomesValue = _numOutcomes;
         initializeNumTicksValue = _numTicks;
@@ -336,8 +247,8 @@ contract MockMarket is IMarket {
         return universe;
     }
 
-    function getReportingWindow() public view returns (IReportingWindow) {
-        return reportingWindow;
+    function getFeeWindow() public view returns (IFeeWindow) {
+        return feeWindow;
     }
 
     function getNumberOfOutcomes() public view returns (uint8) {
@@ -360,24 +271,8 @@ contract MockMarket is IMarket {
         return designatedReporter;
     }
 
-    function getDesignatedReporterDisputeBond() public view returns (IDisputeBond) {
-        return disputeBond;
-    }
-
-    function getFirstReportersDisputeBond() public view returns (IDisputeBond) {
-        return firstDisputeBond;
-    }
-
-    function getLastReportersDisputeBond() public view returns (IDisputeBond) {
-        return lastDisputeBond;
-    }
-
     function getMarketCreatorSettlementFeeDivisor() public view returns (uint256) {
         return marketCreatorSettlementFeeDivisor;
-    }
-
-    function getReportingState() public view returns (ReportingState) {
-        return reportingState;
     }
 
     function getFinalizationTime() public view returns (uint256) {
@@ -390,14 +285,6 @@ contract MockMarket is IMarket {
 
     function getDesignatedReportPayoutHash() public view returns (bytes32) {
         return designatedReportPayoutHash;
-    }
-
-    function getFinalWinningStakeToken() public view returns (IStakeToken) {
-        return finalWinningStakeToken;
-    }
-
-    function getStakeTokenOrZeroByPayoutDistributionHash(bytes32 _payoutDistributionHash) public view returns (IStakeToken) {
-        return stakeTokenOrZeroByPayoutDistributionHash;
     }
 
     function getTentativeWinningPayoutDistributionHash() public view returns (bytes32) {
@@ -434,16 +321,8 @@ contract MockMarket is IMarket {
 
     function migrateDueToNoReports() public returns (bool) {
         // :TODO, some reason this doesn't work. figure out how to move state
-        // setReportingWindow(setMigrateDueToNoReportsNextStateValue);
+        // setFeeWindow(setMigrateDueToNoReportsNextStateValue);
         return migrateDueToNoRep;
-    }
-
-    function isContainerForStakeToken(IStakeToken _shadyTarget) public view returns (bool) {
-        return isContForStakeToken;
-    }
-
-    function isContainerForDisputeBond(IDisputeBond _shadyTarget) public view returns (bool) {
-        return isContForDisputeBond;
     }
 
     function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool) {
@@ -454,31 +333,55 @@ contract MockMarket is IMarket {
         return isValidValue;
     }
 
-    function increaseTotalStake(uint256 _amount) public returns (bool) {
-        return increaseTotalStakeValue;
-    }
-
-    function getTotalWinningDisputeBondStake() public view returns (uint256) {
-        return setTotalWinningDisputeBondStakeValue;
-    }
-
-    function getTotalStake() public view returns (uint256) {
-        return setTotalStakeValue;
-    }
-
-    function getExtraDisputeBondRemainingToBePaidOut() public view returns (uint256) {
-        return setExtraDisputeBondRemainingToBePaidOutValue;
-    }
-
-    function decreaseExtraDisputeBondRemainingToBePaidOut(uint256 _amount) public returns (bool) {
-        return setDecreaseExtraDisputeBondRemainingToBePaidOutValue;
-    }
-
     function getMarketCreatorMailbox() public view returns (IMailbox) {
         return setMarketCreatorMailbox;
     }
 
     function disavowTokens() public returns (bool) {
+        return true;
+    }
+
+    function getWinningPayoutDistributionHash() public view returns (bytes32) {
+        return bytes32(0);
+    }
+
+    function getWinningPayoutNumerator(uint8 _outcome) public view returns (uint256) {
+        return 0;
+    }
+
+    function getReputationToken() public view returns (IReputationToken) {
+        return IReputationToken(0);
+    }
+
+    function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool) {
+        return true;
+    }
+
+    function isInvalid() public view returns (bool) {
+        return true;
+    }
+
+    function finishedCrowdsourcingDisputeBond() public returns (bool) {
+        return true;
+    }
+
+    function designatedReporterWasCorrect() public view returns (bool) {
+        return true;
+    }
+
+    function designatedReporterShowed() public view returns (bool) {
+        return true;
+    }
+
+    function isFinalized() public view returns (bool) {
+        return true;
+    }
+
+    function finalizeFork() public returns (bool) {
+        return true;
+    }
+
+    function finalize() public returns (bool) {
         return true;
     }
 }
