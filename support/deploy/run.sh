@@ -28,6 +28,16 @@ case $2 in
     privateKey=$ROCKAWAY_PRIVATE_KEY
     gasPrice=1
     ;;
+  "clique")
+    host="clique.ethereum.nodes.augur.net"
+    privateKey="fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a"
+    gasPrice=1
+    ;;
+  "aura")
+    host="aura.ethereum.nodes.augur.net"
+    privateKey="fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a"
+    gasPrice=1
+    ;;
   *)
     echo "Must specify a network to deploy"
     exit 1
