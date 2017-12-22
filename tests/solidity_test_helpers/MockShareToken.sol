@@ -102,4 +102,8 @@ contract MockShareToken is DelegationTarget, ITyped, Initializable, MockVariable
     function trustedFillOrderTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
         return true;
     }
+
+    function trustedCancelOrderTransfer(address _source, address _destination, uint256 _attotokens) public onlyCaller("CancelOrder") onlyInGoodTimes afterInitialized returns (bool) {
+        return true;
+    }
 }
