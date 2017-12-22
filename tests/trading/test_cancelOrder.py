@@ -35,7 +35,7 @@ def test_cancelBid(contractsFixture, cash, market, universe):
     logs = []
     captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
 
-    assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
+    assert(cancelOrder.cancelOrder(orderID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
     # Confirm cancel order logging works correctly
     assert len(logs) == 1
@@ -83,7 +83,7 @@ def test_cancelAsk(contractsFixture, cash, market):
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == creatorInitialETH - fix('1', '4000'), "ETH should be deducted from the creator balance"
 
-    assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
+    assert(cancelOrder.cancelOrder(orderID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
     assert orders.getAmount(orderID) == 0
     assert orders.getPrice(orderID) == 0
@@ -113,11 +113,11 @@ def test_exceptions(contractsFixture, cash, market):
 
     # cancelOrder exceptions
     with raises(TransactionFailed):
-        cancelOrder.cancelOrder(longTo32Bytes(0), orderType, market.address, outcomeID, sender=tester.k1)
+        cancelOrder.cancelOrder(longTo32Bytes(0), sender=tester.k1)
     with raises(TransactionFailed):
-        cancelOrder.cancelOrder(longTo32Bytes(1), orderType, market.address, outcomeID, sender=tester.k1)
+        cancelOrder.cancelOrder(longTo32Bytes(1), sender=tester.k1)
     with raises(TransactionFailed):
-        cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k2)
-    assert(cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1) == 1), "cancelOrder should succeed"
+        cancelOrder.cancelOrder(orderID, sender=tester.k2)
+    assert(cancelOrder.cancelOrder(orderID, sender=tester.k1) == 1), "cancelOrder should succeed"
     with raises(TransactionFailed):
-        cancelOrder.cancelOrder(orderID, orderType, market.address, outcomeID, sender=tester.k1)
+        cancelOrder.cancelOrder(orderID, sender=tester.k1)

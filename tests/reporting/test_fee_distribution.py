@@ -266,8 +266,7 @@ def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market,
         with EtherDelta(expectedFees / 2, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert marketDisputeCrowdsourcer.redeem(tester.a1)
 
-    # The + 1 is for rounding errors
-    with TokenDelta(reputationToken, expectedRep + 1, tester.a2, "Redeeming didn't refund REP"):
+    with TokenDelta(reputationToken, expectedRep, tester.a2, "Redeeming didn't refund REP"):
         with EtherDelta(expectedFees - expectedFees / 2, tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert marketDisputeCrowdsourcer.redeem(tester.a2)
 
