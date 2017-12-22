@@ -59,15 +59,12 @@ contract CancelOrder is CashAutoConverter, Extractable, ReentrancyGuard, ICancel
             if (_type == Order.Types.Bid) {
                 for (uint8 _i = 0; _i < _market.getNumberOfOutcomes(); ++_i) {
                     if (_i != _outcome) {
-                        _market.getShareToken(_i).transfer(_sender, _sharesEscrowed);
+                        _market.getShareToken(_i).trustedCancelOrderTransfer(_market, _sender, _sharesEscrowed);
                     }
                 }
             // Shares refund if has shares escrowed for this outcome
-            } else if (_type == Order.Types.Ask) {
-                _market.getShareToken(_outcome).transfer(_sender, _sharesEscrowed);
-            // unexpected type
             } else {
-                revert();
+                _market.getShareToken(_outcome).trustedCancelOrderTransfer(_market, _sender, _sharesEscrowed);
             }
         }
 
