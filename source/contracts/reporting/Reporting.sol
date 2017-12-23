@@ -21,7 +21,7 @@ library Reporting {
     uint256 private constant MAXIMUM_REPORTING_FEE_DIVISOR = 10000; // Minimum .01% fees
     uint256 private constant MINIMUM_REPORTING_FEE_DIVISOR = 3; // Maximum 33.3~% fees. Note than anything less than a value of 2 here will likely result in bugs such as divide by 0 cases.
 
-    // NOTE: We need to maintain this cost to roughly match the gas cost of reporting. This was last updated 10/02/2017
+    // NOTE: We need to maintain this cost to roughly match the gas cost of reporting. This was last updated 12/22/2017
     uint256 private constant GAS_TO_REPORT = 1500000;
     uint256 private constant DEFAULT_REPORTING_GAS_PRICE = 5000000000;
 
