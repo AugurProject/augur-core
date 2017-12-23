@@ -5,6 +5,7 @@ import 'trading/IClaimTradingProceeds.sol';
 import 'Controlled.sol';
 import 'libraries/ReentrancyGuard.sol';
 import 'libraries/CashAutoConverter.sol';
+import 'libraries/MarketValidator.sol';
 import 'reporting/IMarket.sol';
 import 'trading/ICash.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -18,10 +19,10 @@ import 'libraries/Extractable.sol';
  * @title ClaimTradingProceeds
  * @dev This allows users to claim their money from a market by exchanging their shares
  */
-contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard, IClaimTradingProceeds {
+contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard, MarketValidator, IClaimTradingProceeds {
     using SafeMathUint256 for uint256;
 
-    function claimTradingProceeds(IMarket _market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
+    function claimTradingProceeds(IMarket _market) marketIsValid(_market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
         if (!_market.isFinalized()) {
             _market.finalize();
         }

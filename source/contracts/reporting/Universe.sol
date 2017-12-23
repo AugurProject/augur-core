@@ -8,7 +8,6 @@ import 'libraries/Initializable.sol';
 import 'factories/ReputationTokenFactory.sol';
 import 'factories/FeeWindowFactory.sol';
 import 'factories/MarketFactory.sol';
-import 'factories/UniverseFactory.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IFeeWindow.sol';
@@ -171,7 +170,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         require(_reportingParticipant.getMarket() == forkingMarket);
         IUniverse _childUniverse = getChildUniverse(_parentPayoutDistributionHash);
         if (_childUniverse == IUniverse(0)) {
-            _childUniverse = UniverseFactory(controller.lookup("UniverseFactory")).createUniverse(controller, this, _parentPayoutDistributionHash);
+            _childUniverse = controller.getAugur().createChildUniverse(_parentPayoutDistributionHash);
             childUniverses.push(_childUniverse);
             controller.getAugur().logUniverseCreated(_childUniverse);
         }

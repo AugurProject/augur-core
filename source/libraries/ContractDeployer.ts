@@ -9,7 +9,7 @@ import { CompilerOutput } from "solc";
 import { Abi, AbiFunction } from 'ethereum';
 import { Configuration } from './Configuration';
 import { Connector } from './Connector';
-import { ContractFactory, Controller, Controlled, Universe } from './ContractInterfaces';
+import { Augur, ContractFactory, Controller, Controlled, Universe } from './ContractInterfaces';
 import { AccountManager } from './AccountManager';
 import { Contracts, Contract } from './Contracts';
 
@@ -205,12 +205,19 @@ export class ContractDeployer {
 
     private async createGenesisUniverse(): Promise<Universe> {
         console.log('Creating genesis universe...');
-        // we have to manually upload because Geth's gas estimation appears to be broken when instantiating a contract as part of a call: https://github.com/ethereum/go-ethereum/issues/1590#issuecomment-338751085
-        const delegatorAddress = await this.construct(this.contracts.get('Delegator'), [ this.controller.address, stringTo32ByteHex('Universe') ], `Instantiating genesis universe.`);
-        const universe = new Universe(this.connector, this.accountManager, delegatorAddress, this.configuration.gasPrice);
-        const transactionHash = await universe.initialize("0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000000000000000000000000000");
+        const augur = new Augur(this.connector, this.accountManager, this.getContract("Augur").address, this.configuration.gasPrice);
+        const universeAddress = await augur.createGenesisUniverse_();
+        if (!universeAddress || universeAddress == "0x") {
+            throw new Error("Unable to create genesis universe. eth_call failed");
+        }
+        const transactionHash = await augur.createGenesisUniverse();
+        await this.connector.waitForTransactionReceipt(transactionHash, `Waiting on genesis universe creation...`);
+        const universe = new Universe(this.connector, this.accountManager, universeAddress, this.configuration.gasPrice);
         await this.connector.waitForTransactionReceipt(transactionHash, `Initializing universe.`);
         console.log(`Genesis universe address: ${universe.address}`);
+        if (await universe.getTypeName_() !== stringTo32ByteHex("Universe")) {
+            throw new Error("Unable to create genesis universe. Get type name failed");
+        }
         return universe;
     }
 

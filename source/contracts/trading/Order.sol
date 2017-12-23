@@ -53,6 +53,7 @@ library Order {
     // Constructor
     //
 
+    // No validation is needed here as it is simply a librarty function for organizing data
     function create(IController _controller, address _creator, uint8 _outcome, Order.Types _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal view returns (Data) {
         require(_outcome < _market.getNumberOfOutcomes());
         require(_price < _market.getNumTicks());

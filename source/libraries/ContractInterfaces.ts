@@ -393,6 +393,19 @@ export class Augur extends Controlled {
         return <boolean>result[0];
     }
 
+    public createGenesisUniverse = async( options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"createGenesisUniverse","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        return await this.remoteCall(abi, [], options.sender, options.gasPrice);
+    }
+
+    public createGenesisUniverse_ = async( options?: { sender?: string }): Promise<string> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":false,"inputs":[],"name":"createGenesisUniverse","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const result = await this.localCall(abi, [], options.sender);
+        return <string>result[0];
+    }
+
     public logFeeTokenBurned = async(universe: string, target: string, amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
         options = options || {};
         const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_target","type":"address"},{"name":"_amount","type":"uint256"}],"name":"logFeeTokenBurned","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -456,6 +469,26 @@ export class Augur extends Controlled {
         const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_target","type":"address"},{"name":"_amount","type":"uint256"}],"name":"logDisputeCrowdsourcerTokensMinted","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
         const result = await this.localCall(abi, [universe, target, amount], options.sender);
         return <boolean>result[0];
+    }
+
+    public isValidUniverse_ = async(universe: string, options?: { sender?: string }): Promise<boolean> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_universe","type":"address"}],"name":"isValidUniverse","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
+        const result = await this.localCall(abi, [universe], options.sender);
+        return <boolean>result[0];
+    }
+
+    public createChildUniverse = async(parentPayoutDistributionHash: string, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_parentPayoutDistributionHash","type":"bytes32"}],"name":"createChildUniverse","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        return await this.remoteCall(abi, [parentPayoutDistributionHash], options.sender, options.gasPrice);
+    }
+
+    public createChildUniverse_ = async(parentPayoutDistributionHash: string, options?: { sender?: string }): Promise<string> => {
+        options = options || {};
+        const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_parentPayoutDistributionHash","type":"bytes32"}],"name":"createChildUniverse","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+        const result = await this.localCall(abi, [parentPayoutDistributionHash], options.sender);
+        return <string>result[0];
     }
 
     public logMarketFinalized = async(universe: string, market: string, options?: { sender?: string, gasPrice?: BN }): Promise<string> => {
