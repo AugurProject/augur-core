@@ -40,6 +40,10 @@ def test_market_creation(localFixture, mockUniverse, mockFeeWindow, mockCash, ch
     with raises(TransactionFailed, message="reporting window reputation token does not have enough balance"):
         market.initialize(mockUniverse.address, endTime, fee, mockCash.address, tester.a1, tester.a1, 5, numTicks)
 
+    badCash = localFixture.upload('../source/contracts/trading/Cash.sol', 'uncontrolledCash')
+    with raises(TransactionFailed, message="the denomination token must be a valid cash implementation"):
+        market.initialize(mockUniverse.address, endTime, fee, badCash.address, tester.a1, tester.a1, 5, numTicks, value=100)
+
     mockReputationToken.setBalanceOf(100)
     mockUniverse.setTargetReporterGasCosts(15)
     mockUniverse.setValidityBond(12)

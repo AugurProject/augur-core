@@ -10,7 +10,7 @@ library Reporting {
     uint256 private constant INITIAL_REP_SUPPLY = 11 * 10 ** 6 * 10 ** 18; // 11 Million REP
     // CONSIDER: Should this be a constant?
     uint256 private constant DISPUTE_THRESHOLD_FOR_FORK = INITIAL_REP_SUPPLY / 80; // 1.25% of the REP total supply
-    uint256 private constant INITIAL_REPORT_MIN_VALUE = DISPUTE_THRESHOLD_FOR_FORK / 2**20; // This value will result in a maximum 20 round dispute sequence
+    uint256 private constant INITIAL_REPORT_MIN_VALUE = 175 * 10**15; // This value will result in a maximum 20 round dispute sequence
     uint256 private constant DEFAULT_DESIGNATED_REPORT_STAKE = INITIAL_REPORT_MIN_VALUE;
     uint256 private constant DESIGNATED_REPORT_STAKE_FLOOR = INITIAL_REPORT_MIN_VALUE;
     uint256 private constant DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND = INITIAL_REPORT_MIN_VALUE;
@@ -21,9 +21,9 @@ library Reporting {
     uint256 private constant MAXIMUM_REPORTING_FEE_DIVISOR = 10000; // Minimum .01% fees
     uint256 private constant MINIMUM_REPORTING_FEE_DIVISOR = 3; // Maximum 33.3~% fees. Note than anything less than a value of 2 here will likely result in bugs such as divide by 0 cases.
 
-    // NOTE: We need to maintain this cost to roughly match the gas cost of reporting. This was last updated 10/02/2017
-    uint256 private constant GAS_TO_REPORT = 600000;
-    uint256 private constant DEFAULT_REPORTING_GAS_PRICE = 5;
+    // NOTE: We need to maintain this cost to roughly match the gas cost of reporting. This was last updated 12/22/2017
+    uint256 private constant GAS_TO_REPORT = 1500000;
+    uint256 private constant DEFAULT_REPORTING_GAS_PRICE = 5000000000;
 
     uint256 private constant TARGET_INVALID_MARKETS_DIVISOR = 100; // 1% of markets are expected to be invalid
     uint256 private constant TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR = 100; // 1% of markets are expected to have an incorrect designate report

@@ -66,6 +66,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         require(_feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(controller.getTimestamp() < _endTime);
+        require(address(_cash) == controller.lookup("Cash"));
         universe = _universe;
         require(getForkingMarket() == IMarket(0));
         owner = _creator;
