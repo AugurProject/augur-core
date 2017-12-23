@@ -46,6 +46,7 @@ RUN npm run build:interfaces
 
 
 COPY ./support/deploy/deploy.sh /app/support/deploy/deploy.sh
+COPY ./support/deploy/run.sh /app/support/deploy/run.sh
 COPY ./support/artifacts/run.sh /app/support/artifacts/run.sh
 COPY ./support/.npmrc /root/.npmrc.deploy
 
