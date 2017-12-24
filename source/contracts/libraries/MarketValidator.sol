@@ -5,9 +5,9 @@ import 'Controlled.sol';
 
 
 contract MarketValidator is Controlled {
-    modifier marketIsValid(IMarket _market) {
+    modifier marketIsLegit(IMarket _market) {
         IUniverse _universe = _market.getUniverse();
-        require(controller.getAugur().isValidUniverse(_universe));
+        require(controller.getAugur().isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(_market));
         _;
     }

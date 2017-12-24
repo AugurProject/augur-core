@@ -471,9 +471,9 @@ export class Augur extends Controlled {
         return <boolean>result[0];
     }
 
-    public isValidUniverse_ = async(universe: string, options?: { sender?: string }): Promise<boolean> => {
+    public isKnownUniverse_ = async(universe: string, options?: { sender?: string }): Promise<boolean> => {
         options = options || {};
-        const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_universe","type":"address"}],"name":"isValidUniverse","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
+        const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_universe","type":"address"}],"name":"isKnownUniverse","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
         const result = await this.localCall(abi, [universe], options.sender);
         return <boolean>result[0];
     }

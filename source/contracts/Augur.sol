@@ -46,8 +46,8 @@ contract Augur is Controlled, Extractable {
     }
 
     function createChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
-        require(universes[msg.sender]);
         IUniverse _parentUniverse = IUniverse(msg.sender);
+        require(isKnownUniverse(_parentUniverse));
         return createUniverse(_parentUniverse, _parentPayoutDistributionHash);
     }
 
@@ -58,8 +58,8 @@ contract Augur is Controlled, Extractable {
         return _newUniverse;
     }
 
-    function isValidUniverse(IUniverse _universe) public view returns (bool) {
-        return universes[address(_universe)];
+    function isKnownUniverse(IUniverse _universe) public view returns (bool) {
+        return universes[_universe];
     }
 
     //
@@ -78,7 +78,7 @@ contract Augur is Controlled, Extractable {
 
     // This signature is intended for the categorical market creation. We use two signatures for the same event because of stack depth issues which can be circumvented by maintaining order of paramaters
     function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator, bytes32[] _outcomes, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe == IUniverse(msg.sender));
         MarketCreated(_topic, _description, _extraInfo, _universe, _market, _marketCreator, _outcomes, _universe.getOrCacheMarketCreationCost(), _minPrice, _maxPrice, _marketType);
         return true;
@@ -86,49 +86,49 @@ contract Augur is Controlled, Extractable {
 
     // This signature is intended for binary and scalar market creation. See function comment above for explanation.
     function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe == IUniverse(msg.sender));
         MarketCreated(_topic, _description, _extraInfo, _universe, _market, _marketCreator, new bytes32[](0), _universe.getOrCacheMarketCreationCost(), _minPrice, _maxPrice, _marketType);
         return true;
     }
 
     function logInitialReportSubmitted(IUniverse _universe, address _reporter, address _market, uint256 _amountStaked, bool _isDesignatedReporter, uint256[] _payoutNumerators) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
         InitialReportSubmitted(_universe, _reporter, _market, _amountStaked, _isDesignatedReporter, _payoutNumerators);
         return true;
     }
 
     function logDisputeCrowdsourcerCreated(IUniverse _universe, address _market, address _disputeCrowdsourcer, uint256[] _payoutNumerators, uint256 _size) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
         DisputeCrowdsourcerCreated(_universe, _market, _disputeCrowdsourcer, _payoutNumerators, _size);
         return true;
     }
 
     function logDisputeCrowdsourcerContribution(IUniverse _universe, address _reporter, address _market, address _disputeCrowdsourcer, uint256 _amountStaked) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
         DisputeCrowdsourcerContribution(_universe, _reporter, _market, _disputeCrowdsourcer, _amountStaked);
         return true;
     }
 
     function logDisputeCrowdsourcerCompleted(IUniverse _universe, address _market, address _disputeCrowdsourcer) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
         DisputeCrowdsourcerCompleted(_universe, _market, _disputeCrowdsourcer);
         return true;
     }
 
     function logWinningTokensRedeemed(IUniverse _universe, address _reporter, address _market, address _reportingParticipant, uint256 _amountRedeemed, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         WinningsRedeemed(_universe, _reporter, _market, _reportingParticipant, _amountRedeemed, _reportingFeesReceived, _payoutNumerators);
         return true;
     }
 
     function logMarketFinalized(IUniverse _universe, address _market) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
         MarketFinalized(_universe, _market);
         return true;
@@ -169,84 +169,84 @@ contract Augur is Controlled, Extractable {
     }
 
     function logFeeWindowTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         TokensTransferred(_universe, msg.sender, _from, _to, _value);
         return true;
     }
 
     function logReputationTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.getReputationToken() == IReputationToken(msg.sender));
         TokensTransferred(_universe, msg.sender, _from, _to, _value);
         return true;
     }
 
     function logDisputeCrowdsourcerTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         TokensTransferred(_universe, msg.sender, _from, _to, _value);
         return true;
     }
 
     function logShareTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForShareToken(IShareToken(msg.sender)));
         TokensTransferred(_universe, msg.sender, _from, _to, _value);
         return true;
     }
 
     function logReputationTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.getReputationToken() == IReputationToken(msg.sender));
         TokensBurned(_universe, msg.sender, _target, _amount);
         return true;
     }
 
     function logReputationTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.getReputationToken() == IReputationToken(msg.sender));
         TokensMinted(_universe, msg.sender, _target, _amount);
         return true;
     }
 
     function logShareTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForShareToken(IShareToken(msg.sender)));
         TokensBurned(_universe, msg.sender, _target, _amount);
         return true;
     }
 
     function logShareTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForShareToken(IShareToken(msg.sender)));
         TokensMinted(_universe, msg.sender, _target, _amount);
         return true;
     }
 
     function logFeeWindowBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         TokensBurned(_universe, msg.sender, _target, _amount);
         return true;
     }
 
     function logFeeWindowMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         TokensMinted(_universe, msg.sender, _target, _amount);
         return true;
     }
 
     function logDisputeCrowdsourcerTokensBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         TokensBurned(_universe, msg.sender, _target, _amount);
         return true;
     }
 
     function logDisputeCrowdsourcerTokensMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         TokensMinted(_universe, msg.sender, _target, _amount);
         return true;
@@ -259,21 +259,21 @@ contract Augur is Controlled, Extractable {
     }
 
     function logFeeTokenTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
         TokensTransferred(_universe, msg.sender, _from, _to, _value);
         return true;
     }
 
     function logFeeTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
         TokensBurned(_universe, msg.sender, _target, _amount);
         return true;
     }
 
     function logFeeTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isValidUniverse(_universe));
+        require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
         TokensMinted(_universe, msg.sender, _target, _amount);
         return true;

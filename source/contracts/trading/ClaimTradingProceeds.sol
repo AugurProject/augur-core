@@ -22,7 +22,7 @@ import 'libraries/Extractable.sol';
 contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard, MarketValidator, IClaimTradingProceeds {
     using SafeMathUint256 for uint256;
 
-    function claimTradingProceeds(IMarket _market) marketIsValid(_market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
+    function claimTradingProceeds(IMarket _market) marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
         if (!_market.isFinalized()) {
             _market.finalize();
         }

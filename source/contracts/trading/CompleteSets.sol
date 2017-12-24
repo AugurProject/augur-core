@@ -21,7 +21,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
     /**
      * Buys `_amount` shares of every outcome in the specified market.
     **/
-    function publicBuyCompleteSets(IMarket _market, uint256 _amount) external marketIsValid(_market) payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
+    function publicBuyCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
         return this.buyCompleteSets(msg.sender, _market, _amount);
     }
 
@@ -43,7 +43,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
         return true;
     }
 
-    function publicSellCompleteSets(IMarket _market, uint256 _amount) external marketIsValid(_market) convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
+    function publicSellCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
         this.sellCompleteSets(msg.sender, _market, _amount);
         return true;
     }

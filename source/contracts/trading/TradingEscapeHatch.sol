@@ -18,7 +18,7 @@ contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter,
     // market => (outcome => frozenShareValue)
     mapping(address => mapping(uint8 => uint256)) private frozenShareValues;
 
-    function claimSharesInUpdate(IMarket _market) public marketIsValid(_market) convertToAndFromCash onlyInBadTimes returns(bool) {
+    function claimSharesInUpdate(IMarket _market) public marketIsLegit(_market) convertToAndFromCash onlyInBadTimes returns(bool) {
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _marketCurrency = _market.getDenominationToken();
 
