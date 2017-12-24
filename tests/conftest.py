@@ -333,8 +333,8 @@ class ContractsFixture:
         shareToken = shareTokenFactory.createShareToken(controllerAddress)
         return self.applySignature('shareToken', shareToken)
 
-    def createUniverse(self, parentUniverse, payoutDistributionHash):
-        universeAddress = self.contracts['UniverseFactory'].createUniverse(self.contracts['Controller'].address, parentUniverse, payoutDistributionHash)
+    def createUniverse(self):
+        universeAddress = self.contracts['Augur'].createGenesisUniverse()
         universe = self.applySignature('Universe', universeAddress)
         assert universe.getTypeName() == stringToBytes('Universe')
         return universe
@@ -446,7 +446,7 @@ def augurInitializedWithMocksSnapshot(fixture, augurInitializedSnapshot):
 def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
     fixture.resetToSnapshot(augurInitializedSnapshot)
     # TODO: remove assignments to the fixture as they don't get rolled back, so can bleed across tests.  We should be accessing things via `fixture.contracts[...]`
-    universe = fixture.createUniverse(0, "")
+    universe = fixture.createUniverse()
     cash = fixture.getSeededCash()
     augur = fixture.contracts['Augur']
     fixture.distributeRep(universe)

@@ -6,6 +6,7 @@ import 'Augur.sol';
 import 'Controlled.sol';
 import 'libraries/ReentrancyGuard.sol';
 import 'libraries/math/SafeMathUint256.sol';
+import 'libraries/MarketValidator.sol';
 import 'trading/ICash.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IFeeWindow.sol';
@@ -14,13 +15,13 @@ import 'libraries/CashAutoConverter.sol';
 import 'libraries/Extractable.sol';
 
 
-contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyGuard, ICompleteSets {
+contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyGuard, MarketValidator, ICompleteSets {
     using SafeMathUint256 for uint256;
 
     /**
      * Buys `_amount` shares of every outcome in the specified market.
     **/
-    function publicBuyCompleteSets(IMarket _market, uint256 _amount) external payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
+    function publicBuyCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
         return this.buyCompleteSets(msg.sender, _market, _amount);
     }
 
@@ -42,7 +43,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
         return true;
     }
 
-    function publicSellCompleteSets(IMarket _market, uint256 _amount) external convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
+    function publicSellCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
         this.sellCompleteSets(msg.sender, _market, _amount);
         return true;
     }

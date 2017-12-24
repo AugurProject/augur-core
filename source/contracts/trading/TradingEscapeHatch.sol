@@ -7,17 +7,18 @@ import 'trading/IOrders.sol';
 import 'trading/IShareToken.sol';
 import 'libraries/CashAutoConverter.sol';
 import 'libraries/DelegationTarget.sol';
+import 'libraries/MarketValidator.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/Extractable.sol';
 
 
-contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter, ITradingEscapeHatch {
+contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter, MarketValidator, ITradingEscapeHatch {
     using SafeMathUint256 for uint256;
 
     // market => (outcome => frozenShareValue)
     mapping(address => mapping(uint8 => uint256)) private frozenShareValues;
 
-    function claimSharesInUpdate(IMarket _market) public convertToAndFromCash onlyInBadTimes returns(bool) {
+    function claimSharesInUpdate(IMarket _market) public marketIsLegit(_market) convertToAndFromCash onlyInBadTimes returns(bool) {
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _marketCurrency = _market.getDenominationToken();
 

@@ -89,3 +89,12 @@ def test_publicSellCompleteSets_failure(contractsFixture, universe, cash, market
     # sellCompleteSets exceptions
     with raises(TransactionFailed):
         completeSets.publicSellCompleteSets(market.address, 10 + 1, sender=tester.k1)
+
+def test_maliciousMarket(contractsFixture, universe, cash, market):
+    completeSets = contractsFixture.contracts['CompleteSets']
+    orders = contractsFixture.contracts['Orders']
+
+    maliciousMarket = contractsFixture.upload('solidity_test_helpers/MaliciousMarket.sol', 'maliciousMarket', constructorArgs=[market.address])
+
+    with raises(TransactionFailed):
+        completeSets.publicBuyCompleteSets(maliciousMarket.address, 10**18, sender = tester.k1, value=10**18)
