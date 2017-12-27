@@ -346,9 +346,8 @@ class ContractsFixture:
         return shareToken
 
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
-        payoutDistributionHash = market.derivePayoutDistributionHash(payoutDistribution, False)
         assert payoutDistributionHash
-        childUniverseAddress = parentUniverse.getOrCreateChildUniverse(payoutDistributionHash)
+        childUniverseAddress = parentUniverse.getOrCreateChildUniverse(payoutDistribution, False)
         assert childUniverseAddress
         childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
         return childUniverse

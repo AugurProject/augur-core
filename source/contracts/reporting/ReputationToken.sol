@@ -22,6 +22,7 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     string constant public symbol = "REP";
     uint256 constant public decimals = 18;
     IUniverse private universe;
+    uint256 private totalMigrated;
 
     function initialize(IUniverse _universe) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
@@ -42,12 +43,11 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
         IUniverse _parentUniverse = universe.getParentUniverse();
         require(ReputationToken(msg.sender) == _parentUniverse.getReputationToken());
         mint(_reporter, _attotokens);
-        // Award a bonus if migration is done before the fork has resolved and check if the fork can be resolved early
+        totalMigrated += _attotokens;
+        // Award a bonus if migration is done before the fork has resolved and update the universe tentative winner tracking
         if (!_parentUniverse.getForkingMarket().isFinalized()) {
             mint(_reporter, _attotokens.div(Reporting.getForkMigrationPercentageBonusDivisor()));
-            if (supply > _parentUniverse.getForkReputationGoal()) {
-                _parentUniverse.getForkingMarket().finalizeFork();
-            }
+            _parentUniverse.updateTentativeWinningChildUniverse(universe.getParentPayoutDistributionHash());
         }
         return true;
     }
@@ -106,6 +106,10 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
 
     function getUniverse() public view returns (IUniverse) {
         return universe;
+    }
+
+    function getTotalMigrated() public view returns (uint256) {
+        return totalMigrated;
     }
 
     function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {

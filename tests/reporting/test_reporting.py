@@ -158,6 +158,10 @@ def test_forking(finalizeByMigration, localFixture, universe, market, categorica
     with raises(TransactionFailed, message="We cannot migrate until the fork is finalized"):
         categoricalMarket.migrateThroughOneFork()
 
+    # confirm that we can manually create a child universe from an outcome no one asserted was true during dispute
+    numTicks = market.getNumTicks()
+    childUniverse = universe.createChildUniverse([numTicks/ 4, numTicks * 3 / 4], False)
+
     # finalize the fork
     finalizeFork(localFixture, market, universe, finalizeByMigration)
 

@@ -15,7 +15,7 @@ contract IUniverse is ITyped {
     function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external returns (bool);
     function fork() public returns (bool);
     function getParentUniverse() public view returns (IUniverse);
-    function createChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse);
+    function createChildUniverse(uint256[] _parentPayoutNumerators, bool _invalid) public returns (IUniverse);
     function getChildUniverse(bytes32 _parentPayoutDistributionHash) public view returns (IUniverse);
     function getReputationToken() public view returns (IReputationToken);
     function getForkingMarket() public view returns (IMarket);
@@ -40,6 +40,7 @@ contract IUniverse is ITyped {
     function getCurrentFeeWindow() public view returns (IFeeWindow);
     function getOrCreateFeeWindowBefore(IFeeWindow _feeWindow) public returns (IFeeWindow);
     function isParentOf(IUniverse _shadyChild) public view returns (bool);
+    function updateTentativeWinningChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (bool);
     function isContainerForFeeWindow(IFeeWindow _shadyTarget) public view returns (bool);
     function isContainerForMarket(IMarket _shadyTarget) public view returns (bool);
     function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool);

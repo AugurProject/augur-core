@@ -26,11 +26,12 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     bytes32 private parentPayoutDistributionHash;
     IReputationToken private reputationToken;
     IMarket private forkingMarket;
+    bytes32 private tentativeWinningChildUniversePayoutDistributionHash;
     uint256 private forkEndTime;
     uint256 private forkReputationGoal;
     mapping(uint256 => IFeeWindow) private feeWindows;
     mapping(address => bool) private markets;
-    IUniverse[] private childUniverses;
+    mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
 
     mapping (address => uint256) private validityBondInAttoeth;
@@ -60,8 +61,6 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         } else {
             // We're using a hardcoded supply value instead of getting the total REP supply from the token since at launch we will start out with a 0 supply token and users will migrate legacy REP to this token. Since the first fork may occur before all REP migrates we want to count that unmigrated REP too since it may participate in the fork eventually.
             forkReputationGoal = Reporting.getInitialREPSupply() / Reporting.getForkRepMigrationVictoryDivisor();
-            // Account for the bonus for migrating rep that occurs before finalization
-            forkReputationGoal += forkReputationGoal / Reporting.getForkMigrationPercentageBonusDivisor();
         }
         controller.getAugur().logUniverseForked();
         return true;
@@ -104,13 +103,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getChildUniverse(bytes32 _parentPayoutDistributionHash) public view returns (IUniverse) {
-        for (uint8 i=0; i < childUniverses.length; i++) {
-            IUniverse _childUniverse = childUniverses[i];
-            if (_childUniverse.getParentPayoutDistributionHash() == _parentPayoutDistributionHash) {
-                return _childUniverse;
-            }
-        }
-        return IUniverse(0);
+        return childUniverses[_parentPayoutDistributionHash];
     }
 
     function getFeeWindowId(uint256 _timestamp) public view returns (uint256) {
@@ -164,34 +157,41 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return getOrCreateFeeWindowByTimestamp(_feeWindow.getStartTime() - 2);
     }
 
-    function createChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
-        IReportingParticipant _reportingParticipant = IReportingParticipant(msg.sender);
-        require(isContainerForReportingParticipant(_reportingParticipant));
-        require(_reportingParticipant.getMarket() == forkingMarket);
+    function createChildUniverse(uint256[] _parentPayoutNumerators, bool _parentInvalid) public returns (IUniverse) {
+        bytes32 _parentPayoutDistributionHash = forkingMarket.derivePayoutDistributionHash(_parentPayoutNumerators, _parentInvalid);
         IUniverse _childUniverse = getChildUniverse(_parentPayoutDistributionHash);
         if (_childUniverse == IUniverse(0)) {
             _childUniverse = controller.getAugur().createChildUniverse(_parentPayoutDistributionHash);
-            childUniverses.push(_childUniverse);
+            childUniverses[_parentPayoutDistributionHash] = _childUniverse;
             controller.getAugur().logUniverseCreated(_childUniverse);
         }
         return _childUniverse;
     }
 
+    function updateTentativeWinningChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (bool) {
+        IUniverse _tentativeWinningUniverse = getChildUniverse(tentativeWinningChildUniversePayoutDistributionHash);
+        IUniverse _updatedUniverse = getChildUniverse(_parentPayoutDistributionHash);
+        uint256 _currentTentativeWinningChildUniverseRepMigrated = 0;
+        if (_tentativeWinningUniverse != IUniverse(0)) {
+            _tentativeWinningUniverse.getReputationToken().getTotalMigrated();
+        }
+        uint256 _updatedUniverseRepMigrated = _updatedUniverse.getReputationToken().getTotalMigrated();
+        if (_updatedUniverseRepMigrated > _currentTentativeWinningChildUniverseRepMigrated) {
+            tentativeWinningChildUniversePayoutDistributionHash = _parentPayoutDistributionHash;
+        }
+        if (_updatedUniverseRepMigrated >= forkReputationGoal) {
+            forkingMarket.finalizeFork();
+        }
+        return true;
+    }
+
     function getWinningChildUniverse() public view returns (IUniverse) {
         require(forkingMarket != IMarket(0));
-        require(childUniverses.length > 0);
-        uint256 _winningAmount = 0;
-        IUniverse _winningUniverse;
-        for (uint8 i = 0; i < childUniverses.length; i++) {
-            uint256 _balance = childUniverses[i].getReputationToken().totalSupply();
-            if (_balance > _winningAmount) {
-                _winningUniverse = childUniverses[i];
-                _winningAmount = _balance;
-            }
-        }
-        require(_winningUniverse != IUniverse(0));
+        require(tentativeWinningChildUniversePayoutDistributionHash != bytes32(0));
+        IUniverse _tentativeWinningUniverse = getChildUniverse(tentativeWinningChildUniversePayoutDistributionHash);
+        uint256 _winningAmount = _tentativeWinningUniverse.getReputationToken().getTotalMigrated();
         require(_winningAmount >= forkReputationGoal || controller.getTimestamp() > forkEndTime);
-        return _winningUniverse;
+        return _tentativeWinningUniverse;
     }
 
     function isContainerForFeeWindow(IFeeWindow _shadyFeeWindow) public view returns (bool) {
