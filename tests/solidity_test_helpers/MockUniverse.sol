@@ -391,7 +391,7 @@ contract MockUniverse is Initializable, IUniverse {
         return _newMarket;
     }
 
-    function createChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
+    function createChildUniverse(uint256[] _parentPayoutNumerators, bool _parentInvalid) public returns (IUniverse) {
         return IUniverse(0);
     }
     
@@ -425,5 +425,17 @@ contract MockUniverse is Initializable, IUniverse {
 
     function isForking() public view returns (bool) {
         return true;
+    }
+
+    function updateTentativeWinningChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (bool) {
+        return true;
+    }
+
+    function getDisputeThresholdForFork() public view returns (uint256) {
+        return 0;
+    }
+
+    function getInitialReportMinValue() public view returns (uint256) {
+        return 0;
     }
 }
