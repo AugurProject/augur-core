@@ -138,17 +138,18 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     mockFeeWindowFactory.setCreateFeeWindowValue(nextFeeWindow.address)
     assert populatedUniverse.getOrCreateNextFeeWindow() == nextFeeWindow.address
 
+    initial_report_min = populatedUniverse.getInitialReportMinValue()
     designated_divisor = constants.TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR()
-    designated_default = constants.DEFAULT_DESIGNATED_REPORT_STAKE()
-    designated_floor = constants.DESIGNATED_REPORT_STAKE_FLOOR()
+    designated_default = initial_report_min
+    designated_floor = initial_report_min
 
     validity_divisor = constants.TARGET_INVALID_MARKETS_DIVISOR()
     validity_default = constants.DEFAULT_VALIDITY_BOND()
     validity_floor = constants.VALIDITY_BOND_FLOOR()
 
     noshow_divisor = constants.TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR()
-    noshow_default = constants.DEFAULT_DESIGNATED_REPORT_NO_SHOW_BOND()
-    noshow_floor = constants.DESIGNATED_REPORT_NO_SHOW_BOND_FLOOR()
+    noshow_default = initial_report_min
+    noshow_floor = initial_report_min
 
     getGasToReport = constants.GAS_TO_REPORT()
 

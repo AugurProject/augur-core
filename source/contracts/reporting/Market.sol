@@ -154,7 +154,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         participants.push(_reportingParticipant);
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this); // disavow other crowdsourcers
         controller.getAugur().logDisputeCrowdsourcerCompleted(universe, this, _reportingParticipant);
-        if (IDisputeCrowdsourcer(msg.sender).getSize() >= Reporting.getDisputeThresholdForFork()) {
+        if (IDisputeCrowdsourcer(msg.sender).getSize() >= universe.getDisputeThresholdForFork()) {
             universe.fork();
         } else {
             feeWindow = universe.getOrCreateNextFeeWindow();
