@@ -23,11 +23,15 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     uint256 constant public decimals = 18;
     IUniverse private universe;
     uint256 private totalMigrated;
+    mapping(address => uint256) migratedToSibling;
+    uint256 private parentTotalTheoreticalSupply;
+    uint256 private totalTheoreticalSupply;
 
     function initialize(IUniverse _universe) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         require(_universe != address(0));
         universe = _universe;
+        updateParentTotalTheoreticalSupply();
         return true;
     }
 
@@ -46,7 +50,9 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
         totalMigrated += _attotokens;
         // Award a bonus if migration is done before the fork has resolved and update the universe tentative winner tracking
         if (!_parentUniverse.getForkingMarket().isFinalized()) {
-            mint(_reporter, _attotokens.div(Reporting.getForkMigrationPercentageBonusDivisor()));
+            uint256 _bonus = _attotokens.div(Reporting.getForkMigrationPercentageBonusDivisor());
+            mint(_reporter, _bonus);
+            totalTheoreticalSupply += _bonus;
             _parentUniverse.updateTentativeWinningChildUniverse(universe.getParentPayoutDistributionHash());
         }
         return true;
@@ -64,7 +70,9 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
         IUniverse _parentUniverse = universe.getParentUniverse();
         IReportingParticipant _reportingParticipant = IReportingParticipant(msg.sender);
         require(_parentUniverse.isContainerForReportingParticipant(_reportingParticipant));
-        mint(_reportingParticipant, _amountMigrated / 2);
+        uint256 _bonus = _amountMigrated / 2;
+        mint(_reportingParticipant, _bonus);
+        totalTheoreticalSupply += _bonus;
         return true;
     }
 
@@ -110,6 +118,32 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
 
     function getTotalMigrated() public view returns (uint256) {
         return totalMigrated;
+    }
+
+    function updateSiblingMigrationTotal(IReputationToken _token) public returns (bool) {
+        require(_token != this);
+        IUniverse _supposedUniverse = _token.getUniverse();
+        require(_token == universe.getParentUniverse().getChildUniverse(_supposedUniverse.getParentPayoutDistributionHash()).getReputationToken());
+        totalTheoreticalSupply += migratedToSibling[_token];
+        migratedToSibling[_token] = _token.getTotalMigrated();
+        totalTheoreticalSupply -= migratedToSibling[_token];
+        return true;
+    }
+
+    function updateParentTotalTheoreticalSupply() public returns (bool) {
+        IUniverse _parentUniverse = universe.getParentUniverse();
+        totalTheoreticalSupply -= parentTotalTheoreticalSupply;
+        if (_parentUniverse == IUniverse(0)) {
+            parentTotalTheoreticalSupply = Reporting.getInitialREPSupply();
+        } else {
+            parentTotalTheoreticalSupply = _parentUniverse.getReputationToken().getTotalTheoreticalSupply();
+        }
+        totalTheoreticalSupply += parentTotalTheoreticalSupply;
+        return true;
+    }
+
+    function getTotalTheoreticalSupply() public view returns (uint256) {
+        return totalTheoreticalSupply;
     }
 
     function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {

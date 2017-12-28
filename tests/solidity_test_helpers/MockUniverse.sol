@@ -430,4 +430,12 @@ contract MockUniverse is Initializable, IUniverse {
     function updateTentativeWinningChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (bool) {
         return true;
     }
+
+    function getDisputeThresholdForFork() public view returns (uint256) {
+        return 0;
+    }
+
+    function getInitialReportMinValue() public view returns (uint256) {
+        return 0;
+    }
 }

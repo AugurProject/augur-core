@@ -29,6 +29,8 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     bytes32 private tentativeWinningChildUniversePayoutDistributionHash;
     uint256 private forkEndTime;
     uint256 private forkReputationGoal;
+    uint256 private disputeThresholdForFork;
+    uint256 private initialReportMinValue;
     mapping(uint256 => IFeeWindow) private feeWindows;
     mapping(address => bool) private markets;
     mapping(bytes32 => IUniverse) private childUniverses;
@@ -45,6 +47,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         parentUniverse = _parentUniverse;
         parentPayoutDistributionHash = _parentPayoutDistributionHash;
         reputationToken = ReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this);
+        updateForkValues();
         require(reputationToken != address(0));
         return true;
     }
@@ -54,15 +57,15 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
         forkEndTime = controller.getTimestamp() + Reporting.getForkDurationSeconds();
-        // We pre calculate the amount of REP needed to determine a winner early in a fork. We assume maximum possible fork inflation in every fork so this is hard to achieve with every subsequent fork and may become impossible in some universes.
-        if (parentUniverse != IUniverse(0)) {
-            uint256 _previousForkReputationGoal = parentUniverse.getForkReputationGoal();
-            forkReputationGoal = _previousForkReputationGoal + (_previousForkReputationGoal / Reporting.getForkMigrationPercentageBonusDivisor());
-        } else {
-            // We're using a hardcoded supply value instead of getting the total REP supply from the token since at launch we will start out with a 0 supply token and users will migrate legacy REP to this token. Since the first fork may occur before all REP migrates we want to count that unmigrated REP too since it may participate in the fork eventually.
-            forkReputationGoal = Reporting.getInitialREPSupply() / Reporting.getForkRepMigrationVictoryDivisor();
-        }
         controller.getAugur().logUniverseForked();
+        return true;
+    }
+
+    function updateForkValues() public returns (bool) {
+        uint256 _totalRepSupply = reputationToken.getTotalTheoreticalSupply();
+        forkReputationGoal = _totalRepSupply.div(2); // 50% of REP migrating results in a victory in a fork
+        disputeThresholdForFork = _totalRepSupply.div(80); // 1.25% of the total rep supply
+        initialReportMinValue = disputeThresholdForFork.div(3).div(2**18) + 1; // This value will result in a maximum 20 round dispute sequence
         return true;
     }
 
@@ -92,6 +95,14 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
 
     function getForkReputationGoal() public view returns (uint256) {
         return forkReputationGoal;
+    }
+
+    function getDisputeThresholdForFork() public view returns (uint256) {
+        return disputeThresholdForFork;
+    }
+
+    function getInitialReportMinValue() public view returns (uint256) {
+        return initialReportMinValue;
     }
 
     function getFeeWindow(uint256 _feeWindowId) public view returns (IFeeWindow) {
@@ -319,7 +330,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         uint256 _incorrectDesignatedReportMarketsInPreviousWindow = _previousFeeWindow.getNumIncorrectDesignatedReportMarkets();
         uint256 _previousDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_previousFeeWindow];
 
-        _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectDesignatedReportMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetIncorrectDesignatedReportMarketsDivisor(), _previousDesignatedReportStakeInAttoRep, Reporting.getDefaultDesignatedReportStake(), Reporting.getDesignatedReportStakeFloor());
+        _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectDesignatedReportMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetIncorrectDesignatedReportMarketsDivisor(), _previousDesignatedReportStakeInAttoRep, initialReportMinValue, initialReportMinValue);
         designatedReportStakeInAttoRep[_feeWindow] = _currentDesignatedReportStakeInAttoRep;
         return _currentDesignatedReportStakeInAttoRep;
     }
@@ -335,7 +346,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         uint256 _designatedReportNoShowsInPreviousWindow = _previousFeeWindow.getNumDesignatedReportNoShows();
         uint256 _previousDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_previousFeeWindow];
 
-        _currentDesignatedReportNoShowBondInAttoRep = calculateFloatingValue(_designatedReportNoShowsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetDesignatedReportNoShowsDivisor(), _previousDesignatedReportNoShowBondInAttoRep, Reporting.getDefaultDesignatedReportNoShowBond(), Reporting.getDesignatedReportNoShowBondFloor());
+        _currentDesignatedReportNoShowBondInAttoRep = calculateFloatingValue(_designatedReportNoShowsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetDesignatedReportNoShowsDivisor(), _previousDesignatedReportNoShowBondInAttoRep, initialReportMinValue, initialReportMinValue);
         designatedReportNoShowBondInAttoRep[_feeWindow] = _currentDesignatedReportNoShowBondInAttoRep;
         return _currentDesignatedReportNoShowBondInAttoRep;
     }
