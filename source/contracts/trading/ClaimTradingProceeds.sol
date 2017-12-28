@@ -22,7 +22,7 @@ import 'libraries/Extractable.sol';
 contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard, MarketValidator, IClaimTradingProceeds {
     using SafeMathUint256 for uint256;
 
-    function claimTradingProceeds(IMarket _market) marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes nonReentrant external returns(bool) {
+    function claimTradingProceeds(IMarket _market, address _shareHolder) marketIsLegit(_market) onlyInGoodTimes nonReentrant external returns(bool) {
         if (!_market.isFinalized()) {
             _market.finalize();
         }
@@ -33,7 +33,7 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
 
         for (uint8 _outcome = 0; _outcome < _market.getNumberOfOutcomes(); ++_outcome) {
             IShareToken _shareToken = _market.getShareToken(_outcome);
-            uint256 _numberOfShares = _shareToken.balanceOf(msg.sender);
+            uint256 _numberOfShares = _shareToken.balanceOf(_shareHolder);
             var (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _outcome, _numberOfShares);
 
             if (_proceeds > 0) {
@@ -42,11 +42,12 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
 
             // always destroy shares as it gives a minor gas refund and is good for the network
             if (_numberOfShares > 0) {
-                _shareToken.destroyShares(msg.sender, _numberOfShares);
-                logTradingProceedsClaimed(_market, _shareToken, msg.sender, _numberOfShares, _shareHolderShare);
+                _shareToken.destroyShares(_shareHolder, _numberOfShares);
+                logTradingProceedsClaimed(_market, _shareToken, _shareHolder, _numberOfShares, _shareHolderShare);
             }
             if (_shareHolderShare > 0) {
-                require(_denominationToken.transferFrom(_market, msg.sender, _shareHolderShare));
+                require(_denominationToken.transferFrom(_market, this, _shareHolderShare));
+                _denominationToken.withdrawEtherTo(_shareHolder, _shareHolderShare);
             }
             if (_creatorShare > 0) {
                 require(_denominationToken.transferFrom(_market, _market.getMarketCreatorMailbox(), _creatorShare));

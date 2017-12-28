@@ -86,7 +86,7 @@ def test_winningShareRedmption(localFixture, cash, market):
     finalizeMarket(localFixture, market, [0,market.getNumTicks()])
 
     with PrintGasUsed(localFixture, "ClaimTradingProceeds:claimTradingProceeds", CLAIM_PROCEEDS):
-        claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
+        claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
 
 def test_initial_report(localFixture, universe, cash, market):
     proceedToDesignatedReporting(localFixture, market)
