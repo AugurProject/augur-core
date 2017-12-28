@@ -3,14 +3,18 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
-from utils import longToHexString, bytesToHexString, stringToBytes, longTo32Bytes, garbageAddress, garbageBytes20, garbageBytes32, twentyZeros, thirtyTwoZeros
+from utils import AssertLog, longToHexString, bytesToHexString, stringToBytes, longTo32Bytes, garbageAddress, garbageBytes20, garbageBytes32, twentyZeros, thirtyTwoZeros
 from struct import pack
 
-def test_whitelists(controller):
+def test_whitelists(localFixture, controller):
     assert controller.assertIsWhitelisted(tester.a0, sender = tester.k2)
     with raises(TransactionFailed): controller.addToWhitelist(tester.a1, sender = tester.k1)
     with raises(TransactionFailed): controller.addToWhitelist(tester.a1, sender = tester.k2)
-    assert controller.addToWhitelist(tester.a1, sender = tester.k0)
+
+    whitelistAdditionLog = {"addition": bytesToHexString(tester.a1)}
+    with AssertLog(localFixture, "WhitelistAddition", whitelistAdditionLog):
+        assert controller.addToWhitelist(tester.a1, sender = tester.k0)
+    
     assert controller.assertIsWhitelisted(tester.a1, sender = tester.k2)
     with raises(TransactionFailed): controller.assertIsWhitelisted(tester.a2, sender = tester.k2)
     with raises(TransactionFailed): controller.removeFromWhitelist(tester.a1, sender = tester.k2)
@@ -89,6 +93,8 @@ def test_getContractDetails(controller):
 def localSnapshot(fixture, controllerSnapshot):
     fixture.resetToSnapshot(controllerSnapshot)
     fixture.upload('solidity_test_helpers/ControllerUser.sol')
+    fixture.uploadAndAddToController('../source/contracts/Augur.sol')
+    fixture.contracts["Augur"].setController(fixture.contracts['Controller'].address)
     decentralizedController = fixture.upload('../source/contracts/Controller.sol', 'decentralizedController')
     decentralizedController.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k0)
     return fixture.createSnapshot()

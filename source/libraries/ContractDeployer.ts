@@ -31,8 +31,8 @@ export class ContractDeployer {
     public async deploy(): Promise<void> {
         this.controller = await this.uploadController();
         await this.uploadAllContracts();
+        await this.initializeAllContracts();        
         await this.whitelistTradingContracts();
-        await this.initializeAllContracts();
 
         if(this.configuration.createGenesisUniverse) {
             this.universe = await this.createGenesisUniverse();

@@ -427,8 +427,8 @@ def controllerSnapshot(fixture, baseSnapshot):
 def augurInitializedSnapshot(fixture, controllerSnapshot):
     fixture.resetToSnapshot(controllerSnapshot)
     fixture.uploadAllContracts()
-    fixture.whitelistTradingContracts()
     fixture.initializeAllContracts()
+    fixture.whitelistTradingContracts()
     fixture.approveCentralAuthority()
     return fixture.createSnapshot()
 

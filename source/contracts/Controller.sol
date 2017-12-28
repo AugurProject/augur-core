@@ -66,6 +66,7 @@ contract Controller is IController {
 
     function addToWhitelist(address _target) public onlyWhitelistedCallers returns (bool) {
         whitelist[_target] = true;
+        getAugur().logContractAddedToWhitelist(_target);
         return true;
     }
 
