@@ -134,14 +134,14 @@ ${contractMethods.join("\n\n")}
         const argNames: String = this.getArgNamesString(abiFunction);
         const params: String = this.getParamsString(abiFunction);
         const options: String = `{ sender?: string${abiFunction.payable ? ", attachedEth?: BN" : ""} }`;
-        const returnType: String = this.getTsTypeFromPrimitive(abiFunction.outputs[0].type);
-        const returnPromiseType: String = abiFunction.outputs.length == 1 ? returnType : "Array<string>";
+        const returnType: String = (abiFunction.outputs[0] !== undefined) ? this.getTsTypeFromPrimitive(abiFunction.outputs[0].type) : "void";
+        const returnPromiseType: String = (abiFunction.outputs.length === 0 || abiFunction.outputs.length === 1) ? returnType : "Array<string>";
         const returnValue: String = abiFunction.outputs.length == 1 ? `<${returnType}>result[0]` : "<Array<string>>result";
         return `    public ${abiFunction.name}_ = async(${params} options?: ${options}): Promise<${returnPromiseType}> => {
         options = options || {};
         const abi: AbiFunction = ${JSON.stringify(abiFunction)};
-        const result = await this.localCall(abi, [${argNames}], options.sender${abiFunction.payable ? ", options.attachedEth" : ""});
-        return ${returnValue};
+        ${abiFunction.outputs.length !== 0 ? 'const result = ' : ''}await this.localCall(abi, [${argNames}], options.sender${abiFunction.payable ? ", options.attachedEth" : ""});
+        ${abiFunction.outputs.length !== 0 ? `return ${returnValue};` : ''}
     }`;
     }
 
