@@ -56,7 +56,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         require(forkingMarket == IMarket(0));
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
-        forkEndTime = controller.getTimestamp() + Reporting.getForkDurationSeconds();
+        forkEndTime = controller.getTimestamp().add(Reporting.getForkDurationSeconds());
         controller.getAugur().logUniverseForked();
         return true;
     }
@@ -65,7 +65,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         uint256 _totalRepSupply = reputationToken.getTotalTheoreticalSupply();
         forkReputationGoal = _totalRepSupply.div(2); // 50% of REP migrating results in a victory in a fork
         disputeThresholdForFork = _totalRepSupply.div(80); // 1.25% of the total rep supply
-        initialReportMinValue = disputeThresholdForFork.div(3).div(2**18) + 1; // This value will result in a maximum 20 round dispute sequence
+        initialReportMinValue = disputeThresholdForFork.div(3).div(2**18).add(1); // This value will result in a maximum 20 round dispute sequence
         return true;
     }
 
@@ -118,7 +118,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getFeeWindowId(uint256 _timestamp) public view returns (uint256) {
-        return _timestamp / getDisputeRoundDurationInSeconds();
+        return _timestamp.div(getDisputeRoundDurationInSeconds());
     }
 
     function getDisputeRoundDurationInSeconds() public view returns (uint256) {
@@ -141,11 +141,11 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getOrCreatePreviousFeeWindow() public onlyInGoodTimes returns (IFeeWindow) {
-        return getOrCreateFeeWindowByTimestamp(controller.getTimestamp() - getDisputeRoundDurationInSeconds());
+        return getOrCreateFeeWindowByTimestamp(controller.getTimestamp().sub(getDisputeRoundDurationInSeconds()));
     }
 
     function getPreviousFeeWindow() public view onlyInGoodTimes returns (IFeeWindow) {
-        return getFeeWindowByTimestamp(controller.getTimestamp() - getDisputeRoundDurationInSeconds());
+        return getFeeWindowByTimestamp(controller.getTimestamp().sub(getDisputeRoundDurationInSeconds()));
     }
 
     function getOrCreateCurrentFeeWindow() public onlyInGoodTimes returns (IFeeWindow) {
@@ -157,15 +157,15 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getOrCreateNextFeeWindow() public onlyInGoodTimes returns (IFeeWindow) {
-        return getOrCreateFeeWindowByTimestamp(controller.getTimestamp() + getDisputeRoundDurationInSeconds());
+        return getOrCreateFeeWindowByTimestamp(controller.getTimestamp().add(getDisputeRoundDurationInSeconds()));
     }
 
     function getNextFeeWindow() public view onlyInGoodTimes returns (IFeeWindow) {
-        return getFeeWindowByTimestamp(controller.getTimestamp() + getDisputeRoundDurationInSeconds());
+        return getFeeWindowByTimestamp(controller.getTimestamp().add(getDisputeRoundDurationInSeconds()));
     }
 
     function getOrCreateFeeWindowBefore(IFeeWindow _feeWindow) public onlyInGoodTimes returns (IFeeWindow) {
-        return getOrCreateFeeWindowByTimestamp(_feeWindow.getStartTime() - 2);
+        return getOrCreateFeeWindowByTimestamp(_feeWindow.getStartTime().sub(2));
     }
 
     function createChildUniverse(uint256[] _parentPayoutNumerators, bool _parentInvalid) public returns (IUniverse) {
@@ -426,7 +426,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getOrCacheMarketCreationCost() public onlyInGoodTimes returns (uint256) {
-        return getOrCacheValidityBond() + getOrCacheTargetReporterGasCosts();
+        return getOrCacheValidityBond().add(getOrCacheTargetReporterGasCosts());
     }
 
     function getInitialReportStakeSize() public onlyInGoodTimes returns (uint256) {

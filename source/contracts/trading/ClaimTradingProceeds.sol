@@ -27,7 +27,7 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
             _market.finalize();
         }
 
-        require(controller.getTimestamp() > _market.getFinalizationTime() + Reporting.getClaimTradingProceedsWaitTime());
+        require(controller.getTimestamp() > _market.getFinalizationTime().add(Reporting.getClaimTradingProceedsWaitTime()));
 
         ICash _denominationToken = _market.getDenominationToken();
 
