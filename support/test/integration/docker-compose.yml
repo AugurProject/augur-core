@@ -14,9 +14,9 @@ services:
       dockerfile: support/Dockerfile
       cache_from:
         - augurproject/augur-core:latest
-    entrypoint: [ "npm", "run", "test:integration"]
+    entrypoint: [ "npm", "run", "test:integration" ]
     # uncomment the following 3 lines to enable debugging the tests
-    # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
+    # command: [ "--", "--debug=0.0.0.0:9229", "--inspect-brk" ]
     # ports:
     #   - "9229:9229"
     environment:
@@ -38,9 +38,9 @@ services:
       dockerfile: support/Dockerfile
       cache_from:
         - augurproject/augur-core:latest
-    entrypoint: [ "npx", "mocha", "output/tests-integration/**/*.js", "--no-timeouts", "--require", "source-map-support/register"]
+    entrypoint: [ "npm", "run", "test:integration" ]
     # uncomment the following 3 lines to enable debugging the tests
-    # command: [ "--debug=0.0.0.0:9229", "--inspect-brk" ]
+    command: [ "--", "--debug=0.0.0.0:9229", "--inspect-brk" ]
     # ports:
     #   - "9229:9229"
     environment:
