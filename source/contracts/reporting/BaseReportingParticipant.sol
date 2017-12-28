@@ -34,7 +34,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
 
     function fork() public onlyInGoodTimes returns (bool) {
         require(market == market.getUniverse().getForkingMarket());
-        IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutDistributionHash);
+        IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutNumerators, invalid);
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
         redeemForAllFeeWindows();
         uint256 _balance = reputationToken.balanceOf(this);

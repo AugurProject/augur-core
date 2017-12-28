@@ -23,7 +23,7 @@ def test_designatedReportHappyPath(localFixture, universe, market):
         "universe": universe.address,
         "reporter": bytesToHexString(tester.a0),
         "market": market.address,
-        "amountStaked": localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE(),
+        "amountStaked": universe.getInitialReportMinValue(),
         "isDesignatedReporter": True,
         "payoutNumerators": [0, market.getNumTicks()]
     }
@@ -115,7 +115,7 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
     crowdsourcerCreatedLog = {
         "universe": universe.address,
         "market": market.address,
-        "size": localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE() * 2,
+        "size": universe.getInitialReportMinValue() * 2,
         "payoutNumerators": [0, market.getNumTicks()]
     }
 
@@ -123,7 +123,7 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
         "universe": universe.address,
         "reporter": bytesToHexString(tester.a0),
         "market": market.address,
-        "amountStaked": localFixture.contracts["Constants"].DEFAULT_DESIGNATED_REPORT_STAKE() * 2
+        "amountStaked": universe.getInitialReportMinValue() * 2
     }
 
     crowdsourcerCompletedLog = {
@@ -145,7 +145,7 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
 
 @mark.parametrize('finalizeByMigration', [
     True,
-    #False
+    False
 ])
 def test_forking(finalizeByMigration, localFixture, universe, market, categoricalMarket):
     # Let's go into the one dispute round for the categorical market
@@ -157,6 +157,10 @@ def test_forking(finalizeByMigration, localFixture, universe, market, categorica
 
     with raises(TransactionFailed, message="We cannot migrate until the fork is finalized"):
         categoricalMarket.migrateThroughOneFork()
+
+    # confirm that we can manually create a child universe from an outcome no one asserted was true during dispute
+    numTicks = market.getNumTicks()
+    childUniverse = universe.createChildUniverse([numTicks/ 4, numTicks * 3 / 4], False)
 
     # finalize the fork
     finalizeFork(localFixture, market, universe, finalizeByMigration)
@@ -180,6 +184,77 @@ def test_forking(finalizeByMigration, localFixture, universe, market, categorica
     assert not categoricalInitialReport.isDisavowed()
     assert not universe.isContainerForReportingParticipant(categoricalInitialReport.address)
     assert newUniverse.isContainerForReportingParticipant(categoricalInitialReport.address)
+
+def test_forking_values(localFixture, universe, market, cash):
+    reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
+
+    # proceed to forking
+    proceedToFork(localFixture, market, universe)
+
+    # finalize the fork
+    finalizeFork(localFixture, market, universe)
+
+    # We can see that the theoretical total REP supply in the winning child universe is higher than the initial REP supply
+    winningPayoutHash = market.getWinningPayoutDistributionHash()
+    childUniverse = localFixture.applySignature("Universe", universe.getChildUniverse(winningPayoutHash))
+    childUniverseReputationToken = localFixture.applySignature("ReputationToken", childUniverse.getReputationToken())
+    childUniverseTheoreticalSupply = childUniverseReputationToken.getTotalTheoreticalSupply()
+    assert childUniverseTheoreticalSupply > reputationToken.getTotalTheoreticalSupply()
+
+    # In fact it will be approximately the bonus REP migrated into the new universe more.
+    delta = childUniverseTheoreticalSupply - reputationToken.getTotalTheoreticalSupply()
+    migrationBonus = long(childUniverseReputationToken.getTotalMigrated() / 20L)
+    participantIndex = 0
+    while True:
+        try:
+            reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(participantIndex))
+            participantIndex += 1
+            if reportingParticipant.getPayoutDistributionHash() != winningPayoutHash:
+                continue
+            migrationBonus += long(reportingParticipant.getSize() / 2L)
+        except TransactionFailed:
+            break
+    assert delta == migrationBonus - 6 # rounding error dust buildup
+
+    # The universe needs to be nudged to actually update values since there are potentially unbounded universes and updating the values derived by this total is not essential as a matter of normal procedure
+    assert childUniverse.getForkReputationGoal() == universe.getForkReputationGoal()
+    assert childUniverse.getDisputeThresholdForFork() == universe.getDisputeThresholdForFork()
+    assert childUniverse.getInitialReportMinValue() == universe.getInitialReportMinValue()
+
+    # The universe uses this theoretical total to calculate values such as the fork goal, fork dispute threshhold and the initial reporting defaults and floors
+    assert childUniverse.updateForkValues()
+    assert childUniverse.getForkReputationGoal() == childUniverseTheoreticalSupply / 2
+    assert childUniverse.getDisputeThresholdForFork() == long(childUniverseTheoreticalSupply / 80L)
+    assert childUniverse.getInitialReportMinValue() == long(childUniverse.getDisputeThresholdForFork() / 3L / 2**18 + 1)
+
+    # Now we'll fork again and confirm it still takes only 20 dispute rounds in the worst case
+    newMarket = localFixture.createReasonableBinaryMarket(childUniverse, cash)
+    proceedToFork(localFixture, newMarket, childUniverse)
+    assert newMarket.getNumParticipants() == 21
+
+    # finalize the fork
+    finalizeFork(localFixture, newMarket, childUniverse)
+
+    # The total theoretical supply is again larger.
+    childWinningPayoutHash = newMarket.getWinningPayoutDistributionHash()
+    leafUniverse = localFixture.applySignature("Universe", childUniverse.getChildUniverse(childWinningPayoutHash))
+    leafUniverseReputationToken = localFixture.applySignature("ReputationToken", leafUniverse.getReputationToken())
+    leafUniverseTheoreticalSupply = leafUniverseReputationToken.getTotalTheoreticalSupply()
+    assert leafUniverseTheoreticalSupply > childUniverseReputationToken.getTotalTheoreticalSupply()
+
+    # We can make the child universe theoretical total more accurate by asking for a recomputation given a specific sibling universe to deduct from
+    losingPayoutHash = market.derivePayoutDistributionHash([0, market.getNumTicks()], False)
+    siblingUniverse = localFixture.applySignature("Universe", universe.getChildUniverse(losingPayoutHash))
+    siblingReputationToken = localFixture.applySignature("ReputationToken", siblingUniverse.getReputationToken())
+    assert childUniverseReputationToken.updateSiblingMigrationTotal(siblingReputationToken.address)
+    newChildTheoreticalSupply = childUniverseReputationToken.getTotalTheoreticalSupply()
+    siblingMigrationAmount = siblingReputationToken.getTotalMigrated()
+    assert childUniverseTheoreticalSupply - newChildTheoreticalSupply == siblingMigrationAmount
+
+    # Now that the child universe has been updated we can ask the leaf universe to recompute based on its parent's new theoretical total supply
+    assert leafUniverseReputationToken.updateParentTotalTheoreticalSupply()
+    newLeafTheoreticalSupply = leafUniverseReputationToken.getTotalTheoreticalSupply()
+    assert leafUniverseTheoreticalSupply - newLeafTheoreticalSupply == siblingMigrationAmount
 
 def test_fee_window_record_keeping(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
     feeWindow = localFixture.applySignature('FeeWindow', universe.getOrCreateCurrentFeeWindow())

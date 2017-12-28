@@ -178,4 +178,12 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
     function mintForReportingParticipant(uint256 _amountMigrated) public returns (bool) {
         return true;
     }
+
+    function getTotalMigrated() public view returns (uint256) {
+        return 0;
+    }
+
+    function getTotalTheoreticalSupply() public view returns (uint256) {
+        return 0;
+    }
 }

@@ -346,9 +346,8 @@ class ContractsFixture:
         return shareToken
 
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
-        payoutDistributionHash = market.derivePayoutDistributionHash(payoutDistribution, False)
         assert payoutDistributionHash
-        childUniverseAddress = parentUniverse.getOrCreateChildUniverse(payoutDistributionHash)
+        childUniverseAddress = parentUniverse.getOrCreateChildUniverse(payoutDistribution, False)
         assert childUniverseAddress
         childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
         return childUniverse
@@ -378,7 +377,7 @@ class ContractsFixture:
     def createReasonableBinaryMarket(self, universe, denominationToken, sender=tester.k0, topic="", description="description", extraInfo=""):
         return self.createBinaryMarket(
             universe = universe,
-            endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
+            endTime = long(self.contracts["Time"].getTimestamp() + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             designatedReporterAddress = tester.a0,
@@ -391,7 +390,7 @@ class ContractsFixture:
         return self.createCategoricalMarket(
             universe = universe,
             numOutcomes = numOutcomes,
-            endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
+            endTime = long(self.contracts["Time"].getTimestamp() + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             designatedReporterAddress = tester.a0,
@@ -400,7 +399,7 @@ class ContractsFixture:
     def createReasonableScalarMarket(self, universe, maxPrice, minPrice, numTicks, denominationToken, sender=tester.k0):
         return self.createScalarMarket(
             universe = universe,
-            endTime = long(self.chain.head_state.timestamp + timedelta(days=1).total_seconds()),
+            endTime = long(self.contracts["Time"].getTimestamp() + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
             denominationToken = denominationToken,
             maxPrice= maxPrice,
