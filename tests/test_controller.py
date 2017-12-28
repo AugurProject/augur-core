@@ -21,13 +21,22 @@ def test_whitelists(localFixture, controller):
     assert controller.removeFromWhitelist(tester.a1, sender = tester.k1)
     with raises(TransactionFailed): controller.assertIsWhitelisted(tester.a1, sender = tester.k0)
 
-def test_registry(controller, decentralizedController):
+def test_registry(localFixture, controller, decentralizedController):
     key1 = 'abc'.ljust(32, '\x00')
     key2 = 'foo'.ljust(32, '\x00')
     with raises(TransactionFailed): controller.registerContract(key1, 123, garbageBytes20, garbageBytes32, sender = tester.k2)
     assert controller.lookup(key1, sender = tester.k2) == longToHexString(0)
     assert controller.addToWhitelist(tester.a1, sender = tester.k0)
-    assert controller.registerContract(key1, 123, garbageBytes20, garbageBytes32, sender = tester.k0)
+
+    registryAdditionLog = {
+        "key": key1,
+        "addition": longToHexString(123),
+        "commitHash": garbageBytes20,
+        "bytecodeHash": garbageBytes32
+    }
+    with AssertLog(localFixture, "RegistryAddition", registryAdditionLog):
+        assert controller.registerContract(key1, 123, garbageBytes20, garbageBytes32, sender = tester.k0)
+
     assert controller.lookup(key1, sender = tester.k2) == longToHexString(123)
     with raises(TransactionFailed): controller.assertOnlySpecifiedCaller(tester.a1, key2, sender = tester.k2)
     assert controller.registerContract(key2, tester.a1, garbageBytes20, garbageBytes32, sender = tester.k0)
@@ -93,8 +102,7 @@ def test_getContractDetails(controller):
 def localSnapshot(fixture, controllerSnapshot):
     fixture.resetToSnapshot(controllerSnapshot)
     fixture.upload('solidity_test_helpers/ControllerUser.sol')
-    fixture.uploadAndAddToController('../source/contracts/Augur.sol')
-    fixture.contracts["Augur"].setController(fixture.contracts['Controller'].address)
+    fixture.uploadAugur()
     decentralizedController = fixture.upload('../source/contracts/Controller.sol', 'decentralizedController')
     decentralizedController.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k0)
     return fixture.createSnapshot()

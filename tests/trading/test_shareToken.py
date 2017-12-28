@@ -127,6 +127,9 @@ def test_transferFrom(contractsFixture, market):
 def test_setController(contractsFixture, market):
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
     newController = contractsFixture.upload('../source/contracts/Controller.sol', 'newController')
+    newAugur = contractsFixture.upload('../source/contracts/Augur.sol', "newAugur")
+    newAugur.setController(newController.address)
+    newController.registerContract("Augur".ljust(32, '\x00'), newAugur.address, garbageBytes20, garbageBytes32)
     newController.registerContract('shareToken'.ljust(32, '\x00'), shareToken.address, garbageBytes20, garbageBytes32)
 
     contractsFixture.contracts['Controller'].updateController(shareToken.address, newController.address, sender=tester.k0)

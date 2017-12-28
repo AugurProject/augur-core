@@ -266,6 +266,7 @@ class ContractsFixture:
                 extension = path.splitext(filename)[1]
                 if extension != '.sol': continue
                 if name == 'controller': continue
+                if name == 'Augur': continue
                 if name == 'Time': continue # In testing and development we swap the Time library for a ControlledTime version which lets us manage block timestamp
                 contractsToDelegate = ['Orders', 'TradingEscapeHatch', 'Cash']
                 if name in contractsToDelegate:
@@ -300,7 +301,7 @@ class ContractsFixture:
             self.contracts['Controller'].addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['Augur','CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimTradingProceeds','OrdersFetcher', 'Time']
+        contractsToInitialize = ['CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimTradingProceeds','OrdersFetcher', 'Time']
         for contractName in contractsToInitialize:
             if getattr(self.contracts[contractName], "setController", None):
                 self.contracts[contractName].setController(self.contracts['Controller'].address)
@@ -325,6 +326,13 @@ class ContractsFixture:
         for testerKey in testersGivingApproval:
             for contractName in contractsToApprove:
                 self.contracts[contractName].approve(authority.address, 2**254, sender=testerKey)
+
+    def uploadAugur(self):
+        # We have to upload Augur first so it can log when contracts are added to the registry
+        augur = self.upload("../source/contracts/Augur.sol")
+        self.contracts["Augur"].setController(self.contracts['Controller'].address)
+        self.contracts['Controller'].registerContract("Augur".ljust(32, '\x00'), augur.address, garbageBytes20, garbageBytes32)
+        return augur
 
     def uploadShareToken(self, controllerAddress = None):
         controllerAddress = controllerAddress if controllerAddress else self.contracts['Controller'].address
@@ -426,6 +434,7 @@ def controllerSnapshot(fixture, baseSnapshot):
 @pytest.fixture(scope="session")
 def augurInitializedSnapshot(fixture, controllerSnapshot):
     fixture.resetToSnapshot(controllerSnapshot)
+    fixture.uploadAugur()
     fixture.uploadAllContracts()
     fixture.initializeAllContracts()
     fixture.whitelistTradingContracts()

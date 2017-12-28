@@ -30,6 +30,7 @@ export class ContractDeployer {
 
     public async deploy(): Promise<void> {
         this.controller = await this.uploadController();
+        await this.uploadAugur();
         await this.uploadAllContracts();
         await this.initializeAllContracts();        
         await this.whitelistTradingContracts();
@@ -87,6 +88,19 @@ export class ContractDeployer {
         return controller;
     }
 
+    private async uploadAugur(): Promise<void> {
+        // We have to upload and initialize Augur first so it can log the registration and whitelisting of other contracts
+        const contract = await this.contracts.get("Augur");
+        const address = await this.construct(contract, [], `Uploading ${contract.contractName}`);
+        const commitHash = await ContractDeployer.getGitCommit();
+        const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
+        const augur = new Augur(this.connector, this.accountManager, address, this.configuration.gasPrice);
+        contract.address = address;
+        const setControllerTransactionHash = await augur.setController(this.controller.address);
+        await this.connector.waitForTransactionReceipt(setControllerTransactionHash, `Initializing Augur.`);
+        await this.controller.registerContract(stringTo32ByteHex("Augur"), address, commitHash, bytecodeHash);
+    }
+
     private async uploadAllContracts(): Promise<void> {
         console.log('Uploading contracts...');
         const promises = [...this.contracts].map(contract => this.upload(contract));
@@ -99,6 +113,7 @@ export class ContractDeployer {
         if (contractName === 'Controller') return;
         if (contractName === 'Delegator') return;
         if (contractName === 'TimeControlled') return;
+        if (contractName === 'Augur') return;
         if (contractName === 'Time') contract = this.configuration.useNormalTime ? contract: this.contracts.get('TimeControlled');
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
         if (contract.relativeFilePath.startsWith('libraries/')) return;
@@ -182,7 +197,7 @@ export class ContractDeployer {
 
     private async initializeAllContracts(): Promise<void> {
         console.log('Initializing contracts...');
-        const contractsToInitialize = ["Augur","CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimTradingProceeds","OrdersFetcher","Time"];
+        const contractsToInitialize = ["CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimTradingProceeds","OrdersFetcher","Time"];
         const promises: Array<Promise<any>> = [];
         for (let contractName of contractsToInitialize) {
             promises.push(this.initializeContract(contractName));

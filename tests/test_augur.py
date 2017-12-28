@@ -20,9 +20,8 @@ def test_augur_central_authority_for_cash(augur, cash):
 @pytest_fixture(scope="session")
 def localSnapshot(fixture, controllerSnapshot):
     fixture.resetToSnapshot(controllerSnapshot)
-    augur = fixture.uploadAndAddToController("../source/contracts/Augur.sol")
+    augur = fixture.uploadAugur()
     cash = fixture.uploadAndAddToController("../source/contracts/trading/Cash.sol")
-    augur.setController(fixture.contracts['Controller'].address)
     cash.setController(fixture.contracts['Controller'].address)
     fixture.approveCentralAuthority()
     snapshot = fixture.createSnapshot()
