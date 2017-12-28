@@ -16,7 +16,6 @@ import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
 import 'reporting/IFeeWindow.sol';
-import 'factories/FeeWindowFactory.sol';
 import 'libraries/Extractable.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/IFeeToken.sol';
@@ -80,13 +79,11 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
     }
 
     function redeemForReportingParticipant() public returns (bool) {
-        redeemInternal(msg.sender, true);
-        return true;
+        return redeemInternal(msg.sender, true);
     }
 
     function redeem(address _sender) public returns (bool) {
-        redeemInternal(_sender, false);
-        return true;
+        return redeemInternal(_sender, false);
     }
 
     function redeemInternal(address _sender, bool _isReportingParticipant) private returns (bool) {
@@ -108,7 +105,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
         }
 
         if (_totalFeeStake == 0) {
-            return;
+            return true;
         }
 
         // CASH

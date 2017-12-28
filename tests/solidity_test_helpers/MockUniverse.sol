@@ -23,7 +23,7 @@ contract MockUniverse is Initializable, IUniverse {
     IMarket private setForkingMarketValue;
     uint256 private setForkEndTimeValue;
     bytes32 private setParentPayoutDistributionHashValue;
-    uint256 private setReportingPeriodDurationInSecondsValue;
+    uint256 private setDisputeRoundDurationInSecondsValue;
     IFeeWindow private setFeeWindowByTimestampValue;
     IFeeWindow private setFeeWindowByMarketEndTimeValue;
     IFeeWindow private setCurrentFeeWindowValue;
@@ -53,6 +53,8 @@ contract MockUniverse is Initializable, IUniverse {
     uint256 private setForkReputationGoalValue;
     MarketFactory private marketFactory;
     Controller private controller;
+    bool private setIsContainerForReportingParticipantValue;
+    bool private setIsForkingValue;
     /*
     * setters to feed the getters and impl of IUniverse
     */
@@ -88,8 +90,8 @@ contract MockUniverse is Initializable, IUniverse {
         setParentPayoutDistributionHashValue = _setParentPayoutDistributionHashValue;
     }
 
-    function setReportingPeriodDurationInSeconds(uint256 _setReportingPeriodDurationInSecondsValue) public {
-        setReportingPeriodDurationInSecondsValue = _setReportingPeriodDurationInSecondsValue;
+    function setDisputeRoundDurationInSeconds(uint256 _setDisputeRoundDurationInSecondsValue) public {
+        setDisputeRoundDurationInSecondsValue = _setDisputeRoundDurationInSecondsValue;
     }
 
     function setFeeWindowByTimestamp(IFeeWindow _setFeeWindowByTimestampValue) public {
@@ -200,6 +202,9 @@ contract MockUniverse is Initializable, IUniverse {
         return initializeParentPayoutDistributionHashValue;
     }
 
+    function setIsContainerForReportingParticipant(bool _value) public {
+        setIsContainerForReportingParticipantValue = _value;
+    }
     /*
     * Impl of IUniverse and ITyped
      */
@@ -247,7 +252,7 @@ contract MockUniverse is Initializable, IUniverse {
     }
 
     function getDisputeRoundDurationInSeconds() public view returns (uint256) {
-        return setReportingPeriodDurationInSecondsValue;
+        return setDisputeRoundDurationInSecondsValue;
     }
 
     function getOrCreateFeeWindowByTimestamp(uint256 _timestamp) public returns (IFeeWindow) {
@@ -396,7 +401,7 @@ contract MockUniverse is Initializable, IUniverse {
     }
     
     function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool) {
-        return true;
+        return setIsContainerForReportingParticipantValue;
     }
 
     function addMarketTo() public returns (bool) {
@@ -423,7 +428,9 @@ contract MockUniverse is Initializable, IUniverse {
         return true;
     }
 
+    function setIsForking(bool _isForking) public { setIsForkingValue = _isForking; }
+
     function isForking() public view returns (bool) {
-        return true;
+        return setIsForkingValue;
     }
 }
