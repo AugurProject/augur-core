@@ -9,6 +9,7 @@ contract MockInitialReporter is IInitialReporter {
     address private designatedReporter;
     bytes32 private payoutDistributionHash;
     uint256 private reportTimestamp;
+    bool private reportWasCalledValue;
 
     function setReportTimestamp(uint256 _reportTimestamp) public returns (bool) {
         reportTimestamp = _reportTimestamp;
@@ -30,30 +31,33 @@ contract MockInitialReporter is IInitialReporter {
         return _feeWindow.mintFeeTokens(_amount);
     }
 
+    function reportWasCalled() public returns(bool) { return reportWasCalledValue; }
+
     function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
+        reportWasCalledValue = true;
         return true;
     }
 
     function resetReportTimestamp() public returns (bool) {
         return true;
     }
-    
+
     function designatedReporterShowed() public view returns (bool) {
         return true;
     }
-    
+
     function designatedReporterWasCorrect() public view returns (bool) {
         return true;
     }
-    
+
     function getDesignatedReporter() public view returns (address) {
         return designatedReporter;
     }
-    
+
     function getReportTimestamp() public view returns (uint256) {
         return reportTimestamp;
     }
-    
+
     function depositGasBond() public payable returns (bool) {
         return true;
     }
@@ -102,4 +106,7 @@ contract MockInitialReporter is IInitialReporter {
         return 0;
     }
 
+    function callFinishedCrowdsourcingDisputeBond(IMarket _market) public returns(bool) {
+        return _market.finishedCrowdsourcingDisputeBond();
+    }
 }

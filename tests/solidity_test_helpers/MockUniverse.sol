@@ -55,9 +55,23 @@ contract MockUniverse is Initializable, IUniverse {
     Controller private controller;
     bool private setIsContainerForReportingParticipantValue;
     bool private setIsForkingValue;
+    bool private getOrCacheValidityBondWallCalledValue;
+    bool private getOrCacheTargetReporterGasCostsWasCalledValue;
+    uint256 private setDisputeThresholdForForkValue;
+    bool private getOrCreateNextFeeWindowWasCalledValue;
+    IUniverse private setWinningChildUniverseValue;
+    bool private addMarketToWasCalledValue;
+    bool private removeMarketFromWasCalledValue;
     /*
     * setters to feed the getters and impl of IUniverse
     */
+    function reset() public {
+        setforkValue = false;
+        getOrCreateNextFeeWindowWasCalledValue = false;
+        addMarketToWasCalledValue = false;
+        removeMarketFromWasCalledValue = false;
+    }
+
     function getForkCalled() public returns(bool) {
         return setforkValue;
     }
@@ -126,15 +140,15 @@ contract MockUniverse is Initializable, IUniverse {
         setTargetRepMarketCapInAttoethValue = _setTargetRepMarketCapInAttoethValue;
     }
 
-    function setValidityBond(uint256 _setValidityBondValue) public {
+    function setOrCacheValidityBond(uint256 _setValidityBondValue) public {
         setValidityBondValue = _setValidityBondValue;
     }
 
-    function setDesignatedReportStake(uint256 _setDesignatedReportStakeValue) public {
+    function setOrCacheDesignatedReportStake(uint256 _setDesignatedReportStakeValue) public {
         setDesignatedReportStakeValue = _setDesignatedReportStakeValue;
     }
 
-    function setDesignatedReportNoShowBond(uint256 _setDesignatedReportNoShowBondValue) public {
+    function setOrCacheDesignatedReportNoShowBond(uint256 _setDesignatedReportNoShowBondValue) public {
         setDesignatedReportNoShowBondValue = _setDesignatedReportNoShowBondValue;
     }
 
@@ -158,7 +172,7 @@ contract MockUniverse is Initializable, IUniverse {
         setCalculateFloatingValueValue = _setCalculateFloatingValueValue;
     }
 
-    function setTargetReporterGasCosts(uint256 _setTargetReporterGasCostsValue) public {
+    function setOrCacheTargetReporterGasCosts(uint256 _setTargetReporterGasCostsValue) public {
         setTargetReporterGasCostsValue = _setTargetReporterGasCostsValue;
     }
 
@@ -205,6 +219,7 @@ contract MockUniverse is Initializable, IUniverse {
     function setIsContainerForReportingParticipant(bool _value) public {
         setIsContainerForReportingParticipantValue = _value;
     }
+
     /*
     * Impl of IUniverse and ITyped
      */
@@ -267,7 +282,10 @@ contract MockUniverse is Initializable, IUniverse {
         return setCurrentFeeWindowValue;
     }
 
+    function getOrCreateNextFeeWindowWasCalled() public returns(bool) { return getOrCreateNextFeeWindowWasCalledValue;}
+
     function getOrCreateNextFeeWindow() public returns (IFeeWindow) {
+        getOrCreateNextFeeWindowWasCalledValue = true;
         return setNextFeeWindowValue;
     }
 
@@ -287,7 +305,10 @@ contract MockUniverse is Initializable, IUniverse {
         return setTargetRepMarketCapInAttoethValue;
     }
 
+    function getOrCacheValidityBondWallCalled() public returns(bool) { return getOrCacheValidityBondWallCalledValue; }
+
     function getOrCacheValidityBond() public returns (uint256) {
+        getOrCacheValidityBondWallCalledValue = true;
         return setValidityBondValue;
     }
 
@@ -339,7 +360,10 @@ contract MockUniverse is Initializable, IUniverse {
         return _newValue;
     }
 
+    function getOrCacheTargetReporterGasCostsWasCalled() public returns(bool) { return getOrCacheTargetReporterGasCostsWasCalledValue; }
+
     function getOrCacheTargetReporterGasCosts() public returns (uint256) {
+        getOrCacheTargetReporterGasCostsWasCalledValue = true;
         return setTargetReporterGasCostsValue;
     }
 
@@ -399,21 +423,31 @@ contract MockUniverse is Initializable, IUniverse {
     function createChildUniverse(uint256[] _parentPayoutNumerators, bool _parentInvalid) public returns (IUniverse) {
         return IUniverse(0);
     }
-    
+
     function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool) {
         return setIsContainerForReportingParticipantValue;
     }
 
+    function addMarketToWasCalled() public returns(bool) { return addMarketToWasCalledValue; }
+
     function addMarketTo() public returns (bool) {
+        addMarketToWasCalledValue = true;
         return true;
     }
 
+    function removeMarketFromWasCalled() public returns(bool) { return removeMarketFromWasCalledValue; }
+
     function removeMarketFrom() public returns (bool) {
+        removeMarketFromWasCalledValue = true;
         return true;
+    }
+
+    function setWinningChildUniverse(IUniverse _winning) public {
+        setWinningChildUniverseValue = _winning;
     }
 
     function getWinningChildUniverse() public view returns (IUniverse) {
-        return IUniverse(0);
+        return setWinningChildUniverseValue;
     }
 
     function getCurrentFeeWindow() public view returns (IFeeWindow) {
@@ -438,8 +472,10 @@ contract MockUniverse is Initializable, IUniverse {
         return true;
     }
 
+    function setDisputeThresholdForFork(uint256 _value) public { setDisputeThresholdForForkValue = _value; }
+
     function getDisputeThresholdForFork() public view returns (uint256) {
-        return 0;
+        return setDisputeThresholdForForkValue;
     }
 
     function getInitialReportMinValue() public view returns (uint256) {
