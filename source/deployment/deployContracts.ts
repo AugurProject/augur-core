@@ -20,8 +20,8 @@ async function doWork() {
 }
 
 doWork().then(() => {
-    process.exit();
+    process.exitCode = 0;
 }).catch(error => {
     console.log(error);
-    process.exit();
+    process.exitCode = 1;
 });
