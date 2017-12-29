@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+require('source-map-support').install();
 import { ContractCompiler } from "../libraries/ContractCompiler";
 import { Configuration } from '../libraries/Configuration';
 import { ContractInterfaceGenerator } from '../libraries/ContractInterfacesGenerator';
