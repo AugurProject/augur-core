@@ -32,7 +32,7 @@ contract MockMarket is IMarket {
     uint256 private firstReporterCompCheck;
     bool private migrateDueToNoRep;
     bool private isContForShareToken;
-    bool private isValidValue;
+    bool private isInValidValue;
     address private owner;
     bool private transferOwner;
     IUniverse private initializeUniverseValue;
@@ -44,6 +44,8 @@ contract MockMarket is IMarket {
     address private initializeCreatorValue;
     address private initializeDesignatedReporterAddressValue;
     IMailbox private setMarketCreatorMailbox;
+    bool private setDesignatedReporterWasCorrectValue;
+    bool private setDesignatedReporterShowedValue;
     /*
     * setters to feed the getters and impl of IMarket
     */
@@ -139,8 +141,8 @@ contract MockMarket is IMarket {
         isContForShareToken = _isContForShareToken;
     }
 
-    function setIsValid(bool _isValidValue) public {
-        isValidValue = _isValidValue;
+    function setIsInvalid(bool _isInValidValue) public {
+        isInValidValue = _isInValidValue;
     }
 
     function setOwner(address _owner) public {
@@ -201,6 +203,10 @@ contract MockMarket is IMarket {
 
     function setMarketCreatorMailboxValue(IMailbox _setMarketCreatorMailbox) public {
         setMarketCreatorMailbox = _setMarketCreatorMailbox;
+    }
+
+    function callOnMarketFinalized(IFeeWindow _feeWindow) public returns(bool) {
+        return _feeWindow.onMarketFinalized();
     }
 
     /*
@@ -329,8 +335,8 @@ contract MockMarket is IMarket {
         return isContForShareToken;
     }
 
-    function isValid() public view returns (bool) {
-        return isValidValue;
+    function isInvalid() public view returns (bool) {
+        return isInValidValue;
     }
 
     function getMarketCreatorMailbox() public view returns (IMailbox) {
@@ -357,20 +363,20 @@ contract MockMarket is IMarket {
         return true;
     }
 
-    function isInvalid() public view returns (bool) {
-        return true;
-    }
-
     function finishedCrowdsourcingDisputeBond() public returns (bool) {
         return true;
     }
 
+    function setDesignatedReporterWasCorrect(bool _designatedReporterWasCorrect) public { setDesignatedReporterWasCorrectValue = _designatedReporterWasCorrect; }
+    
     function designatedReporterWasCorrect() public view returns (bool) {
-        return true;
+        return setDesignatedReporterWasCorrectValue;
     }
 
+    function setDesignatedReporterShowed(bool _designatedReporterShowed) public { setDesignatedReporterShowedValue = _designatedReporterShowed; }
+
     function designatedReporterShowed() public view returns (bool) {
-        return true;
+        return setDesignatedReporterShowedValue;
     }
 
     function isFinalized() public view returns (bool) {

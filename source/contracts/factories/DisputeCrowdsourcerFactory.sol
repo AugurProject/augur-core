@@ -3,7 +3,6 @@ pragma solidity 0.4.18;
 import 'libraries/Delegator.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IFeeWindow.sol';
 import 'IController.sol';
 
 

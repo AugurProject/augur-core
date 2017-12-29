@@ -16,7 +16,6 @@ import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
 import 'reporting/IFeeWindow.sol';
-import 'factories/FeeWindowFactory.sol';
 import 'libraries/Extractable.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/IFeeToken.sol';
@@ -108,7 +107,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
         }
 
         if (_totalFeeStake == 0) {
-            return;
+            return true;
         }
 
         // CASH
