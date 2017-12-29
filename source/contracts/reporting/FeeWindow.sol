@@ -41,7 +41,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
     function initialize(IUniverse _universe, uint256 _feeWindowId) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         universe = _universe;
-        startTime = _feeWindowId * universe.getDisputeRoundDurationInSeconds();
+        startTime = _feeWindowId.mul(universe.getDisputeRoundDurationInSeconds());
         // Initialize this to some reasonable value to handle the first market ever created without branching code
         reportingGasPrice.record(Reporting.getDefaultReportingGasPrice());
         feeToken = FeeTokenFactory(controller.lookup("FeeTokenFactory")).createFeeToken(controller, this);
@@ -172,7 +172,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
     }
 
     function getEndTime() public afterInitialized view returns (uint256) {
-        return getStartTime() + Reporting.getDisputeRoundDurationSeconds();
+        return getStartTime().add(Reporting.getDisputeRoundDurationSeconds());
     }
 
     function getFeeToken() public afterInitialized view returns (IFeeToken) {

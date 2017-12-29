@@ -92,6 +92,7 @@ def test_delegationInputsAndOutputs(localFixture):
 @fixture(scope="session")
 def localSnapshot(fixture, controllerSnapshot):
     fixture.resetToSnapshot(controllerSnapshot)
+    fixture.uploadAugur()
     name = "DelegatorHelper"
     targetName = "DelegatorHelperTarget"
     fixture.uploadAndAddToController("solidity_test_helpers/DelegatorHelper.sol", targetName, name)
