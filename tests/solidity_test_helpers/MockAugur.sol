@@ -167,4 +167,12 @@ contract MockAugur is Controlled {
     function logDisputeCrowdsourcerCompleted(IUniverse _universe, address _market, address _disputeCrowdsourcer) public returns (bool) {
         return true;
     }
+
+    function logContractAddedToWhitelist(address _addition) public returns (bool) {
+        return true;
+    }
+
+    function logContractAddedToRegistry(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public returns (bool) {
+        return true;
+    }
 }

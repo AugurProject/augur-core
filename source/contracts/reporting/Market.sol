@@ -405,7 +405,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     }
 
     function getDesignatedReportingEndTime() public view returns (uint256) {
-        return endTime + Reporting.getDesignatedReportingDurationSeconds();
+        return endTime.add(Reporting.getDesignatedReportingDurationSeconds());
     }
 
     function getNumParticipants() public view returns (uint256) {
