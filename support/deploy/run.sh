@@ -14,8 +14,8 @@ case $2 in
     gasPrice=20
     ;;
   "rinkeby")
-    host="rinkeby.ethereum.nodes.augur.net"
-    port="80"
+    host="rinkeby.ethereum.origin.augur.net"
+    port="8545"
     privateKey=$RINKEBY_PRIVATE_KEY
     gasPrice=20
     ;;
