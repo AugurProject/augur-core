@@ -122,8 +122,8 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
 
     function updateSiblingMigrationTotal(IReputationToken _token) public returns (bool) {
         require(_token != this);
-        IUniverse _supposedUniverse = _token.getUniverse();
-        require(_token == universe.getParentUniverse().getChildUniverse(_supposedUniverse.getParentPayoutDistributionHash()).getReputationToken());
+        IUniverse _shadyUniverse = _token.getUniverse();
+        require(_token == universe.getParentUniverse().getChildUniverse(_shadyUniverse.getParentPayoutDistributionHash()).getReputationToken());
         totalTheoreticalSupply += migratedToSibling[_token];
         migratedToSibling[_token] = _token.getTotalMigrated();
         totalTheoreticalSupply -= migratedToSibling[_token];

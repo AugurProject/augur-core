@@ -100,10 +100,10 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
         with TokenDelta(cash, expectedReporterFees, universe.getOrCreateNextFeeWindow(), "Reporter fees not paid"):
             # redeem shares with a1
             initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
-            claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
+            claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
             # redeem shares with a2
             initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
-            claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k2)
+            claimTradingProceeds.claimTradingProceeds(market.address, tester.a2)
 
     # Confirm claim proceeds logging works correctly
     assert len(logs) == 6
@@ -146,10 +146,10 @@ def test_redeem_shares_in_categorical_market(kitchenSinkFixture, universe, cash,
 
     # redeem shares with a1
     initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
-    claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
+    claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
     # redeem shares with a2
     initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
-    claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k2)
+    claimTradingProceeds.claimTradingProceeds(market.address, tester.a2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
     assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout + 1 # rounding errors from fees
@@ -183,10 +183,10 @@ def test_redeem_shares_in_scalar_market(kitchenSinkFixture, universe, cash, scal
 
     # redeem shares with a1
     initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
-    claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
+    claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
     # redeem shares with a2
     initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
-    claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k2)
+    claimTradingProceeds.claimTradingProceeds(market.address, tester.a2)
 
     # assert a1 ends up with cash (minus fees) and a2 does not
     assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout * 3 / 4
@@ -214,14 +214,14 @@ def test_reedem_failure(kitchenSinkFixture, cash, market):
 
     # market not finalized
     with raises(TransactionFailed):
-        claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
+        claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
     # finalize the market
     assert market.finalize()
     # waiting period not over
     with raises(TransactionFailed):
-        claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
+        claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
 
     # set timestamp to 3 days later (waiting period)
     kitchenSinkFixture.contracts["Time"].incrementTimestamp(long(timedelta(days = 3, seconds = 1).total_seconds()))
     # validate that everything else is OK
-    assert claimTradingProceeds.claimTradingProceeds(market.address, sender = tester.k1)
+    assert claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)

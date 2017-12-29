@@ -34,6 +34,8 @@ contract Augur is Controlled, Extractable {
     event TokensMinted(address indexed universe, address indexed token, address indexed target, uint256 amount);
     event TokensBurned(address indexed universe, address indexed token, address indexed target, uint256 amount);
     event FeeWindowCreated(address indexed universe, address feeWindow, uint256 startTime, uint256 endTime, uint256 id);
+    event WhitelistAddition(address addition);
+    event RegistryAddition(bytes32 key, address addition, bytes20 commitHash, bytes32 bytecodeHash);
 
     mapping(address => bool) private universes;
 
@@ -276,6 +278,16 @@ contract Augur is Controlled, Extractable {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
         TokensMinted(_universe, msg.sender, _target, _amount);
+        return true;
+    }
+
+    function logContractAddedToWhitelist(address _addition) public onlyControllerCaller returns (bool) {
+        WhitelistAddition(_addition);
+        return true;
+    }
+
+    function logContractAddedToRegistry(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyControllerCaller returns (bool) {
+        RegistryAddition(_key, _address, _commitHash, _bytecodeHash);
         return true;
     }
 

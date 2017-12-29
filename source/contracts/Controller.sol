@@ -66,6 +66,7 @@ contract Controller is IController {
 
     function addToWhitelist(address _target) public onlyWhitelistedCallers returns (bool) {
         whitelist[_target] = true;
+        getAugur().logContractAddedToWhitelist(_target);
         return true;
     }
 
@@ -85,6 +86,7 @@ contract Controller is IController {
 
     function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyOwnerCaller returns (bool) {
         registry[_key] = ContractDetails(_key, _address, _commitHash, _bytecodeHash);
+        getAugur().logContractAddedToRegistry(_key, _address, _commitHash, _bytecodeHash);
         return true;
     }
 
