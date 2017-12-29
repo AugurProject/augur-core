@@ -9,7 +9,7 @@ import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
-import 'TEST/MockVariableSupplyToken.sol';import 'TEST/MockVariableSupplyToken.sol';
+import 'TEST/MockVariableSupplyToken.sol';
 
 
 contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVariableSupplyToken, IReputationToken {

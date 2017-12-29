@@ -79,11 +79,13 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
     }
 
     function redeemForReportingParticipant() public returns (bool) {
-        return redeemInternal(msg.sender, true);
+        redeemInternal(msg.sender, true);
+        return true;
     }
 
     function redeem(address _sender) public returns (bool) {
-        return redeemInternal(_sender, false);
+        redeemInternal(_sender, false);
+        return true;
     }
 
     function redeemInternal(address _sender, bool _isReportingParticipant) private returns (bool) {
