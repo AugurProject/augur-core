@@ -38,7 +38,7 @@ case $2 in
   "aura")
     host="aura.ethereum.nodes.augur.net"
     port="80"
-    privateKey="fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a"
+    privateKey="47f49c399482f73143cadeb2db8938d3f249578bdc64cdcda4ecf1ee535a5c91"
     gasPrice=1
     ;;
   *)
