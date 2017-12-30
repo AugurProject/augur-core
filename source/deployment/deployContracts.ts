@@ -7,9 +7,8 @@ import { Configuration } from '../libraries/Configuration';
 import { AccountManager } from '../libraries/AccountManager';
 
 // the rest of the code in this file is for running this as a standalone script, rather than as a library
-async function doWork() {
+export async function deployContracts(configuration: Configuration) {
     require('source-map-support').install();
-    const configuration = await Configuration.create();
     const connector = new Connector(configuration);
     const accountManager = new AccountManager(configuration, connector);
     console.log("Compiling contracts");
@@ -19,9 +18,13 @@ async function doWork() {
     await contractDeployer.deploy();
 }
 
-doWork().then(() => {
-    process.exitCode = 0;
-}).catch(error => {
-    console.log(error);
-    process.exitCode = 1;
-});
+if (require.main === module) {
+    Configuration.create().then((configuration) => {
+        deployContracts(configuration).then(() => {
+            process.exitCode = 0;
+        }).catch(error => {
+            console.log(error);
+            process.exitCode = 1;
+        });
+    });
+}

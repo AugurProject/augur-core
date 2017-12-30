@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as getPort from "get-port";
 import BN = require('bn.js');
+import { networkConfigurations } from "./NetworkConfigurations";
 
 export class Configuration {
     public readonly httpProviderHost: string;
@@ -31,16 +32,28 @@ export class Configuration {
         this.useNormalTime = isProduction || useNormalTime;
     }
 
-    public static create = async (isProduction: boolean=false, useNormalTime: boolean=true): Promise<Configuration> => {
-        const host = (typeof process.env.ETHEREUM_HOST === "undefined") ? "localhost" : process.env.ETHEREUM_HOST!;
-        const port = (typeof process.env.ETHEREUM_PORT === "undefined") ? await getPort() : parseInt(process.env.ETHEREUM_PORT || "0");
-        const gasPrice = ((typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? new BN(20) : new BN(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH!)).mul(new BN(1000000000));
-        const privateKey = process.env.ETHEREUM_PRIVATE_KEY || '0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d';
+    private static createWithHost(host: string, port: number, gasPrice: BN, privateKey: string, isProduction: boolean=false, useNormalTime: boolean=true): Configuration {
         const contractSourceRoot = path.join(__dirname, "../../source/contracts/");
         const contractOutputRoot = path.join(__dirname, "../../output/contracts/");
         const controllerAddress = process.env.AUGUR_CONTROLLER_ADDRESS;
         const createGenesisUniverse = (typeof process.env.CREATE_GENESIS_UNIVERSE === "undefined") ? true : process.env.CREATE_GENESIS_UNIVERSE === "true";
 
         return new Configuration(host, port, gasPrice, privateKey, contractSourceRoot, contractOutputRoot, controllerAddress, createGenesisUniverse, isProduction, useNormalTime);
+    }
+
+    public static create = async (isProduction: boolean=false, useNormalTime: boolean=true): Promise<Configuration> => {
+        const host = (typeof process.env.ETHEREUM_HOST === "undefined") ? "localhost" : process.env.ETHEREUM_HOST!;
+        const port = (typeof process.env.ETHEREUM_PORT === "undefined") ? await getPort() : parseInt(process.env.ETHEREUM_PORT || "0");
+        const gasPrice = ((typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? new BN(20) : new BN(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH!)).mul(new BN(1000000000));
+        const privateKey = process.env.ETHEREUM_PRIVATE_KEY || '0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d';
+
+        return Configuration.createWithHost(host, port, gasPrice, privateKey, isProduction, useNormalTime);
+    }
+
+    public static network = (name: string):Configuration => {
+        const network = networkConfigurations[name];
+        if (network === undefined || network === null) throw new Error(`Network configuration ${name} not found`);
+        if (network.privateKey === undefined || network.privateKey === null) throw new Error(`Network configuration for ${name} has no private key available. Check that this key is in the environment {NETWORK_NAME}_PRIVATE_KEY`);
+        return Configuration.createWithHost(network.host, network.port, network.gasPrice, network.privateKey);
     }
 }
