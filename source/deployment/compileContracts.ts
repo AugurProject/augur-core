@@ -9,8 +9,8 @@ async function doWork(): Promise<void> {
 }
 
 doWork().then(() => {
-    process.exit();
+    process.exit(0);
 }).catch(error => {
     console.log(error);
-    process.exit();
+    process.exit(1);
 });
