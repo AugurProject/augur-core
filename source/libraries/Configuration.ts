@@ -53,7 +53,7 @@ export class Configuration {
     public static network = (name: string):Configuration => {
         const network = networkConfigurations[name];
         if (network === undefined || network === null) throw new Error(`Network configuration ${name} not found`);
-        if (network.privateKey === undefined || network.privateKey === null) throw new Error(`Network configuration for ${name} has no private key available. Check that this key is in the environment {NETWORK_NAME}_PRIVATE_KEY`);
+        if (network.privateKey === undefined || network.privateKey === null) throw new Error(`Network configuration for ${name} has no private key available. Check that this key is in the environment ${name.toUpperCase()}_PRIVATE_KEY`);
         return Configuration.createWithHost(network.host, network.port, network.gasPrice, network.privateKey);
     }
 }
