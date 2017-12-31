@@ -4,6 +4,17 @@
 
 Smart contracts for [Augur](https://augur.net), a decentralized prediction market platform on the [Ethereum](https://ethereum.org) blockchain.
 
+## Quick Setup
+
+If you just want to clone the repo and quickly have a couple local proof of authority networks (Geth/Clique and Parity/Aura) running with the contracts deployed then you can just clone the repo and run:
+```
+docker-compose -f support/test/integration/docker-compose.yml up --build --force-recreate
+```
+* Parity HTTP RPC will be available on localhost port `47622`.
+* Geth HTTP RPC will be available on localhost port `47624`.
+* An abundant supply of ETH is available using the private key `0xfae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a`.
+* The log output will let you know what the address of the various Augur contracts are.
+
 ## Installation
 
 You need system-wide installations of Python 2.7.6+, Node.js 8+, and [Solidity 0.4.18](https://github.com/ethereum/solidity/releases/tag/v0.4.18).  (Or Docker; see below.)  Install the dependencies:
