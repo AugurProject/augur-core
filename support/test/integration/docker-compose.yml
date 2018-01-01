@@ -2,18 +2,13 @@ version: "3.2"
 services:
   parity-dev-node:
     image: augurproject/dev-node-parity:latest
-    # uncomment following line to run with fixed block times instead of instant seal (parameter is seconds between blocks)
-    command: [ "1" ]
     ports:
       - "47622:8545"
       - "47621:8180"
   parity-integration-tests:
-    image: augurproject/augur-core:latest
     build:
       context: ../../../
       dockerfile: support/Dockerfile
-      cache_from:
-        - augurproject/augur-core:latest
     entrypoint: [ "npm", "run", "test:integration" ]
     # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--", "--debug=0.0.0.0:9229", "--inspect-brk" ]
@@ -32,15 +27,12 @@ services:
     ports:
       - "47624:8545"
   geth-integration-tests:
-    image: augurproject/augur-core:latest
     build:
       context: ../../../
       dockerfile: support/Dockerfile
-      cache_from:
-        - augurproject/augur-core:latest
     entrypoint: [ "npm", "run", "test:integration" ]
     # uncomment the following 3 lines to enable debugging the tests
-    command: [ "--", "--debug=0.0.0.0:9229", "--inspect-brk" ]
+    # command: [ "--", "--debug=0.0.0.0:9229", "--inspect-brk" ]
     # ports:
     #   - "9229:9229"
     environment:

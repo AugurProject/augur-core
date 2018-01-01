@@ -43,6 +43,7 @@ jobs:
                 docker pull $IMAGE_BUILD;
                 docker tag $IMAGE_BUILD $IMAGE_LATEST;
                 ARTIFACTS=true npm run docker:run:deploy && docker push $IMAGE_LATEST
+      if: type = push
 stages:
   - build
   - test
