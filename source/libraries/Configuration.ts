@@ -10,6 +10,7 @@ export class Configuration {
     public readonly privateKey: string;
     public readonly contractSourceRoot: string;
     public readonly contractOutputPath: string;
+    public readonly abiOutputPath: string;
     public readonly contractAddressesOutputPath: string;
     public readonly contractInterfacesOutputPath: string;
     public readonly controllerAddress: string|undefined;
@@ -24,6 +25,7 @@ export class Configuration {
         this.privateKey = privateKey;
         this.contractSourceRoot = contractSourceRoot;
         this.contractOutputPath = path.join(contractOutputRoot, 'contracts.json');
+        this.abiOutputPath = path.join(contractOutputRoot, 'abi.json');
         this.contractAddressesOutputPath = path.join(contractOutputRoot, 'addresses.json');
         this.contractInterfacesOutputPath = path.join(contractSourceRoot, '../libraries', 'ContractInterfaces.ts');
         this.controllerAddress = controllerAddress;
