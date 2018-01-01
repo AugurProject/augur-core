@@ -48,7 +48,7 @@ stages:
   - build
   - test
   - name: deploy
-    if: (branch = master or tag =~ ^v\d+\.\d+\.\d+(-\d+)?$) and type = push
+    if: (branch = master or tag =~ ^v\d+\.\d+\.\d+(-\d+)?$) and head_branch is blank
 git:
   depth: 5
 branches:
