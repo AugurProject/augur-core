@@ -43,12 +43,12 @@ jobs:
                 docker pull $IMAGE_BUILD;
                 docker tag $IMAGE_BUILD $IMAGE_LATEST;
                 ARTIFACTS=true npm run docker:run:deploy && docker push $IMAGE_LATEST
-      if: head_branch is blank
+      if: type = push
 stages:
   - build
   - test
   - name: deploy
-    if: (branch = master or tag =~ ^v\d+\.\d+\.\d+(-\d+)?$) and head_branch is blank
+    if: branch = master or tag =~ ^v\d+\.\d+\.\d+(-\d+)?$
 git:
   depth: 5
 branches:
