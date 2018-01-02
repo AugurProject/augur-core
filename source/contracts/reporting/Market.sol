@@ -90,7 +90,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             require(owner.call.value(_refund)());
         }
         // Send the reporter gas bond to the initial report contract. It will be paid out only if they are correct.
-        require(IInitialReporter(participants[0]).depositGasBond.value(reporterGasCostsFeeAttoeth)());
+        cash.depositEtherFor.value(reporterGasCostsFeeAttoeth)(participants[0]);
         return true;
     }
 

@@ -12,5 +12,4 @@ contract IInitialReporter is IReportingParticipant {
     function designatedReporterWasCorrect() public view returns (bool);
     function getDesignatedReporter() public view returns (address);
     function getReportTimestamp() public view returns (uint256);
-    function depositGasBond() public payable returns (bool);
 }

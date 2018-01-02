@@ -61,7 +61,7 @@ def test_initialReportHappyPath(localFixture, universe, market):
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.finalize()
 
-def test_initialReport_transfer_ownership(localFixture, universe, market, cash):
+def test_initialReport_transfer_ownership(localFixture, universe, market, cash, constants):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
 
     # proceed to the initial reporting period
@@ -92,8 +92,11 @@ def test_initialReport_transfer_ownership(localFixture, universe, market, cash):
     # When we redeem the initialReporter it goes to the correct party as well
     expectedRep = initialReporter.getStake()
     owner = initialReporter.getOwner()
-    with TokenDelta(reputationToken, expectedRep, owner, "Redeeming didn't refund REP"):
-        assert initialReporter.redeem(owner)
+
+    expectedGasBond = 2 * constants.GAS_TO_REPORT() * constants.DEFAULT_REPORTING_GAS_PRICE()
+    with EtherDelta(expectedGasBond, owner, localFixture.chain, "Initial reporter did not get the reporting gas cost bond"):
+        with TokenDelta(reputationToken, expectedRep, owner, "Redeeming didn't refund REP"):
+            assert initialReporter.redeem(owner)
 
 @mark.parametrize('rounds', [
     2,
@@ -327,3 +330,7 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
 def localFixture(fixture, localSnapshot):
     fixture.resetToSnapshot(localSnapshot)
     return fixture
+
+@fixture
+def constants(localFixture, kitchenSinkSnapshot):
+    return localFixture.contracts['Constants']

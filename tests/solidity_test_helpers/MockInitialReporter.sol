@@ -58,10 +58,6 @@ contract MockInitialReporter is IInitialReporter {
         return reportTimestamp;
     }
 
-    function depositGasBond() public payable returns (bool) {
-        return true;
-    }
-
     function getStake() public view returns (uint256) {
         return 0;
     }
