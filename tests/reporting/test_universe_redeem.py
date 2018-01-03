@@ -62,6 +62,7 @@ def test_redeem_participation_tokens(kitchenSinkFixture, universe, market, cash)
 
 def test_redeem_reporting_participants(kitchenSinkFixture, market, categoricalMarket, scalarMarket, universe, cash):
     reputationToken = kitchenSinkFixture.applySignature("ReputationToken", universe.getReputationToken())
+    constants = kitchenSinkFixture.contracts["Constants"]
 
     # Initial Report
     proceedToNextRound(kitchenSinkFixture, market, doGenerateFees = True)
@@ -90,8 +91,9 @@ def test_redeem_reporting_participants(kitchenSinkFixture, market, categoricalMa
     expectedRep = long(winningDisputeCrowdsourcer2.getStake() + winningDisputeCrowdsourcer1.getStake())
     expectedRep = long(expectedRep + expectedRep / 2)
     expectedRep += long(initialReporter.getStake() + initialReporter.getStake() / 2)
+    expectedGasBond = 2 * constants.GAS_TO_REPORT() * constants.DEFAULT_REPORTING_GAS_PRICE()
     with TokenDelta(reputationToken, expectedRep, tester.a0, "Redeeming didn't refund REP"):
-        with EtherDelta(expectedFees, tester.a0, kitchenSinkFixture.chain, "Redeeming didn't increase ETH correctly"):
+        with EtherDelta(expectedFees +  expectedGasBond, tester.a0, kitchenSinkFixture.chain, "Redeeming didn't increase ETH correctly"):
             with PrintGasUsed(kitchenSinkFixture, "Universe Redeem:", 0):
                 assert universe.redeemStake([initialReporter.address, winningDisputeCrowdsourcer1.address, winningDisputeCrowdsourcer2.address], [])
 
