@@ -2,8 +2,8 @@ pragma solidity ^0.4.18;
 
 import 'reporting/IMarket.sol';
 import 'reporting/IUniverse.sol';
+import 'reporting/IMailbox.sol';
 import 'libraries/ITyped.sol';
-import 'libraries/IMailbox.sol';
 
 
 contract MockMarket is IMarket {
@@ -368,7 +368,7 @@ contract MockMarket is IMarket {
     }
 
     function setDesignatedReporterWasCorrect(bool _designatedReporterWasCorrect) public { setDesignatedReporterWasCorrectValue = _designatedReporterWasCorrect; }
-    
+
     function designatedReporterWasCorrect() public view returns (bool) {
         return setDesignatedReporterWasCorrectValue;
     }

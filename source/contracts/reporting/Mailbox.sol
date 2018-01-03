@@ -3,8 +3,8 @@ pragma solidity 0.4.18;
 import 'libraries/DelegationTarget.sol';
 import 'libraries/Ownable.sol';
 import 'libraries/token/ERC20Basic.sol';
-import 'libraries/IMailbox.sol';
 import 'libraries/Initializable.sol';
+import 'reporting/IMailbox.sol';
 import 'trading/ICash.sol';
 
 
