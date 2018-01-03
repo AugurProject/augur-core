@@ -32,7 +32,7 @@ export class ContractDeployer {
         this.controller = await this.uploadController();
         await this.uploadAugur();
         await this.uploadAllContracts();
-        await this.initializeAllContracts();        
+        await this.initializeAllContracts();
         await this.whitelistTradingContracts();
 
         if(this.configuration.createGenesisUniverse) {
@@ -243,6 +243,7 @@ export class ContractDeployer {
         if (this.contracts.get('Augur').address === undefined) throw new Error(`Augur not uploaded.`);
         mapping['Augur'] = this.contracts.get('Augur').address!;
         mapping['LegacyReputationToken'] = this.contracts.get('LegacyReputationToken').address!;
+        mapping['Mailbox'] = this.contracts.get('Mailbox').address!;
         for (let contract of this.contracts) {
             if (!contract.relativeFilePath.startsWith('trading/')) continue;
             if (/^I[A-Z].*/.test(contract.contractName)) continue;
