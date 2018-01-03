@@ -21,7 +21,7 @@ import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/SafeMathInt256.sol';
 import 'libraries/Extractable.sol';
 import 'factories/MailboxFactory.sol';
-import 'libraries/IMailbox.sol';
+import 'reporting/IMailbox.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IInitialReporter.sol';
 import 'Augur.sol';
@@ -167,7 +167,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function finalize() public onlyInGoodTimes returns (bool) {
         require(winningPayoutDistributionHash == bytes32(0));
-        
+
         if (universe.getForkingMarket() == this) {
             return finalizeFork();
         }

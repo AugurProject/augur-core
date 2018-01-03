@@ -10,7 +10,7 @@ import 'reporting/IFeeWindow.sol';
 import 'trading/IShareToken.sol';
 import 'reporting/IReportingParticipant.sol';
 import 'reporting/IReputationToken.sol';
-import 'libraries/IMailbox.sol';
+import 'reporting/IMailbox.sol';
 
 
 contract IMarket is ITyped, IOwnable {
