@@ -114,6 +114,7 @@ def generateFees(fixture, universe, market):
     completeSets = fixture.contracts['CompleteSets']
     cash = fixture.contracts['Cash']
     mailbox = fixture.applySignature('Mailbox', market.getMarketCreatorMailbox())
+    assert mailbox.withdrawEther()
     
     cost = 1000 * market.getNumTicks()
     marketCreatorFees = cost / market.getMarketCreatorSettlementFeeDivisor()

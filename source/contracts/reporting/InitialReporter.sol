@@ -23,10 +23,6 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
         return true;
     }
 
-    function depositGasBond() public payable returns (bool) {
-        return true;
-    }
-
     function redeem(address) public returns (bool) {
         if (!isDisavowed() && !market.isFinalized()) {
             market.finalize();
@@ -57,6 +53,10 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
 
     function withdrawInEmergency() public onlyInBadTimes returns (bool) {
         reputationToken.transfer(owner, reputationToken.balanceOf(this));
+        uint256 _cashBalance = cash.balanceOf(this);
+        if (_cashBalance > 0) {
+            cash.withdrawEtherTo(owner, _cashBalance);
+        }
         return true;
     }
 

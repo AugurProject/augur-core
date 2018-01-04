@@ -6,6 +6,7 @@ from reporting_utils import generateFees, proceedToNextRound, finalizeFork, getE
 
 def test_initial_report_and_participation_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    constants = localFixture.contracts["Constants"]
 
     # We cannot purchase participation tokens yet since the window isn't active
     with raises(TransactionFailed):
@@ -121,6 +122,7 @@ def test_failed_crowdsourcer_fees(localFixture, universe, market, cash, reputati
 
 def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    constants = localFixture.contracts["Constants"]
 
     # We'll make the window active
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
@@ -164,6 +166,8 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
             assert initialReporter.redeem(tester.a0)
 
 def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
+    constants = localFixture.contracts["Constants"]
+
     # Initial Report disputed
     proceedToNextRound(localFixture, market, tester.k1, True)
     # Initial Report winning
