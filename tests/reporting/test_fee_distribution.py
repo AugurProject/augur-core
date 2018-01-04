@@ -69,15 +69,14 @@ def test_initial_report_and_participation_fee_collection(localFixture, universe,
 
     marketStake = marketInitialReport.getStake()
     expectedFees = reporterFees * marketStake / totalStake
-    expectedGasBond = 2 * constants.GAS_TO_REPORT() * constants.DEFAULT_REPORTING_GAS_PRICE()
     with TokenDelta(reputationToken, marketStake, tester.a0, "Redeeming didn't refund REP"):
-        with EtherDelta(expectedFees + expectedGasBond, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+        with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert marketInitialReport.redeem(tester.a0)
 
     categoricalMarketStake = categoricalInitialReport.getStake()
     expectedFees = reporterFees * categoricalMarketStake / totalStake
     with TokenDelta(reputationToken, categoricalMarketStake, tester.a0, "Redeeming didn't refund REP"):
-        with EtherDelta(expectedFees + expectedGasBond, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+        with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert categoricalInitialReport.redeem(tester.a0)
 
 def test_failed_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
@@ -162,9 +161,8 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
 
     # The initial reporter gets fees even though they were not correct. They do not get their REP back though
     expectedFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
-    expectedGasBond = 2 * constants.GAS_TO_REPORT() * constants.DEFAULT_REPORTING_GAS_PRICE()
     with TokenDelta(reputationToken, 0, tester.a0, "Redeeming didn't refund REP"):
-        with EtherDelta(expectedFees + expectedGasBond, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+        with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert initialReporter.redeem(tester.a0)
 
 def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
@@ -203,9 +201,8 @@ def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, 
     # The initial reporter locked in REP for 5 rounds.
     expectedInitialReporterFees = getExpectedFees(localFixture, cash, initialReporter, 5)
     expectedRep = long(initialReporter.getStake() + initialReporter.getStake() / 2)
-    expectedGasBond = 2 * constants.GAS_TO_REPORT() * constants.DEFAULT_REPORTING_GAS_PRICE()
     with TokenDelta(reputationToken, expectedRep, tester.a0, "Redeeming didn't refund REP"):
-        with EtherDelta(expectedInitialReporterFees + expectedGasBond, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+        with EtherDelta(expectedInitialReporterFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert initialReporter.redeem(tester.a0)
 
     # The first winning dispute crowdsourcer will get fees for 4 rounds

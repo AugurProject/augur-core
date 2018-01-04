@@ -74,10 +74,8 @@ def test_reporting_participant_escape_hatch(localFixture, controller, reputation
     assert controller.emergencyStop()
 
     # We can now call the escape hatch
-    expectedGasBond = 2 * constants.GAS_TO_REPORT() * constants.DEFAULT_REPORTING_GAS_PRICE()
-    with EtherDelta(expectedGasBond, initialReporter.getOwner(), localFixture.chain, "Initial reporter did not get the reporting gas cost bond"):
-        with TokenDelta(reputationToken, reputationToken.balanceOf(initialReporter.address), tester.a0, "REP was not given back"):
-            assert initialReporter.withdrawInEmergency()
+    with TokenDelta(reputationToken, reputationToken.balanceOf(initialReporter.address), tester.a0, "REP was not given back"):
+        assert initialReporter.withdrawInEmergency()
     
     with TokenDelta(reputationToken, reputationToken.balanceOf(crowdsourcer1.address), tester.a0, "REP was not given back"):
         assert crowdsourcer1.withdrawInEmergency()

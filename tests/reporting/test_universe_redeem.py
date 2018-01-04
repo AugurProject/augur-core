@@ -93,7 +93,6 @@ def test_redeem_reporting_participants(kitchenSinkFixture, market, categoricalMa
     expectedRep += long(initialReporter.getStake() + initialReporter.getStake() / 2)
     expectedGasBond = 2 * constants.GAS_TO_REPORT() * constants.DEFAULT_REPORTING_GAS_PRICE()
     with TokenDelta(reputationToken, expectedRep, tester.a0, "Redeeming didn't refund REP"):
-        with EtherDelta(expectedFees +  expectedGasBond, tester.a0, kitchenSinkFixture.chain, "Redeeming didn't increase ETH correctly"):
-            with PrintGasUsed(kitchenSinkFixture, "Universe Redeem:", 0):
-                assert universe.redeemStake([initialReporter.address, winningDisputeCrowdsourcer1.address, winningDisputeCrowdsourcer2.address], [])
+        with PrintGasUsed(kitchenSinkFixture, "Universe Redeem:", 0):
+            assert universe.redeemStake([initialReporter.address, winningDisputeCrowdsourcer1.address, winningDisputeCrowdsourcer2.address], [])
 

@@ -89,8 +89,6 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         if (_refund > 0) {
             require(owner.call.value(_refund)());
         }
-        // Send the reporter gas bond to the initial report contract. It will be paid out only if they are correct.
-        cash.depositEtherFor.value(reporterGasCostsFeeAttoeth)(participants[0]);
         return true;
     }
 
@@ -225,8 +223,10 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         // If the designated reporter showed up return the no show bond to the market creator. Otherwise it will be used as stake in the first report.
         if (_reporter == _initialReporter.getDesignatedReporter()) {
             _reputationToken.transfer(owner, _repBalance);
+            marketCreatorMailbox.depositEther.value(reporterGasCostsFeeAttoeth)();
         } else {
             _reputationToken.transfer(_initialReporter, _repBalance);
+            cash.depositEtherFor.value(reporterGasCostsFeeAttoeth)(_initialReporter);
         }
         return true;
     }
