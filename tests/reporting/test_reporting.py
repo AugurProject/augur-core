@@ -146,11 +146,13 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
         feeWindow = market.getFeeWindow()
         assert feeWindow == universe.getCurrentFeeWindow()
 
-@mark.parametrize('finalizeByMigration', [
-    True,
-    False
+@mark.parametrize('finalizeByMigration, manuallyDisavow', [
+    (True, True),
+    (False, True),
+    (True, False),
+    (False, False),
 ])
-def test_forking(finalizeByMigration, localFixture, universe, market, categoricalMarket):
+def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, market, categoricalMarket):
     # Let's go into the one dispute round for the categorical market
     proceedToNextRound(localFixture, categoricalMarket)
     proceedToNextRound(localFixture, categoricalMarket)
@@ -165,17 +167,21 @@ def test_forking(finalizeByMigration, localFixture, universe, market, categorica
     numTicks = market.getNumTicks()
     childUniverse = universe.createChildUniverse([numTicks/ 4, numTicks * 3 / 4], False)
 
+    # confirm that before the fork is finalized we can redeem stake in other markets crowdsourcers, which are disavowable
+    categoricalDisputeCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", categoricalMarket.getReportingParticipant(1))
+
+    if manuallyDisavow:
+        assert categoricalMarket.disavowCrowdsourcers()
+        # We can redeem before the fork finalizes since disavowal has occured
+        assert categoricalDisputeCrowdsourcer.redeem(tester.a0)
+
     # finalize the fork
     finalizeFork(localFixture, market, universe, finalizeByMigration)
-
-    # get the reporting participants for the categorical market before they may be disavowed
-    categoricalInitialReport = localFixture.applySignature("InitialReporter", categoricalMarket.getReportingParticipant(0)) 
-    categoricalDisputeCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", categoricalMarket.getReportingParticipant(1)) 
 
     # The categorical market can be migrated to the winning universe
     assert categoricalMarket.migrateThroughOneFork()
 
-    # This disavows the dispute crowdsourcer
+    # The dispute crowdsourcer has been disavowed
     newUniverse = localFixture.applySignature("Universe", categoricalMarket.getUniverse())
     assert newUniverse.address != universe.address
     assert categoricalDisputeCrowdsourcer.isDisavowed()
@@ -183,6 +189,7 @@ def test_forking(finalizeByMigration, localFixture, universe, market, categorica
     assert not newUniverse.isContainerForReportingParticipant(categoricalDisputeCrowdsourcer.address)
 
     # The initial report is still present however
+    categoricalInitialReport = localFixture.applySignature("InitialReporter", categoricalMarket.getReportingParticipant(0)) 
     assert categoricalMarket.getReportingParticipant(0) == categoricalInitialReport.address
     assert not categoricalInitialReport.isDisavowed()
     assert not universe.isContainerForReportingParticipant(categoricalInitialReport.address)
