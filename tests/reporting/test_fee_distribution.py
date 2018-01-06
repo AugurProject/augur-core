@@ -79,7 +79,11 @@ def test_initial_report_and_participation_fee_collection(localFixture, universe,
         with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert categoricalInitialReport.redeem(tester.a0)
 
-def test_failed_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
+@mark.parametrize('finalize', [
+    True,
+    False,
+])
+def test_failed_crowdsourcer_fees(finalize, localFixture, universe, market, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
 
     # generate some fees
@@ -92,31 +96,35 @@ def test_failed_crowdsourcer_fees(localFixture, universe, market, cash, reputati
     generateFees(localFixture, universe, market)
 
     # We'll have testers contribute to a dispute but not reach the target
-    amount = market.getTotalStake() - 1
+    amount = market.getTotalStake()
 
-    with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k1, startgas=long(6.7 * 10**6))
+    with TokenDelta(reputationToken, -amount + 1, tester.a1, "Disputing did not reduce REP balance correctly"):
+        assert market.contribute([1, market.getNumTicks()-1], False, amount - 1, sender=tester.k1, startgas=long(6.7 * 10**6))
 
-    with TokenDelta(reputationToken, -amount, tester.a2, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k2, startgas=long(6.7 * 10**6))
+    with TokenDelta(reputationToken, -amount + 1, tester.a2, "Disputing did not reduce REP balance correctly"):
+        assert market.contribute([1, market.getNumTicks()-1], False, amount - 1, sender=tester.k2, startgas=long(6.7 * 10**6))
 
     assert market.getFeeWindow() == feeWindow.address
 
-    payoutDistributionHash = market.derivePayoutDistributionHash([0, market.getNumTicks()], False)
+    payoutDistributionHash = market.derivePayoutDistributionHash([1, market.getNumTicks()-1], False)
     failedCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", market.getCrowdsourcer(payoutDistributionHash))
 
-    # Fast forward time until the fee window is over and we can redeem to recieve the REP back and fees
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
-    assert market.finalize()
+    if finalize:
+        # Fast forward time until the fee window is over and we can redeem to recieve the REP back and fees
+        localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+        expectedTotalFees = getExpectedFees(localFixture, cash, failedCrowdsourcer, 1)
+    else:
+        # Continue to the next round which will disavow failed crowdsourcers and let us redeem once the window is over
+        market.contribute([0, market.getNumTicks()], False, amount * 2, startgas=long(6.7 * 10**6))
+        assert market.getFeeWindow() != feeWindow.address
+        localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+        expectedTotalFees = getExpectedFees(localFixture, cash, failedCrowdsourcer, 1)
 
-    # The dispute crowdsourcer contributor locked in REP for 2 rounds, as did the Initial Reporter
-    expectedTotalFees = getExpectedFees(localFixture, cash, failedCrowdsourcer, 1)
-
-    with TokenDelta(reputationToken, amount, tester.a1, "Redeeming did not refund REP"):
+    with TokenDelta(reputationToken, amount - 1, tester.a1, "Redeeming did not refund REP"):
         with EtherDelta(expectedTotalFees / 2, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert failedCrowdsourcer.redeem(tester.a1)
 
-    with TokenDelta(reputationToken, amount, tester.a2, "Redeeming did not refund REP"):
+    with TokenDelta(reputationToken, amount - 1, tester.a2, "Redeeming did not refund REP"):
         with EtherDelta(cash.balanceOf(failedCrowdsourcer.address), tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert failedCrowdsourcer.redeem(tester.a2)
 

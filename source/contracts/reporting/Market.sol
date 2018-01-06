@@ -271,12 +271,20 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         // reset state back to Initial Reporter
         feeWindow = IFeeWindow(0);
         IInitialReporter _initialParticipant = getInitialReporter();
-        for (uint8 i = 1; i < participants.length; ++i) {
-            IDisputeCrowdsourcer(participants[i]).disavow();
-        }
         delete participants;
         participants.push(_initialParticipant);
         _initialParticipant.resetReportTimestamp();
+        crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
+        return true;
+    }
+
+    function disavowCrowdsourcers() public onlyInGoodTimes returns (bool) {
+        IMarket _forkingMarket = getForkingMarket();
+        require(_forkingMarket != IMarket(0));
+        require(_forkingMarket != this);
+        IInitialReporter _initialParticipant = getInitialReporter();
+        delete participants;
+        participants.push(_initialParticipant);
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         return true;
     }

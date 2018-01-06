@@ -72,7 +72,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
     }
 
     function isDisavowed() public view returns (bool) {
-        return market == IMarket(0);
+        return market == IMarket(0) || !market.isContainerForReportingParticipant(this);
     }
 
     function getPayoutNumerator(uint8 _outcome) public view returns (uint256) {
