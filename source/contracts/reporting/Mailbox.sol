@@ -6,9 +6,10 @@ import 'libraries/token/ERC20Basic.sol';
 import 'libraries/Initializable.sol';
 import 'reporting/IMailbox.sol';
 import 'trading/ICash.sol';
+import 'libraries/Extractable.sol';
 
 
-contract Mailbox is DelegationTarget, Ownable, Initializable, IMailbox {
+contract Mailbox is DelegationTarget, Extractable, Ownable, Initializable, IMailbox {
     function initialize(address _owner) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         owner = _owner;
@@ -38,5 +39,13 @@ contract Mailbox is DelegationTarget, Ownable, Initializable, IMailbox {
         uint256 _balance = _token.balanceOf(this);
         require(_token.transfer(owner, _balance));
         return true;
+    }
+
+    function getProtectedTokens() internal returns (address[] memory) {
+        address[] memory _protectedTokens = new address[](2);
+        // address(1) is the sentinel value for Ether extraction
+        _protectedTokens[0] = address(1);
+        _protectedTokens[1] = ICash(controller.lookup("Cash"));
+        return _protectedTokens;
     }
 }

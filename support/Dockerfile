@@ -1,7 +1,7 @@
 ##
 # Build a base package for augur-core.
 #
-# The build process is strucutred this way to encourage fail fast behavior so
+# The build process is structured this way to encourage fail fast behavior so
 # that this image's build will fail earlier for compiling contracts than
 # for other pieces
 FROM python:2.7.13
@@ -43,7 +43,6 @@ COPY source/tools/generateContractInterfaces.ts /app/source/tools/generateContra
 # Build contract interfaces
 RUN npm run build:source
 RUN npm run build:interfaces
-
 
 COPY ./support/deploy/deploy.sh /app/support/deploy/deploy.sh
 COPY ./support/deploy/run.sh /app/support/deploy/run.sh
