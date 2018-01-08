@@ -14,7 +14,6 @@ import 'trading/Order.sol';
 import 'reporting/IMarket.sol';
 import 'trading/ICash.sol';
 import 'trading/IOrders.sol';
-import 'Augur.sol';
 import 'libraries/Extractable.sol';
 
 

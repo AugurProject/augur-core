@@ -6,7 +6,6 @@ import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
 import 'trading/ICash.sol';
 import 'IController.sol';
-import 'Augur.sol';
 
 
 contract MarketFactory {

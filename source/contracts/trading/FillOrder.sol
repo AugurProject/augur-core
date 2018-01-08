@@ -2,7 +2,6 @@ pragma solidity 0.4.18;
 
 
 import 'trading/IFillOrder.sol';
-import 'Augur.sol';
 import 'Controlled.sol';
 import 'libraries/ReentrancyGuard.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -32,7 +31,7 @@ library Trade {
         ICash denominationToken;
         IShareToken longShareToken;
         IShareToken[] shortShareTokens;
-        Augur augur;
+        IAugur augur;
     }
 
     struct FilledOrder {
@@ -271,7 +270,7 @@ library Trade {
             denominationToken: _market.getDenominationToken(),
             longShareToken: _market.getShareToken(_outcome),
             shortShareTokens: getShortShareTokens(_market, _outcome),
-            augur: Augur(_controller.lookup("Augur"))
+            augur: _controller.getAugur()
         });
     }
 

@@ -1,6 +1,7 @@
 pragma solidity 0.4.18;
 
 import 'Controlled.sol';
+import 'IAugur.sol';
 import 'libraries/token/ERC20.sol';
 import 'factories/UniverseFactory.sol';
 import 'reporting/IUniverse.sol';
@@ -15,7 +16,7 @@ import 'libraries/Extractable.sol';
 
 
 // Centralized approval authority and event emissions
-contract Augur is Controlled, Extractable {
+contract Augur is Controlled, Extractable, IAugur {
     event MarketCreated(bytes32 indexed topic, string description, string extraInfo, address indexed universe, address market, address indexed marketCreator, bytes32[] outcomes, uint256 marketCreationFee, int256 minPrice, int256 maxPrice, IMarket.MarketType marketType);
     event InitialReportSubmitted(address indexed universe, address indexed reporter, address indexed market, uint256 amountStaked, bool isDesignatedReporter, uint256[] payoutNumerators);
     event DisputeCrowdsourcerCreated(address indexed universe, address indexed market, address disputeCrowdsourcer, uint256[] payoutNumerators, uint256 size);

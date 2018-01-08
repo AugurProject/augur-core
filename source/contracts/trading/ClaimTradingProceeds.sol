@@ -10,7 +10,6 @@ import 'reporting/IMarket.sol';
 import 'trading/ICash.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/Reporting.sol';
-import 'Augur.sol';
 import 'libraries/Extractable.sol';
 
 

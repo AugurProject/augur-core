@@ -24,7 +24,6 @@ import 'factories/MailboxFactory.sol';
 import 'reporting/IMailbox.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IInitialReporter.sol';
-import 'Augur.sol';
 
 
 contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable, IMarket {

@@ -8,10 +8,9 @@ import 'reporting/IReputationToken.sol';
 import 'reporting/IFeeToken.sol';
 import 'trading/ICash.sol';
 import 'libraries/token/ERC20.sol';
-import 'IControlled.sol';
 
 
-contract IFeeWindow is ITyped, IControlled, ERC20 {
+contract IFeeWindow is ITyped, ERC20 {
     function initialize(IUniverse _universe, uint256 _feeWindowId) public returns (bool);
     function noteInitialReportingGasPrice() public returns (bool);
     function getUniverse() public view returns (IUniverse);

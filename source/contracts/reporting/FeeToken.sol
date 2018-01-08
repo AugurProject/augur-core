@@ -32,17 +32,17 @@ contract FeeToken is DelegationTarget, VariableSupplyToken, IFeeToken {
     }
 
     function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
-        feeWindow.getController().getAugur().logFeeTokenTransferred(feeWindow.getUniverse(), _from, _to, _value);
+        controller.getAugur().logFeeTokenTransferred(feeWindow.getUniverse(), _from, _to, _value);
         return true;
     }
 
     function onMint(address _target, uint256 _amount) internal returns (bool) {
-        feeWindow.getController().getAugur().logFeeTokenMinted(feeWindow.getUniverse(), _target, _amount);
+        controller.getAugur().logFeeTokenMinted(feeWindow.getUniverse(), _target, _amount);
         return true;
     }
 
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
-        feeWindow.getController().getAugur().logFeeTokenBurned(feeWindow.getUniverse(), _target, _amount);
+        controller.getAugur().logFeeTokenBurned(feeWindow.getUniverse(), _target, _amount);
         return true;
     }
 }

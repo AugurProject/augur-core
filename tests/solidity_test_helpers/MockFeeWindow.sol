@@ -3,6 +3,7 @@ pragma solidity ^0.4.18;
 import 'reporting/IMarket.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IFeeWindow.sol';
+import 'IController.sol';
 import 'libraries/ITyped.sol';
 import 'reporting/IReputationToken.sol';
 import 'libraries/Initializable.sol';
