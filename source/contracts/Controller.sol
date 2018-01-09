@@ -8,6 +8,7 @@ pragma solidity 0.4.18;
  * Initially, Augur will have a “dev mode” that that can be enabled to allow Augur’s team to suicide funds, extract Ether or Tokens from a specific contract (in case funds inadvertently get sent somewhere they shouldn’t have), and update the Controller of a target contract to a new Controller.  Eventually, the plan is to remove this mode so that this functionality will no longer be available to anyone, including the Augur team.  At that point, the `owner` address will only be able to the `emergencyStop` and `release` functions.
  */
 
+import 'IAugur.sol';
 import 'IController.sol';
 import 'IControlled.sol';
 import 'libraries/token/ERC20Basic.sol';
@@ -178,8 +179,8 @@ contract Controller is IController {
      * Helper functions
      */
 
-    function getAugur() public view returns (Augur) {
-        return Augur(lookup("Augur"));
+    function getAugur() public view returns (IAugur) {
+        return IAugur(lookup("Augur"));
     }
 
     function getTimestamp() public view returns (uint256) {

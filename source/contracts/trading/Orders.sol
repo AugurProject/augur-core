@@ -8,7 +8,6 @@ import 'libraries/math/SafeMathInt256.sol';
 import 'trading/Order.sol';
 import 'reporting/IMarket.sol';
 import 'trading/IOrdersFetcher.sol';
-import 'Augur.sol';
 import 'libraries/Extractable.sol';
 
 

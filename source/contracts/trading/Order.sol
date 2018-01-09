@@ -9,7 +9,7 @@
 pragma solidity 0.4.18;
 
 
-import 'Augur.sol';
+import 'IAugur.sol';
 import 'IController.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/IMarket.sol';
@@ -34,7 +34,7 @@ library Order {
         // Contracts
         IOrders orders;
         IMarket market;
-        Augur augur;
+        IAugur augur;
 
         // Order
         bytes32 id;
@@ -59,7 +59,7 @@ library Order {
         require(_price < _market.getNumTicks());
 
         IOrders _orders = IOrders(_controller.lookup("Orders"));
-        Augur _augur = Augur(_controller.lookup("Augur"));
+        IAugur _augur = _controller.getAugur();
 
         return Data({
             orders: _orders,

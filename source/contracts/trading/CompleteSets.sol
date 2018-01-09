@@ -2,7 +2,7 @@ pragma solidity 0.4.18;
 
 
 import 'trading/ICompleteSets.sol';
-import 'Augur.sol';
+import 'IAugur.sol';
 import 'Controlled.sol';
 import 'libraries/ReentrancyGuard.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -30,7 +30,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
 
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _denominationToken = _market.getDenominationToken();
-        Augur _augur = controller.getAugur();
+        IAugur _augur = controller.getAugur();
 
         uint256 _cost = _amount.mul(_market.getNumTicks());
         require(_augur.trustedTransfer(_denominationToken, _sender, _market, _cost));

@@ -15,7 +15,7 @@ import 'reporting/IFeeToken.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IRepPriceOracle.sol';
 import 'libraries/math/SafeMathUint256.sol';
-import 'Augur.sol';
+import 'IAugur.sol';
 import 'libraries/Extractable.sol';
 
 
@@ -171,10 +171,11 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     function createChildUniverse(uint256[] _parentPayoutNumerators, bool _parentInvalid) public returns (IUniverse) {
         bytes32 _parentPayoutDistributionHash = forkingMarket.derivePayoutDistributionHash(_parentPayoutNumerators, _parentInvalid);
         IUniverse _childUniverse = getChildUniverse(_parentPayoutDistributionHash);
+        IAugur _augur = controller.getAugur();
         if (_childUniverse == IUniverse(0)) {
-            _childUniverse = controller.getAugur().createChildUniverse(_parentPayoutDistributionHash);
+            _childUniverse = _augur.createChildUniverse(_parentPayoutDistributionHash);
             childUniverses[_parentPayoutDistributionHash] = _childUniverse;
-            controller.getAugur().logUniverseCreated(_childUniverse);
+            _augur.logUniverseCreated(_childUniverse);
         }
         return _childUniverse;
     }

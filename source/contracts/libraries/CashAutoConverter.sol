@@ -3,7 +3,7 @@ pragma solidity 0.4.18;
 
 import 'trading/ICash.sol';
 import 'Controlled.sol';
-import 'Augur.sol';
+import 'IAugur.sol';
 
 
 /**
@@ -30,7 +30,7 @@ contract CashAutoConverter is Controlled {
         ICash _cash = ICash(controller.lookup("Cash"));
         uint256 _tokenBalance = _cash.balanceOf(msg.sender);
         if (_tokenBalance > 0) {
-            Augur augur = controller.getAugur();
+            IAugur augur = controller.getAugur();
             augur.trustedTransfer(_cash, msg.sender, this, _tokenBalance);
             _cash.withdrawEtherTo(msg.sender, _tokenBalance);
         }
