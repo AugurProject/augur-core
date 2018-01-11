@@ -109,7 +109,7 @@ export class ContractInterfaceGenerator {
 
         const extendsControlled: boolean = seen.has("getController") && contractName != "Controlled";
         if (extendsControlled) {
-            if (!seen.has("extractTokens") && contractName != "Delegator") {
+            if (!seen.has("extractTokens") && contractName != "Delegator" && contractName != "Map") {
                 throw new Error("Controlled contracts must inherit the Extractable class. " + contractName + " does not.");
             }
         }

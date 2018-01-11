@@ -664,3 +664,24 @@ def test_two_asks_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     assert orders.getOrderSharesEscrowed(fillOrderID) == 0
     assert orders.getBetterOrderId(fillOrderID) == longTo32Bytes(0)
     assert orders.getWorseOrderId(fillOrderID) == longTo32Bytes(0)
+
+# XXX publicTakeBestOrder with multiple orders and types and numbers of outcomes
+'''
+def test_escapeHatch(contractsFixture, cash, market):
+    controller = contractsFixture.contracts['Controller']
+    createOrder = contractsFixture.contracts['CreateOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
+    trade = contractsFixture.contracts['Trade']
+    tradingEscapeHatch = contractsFixture.contracts['TradingEscapeHatch']
+    yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
+    initialTester1ETH = contractsFixture.chain.head_state.get_balance(tester.a1)
+    initialTester2ETH = contractsFixture.chain.head_state.get_balance(tester.a2)
+
+    # create order with cash
+    orderID = createOrder.publicCreateOrder(contractsFixture.contracts['Constants'].ASK(), fix(1), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender=tester.k1, value=fix('1', '4000'))
+    assert orderID
+
+    # fill order with cash using on-chain matcher
+    assert trade.publicTakeBestOrder(LONG, market.address, YES, fix(1), 6000, sender=tester.k2, value=fix('1', '6000')) == 0
+'''

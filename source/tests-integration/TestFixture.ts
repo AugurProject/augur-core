@@ -5,7 +5,7 @@ import { Connector } from '../libraries/Connector';
 import { AccountManager } from '../libraries/AccountManager';
 import { ContractCompiler } from '../libraries/ContractCompiler';
 import { ContractDeployer } from '../libraries/ContractDeployer';
-import { LegacyReputationToken, Cash, Universe, ReputationToken, Market, CreateOrder, Orders } from '../libraries/ContractInterfaces';
+import { FeeWindow, ShareToken, CompleteSets, TimeControlled, LegacyReputationToken, Cash, Universe, ReputationToken, Market, CreateOrder, Orders, Trade, CancelOrder } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
 
 export class TestFixture {
@@ -22,11 +22,11 @@ export class TestFixture {
         this.configuration = configuration;
         this.connector = connector;
         this.accountManager = accountManager;
-        this.contractDeployer = contractDeployer
+        this.contractDeployer = contractDeployer;
     }
 
     public static create = async (): Promise<TestFixture> => {
-        const configuration = await Configuration.create();
+        const configuration = await Configuration.create(false, false);
         await TestRpc.startTestRpcIfNecessary(configuration);
         const compiledContracts = await new ContractCompiler(configuration).compileContracts();
         const connector = new Connector(configuration);
@@ -92,6 +92,43 @@ export class TestFixture {
         return;
     }
 
+    public async takeBestOrder(marketAddress: string, type: BN, numShares: BN, price: BN, outcome: BN, tradeGroupID: string): Promise<void> {
+        const tradeContract = await this.contractDeployer.getContract("Trade");
+        const trade = new Trade(this.connector, this.accountManager, tradeContract.address, this.configuration.gasPrice);
+
+        let actualPrice = price;
+        if (type == new BN(1)) {
+            const market = new Market(this.connector, this.accountManager, marketAddress, this.configuration.gasPrice);
+            const numTicks = await market.getNumTicks_();
+            actualPrice = numTicks.sub(price);
+        }
+        const ethValue = numShares.mul(actualPrice);
+
+        const bestPriceAmount = await trade.publicTakeBestOrder_(type, marketAddress, outcome, numShares, price, tradeGroupID, { attachedEth: ethValue });
+        if (bestPriceAmount == new BN(0)) {
+            throw new Error("Could not take best Order");
+        }
+
+        const transactionHash = await trade.publicTakeBestOrder(type, marketAddress, outcome, numShares, price, tradeGroupID, { attachedEth: ethValue });
+        const receipt = await this.connector.waitForTransactionReceipt(transactionHash, `Taking Best Order.`);
+        if (receipt.status != 1) {
+            throw new Error("Could not take best Order");
+        }
+        return;
+    }
+
+    public async cancelOrder(orderID: string): Promise<void> {
+        const cancelOrderContract = await this.contractDeployer.getContract("CancelOrder");
+        const cancelOrder = new CancelOrder(this.connector, this.accountManager, cancelOrderContract.address, this.configuration.gasPrice);
+
+        const transactionHash = await cancelOrder.cancelOrder(orderID);
+        const receipt = await this.connector.waitForTransactionReceipt(transactionHash, `Canceling Order.`);
+        if (receipt.status != 1) {
+            throw new Error("Could not cancel Order");
+        }
+        return;
+    }
+
     public async getOrderPrice(orderID: string): Promise<BN> {
         const ordersContract = await this.contractDeployer.getContract("Orders");
         const orders = new Orders(this.connector, this.accountManager, ordersContract.address, this.configuration.gasPrice);
@@ -103,6 +140,12 @@ export class TestFixture {
         return price;
     }
 
+    public async getOrderAmount(orderID: string): Promise<BN> {
+        const ordersContract = await this.contractDeployer.getContract("Orders");
+        const orders = new Orders(this.connector, this.accountManager, ordersContract.address, this.configuration.gasPrice);
+        return await orders.getAmount_(orderID);
+    }
+
     public async getBestOrderId(type: BN, market: string, outcome: BN): Promise<string> {
         const ordersContract = await this.contractDeployer.getContract("Orders");
         const orders = new Orders(this.connector, this.accountManager, ordersContract.address, this.configuration.gasPrice);
@@ -112,5 +155,73 @@ export class TestFixture {
             throw new Error("Unable to get order price");
         }
         return orderID;
+    }
+
+    public async buyCompleteSets(market: Market, amount: BN): Promise<void> {
+        const completeSetsContract = await this.contractDeployer.getContract("CompleteSets");
+        const completeSets = new CompleteSets(this.connector, this.accountManager, completeSetsContract.address, this.configuration.gasPrice);
+
+        const numTicks = await market.getNumTicks_();
+        const ethValue = amount.mul(numTicks);
+
+        const placeOrderTransactionHash = await completeSets.publicBuyCompleteSets(market.address, amount, { attachedEth: ethValue });
+        const receipt = await this.connector.waitForTransactionReceipt(placeOrderTransactionHash, `Buying complete sets`);
+        if (receipt.status != 1) {
+            throw new Error("Buying complete sets failed");
+        }
+        return;
+    }
+
+    public async contribute(market: Market, payoutNumerators: Array<BN>, invalid: boolean, amount: BN): Promise<void> {                
+        const contributeTransactionHash = await market.contribute(payoutNumerators, invalid, amount);
+        const receipt = await this.connector.waitForTransactionReceipt(contributeTransactionHash, `Contributing`);
+        if (receipt.status != 1) {
+            throw new Error("Contributing failed");
+        }
+        return;
+    }
+
+    public async getNumSharesInMarket(market: Market, outcome: BN): Promise<BN> {
+        const shareTokenAddress = await market.getShareToken_(outcome);
+        const shareToken = new ShareToken(this.connector, this.accountManager, shareTokenAddress, this.configuration.gasPrice);
+        return await shareToken.balanceOf_(this.accountManager.defaultAddress);
+    }
+
+    public async getFeeWindow(market: Market): Promise<FeeWindow> {
+        const feeWindowAddress = await market.getFeeWindow_();
+        return new FeeWindow(this.connector, this.accountManager, feeWindowAddress, this.configuration.gasPrice);
+    }
+
+    public async setTimestamp(timestamp: BN): Promise<void> {
+        const timeContract = await this.contractDeployer.getContract("TimeControlled");
+        const time = new TimeControlled(this.connector, this.accountManager, timeContract.address, this.configuration.gasPrice);
+        const transactionHash = await time.setTimestamp(timestamp);
+        const receipt = await this.connector.waitForTransactionReceipt(transactionHash, `Setting timestamp.`);
+        if (receipt.status != 1) {
+            throw new Error("Could not set timestamp");
+        }
+        return;
+    }
+
+    public async getTimestamp(): Promise<BN> {
+        return this.contractDeployer.controller.getTimestamp_();
+    }
+
+    public async doInitialReport(market: Market, payoutNumerators: Array<BN>, invalid: boolean): Promise<void> {
+        const transactionHash = await market.doInitialReport(payoutNumerators, invalid);
+        const receipt = await this.connector.waitForTransactionReceipt(transactionHash, `Doing initial report.`);
+        if (receipt.status != 1) {
+            throw new Error("Could not do initial report");
+        }
+        return;
+    }
+
+    public async finalizeMarket(market: Market): Promise<void> {
+        const transactionHash = await market.finalize();
+        const receipt = await this.connector.waitForTransactionReceipt(transactionHash, `Finalizing market.`);
+        if (receipt.status != 1) {
+            throw new Error("Could not finalize market");
+        }
+        return;
     }
 }
