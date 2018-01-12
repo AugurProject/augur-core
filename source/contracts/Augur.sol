@@ -123,16 +123,17 @@ contract Augur is Controlled, Extractable, IAugur {
         return true;
     }
 
-    function logWinningTokensRedeemed(IUniverse _universe, address _reporter, address _market, address _reportingParticipant, uint256 _amountRedeemed, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
+    function logWinningStakeRedeemed(IUniverse _universe, address _reporter, address _market, address _reportingParticipant, uint256 _amountRedeemed, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         WinningsRedeemed(_universe, _reporter, _market, _reportingParticipant, _amountRedeemed, _reportingFeesReceived, _payoutNumerators);
         return true;
     }
 
-    function logMarketFinalized(IUniverse _universe, address _market) public returns (bool) {
+    function logMarketFinalized(IUniverse _universe) public returns (bool) {
         require(isKnownUniverse(_universe));
-        require(_universe.isContainerForMarket(IMarket(msg.sender)));
+        IMarket _market = IMarket(msg.sender);
+        require(_universe.isContainerForMarket(_market));
         MarketFinalized(_universe, _market);
         return true;
     }

@@ -40,7 +40,12 @@ def test_designatedReportHappyPath(localFixture, universe, market):
 
     # time marches on and the market can be finalized
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
-    assert market.finalize()
+    marketFinalizedLog = {
+        "universe": universe.address,
+        "market": market.address
+    }
+    with AssertLog(localFixture, "MarketFinalized", marketFinalizedLog):
+        assert market.finalize()
 
     with raises(TransactionFailed, message="Cannot finalize twice"):
         market.finalize()

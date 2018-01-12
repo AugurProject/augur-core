@@ -177,6 +177,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         redistributeLosingReputation();
         distributeValidityBond();
         finalizationTime = controller.getTimestamp();
+        controller.getAugur().logMarketFinalized(universe);
         return true;
     }
 

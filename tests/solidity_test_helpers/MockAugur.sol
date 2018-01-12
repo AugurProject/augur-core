@@ -68,7 +68,7 @@ contract MockAugur is Controlled {
 
     bool private logMarketFinalizedCalledValue;
 
-    function logMarketFinalized(IUniverse _universe, address _market) public returns (bool) {
+    function logMarketFinalized(IUniverse _universe) public returns (bool) {
         logMarketFinalizedCalledValue = true;
         return true;
     }

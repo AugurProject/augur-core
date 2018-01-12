@@ -24,7 +24,8 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
     }
 
     function redeem(address) public returns (bool) {
-        if (!isDisavowed() && !market.isFinalized()) {
+        bool _isDisavowed = isDisavowed();
+        if (!_isDisavowed && !market.isFinalized()) {
             market.finalize();
         }
         redeemForAllFeeWindows();
@@ -32,6 +33,9 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
         uint256 _cashBalance = cash.balanceOf(this);
         if (_cashBalance > 0) {
             cash.withdrawEtherTo(owner, _cashBalance);
+        }
+        if (!_isDisavowed) {
+            controller.getAugur().logWinningStakeRedeemed(market.getUniverse(), owner, market, this, size, _cashBalance, payoutNumerators);
         }
         return true;
     }

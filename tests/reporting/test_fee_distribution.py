@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed, ABIContract
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, EtherDelta, longToHexString, PrintGasUsed
+from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, EtherDelta, longToHexString, PrintGasUsed, AssertLog
 from reporting_utils import generateFees, proceedToNextRound, finalizeFork, getExpectedFees
 
 def test_initial_report_and_participation_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken):
@@ -69,9 +69,19 @@ def test_initial_report_and_participation_fee_collection(localFixture, universe,
 
     marketStake = marketInitialReport.getStake()
     expectedFees = reporterFees * marketStake / totalStake
-    with TokenDelta(reputationToken, marketStake, tester.a0, "Redeeming didn't refund REP"):
-        with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-            assert marketInitialReport.redeem(tester.a0)
+    winningsRedeemedLog = {
+        "reporter": bytesToHexString(tester.a0),
+        "reportingParticipant": marketInitialReport.address,
+        "amountRedeemed": marketStake,
+        "reportingFeesReceived": expectedFees,
+        "payoutNumerators": [market.getNumTicks(), 0],
+        "universe": universe.address,
+        "market": market.address
+    }
+    with AssertLog(localFixture, "WinningsRedeemed", winningsRedeemedLog):
+        with TokenDelta(reputationToken, marketStake, tester.a0, "Redeeming didn't refund REP"):
+            with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+                assert marketInitialReport.redeem(tester.a0)
 
     categoricalMarketStake = categoricalInitialReport.getStake()
     expectedFees = reporterFees * categoricalMarketStake / totalStake
@@ -163,9 +173,19 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
     expectedFees = expectedTotalFees * 2 / 3
     expectedRep = market.getTotalStake()
     assert expectedRep == long(marketDisputeCrowdsourcer.getStake() + marketDisputeCrowdsourcer.getStake() / 2)
-    with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't refund REP"):
-        with EtherDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-            assert marketDisputeCrowdsourcer.redeem(tester.a1, sender=tester.k1)
+    winningsRedeemedLog = {
+        "reporter": bytesToHexString(tester.a1),
+        "reportingParticipant": marketDisputeCrowdsourcer.address,
+        "amountRedeemed": marketDisputeCrowdsourcer.getStake(),
+        "reportingFeesReceived": expectedFees,
+        "payoutNumerators": [0, market.getNumTicks()],
+        "universe": universe.address,
+        "market": market.address
+    }
+    with AssertLog(localFixture, "WinningsRedeemed", winningsRedeemedLog):
+        with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't refund REP"):
+            with EtherDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+                assert marketDisputeCrowdsourcer.redeem(tester.a1, sender=tester.k1)
 
     # The initial reporter gets fees even though they were not correct. They do not get their REP back though
     expectedFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
