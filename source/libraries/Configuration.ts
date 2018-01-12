@@ -11,6 +11,8 @@ export class Configuration {
     public readonly contractSourceRoot: string;
     public readonly contractOutputPath: string;
     public readonly abiOutputPath: string;
+    public readonly augurContractsRepoUrl: string;
+    public readonly augurjsRepoUrl: string;
     public readonly contractAddressesOutputPath: string;
     public readonly contractInterfacesOutputPath: string;
     public readonly controllerAddress: string|undefined;
@@ -18,7 +20,7 @@ export class Configuration {
     public readonly isProduction: boolean;
     public readonly useNormalTime: boolean;
 
-    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputRoot: string, controllerAddress: string|undefined, createGenesisUniverse: boolean=true, isProduction: boolean=false, useNormalTime: boolean=true) {
+    public constructor(host: string, port: number, gasPrice: BN, privateKey: string, contractSourceRoot: string, contractOutputRoot: string, artifactOutputRoot: string, controllerAddress: string|undefined, createGenesisUniverse: boolean=true, isProduction: boolean=false, useNormalTime: boolean=true) {
         this.httpProviderHost = host;
         this.httpProviderPort = port;
         this.gasPrice = gasPrice;
@@ -26,7 +28,7 @@ export class Configuration {
         this.contractSourceRoot = contractSourceRoot;
         this.contractOutputPath = path.join(contractOutputRoot, 'contracts.json');
         this.abiOutputPath = path.join(contractOutputRoot, 'abi.json');
-        this.contractAddressesOutputPath = path.join(contractOutputRoot, 'addresses.json');
+        this.contractAddressesOutputPath = path.join(artifactOutputRoot, 'addresses.json');
         this.contractInterfacesOutputPath = path.join(contractSourceRoot, '../libraries', 'ContractInterfaces.ts');
         this.controllerAddress = controllerAddress;
         this.createGenesisUniverse = createGenesisUniverse;
@@ -36,11 +38,12 @@ export class Configuration {
 
     private static createWithHost(host: string, port: number, gasPrice: BN, privateKey: string, isProduction: boolean=false, useNormalTime: boolean=true): Configuration {
         const contractSourceRoot = path.join(__dirname, "../../source/contracts/");
-        const contractOutputRoot = path.join(__dirname, "../../output/contracts/");
+        const contractOutputRoot = (typeof process.env.CONTRACT_OUTPUT_ROOT === "undefined") ? path.join(__dirname, "../../output/contracts/") : path.normalize(<string> process.env.CONTRACT_OUTPUT_ROOT);
+        const artifactOutputRoot = (typeof process.env.ARTIFACT_OUTPUT_ROOT === "undefined") ? path.join(__dirname, "../../output/artifacts/") : path.normalize(<string> process.env.ARTIFACT_OUTPUT_ROOT);
         const controllerAddress = process.env.AUGUR_CONTROLLER_ADDRESS;
         const createGenesisUniverse = (typeof process.env.CREATE_GENESIS_UNIVERSE === "undefined") ? true : process.env.CREATE_GENESIS_UNIVERSE === "true";
 
-        return new Configuration(host, port, gasPrice, privateKey, contractSourceRoot, contractOutputRoot, controllerAddress, createGenesisUniverse, isProduction, useNormalTime);
+        return new Configuration(host, port, gasPrice, privateKey, contractSourceRoot, contractOutputRoot, artifactOutputRoot, controllerAddress, createGenesisUniverse, isProduction, useNormalTime);
     }
 
     public static create = async (isProduction: boolean=false, useNormalTime: boolean=true): Promise<Configuration> => {
