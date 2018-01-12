@@ -224,7 +224,7 @@ def test_forking_values(localFixture, universe, market, cash):
             migrationBonus += long(reportingParticipant.getSize() / 2L)
         except TransactionFailed:
             break
-    assert delta == migrationBonus - 6 # rounding error dust buildup
+    assert delta == migrationBonus - 5 # rounding error dust buildup
 
     # The universe needs to be nudged to actually update values since there are potentially unbounded universes and updating the values derived by this total is not essential as a matter of normal procedure
     assert childUniverse.getForkReputationGoal() == universe.getForkReputationGoal()
@@ -234,7 +234,7 @@ def test_forking_values(localFixture, universe, market, cash):
     # The universe uses this theoretical total to calculate values such as the fork goal, fork dispute threshhold and the initial reporting defaults and floors
     assert childUniverse.updateForkValues()
     assert childUniverse.getForkReputationGoal() == childUniverseTheoreticalSupply / 2
-    assert childUniverse.getDisputeThresholdForFork() == long(childUniverseTheoreticalSupply / 80L)
+    assert childUniverse.getDisputeThresholdForFork() == long(childUniverseTheoreticalSupply / 40L)
     assert childUniverse.getInitialReportMinValue() == long(childUniverse.getDisputeThresholdForFork() / 3L / 2**18 + 1)
 
     # Now we'll fork again and confirm it still takes only 20 dispute rounds in the worst case
