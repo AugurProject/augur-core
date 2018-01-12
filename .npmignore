@@ -1,0 +1,8 @@
+typings/*
+tests/*
+.editorconfig
+.travis.yml
+.idea
+.env
+.vscode
+TODO.md
