@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { deployContracts } from "./deployContracts"
-import { Configuration } from '../libraries/Configuration';
+import { Configuration } from "../libraries/Configuration";
 
 export async function deployToNetworks(networks: Array<string>) {
     const configurations: Array<Configuration> = networks.map((network) => Configuration.network(network));
