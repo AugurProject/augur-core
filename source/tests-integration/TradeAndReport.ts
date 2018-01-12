@@ -48,7 +48,7 @@ describe("TradeAndReport", () => {
         let newTimestamp = await market.getEndTime_();
         newTimestamp = newTimestamp.add(new BN(1));
         await fixture.setTimestamp(newTimestamp);
-        let timestamp = await fixture.getTimestamp();
+        const timestamp = await fixture.getTimestamp();
         expect(timestamp.toNumber()).to.equal(newTimestamp.toNumber());
 
         // Do designated report

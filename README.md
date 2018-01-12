@@ -147,7 +147,7 @@ npm run docker:test
 npm run docker:test:integration
 ```
 
-For quicker iteration on integration tests follow the intrusctions here to run tests locally against a node running in docker:
+For quicker iteration on integration tests follow the instructions here to run tests locally against a node running in docker:
 
 https://github.com/AugurProject/augur-core/blob/7272124d985a4c38a2b4f6f599cc16014615cec9/.vscode/launch.json#L28-L35
 
