@@ -64,7 +64,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     function updateForkValues() public returns (bool) {
         uint256 _totalRepSupply = reputationToken.getTotalTheoreticalSupply();
         forkReputationGoal = _totalRepSupply.div(2); // 50% of REP migrating results in a victory in a fork
-        disputeThresholdForFork = _totalRepSupply.div(80); // 1.25% of the total rep supply
+        disputeThresholdForFork = _totalRepSupply.div(40); // 2.5% of the total rep supply
         initialReportMinValue = disputeThresholdForFork.div(3).div(2**18).add(1); // This value will result in a maximum 20 round dispute sequence
         return true;
     }
