@@ -96,7 +96,7 @@ export class ContractCompiler {
         for (let relativeFilePath in compilerOutput.contracts) {
             for (let contractName in compilerOutput.contracts[relativeFilePath]) {
                 // don't include libraries
-                if (relativeFilePath.startsWith('libraries/') && contractName !== 'Delegator') continue;
+                if (relativeFilePath.startsWith('libraries/') && contractName !== 'Delegator' && contractName !== 'Map') continue;
                 // don't include embedded libraries
                 if (!relativeFilePath.endsWith(`${contractName}.sol`)) continue;
                 const abi = compilerOutput.contracts[relativeFilePath][contractName].abi;

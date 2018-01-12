@@ -147,6 +147,12 @@ npm run docker:test
 npm run docker:test:integration
 ```
 
+For quicker iteration on integration tests follow the instructions here to run tests locally against a node running in docker:
+
+https://github.com/AugurProject/augur-core/blob/7272124d985a4c38a2b4f6f599cc16014615cec9/.vscode/launch.json#L28-L35
+
+If the contracts aren't changing, after the first run you can add "AUGUR_CONTROLLER_ADDRESS": "..." to the env and it will even skip re-uploading the contracts with each run of the integration tests.
+
 ## Source code organization
 
 Augur's smart contracts are organized into four folders:

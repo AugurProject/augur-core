@@ -32,7 +32,7 @@ export class ContractDeployer {
         this.controller = await this.uploadController();
         await this.uploadAugur();
         await this.uploadAllContracts();
-        await this.initializeAllContracts();        
+        await this.initializeAllContracts();
         await this.whitelistTradingContracts();
 
         if(this.configuration.createGenesisUniverse) {
@@ -116,7 +116,7 @@ export class ContractDeployer {
         if (contractName === 'Augur') return;
         if (contractName === 'Time') contract = this.configuration.useNormalTime ? contract: this.contracts.get('TimeControlled');
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
-        if (contract.relativeFilePath.startsWith('libraries/')) return;
+        if (contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) return;
         // Check to see if we have already uploded this version of the contract
         if (await this.shouldUpgradeContract(contract, contractsToDelegate[contractName])) {
             console.log(`Using existing contract for ${contractName}`);
