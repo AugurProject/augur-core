@@ -39,8 +39,7 @@ export class TestFixture {
     public async approveCentralAuthority(): Promise<void> {
         const authority = this.contractDeployer.getContract('Augur');
         const cash = new Cash(this.connector, this.accountManager, this.contractDeployer.getContract('Cash').address, this.configuration.gasPrice);
-        const transactionHash = await cash.approve(authority.address, new BN(2).pow(new BN(256)).sub(new BN(1)));
-        await this.connector.waitForTransactionReceipt(transactionHash, `Approving central authority.`);
+        await cash.approve(authority.address, new BN(2).pow(new BN(256)).sub(new BN(1)));
     }
 
     public async createMarket(universe: Universe, outcomes: string[], endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporter: string): Promise<Market> {
@@ -50,12 +49,9 @@ export class TestFixture {
 
         // get some REP
         // TODO: just get enough REP to cover the bonds rather than over-allocating
-        const repFaucetTransactionHash = await legacyReputationToken.faucet(new BN(0));
-        const repApprovalTransactionHash = await legacyReputationToken.approve(reputationTokenAddress, new BN(2).pow(new BN(256)).sub(new BN(1)));
-        await this.connector.waitForTransactionReceipt(repFaucetTransactionHash, `Using legacy reputation faucet.`);
-        await this.connector.waitForTransactionReceipt(repApprovalTransactionHash, `Approving legacy reputation.`);
-        const repMigrationTransactionHash = await reputationToken.migrateFromLegacyReputationToken();
-        await this.connector.waitForTransactionReceipt(repMigrationTransactionHash, `Migrating reputation.`);
+        await legacyReputationToken.faucet(new BN(0));
+        await legacyReputationToken.approve(reputationTokenAddress, new BN(2).pow(new BN(256)).sub(new BN(1)));
+        await reputationToken.migrateFromLegacyReputationToken();
 
         const marketCreationFee = await universe.getOrCacheMarketCreationCost_();
 
@@ -63,8 +59,7 @@ export class TestFixture {
         if (!marketAddress || marketAddress == "0x") {
             throw new Error("Unable to get address for new categorical market.");
         }
-        const createMarketTransactionHash = await universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken, designatedReporter, outcomes, stringTo32ByteHex(" "), 'description', '', { attachedEth: marketCreationFee });
-        await this.connector.waitForTransactionReceipt(createMarketTransactionHash, `Creating market.`);
+        await universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken, designatedReporter, outcomes, stringTo32ByteHex(" "), 'description', '', { attachedEth: marketCreationFee });
         const market = new Market(this.connector, this.accountManager, marketAddress, this.configuration.gasPrice);
         if (await market.getTypeName_() !== stringTo32ByteHex("Market")) {
             throw new Error("Unable to create new categorical market");
@@ -84,11 +79,7 @@ export class TestFixture {
 
         const ethValue = numShares.mul(price);
 
-        const placeOrderTransactionHash = await createOrder.publicCreateOrder(type, numShares, price, market, outcome, betterOrderID, worseOrderID, tradeGroupID, { attachedEth: ethValue });
-        const receipt = await this.connector.waitForTransactionReceipt(placeOrderTransactionHash, `Placing Order.`);
-        if (receipt.status != 1) {
-            throw new Error("Could not create Order");
-        }
+        await createOrder.publicCreateOrder(type, numShares, price, market, outcome, betterOrderID, worseOrderID, tradeGroupID, { attachedEth: ethValue });
         return;
     }
 
@@ -109,11 +100,7 @@ export class TestFixture {
             throw new Error("Could not take best Order");
         }
 
-        const transactionHash = await trade.publicTakeBestOrder(type, marketAddress, outcome, numShares, price, tradeGroupID, { attachedEth: ethValue });
-        const receipt = await this.connector.waitForTransactionReceipt(transactionHash, `Taking Best Order.`);
-        if (receipt.status != 1) {
-            throw new Error("Could not take best Order");
-        }
+        await trade.publicTakeBestOrder(type, marketAddress, outcome, numShares, price, tradeGroupID, { attachedEth: ethValue });
         return;
     }
 
@@ -121,11 +108,7 @@ export class TestFixture {
         const cancelOrderContract = await this.contractDeployer.getContract("CancelOrder");
         const cancelOrder = new CancelOrder(this.connector, this.accountManager, cancelOrderContract.address, this.configuration.gasPrice);
 
-        const transactionHash = await cancelOrder.cancelOrder(orderID);
-        const receipt = await this.connector.waitForTransactionReceipt(transactionHash, `Canceling Order.`);
-        if (receipt.status != 1) {
-            throw new Error("Could not cancel Order");
-        }
+        await cancelOrder.cancelOrder(orderID);
         return;
     }
 
@@ -164,20 +147,12 @@ export class TestFixture {
         const numTicks = await market.getNumTicks_();
         const ethValue = amount.mul(numTicks);
 
-        const placeOrderTransactionHash = await completeSets.publicBuyCompleteSets(market.address, amount, { attachedEth: ethValue });
-        const receipt = await this.connector.waitForTransactionReceipt(placeOrderTransactionHash, `Buying complete sets`);
-        if (receipt.status != 1) {
-            throw new Error("Buying complete sets failed");
-        }
+        await completeSets.publicBuyCompleteSets(market.address, amount, { attachedEth: ethValue });
         return;
     }
 
     public async contribute(market: Market, payoutNumerators: Array<BN>, invalid: boolean, amount: BN): Promise<void> {                
-        const contributeTransactionHash = await market.contribute(payoutNumerators, invalid, amount);
-        const receipt = await this.connector.waitForTransactionReceipt(contributeTransactionHash, `Contributing`);
-        if (receipt.status != 1) {
-            throw new Error("Contributing failed");
-        }
+        await market.contribute(payoutNumerators, invalid, amount);
         return;
     }
 
@@ -195,11 +170,7 @@ export class TestFixture {
     public async setTimestamp(timestamp: BN): Promise<void> {
         const timeContract = await this.contractDeployer.getContract("TimeControlled");
         const time = new TimeControlled(this.connector, this.accountManager, timeContract.address, this.configuration.gasPrice);
-        const transactionHash = await time.setTimestamp(timestamp);
-        const receipt = await this.connector.waitForTransactionReceipt(transactionHash, `Setting timestamp.`);
-        if (receipt.status != 1) {
-            throw new Error("Could not set timestamp");
-        }
+        await time.setTimestamp(timestamp);
         return;
     }
 
@@ -208,20 +179,12 @@ export class TestFixture {
     }
 
     public async doInitialReport(market: Market, payoutNumerators: Array<BN>, invalid: boolean): Promise<void> {
-        const transactionHash = await market.doInitialReport(payoutNumerators, invalid);
-        const receipt = await this.connector.waitForTransactionReceipt(transactionHash, `Doing initial report.`);
-        if (receipt.status != 1) {
-            throw new Error("Could not do initial report");
-        }
+        await market.doInitialReport(payoutNumerators, invalid);
         return;
     }
 
     public async finalizeMarket(market: Market): Promise<void> {
-        const transactionHash = await market.finalize();
-        const receipt = await this.connector.waitForTransactionReceipt(transactionHash, `Finalizing market.`);
-        if (receipt.status != 1) {
-            throw new Error("Could not finalize market");
-        }
+        await market.finalize();
         return;
     }
 }

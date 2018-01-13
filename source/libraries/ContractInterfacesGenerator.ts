@@ -69,7 +69,7 @@ export class ContractInterfaceGenerator {
             return decodeParams(abi.outputs.map(x => x.name), abi.outputs.map(x => x.type), result);
         }
 
-        protected async remoteCall(abi: AbiFunction, parameters: Array<any>, sender?: string, gasPrice?: BN, attachedEth?: BN): Promise<string> {
+        protected async remoteCall(abi: AbiFunction, parameters: Array<any>, txName: String, sender?: string, gasPrice?: BN, attachedEth?: BN): Promise<void> {
             const from = sender || this.accountManager.defaultAddress;
             const data = encodeMethod(abi, parameters);
             // TODO: remove \`gas\` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
@@ -77,7 +77,23 @@ export class ContractInterfaceGenerator {
             gasPrice = gasPrice || this.defaultGasPrice;
             const transaction = Object.assign({ from: from, to: this.address, data: data, gasPrice: gasPrice, gas: gas }, attachedEth ? { value: attachedEth } : {});
             const signedTransaction = await this.accountManager.signTransaction(transaction);
-            return await this.connector.ethjsQuery.sendRawTransaction(signedTransaction);
+            let err: Error = new Error();
+            // The retry behavior here is because geth non-deterministically fails on transactions sometimes.
+            for (let i = 0; i < 3; i++) {
+                try {
+                    const transactionHash = await this.connector.ethjsQuery.sendRawTransaction(signedTransaction);
+                    const txReceipt = await this.connector.waitForTransactionReceipt(transactionHash, \`Waiting on receipt for tx: \${txName}\`);
+                    if (txReceipt.status != 1) {
+                        throw new Error(\`Tx \${txName} failed\`);
+                    }
+                    return;
+                } catch (e) {
+                    console.log(\`Retrying tx. Got error: \${e}\`);
+                    err = e;
+                    continue;
+                }
+            }
+            throw err;
         }
     }
 
@@ -114,13 +130,14 @@ export class ContractInterfaceGenerator {
             }
         }
 
-        return `export class ${contractName} extends ${extendsControlled ? "Controlled" : "Contract"} {
-    public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
-        super(connector, accountManager, address, defaultGasPrice);
-    }
+        return `
+    export class ${contractName} extends ${extendsControlled ? "Controlled" : "Contract"} {
+        public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
+            super(connector, accountManager, address, defaultGasPrice);
+        }
 
 ${contractMethods.join("\n\n")}
-}
+    }
 `
     }
 
@@ -128,11 +145,12 @@ ${contractMethods.join("\n\n")}
         const argNames: String = this.getArgNamesString(abiFunction);
         const params: String = this.getParamsString(abiFunction);
         const options: String = `{ sender?: string, gasPrice?: BN${abiFunction.payable ? ", attachedEth?: BN" : ""} }`;
-        return `    public ${abiFunction.name} = async(${params} options?: ${options}): Promise<string> => {
-        options = options || {};
-        const abi: AbiFunction = ${JSON.stringify(abiFunction)};
-        return await this.remoteCall(abi, [${argNames}], options.sender, options.gasPrice${abiFunction.payable ? ", options.attachedEth" : ""});
-    }`;
+        return `        public ${abiFunction.name} = async(${params} options?: ${options}): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = ${JSON.stringify(abiFunction)};
+            await this.remoteCall(abi, [${argNames}], "${abiFunction.name}", options.sender, options.gasPrice${abiFunction.payable ? ", options.attachedEth" : ""});
+            return;
+        }`;
     }
 
     private localMethodTemplate(abiFunction: AbiFunction) {
@@ -142,12 +160,12 @@ ${contractMethods.join("\n\n")}
         const returnType: String = (abiFunction.outputs[0] !== undefined) ? this.getTsTypeFromPrimitive(abiFunction.outputs[0].type) : "void";
         const returnPromiseType: String = (abiFunction.outputs.length === 0 || abiFunction.outputs.length === 1) ? returnType : "Array<string>";
         const returnValue: String = abiFunction.outputs.length == 1 ? `<${returnType}>result[0]` : "<Array<string>>result";
-        return `    public ${abiFunction.name}_ = async(${params} options?: ${options}): Promise<${returnPromiseType}> => {
-        options = options || {};
-        const abi: AbiFunction = ${JSON.stringify(abiFunction)};
-        ${abiFunction.outputs.length !== 0 ? 'const result = ' : ''}await this.localCall(abi, [${argNames}], options.sender${abiFunction.payable ? ", options.attachedEth" : ""});
-        ${abiFunction.outputs.length !== 0 ? `return ${returnValue};` : ''}
-    }`;
+        return `        public ${abiFunction.name}_ = async(${params} options?: ${options}): Promise<${returnPromiseType}> => {
+            options = options || {};
+            const abi: AbiFunction = ${JSON.stringify(abiFunction)};
+            ${abiFunction.outputs.length !== 0 ? 'const result = ' : ''}await this.localCall(abi, [${argNames}], options.sender${abiFunction.payable ? ", options.attachedEth" : ""});
+            ${abiFunction.outputs.length !== 0 ? `return ${returnValue};` : ''}
+        }`;
     }
 
     private getTsTypeFromPrimitive(abiType: Primitive) {
