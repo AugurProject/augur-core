@@ -172,7 +172,7 @@ export class ContractDeployer {
 
     private async whitelistTradingContracts(): Promise<void> {
         console.log('Whitelisting contracts...');
-        const promises: Array<Promise<any>> = [];
+        const promises: Array<Promise<void>> = [];
         for (let contract of this.contracts) {
             if (!contract.relativeFilePath.startsWith("trading/")) continue;
             if (contract.address === undefined) throw new Error(`Attempted to whitelist ${contract.contractName} but it has not yet been uploaded.`);
