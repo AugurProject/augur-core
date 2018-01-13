@@ -96,8 +96,7 @@ export class ContractDeployer {
         const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
         const augur = new Augur(this.connector, this.accountManager, address, this.configuration.gasPrice);
         contract.address = address;
-        const setControllerTransactionHash = await augur.setController(this.controller.address);
-        await this.connector.waitForTransactionReceipt(setControllerTransactionHash, `Initializing Augur.`);
+        await augur.setController(this.controller.address);
         await this.controller.registerContract(stringTo32ByteHex("Augur"), address, commitHash, bytecodeHash);
     }
 
@@ -173,7 +172,7 @@ export class ContractDeployer {
 
     private async whitelistTradingContracts(): Promise<void> {
         console.log('Whitelisting contracts...');
-        const promises: Array<Promise<TransactionReceipt>> = [];
+        const promises: Array<Promise<any>> = [];
         for (let contract of this.contracts) {
             if (!contract.relativeFilePath.startsWith("trading/")) continue;
             if (contract.address === undefined) throw new Error(`Attempted to whitelist ${contract.contractName} but it has not yet been uploaded.`);
@@ -183,16 +182,15 @@ export class ContractDeployer {
                 continue;
             } else {
                 console.log(`Whitelisting ${contract.contractName}`);
-                promises.push(this.whitelistContract(contract.contractName, contract.address));
+                promises.push(this.whitelistContract(contract.address));
             }
         }
 
         await resolveAll(promises);
     }
 
-    private async whitelistContract(contractName: string, contractAddress: string): Promise<TransactionReceipt> {
-        const transactionHash = await this.controller.addToWhitelist(contractAddress, { sender: this.accountManager.defaultAddress });
-        return await this.connector.waitForTransactionReceipt(transactionHash, `Whitelisting ${contractName}`);
+    private async whitelistContract(contractAddress: string): Promise<void> {
+        return await this.controller.addToWhitelist(contractAddress, { sender: this.accountManager.defaultAddress });
     }
 
     private async initializeAllContracts(): Promise<void> {
@@ -214,8 +212,7 @@ export class ContractDeployer {
             return;
         }
         console.log(`Initializing ${contractName}`);
-        const transactionHash = await this.getContract(contractName).setController(this.controller.address);
-        return await this.connector.waitForTransactionReceipt(transactionHash, `Initializing ${contractName}`);
+        await this.getContract(contractName).setController(this.controller.address);
     }
 
     private async createGenesisUniverse(): Promise<Universe> {
@@ -225,10 +222,8 @@ export class ContractDeployer {
         if (!universeAddress || universeAddress == "0x") {
             throw new Error("Unable to create genesis universe. eth_call failed");
         }
-        const transactionHash = await augur.createGenesisUniverse();
-        await this.connector.waitForTransactionReceipt(transactionHash, `Waiting on genesis universe creation...`);
+        await augur.createGenesisUniverse();
         const universe = new Universe(this.connector, this.accountManager, universeAddress, this.configuration.gasPrice);
-        await this.connector.waitForTransactionReceipt(transactionHash, `Initializing universe.`);
         console.log(`Genesis universe address: ${universe.address}`);
         if (await universe.getTypeName_() !== stringTo32ByteHex("Universe")) {
             throw new Error("Unable to create genesis universe. Get type name failed");

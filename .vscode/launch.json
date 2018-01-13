@@ -25,13 +25,13 @@
                 "output/tests-integration/**/*.js",
                 "--no-timeouts"
             ],
-            // uncomment one of the following and run `docker-compose up --build --force-recreate --abort-on-container-exit parity-dev-node` then you can debug tests against any chain from within VSCode
+            // uncomment one of the following and run `docker-compose -f support/test/integration/docker-compose.yml up --build --force-recreate --abort-on-container-exit parity-dev-node` then you can debug tests against any chain from within VSCode
             // ** Local **
-            // "env": {
+            //"env": {
             //     "ETHEREUM_HOST": "localhost",
-            //     "ETHEREUM_PORT": "8545",
+            //     "ETHEREUM_PORT": "47624",
             //     "ETHEREUM_GAS_PRICE_IN_NANOETH": "1",
-            ////     "ETHEREUM_PRIVATE_KEY": "0xe2b0241b73cd78d450f85eca67188fb884e7ebe961f8981814474c500d581952"
+            //     "ETHEREUM_PRIVATE_KEY": "0xfae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a"
             // },
             // ** Aura **
             // "env": {
