@@ -77,23 +77,12 @@ export class ContractInterfaceGenerator {
             gasPrice = gasPrice || this.defaultGasPrice;
             const transaction = Object.assign({ from: from, to: this.address, data: data, gasPrice: gasPrice, gas: gas }, attachedEth ? { value: attachedEth } : {});
             const signedTransaction = await this.accountManager.signTransaction(transaction);
-            let err: Error = new Error();
-            // The retry behavior here is because geth non-deterministically fails on transactions sometimes.
-            for (let i = 0; i < 3; i++) {
-                try {
-                    const transactionHash = await this.connector.ethjsQuery.sendRawTransaction(signedTransaction);
-                    const txReceipt = await this.connector.waitForTransactionReceipt(transactionHash, \`Waiting on receipt for tx: \${txName}\`);
-                    if (txReceipt.status != 1) {
-                        throw new Error(\`Tx \${txName} failed\`);
-                    }
-                    return;
-                } catch (e) {
-                    console.log(\`Retrying tx. Got error: \${e}\`);
-                    err = e;
-                    continue;
-                }
+            const transactionHash = await this.connector.ethjsQuery.sendRawTransaction(signedTransaction);
+            const txReceipt = await this.connector.waitForTransactionReceipt(transactionHash, \`Waiting on receipt for tx: \${txName}\`);
+            if (txReceipt.status != 1) {
+                throw new Error(\`Tx \${txName} failed: \${txReceipt}\`);
             }
-            throw err;
+            return;
         }
     }
 
