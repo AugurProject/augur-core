@@ -39,7 +39,7 @@ export class Configuration {
     private static createWithHost(host: string, port: number, gasPrice: BN, privateKey: string, isProduction: boolean=false, useNormalTime: boolean=true): Configuration {
         const contractSourceRoot = path.join(__dirname, "../../source/contracts/");
         const contractOutputRoot = (typeof process.env.CONTRACT_OUTPUT_ROOT === "undefined") ? path.join(__dirname, "../../output/contracts/") : path.normalize(<string> process.env.CONTRACT_OUTPUT_ROOT);
-        const artifactOutputRoot = (typeof process.env.ARTIFACT_OUTPUT_ROOT === "undefined") ? path.join(__dirname, "../../output/artifacts/") : path.normalize(<string> process.env.ARTIFACT_OUTPUT_ROOT);
+        const artifactOutputRoot = (typeof process.env.ARTIFACT_OUTPUT_ROOT === "undefined") ? path.join(__dirname, "../../output/contracts/") : path.normalize(<string> process.env.ARTIFACT_OUTPUT_ROOT);
         const controllerAddress = process.env.AUGUR_CONTROLLER_ADDRESS;
         const createGenesisUniverse = (typeof process.env.CREATE_GENESIS_UNIVERSE === "undefined") ? true : process.env.CREATE_GENESIS_UNIVERSE === "true";
 

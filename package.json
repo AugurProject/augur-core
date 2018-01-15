@@ -27,7 +27,7 @@
     "deploy:rinkeby": "npm run deploy:net -- rinkeby",
     "deploy:ropsten": "npm run deploy:net -- ropsten",
     "deploy:foundation": "npm run deploy:net -- foundation",
-    "deploy": "npm run deploy:rinkeby",
+    "deploy": "npm run deploy:net -- aura clique rinkeby",
     "artifacts": "bash support/artifacts/run.sh",
     "docker:build": "docker build --cache-from augurproject/augur-core:latest --tag augurproject/augur-core:latest -f support/Dockerfile .",
     "docker:push": "docker push augurproject/augur-core:latest",
@@ -52,7 +52,7 @@
     "docker:deploy:rinkeby": "npm run docker:deploy:net -- rinkeby",
     "docker:deploy:ropsten": "npm run docker:deploy:net -- ropsten",
     "docker:deploy:foundation": "npm run docker:deploy:net -- foundation",
-    "docker:deploy": "npm run docker:deploy:rinkeby"
+    "docker:deploy": "npm run docker:deploy:net -- aura clique rinkeby"
   },
   "devDependencies": {
     "@types/chai": "4.0.4",

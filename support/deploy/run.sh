@@ -15,7 +15,8 @@ case "$environment" in
       augurproject/augur-core:latest -- /app/support/deploy/deploy.sh $@
     ;;
   "direct")
-      bash support/deploy/deploy.sh $@
+    echo "Deploying to $@"
+    bash support/deploy/deploy.sh $@
     ;;
   *)
     echo "Must specifiy either docker or direct as first argument"
