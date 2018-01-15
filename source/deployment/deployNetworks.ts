@@ -6,6 +6,7 @@ import { Configuration } from "../libraries/Configuration";
 export async function deployToNetworks(networks: Array<string>) {
     const configurations: Array<Configuration> = networks.map((network) => Configuration.network(network));
     for(let configuration of configurations) {
+        console.log("Deploying to ", configuration.networkName);
         await deployContracts(configuration);
     }
 }
