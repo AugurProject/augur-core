@@ -27,6 +27,7 @@ COPY typings/ /app/typings/
 COPY source/contracts/ /app/source/contracts/
 COPY source/deployment/compileContracts.ts /app/source/deployment/compileContracts.ts
 COPY source/libraries/Configuration.ts /app/source/libraries/Configuration.ts
+COPY source/libraries/NetworkConfigurations.ts /app/source/libraries/NetworkConfigurations.ts
 COPY source/libraries/ContractCompiler.ts /app/source/libraries/ContractCompiler.ts
 COPY package.json /app/package.json
 COPY package-lock.json /app/package-lock.json

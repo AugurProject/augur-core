@@ -1,7 +1,7 @@
 import { hash } from 'crypto-promise';
 import { Repository } from 'nodegit';
 import { resolve as resolvePath } from 'path';
-import { writeFile } from "async-file";
+import { exists, readFile, writeFile } from "async-file";
 import { encodeParams } from 'ethjs-abi';
 import { TransactionReceipt } from 'ethjs-shared';
 import { stringTo32ByteHex } from "./HelperFunctions";
@@ -227,7 +227,10 @@ export class ContractDeployer {
     }
 
     private async generateAddressMapping(): Promise<string> {
-        const mapping: { [name: string]: string } = {};
+        type ContractAddressMapping = { [name: string]: string };
+        type NetworkAddressMapping = { [networkId: string]: ContractAddressMapping };
+
+        const mapping: ContractAddressMapping = {};
         mapping['Controller'] = this.controller.address;
         if (this.universe) mapping['Universe'] = this.universe.address;
         if (this.contracts.get('Augur').address === undefined) throw new Error(`Augur not uploaded.`);
@@ -239,8 +242,15 @@ export class ContractDeployer {
             if (contract.address === undefined) throw new Error(`${contract.contractName} not uploaded.`);
             mapping[contract.contractName] = contract.address;
         }
+
         const networkId = await this.connector.ethjsQuery.net_version();
-        return JSON.stringify({ [networkId]: mapping }, null, '\t');
+        let addressMapping: NetworkAddressMapping  = {};
+        if (await exists(this.configuration.contractAddressesOutputPath)) {
+            let existingAddressFileData: string = await readFile(this.configuration.contractAddressesOutputPath, 'utf8');
+            addressMapping = JSON.parse(existingAddressFileData);
+        }
+        addressMapping[networkId] = mapping;
+        return JSON.stringify(addressMapping, null, '\t');
     }
 
     private async generateAddressMappingFile(): Promise<void> {
