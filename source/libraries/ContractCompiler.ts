@@ -4,7 +4,12 @@ import asyncMkdirp = require('async-mkdirp');
 import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
 import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
+import { Abi } from "ethereum";
 import { Configuration } from './Configuration';
+
+interface AbiOutput {
+    [contract: string]: Abi;
+}
 
 export class ContractCompiler {
     private readonly configuration: Configuration;
@@ -48,14 +53,17 @@ export class ContractCompiler {
                 throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
             }
         }
-        const filteredCompilerOutput = this.filterCompilerOutput(compilerOutput);
 
         // Create output directory (if it doesn't exist)
         await asyncMkdirp(path.dirname(this.configuration.contractOutputPath));
 
         // Output contract data to single file
-        const contractOutputFilePath = this.configuration.contractOutputPath;
-        await fs.writeFile(contractOutputFilePath, JSON.stringify(filteredCompilerOutput, null, '\t'));
+        const filteredCompilerOutput = this.filterCompilerOutput(compilerOutput);
+        await fs.writeFile(this.configuration.contractOutputPath, JSON.stringify(filteredCompilerOutput, null, '\t'));
+
+        // Output abi data to a single file
+        const abiOutput = this.generateAbiOutput(filteredCompilerOutput);
+        await fs.writeFile(this.configuration.abiOutputPath, JSON.stringify(abiOutput, null, '\t'));
 
         return filteredCompilerOutput;
     }
@@ -115,6 +123,17 @@ export class ContractCompiler {
                 }
             }
         }
+        return result;
+    }
+
+    private generateAbiOutput(compilerOutput: CompilerOutput): AbiOutput {
+        const result: AbiOutput = {};
+        for (let relativeFilePath in compilerOutput.contracts) {
+            for (let contractName in compilerOutput.contracts[relativeFilePath]) {
+                result[contractName] = compilerOutput.contracts[relativeFilePath][contractName].abi;
+            }
+        }
+
         return result;
     }
 }
