@@ -34,7 +34,6 @@ export class ContractDeployer {
         await this.uploadAllContracts();
         await this.initializeAllContracts();
         await this.whitelistTradingContracts();
-        
         if(this.configuration.createGenesisUniverse) {
             this.universe = await this.createGenesisUniverse();
         }
