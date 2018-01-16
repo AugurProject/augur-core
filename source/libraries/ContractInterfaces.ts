@@ -34,8 +34,9 @@
         protected async remoteCall(abi: AbiFunction, parameters: Array<any>, txName: String, sender?: string, gasPrice?: BN, attachedEth?: BN): Promise<void> {
             const from = sender || this.accountManager.defaultAddress;
             const data = encodeMethod(abi, parameters);
-            // TODO: remove `gas` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
-            const gas = await this.connector.ethjsQuery.estimateGas(Object.assign({ to: this.address, from: from, data: data }, attachedEth ? { value: attachedEth } : {} ));
+            let gas = await this.connector.ethjsQuery.estimateGas(Object.assign({ to: this.address, from: from, data: data }, attachedEth ? { value: attachedEth } : {} ));
+            // This is to address an observed bug while running against geth where occasionally gas estimates are lower than required
+            gas = gas.add(gas.div(new BN(10)));
             gasPrice = gasPrice || this.defaultGasPrice;
             const transaction = Object.assign({ from: from, to: this.address, data: data, gasPrice: gasPrice, gas: gas }, attachedEth ? { value: attachedEth } : {});
             const signedTransaction = await this.accountManager.signTransaction(transaction);
@@ -44,7 +45,6 @@
             if (txReceipt.status != 1) {
                 throw new Error(`Tx ${txName} failed: ${txReceipt}`);
             }
-            return;
         }
     }
 
@@ -899,6 +899,27 @@
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_caller","type":"address"},{"name":"_allowedCaller","type":"bytes32"}],"name":"assertOnlySpecifiedCaller","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [caller, allowedCaller], options.sender);
             return <boolean>result[0];
+        }
+    }
+
+
+    export class GethContract extends Contract {
+        public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
+            super(connector, accountManager, address, defaultGasPrice);
+        }
+
+        public test = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"test","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [], "test", options.sender, options.gasPrice);
+            return;
+        }
+
+        public test_ = async( options?: { sender?: string }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"test","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.localCall(abi, [], options.sender);
+            
         }
     }
 
