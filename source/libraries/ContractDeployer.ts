@@ -33,7 +33,6 @@ export class ContractDeployer {
     }
 
     public async deploy(): Promise<void> {
-        console.log("Saving contract start block");
         const blockNumber = await this.getBlockNumber();
         this.controller = await this.uploadController();
         await this.uploadAugur();
@@ -282,4 +281,5 @@ export class ContractDeployer {
         const blockNumberMapping = await this.generateUploadBlockNumberMapping(blockNumber);
         await writeFile(this.configuration.uploadBlockNumbersOutputPath, blockNumberMapping, 'utf8')
     }
+
 }
