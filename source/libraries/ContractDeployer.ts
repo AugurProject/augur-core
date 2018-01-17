@@ -28,7 +28,13 @@ export class ContractDeployer {
         this.contracts = new Contracts(compilerOutput);
     }
 
+    public async getBlockNumber(): Promise<number> {
+        return this.connector.ethjsQuery.getBlockByNumber('latest', false).then( (block) => block.number.toNumber());
+    }
+
     public async deploy(): Promise<void> {
+        console.log("Saving contract start block");
+        const blockNumber = await this.getBlockNumber();
         this.controller = await this.uploadController();
         await this.uploadAugur();
         await this.uploadAllContracts();
@@ -39,6 +45,7 @@ export class ContractDeployer {
             this.universe = await this.createGenesisUniverse();
         }
 
+        await this.generateUploadBlockNumberFile(blockNumber);
         await this.generateAddressMappingFile();
     }
 
@@ -256,5 +263,23 @@ export class ContractDeployer {
     private async generateAddressMappingFile(): Promise<void> {
         const addressMappingJson = await this.generateAddressMapping();
         await writeFile(this.configuration.contractAddressesOutputPath, addressMappingJson, 'utf8')
+    }
+
+    private async generateUploadBlockNumberMapping(blockNumber: number): Promise<string> {
+        type UploadBlockNumberMapping = { [networkId: string]: number };
+
+        const networkId = await this.connector.ethjsQuery.net_version();
+        let blockNumberMapping: UploadBlockNumberMapping  = {};
+        if (await exists(this.configuration.uploadBlockNumbersOutputPath)) {
+            let existingBlockNumberData: string = await readFile(this.configuration.uploadBlockNumbersOutputPath, 'utf8');
+            blockNumberMapping = JSON.parse(existingBlockNumberData);
+        }
+        blockNumberMapping[networkId] = blockNumber;
+        return JSON.stringify(blockNumberMapping, null, '\t');
+    }
+
+    private async generateUploadBlockNumberFile(blockNumber: number): Promise<void> {
+        const blockNumberMapping = await this.generateUploadBlockNumberMapping(blockNumber);
+        await writeFile(this.configuration.uploadBlockNumbersOutputPath, blockNumberMapping, 'utf8')
     }
 }
