@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 ###
 # Setup the environments properly for merging and updating items in augur-contracts and augur.js
