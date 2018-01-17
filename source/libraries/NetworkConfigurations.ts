@@ -18,7 +18,7 @@ export const networkConfigurations: NetworkConfigurations = {
         host: "ropsten.ethereum.nodes.augur.net",
         port: 80,
         privateKey: process.env.ROPSTEN_PRIVATE_KEY,
-        gasPrice: new BN(20)
+        gasPrice: new BN(20*1000000)
     },
     kovan: {
         isProduction: false,
@@ -32,7 +32,7 @@ export const networkConfigurations: NetworkConfigurations = {
         host: "rinkeby.ethereum.nodes.augur.net",
         port: 80,
         privateKey: process.env.RINKEBY_PRIVATE_KEY,
-        gasPrice: new BN(20)
+        gasPrice: new BN(30*1000000)
     },
     clique: {
         isProduction: false,
@@ -43,8 +43,8 @@ export const networkConfigurations: NetworkConfigurations = {
     },
     aura: {
         isProduction: false,
-        host: "aura.ethereum.origin.augur.net",
-        port: 8545,
+        host: "aura.ethereum.nodes.augur.net",
+        port: 80,
         privateKey: "fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
         gasPrice: new BN(1)
     }
