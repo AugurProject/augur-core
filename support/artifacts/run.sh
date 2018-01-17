@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 ###
 # Setup the environments properly for merging and updating items in augur-contracts and augur.js
@@ -34,8 +34,8 @@ else
   contracts_repo_url=${AUGUR_CONTRACTS_REPO_URL:-https://github.com/AugurProject/augur-contracts}
   echo "AUGUR_CONTRACTS_REPO_URL=${contracts_repo_url}, set environment to override"
 
-  augurjs_repo_url=${AUGUR_CONTRACTS_REPO_URL:-https://github.com/AugurProject/augur.js}
-  echo "AUGURJS_REPO_URL=${contracts_repo_url}, set environment to override"
+  augurjs_repo_url=${AUGURJS_REPO_URL:-https://github.com/AugurProject/augur.js}
+  echo "AUGURJS_REPO_URL=${augurjs_repo_url}, set environment to override"
 
   rm -rf output/augur-contracts
   rm -rf output/augur.js
