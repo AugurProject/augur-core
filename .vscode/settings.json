@@ -12,6 +12,7 @@
         "**/*.pyc": true
     },
     "python.linting.pylintEnabled": false,
+    "files.trimTrailingWhitespace": true,
     "solidity.lintOnChange": false,
     "solidity.solidityRoot": "source/contracts",
     "typescript.tsdk": "node_modules\\typescript\\lib"

@@ -4,7 +4,7 @@ import { resolve as resolvePath } from 'path';
 import { exists, readFile, writeFile } from "async-file";
 import { encodeParams } from 'ethjs-abi';
 import { TransactionReceipt } from 'ethjs-shared';
-import { stringTo32ByteHex } from "./HelperFunctions";
+import { stringTo32ByteHex, resolveAll } from "./HelperFunctions";
 import { CompilerOutput } from "solc";
 import { Abi, AbiFunction } from 'ethereum';
 import { Configuration } from './Configuration';
@@ -34,7 +34,6 @@ export class ContractDeployer {
         await this.uploadAllContracts();
         await this.initializeAllContracts();
         await this.whitelistTradingContracts();
-
         if(this.configuration.createGenesisUniverse) {
             this.universe = await this.createGenesisUniverse();
         }
@@ -102,9 +101,11 @@ export class ContractDeployer {
 
     private async uploadAllContracts(): Promise<void> {
         console.log('Uploading contracts...');
+        const promises: Array<Promise<any>> = [];
         for (let contract of this.contracts) {
-            await this.upload(contract);
+            promises.push(this.upload(contract));
         }
+        await resolveAll(promises);
     }
 
     private async upload(contract: Contract): Promise<void> {
@@ -173,6 +174,7 @@ export class ContractDeployer {
 
     private async whitelistTradingContracts(): Promise<void> {
         console.log('Whitelisting contracts...');
+        const promises: Array<Promise<any>> = [];
         for (let contract of this.contracts) {
             if (!contract.relativeFilePath.startsWith("trading/")) continue;
             if (contract.address === undefined) throw new Error(`Attempted to whitelist ${contract.contractName} but it has not yet been uploaded.`);
@@ -182,9 +184,10 @@ export class ContractDeployer {
                 continue;
             } else {
                 console.log(`Whitelisting ${contract.contractName}`);
-                await this.whitelistContract(contract.address);
+                promises.push(this.whitelistContract(contract.address));
             }
         }
+        await resolveAll(promises);
     }
 
     private async whitelistContract(contractAddress: string): Promise<void> {
@@ -194,9 +197,11 @@ export class ContractDeployer {
     private async initializeAllContracts(): Promise<void> {
         console.log('Initializing contracts...');
         const contractsToInitialize = ["CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimTradingProceeds","OrdersFetcher","Time"];
+        const promises: Array<Promise<any>> = [];
         for (let contractName of contractsToInitialize) {
-            await this.initializeContract(contractName);
+            promises.push(this.initializeContract(contractName));
         }
+        resolveAll(promises);
     }
 
     private async initializeContract(contractName: string): Promise<TransactionReceipt|void> {
