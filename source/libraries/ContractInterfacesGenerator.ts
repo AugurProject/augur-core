@@ -72,8 +72,9 @@ export class ContractInterfaceGenerator {
         protected async remoteCall(abi: AbiFunction, parameters: Array<any>, txName: String, sender?: string, gasPrice?: BN, attachedEth?: BN): Promise<void> {
             const from = sender || this.accountManager.defaultAddress;
             const data = encodeMethod(abi, parameters);
-            // TODO: remove \`gas\` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
-            const gas = await this.connector.ethjsQuery.estimateGas(Object.assign({ to: this.address, from: from, data: data }, attachedEth ? { value: attachedEth } : {} ));
+            let gas = await this.connector.ethjsQuery.estimateGas(Object.assign({ to: this.address, from: from, data: data }, attachedEth ? { value: attachedEth } : {} ));
+            // This is to address an observed bug while running against geth where occasionally gas estimates are lower than required: https://github.com/ethereum/go-ethereum/issues/15896
+            gas = gas.add(gas.div(new BN(10)));
             gasPrice = gasPrice || this.defaultGasPrice;
             const transaction = Object.assign({ from: from, to: this.address, data: data, gasPrice: gasPrice, gas: gas }, attachedEth ? { value: attachedEth } : {});
             const signedTransaction = await this.accountManager.signTransaction(transaction);
@@ -82,7 +83,6 @@ export class ContractInterfaceGenerator {
             if (txReceipt.status != 1) {
                 throw new Error(\`Tx \${txName} failed: \${txReceipt}\`);
             }
-            return;
         }
     }
 
