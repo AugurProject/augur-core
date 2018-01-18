@@ -3,8 +3,9 @@ services:
   parity-dev-node:
     image: augurproject/dev-node-parity:latest
     ports:
-      - "47622:8545"
       - "47621:8180"
+      - "47622:8545"
+      - "47623:8546"
   parity-integration-tests:
     build:
       context: ../../../
@@ -26,6 +27,7 @@ services:
     image: augurproject/dev-node-geth:latest
     ports:
       - "47624:8545"
+      - "47625:8546"
   geth-integration-tests:
     build:
       context: ../../../
