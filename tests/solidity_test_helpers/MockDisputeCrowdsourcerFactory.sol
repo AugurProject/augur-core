@@ -5,6 +5,7 @@ import 'IController.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';
 import 'TEST/MockDisputeCrowdsourcer.sol';
 
+
 contract MockDisputeCrowdsourcerFactory {
     MockDisputeCrowdsourcer private disputeCrowdsourcer;
     bytes32 private createdPayoutDistributionHashValue;

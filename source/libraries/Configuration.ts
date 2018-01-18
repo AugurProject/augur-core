@@ -44,6 +44,7 @@ export class Configuration {
         const artifactOutputRoot = (typeof process.env.ARTIFACT_OUTPUT_ROOT === "undefined") ? path.join(__dirname, "../../output/contracts/") : path.normalize(<string> process.env.ARTIFACT_OUTPUT_ROOT);
         const controllerAddress = process.env.AUGUR_CONTROLLER_ADDRESS;
         const createGenesisUniverse = (typeof process.env.CREATE_GENESIS_UNIVERSE === "undefined") ? true : process.env.CREATE_GENESIS_UNIVERSE === "true";
+        useNormalTime = (typeof process.env.USE_NORMAL_TIME === "string") ? process.env.USE_NORMAL_TIME === "true" : useNormalTime
 
         return new Configuration(host, port, gasPrice, privateKey, contractSourceRoot, contractOutputRoot, artifactOutputRoot, controllerAddress, createGenesisUniverse, isProduction, useNormalTime, networkName);
     }
@@ -53,6 +54,7 @@ export class Configuration {
         const port = (typeof process.env.ETHEREUM_PORT === "undefined") ? await getPort() : parseInt(process.env.ETHEREUM_PORT || "0");
         const gasPrice = ((typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? new BN(20) : new BN(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH!)).mul(new BN(1000000000));
         const privateKey = process.env.ETHEREUM_PRIVATE_KEY || '0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d';
+        useNormalTime = (typeof process.env.USE_NORMAL_TIME === "string") ? process.env.USE_NORMAL_TIME === "true" : useNormalTime
 
         return Configuration.createWithHost(host, port, gasPrice, privateKey, isProduction, useNormalTime);
     }
@@ -61,6 +63,8 @@ export class Configuration {
         const network = networkConfigurations[networkName];
         if (network === undefined || network === null) throw new Error(`Network configuration ${networkName} not found`);
         if (network.privateKey === undefined || network.privateKey === null) throw new Error(`Network configuration for ${networkName} has no private key available. Check that this key is in the environment ${networkName.toUpperCase()}_PRIVATE_KEY`);
+        useNormalTime = (typeof process.env.USE_NORMAL_TIME === "string") ? process.env.USE_NORMAL_TIME === "true" : useNormalTime
+
         return Configuration.createWithHost(network.host, network.port, network.gasPrice, network.privateKey, network.isProduction, useNormalTime, networkName);
     }
 }
