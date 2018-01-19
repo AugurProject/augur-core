@@ -25,7 +25,8 @@ def test_designatedReportHappyPath(localFixture, universe, market):
         "market": market.address,
         "amountStaked": universe.getInitialReportMinValue(),
         "isDesignatedReporter": True,
-        "payoutNumerators": [0, market.getNumTicks()]
+        "payoutNumerators": [0, market.getNumTicks()],
+        "invalid": False
     }
     with AssertLog(localFixture, "InitialReportSubmitted", initialReportLog):
         assert market.doInitialReport([0, market.getNumTicks()], False)
@@ -124,7 +125,8 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
         "universe": universe.address,
         "market": market.address,
         "size": universe.getInitialReportMinValue() * 2,
-        "payoutNumerators": [0, market.getNumTicks()]
+        "payoutNumerators": [0, market.getNumTicks()],
+        "invalid": False
     }
 
     crowdsourcerContributionLog = {
@@ -194,7 +196,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
     assert not newUniverse.isContainerForReportingParticipant(categoricalDisputeCrowdsourcer.address)
 
     # The initial report is still present however
-    categoricalInitialReport = localFixture.applySignature("InitialReporter", categoricalMarket.getReportingParticipant(0)) 
+    categoricalInitialReport = localFixture.applySignature("InitialReporter", categoricalMarket.getReportingParticipant(0))
     assert categoricalMarket.getReportingParticipant(0) == categoricalInitialReport.address
     assert not categoricalInitialReport.isDisavowed()
     assert not universe.isContainerForReportingParticipant(categoricalInitialReport.address)
@@ -273,7 +275,7 @@ def test_forking_values(localFixture, universe, market, cash):
 
 def test_fee_window_record_keeping(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
     feeWindow = localFixture.applySignature('FeeWindow', universe.getOrCreateCurrentFeeWindow())
-    
+
     # First we'll confirm we get the expected default values for the window record keeping
     assert feeWindow.getNumMarkets() == 0
     assert feeWindow.getNumInvalidMarkets() == 0
