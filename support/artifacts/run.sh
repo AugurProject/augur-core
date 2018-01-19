@@ -37,7 +37,6 @@ else
   augurjs_repo_url=${AUGURJS_REPO_URL:-https://github.com/AugurProject/augur.js}
   echo "AUGURJS_REPO_URL=${augurjs_repo_url}, set environment to override"
 
-  rm -rf output/augur-contracts
   rm -rf output/augur.js
 fi
 
@@ -50,25 +49,6 @@ else
   echo "No logged in NPM session and NPM_TOKEN not set, will not be able to publish to NPM"
 fi
 
-
-###
-# Update the augur-contracts Repository
-
-git clone $contracts_repo_url output/augur-contracts
-current_dir=$PWD
-cd output/augur-contracts
-
-npm install
-
-AUTOCOMMIT=true BRANCH=$branch COMMIT=$commit TAG=$tag SOURCE=../contracts npm run update-contracts
-update_success=$?
-
-contracts_version=$(npm version)
-cd $current_dir
-
-[[ $update_success == 0 ]] || exit $update_success
-
-
 ###
 # Update the augur.js repository
 
@@ -76,7 +56,10 @@ git clone $augurjs_repo_url output/augur.js
 current_dir=$PWD
 cd output/augur.js
 
-AUTOCOMMIT=true BRANCH=$branch COMMIT=$commit TAG=$tag npm run update-contracts
+echo "!!!!!!! TEMPORARY !!!!!!!!!!!!!!!!!!"
+git checkout -b feature/include-artifacts origin/feature/include-artifacts
+
+AUTOCOMMIT=true BRANCH=$branch COMMIT=$commit TAG=$tag SOURCE=../contracts npm run update-contracts
 update_success=$?
 
 cd $current_dir

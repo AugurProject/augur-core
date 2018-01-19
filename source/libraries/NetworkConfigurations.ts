@@ -32,7 +32,7 @@ export const networkConfigurations: NetworkConfigurations = {
         host: "rinkeby.ethereum.nodes.augur.net",
         port: 80,
         privateKey: process.env.RINKEBY_PRIVATE_KEY,
-        gasPrice: new BN(30*1000000)
+        gasPrice: new BN(31*1000000)
     },
     clique: {
         isProduction: false,
