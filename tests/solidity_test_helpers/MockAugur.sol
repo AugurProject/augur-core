@@ -175,4 +175,8 @@ contract MockAugur is Controlled {
     function logContractAddedToRegistry(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public returns (bool) {
         return true;
     }
+
+    function logTimestampSet(uint256 _newTimestamp) public returns (bool) {
+        return true;
+    }
 }

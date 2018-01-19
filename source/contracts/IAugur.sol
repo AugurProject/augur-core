@@ -42,4 +42,5 @@ contract IAugur {
     function logFeeTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool);
     function logContractAddedToWhitelist(address _addition) public returns (bool);
     function logContractAddedToRegistry(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public returns (bool);
+    function logTimestampSet(uint256 _newTimestamp) public returns (bool);
 }
