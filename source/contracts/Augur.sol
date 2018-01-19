@@ -37,6 +37,7 @@ contract Augur is Controlled, Extractable, IAugur {
     event FeeWindowCreated(address indexed universe, address feeWindow, uint256 startTime, uint256 endTime, uint256 id);
     event WhitelistAddition(address addition);
     event RegistryAddition(bytes32 key, address addition, bytes20 commitHash, bytes32 bytecodeHash);
+    event TimestampSet(uint256 newTimestamp);
 
     mapping(address => bool) private universes;
 
@@ -290,6 +291,12 @@ contract Augur is Controlled, Extractable, IAugur {
 
     function logContractAddedToRegistry(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyControllerCaller returns (bool) {
         RegistryAddition(_key, _address, _commitHash, _bytecodeHash);
+        return true;
+    }
+
+    function logTimestampSet(uint256 _newTimestamp) public returns (bool) {
+        require(msg.sender == controller.lookup("Time"));
+        TimestampSet(_newTimestamp);
         return true;
     }
 

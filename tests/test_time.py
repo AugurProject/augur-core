@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture as pytest_fixture
-from utils import stringToBytes
+from utils import stringToBytes, AssertLog
 
 
 def test_default_controlled_time(localFixture, controller, time):
@@ -17,7 +17,8 @@ def test_default_controlled_time(localFixture, controller, time):
 
     # The owner of the uploaded Time contract can change this time at will
     newTime = time.getTimestamp() + 1
-    assert time.setTimestamp(newTime)
+    with AssertLog(localFixture, "TimestampSet", {"newTimestamp": newTime}):
+        assert time.setTimestamp(newTime)
     assert time.getTimestamp() == controller.getTimestamp() == newTime
 
     # Other users cannot
@@ -25,7 +26,8 @@ def test_default_controlled_time(localFixture, controller, time):
         time.setTimestamp(newTime + 1, sender=tester.k1)
 
     # We can also increment the time
-    assert time.incrementTimestamp(1)
+    with AssertLog(localFixture, "TimestampSet", {"newTimestamp": newTime + 1}):
+        assert time.incrementTimestamp(1)
     assert time.getTimestamp() == controller.getTimestamp() == newTime + 1
 
 def test_real_time(localFixture, controller):
