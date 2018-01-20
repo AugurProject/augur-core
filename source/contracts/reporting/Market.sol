@@ -131,7 +131,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         feeWindow = universe.getOrCreateNextFeeWindow();
         _initialReporter.report(msg.sender, _payoutDistributionHash, _payoutNumerators, _invalid);
-        controller.getAugur().logInitialReportSubmitted(universe, msg.sender, this, _initialReporter.getStake(), _isDesignatedReporter, _payoutNumerators);
+        controller.getAugur().logInitialReportSubmitted(universe, msg.sender, this, _initialReporter.getStake(), _isDesignatedReporter, _payoutNumerators, _invalid);
         return true;
     }
 
@@ -252,7 +252,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             DisputeCrowdsourcerFactory _disputeCrowdsourcerFactory = DisputeCrowdsourcerFactory(controller.lookup("DisputeCrowdsourcerFactory"));
             _crowdsourcer = _disputeCrowdsourcerFactory.createDisputeCrowdsourcer(controller, this, _size, _payoutDistributionHash, _payoutNumerators, _invalid);
             crowdsourcers.add(_payoutDistributionHash, address(_crowdsourcer));
-            controller.getAugur().logDisputeCrowdsourcerCreated(universe, this, _crowdsourcer, _payoutNumerators, _size);
+            controller.getAugur().logDisputeCrowdsourcerCreated(universe, this, _crowdsourcer, _payoutNumerators, _size, _invalid);
         }
         return _crowdsourcer;
     }
