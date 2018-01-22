@@ -11,9 +11,9 @@ else
 fi
 
 if [[ "${ARTIFACTS:-true}" == "true" ]]; then
-  npm run artifacts || exit 1
+  npm run artifacts -- $@ || exit 1
 else
-  echo "Skipping pushing build artificats, set ARTIFACTS=true to do it"
+  echo "Skipping pushing build artifacts, set ARTIFACTS=true to do it"
 fi
 
 if [[ "${RUN_CANNED_MARKETS:-true}" == "true" ]]; then

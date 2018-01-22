@@ -4,9 +4,9 @@ import { Configuration } from '../libraries/Configuration';
 import { ArtifactDeployer } from '../libraries/ArtifactDeployer';
 
 export async function runCannedMarkets(networks: Array<string>) {
+    console.log(`Canning markets on ${networks.length} different networks`);
     const configurations: Array<Configuration> = networks.map((network) => Configuration.network(network));
     for(let configuration of configurations) {
-        console.log('Canning markets on:', configuration.networkName);
         const deployer = new ArtifactDeployer(configuration);
         await deployer.runCannedMarkets();
     }

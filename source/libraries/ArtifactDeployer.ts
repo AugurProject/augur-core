@@ -1,8 +1,6 @@
 import * as path from 'path';
-import { promisify } from 'util';
 import { Configuration } from './Configuration';
 import { spawn, SpawnOptions } from 'child_process';
-const spawnAsync = promisify(spawn);
 
 export class ArtifactDeployer {
     private readonly configuration: Configuration;
@@ -14,7 +12,11 @@ export class ArtifactDeployer {
     public async runCannedMarkets(): Promise<void> {
         if (this.configuration.networkName === null) {
             throw new Error('Must have a network name to can markets');
+        } else if(!this.configuration.networkName.match(/[a-zA-Z0=9\-_]+/)) {
+            throw new Error('Network names must consist of only alphanumeric chatacters and - or _');
         }
+
+        console.log('\n\nStarted canning markets on:', this.configuration.networkName,'\n-----------------');
 
         const options: SpawnOptions = {
             env: {
@@ -27,6 +29,16 @@ export class ArtifactDeployer {
         };
 
         const cannedMarketsScript = path.join(this.configuration.augurjsRepoPath, 'scripts', 'canned-markets.sh');
-        await spawnAsync(cannedMarketsScript, [this.configuration.networkName], options);
+
+        await new Promise<void>((resolve, reject) => {
+            const child = spawn(cannedMarketsScript, [<string> this.configuration.networkName], options);
+
+            child.on('close', (code: number): void => {
+                if (code !== 0) return reject(new Error('Market cannary exited with non-zero exit code'));
+                resolve();
+            });
+        });
+
+        console.log('\n\nFinished canning markets on:', this.configuration.networkName,'\n-----------------');
     }
 }
