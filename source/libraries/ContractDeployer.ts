@@ -39,6 +39,7 @@ export class ContractDeployer {
         await this.uploadAllContracts();
         await this.initializeAllContracts();
         await this.whitelistTradingContracts();
+
         if(this.configuration.createGenesisUniverse) {
             this.universe = await this.createGenesisUniverse();
         }
@@ -171,7 +172,7 @@ export class ContractDeployer {
         const gasEstimate = await this.connector.ethjsQuery.estimateGas({ from: this.accountManager.defaultAddress, data: data });
         const nonce = await this.accountManager.nonces.get(this.accountManager.defaultAddress);
         const signedTransaction = await this.accountManager.signTransaction({ gas: gasEstimate, gasPrice: this.configuration.gasPrice, data: data});
-        console.log(`Upload contract: ${contract.contractName} nonce: ${nonce}, gas: ${gasEstimate}`);
+        console.log(`Upload contract: ${contract.contractName} nonce: ${nonce}, gas: ${gasEstimate}, gasPrice: ${this.configuration.gasPrice}`);
         const transactionHash = await this.connector.ethjsQuery.sendRawTransaction(signedTransaction);
         const receipt = await this.connector.waitForTransactionReceipt(transactionHash, failureDetails);
         console.log(`Uploaded contract: ${contract.contractName}: \"${receipt.contractAddress}\"`);

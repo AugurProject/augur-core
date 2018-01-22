@@ -6,7 +6,15 @@ import { Configuration } from "../libraries/Configuration";
 export async function deployToNetworks(networks: Array<string>) {
     const configurations: Array<Configuration> = networks.map((network) => Configuration.network(network));
     for(let configuration of configurations) {
-        console.log("Deploying to ", configuration.networkName);
+        console.log(`
+
+-----------------
+Deploying to: ${configuration.networkName}
+    compiled contracts: ${configuration.contractOutputPath}
+    abi: ${configuration.abiOutputPath}
+    contract address: ${configuration.contractAddressesOutputPath}
+    upload blocks #s: ${configuration.uploadBlockNumbersOutputPath}
+`);
         await deployContracts(configuration);
     }
 }

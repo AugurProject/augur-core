@@ -11,8 +11,7 @@ export class Configuration {
     public readonly contractSourceRoot: string;
     public readonly contractOutputPath: string;
     public readonly abiOutputPath: string;
-    public readonly augurContractsRepoUrl: string;
-    public readonly augurjsRepoUrl: string;
+    public readonly augurjsRepoPath: string;
     public readonly contractAddressesOutputPath: string;
     public readonly contractInterfacesOutputPath: string;
     public readonly uploadBlockNumbersOutputPath: string;
@@ -33,6 +32,7 @@ export class Configuration {
         this.contractAddressesOutputPath = path.join(artifactOutputRoot, 'addresses.json');
         this.contractInterfacesOutputPath = path.join(contractSourceRoot, '../libraries', 'ContractInterfaces.ts');
         this.uploadBlockNumbersOutputPath = path.join(artifactOutputRoot, 'upload-block-numbers.json');
+        this.augurjsRepoPath = path.join(contractOutputRoot, '../augur.js');
         this.controllerAddress = controllerAddress;
         this.createGenesisUniverse = createGenesisUniverse;
         this.isProduction = isProduction;

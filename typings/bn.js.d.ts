@@ -8,6 +8,9 @@ declare module 'bn.js' {
         mul(other: BN): BN;
         div(other: BN): BN;
         pow(other: BN): BN;
+
+        static min(... args: Array<number|string|BN>): BN;
+        static max(... args: Array<number|string|BN>): BN;
     }
 
     export = BN;
