@@ -155,11 +155,11 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
 
 @mark.parametrize('finalizeByMigration, manuallyDisavow', [
     (True, True),
-    (False, True),
-    (True, False),
-    (False, False),
+    #(False, True),
+    #(True, False),
+    #(False, False),
 ])
-def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, market, categoricalMarket):
+def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, market, categoricalMarket, scalarMarket):
     # Let's go into the one dispute round for the categorical market
     proceedToNextRound(localFixture, categoricalMarket)
     proceedToNextRound(localFixture, categoricalMarket)
@@ -182,8 +182,22 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
         # We can redeem before the fork finalizes since disavowal has occured
         assert categoricalDisputeCrowdsourcer.redeem(tester.a0)
 
+    # We cannot contribute to a crowdsourcer during a fork
+    with raises(TransactionFailed):
+        categoricalMarket.contribute([2,2,categoricalMarket.getNumTicks()-4], False, 1)
+
+    # We cannot purchase new Participation Tokens during a fork
+    feeWindowAddress = universe.getCurrentFeeWindow()
+    feeWindow = localFixture.applySignature("FeeWindow", feeWindowAddress)
+    with raises(TransactionFailed):
+        feeWindow.buy(1)
+
     # finalize the fork
     finalizeFork(localFixture, market, universe, finalizeByMigration)
+
+    # We cannot contribute to a crowdsourcer in a forked universe
+    with raises(TransactionFailed):
+        categoricalMarket.contribute([2,2,categoricalMarket.getNumTicks()-4], False, 1)
 
     # The categorical market can be migrated to the winning universe
     assert categoricalMarket.migrateThroughOneFork()
@@ -201,6 +215,18 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
     assert not categoricalInitialReport.isDisavowed()
     assert not universe.isContainerForReportingParticipant(categoricalInitialReport.address)
     assert newUniverse.isContainerForReportingParticipant(categoricalInitialReport.address)
+
+    # The categorical market has a new fee window since it was initially reported on and may be disputed now
+    categoricalMarketFeeWindowAddress = categoricalMarket.getFeeWindow()
+    categoricalMarketFeeWindow = localFixture.applySignature("FeeWindow", categoricalMarketFeeWindowAddress)
+
+    proceedToNextRound(localFixture, categoricalMarket, moveTimeForward = False)
+
+    # We can also purchase Participation Tokens in this fee window
+    assert categoricalMarketFeeWindow.buy(1)
+
+    # We can migrate a market that has not had its initial reporting completed as well
+    assert scalarMarket.migrateThroughOneFork()
 
 def test_forking_values(localFixture, universe, market, cash):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())

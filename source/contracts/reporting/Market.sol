@@ -137,6 +137,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount) public onlyInGoodTimes returns (bool) {
         require(feeWindow.isActive());
+        require(!universe.isForking());
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         require(_payoutDistributionHash != getWinningReportingParticipant().getPayoutDistributionHash());
         IDisputeCrowdsourcer _crowdsourcer = getOrCreateDisputeCrowdsourcer(_payoutDistributionHash, _payoutNumerators, _invalid);
@@ -259,18 +260,21 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function migrateThroughOneFork() public onlyInGoodTimes returns (bool) {
         // only proceed if the forking market is finalized
-        require(universe.getForkingMarket().isFinalized());
+        IMarket _forkingMarket = universe.getForkingMarket();
+        require(_forkingMarket.isFinalized());
 
         IUniverse _currentUniverse = universe;
-        bytes32 _winningForkPayoutDistributionHash = _currentUniverse.getForkingMarket().getWinningPayoutDistributionHash();
+        bytes32 _winningForkPayoutDistributionHash = _forkingMarket.getWinningPayoutDistributionHash();
         IUniverse _destinationUniverse = _currentUniverse.getChildUniverse(_winningForkPayoutDistributionHash);
         // follow the forking market to its universe
         _destinationUniverse.addMarketTo();
         _currentUniverse.removeMarketFrom();
         universe = _destinationUniverse;
         // reset state back to Initial Reporter
-        feeWindow = IFeeWindow(0);
         IInitialReporter _initialParticipant = getInitialReporter();
+        if (feeWindow != IFeeWindow(0)) {
+            feeWindow = universe.getOrCreateNextFeeWindow();
+        }
         delete participants;
         participants.push(_initialParticipant);
         _initialParticipant.resetReportTimestamp();
