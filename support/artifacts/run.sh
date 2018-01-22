@@ -56,9 +56,6 @@ git clone $augurjs_repo_url output/augur.js
 current_dir=$PWD
 cd output/augur.js
 
-echo "!!!!!!! TEMPORARY !!!!!!!!!!!!!!!!!!"
-git checkout -b feature/include-artifacts origin/feature/include-artifacts
-
 npm install
 
 AUTOCOMMIT=true BRANCH=$branch COMMIT=$commit TAG=$tag SOURCE=../contracts npm run update-contracts
