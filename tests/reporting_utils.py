@@ -31,7 +31,7 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
         # This will also use the InitialReporter which is not a DisputeCrowdsourcer, but has the called function from abstract inheritance
         winningReport = fixture.applySignature('DisputeCrowdsourcer', market.getWinningReportingParticipant())
         winningPayoutHash = winningReport.getPayoutDistributionHash()
-        
+
         if (randomPayoutNumerators):
             chosenPayoutNumerators = [0] * market.getNumberOfOutcomes()
             chosenPayoutNumerators[0] = randint(0, market.getNumTicks())
@@ -39,7 +39,7 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
         else:
             firstReportWinning = market.derivePayoutDistributionHash(payoutNumerators, False) == winningPayoutHash
             chosenPayoutNumerators = payoutNumerators if not firstReportWinning else payoutNumerators[::-1]
-        
+
         chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
         amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
         with PrintGasUsed(fixture, "Contribute:", 0):
@@ -54,7 +54,7 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
         feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
         fixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
-def proceedToFork(fixture, market, universe):    
+def proceedToFork(fixture, market, universe):
     while (market.getForkingMarket() == longToHexString(0)):
         proceedToNextRound(fixture, market)
 
@@ -96,11 +96,11 @@ def finalizeFork(fixture, market, universe, finalizeByMigration = True):
 
     if (finalizeByMigration):
         # Tester 0 moves more than 50% of REP
-        repBalance = reputationToken.balanceOf(tester.a0)
-        bonus = repBalance / fixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
-        reputationToken.migrateOut(noUniverseReputationToken.address, reputationToken.balanceOf(tester.a0))
-        assert not reputationToken.balanceOf(tester.a0)
-        assert noUniverseReputationToken.balanceOf(tester.a0) == repBalance + bonus
+        amount = reputationToken.balanceOf(tester.a0) - 20
+        bonus = amount / fixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+        reputationToken.migrateOut(noUniverseReputationToken.address, amount)
+        assert reputationToken.balanceOf(tester.a0) == 20
+        assert noUniverseReputationToken.balanceOf(tester.a0) == amount + bonus
         assert market.getWinningPayoutDistributionHash() == noUniverse.getParentPayoutDistributionHash()
     else:
         # Time marches on past the fork end time
@@ -108,14 +108,24 @@ def finalizeFork(fixture, market, universe, finalizeByMigration = True):
         assert market.finalize()
         assert market.getWinningPayoutDistributionHash() == yesUniverse.getParentPayoutDistributionHash()
 
+    # if the fork finalized by migration we're still in the 60 day fork window and can still get a bonus for migrating. If the fork is past the fork period we can no longer get the 5% bonus
+    amount = 20
+    amountAdded = amount
+    if finalizeByMigration:
+        bonus = amount / fixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+        amountAdded += bonus
+
+    with TokenDelta(yesUniverseReputationToken, amountAdded, tester.a0, "reputation migration bonus did not work correctly"):
+        reputationToken.migrateOut(yesUniverseReputationToken.address, amount)
+
     assert market.finalizeFork()
-    
+
 def generateFees(fixture, universe, market):
     completeSets = fixture.contracts['CompleteSets']
     cash = fixture.contracts['Cash']
     mailbox = fixture.applySignature('Mailbox', market.getMarketCreatorMailbox())
     assert mailbox.withdrawEther()
-    
+
     cost = 1000 * market.getNumTicks()
     marketCreatorFees = cost / market.getMarketCreatorSettlementFeeDivisor()
     completeSets.publicBuyCompleteSets(market.address, 1000, sender = tester.k1, value = cost)

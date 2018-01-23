@@ -48,11 +48,14 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
         require(ReputationToken(msg.sender) == _parentUniverse.getReputationToken());
         mint(_reporter, _attotokens);
         totalMigrated += _attotokens;
-        // Award a bonus if migration is done before the fork has resolved and update the universe tentative winner tracking
-        if (!_parentUniverse.getForkingMarket().isFinalized()) {
+        // Award a bonus if migration is done before the fork period is over, even if it has finalized
+        if (controller.getTimestamp() < _parentUniverse.getForkEndTime()) {
             uint256 _bonus = _attotokens.div(Reporting.getForkMigrationPercentageBonusDivisor());
             mint(_reporter, _bonus);
             totalTheoreticalSupply += _bonus;
+        }
+        // Update the fork tenative winner and finalize if we can
+        if (!_parentUniverse.getForkingMarket().isFinalized()) {
             _parentUniverse.updateTentativeWinningChildUniverse(universe.getParentPayoutDistributionHash());
         }
         return true;
