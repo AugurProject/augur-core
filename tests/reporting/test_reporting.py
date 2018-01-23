@@ -155,9 +155,9 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
 
 @mark.parametrize('finalizeByMigration, manuallyDisavow', [
     (True, True),
-    #(False, True),
-    #(True, False),
-    #(False, False),
+    (False, True),
+    (True, False),
+    (False, False),
 ])
 def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, market, categoricalMarket, scalarMarket):
     # Let's go into the one dispute round for the categorical market
