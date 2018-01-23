@@ -35,7 +35,7 @@ def test_fee_window_note_initial_reporting_gas_price(localFixture, initializedFe
 
     assert initializedFeeWindow.noteInitialReportingGasPrice(gasprice=gasPrice) == True
     assert initializedFeeWindow.getAvgReportingGasPrice() == (gasPrice + gasValue) / 2
-    
+
 def test_fee_window_on_market_finalization(localFixture, initializedFeeWindow, mockUniverse, mockMarket):
     with raises(TransactionFailed, message="on market finalized needs to be called from market"):
         initializedFeeWindow.onMarketFinalized()
@@ -87,7 +87,7 @@ def test_fee_window_buy(localFixture, initializedFeeWindow, Time, mockReputation
     assert mockReputationToken.getTrustedTransferDestinationValue() == initializedFeeWindow.address
     assert mockReputationToken.getTrustedTransferAttotokensValue() == attoToken
     assert initializedFeeWindow.balanceOf(tester.a0) == user_balance + attoToken
-    
+
 def test_fee_window_redeem_for_reporting_participant_zero(localFixture, initializedFeeWindow, mockUniverse, Time, mockReputationToken, mockFeeToken, constants, mockCash):
     assert initializedFeeWindow.isOver() == False
     mockUniverse.setIsForking(False)
@@ -107,7 +107,6 @@ def test_fee_window_redeem_for_reporting_participant_zero(localFixture, initiali
     assert mockReputationToken.getTransferValueFor(tester.a0) == 0
 
 def test_fee_window_redeem_for_reporting_participant_with_balance(localFixture, initializedFeeWindow, mockUniverse, Time, mockReputationToken, mockFeeToken, constants, mockCash):
-    mockUniverse.setIsForking(True)
     attoToken = 10 ** 10
     feeTokenBalance = 10 ** 2
     feeWindowBalance = 10 ** 4
@@ -142,7 +141,6 @@ def test_fee_window_redeem_for_reporting_participant_with_balance(localFixture, 
 
 
 def test_fee_window_redeem_with_balance(localFixture, initializedFeeWindow, mockUniverse, Time, mockReputationToken, mockFeeToken, constants, mockCash):
-    mockUniverse.setIsForking(True)
     attoToken = 10 ** 10
     feeTokenBalance = 10 ** 2
     feeWindowBalance = 10 ** 4
@@ -163,7 +161,7 @@ def test_fee_window_redeem_with_balance(localFixture, initializedFeeWindow, mock
     Time.setTimestamp(feeWindowId * mockUniverse.getDisputeRoundDurationInSeconds() + constants.DISPUTE_ROUND_DURATION_SECONDS())
     assert initializedFeeWindow.isOver() == True
     assert mockFeeToken.balanceOf(tester.a1) == feeTokenBalance
-    
+
     assert initializedFeeWindow.redeem(tester.a1) == True
     assert mockReputationToken.getTransferValueFor(tester.a1) == attoToken
 
@@ -185,7 +183,7 @@ def test_fee_window_mint_fee_tokens(localFixture, initializedFeeWindow, mockUniv
     mockUniverse.setIsContainerForReportingParticipant(False)
     with raises(TransactionFailed, message="IReporting Participant needs to be in same Universe"):
         mockInitialReporter.callMintFeeTokens(initializedFeeWindow.address, amount)
-    
+
     mockUniverse.setIsContainerForReportingParticipant(True)
     assert mockInitialReporter.callMintFeeTokens(initializedFeeWindow.address, amount) == True
     assert mockFeeToken.getMintForReportingParticipantTargetValue() == mockInitialReporter.address
@@ -213,6 +211,7 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     mockUniverse.setDisputeRoundDurationInSeconds(5040)
     mockUniverse.setForkingMarket(5040)
     mockUniverse.setForkingMarket(longToHexString(0))
+    mockUniverse.setIsForking(False)
     fixture.contracts["Time"].setTimestamp(feeWindowId)
     feeWindow.initialize(mockUniverse.address, feeWindowId)
     return fixture.createSnapshot()

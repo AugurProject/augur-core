@@ -73,6 +73,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
     function buy(uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(_attotokens > 0);
         require(isActive());
+        require(!universe.isForking());
         getReputationToken().trustedFeeWindowTransfer(msg.sender, this, _attotokens);
         mint(msg.sender, _attotokens);
         return true;
