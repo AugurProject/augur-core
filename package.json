@@ -40,7 +40,7 @@
     "docker:run:deploy:rinkeby": "npm run docker:run:deploy:net -- rinkeby",
     "docker:run:deploy:ropsten": "npm run docker:run:deploy:net -- ropsten",
     "docker:run:deploy:foundation": "npm run docker:run:deploy:net -- foundation",
-    "docker:run:deploy": "npm run docker:run:deploy:rinkeby",
+    "docker:run:deploy": "npm run docker:run:deploy:net -- aura clique rinkeby",
     "docker:shell": "npm run docker:build && npm run docker:run:shell",
     "docker:test:unit": "npm run docker:build && npm run docker:run:test:unit",
     "docker:test:unit:all": "npm run docker:build && npm run docker:run:test:unit:all",
