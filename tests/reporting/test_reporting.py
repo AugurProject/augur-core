@@ -51,12 +51,17 @@ def test_designatedReportHappyPath(localFixture, universe, market):
     with raises(TransactionFailed, message="Cannot finalize twice"):
         market.finalize()
 
-def test_initialReportHappyPath(localFixture, universe, market):
+@mark.parametrize('reportByDesignatedReporter', [
+    True,
+    False
+])
+def test_initialReportHappyPath(reportByDesignatedReporter, localFixture, universe, market):
     # proceed to the initial reporting period
     proceedToInitialReporting(localFixture, market)
 
     # do an initial report as someone other than the designated reporter
-    assert market.doInitialReport([0, market.getNumTicks()], False, sender=tester.k1)
+    sender = tester.k0 if reportByDesignatedReporter else tester.k1
+    assert market.doInitialReport([0, market.getNumTicks()], False, sender=sender)
 
     # the market is now assigned a fee window
     newFeeWindowAddress = market.getFeeWindow()
