@@ -240,9 +240,10 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
     previousREPBalance = reputationToken.balanceOf(scalarMarket.address)
     assert previousREPBalance > 0
+    bonus = previousREPBalance / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR() if finalizeByMigration else 0
     assert scalarMarket.migrateThroughOneFork()
     newUniverseREP = localFixture.applySignature("ReputationToken", newUniverse.getReputationToken())
-    assert newUniverseREP.balanceOf(scalarMarket.address) == previousREPBalance
+    assert newUniverseREP.balanceOf(scalarMarket.address) == previousREPBalance + bonus
 
     # We can finalize this market as well
     proceedToNextRound(localFixture, scalarMarket)
