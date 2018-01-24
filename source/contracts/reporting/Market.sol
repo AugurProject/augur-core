@@ -266,10 +266,13 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         IUniverse _currentUniverse = universe;
         bytes32 _winningForkPayoutDistributionHash = _forkingMarket.getWinningPayoutDistributionHash();
         IUniverse _destinationUniverse = _currentUniverse.getChildUniverse(_winningForkPayoutDistributionHash);
+
         // follow the forking market to its universe
         _destinationUniverse.addMarketTo();
         _currentUniverse.removeMarketFrom();
+        IReputationToken _oldReputationToken = getReputationToken();
         universe = _destinationUniverse;
+
         // reset state back to Initial Reporter
         IInitialReporter _initialParticipant = getInitialReporter();
         if (feeWindow != IFeeWindow(0)) {
@@ -278,6 +281,16 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         delete participants;
         participants.push(_initialParticipant);
         _initialParticipant.resetReportTimestamp();
+
+        // Migrate REP
+        _initialParticipant.migrateREP();
+        IReputationToken _newReputationToken = getReputationToken();
+        uint256 _balance = _oldReputationToken.balanceOf(this);
+        if (_balance > 0) {
+            _oldReputationToken.migrateOut(_newReputationToken, _balance);
+        }
+
+        // Disavow crowdsourcers
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         return true;
     }
