@@ -230,8 +230,27 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
     # We can also purchase Participation Tokens in this fee window
     assert categoricalMarketFeeWindow.buy(1)
 
-    # We can migrate a market that has not had its initial reporting completed as well
+    # We will finalize the categorical market in the new universe
+    feeWindow = localFixture.applySignature('FeeWindow', categoricalMarket.getFeeWindow())
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+
+    assert categoricalMarket.finalize()
+
+    # We can migrate a market that has not had its initial reporting completed as well, and confirm its REP no show bond is in the new universe REP
+    reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
+    previousREPBalance = reputationToken.balanceOf(scalarMarket.address)
+    assert previousREPBalance > 0
+    bonus = previousREPBalance / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR() if finalizeByMigration else 0
     assert scalarMarket.migrateThroughOneFork()
+    newUniverseREP = localFixture.applySignature("ReputationToken", newUniverse.getReputationToken())
+    assert newUniverseREP.balanceOf(scalarMarket.address) == previousREPBalance + bonus
+
+    # We can finalize this market as well
+    proceedToNextRound(localFixture, scalarMarket)
+    feeWindow = localFixture.applySignature('FeeWindow', scalarMarket.getFeeWindow())
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+
+    assert scalarMarket.finalize()
 
 def test_forking_values(localFixture, universe, market, cash):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())

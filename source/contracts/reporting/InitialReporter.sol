@@ -73,6 +73,18 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
         return true;
     }
 
+    function migrateREP() public returns (bool) {
+        require(IMarket(msg.sender) == market);
+        IUniverse _newUniverse = market.getUniverse();
+        IReputationToken _newReputationToken = _newUniverse.getReputationToken();
+        uint256 _balance = reputationToken.balanceOf(this);
+        if (_balance > 0) {
+            reputationToken.migrateOut(_newReputationToken, _balance);
+        }
+        reputationToken = _newReputationToken;
+        return true;
+    }
+
     function getStake() public view returns (uint256) {
         return size;
     }
@@ -96,7 +108,7 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
     function getReputationToken() public view returns (IReputationToken) {
         return reputationToken;
     }
-    
+
     function designatedReporterWasCorrect() public view returns (bool) {
         return payoutDistributionHash == market.getWinningPayoutDistributionHash();
     }
