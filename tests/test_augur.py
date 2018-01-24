@@ -17,16 +17,14 @@ def test_augur_central_authority_for_cash(augur, cash):
         assert cash.balanceOf(testerAddress) == originalTesterBalance - 40
         assert cash.balanceOf(0) == originalVoidBalance + 40
 
+def test_is_known_universe(augur, universe):
+    assert augur.isKnownUniverse(universe.address)
+    assert not augur.isKnownUniverse(augur.address)
+
 @pytest_fixture(scope="session")
-def localSnapshot(fixture, controllerSnapshot):
-    fixture.resetToSnapshot(controllerSnapshot)
-    augur = fixture.uploadAugur()
-    cash = fixture.uploadAndAddToController("../source/contracts/trading/Cash.sol")
-    cash.setController(fixture.contracts['Controller'].address)
-    fixture.approveCentralAuthority()
+def localSnapshot(fixture, kitchenSinkSnapshot):
+    fixture.resetToSnapshot(kitchenSinkSnapshot)
     snapshot = fixture.createSnapshot()
-    snapshot["augur"] = augur
-    snapshot["cash"] = cash
     return snapshot
 
 @pytest_fixture
@@ -36,8 +34,8 @@ def localFixture(fixture, localSnapshot):
 
 @pytest_fixture
 def augur(localFixture, localSnapshot):
-    return localSnapshot["augur"]
+    return localFixture.contracts["Augur"]
 
 @pytest_fixture
 def cash(localFixture, localSnapshot):
-    return localSnapshot["cash"]
+    return localFixture.contracts["Cash"]
