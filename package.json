@@ -59,7 +59,7 @@
     "docker:deploy:foundation": "npm run docker:deploy:net -- foundation",
     "docker:deploy": "npm run docker:deploy:net -- aura clique rinkeby"
   },
-  "devDependencies": {
+  "dependencies": {
     "@types/chai": "4.0.4",
     "@types/chai-as-promised": "7.1.0",
     "@types/get-port": "^3.2.0",
