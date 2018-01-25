@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ "${DEPLOY:-true}" == "true" ]]; then
-  node output/deployment/deployNetworks.js $@
+  node deployment/deployNetworks.js $@
   if [[ "$?" != "0" ]]; then
     echo "Error while deploying contracts to $ETHEREUM_NETWORK, exiting and skipping artifact management"
     exit 1
@@ -17,7 +17,7 @@ else
 fi
 
 if [[ "${RUN_CANNED_MARKETS:-true}" == "true" ]]; then
-  node output/deployment/runCannedMarkets.js $@ || exit 1
+  node deployment/runCannedMarkets.js $@ || exit 1
 else
   echo "Skipping canned markets, set RUN_CANNED_MARKETS=true to do it"
 fi
