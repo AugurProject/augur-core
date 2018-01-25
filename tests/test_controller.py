@@ -14,7 +14,7 @@ def test_whitelists(localFixture, controller):
     whitelistAdditionLog = {"addition": bytesToHexString(tester.a1)}
     with AssertLog(localFixture, "WhitelistAddition", whitelistAdditionLog):
         assert controller.addToWhitelist(tester.a1, sender = tester.k0)
-    
+
     assert controller.assertIsWhitelisted(tester.a1, sender = tester.k2)
     with raises(TransactionFailed): controller.assertIsWhitelisted(tester.a2, sender = tester.k2)
     with raises(TransactionFailed): controller.removeFromWhitelist(tester.a1, sender = tester.k2)
