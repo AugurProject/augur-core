@@ -21,7 +21,7 @@
     "preversion": "npm run build",
     "version": "git add source/libraries/ContractInterfaces.ts",
     "postversion": "cp package.json output/",
-    "dist": "cd output && npm publish",
+    "release": "npm version prerelease && cd output && npm publish",
     "test:unit": "pytest -vv",
     "test:unit:all": "pytest tests -vv",
     "test:integration": "npx mocha output/tests-integration/**/*.js --no-timeouts --require source-map-support/register",
