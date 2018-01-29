@@ -25,6 +25,7 @@ contract Constants {
     uint256 public constant TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR = Reporting.getTargetIncorrectDesignatedReportMarketsDivisor();
     uint256 public constant TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR = Reporting.getTargetDesignatedReportNoShowsDivisor();
     uint256 public constant TARGET_REP_MARKET_CAP_MULTIPLIER = Reporting.getTargetRepMarketCapMultiplier();
+    uint256 public constant TARGET_REP_MARKET_CAP_DIVISOR = Reporting.getTargetRepMarketCapDivisor();
 
     uint256 public constant INITIAL_REP_SUPPLY = Reporting.getInitialREPSupply();
     uint256 public constant FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR = Reporting.getForkMigrationPercentageBonusDivisor();

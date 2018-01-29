@@ -298,7 +298,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getTargetRepMarketCapInAttoeth() public view returns (uint256) {
-        return getOpenInterestInAttoEth() * Reporting.getTargetRepMarketCapMultiplier();
+        return getOpenInterestInAttoEth() * Reporting.getTargetRepMarketCapMultiplier() / Reporting.getTargetRepMarketCapDivisor();
     }
 
     function getOrCacheValidityBond() public onlyInGoodTimes returns (uint256) {

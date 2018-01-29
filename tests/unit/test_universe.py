@@ -102,15 +102,15 @@ def test_universe_contains(localFixture, populatedUniverse, mockMarket, chain, m
     assert populatedUniverse.isContainerForShareToken(mockShareToken.address) == True
 
 def test_open_interest(localFixture, populatedUniverse):
-    multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER()
+    multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER() / float(localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_DIVISOR())
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 0
     assert populatedUniverse.getOpenInterestInAttoEth() == 0
-    populatedUniverse.incrementOpenInterest(10)
-    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 10 * multiplier
+    populatedUniverse.incrementOpenInterest(20)
+    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 20 * multiplier
+    assert populatedUniverse.getOpenInterestInAttoEth() == 20
+    populatedUniverse.decrementOpenInterest(10)
     assert populatedUniverse.getOpenInterestInAttoEth() == 10
-    populatedUniverse.decrementOpenInterest(5)
-    assert populatedUniverse.getOpenInterestInAttoEth() == 5
-    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 5 * multiplier
+    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 10 * multiplier
 
 def test_universe_rep_price_oracle(localFixture, populatedUniverse, mockReputationToken, mockShareToken):
     controller = localFixture.contracts['Controller']
@@ -209,7 +209,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     mockFeeWindowFactory.setCreateFeeWindowValue(previousFeeWindow.address)
     assert populatedUniverse.getOrCreatePreviousFeeWindow() == previousFeeWindow.address
 
-    multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER()
+    multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER() / float(localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_DIVISOR())
     # default value
     defaultValue = 10000
     assert populatedUniverse.getRepMarketCapInAttoeth() == 0
@@ -254,12 +254,12 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
 
     mockReputationToken.setTotalSupply(1)
     repPriceOracle.setRepPriceInAttoEth(1)
-    populatedUniverse.decrementOpenInterest(15)
+    populatedUniverse.decrementOpenInterest(10)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 1
-    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 5 * multiplier
-    assert populatedUniverse.getOpenInterestInAttoEth() == 5
+    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 10 * multiplier
+    assert populatedUniverse.getOpenInterestInAttoEth() == 10
 
-    assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue / 5 * multiplier
+    assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue
 
 def test_universe_create_market(localFixture, chain, populatedUniverse, mockMarket, mockMarketFactory, mockCash, mockReputationToken, mockAugur, mockFeeWindowFactory, mockFeeWindow):
     timestamp = localFixture.contracts["Time"].getTimestamp()
@@ -280,7 +280,7 @@ def test_universe_create_market(localFixture, chain, populatedUniverse, mockMark
     mockMarketFactory.setMarket(mockMarket.address)
 
     newMarket = populatedUniverse.createBinaryMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "description", "info")
-    
+
     assert mockMarketFactory.getCreateMarketUniverseValue() == populatedUniverse.address
     assert populatedUniverse.isContainerForMarket(mockMarket.address)
     assert mockAugur.logMarketCreatedCalled() == True
