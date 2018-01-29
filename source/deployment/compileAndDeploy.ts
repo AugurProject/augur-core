@@ -1,17 +1,23 @@
-import { Configuration } from '../libraries/Configuration';
+import { AccountManager } from '../libraries/AccountManager';
+import { CompilerConfiguration } from '../libraries/CompilerConfiguration';
 import { ContractCompiler } from '../libraries/ContractCompiler';
 import { ContractDeployer } from '../libraries/ContractDeployer';
 import { Connector } from '../libraries/Connector';
-import { AccountManager } from '../libraries/AccountManager';
+import { DeployerConfiguration } from '../libraries/DeployerConfiguration';
+import { NetworkConfiguration } from '../libraries/NetworkConfiguration';
 require('source-map-support').install();
 
 async function doWork(): Promise<void> {
-    const configuration = await Configuration.create();
-    const contractCompiler = new ContractCompiler(configuration);
+    const compilerConfiguration = CompilerConfiguration.create();
+    const contractCompiler = new ContractCompiler(compilerConfiguration);
     const compiledContracts = await contractCompiler.compileContracts();
-    const connector = new Connector(configuration);
-    const accountManager = new AccountManager(configuration, connector);
-    const contractDeployer = new ContractDeployer(configuration, connector, accountManager, compiledContracts);
+
+    const networkConfiguration = NetworkConfiguration.create();
+    const connector = new Connector(networkConfiguration);
+    const accountManager = new AccountManager(networkConfiguration, connector);
+
+    const deployerConfiguration = DeployerConfiguration.create();
+    const contractDeployer = new ContractDeployer(deployerConfiguration, connector, accountManager, compiledContracts);
     await contractDeployer.deploy();
 }
 
