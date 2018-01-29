@@ -11,7 +11,7 @@ export class AccountManager {
     public readonly nonces = new Map<string, BN>();
     public readonly defaultAddress: string;
 
-    constructor(configuration: Configuration, connector: Connector) {
+    constructor(configuration: NetworkConfiguration, connector: Connector) {
         this.connector = connector;
         const account = generate('non entropic entropy for account seed');
         this.accounts.set(account.address, account);
