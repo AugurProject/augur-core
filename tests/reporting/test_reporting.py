@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, AssertLog, EtherDelta
+from utils import longTo32Bytes, captureFilteredLogs, bytesToHexString, TokenDelta, AssertLog, EtherDelta, longToHexString
 from reporting_utils import proceedToDesignatedReporting, proceedToInitialReporting, proceedToNextRound, proceedToFork, finalizeFork
 
 tester.STARTGAS = long(6.7 * 10**6)
@@ -384,6 +384,25 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     assert feeWindow.getNumMarkets() == 1
     assert feeWindow.getNumDesignatedReportNoShows() == 1
 
+def test_rep_migration_convenience_function(localFixture, universe, market):
+    proceedToFork(localFixture, market, universe)
+
+    payoutNumerators = [1, market.getNumTicks()-1]
+    payoutDistributionHash = market.derivePayoutDistributionHash(payoutNumerators, False)
+
+    # Initially child universes don't exist
+    assert universe.getChildUniverse(payoutDistributionHash) == longToHexString(0)
+
+    # We'll use the convenience function for migrating REP instead of manually creating a child universe
+    reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
+
+    assert reputationToken.migrateOut(payoutNumerators, False, 10)
+
+    # We can see that the child universe was created
+    newUniverse = localFixture.applySignature("Universe", universe.getChildUniverse(payoutDistributionHash))
+    newReputationToken = localFixture.applySignature("ReputationToken", newUniverse.getReputationToken())
+    bonus = 10 / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+    assert newReputationToken.balanceOf(tester.a0) == 10 + bonus
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
