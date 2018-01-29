@@ -10,6 +10,7 @@ import { Abi, AbiFunction } from 'ethereum';
 import { DeployerConfiguration } from './DeployerConfiguration';
 import { Connector } from './Connector';
 import { Augur, ContractFactory, Controller, Controlled, Universe } from './ContractInterfaces';
+import { NetworkConfiguration } from './NetworkConfiguration';
 import { AccountManager } from './AccountManager';
 import { Contracts, Contract } from './Contracts';
 
@@ -20,6 +21,22 @@ export class ContractDeployer {
     private readonly contracts: Contracts;
     public controller: Controller;
     public universe: Universe;
+
+    public static deployToNetwork = async (networkConfiguration: NetworkConfiguration, deployerConfiguration: DeployerConfiguration) => {
+        const connector = new Connector(networkConfiguration);
+        const accountManager = new AccountManager(networkConfiguration, connector);
+
+        const compilerOutput = JSON.parse(await readFile(deployerConfiguration.contractInputPath, "utf8"));
+        const contractDeployer = new ContractDeployer(deployerConfiguration, connector, accountManager, compilerOutput);
+
+        console.log(`\n\n-----------------
+Deploying to: ${networkConfiguration.networkName}
+    compiled contracts: ${deployerConfiguration.contractInputPath}
+    contract address: ${deployerConfiguration.contractAddressesOutputPath}
+    upload blocks #s: ${deployerConfiguration.uploadBlockNumbersOutputPath}
+`);
+        await contractDeployer.deploy();
+    }
 
     public constructor(configuration: DeployerConfiguration, connector: Connector, accountManager: AccountManager, compilerOutput: CompilerOutput) {
         this.configuration = configuration;
