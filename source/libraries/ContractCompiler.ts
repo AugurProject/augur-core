@@ -5,16 +5,16 @@ import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
 import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
 import { Abi } from "ethereum";
-import { Configuration } from './Configuration';
+import { CompilerConfiguration } from './CompilerConfiguration';
 
 interface AbiOutput {
     [contract: string]: Abi;
 }
 
 export class ContractCompiler {
-    private readonly configuration: Configuration;
+    private readonly configuration: CompilerConfiguration;
 
-    public constructor(configuration: Configuration) {
+    public constructor(configuration: CompilerConfiguration) {
         this.configuration = configuration
     }
 

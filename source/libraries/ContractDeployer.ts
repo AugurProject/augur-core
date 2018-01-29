@@ -7,7 +7,7 @@ import { TransactionReceipt } from 'ethjs-shared';
 import { stringTo32ByteHex, resolveAll } from "./HelperFunctions";
 import { CompilerOutput } from "solc";
 import { Abi, AbiFunction } from 'ethereum';
-import { Configuration } from './Configuration';
+import { DeployerConfiguration } from './DeployerConfiguration';
 import { Connector } from './Connector';
 import { Augur, ContractFactory, Controller, Controlled, Universe } from './ContractInterfaces';
 import { AccountManager } from './AccountManager';
@@ -15,13 +15,13 @@ import { Contracts, Contract } from './Contracts';
 
 export class ContractDeployer {
     private readonly accountManager: AccountManager;
-    private readonly configuration: Configuration;
+    private readonly configuration: DeployerConfiguration;
     private readonly connector: Connector;
     private readonly contracts: Contracts;
     public controller: Controller;
     public universe: Universe;
 
-    public constructor(configuration: Configuration, connector: Connector, accountManager: AccountManager, compilerOutput: CompilerOutput) {
+    public constructor(configuration: DeployerConfiguration, connector: Connector, accountManager: AccountManager, compilerOutput: CompilerOutput) {
         this.configuration = configuration;
         this.connector = connector;
         this.accountManager = accountManager;
@@ -52,7 +52,7 @@ export class ContractDeployer {
         if (!this.contracts.has(contractName)) throw new Error(`Contract named ${contractName} does not exist.`);
         const contract = this.contracts.get(contractName);
         if (contract.address === undefined) throw new Error(`Contract name ${contractName} has not yet been uploaded.`);
-        const controlled = ContractFactory(this.connector, this.accountManager, contract.address, this.configuration.gasPrice);
+        const controlled = ContractFactory(this.connector, this.accountManager, contract.address, this.connector.gasPrice);
         return controlled;
     }
 
@@ -85,7 +85,7 @@ export class ContractDeployer {
         const address = (this.configuration.controllerAddress !== undefined)
             ? this.configuration.controllerAddress
             : await this.construct(this.contracts.get('Controller'), [], `Uploading Controller.sol`);
-        const controller = new Controller(this.connector, this.accountManager, address, this.configuration.gasPrice);
+        const controller = new Controller(this.connector, this.accountManager, address, this.connector.gasPrice);
         const ownerAddress = await controller.owner_();
         if (ownerAddress.toLowerCase() !== this.accountManager.defaultAddress.toLowerCase()) {
             throw new Error("Controller owner does not equal from address");
@@ -100,7 +100,7 @@ export class ContractDeployer {
         const address = await this.construct(contract, [], `Uploading ${contract.contractName}`);
         const commitHash = await ContractDeployer.getGitCommit();
         const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
-        const augur = new Augur(this.connector, this.accountManager, address, this.configuration.gasPrice);
+        const augur = new Augur(this.connector, this.accountManager, address, this.connector.gasPrice);
         contract.address = address;
         await augur.setController(this.controller.address);
         await this.controller.registerContract(stringTo32ByteHex("Augur"), address, commitHash, bytecodeHash);
@@ -171,8 +171,8 @@ export class ContractDeployer {
         // TODO: remove `gas` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
         const gasEstimate = await this.connector.ethjsQuery.estimateGas({ from: this.accountManager.defaultAddress, data: data });
         const nonce = await this.accountManager.nonces.get(this.accountManager.defaultAddress);
-        const signedTransaction = await this.accountManager.signTransaction({ gas: gasEstimate, gasPrice: this.configuration.gasPrice, data: data});
-        console.log(`Upload contract: ${contract.contractName} nonce: ${nonce}, gas: ${gasEstimate}, gasPrice: ${this.configuration.gasPrice}`);
+        const signedTransaction = await this.accountManager.signTransaction({ gas: gasEstimate, gasPrice: this.connector.gasPrice, data: data});
+        console.log(`Upload contract: ${contract.contractName} nonce: ${nonce}, gas: ${gasEstimate}, gasPrice: ${this.connector.gasPrice}`);
         const transactionHash = await this.connector.ethjsQuery.sendRawTransaction(signedTransaction);
         const receipt = await this.connector.waitForTransactionReceipt(transactionHash, failureDetails);
         console.log(`Uploaded contract: ${contract.contractName}: \"${receipt.contractAddress}\"`);
@@ -224,13 +224,13 @@ export class ContractDeployer {
 
     private async createGenesisUniverse(): Promise<Universe> {
         console.log('Creating genesis universe...');
-        const augur = new Augur(this.connector, this.accountManager, this.getContract("Augur").address, this.configuration.gasPrice);
+        const augur = new Augur(this.connector, this.accountManager, this.getContract("Augur").address, this.connector.gasPrice);
         const universeAddress = await augur.createGenesisUniverse_();
         if (!universeAddress || universeAddress == "0x") {
             throw new Error("Unable to create genesis universe. eth_call failed");
         }
         await augur.createGenesisUniverse();
-        const universe = new Universe(this.connector, this.accountManager, universeAddress, this.configuration.gasPrice);
+        const universe = new Universe(this.connector, this.accountManager, universeAddress, this.connector.gasPrice);
         console.log(`Genesis universe address: ${universe.address}`);
         if (await universe.getTypeName_() !== stringTo32ByteHex("Universe")) {
             throw new Error("Unable to create genesis universe. Get type name failed");
