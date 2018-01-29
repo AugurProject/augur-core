@@ -16,8 +16,3 @@ else
   echo "Skipping pushing build artifacts, set ARTIFACTS=true to do it"
 fi
 
-if [[ "${RUN_CANNED_MARKETS:-true}" == "true" ]]; then
-  node deployment/runCannedMarkets.js $@ || exit 1
-else
-  echo "Skipping canned markets, set RUN_CANNED_MARKETS=true to do it"
-fi
