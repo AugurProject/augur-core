@@ -437,14 +437,14 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(bytes(_description).length > 0);
         _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getCategoricalMarketNumTicks(2));
-        controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, 0, 1, IMarket.MarketType.BINARY);
+        controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, 0, 1 ether, IMarket.MarketType.BINARY);
         return _newMarket;
     }
 
     function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(bytes(_description).length > 0);
         _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint8(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint8(_outcomes.length)));
-        controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, _outcomes, 0, 1, IMarket.MarketType.CATEGORICAL);
+        controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, _outcomes, 0, 1 ether, IMarket.MarketType.CATEGORICAL);
         return _newMarket;
     }
 
