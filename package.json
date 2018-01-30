@@ -5,6 +5,8 @@
   "author": "The Augur Developers <tam@augur.net>",
   "repository": "http://github.com/AugurProject/augur-core",
   "main": "output/index.js",
+  "module": "output/index.js",
+  "browser": "output/browser.js",
   "license": {
     "type": "GPL-3.0",
     "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
