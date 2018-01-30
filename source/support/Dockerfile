@@ -31,7 +31,6 @@ COPY source/libraries/DeployerConfiguration.ts /app/source/libraries/DeployerCon
 COPY source/libraries/NetworkConfiguration.ts /app/source/libraries/NetworkConfiguration.ts
 COPY source/libraries/ContractCompiler.ts /app/source/libraries/ContractCompiler.ts
 COPY package.json /app/package.json
-COPY package-lock.json /app/package-lock.json
 
 RUN npm install
 
