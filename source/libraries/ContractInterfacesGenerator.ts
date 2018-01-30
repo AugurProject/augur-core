@@ -2,14 +2,14 @@ import * as fs from "async-file";
 import { Abi, AbiFunction, Primitive } from 'ethereum';
 import { ContractCompiler } from "./ContractCompiler";
 import { CompilerOutput, CompilerOutputContracts } from "solc";
-import { Configuration } from './Configuration';
+import { CompilerConfiguration } from './CompilerConfiguration';
 
 
 export class ContractInterfaceGenerator {
     private readonly compiler: ContractCompiler;
-    private readonly configuration: Configuration;
+    private readonly configuration: CompilerConfiguration;
 
-    public constructor(configuration: Configuration, compiler: ContractCompiler) {
+    public constructor(configuration: CompilerConfiguration, compiler: ContractCompiler) {
         this.compiler = compiler;
         this.configuration = configuration;
     }

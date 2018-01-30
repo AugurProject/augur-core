@@ -24,7 +24,7 @@ export class ContractDeployer {
 
     public static deployToNetwork = async (networkConfiguration: NetworkConfiguration, deployerConfiguration: DeployerConfiguration) => {
         const connector = new Connector(networkConfiguration);
-        const accountManager = new AccountManager(networkConfiguration, connector);
+        const accountManager = new AccountManager(connector, networkConfiguration.privateKey);
 
         const compilerOutput = JSON.parse(await readFile(deployerConfiguration.contractInputPath, "utf8"));
         const contractDeployer = new ContractDeployer(deployerConfiguration, connector, accountManager, compilerOutput);
