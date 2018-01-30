@@ -3,7 +3,6 @@ import { Account, generate, privateToAccount } from 'ethjs-account';
 import { Transaction } from 'ethjs-shared';
 import { sign } from 'ethjs-signer';
 import { Connector } from './Connector';
-import { NetworkConfiguration } from './NetworkConfiguration';
 
 export class AccountManager {
     private readonly connector: Connector;
@@ -11,13 +10,14 @@ export class AccountManager {
     public readonly nonces = new Map<string, BN>();
     public readonly defaultAddress: string;
 
-    constructor(configuration: NetworkConfiguration, connector: Connector) {
+    constructor(connector: Connector, privateKey?: string) {
         this.connector = connector;
         const account = generate('non entropic entropy for account seed');
         this.accounts.set(account.address, account);
         this.defaultAddress = account.address;
-        if (typeof configuration.privateKey !== 'undefined') {
-            this.defaultAddress = this.addAccount(configuration.privateKey);
+
+        if (typeof privateKey !== 'undefined') {
+            this.defaultAddress = this.addAccount(privateKey);
         }
     }
 

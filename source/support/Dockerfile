@@ -26,8 +26,9 @@ COPY tsconfig.json /app/tsconfig.json
 COPY typings/ /app/typings/
 COPY source/contracts/ /app/source/contracts/
 COPY source/deployment/compileContracts.ts /app/source/deployment/compileContracts.ts
-COPY source/libraries/Configuration.ts /app/source/libraries/Configuration.ts
-COPY source/libraries/NetworkConfigurations.ts /app/source/libraries/NetworkConfigurations.ts
+COPY source/libraries/CompilerConfiguration.ts /app/source/libraries/CompilerConfiguration.ts
+COPY source/libraries/DeployerConfiguration.ts /app/source/libraries/DeployerConfiguration.ts
+COPY source/libraries/NetworkConfiguration.ts /app/source/libraries/NetworkConfiguration.ts
 COPY source/libraries/ContractCompiler.ts /app/source/libraries/ContractCompiler.ts
 COPY package.json /app/package.json
 COPY package-lock.json /app/package-lock.json
@@ -44,11 +45,6 @@ COPY source/tools/generateContractInterfaces.ts /app/source/tools/generateContra
 # Build contract interfaces
 RUN npm run build:source
 RUN npm run build:interfaces
-
-COPY ./support/deploy/deploy.sh /app/support/deploy/deploy.sh
-COPY ./support/deploy/run.sh /app/support/deploy/run.sh
-COPY ./support/artifacts/run.sh /app/support/artifacts/run.sh
-COPY ./support/.npmrc /root/.npmrc.deploy
 
 # Copy source
 COPY source/ /app/source/
