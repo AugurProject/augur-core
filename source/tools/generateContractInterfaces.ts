@@ -2,11 +2,11 @@
 
 require('source-map-support').install();
 import { ContractCompiler } from "../libraries/ContractCompiler";
-import { Configuration } from '../libraries/Configuration';
+import { CompilerConfiguration } from '../libraries/CompilerConfiguration';
 import { ContractInterfaceGenerator } from '../libraries/ContractInterfacesGenerator';
 
 async function doWork(): Promise<void> {
-    const configuration = await Configuration.create();
+    const configuration = await CompilerConfiguration.create();
     const compiler: ContractCompiler = new ContractCompiler(configuration);
     const interfacesGenerator: ContractInterfaceGenerator = new ContractInterfaceGenerator(configuration, compiler);
     await interfacesGenerator.generateContractInterfaces();

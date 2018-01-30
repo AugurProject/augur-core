@@ -14,7 +14,7 @@ async function doWork(): Promise<void> {
 
     const networkConfiguration = NetworkConfiguration.create();
     const connector = new Connector(networkConfiguration);
-    const accountManager = new AccountManager(networkConfiguration, connector);
+    const accountManager = new AccountManager(connector, networkConfiguration.privateKey);
 
     const deployerConfiguration = DeployerConfiguration.create();
     const contractDeployer = new ContractDeployer(deployerConfiguration, connector, accountManager, compiledContracts);
