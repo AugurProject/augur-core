@@ -12,11 +12,11 @@ case "$environment" in
       -e DEPLOY \
       -e ARTIFACTS \
       --entrypoint "bash"  \
-      augurproject/augur-core:latest -- /app/support/deploy/deploy.sh $@
+      augurproject/augur-core:latest -- /app/source/support/deploy/deploy.sh $@
     ;;
   "direct")
     echo "Deploying to $@"
-    bash support/deploy/deploy.sh $@
+    bash ./source/support/deploy/deploy.sh $@
     ;;
   *)
     echo "Must specifiy either docker or direct as first argument"
