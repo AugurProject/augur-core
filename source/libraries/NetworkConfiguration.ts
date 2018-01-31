@@ -77,6 +77,7 @@ export class NetworkConfiguration {
     public static create(networkName: string="environment"): NetworkConfiguration {
         const network = networks[networkName];
 
+        if (networkName == "environment") networkName = "ethereum"
         if (network === undefined || network === null) throw new Error(`Network configuration ${networkName} not found`);
         if (network.privateKey === undefined || network.privateKey === null) throw new Error(`Network configuration for ${networkName} has no private key available. Check that this key is in the environment ${networkName.toUpperCase()}_PRIVATE_KEY`);
 
