@@ -15,7 +15,7 @@ export class DeployerConfiguration {
 
         this.contractAddressesOutputPath = path.join(artifactOutputRoot, 'addresses.json');
         this.uploadBlockNumbersOutputPath = path.join(artifactOutputRoot, 'upload-block-numbers.json');
-        this.contractInputPath = path.join(contractInputRoot, 'addresses.json');
+        this.contractInputPath = path.join(contractInputRoot, 'contracts.json');
     }
 
     public static create(isProduction: boolean=false): DeployerConfiguration {
