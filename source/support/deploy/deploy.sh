@@ -10,9 +10,3 @@ else
   echo "Skipping deploy, set DEPLOY=true to do it"
 fi
 
-if [[ "${ARTIFACTS:-true}" == "true" ]]; then
-  npm run artifacts -- $@ || exit 1
-else
-  echo "Skipping pushing build artifacts, set ARTIFACTS=true to do it"
-fi
-
