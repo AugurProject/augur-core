@@ -5,10 +5,13 @@ import { NetworkConfiguration } from "../libraries/NetworkConfiguration";
 import { DeployerConfiguration } from "../libraries/DeployerConfiguration";
 
 export async function deployToNetworks(networks: Array<string>) {
+    // Create all network configs up front so that an error in any of them
+    // causes us to die
+    const networkConfigurations = networks.map(NetworkConfiguration.create);
     const deployerConfiguration = DeployerConfiguration.create();
-    for(let network of networks) {
+    for(let network of networkConfigurations) {
         // Deploy sequentially
-        await ContractDeployer.deployToNetwork(NetworkConfiguration.create(network), deployerConfiguration);
+        await ContractDeployer.deployToNetwork(network, deployerConfiguration);
     }
 }
 
