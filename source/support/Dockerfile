@@ -53,3 +53,4 @@ COPY tests/ /app/tests/
 RUN npm run build:source
 COPY .git/ /app/.git/
 
+ENTRYPOINT ["npm"]
