@@ -22,10 +22,13 @@ contract IOrders {
     function getWorstOrderId(Order.Types _type, IMarket _market, uint8 _outcome) public view returns (bytes32);
     function getLastOutcomePrice(IMarket _market, uint8 _outcome) public view returns (uint256);
     function getOrderId(Order.Types _type, IMarket _market, uint256 _fxpAmount, uint256 _price, address _sender, uint256 _blockNumber, uint8 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed) public view returns (bytes32);
+    function getTotalEscrowed(IMarket _market) public view returns (uint256);
     function isBetterPrice(Order.Types _type, uint256 _price, bytes32 _orderId) public view returns (bool);
     function isWorsePrice(Order.Types _type, uint256 _price, bytes32 _orderId) public view returns (bool);
     function assertIsNotBetterPrice(Order.Types _type, uint256 _price, bytes32 _betterOrderId) public view returns (bool);
     function assertIsNotWorsePrice(Order.Types _type, uint256 _price, bytes32 _worseOrderId) public returns (bool);
     function fillOrder(bytes32 _orderId, uint256 _sharesFilled, uint256 _tokensFilled) public returns (bool);
     function setPrice(IMarket _market, uint8 _outcome, uint256 _price) external returns (bool);
+    function incrementTotalEscrowed(IMarket _market, uint256 _amount) external returns (bool);
+    function decrementTotalEscrowed(IMarket _market, uint256 _amount) external returns (bool);
 }

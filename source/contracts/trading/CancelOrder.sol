@@ -44,6 +44,8 @@ contract CancelOrder is CashAutoConverter, Extractable, ReentrancyGuard, MarketV
         _orders.removeOrder(_orderId);
 
         refundOrder(msg.sender, _type, _sharesEscrowed, _moneyEscrowed, _market, _outcome);
+        _orders.decrementTotalEscrowed(_market, _moneyEscrowed);
+        _market.assertBalances();
 
         controller.getAugur().logOrderCanceled(_market.getUniverse(), _market.getShareToken(_outcome), msg.sender, _orderId, _type, _moneyEscrowed, _sharesEscrowed);
 

@@ -468,6 +468,23 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return false;
     }
 
+    function assertBalances() public view returns (bool) {
+        // Escrowed funds for open orders
+        uint256 _expectedBalance = IOrders(controller.lookup("Orders")).getTotalEscrowed(this);
+        // Market Open Interest. If we're finalized we need actually calculate the value
+        if (isFinalized()) {
+            IReportingParticipant _winningReportingPartcipant = getWinningReportingParticipant();
+            for (uint8 i = 0; i < numOutcomes; i++) {
+                _expectedBalance += shareTokens[i].totalSupply() * _winningReportingPartcipant.getPayoutNumerator(i);
+            }
+        } else {
+            _expectedBalance += shareTokens[0].totalSupply() * numTicks;
+        }
+
+        assert(cash.balanceOf(this) == _expectedBalance);
+        return true;
+    }
+
     // Markets hold the initial fees paid by the creator in ETH and REP, so we dissallow ETH and REP extraction by the controller
     function getProtectedTokens() internal returns (address[] memory) {
         address[] memory _protectedTokens = new address[](numOutcomes + 3);

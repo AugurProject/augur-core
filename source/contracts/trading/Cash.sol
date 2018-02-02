@@ -20,11 +20,13 @@ contract Cash is DelegationTarget, Extractable, ITyped, VariableSupplyToken, ICa
 
     function depositEther() external payable onlyInGoodTimes returns(bool) {
         mint(msg.sender, msg.value);
+        assert(this.balance == totalSupply());
         return true;
     }
 
     function depositEtherFor(address _to) external payable onlyInGoodTimes returns(bool) {
         mint(_to, msg.value);
+        assert(this.balance == totalSupply());
         return true;
     }
 
@@ -32,6 +34,7 @@ contract Cash is DelegationTarget, Extractable, ITyped, VariableSupplyToken, ICa
         require(_amount > 0 && _amount <= balances[msg.sender]);
         burn(msg.sender, _amount);
         require(msg.sender.call.value(_amount)());
+        assert(this.balance == totalSupply());
         return true;
     }
 
@@ -39,6 +42,7 @@ contract Cash is DelegationTarget, Extractable, ITyped, VariableSupplyToken, ICa
         require(_amount > 0 && _amount <= balances[msg.sender]);
         burn(msg.sender, _amount);
         require(_to.call.value(_amount)());
+        assert(this.balance == totalSupply());
         return true;
     }
 

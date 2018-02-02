@@ -19,19 +19,27 @@ contract Trade is CashAutoConverter, Extractable, ReentrancyGuard, MarketValidat
     uint256 private constant MINIMUM_GAS_NEEDED = 500000;
 
     function publicBuy(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
-        return trade(msg.sender, Order.TradeDirections.Long, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
+        bytes32 _result = trade(msg.sender, Order.TradeDirections.Long, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
+        _market.assertBalances();
+        return _result;
     }
 
     function publicSell(IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
-        return trade(msg.sender, Order.TradeDirections.Short, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
+        bytes32 _result = trade(msg.sender, Order.TradeDirections.Short, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
+        _market.assertBalances();
+        return _result;
     }
 
     function publicTrade(Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes nonReentrant returns (bytes32) {
-        return trade(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
+        bytes32 _result = trade(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
+        _market.assertBalances();
+        return _result;
     }
 
     function publicTakeBestOrder(Order.TradeDirections _direction, IMarket _market, uint8 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes nonReentrant returns (uint256) {
-        return fillBestOrder(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
+        uint256 _result = fillBestOrder(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
+        _market.assertBalances();
+        return _result;
     }
 
     // CONSIDER: We may want to return multiple values here to indicate success and the order id seperately.
