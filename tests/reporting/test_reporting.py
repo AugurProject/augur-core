@@ -396,7 +396,7 @@ def test_rep_migration_convenience_function(localFixture, universe, market):
     # We'll use the convenience function for migrating REP instead of manually creating a child universe
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
 
-    assert reputationToken.migrateOut(payoutNumerators, False, 10)
+    assert reputationToken.migrateOutByPayout(payoutNumerators, False, 10)
 
     # We can see that the child universe was created
     newUniverse = localFixture.applySignature("Universe", universe.getChildUniverse(payoutDistributionHash))
