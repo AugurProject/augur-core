@@ -279,7 +279,7 @@ Deploying to: ${networkConfiguration.networkName}
             addressMapping = JSON.parse(existingAddressFileData);
         }
         addressMapping[networkId] = mapping;
-        return JSON.stringify(addressMapping, null, '\t');
+        return JSON.stringify(addressMapping, null, ' ');
     }
 
     private async generateAddressMappingFile(): Promise<void> {
@@ -297,7 +297,7 @@ Deploying to: ${networkConfiguration.networkName}
             blockNumberMapping = JSON.parse(existingBlockNumberData);
         }
         blockNumberMapping[networkId] = blockNumber;
-        return JSON.stringify(blockNumberMapping, null, '\t');
+        return JSON.stringify(blockNumberMapping, null, '  ');
     }
 
     private async generateUploadBlockNumberFile(blockNumber: number): Promise<void> {
