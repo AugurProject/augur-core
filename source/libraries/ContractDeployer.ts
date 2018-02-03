@@ -2,6 +2,7 @@ import { hash } from 'crypto-promise';
 import { Repository } from 'nodegit';
 import { resolve as resolvePath } from 'path';
 import { exists, readFile, writeFile } from "async-file";
+import { exec } from 'child_process';
 import { encodeParams } from 'ethjs-abi';
 import { TransactionReceipt } from 'ethjs-shared';
 import { stringTo32ByteHex, resolveAll } from "./HelperFunctions";
@@ -74,10 +75,27 @@ Deploying to: ${networkConfiguration.networkName}
     }
 
     private static async getGitCommit(): Promise<string> {
-        const repositoryRootPath = resolvePath(__dirname, '..', '..');
-        const repository = await Repository.open(repositoryRootPath);
-        const headCommit = await repository.getHeadCommit();
-        return `0x${headCommit.sha()}`;
+        try {
+            const repositoryRootPath = resolvePath(__dirname, '..', '..');
+            const repository = await Repository.open(repositoryRootPath);
+            const headCommit = await repository.getHeadCommit();
+            return `0x${headCommit.sha()}`;
+        } catch(e) {
+            if (!e.message.match(/could not find repository/)) {
+                throw e;
+            }
+        }
+
+        // If we couldn't get the hash from a git repo, try to get it from NPM
+        return await new Promise<string>( (resolve, reject) => {
+            exec("npm show . gitHead", (error, stdout, stderr) => {
+                if (error) {
+                    console.log(stderr);
+                    return reject(error);
+                }
+                resolve(`0x${stdout.trim()}`);
+            });
+        });
     }
 
     private static async getBytecodeSha(bytecode: Buffer): Promise<string> {
