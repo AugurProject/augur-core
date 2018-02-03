@@ -1,5 +1,6 @@
 import * as path from 'path';
 
+const ARTIFACT_OUTPUT_ROOT  = (typeof process.env.ARTIFACT_OUTPUT_ROOT === 'undefined') ? path.join(__dirname, '../../output/contracts') : path.normalize(<string> process.env.ARTIFACT_OUTPUT_ROOT);
 export class DeployerConfiguration {
     public readonly contractInputPath: string;
     public readonly contractAddressesOutputPath: string;
@@ -18,14 +19,12 @@ export class DeployerConfiguration {
         this.contractInputPath = path.join(contractInputRoot, 'contracts.json');
     }
 
-    public static create(isProduction: boolean=false): DeployerConfiguration {
+    public static create(artifactOutputRoot: string=ARTIFACT_OUTPUT_ROOT, isProduction: boolean=false): DeployerConfiguration {
         const contractInputRoot = (typeof process.env.CONTRACT_INPUT_ROOT === 'undefined') ? path.join(__dirname, '../../output/contracts') : path.normalize(<string> process.env.CONTRACT_INPUT_ROOT);
-        const artifactOutputRoot = (typeof process.env.ARTIFACT_OUTPUT_ROOT === 'undefined') ? path.join(__dirname, '../../output/contracts') : path.normalize(<string> process.env.ARTIFACT_OUTPUT_ROOT);
         const controllerAddress = process.env.AUGUR_CONTROLLER_ADDRESS;
         const createGenesisUniverse = (typeof process.env.CREATE_GENESIS_UNIVERSE === 'undefined') ? true : process.env.CREATE_GENESIS_UNIVERSE === 'true';
         const useNormalTime = (typeof process.env.USE_NORMAL_TIME === 'string') ? process.env.USE_NORMAL_TIME === 'true' : true;
 
         return new DeployerConfiguration(contractInputRoot, artifactOutputRoot, controllerAddress, createGenesisUniverse, isProduction, useNormalTime);
     }
-
 }
