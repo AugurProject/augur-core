@@ -10,7 +10,7 @@ export class Connector {
     public readonly gasPrice: BN;
 
     constructor(configuration: NetworkConfiguration) {
-        const ethjsHttpProvider = new EthjsHttpProvider(`http://${configuration.host}:${configuration.port}`);
+        const ethjsHttpProvider = new EthjsHttpProvider(configuration.http);
         this.ethjsQuery = new EthjsQuery(ethjsHttpProvider);
         this.gasPrice = configuration.gasPrice;
     }

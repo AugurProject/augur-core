@@ -2,8 +2,8 @@ import BN = require('bn.js');
 
 type NetworkOptions = {
     isProduction: boolean;
-    host: string;
-    port: number;
+    http: string;
+    ws?: string;
     privateKey: string | undefined;
     gasPrice: BN;
 }
@@ -15,43 +15,38 @@ type Networks = {
 const networks: Networks = {
     ropsten: {
         isProduction: false,
-        host: "ropsten.ethereum.nodes.augur.net",
-        port: 80,
+        http: "http://ropsten.ethereum.nodes.augur.net",
         privateKey: process.env.ROPSTEN_PRIVATE_KEY,
         gasPrice: new BN(20*1000000000)
     },
     kovan: {
         isProduction: false,
-        host: "kovan.ethereum.nodes.augur.net",
-        port: 80,
+        http: "http://kovan.ethereum.nodes.augur.net",
         privateKey: process.env.KOVAN_PRIVATE_KEY,
         gasPrice: new BN(1)
     },
     rinkeby: {
         isProduction: false,
-        host: "rinkeby.ethereum.nodes.augur.net",
-        port: 80,
+        http: "http://rinkeby.ethereum.nodes.augur.net",
+        ws: "http://websocket-rinkeby.ethereum.nodes.augur.net",
         privateKey: process.env.RINKEBY_PRIVATE_KEY,
         gasPrice: new BN(31*1000000000)
     },
     clique: {
         isProduction: false,
-        host: "clique.ethereum.nodes.augur.net",
-        port: 80,
+        http: "http://clique.ethereum.nodes.augur.net",
         privateKey: "fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
         gasPrice: new BN(1)
     },
     aura: {
         isProduction: false,
-        host: "aura.ethereum.nodes.augur.net",
-        port: 80,
+        http: "http://aura.ethereum.nodes.augur.net",
         privateKey: "fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
         gasPrice: new BN(1)
     },
     environment: {
         isProduction: process.env.PRODUCTION === "true" || false,
-        host: process.env.ETHEREUM_HOST || "localhost",
-        port: (typeof process.env.ETHEREUM_PORT === "string") ? parseInt(process.env.ETHEREUM_PORT!) : 8545,
+        http: process.env.ETHEREUM_HTTP || "http://localhost:8545",
         privateKey: process.env.ETHEREUM_PRIVATE_KEY,
         gasPrice: ((typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? new BN(20) : new BN(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH!)).mul(new BN(1000000000))
     }
@@ -59,16 +54,16 @@ const networks: Networks = {
 
 export class NetworkConfiguration {
     public readonly networkName: string;
-    public readonly host: string;
-    public readonly port: number;
-    public readonly privateKey: string | undefined;
+    public readonly http: string;
+    public readonly ws?: string;
+    public readonly privateKey?: string;
     public readonly gasPrice: BN;
     public readonly isProduction: boolean;
 
-    public constructor(networkName: string, host: string, port: number, gasPrice: BN, privateKey: string, isProduction: boolean) {
+    public constructor(networkName: string, http: string, ws: string | undefined, gasPrice: BN, privateKey: string, isProduction: boolean) {
         this.networkName = networkName;
-        this.host = host;
-        this.port = port;
+        this.http = http;
+        this.ws = ws;
         this.gasPrice = gasPrice;
         this.privateKey = privateKey;
         this.isProduction = isProduction;
@@ -77,11 +72,10 @@ export class NetworkConfiguration {
     public static create(networkName: string="environment"): NetworkConfiguration {
         const network = networks[networkName];
 
-        if (networkName == "environment") networkName = "ethereum"
         if (network === undefined || network === null) throw new Error(`Network configuration ${networkName} not found`);
-        if (network.privateKey === undefined || network.privateKey === null) throw new Error(`Network configuration for ${networkName} has no private key available. Check that this key is in the environment ${networkName.toUpperCase()}_PRIVATE_KEY`);
+        if (network.privateKey === undefined || network.privateKey === null) throw new Error(`Network configuration for ${networkName} has no private key available. Check that this key is in the environment ${networkName == "environment" ? "ETHEREUM" : networkName.toUpperCase()}_PRIVATE_KEY`);
 
-        return new NetworkConfiguration(networkName, network.host, network.port, network.gasPrice, network.privateKey, network.isProduction);
+        return new NetworkConfiguration(networkName, network.http, network.ws, network.gasPrice, network.privateKey, network.isProduction);
     }
 }
 
