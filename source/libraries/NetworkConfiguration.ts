@@ -35,13 +35,13 @@ const networks: Networks = {
     clique: {
         isProduction: false,
         http: "http://clique.ethereum.nodes.augur.net",
-        privateKey: "fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
+        privateKey: process.env.CLIQUE_PRIVATE_KEY || "fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
         gasPrice: new BN(1)
     },
     aura: {
         isProduction: false,
         http: "http://aura.ethereum.nodes.augur.net",
-        privateKey: "fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
+        privateKey: process.env.AURA_PRIVATE_KEY || "fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
         gasPrice: new BN(1)
     },
     environment: {
