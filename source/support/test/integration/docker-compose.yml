@@ -9,7 +9,7 @@ services:
   parity-integration-tests:
     build:
       context: ../../../../
-      dockerfile: support/Dockerfile
+      dockerfile: source/support/Dockerfile
     entrypoint: [ "npm", "run", "test:integration" ]
     # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--", "--debug=0.0.0.0:9229", "--inspect-brk" ]
@@ -31,7 +31,7 @@ services:
   geth-integration-tests:
     build:
       context: ../../../../
-      dockerfile: support/Dockerfile
+      dockerfile: source/support/Dockerfile
     entrypoint: [ "npm", "run", "test:integration" ]
     # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--", "--debug=0.0.0.0:9229", "--inspect-brk" ]
