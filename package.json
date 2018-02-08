@@ -5,6 +5,7 @@
   "author": "The Augur Developers <tam@augur.net>",
   "repository": "http://github.com/AugurProject/augur-core",
   "main": "output/index.js",
+  "types": "output/index.d.ts",
   "module": "output/index.js",
   "browser": "output/browser.js",
   "license": {
