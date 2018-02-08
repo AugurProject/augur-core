@@ -20,6 +20,7 @@
         "allowUnreachableCode": false,
         "allowUnusedLabels": false,
         "forceConsistentCasingInFileNames": true,
+        "declaration": true,
         "noImplicitAny": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitReturns": true,
