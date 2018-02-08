@@ -6,6 +6,10 @@
         "sourceMap": true,
         "outDir": "output",
         "rootDir": "source",
+        "typeRoots": [
+          "node_modules/@types",
+          "typings"
+        ],
         "paths": {
             "*": [
                 "./typings/*"
