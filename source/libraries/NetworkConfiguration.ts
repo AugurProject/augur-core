@@ -47,6 +47,7 @@ const networks: Networks = {
     environment: {
         isProduction: process.env.PRODUCTION === "true" || false,
         http: process.env.ETHEREUM_HTTP || "http://localhost:8545",
+        ws: process.env.ETHEREUM_WS || "http://localhost:8546",
         privateKey: process.env.ETHEREUM_PRIVATE_KEY || "fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
         gasPrice: ((typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? new BN(20) : new BN(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH!)).mul(new BN(1000000000))
     }
