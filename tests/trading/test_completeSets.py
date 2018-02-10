@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
-from utils import bytesToHexString, fix, captureFilteredLogs
+from utils import bytesToHexString, fix, AssertLog
 from constants import YES, NO
 
 def test_publicBuyCompleteSets(contractsFixture, universe, cash, market):
@@ -19,7 +19,14 @@ def test_publicBuyCompleteSets(contractsFixture, universe, cash, market):
     assert universe.getOpenInterestInAttoEth() == 0
 
     cost = 10 * market.getNumTicks()
-    assert completeSets.publicBuyCompleteSets(market.address, 10, sender=tester.k1, value=cost)
+    completeSetsPurchasedLog = {
+        "universe": universe.address,
+        "market": market.address,
+        "account": bytesToHexString(tester.a1),
+        "numCompleteSets": 10
+    }
+    with AssertLog(contractsFixture, "CompleteSetsPurchased", completeSetsPurchasedLog):
+        assert completeSets.publicBuyCompleteSets(market.address, 10, sender=tester.k1, value=cost)
 
     assert yesShareToken.balanceOf(tester.a1) == 10, "Should have 10 shares of outcome 1"
     assert noShareToken.balanceOf(tester.a1) == 10, "Should have 10 shares of outcome 2"
@@ -63,7 +70,16 @@ def test_publicSellCompleteSets(contractsFixture, universe, cash, market):
     assert universe.getOpenInterestInAttoEth() == 10 * market.getNumTicks()
     initialTester1ETH = contractsFixture.chain.head_state.get_balance(tester.a1)
     initialTester0ETH = contractsFixture.chain.head_state.get_balance(tester.a0)
-    result = completeSets.publicSellCompleteSets(market.address, 9, sender=tester.k1)
+
+    completeSetsSoldLog = {
+        "universe": universe.address,
+        "market": market.address,
+        "account": bytesToHexString(tester.a1),
+        "numCompleteSets": 9
+    }
+    with AssertLog(contractsFixture, "CompleteSetsSold", completeSetsSoldLog):
+        result = completeSets.publicSellCompleteSets(market.address, 9, sender=tester.k1)
+
     assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
 
     assert yesShareToken.balanceOf(tester.a1) == 1, "Should have 1 share of outcome yes"

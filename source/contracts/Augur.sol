@@ -30,6 +30,8 @@ contract Augur is Controlled, Extractable, IAugur {
     // The ordering here is to match functions higher in the call chain to avoid stack depth issues
     event OrderCreated(Order.Types orderType, uint256 amount, uint256 price, address indexed creator, uint256 moneyEscrowed, uint256 sharesEscrowed, bytes32 tradeGroupId, bytes32 orderId, address indexed universe, address indexed shareToken);
     event OrderFilled(address indexed universe, address indexed shareToken, address filler, bytes32 orderId, uint256 numCreatorShares, uint256 numCreatorTokens, uint256 numFillerShares, uint256 numFillerTokens, uint256 marketCreatorFees, uint256 reporterFees, bytes32 tradeGroupId);
+    event CompleteSetsPurchased(address indexed universe, address indexed market, address indexed account, uint256 numCompleteSets);
+    event CompleteSetsSold(address indexed universe, address indexed market, address indexed account, uint256 numCompleteSets);
     event TradingProceedsClaimed(address indexed universe, address indexed shareToken, address indexed sender, address market, uint256 numShares, uint256 numPayoutTokens, uint256 finalTokenBalance);
     event TokensTransferred(address indexed universe, address indexed token, address indexed from, address to, uint256 value);
     event TokensMinted(address indexed universe, address indexed token, address indexed target, uint256 amount);
@@ -151,6 +153,16 @@ contract Augur is Controlled, Extractable, IAugur {
 
     function logOrderFilled(IUniverse _universe, address _shareToken, address _filler, bytes32 _orderId, uint256 _numCreatorShares, uint256 _numCreatorTokens, uint256 _numFillerShares, uint256 _numFillerTokens, uint256 _marketCreatorFees, uint256 _reporterFees, bytes32 _tradeGroupId) public onlyWhitelistedCallers returns (bool) {
         OrderFilled(_universe, _shareToken, _filler, _orderId, _numCreatorShares, _numCreatorTokens, _numFillerShares, _numFillerTokens, _marketCreatorFees, _reporterFees, _tradeGroupId);
+        return true;
+    }
+
+    function logCompleteSetsPurchased(IUniverse _universe, IMarket _market, address _account, uint256 _numCompleteSets) public onlyWhitelistedCallers returns (bool) {
+        CompleteSetsPurchased(_universe, _market, _account, _numCompleteSets);
+        return true;
+    }
+
+    function logCompleteSetsSold(IUniverse _universe, IMarket _market, address _account, uint256 _numCompleteSets) public onlyWhitelistedCallers returns (bool) {
+        CompleteSetsSold(_universe, _market, _account, _numCompleteSets);
         return true;
     }
 
