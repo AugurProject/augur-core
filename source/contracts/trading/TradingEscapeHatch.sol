@@ -35,7 +35,7 @@ contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter,
         return true;
     }
 
-    function getFrozenShareValue(IMarket _market, uint8 _numOutcomes, uint8 _outcome) internal returns(uint256) {
+    function getFrozenShareValue(IMarket _market, uint8 _numOutcomes, uint8 _outcome) public onlyInBadTimes returns(uint256) {
         require(_outcome < _numOutcomes);
 
         if (frozenShareValues[_market][_outcome] != 0) {
