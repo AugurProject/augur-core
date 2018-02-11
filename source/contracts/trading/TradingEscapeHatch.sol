@@ -19,8 +19,15 @@ contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter,
     mapping(address => mapping(uint8 => uint256)) private frozenShareValues;
 
     function claimSharesInUpdate(IMarket _market) public marketIsLegit(_market) convertToAndFromCash onlyInBadTimes returns(bool) {
-        uint8 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _marketCurrency = _market.getDenominationToken();
+        uint256 _amountToTransfer = getFozenShareValueInMarket(_market);
+        require(_marketCurrency.transferFrom(_market, msg.sender, _amountToTransfer));
+        return true;
+    }
+
+    function getFozenShareValueInMarket(IMarket _market) public onlyInBadTimes returns (uint256) {
+        uint8 _numOutcomes = _market.getNumberOfOutcomes();
+        uint256 _frozenShareValueInMarket = 0;
 
         for (uint8 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
             IShareToken _shareToken = _market.getShareToken(_outcome);
@@ -28,14 +35,13 @@ contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter,
             if (_sharesOwned > 0) {
                 uint256 _frozenShareValue = getFrozenShareValue(_market, _numOutcomes, _outcome);
                 _shareToken.destroyShares(msg.sender, _sharesOwned);
-                uint256 _amountToTransfer = _sharesOwned.mul(_frozenShareValue);
-                require(_marketCurrency.transferFrom(_market, msg.sender, _amountToTransfer));
+                _frozenShareValueInMarket += _sharesOwned.mul(_frozenShareValue);
             }
         }
-        return true;
+        return _frozenShareValueInMarket;
     }
 
-    function getFrozenShareValue(IMarket _market, uint8 _numOutcomes, uint8 _outcome) public onlyInBadTimes returns(uint256) {
+    function getFrozenShareValue(IMarket _market, uint8 _numOutcomes, uint8 _outcome) internal returns(uint256) {
         require(_outcome < _numOutcomes);
 
         if (frozenShareValues[_market][_outcome] != 0) {
