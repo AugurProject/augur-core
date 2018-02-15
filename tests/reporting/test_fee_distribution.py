@@ -101,7 +101,7 @@ def test_failed_crowdsourcer_fees(finalize, localFixture, universe, market, cash
 
     # We'll make the window active
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
-    
+
     # generate some fees
     generateFees(localFixture, universe, market)
 
@@ -147,7 +147,7 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
 
     # generate some fees
     generateFees(localFixture, universe, market)
-    
+
     # We'll have testers push markets into the next round by funding dispute crowdsourcers
     amount = 2 * market.getTotalStake()
     with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
@@ -268,7 +268,7 @@ def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market,
 
     # generate some fees
     generateFees(localFixture, universe, market)
-    
+
     # We'll have testers push markets into the next round by funding dispute crowdsourcers
     amount = market.getTotalStake()
     with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
