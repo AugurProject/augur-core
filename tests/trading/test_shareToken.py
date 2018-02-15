@@ -73,6 +73,8 @@ def test_transfer(contractsFixture, market):
             "from": bytesToHexString(tester.a0),
             "to": bytesToHexString(tester.a1),
             "universe": market.getUniverse(),
+            "tokenType": 1,
+            "market": market.address,
             "value": 5
         }
     ]
@@ -113,6 +115,8 @@ def test_approve(contractsFixture, market):
             "from": bytesToHexString(tester.a0),
             "to": bytesToHexString(tester.a1),
             "universe": market.getUniverse(),
+            "tokenType": 1,
+            "market": market.address,
             "value": 7
         }
     ]

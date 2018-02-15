@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from utils import captureFilteredLogs, bytesToHexString
 
-def test_fee_wondow_logging(contractsFixture, market, categoricalMarket, scalarMarket, universe):
+def test_fee_window_logging(contractsFixture, market, categoricalMarket, scalarMarket, universe):
     feeWindow = contractsFixture.applySignature('FeeWindow', universe.getOrCreateCurrentFeeWindow())
 
     contractsFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
@@ -19,6 +19,7 @@ def test_fee_wondow_logging(contractsFixture, market, categoricalMarket, scalarM
     assert logs[0]['to'] == bytesToHexString(tester.a1)
     assert logs[0]['token'] == feeWindow.address
     assert logs[0]['universe'] == universe.address
+    assert logs[0]['tokenType'] == 3
     assert logs[0]['value'] == 8
 
     assert feeWindow.approve(tester.a2, 12)
@@ -31,4 +32,5 @@ def test_fee_wondow_logging(contractsFixture, market, categoricalMarket, scalarM
     assert logs[1]['to'] == bytesToHexString(tester.a1)
     assert logs[1]['token'] == feeWindow.address
     assert logs[1]['universe'] == universe.address
+    assert logs[0]['tokenType'] == 3
     assert logs[1]['value'] == 12

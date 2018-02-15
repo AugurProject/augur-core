@@ -29,13 +29,14 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
             market.finalize();
         }
         redeemForAllFeeWindows();
-        reputationToken.transfer(owner, reputationToken.balanceOf(this));
+        uint256 _repBalance = reputationToken.balanceOf(this);
+        reputationToken.transfer(owner, _repBalance);
         uint256 _cashBalance = cash.balanceOf(this);
         if (_cashBalance > 0) {
             cash.withdrawEtherTo(owner, _cashBalance);
         }
         if (!_isDisavowed) {
-            controller.getAugur().logWinningStakeRedeemed(market.getUniverse(), owner, market, this, size, _cashBalance, payoutNumerators);
+            controller.getAugur().logInitialReporterRedeemed(market.getUniverse(), owner, market, size, _repBalance, _cashBalance, payoutNumerators);
         }
         return true;
     }
@@ -111,6 +112,14 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
 
     function designatedReporterWasCorrect() public view returns (bool) {
         return payoutDistributionHash == market.getWinningPayoutDistributionHash();
+    }
+
+    function transferOwnership(address _newOwner) public onlyOwner returns (bool) {
+        if (_newOwner != address(0)) {
+            controller.getAugur().logInitialReporterTransfered(market.getUniverse(), market, owner, _newOwner);
+            owner = _newOwner;
+        }
+        return true;
     }
 
     function getProtectedTokens() internal returns (address[] memory) {

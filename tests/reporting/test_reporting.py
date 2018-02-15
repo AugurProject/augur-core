@@ -95,7 +95,14 @@ def test_initialReport_transfer_ownership(localFixture, universe, market, cash, 
 
     # Let's get a reference to the Initial Reporter bond and transfer it to the original designated reporter account
     initialReporter = localFixture.applySignature("InitialReporter", market.getInitialReporter())
-    assert initialReporter.transferOwnership(initialReporter.getDesignatedReporter(), sender=tester.k1)
+    transferLog = {
+        "universe": universe.address,
+        "market": market.address,
+        "from": bytesToHexString(tester.a1),
+        "to": initialReporter.getDesignatedReporter(),
+    }
+    with AssertLog(localFixture, "InitialReporterTransfered", transferLog):
+        assert initialReporter.transferOwnership(initialReporter.getDesignatedReporter(), sender=tester.k1)
 
     # The market still correctly indicates the designated reporter did not show up
     assert not market.designatedReporterShowed()
