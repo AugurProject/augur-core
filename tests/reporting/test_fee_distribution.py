@@ -69,16 +69,16 @@ def test_initial_report_and_participation_fee_collection(localFixture, universe,
 
     marketStake = marketInitialReport.getStake()
     expectedFees = reporterFees * marketStake / totalStake
-    winningsRedeemedLog = {
+    initialReporterRedeemedLog = {
         "reporter": bytesToHexString(tester.a0),
-        "reportingParticipant": marketInitialReport.address,
         "amountRedeemed": marketStake,
+        "repReceived": marketStake,
         "reportingFeesReceived": expectedFees,
         "payoutNumerators": [market.getNumTicks(), 0],
         "universe": universe.address,
         "market": market.address
     }
-    with AssertLog(localFixture, "WinningsRedeemed", winningsRedeemedLog):
+    with AssertLog(localFixture, "InitialReporterRedeemed", initialReporterRedeemedLog):
         with TokenDelta(reputationToken, marketStake, tester.a0, "Redeeming didn't refund REP"):
             with EtherDelta(expectedFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
                 assert marketInitialReport.redeem(tester.a0)
@@ -173,16 +173,17 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
     expectedFees = expectedTotalFees * 2 / 3
     expectedRep = market.getTotalStake()
     assert expectedRep == long(marketDisputeCrowdsourcer.getStake() + marketDisputeCrowdsourcer.getStake() / 2)
-    winningsRedeemedLog = {
+    disputeCrowdsourcerRedeemedLog = {
         "reporter": bytesToHexString(tester.a1),
-        "reportingParticipant": marketDisputeCrowdsourcer.address,
+        "disputeCrowdsourcer": marketDisputeCrowdsourcer.address,
         "amountRedeemed": marketDisputeCrowdsourcer.getStake(),
+        "repReceived": expectedRep,
         "reportingFeesReceived": expectedFees,
         "payoutNumerators": [0, market.getNumTicks()],
         "universe": universe.address,
         "market": market.address
     }
-    with AssertLog(localFixture, "WinningsRedeemed", winningsRedeemedLog):
+    with AssertLog(localFixture, "DisputeCrowdsourcerRedeemed", disputeCrowdsourcerRedeemedLog):
         with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't refund REP"):
             with EtherDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
                 assert marketDisputeCrowdsourcer.redeem(tester.a1, sender=tester.k1)

@@ -124,6 +124,9 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
                 _cash.withdrawEtherTo(_sender, _feePayoutShare);
             }
         }
+        if (_attoParticipationTokens > 0) {
+            controller.getAugur().logFeeWindowRedeemed(universe, _sender, _attoParticipationTokens, _feePayoutShare);
+        }
         return true;
     }
 

@@ -8,7 +8,7 @@ import 'libraries/DelegationTarget.sol';
 import 'libraries/Extractable.sol';
 
 
-contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractable, BaseReportingParticipant, IDisputeCrowdsourcer, Initializable {    
+contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractable, BaseReportingParticipant, IDisputeCrowdsourcer, Initializable {
     function initialize(IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
@@ -39,7 +39,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
             cash.withdrawEtherTo(_redeemer, _feeShare);
         }
         if (!_isDisavowed) {
-            controller.getAugur().logWinningStakeRedeemed(market.getUniverse(), _redeemer, market, this, _amount, _feeShare, payoutNumerators);
+            controller.getAugur().logDisputeCrowdsourcerRedeemed(market.getUniverse(), _redeemer, market, _amount, _reputationShare, _feeShare, payoutNumerators);
         }
         return true;
     }

@@ -25,6 +25,7 @@ def test_reputation_token_logging(contractsFixture, universe):
     assert logs[0]['to'] == bytesToHexString(tester.a1)
     assert logs[0]['token'] == reputationToken.address
     assert logs[0]['universe'] == universe.address
+    assert logs[0]['tokenType'] == 0
     assert logs[0]['value'] == 8
 
     assert reputationToken.approve(tester.a2, 12)
@@ -37,4 +38,5 @@ def test_reputation_token_logging(contractsFixture, universe):
     assert logs[1]['to'] == bytesToHexString(tester.a1)
     assert logs[1]['token'] == reputationToken.address
     assert logs[1]['universe'] == universe.address
+    assert logs[0]['tokenType'] == 0
     assert logs[1]['value'] == 12
