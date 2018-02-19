@@ -15,7 +15,7 @@ before_install:
 script: docker pull $IMAGE_BUILD;
         docker tag $IMAGE_BUILD $IMAGE_LATEST;
         if [[ "$TESTS" == "integration:geth" ]]; then
-          npm run docker:run:test:integration;
+        npm run docker:run:test:integration:geth;
         elif [[ "$TESTS" == "integration:parity" ]]; then
         npm run docker:run:test:integration:parity;
         else
