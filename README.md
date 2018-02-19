@@ -29,69 +29,21 @@ Note: on macOS, you need to use [virtualenv](https://python-guide-pt-br.readthed
 
 ## Deployment
 
-Solidity contract deployment is handled by `ContractDeployer.ts` and the wrapper programs located in `source/deployment`.  This deployment framework allows for incremental deploys of contracts to a given controller (specified via a configuration option).  This allows us to deploy new contracts without touching the controller, effectively upgrading the deployed system in-place.
+Solidity contract deployment is handled by ContractDeployer.ts` and the wrapper programs located in `source/deployment`.  This deployment framework allows for incremental deploys of contracts to a given controller (specified via a configuration option).  This allows us to deploy new contracts without touching the controller, effectively upgrading the deployed system in-place.
 
-### Automated Rinkeby deployment via Travis CI
+- Main Code
+  - source/libraries/ContractCompiler.ts - All logic for compiling contracts, generating ABI
+  - source/libraries/ContractDeployer.ts - All logic for uploading, initializing, and whitelisting contracts, generating addresses and block number outputs.
 
-Travis CI is set up automatically deploy the contracts to the [Rinkeby testnet](https://www.rinkeby.io) after the tests run successfully.  These deployments happen on a tagged version (release or pre-release) of augur-core, pushes changes to [augur-contracts](https://github.com/AugurProject/augur-contracts), and updates augur.js to match that new version of augur-contracts.
+- Configuration
+  - source/libraries/CompilerConfiguration.ts
+  - source/libraries/DeployerConfiguration.ts
+  - source/libraries/NetworkConfiguration.ts -
 
-1. Tag augur-core as needed for a versioned deploy, e.g for a pre-release deployment: `npm version prerelease`
-2. CI will Build, Test, and Deploy the contracts
-3. augur-contracts will automatically have a new dev-channel version published to NPM (augur-contracts@dev)
-4. augur.js will automatically have a new dev-channel version published to NPM (augur.js@dev)
-5. If this is a real release (i.e. we want to declare this fit for public consumption), augur-contracts and augur.js should be published manually to NPM with their next version numbers.
-6. If this is a real release, augur-contracts and augur.js should be incremented to their NEXT release version number, and have the pre-release version -0 appended to them, and pushed to master.
-
-### Local deployment
-
-Deployment can be run in two modes, direct or Docker. In direct mode, the assumption is that the entire system has been built (TypeScript and Solidity), and there is a working Node.js environment locally. Furthermore, one must possess an account on the deployment target (e.g. Rinkeby testnet) which has enough ETH to cover the costs of the deployment. For the purposes of deploying to the testnets, those with access to the augur private testnet keys can deploy and update the existing contracts. For reference, these keys are stored in an encrypted git repository within the Augur Project's keybase team. If you need access, please inquire in the Augur Discord.
-
-All deployment commands can be managed through scripts in package.json, and can be executed using `npm run <command>`.
-
-### Manual Rinkeby deployment
-
-Build and create compile artifacts:
-
-```bash
-npm run build
-```
-
-Deploy to Rinkeby and push build artifacts: This is *not* using the dockerized commands, so that your local git and npm envs are used for the deployment. If you need to use the dockerized version you will need to pass:
-
-a. GITHUB_DEPLOYMENT_TOKEN - set to a valid OAUTH token that allows pushing to github
-b. NPM_TOKEN - The auth token value from your ~/.npmrc after you've logged into NOM
-
-```bash
-RINKEBY_PRIVATE_KEY=$(cat ../keys/deploy_keys/rinkeby.prv) DEPLOY=true ARTIFACTS=true AUTOCOMMIT=true npm run deploy:rinkeby
-```
-
-### Updating augur-contracts
-
-(Note: commands _in this section only_ should be run from your local augur-contracts folder, not from augur-core!)
-
-Manual deployment generates artifacts in the `output/contracts` directory.  To merge these changes into augur-contracts, there are scripts located in [the augur-contracts repository](https://github.com/AugurProject/augur-contracts). **In local deployments, this is not automatic.**
-
-To merge the local changes into augur-contracts:
-
-```bash
-SOURCE="path/to/augur-core/output/contracts" BRANCH=master npm run update-contracts
-```
-
-Next, update the version of augur-contracts:
- - for _dev_ builds, increment the pre-release number
- - for _patches_, increment the patch number of the release build being patched; e.g., if 4.6.0 is the release, we are currently on 4.7.0-6, and we want to patch version 4.6, then we should use a patch to increment to 4.6.1
- - for _releases_, set the version to be the correct major/minor version; e.g., for dev build v4.7.0-10, the release version would be v4.7.0
-
-```bash
-npm version [<version>, major,minor,patch, prerelease]
-git push && git push --tags
-```
-
-Finally, publish to NPM.  If this is a pre-release tag, deploy it to the `dev` channel.  The `dev` channel is the default for versions which are published from CI.
-
-```bash
-npm publish [--tag dev]
-```
+- Wrapper programs
+  - source/deployment/compileAndDeploy.ts - Compiles and Uploads contracts in one step. Useful for integration testing.
+  - source/deployment/compiledContracts.ts - Compile contract source (from source/contracts) and output contracts.json and abi.json. Outputs to output/contracts or CONTRACTS_OUTPUT_ROOT if defined.
+  - source/deployment/deployNetworks.ts - Application that can upload / upgrade all contracts, reads contracts from CONTRACTS_OUTPUT_ROOT, and uses a named network configuration to connect to an ethereum node. The resulting contract addresses are stored in output/contracts or ARTIFACT_OUTPUT_ROOT if defined.
 
 ## Tests
 

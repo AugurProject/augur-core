@@ -11,12 +11,12 @@ case "$environment" in
       --env-file <(env | grep "PRIVATE_KEY\|TRAVIS\|TOKEN") \
       -e DEPLOY \
       -e ARTIFACTS \
-      --entrypoint "bash"  \
-      augurproject/augur-core:latest -- /app/support/deploy/deploy.sh $@
+      --entrypoint "node"  \
+      augurproject/augur-core:latest -- /app/output/deployment/deployNetworks.js $@
     ;;
   "direct")
     echo "Deploying to $@"
-    bash support/deploy/deploy.sh $@
+    node ./output/deployment/deployNetworks.js $@
     ;;
   *)
     echo "Must specifiy either docker or direct as first argument"
