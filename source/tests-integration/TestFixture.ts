@@ -33,10 +33,13 @@ export class TestFixture {
 
         const compilerConfiguration = CompilerConfiguration.create()
         const compiledContracts = await new ContractCompiler(compilerConfiguration).compileContracts();
+
         const connector = new Connector(networkConfiguration);
+        console.log(`Waiting for connection to: ${networkConfiguration.networkName} at ${networkConfiguration.http}`);
+        await connector.waitUntilConnected();
         const accountManager = new AccountManager(connector, networkConfiguration.privateKey);
 
-        const deployerConfiguration = DeployerConfiguration.create();
+        const deployerConfiguration = DeployerConfiguration.createWithControlledTime();
         const contractDeployer = new ContractDeployer(deployerConfiguration, connector, accountManager, compiledContracts);
         await contractDeployer.deploy();
         return new TestFixture(connector, accountManager, contractDeployer);

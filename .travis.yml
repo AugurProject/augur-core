@@ -14,8 +14,10 @@ before_install:
   - sudo chmod +x /usr/local/bin/docker-compose
 script: docker pull $IMAGE_BUILD;
         docker tag $IMAGE_BUILD $IMAGE_LATEST;
-        if [[ "$TESTS" == "integration" ]]; then
+        if [[ "$TESTS" == "integration:geth" ]]; then
           npm run docker:run:test:integration;
+        elif [[ "$TESTS" == "integration:parity" ]]; then
+        npm run docker:run:test:integration:parity;
         else
           npm run docker:run:test:unit -- $TESTS;
         fi
@@ -69,5 +71,6 @@ env:
     - TESTS="tests/reporting"
     - TESTS="tests/fuzzy"
     - TESTS="tests/unit"
-    - TESTS="integration"
+    - TESTS="integration:geth"
+    - TESTS="integration:parity"
 

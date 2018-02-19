@@ -27,4 +27,13 @@ export class DeployerConfiguration {
 
         return new DeployerConfiguration(contractInputRoot, artifactOutputRoot, controllerAddress, createGenesisUniverse, isProduction, useNormalTime);
     }
+
+    public static createWithControlledTime(artifactOutputRoot: string=ARTIFACT_OUTPUT_ROOT, isProduction: boolean=false): DeployerConfiguration {
+        const contractInputRoot = (typeof process.env.CONTRACT_INPUT_ROOT === 'undefined') ? path.join(__dirname, '../../output/contracts') : path.normalize(<string> process.env.CONTRACT_INPUT_ROOT);
+        const controllerAddress = process.env.AUGUR_CONTROLLER_ADDRESS;
+        const createGenesisUniverse = (typeof process.env.CREATE_GENESIS_UNIVERSE === 'undefined') ? true : process.env.CREATE_GENESIS_UNIVERSE === 'true';
+        const useNormalTime = false;
+
+        return new DeployerConfiguration(contractInputRoot, artifactOutputRoot, controllerAddress, createGenesisUniverse, isProduction, useNormalTime);
+    }
 }
