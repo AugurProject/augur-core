@@ -1,21 +1,17 @@
 #!/usr/bin/env node
 
-import { deployContracts } from "./deployContracts"
-import { Configuration } from "../libraries/Configuration";
+import { ContractDeployer } from "../libraries/ContractDeployer";
+import { NetworkConfiguration } from "../libraries/NetworkConfiguration";
+import { DeployerConfiguration } from "../libraries/DeployerConfiguration";
 
 export async function deployToNetworks(networks: Array<string>) {
-    const configurations: Array<Configuration> = networks.map((network) => Configuration.network(network));
-    for(let configuration of configurations) {
-        console.log(`
-
------------------
-Deploying to: ${configuration.networkName}
-    compiled contracts: ${configuration.contractOutputPath}
-    abi: ${configuration.abiOutputPath}
-    contract address: ${configuration.contractAddressesOutputPath}
-    upload blocks #s: ${configuration.uploadBlockNumbersOutputPath}
-`);
-        await deployContracts(configuration);
+    // Create all network configs up front so that an error in any of them
+    // causes us to die
+    const networkConfigurations = networks.map(NetworkConfiguration.create);
+    const deployerConfiguration = DeployerConfiguration.create();
+    for(let network of networkConfigurations) {
+        // Deploy sequentially
+        await ContractDeployer.deployToNetwork(network, deployerConfiguration);
     }
 }
 

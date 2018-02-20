@@ -1,9 +1,9 @@
-import { Configuration } from '../libraries/Configuration';
+import { CompilerConfiguration } from '../libraries/CompilerConfiguration';
 import { ContractCompiler } from "../libraries/ContractCompiler";
 require('source-map-support').install();
 
 async function doWork(): Promise<void> {
-    const configuration = await Configuration.create();
+    const configuration = CompilerConfiguration.create();
     const compiler = new ContractCompiler(configuration);
     await compiler.compileContracts();
 }

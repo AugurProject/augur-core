@@ -6,6 +6,10 @@
         "sourceMap": true,
         "outDir": "output",
         "rootDir": "source",
+        "typeRoots": [
+          "node_modules/@types",
+          "typings"
+        ],
         "paths": {
             "*": [
                 "./typings/*"
@@ -20,6 +24,7 @@
         "allowUnreachableCode": false,
         "allowUnusedLabels": false,
         "forceConsistentCasingInFileNames": true,
+        "declaration": true,
         "noImplicitAny": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitReturns": true,
