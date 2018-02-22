@@ -116,7 +116,7 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
 
     function transferOwnership(address _newOwner) public onlyOwner returns (bool) {
         if (_newOwner != address(0)) {
-            controller.getAugur().logInitialReporterTransfered(market.getUniverse(), market, owner, _newOwner);
+            controller.getAugur().logInitialReporterTransferred(market.getUniverse(), market, owner, _newOwner);
             owner = _newOwner;
         }
         return true;
