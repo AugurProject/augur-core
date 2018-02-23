@@ -63,7 +63,7 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logInitialReporterTransfered(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool) {
+    function logInitialReporterTransferred(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool) {
         return true;
     }
 

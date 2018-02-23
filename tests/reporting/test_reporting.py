@@ -101,7 +101,7 @@ def test_initialReport_transfer_ownership(localFixture, universe, market, cash, 
         "from": bytesToHexString(tester.a1),
         "to": initialReporter.getDesignatedReporter(),
     }
-    with AssertLog(localFixture, "InitialReporterTransfered", transferLog):
+    with AssertLog(localFixture, "InitialReporterTransferred", transferLog):
         assert initialReporter.transferOwnership(initialReporter.getDesignatedReporter(), sender=tester.k1)
 
     # The market still correctly indicates the designated reporter did not show up

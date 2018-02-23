@@ -20,12 +20,27 @@ contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter,
 
     function claimSharesInUpdate(IMarket _market) public marketIsLegit(_market) convertToAndFromCash onlyInBadTimes returns(bool) {
         ICash _marketCurrency = _market.getDenominationToken();
-        uint256 _amountToTransfer = getFrozenShareValueInMarket(_market);
+        uint256 _amountToTransfer = getFrozenShareValueInMarketAndDeleteShares(_market);
         require(_marketCurrency.transferFrom(_market, msg.sender, _amountToTransfer));
         return true;
     }
 
     function getFrozenShareValueInMarket(IMarket _market) public onlyInBadTimes returns (uint256) {
+        uint8 _numOutcomes = _market.getNumberOfOutcomes();
+        uint256 _frozenShareValueInMarket = 0;
+
+        for (uint8 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
+            IShareToken _shareToken = _market.getShareToken(_outcome);
+            uint256 _sharesOwned = _shareToken.balanceOf(msg.sender);
+            if (_sharesOwned > 0) {
+                uint256 _frozenShareValue = getFrozenShareValue(_market, _numOutcomes, _outcome);
+                _frozenShareValueInMarket += _sharesOwned.mul(_frozenShareValue);
+            }
+        }
+        return _frozenShareValueInMarket;
+    }
+
+    function getFrozenShareValueInMarketAndDeleteShares(IMarket _market) private onlyInBadTimes returns (uint256) {
         uint8 _numOutcomes = _market.getNumberOfOutcomes();
         uint256 _frozenShareValueInMarket = 0;
 

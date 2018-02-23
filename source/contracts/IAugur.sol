@@ -47,5 +47,5 @@ contract IAugur {
     function logContractAddedToWhitelist(address _addition) public returns (bool);
     function logContractAddedToRegistry(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public returns (bool);
     function logTimestampSet(uint256 _newTimestamp) public returns (bool);
-    function logInitialReporterTransfered(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool);
+    function logInitialReporterTransferred(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool);
 }
