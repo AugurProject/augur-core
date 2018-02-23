@@ -481,7 +481,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             _expectedBalance += shareTokens[0].totalSupply() * numTicks;
         }
 
-        assert(cash.balanceOf(this) == _expectedBalance);
+        assert(cash.balanceOf(this) >= _expectedBalance);
         return true;
     }
 

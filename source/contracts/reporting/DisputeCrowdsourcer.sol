@@ -45,7 +45,6 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
     }
 
     function contribute(address _participant, uint256 _amount) public onlyInGoodTimes returns (uint256) {
-        assert(reputationToken.balanceOf(this) == totalSupply());
         require(IMarket(msg.sender) == market);
         _amount = _amount.min(size - totalSupply());
         if (_amount == 0) {
@@ -57,7 +56,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         if (totalSupply() == size) {
             market.finishedCrowdsourcingDisputeBond();
         }
-        assert(reputationToken.balanceOf(this) == totalSupply());
+        assert(reputationToken.balanceOf(this) >= totalSupply());
         return _amount;
     }
 
