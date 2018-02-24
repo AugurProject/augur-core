@@ -56,6 +56,8 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
             }
         }
 
+        _market.assertBalances();
+
         return true;
     }
 

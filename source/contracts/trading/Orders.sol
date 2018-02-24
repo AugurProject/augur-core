@@ -20,7 +20,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
     using SafeMathUint256 for uint256;
 
     struct MarketOrders {
-        uint256 volume;
+        uint256 totalEscrowed;
         mapping(uint8 => uint256) prices;
     }
 
@@ -62,8 +62,8 @@ contract Orders is DelegationTarget, Extractable, IOrders {
         return orders[_orderId].moneyEscrowed;
     }
 
-    function getVolume(IMarket _market) public view returns (uint256) {
-        return marketOrderData[_market].volume;
+    function getTotalEscrowed(IMarket _market) public view returns (uint256) {
+        return marketOrderData[_market].totalEscrowed;
     }
 
     function getLastOutcomePrice(IMarket _market, uint8 _outcome) public view returns (uint256) {
@@ -158,6 +158,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
         _order.amount = _amount;
         _order.creator = _sender;
         _order.moneyEscrowed = _moneyEscrowed;
+        _order.orders.incrementTotalEscrowed(_market, _moneyEscrowed);
         _order.sharesEscrowed = _sharesEscrowed;
         insertOrderIntoList(_order, _betterOrderId, _worseOrderId);
         controller.getAugur().logOrderCreated(_type, _amount, _price, _sender, _moneyEscrowed, _sharesEscrowed, _tradeGroupId, _orderId, _order.market.getUniverse(), _order.market.getShareToken(_order.outcome));
@@ -187,6 +188,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
         require(_fill <= _order.amount);
         _order.amount -= _fill;
         _order.moneyEscrowed -= _tokensFilled;
+        _order.orders.decrementTotalEscrowed(_order.market, _tokensFilled);
         _order.sharesEscrowed -= _sharesFilled;
         if (_order.amount == 0) {
             require(_order.moneyEscrowed == 0);
@@ -202,6 +204,16 @@ contract Orders is DelegationTarget, Extractable, IOrders {
 
     function setPrice(IMarket _market, uint8 _outcome, uint256 _price) external onlyWhitelistedCallers returns (bool) {
         marketOrderData[_market].prices[_outcome] = _price;
+        return true;
+    }
+
+    function incrementTotalEscrowed(IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (bool) {
+        marketOrderData[_market].totalEscrowed += _amount;
+        return true;
+    }
+
+    function decrementTotalEscrowed(IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (bool) {
+        marketOrderData[_market].totalEscrowed -= _amount;
         return true;
     }
 

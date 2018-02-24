@@ -56,6 +56,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         if (totalSupply() == size) {
             market.finishedCrowdsourcingDisputeBond();
         }
+        assert(reputationToken.balanceOf(this) >= totalSupply());
         return _amount;
     }
 

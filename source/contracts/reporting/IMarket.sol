@@ -45,4 +45,5 @@ contract IMarket is ITyped, IOwnable {
     function designatedReporterShowed() public view returns (bool);
     function isFinalized() public view returns (bool);
     function finalizeFork() public returns (bool);
+    function assertBalances() public view returns (bool);
 }
