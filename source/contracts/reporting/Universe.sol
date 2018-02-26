@@ -185,7 +185,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         IUniverse _updatedUniverse = getChildUniverse(_parentPayoutDistributionHash);
         uint256 _currentTentativeWinningChildUniverseRepMigrated = 0;
         if (_tentativeWinningUniverse != IUniverse(0)) {
-            _tentativeWinningUniverse.getReputationToken().getTotalMigrated();
+            _currentTentativeWinningChildUniverseRepMigrated = _tentativeWinningUniverse.getReputationToken().getTotalMigrated();
         }
         uint256 _updatedUniverseRepMigrated = _updatedUniverse.getReputationToken().getTotalMigrated();
         if (_updatedUniverseRepMigrated > _currentTentativeWinningChildUniverseRepMigrated) {

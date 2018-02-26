@@ -259,6 +259,35 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
 
     assert scalarMarket.finalize()
 
+def test_finalized_fork_migration(localFixture, universe, market, categoricalMarket):
+    # Make the categorical market finalized
+    proceedToNextRound(localFixture, categoricalMarket)
+    feeWindow = localFixture.applySignature('FeeWindow', categoricalMarket.getFeeWindow())
+
+    # Time marches on and the market can be finalized
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    assert categoricalMarket.finalize()
+
+    # Proceed to Forking for the binary market and finzlie it
+    proceedToFork(localFixture, market, universe)
+    finalizeFork(localFixture, market, universe)
+
+    # The categorical market is finzlied and cannot be migrated to the new universe
+    with raises(TransactionFailed):
+        categoricalMarket.migrateThroughOneFork()
+
+    # We also can't disavow the crowdsourcers for this market
+    with raises(TransactionFailed):
+        categoricalMarket.disavowCrowdsourcers()
+
+    # The forking market may not migrate or disavow crowdsourcers either
+    with raises(TransactionFailed):
+        market.migrateThroughOneFork()
+
+    with raises(TransactionFailed):
+        market.disavowCrowdsourcers()
+
+
 def test_forking_values(localFixture, universe, market, cash):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
 

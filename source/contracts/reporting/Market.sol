@@ -165,11 +165,11 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     }
 
     function finalize() public onlyInGoodTimes returns (bool) {
-        require(winningPayoutDistributionHash == bytes32(0));
-
         if (universe.getForkingMarket() == this) {
             return finalizeFork();
         }
+
+        require(winningPayoutDistributionHash == bytes32(0));
 
         require(getInitialReporter().getReportTimestamp() != 0);
         require(feeWindow.isOver());
@@ -185,6 +185,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function finalizeFork() public onlyInGoodTimes returns (bool) {
         require(universe.getForkingMarket() == this);
+        require(winningPayoutDistributionHash == bytes32(0));
         IUniverse _winningUniverse = universe.getWinningChildUniverse();
         winningPayoutDistributionHash = _winningUniverse.getParentPayoutDistributionHash();
         finalizationTime = controller.getTimestamp();
@@ -263,6 +264,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         // only proceed if the forking market is finalized
         IMarket _forkingMarket = universe.getForkingMarket();
         require(_forkingMarket.isFinalized());
+        require(!isFinalized());
 
         IUniverse _currentUniverse = universe;
         bytes32 _winningForkPayoutDistributionHash = _forkingMarket.getWinningPayoutDistributionHash();
@@ -300,6 +302,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         IMarket _forkingMarket = getForkingMarket();
         require(_forkingMarket != IMarket(0));
         require(_forkingMarket != this);
+        require(!isFinalized());
         IInitialReporter _initialParticipant = getInitialReporter();
         delete participants;
         participants.push(_initialParticipant);
