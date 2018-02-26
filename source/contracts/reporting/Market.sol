@@ -32,7 +32,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     // Constants
     uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 1 ether / 2;
-    uint256 private constant APPROVAL_AMOUNT = 2**256-1;
+    uint256 private constant APPROVAL_AMOUNT = 2 ** 256 - 1;
     address private constant NULL_ADDRESS = address(0);
     uint8 private constant MIN_OUTCOMES = 2;
     uint8 private constant MAX_OUTCOMES = 8;
@@ -212,7 +212,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         for (uint8 j = 0; j < participants.length; j++) {
             _reportingParticipant = participants[j];
             if (_reportingParticipant.getPayoutDistributionHash() == winningPayoutDistributionHash) {
-                _reputationToken.transfer(_reportingParticipant, _reportingParticipant.getSize() / 2);
+                _reputationToken.transfer(_reportingParticipant, _reportingParticipant.getSize().div(2));
             }
         }
         return true;
@@ -249,7 +249,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     function getOrCreateDisputeCrowdsourcer(bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) private returns (IDisputeCrowdsourcer) {
         IDisputeCrowdsourcer _crowdsourcer = IDisputeCrowdsourcer(crowdsourcers.getAsAddressOrZero(_payoutDistributionHash));
         if (_crowdsourcer == IDisputeCrowdsourcer(0)) {
-            uint256 _size = 2 * getTotalStake() - 3 * getStakeInOutcome(_payoutDistributionHash);
+            uint256 _size = getTotalStake().mul(2).sub(getStakeInOutcome(_payoutDistributionHash).mul(3));
             DisputeCrowdsourcerFactory _disputeCrowdsourcerFactory = DisputeCrowdsourcerFactory(controller.lookup("DisputeCrowdsourcerFactory"));
             _crowdsourcer = _disputeCrowdsourcerFactory.createDisputeCrowdsourcer(controller, this, _size, _payoutDistributionHash, _payoutNumerators, _invalid);
             crowdsourcers.add(_payoutDistributionHash, address(_crowdsourcer));
@@ -443,8 +443,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         require(_payoutNumerators.length == numOutcomes);
         for (uint8 i = 0; i < _payoutNumerators.length; i++) {
             uint256 _value = _payoutNumerators[i];
-            // This cannot reasonably exceed uint256 max value as it would require an invalid numTicks
-            _sum += _value;
+            _sum = _sum.add(_value);
             require(!_invalid || _value == _previousValue);
             _previousValue = _value;
         }
@@ -475,10 +474,10 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         if (isFinalized()) {
             IReportingParticipant _winningReportingPartcipant = getWinningReportingParticipant();
             for (uint8 i = 0; i < numOutcomes; i++) {
-                _expectedBalance += shareTokens[i].totalSupply() * _winningReportingPartcipant.getPayoutNumerator(i);
+                _expectedBalance = _expectedBalance.add(shareTokens[i].totalSupply().mul(_winningReportingPartcipant.getPayoutNumerator(i)));
             }
         } else {
-            _expectedBalance += shareTokens[0].totalSupply() * numTicks;
+            _expectedBalance = _expectedBalance.add(shareTokens[0].totalSupply().mul(numTicks));
         }
 
         assert(cash.balanceOf(this) >= _expectedBalance);

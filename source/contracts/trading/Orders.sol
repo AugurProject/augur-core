@@ -180,10 +180,10 @@ contract Orders is DelegationTarget, Extractable, IOrders {
         require(_order.price <= _order.market.getNumTicks());
         uint256 _fill = 0;
         if (_order.orderType == Order.Types.Bid) {
-            _fill = _sharesFilled + _tokensFilled.div(_order.price);
+            _fill = _sharesFilled.add(_tokensFilled.div(_order.price));
         } else if (_order.orderType == Order.Types.Ask) {
             uint256 _fillPrice = _order.market.getNumTicks().sub(_order.price);
-            _fill = _sharesFilled + _tokensFilled.div(_fillPrice);
+            _fill = _sharesFilled.add(_tokensFilled.div(_fillPrice));
         }
         require(_fill <= _order.amount);
         _order.amount -= _fill;

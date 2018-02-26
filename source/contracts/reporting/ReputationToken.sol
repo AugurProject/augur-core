@@ -82,7 +82,7 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
         IUniverse _parentUniverse = universe.getParentUniverse();
         IReportingParticipant _reportingParticipant = IReportingParticipant(msg.sender);
         require(_parentUniverse.isContainerForReportingParticipant(_reportingParticipant));
-        uint256 _bonus = _amountMigrated / 2;
+        uint256 _bonus = _amountMigrated.div(2);
         mint(_reportingParticipant, _bonus);
         totalTheoreticalSupply += _bonus;
         return true;

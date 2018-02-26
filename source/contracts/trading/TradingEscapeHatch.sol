@@ -88,7 +88,8 @@ contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter,
 
         // fill in any outcome prices that have no order history
         if (_numberOfMissingBids > 0) {
-            uint256 _fauxBidPrice = (_market.getNumTicks() - _sumOfBids) / _numberOfMissingBids;
+            // Leaving the redundant / here for stack depth issues
+            uint256 _fauxBidPrice = (_market.getNumTicks().sub(_sumOfBids)) / _numberOfMissingBids;
             // to avoid any oddities, every share is worth _something_, even if it is just 1 attotoken
             if (_fauxBidPrice == 0) {
                 _fauxBidPrice = 1;
