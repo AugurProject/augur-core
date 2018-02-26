@@ -268,11 +268,11 @@ def test_finalized_fork_migration(localFixture, universe, market, categoricalMar
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert categoricalMarket.finalize()
 
-    # Proceed to Forking for the binary market and finzlie it
+    # Proceed to Forking for the binary market and finalize it
     proceedToFork(localFixture, market, universe)
     finalizeFork(localFixture, market, universe)
 
-    # The categorical market is finzlied and cannot be migrated to the new universe
+    # The categorical market is finazlied and cannot be migrated to the new universe
     with raises(TransactionFailed):
         categoricalMarket.migrateThroughOneFork()
 
