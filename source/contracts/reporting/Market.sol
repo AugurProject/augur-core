@@ -61,6 +61,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoeth, ICash _cash, address _designatedReporterAddress, address _creator, uint8 _numOutcomes, uint256 _numTicks) public onlyInGoodTimes payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(MIN_OUTCOMES <= _numOutcomes && _numOutcomes <= MAX_OUTCOMES);
+        require(_numTicks > 0);
         require((_numTicks.isMultipleOf(_numOutcomes)));
         require(_feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
