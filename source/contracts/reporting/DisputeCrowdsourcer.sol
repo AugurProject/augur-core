@@ -31,8 +31,8 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
         uint256 _reputationSupply = reputationToken.balanceOf(this);
         uint256 _cashSupply = cash.balanceOf(this);
         uint256 _amount = balances[_redeemer];
-        uint256 _feeShare = _cashSupply * _amount / supply;
-        uint256 _reputationShare = _reputationSupply * _amount / supply;
+        uint256 _feeShare = _cashSupply.mul(_amount).div(supply);
+        uint256 _reputationShare = _reputationSupply.mul(_amount).div(supply);
         burn(_redeemer, _amount);
         reputationToken.transfer(_redeemer, _reputationShare);
         if (_feeShare > 0) {
@@ -46,7 +46,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
 
     function contribute(address _participant, uint256 _amount) public onlyInGoodTimes returns (uint256) {
         require(IMarket(msg.sender) == market);
-        _amount = _amount.min(size - totalSupply());
+        _amount = _amount.min(size.sub(totalSupply()));
         if (_amount == 0) {
             return 0;
         }
@@ -63,7 +63,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
     function withdrawInEmergency() public onlyInBadTimes returns (bool) {
         uint256 _reputationSupply = reputationToken.balanceOf(this);
         uint256 _attotokens = balances[msg.sender];
-        uint256 _reputationShare = _reputationSupply * _attotokens / supply;
+        uint256 _reputationShare = _reputationSupply.mul(_attotokens).div(supply);
         burn(msg.sender, _attotokens);
         if (_reputationShare != 0) {
             reputationToken.transfer(msg.sender, _reputationShare);

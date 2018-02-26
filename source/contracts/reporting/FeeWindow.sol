@@ -94,7 +94,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
 
         uint256 _attoParticipationTokens = balances[_sender];
         uint256 _attoFeeTokens = feeToken.balanceOf(_sender);
-        uint256 _totalTokens = _attoParticipationTokens + _attoFeeTokens;
+        uint256 _totalTokens = _attoParticipationTokens.add(_attoFeeTokens);
 
         uint256 _totalFeeStake = getTotalFeeStake();
 

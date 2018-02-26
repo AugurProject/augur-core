@@ -332,7 +332,7 @@ library Trade {
     function getSharePriceDetails(IMarket _market, IOrders _orders, bytes32 _orderId) private view returns (uint256 _sharePriceRange, uint256 _sharePriceLong, uint256 _sharePriceShort) {
         uint256 _numTicks = _market.getNumTicks();
         uint256 _orderPrice = _orders.getPrice(_orderId);
-        _sharePriceShort = uint256(_numTicks - _orderPrice);
+        _sharePriceShort = uint256(_numTicks.sub(_orderPrice));
         return (_numTicks, _orderPrice, _sharePriceShort);
     }
 
