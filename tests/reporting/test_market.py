@@ -26,6 +26,11 @@ def test_market_creation(contractsFixture, universe, cash, market):
     assert market.getReputationToken() == universe.getReputationToken()
     assert market.getWinningPayoutDistributionHash() == stringToBytes("")
 
+def test_num_ticks_validation(contractsFixture, universe, cash):
+    # Require numTicks != 0
+    with raises(TransactionFailed):
+       market = contractsFixture.createReasonableScalarMarket(universe, 30, -10, 0, cash)
+
 def test_extraction(contractsFixture, market, universe, cash, scalarMarket):
     controller = contractsFixture.contracts["Controller"]
     reputationToken = contractsFixture.applySignature("ReputationToken", universe.getReputationToken())
