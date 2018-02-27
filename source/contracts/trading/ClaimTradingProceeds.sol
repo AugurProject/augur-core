@@ -30,7 +30,7 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
 
         ICash _denominationToken = _market.getDenominationToken();
 
-        for (uint8 _outcome = 0; _outcome < _market.getNumberOfOutcomes(); ++_outcome) {
+        for (uint256 _outcome = 0; _outcome < _market.getNumberOfOutcomes(); ++_outcome) {
             IShareToken _shareToken = _market.getShareToken(_outcome);
             uint256 _numberOfShares = _shareToken.balanceOf(_shareHolder);
             var (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _outcome, _numberOfShares);
@@ -65,7 +65,7 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
         controller.getAugur().logTradingProceedsClaimed(_market.getUniverse(), _shareToken, _sender, _market, _numShares, _numPayoutTokens, _sender.balance.add(_numPayoutTokens));
     }
 
-    function divideUpWinnings(IMarket _market, uint8 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
+    function divideUpWinnings(IMarket _market, uint256 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
         _proceeds = calculateProceeds(_market, _outcome, _numberOfShares);
         _creatorShare = calculateCreatorFee(_market, _proceeds);
         _reporterShare = calculateReportingFee(_market, _proceeds);
@@ -73,7 +73,7 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
         return (_proceeds, _shareHolderShare, _creatorShare, _reporterShare);
     }
 
-    function calculateProceeds(IMarket _market, uint8 _outcome, uint256 _numberOfShares) public view returns (uint256) {
+    function calculateProceeds(IMarket _market, uint256 _outcome, uint256 _numberOfShares) public view returns (uint256) {
         uint256 _payoutNumerator = _market.getWinningPayoutNumerator(_outcome);
         return _numberOfShares.mul(_payoutNumerator);
     }

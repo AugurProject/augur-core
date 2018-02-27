@@ -39,7 +39,7 @@ library Order {
         // Order
         bytes32 id;
         address creator;
-        uint8 outcome;
+        uint256 outcome;
         Order.Types orderType;
         uint256 amount;
         uint256 price;
@@ -54,7 +54,7 @@ library Order {
     //
 
     // No validation is needed here as it is simply a librarty function for organizing data
-    function create(IController _controller, address _creator, uint8 _outcome, Order.Types _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal view returns (Data) {
+    function create(IController _controller, address _creator, uint256 _outcome, Order.Types _type, uint256 _attoshares, uint256 _price, IMarket _market, bytes32 _betterOrderId, bytes32 _worseOrderId) internal view returns (Data) {
         require(_outcome < _market.getNumberOfOutcomes());
         require(_price < _market.getNumTicks());
 
@@ -122,11 +122,11 @@ library Order {
         require(_orderData.moneyEscrowed == 0);
         require(_orderData.sharesEscrowed == 0);
         uint256 _attosharesToCover = _orderData.amount;
-        uint8 _numberOfOutcomes = _orderData.market.getNumberOfOutcomes();
+        uint256 _numberOfOutcomes = _orderData.market.getNumberOfOutcomes();
 
         // Figure out how many almost-complete-sets (just missing `outcome` share) the creator has
         uint256 _attosharesHeld = 2**254;
-        for (uint8 _i = 0; _i < _numberOfOutcomes; _i++) {
+        for (uint256 _i = 0; _i < _numberOfOutcomes; _i++) {
             if (_i != _orderData.outcome) {
                 uint256 _creatorShareTokenBalance = _orderData.market.getShareToken(_i).balanceOf(_orderData.creator);
                 _attosharesHeld = SafeMathUint256.min(_creatorShareTokenBalance, _attosharesHeld);

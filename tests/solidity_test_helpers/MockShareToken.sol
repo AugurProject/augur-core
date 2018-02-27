@@ -17,19 +17,19 @@ contract MockShareToken is DelegationTarget, ITyped, Initializable, MockVariable
 
     IMarket private initializeMarketValue;
     IMarket private setMarketValue;
-    uint8 private initializeOutcomeValue;
+    uint256 private initializeOutcomeValue;
     address private createSharesOwnerValue;
     uint256 private createSharesFxpValue;
     address private destroySharesOwnerValue;
     uint256 private destroySharesFxpValueValue;
-    uint8 private setOutcomeValue;
+    uint256 private setOutcomeValue;
     bool private setIsShareTokenValue;
 
     function getInitializeMarketValue() public returns(IMarket) {
         return initializeMarketValue;
     }
 
-    function getInitializeOutcomeValue() public returns(uint8) {
+    function getInitializeOutcomeValue() public returns(uint256) {
         return initializeOutcomeValue;
     }
 
@@ -53,7 +53,7 @@ contract MockShareToken is DelegationTarget, ITyped, Initializable, MockVariable
         setMarketValue = _market;
     }
 
-    function setOutcome(uint8 _outcome) public {
+    function setOutcome(uint256 _outcome) public {
         setOutcomeValue = _outcome;
     }
 
@@ -61,7 +61,7 @@ contract MockShareToken is DelegationTarget, ITyped, Initializable, MockVariable
         setIsShareTokenValue = _isShareToken;
     }
 
-    function initialize(IMarket _market, uint8 _outcome) external beforeInitialized returns(bool) {
+    function initialize(IMarket _market, uint256 _outcome) external beforeInitialized returns(bool) {
         endInitialization();
         initializeMarketValue = _market;
         initializeOutcomeValue = _outcome;
@@ -87,7 +87,7 @@ contract MockShareToken is DelegationTarget, ITyped, Initializable, MockVariable
         return setMarketValue;
     }
 
-    function getOutcome() external view returns(uint8) {
+    function getOutcome() external view returns(uint256) {
         return setOutcomeValue;
     }
 

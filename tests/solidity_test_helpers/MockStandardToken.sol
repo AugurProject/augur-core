@@ -38,7 +38,7 @@ contract MockStandardToken is ERC20, BasicToken {
     function getApproveSpenderValue() public returns(address) {
         return approveSpenderValue;
     }
-    
+
     function getApproveValueValue() public returns(uint256) {
         return approveValueValue;
     }
@@ -46,7 +46,7 @@ contract MockStandardToken is ERC20, BasicToken {
     function getAllowanceOwnerValue() public returns(address) {
         return allowanceOwnerValue;
     }
-    
+
     function getAllowanceSpenderValue() public returns(address) {
         return allowanceSpenderValue;
     }
@@ -56,7 +56,7 @@ contract MockStandardToken is ERC20, BasicToken {
     }
 
     function getApproveValueFor(address _to) public returns(uint256) {
-        for (uint8 j = 0; j < approveAddresses.length; j++) {
+        for (uint256 j = 0; j < approveAddresses.length; j++) {
             if (approveAddresses[j] == _to) {
                 return approveAmounts[j];
             }

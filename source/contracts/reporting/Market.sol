@@ -34,8 +34,8 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 1 ether / 2;
     uint256 private constant APPROVAL_AMOUNT = 2 ** 256 - 1;
     address private constant NULL_ADDRESS = address(0);
-    uint8 private constant MIN_OUTCOMES = 2;
-    uint8 private constant MAX_OUTCOMES = 8;
+    uint256 private constant MIN_OUTCOMES = 2;
+    uint256 private constant MAX_OUTCOMES = 8;
 
     // Contract Refs
     IUniverse private universe;
@@ -46,7 +46,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     uint256 private numTicks;
     uint256 private feeDivisor;
     uint256 private endTime;
-    uint8 private numOutcomes;
+    uint256 private numOutcomes;
     bytes32 private winningPayoutDistributionHash;
     uint256 private validityBondAttoeth;
     uint256 private reporterGasCostsFeeAttoeth;
@@ -58,7 +58,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     Map public crowdsourcers;
     IShareToken[] private shareTokens;
 
-    function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoeth, ICash _cash, address _designatedReporterAddress, address _creator, uint8 _numOutcomes, uint256 _numTicks) public onlyInGoodTimes payable beforeInitialized returns (bool _success) {
+    function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoeth, ICash _cash, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public onlyInGoodTimes payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(MIN_OUTCOMES <= _numOutcomes && _numOutcomes <= MAX_OUTCOMES);
         require(_numTicks > 0);
@@ -80,7 +80,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         participants.push(_initialReporterFactory.createInitialReporter(controller, this, _designatedReporterAddress));
         marketCreatorMailbox = MailboxFactory(controller.lookup("MailboxFactory")).createMailbox(controller, owner);
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
-        for (uint8 _outcome = 0; _outcome < numOutcomes; _outcome++) {
+        for (uint256 _outcome = 0; _outcome < numOutcomes; _outcome++) {
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
@@ -99,17 +99,17 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return true;
     }
 
-    function createShareToken(uint8 _outcome) private onlyInGoodTimes returns (IShareToken) {
+    function createShareToken(uint256 _outcome) private onlyInGoodTimes returns (IShareToken) {
         return ShareTokenFactory(controller.lookup("ShareTokenFactory")).createShareToken(controller, this, _outcome);
     }
 
     // This will need to be called manually for each open market if a spender contract is updated
     function approveSpenders() public onlyInGoodTimes returns (bool) {
         bytes32[5] memory _names = [bytes32("CancelOrder"), bytes32("CompleteSets"), bytes32("FillOrder"), bytes32("TradingEscapeHatch"), bytes32("ClaimTradingProceeds")];
-        for (uint8 i = 0; i < _names.length; i++) {
+        for (uint256 i = 0; i < _names.length; i++) {
             cash.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT);
         }
-        for (uint8 j = 0; j < numOutcomes; j++) {
+        for (uint256 j = 0; j < numOutcomes; j++) {
             shareTokens[j].approve(controller.lookup("FillOrder"), APPROVAL_AMOUNT);
         }
         return true;
@@ -157,7 +157,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             universe.fork();
         } else {
             feeWindow = universe.getOrCreateNextFeeWindow();
-            for (uint8 i = 0; i < participants.length; i++) {
+            for (uint256 i = 0; i < participants.length; i++) {
                 participants[i].migrate();
             }
         }
@@ -201,7 +201,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         IReportingParticipant _reportingParticipant;
 
         // Initial pass is to liquidate losers so we have sufficient REP to pay the winners
-        for (uint8 i = 0; i < participants.length; i++) {
+        for (uint256 i = 0; i < participants.length; i++) {
             _reportingParticipant = participants[i];
             if (_reportingParticipant.getPayoutDistributionHash() != winningPayoutDistributionHash) {
                 _reportingParticipant.liquidateLosing();
@@ -211,7 +211,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         IReputationToken _reputationToken = getReputationToken();
 
         // Now redistribute REP
-        for (uint8 j = 0; j < participants.length; j++) {
+        for (uint256 j = 0; j < participants.length; j++) {
             _reportingParticipant = participants[j];
             if (_reportingParticipant.getPayoutDistributionHash() == winningPayoutDistributionHash) {
                 _reputationToken.transfer(_reportingParticipant, _reportingParticipant.getSize().div(2));
@@ -322,7 +322,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function getTotalStake() public view returns (uint256) {
         uint256 _sum;
-        for (uint8 i = 0; i < participants.length; ++i) {
+        for (uint256 i = 0; i < participants.length; ++i) {
             _sum += participants[i].getStake();
         }
         return _sum;
@@ -330,7 +330,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function getStakeInOutcome(bytes32 _payoutDistributionHash) public view returns (uint256) {
         uint256 _sum;
-        for (uint8 i = 0; i < participants.length; ++i) {
+        for (uint256 i = 0; i < participants.length; ++i) {
             if (participants[i].getPayoutDistributionHash() != _payoutDistributionHash) {
                 continue;
             }
@@ -384,7 +384,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return IInitialReporter(participants[0]);
     }
 
-    function getReportingParticipant(uint8 _index) public view returns (IReportingParticipant) {
+    function getReportingParticipant(uint256 _index) public view returns (IReportingParticipant) {
         return participants[_index];
     }
 
@@ -396,7 +396,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return participants[participants.length-1];
     }
 
-    function getWinningPayoutNumerator(uint8 _outcome) public view returns (uint256) {
+    function getWinningPayoutNumerator(uint256 _outcome) public view returns (uint256) {
         require(isFinalized());
         return getWinningReportingParticipant().getPayoutNumerator(_outcome);
     }
@@ -417,7 +417,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return universe.getReputationToken();
     }
 
-    function getNumberOfOutcomes() public view returns (uint8) {
+    function getNumberOfOutcomes() public view returns (uint256) {
         return numOutcomes;
     }
 
@@ -429,7 +429,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         return cash;
     }
 
-    function getShareToken(uint8 _outcome) public view returns (IShareToken) {
+    function getShareToken(uint256 _outcome) public view returns (IShareToken) {
         return shareTokens[_outcome];
     }
 
@@ -445,7 +445,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         uint256 _sum = 0;
         uint256 _previousValue = _payoutNumerators[0];
         require(_payoutNumerators.length == numOutcomes);
-        for (uint8 i = 0; i < _payoutNumerators.length; i++) {
+        for (uint256 i = 0; i < _payoutNumerators.length; i++) {
             uint256 _value = _payoutNumerators[i];
             _sum = _sum.add(_value);
             require(!_invalid || _value == _previousValue);
@@ -463,7 +463,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         if (crowdsourcers.getAsAddressOrZero(_shadyReportingParticipant.getPayoutDistributionHash()) == address(_shadyReportingParticipant)) {
             return true;
         }
-        for (uint8 i = 0; i < participants.length; i++) {
+        for (uint256 i = 0; i < participants.length; i++) {
             if (_shadyReportingParticipant == participants[i]) {
                 return true;
             }
@@ -477,7 +477,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         // Market Open Interest. If we're finalized we need actually calculate the value
         if (isFinalized()) {
             IReportingParticipant _winningReportingPartcipant = getWinningReportingParticipant();
-            for (uint8 i = 0; i < numOutcomes; i++) {
+            for (uint256 i = 0; i < numOutcomes; i++) {
                 _expectedBalance = _expectedBalance.add(shareTokens[i].totalSupply().mul(_winningReportingPartcipant.getPayoutNumerator(i)));
             }
         } else {
@@ -491,7 +491,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
     // Markets hold the initial fees paid by the creator in ETH and REP, so we dissallow ETH and REP extraction by the controller
     function getProtectedTokens() internal returns (address[] memory) {
         address[] memory _protectedTokens = new address[](numOutcomes + 3);
-        for (uint8 i = 0; i < numOutcomes; i++) {
+        for (uint256 i = 0; i < numOutcomes; i++) {
             _protectedTokens[i] = shareTokens[i];
         }
         // address(1) is the sentinel value for Ether extraction

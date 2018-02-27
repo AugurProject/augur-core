@@ -31,13 +31,13 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
     function buyCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (bool) {
         require(_sender != address(0));
 
-        uint8 _numOutcomes = _market.getNumberOfOutcomes();
+        uint256 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _denominationToken = _market.getDenominationToken();
         IAugur _augur = controller.getAugur();
 
         uint256 _cost = _amount.mul(_market.getNumTicks());
         require(_augur.trustedTransfer(_denominationToken, _sender, _market, _cost));
-        for (uint8 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
+        for (uint256 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
             _market.getShareToken(_outcome).createShares(_sender, _amount);
         }
 
@@ -56,7 +56,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
     function sellCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (uint256 _creatorFee, uint256 _reportingFee) {
         require(_sender != address(0));
 
-        uint8 _numOutcomes = _market.getNumberOfOutcomes();
+        uint256 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _denominationToken = _market.getDenominationToken();
         uint256 _creatorFeeDivisor = _market.getMarketCreatorSettlementFeeDivisor();
         uint256 _payout = _amount.mul(_market.getNumTicks());
@@ -67,7 +67,7 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
         _payout = _payout.sub(_creatorFee).sub(_reportingFee);
 
         // Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
-        for (uint8 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
+        for (uint256 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
             _market.getShareToken(_outcome).destroyShares(_sender, _amount);
         }
 

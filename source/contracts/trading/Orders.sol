@@ -21,7 +21,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
 
     struct MarketOrders {
         uint256 totalEscrowed;
-        mapping(uint8 => uint256) prices;
+        mapping(uint256 => uint256) prices;
     }
 
     mapping(bytes32 => Order.Data) private orders;
@@ -38,7 +38,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
         return orders[_orderId].orderType;
     }
 
-    function getOutcome(bytes32 _orderId) public view returns (uint8) {
+    function getOutcome(bytes32 _orderId) public view returns (uint256) {
         return orders[_orderId].outcome;
     }
 
@@ -66,7 +66,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
         return marketOrderData[_market].totalEscrowed;
     }
 
-    function getLastOutcomePrice(IMarket _market, uint8 _outcome) public view returns (uint256) {
+    function getLastOutcomePrice(IMarket _market, uint256 _outcome) public view returns (uint256) {
         return marketOrderData[_market].prices[_outcome];
     }
 
@@ -78,15 +78,15 @@ contract Orders is DelegationTarget, Extractable, IOrders {
         return orders[_orderId].worseOrderId;
     }
 
-    function getBestOrderId(Order.Types _type, IMarket _market, uint8 _outcome) public view returns (bytes32) {
+    function getBestOrderId(Order.Types _type, IMarket _market, uint256 _outcome) public view returns (bytes32) {
         return bestOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)];
     }
 
-    function getWorstOrderId(Order.Types _type, IMarket _market, uint8 _outcome) public view returns (bytes32) {
+    function getWorstOrderId(Order.Types _type, IMarket _market, uint256 _outcome) public view returns (bytes32) {
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)];
     }
 
-    function getOrderId(Order.Types _type, IMarket _market, uint256 _amount, uint256 _price, address _sender, uint256 _blockNumber, uint8 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed) public view returns (bytes32) {
+    function getOrderId(Order.Types _type, IMarket _market, uint256 _amount, uint256 _price, address _sender, uint256 _blockNumber, uint256 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed) public view returns (bytes32) {
         return sha256(_type, _market, _amount, _price, _sender, _blockNumber, _outcome, _moneyEscrowed, _sharesEscrowed);
     }
 
@@ -145,7 +145,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
         return true;
     }
 
-    function saveOrder(Order.Types _type, IMarket _market, uint256 _amount, uint256 _price, address _sender, uint8 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) public onlyWhitelistedCallers returns (bytes32 _orderId) {
+    function saveOrder(Order.Types _type, IMarket _market, uint256 _amount, uint256 _price, address _sender, uint256 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) public onlyWhitelistedCallers returns (bytes32 _orderId) {
         require(_outcome < _market.getNumberOfOutcomes());
         _orderId = getOrderId(_type, _market, _amount, _price, _sender, block.number, _outcome, _moneyEscrowed, _sharesEscrowed);
         Order.Data storage _order = orders[_orderId];
@@ -202,7 +202,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
         return true;
     }
 
-    function setPrice(IMarket _market, uint8 _outcome, uint256 _price) external onlyWhitelistedCallers returns (bool) {
+    function setPrice(IMarket _market, uint256 _outcome, uint256 _price) external onlyWhitelistedCallers returns (bool) {
         marketOrderData[_market].prices[_outcome] = _price;
         return true;
     }
@@ -220,7 +220,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
     function removeOrderFromList(bytes32 _orderId) private returns (bool) {
         Order.Types _type = orders[_orderId].orderType;
         IMarket _market = orders[_orderId].market;
-        uint8 _outcome = orders[_orderId].outcome;
+        uint256 _outcome = orders[_orderId].outcome;
         bytes32 _betterOrderId = orders[_orderId].betterOrderId;
         bytes32 _worseOrderId = orders[_orderId].worseOrderId;
         if (bestOrder[getBestOrderWorstOrderHash(_market, _outcome, _type)] == _orderId) {
@@ -243,7 +243,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
     /**
      * @dev If best bid is not set or price higher than best bid price, this order is the new best bid.
      */
-    function updateBestBidOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint8 _outcome) private returns (bytes32) {
+    function updateBestBidOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint256 _outcome) private returns (bytes32) {
         bytes32 _bestBidOrderId = bestOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Bid)];
         if (_bestBidOrderId == bytes32(0) || _price > orders[_bestBidOrderId].price) {
             bestOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Bid)] = _orderId;
@@ -254,7 +254,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
     /**
      * @dev If worst bid is not set or price lower than worst bid price, this order is the new worst bid.
      */
-    function updateWorstBidOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint8 _outcome) private returns (bytes32) {
+    function updateWorstBidOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint256 _outcome) private returns (bytes32) {
         bytes32 _worstBidOrderId = worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Bid)];
         if (_worstBidOrderId == bytes32(0) || _price < orders[_worstBidOrderId].price) {
             worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Bid)] = _orderId;
@@ -265,7 +265,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
     /**
      * @dev If best ask is not set or price lower than best ask price, this order is the new best ask.
      */
-    function updateBestAskOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint8 _outcome) private returns (bytes32) {
+    function updateBestAskOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint256 _outcome) private returns (bytes32) {
         bytes32 _bestAskOrderId = bestOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Ask)];
         if (_bestAskOrderId == bytes32(0) || _price < orders[_bestAskOrderId].price) {
             bestOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Ask)] = _orderId;
@@ -276,7 +276,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
     /**
      * @dev If worst ask is not set or price higher than worst ask price, this order is the new worst ask.
      */
-    function updateWorstAskOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint8 _outcome) private returns (bytes32) {
+    function updateWorstAskOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint256 _outcome) private returns (bytes32) {
         bytes32 _worstAskOrderId = worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Ask)];
         if (_worstAskOrderId == bytes32(0) || _price > orders[_worstAskOrderId].price) {
             worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Ask)] = _orderId;
@@ -284,7 +284,7 @@ contract Orders is DelegationTarget, Extractable, IOrders {
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Ask)];
     }
 
-    function getBestOrderWorstOrderHash(IMarket _market, uint8 _outcome, Order.Types _type) private pure returns (bytes32) {
+    function getBestOrderWorstOrderHash(IMarket _market, uint256 _outcome, Order.Types _type) private pure returns (bytes32) {
         return sha256(_market, _outcome, _type);
     }
 
