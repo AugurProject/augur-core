@@ -75,7 +75,6 @@ contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, MarketValida
         // fill in any outcome prices that have an order history
         for (uint256 _tempOutcome = 0; _tempOutcome < _numOutcomes; ++_tempOutcome) {
             uint256 _lastTradePrice = uint256(_orders.getLastOutcomePrice(_market, _tempOutcome));
-            // intentionally not a safeSub since minValue may be negative
             uint256 _lastTradePriceShifted = _lastTradePrice;
             if (_lastTradePriceShifted > 0) {
                 _shiftedPrices[_tempOutcome] = _lastTradePriceShifted;
