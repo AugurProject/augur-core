@@ -376,7 +376,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
                 .mul(_previousValue
                     .mul(_badMarkets)
                     .div(_totalMarkets)
-                    .sub(_previousValue / _targetDivisor));
+                .sub(_previousValue / _targetDivisor));
             _newValue = _newValue / (_targetDivisor - 1);
             _newValue = _newValue.add(_previousValue);
         }
