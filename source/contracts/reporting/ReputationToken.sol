@@ -19,7 +19,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
 
     string constant public name = "Reputation";
     string constant public symbol = "REP";
-    uint256 constant public decimals = 18;
+    uint8 constant public decimals = 18;
     IUniverse private universe;
     uint256 private totalMigrated;
     mapping(address => uint256) migratedToSibling;

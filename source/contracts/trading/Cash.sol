@@ -15,7 +15,7 @@ contract Cash is DelegationTarget, ITyped, VariableSupplyToken, ICash {
 
     string constant public name = "Cash";
     string constant public symbol = "CASH";
-    uint256 constant public decimals = 18;
+    uint8 constant public decimals = 18;
 
     function depositEther() external payable onlyInGoodTimes returns(bool) {
         mint(msg.sender, msg.value);

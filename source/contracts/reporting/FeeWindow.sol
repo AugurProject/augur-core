@@ -24,6 +24,10 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
     using SafeMathUint256 for uint256;
     using RunningAverage for RunningAverage.Data;
 
+    string constant public name = "Participation Token";
+    string constant public symbol = "PT";
+    uint8 constant public decimals = 0;
+
     IUniverse private universe;
     uint256 private startTime;
     uint256 private numMarkets;
