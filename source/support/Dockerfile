@@ -22,6 +22,7 @@ RUN pip install --upgrade pip setuptools \
 
 # Install basics of the application
 COPY .soliumrc.json /app/.soliumrc.json
+COPY .soliumignore /app/.soliumignore
 COPY tsconfig.json /app/tsconfig.json
 COPY typings/ /app/typings/
 COPY source/contracts/ /app/source/contracts/
@@ -33,6 +34,9 @@ COPY source/libraries/ContractCompiler.ts /app/source/libraries/ContractCompiler
 COPY package.json /app/package.json
 
 RUN npm install
+
+# Lint
+RUN npm run lint
 
 # Build first chunk
 RUN npm run build:source

@@ -17,7 +17,7 @@
     "test": "test"
   },
   "scripts": {
-    "lint": "npx solium --dir . --reporter=gcc",
+    "lint": "npx solium --dir source --reporter=gcc",
     "build:source": "npx tsc",
     "build:contracts": "node output/deployment/compileContracts.js",
     "build:interfaces": "node output/tools/generateContractInterfaces.js",
