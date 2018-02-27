@@ -12,7 +12,6 @@ import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/Reporting.sol';
 
 
-// AUDIT: Ensure that a malicious market can't subversively cause share tokens to be paid out incorrectly.
 /**
  * @title ClaimTradingProceeds
  * @dev This allows users to claim their money from a market by exchanging their shares

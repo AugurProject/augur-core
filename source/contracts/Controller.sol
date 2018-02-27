@@ -25,7 +25,6 @@ contract Controller is IController {
 
     address public owner;
     mapping(address => bool) public whitelist;
-    // TODO: remove the registry in favor of registeredContracts
     mapping(bytes32 => ContractDetails) public registry;
     bool public stopped = false;
 

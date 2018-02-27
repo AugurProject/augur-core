@@ -87,25 +87,21 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(IUniverse(msg.sender) == universe);
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForMarket(IMarket(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
