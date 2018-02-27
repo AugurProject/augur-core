@@ -35,7 +35,7 @@ contract CancelOrder is CashAutoConverter, Extractable, ReentrancyGuard, MarketV
         uint256 _sharesEscrowed = _orders.getOrderSharesEscrowed(_orderId);
         Order.Types _type = _orders.getOrderType(_orderId);
         IMarket _market = _orders.getMarket(_orderId);
-        uint8 _outcome = _orders.getOutcome(_orderId);
+        uint256 _outcome = _orders.getOutcome(_orderId);
 
         // Check that the order ID is correct and that the sender owns the order
         require(msg.sender == _orders.getOrderCreator(_orderId));
@@ -55,11 +55,11 @@ contract CancelOrder is CashAutoConverter, Extractable, ReentrancyGuard, MarketV
     /**
      * @dev Issue refunds
      */
-    function refundOrder(address _sender, Order.Types _type, uint256 _sharesEscrowed, uint256 _moneyEscrowed, IMarket _market, uint8 _outcome) private returns (bool) {
+    function refundOrder(address _sender, Order.Types _type, uint256 _sharesEscrowed, uint256 _moneyEscrowed, IMarket _market, uint256 _outcome) private returns (bool) {
         if (_sharesEscrowed > 0) {
             // Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
             if (_type == Order.Types.Bid) {
-                for (uint8 _i = 0; _i < _market.getNumberOfOutcomes(); ++_i) {
+                for (uint256 _i = 0; _i < _market.getNumberOfOutcomes(); ++_i) {
                     if (_i != _outcome) {
                         _market.getShareToken(_i).trustedCancelOrderTransfer(_market, _sender, _sharesEscrowed);
                     }

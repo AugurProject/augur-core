@@ -74,7 +74,7 @@ contract MockDisputeCrowdsourcer is IDisputeCrowdsourcer, MockVariableSupplyToke
         return true;
     }
 
-    function getPayoutNumerator(uint8 _outcome) public view returns (uint256) {
+    function getPayoutNumerator(uint256 _outcome) public view returns (uint256) {
         return 0;
     }
 

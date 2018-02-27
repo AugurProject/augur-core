@@ -16,7 +16,7 @@ contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter,
     using SafeMathUint256 for uint256;
 
     // market => (outcome => frozenShareValue)
-    mapping(address => mapping(uint8 => uint256)) private frozenShareValues;
+    mapping(address => mapping(uint256 => uint256)) private frozenShareValues;
 
     function claimSharesInUpdate(IMarket _market) public marketIsLegit(_market) convertToAndFromCash onlyInBadTimes returns(bool) {
         ICash _marketCurrency = _market.getDenominationToken();
@@ -26,10 +26,10 @@ contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter,
     }
 
     function getFrozenShareValueInMarket(IMarket _market) public onlyInBadTimes returns (uint256) {
-        uint8 _numOutcomes = _market.getNumberOfOutcomes();
+        uint256 _numOutcomes = _market.getNumberOfOutcomes();
         uint256 _frozenShareValueInMarket = 0;
 
-        for (uint8 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
+        for (uint256 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
             IShareToken _shareToken = _market.getShareToken(_outcome);
             uint256 _sharesOwned = _shareToken.balanceOf(msg.sender);
             if (_sharesOwned > 0) {
@@ -41,10 +41,10 @@ contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter,
     }
 
     function getFrozenShareValueInMarketAndDeleteShares(IMarket _market) private onlyInBadTimes returns (uint256) {
-        uint8 _numOutcomes = _market.getNumberOfOutcomes();
+        uint256 _numOutcomes = _market.getNumberOfOutcomes();
         uint256 _frozenShareValueInMarket = 0;
 
-        for (uint8 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
+        for (uint256 _outcome = 0; _outcome < _numOutcomes; ++_outcome) {
             IShareToken _shareToken = _market.getShareToken(_outcome);
             uint256 _sharesOwned = _shareToken.balanceOf(msg.sender);
             if (_sharesOwned > 0) {
@@ -56,7 +56,7 @@ contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter,
         return _frozenShareValueInMarket;
     }
 
-    function getFrozenShareValue(IMarket _market, uint8 _numOutcomes, uint8 _outcome) internal returns(uint256) {
+    function getFrozenShareValue(IMarket _market, uint256 _numOutcomes, uint256 _outcome) internal returns(uint256) {
         require(_outcome < _numOutcomes);
 
         if (frozenShareValues[_market][_outcome] != 0) {
@@ -67,14 +67,14 @@ contract TradingEscapeHatch is DelegationTarget, Extractable, CashAutoConverter,
         return frozenShareValues[_market][_outcome];
     }
 
-    function memoizeFrozenShareValues(IMarket _market, uint8 _numOutcomes) internal {
+    function memoizeFrozenShareValues(IMarket _market, uint256 _numOutcomes) internal {
         uint256 _numberOfMissingBids = 0;
         uint256[] memory _shiftedPrices = new uint256[](_numOutcomes);
         uint256 _sumOfBids = 0;
         IOrders _orders = IOrders(controller.lookup("Orders"));
 
         // fill in any outcome prices that have an order history
-        for (uint8 _tempOutcome = 0; _tempOutcome < _numOutcomes; ++_tempOutcome) {
+        for (uint256 _tempOutcome = 0; _tempOutcome < _numOutcomes; ++_tempOutcome) {
             uint256 _lastTradePrice = uint256(_orders.getLastOutcomePrice(_market, _tempOutcome));
             // intentionally not a safeSub since minValue may be negative
             uint256 _lastTradePriceShifted = _lastTradePrice;

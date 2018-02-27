@@ -36,7 +36,7 @@ library Trade {
 
     struct FilledOrder {
         bytes32 orderId;
-        uint8 outcome;
+        uint256 outcome;
         uint256 sharePriceRange;
         uint256 sharePriceLong;
         uint256 sharePriceShort;
@@ -91,7 +91,7 @@ library Trade {
 
         // transfer shares to this contract from each participant
         _data.contracts.longShareToken.trustedFillOrderTransfer(getLongShareSellerSource(_data), this, _numberOfCompleteSets);
-        for (uint8 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
+        for (uint256 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
             _data.contracts.shortShareTokens[_i].trustedFillOrderTransfer(getShortShareSellerSource(_data), this, _numberOfCompleteSets);
         }
 
@@ -121,7 +121,7 @@ library Trade {
         if (_data.creator.direction == Direction.Short) {
             _data.contracts.longShareToken.trustedFillOrderTransfer(_data.contracts.market, _data.filler.participantAddress, _numberOfSharesToTrade);
         } else {
-            for (uint8 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
+            for (uint256 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
                 _data.contracts.shortShareTokens[_i].trustedFillOrderTransfer(_data.contracts.market, _data.filler.participantAddress, _numberOfSharesToTrade);
             }
         }
@@ -145,7 +145,7 @@ library Trade {
         if (_data.filler.direction == Direction.Short) {
             _data.contracts.longShareToken.trustedFillOrderTransfer(_data.filler.participantAddress, _data.creator.participantAddress, _numberOfSharesToTrade);
         } else {
-            for (uint8 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
+            for (uint256 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
                 _data.contracts.shortShareTokens[_i].trustedFillOrderTransfer(_data.filler.participantAddress, _data.creator.participantAddress, _numberOfSharesToTrade);
             }
         }
@@ -184,7 +184,7 @@ library Trade {
         address _longBuyer = getLongShareBuyerDestination(_data);
         address _shortBuyer = getShortShareBuyerDestination(_data);
         _data.contracts.longShareToken.transfer(_longBuyer, _numberOfCompleteSets);
-        for (uint8 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
+        for (uint256 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
             _data.contracts.shortShareTokens[_i].transfer(_shortBuyer, _numberOfCompleteSets);
         }
 
@@ -262,7 +262,7 @@ library Trade {
     function getContracts(IController _controller, bytes32 _orderId) private view returns (Contracts memory) {
         IOrders _orders = IOrders(_controller.lookup("Orders"));
         IMarket _market = _orders.getMarket(_orderId);
-        uint8 _outcome = _orders.getOutcome(_orderId);
+        uint256 _outcome = _orders.getOutcome(_orderId);
         return Contracts({
             orders: _orders,
             market: _market,
@@ -317,13 +317,13 @@ library Trade {
         return _numShares.mul((_direction == Direction.Long) ? _sharePriceLong : _sharePriceShort);
     }
 
-    function getShortShareTokens(IMarket _market, uint8 _longOutcome) private view returns (IShareToken[] memory) {
+    function getShortShareTokens(IMarket _market, uint256 _longOutcome) private view returns (IShareToken[] memory) {
         IShareToken[] memory _shortShareTokens = new IShareToken[](_market.getNumberOfOutcomes() - 1);
-        for (uint8 _outcome = 0; _outcome < _shortShareTokens.length + 1; ++_outcome) {
+        for (uint256 _outcome = 0; _outcome < _shortShareTokens.length + 1; ++_outcome) {
             if (_outcome == _longOutcome) {
                 continue;
             }
-            uint8 _index = (_outcome < _longOutcome) ? _outcome : _outcome - 1;
+            uint256 _index = (_outcome < _longOutcome) ? _outcome : _outcome - 1;
             _shortShareTokens[_index] = _market.getShareToken(_outcome);
         }
         return _shortShareTokens;
@@ -347,7 +347,7 @@ library Trade {
         if (_fillerDirection == Direction.Short) {
             _sharesAvailable = _longShareToken.balanceOf(_filler);
         } else {
-            for (uint8 _outcome = 0; _outcome < _shortShareTokens.length; ++_outcome) {
+            for (uint256 _outcome = 0; _outcome < _shortShareTokens.length; ++_outcome) {
                 _sharesAvailable = _shortShareTokens[_outcome].balanceOf(_filler).min(_sharesAvailable);
             }
         }

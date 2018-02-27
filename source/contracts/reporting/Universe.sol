@@ -444,7 +444,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
 
     function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(bytes(_description).length > 0);
-        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint8(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint8(_outcomes.length)));
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint256(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint256(_outcomes.length)));
         controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, _outcomes, 0, 1 ether, IMarket.MarketType.CATEGORICAL);
         return _newMarket;
     }
@@ -457,7 +457,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return _newMarket;
     }
 
-    function createMarketInternal(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint8 _numOutcomes, uint256 _numTicks) private onlyInGoodTimes afterInitialized returns (IMarket _newMarket) {
+    function createMarketInternal(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint256 _numOutcomes, uint256 _numTicks) private onlyInGoodTimes afterInitialized returns (IMarket _newMarket) {
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
         getReputationToken().trustedUniverseTransfer(_sender, _marketFactory, getOrCacheDesignatedReportNoShowBond());
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, _sender, _numOutcomes, _numTicks);
@@ -466,11 +466,11 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function redeemStake(IReportingParticipant[] _reportingParticipants, IFeeWindow[] _feeWindows) public onlyInGoodTimes returns (bool) {
-        for (uint8 i=0; i < _reportingParticipants.length; i++) {
+        for (uint256 i=0; i < _reportingParticipants.length; i++) {
             _reportingParticipants[i].redeem(msg.sender);
         }
 
-        for (uint8 k=0; k < _feeWindows.length; k++) {
+        for (uint256 k=0; k < _feeWindows.length; k++) {
             _feeWindows[k].redeem(msg.sender);
         }
 

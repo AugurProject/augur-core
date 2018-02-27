@@ -13,7 +13,7 @@ contract MockMarket is IMarket {
     bytes32 private updateDerivePayoutDistributionHashValue;
     IFeeWindow private feeWindow;
     IFeeWindow private setMigrateDueToNoReportsNextStateValue;
-    uint8 private numberOfOutcomes;
+    uint256 private numberOfOutcomes;
     uint256 private numTicks;
     ICash private denominationToken;
     IShareToken private shareToken;
@@ -37,7 +37,7 @@ contract MockMarket is IMarket {
     bool private transferOwner;
     IUniverse private initializeUniverseValue;
     uint256 private initializeEndTime;
-    uint8 private initializeNumOutcomesValue;
+    uint256 private initializeNumOutcomesValue;
     uint256 private initializeNumTicksValue;
     uint256 private initializeFeePerEthInAttoethValue;
     ICash private initializeCashValue;
@@ -65,7 +65,7 @@ contract MockMarket is IMarket {
         feeWindow = _feeWindow;
     }
 
-    function setNumberOfOutcomes(uint8 _numberOfOutcomes) public {
+    function setNumberOfOutcomes(uint256 _numberOfOutcomes) public {
         numberOfOutcomes = _numberOfOutcomes;
     }
 
@@ -165,7 +165,7 @@ contract MockMarket is IMarket {
         return initializeEndTime;
     }
 
-    function getInitializeNumOutcomesValue() public returns(uint8) {
+    function getInitializeNumOutcomesValue() public returns(uint256) {
         return initializeNumOutcomesValue;
     }
 
@@ -224,7 +224,7 @@ contract MockMarket is IMarket {
         return "Market";
     }
 
-    function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoeth, ICash _cash, address _designatedReporterAddress, address _creator, uint8 _numOutcomes, uint256 _numTicks) public payable returns (bool _success) {
+    function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoeth, ICash _cash, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public payable returns (bool _success) {
         initializeUniverseValue = _universe;
         initializeEndTime = _endTime;
         initializeNumOutcomesValue = _numOutcomes;
@@ -257,7 +257,7 @@ contract MockMarket is IMarket {
         return feeWindow;
     }
 
-    function getNumberOfOutcomes() public view returns (uint8) {
+    function getNumberOfOutcomes() public view returns (uint256) {
         return numberOfOutcomes;
     }
 
@@ -269,7 +269,7 @@ contract MockMarket is IMarket {
         return denominationToken;
     }
 
-    function getShareToken(uint8 _outcome)  public view returns (IShareToken) {
+    function getShareToken(uint256 _outcome)  public view returns (IShareToken) {
         return shareToken;
     }
 
@@ -351,7 +351,7 @@ contract MockMarket is IMarket {
         return bytes32(0);
     }
 
-    function getWinningPayoutNumerator(uint8 _outcome) public view returns (uint256) {
+    function getWinningPayoutNumerator(uint256 _outcome) public view returns (uint256) {
         return 0;
     }
 

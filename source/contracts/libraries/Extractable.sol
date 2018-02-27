@@ -29,7 +29,7 @@ contract Extractable is Controlled {
 
     function mayExtract(ERC20Basic _token) private returns (bool) {
         address[] memory _protectedTokens = getProtectedTokens();
-        for (uint8 i = 0; i < _protectedTokens.length; i++) {
+        for (uint256 i = 0; i < _protectedTokens.length; i++) {
             if (_protectedTokens[i] == address(_token)) {
                 return false;
             }

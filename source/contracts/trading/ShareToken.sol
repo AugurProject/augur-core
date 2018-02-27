@@ -18,9 +18,9 @@ contract ShareToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     string constant public symbol = "SHARE";
 
     IMarket private market;
-    uint8 private outcome;
+    uint256 private outcome;
 
-    function initialize(IMarket _market, uint8 _outcome) external beforeInitialized returns(bool) {
+    function initialize(IMarket _market, uint256 _outcome) external beforeInitialized returns(bool) {
         endInitialization();
         market = _market;
         outcome = _outcome;
@@ -56,7 +56,7 @@ contract ShareToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         return market;
     }
 
-    function getOutcome() external view returns(uint8) {
+    function getOutcome() external view returns(uint256) {
         return outcome;
     }
 

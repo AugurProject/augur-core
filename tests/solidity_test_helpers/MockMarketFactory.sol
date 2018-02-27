@@ -12,7 +12,7 @@ contract MockMarketFactory {
     IController private createMarketControllerValue;
     IUniverse private createMarketUniverseValue;
     uint256 private createMarketEndTimeValue;
-    uint8 private createMarketNumOutcomesValue;
+    uint256 private createMarketNumOutcomesValue;
     uint256 private createMarketNumTicksValue;
     uint256 private createMarketfeePerEthInWeiValue;
     ICash private createMarketDenominationTokenValue;
@@ -35,7 +35,7 @@ contract MockMarketFactory {
         return createMarketEndTimeValue;
     }
 
-    function getCreateMarketNumOutcomesValue() public returns(uint8) {
+    function getCreateMarketNumOutcomesValue() public returns(uint256) {
         return createMarketNumOutcomesValue;
     }
 
@@ -59,7 +59,7 @@ contract MockMarketFactory {
         return createMarketDesignatedReporterAddressValue;
     }
 
-    function createMarket(IController _controller, IUniverse _universe, uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint8 _numOutcomes, uint256 _numTicks) public payable returns (IMarket _market) {
+    function createMarket(IController _controller, IUniverse _universe, uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint256 _numOutcomes, uint256 _numTicks) public payable returns (IMarket _market) {
         createMarketControllerValue = _controller;
         createMarketUniverseValue = _universe;
         createMarketEndTimeValue = _endTime;

@@ -159,7 +159,7 @@ ${contractMethods.join("\n\n")}
 
     private getTsTypeFromPrimitive(abiType: Primitive) {
         switch(abiType) {
-            case 'uint8':
+            case 'uint256':
             case 'uint64':
             case 'uint256':
             case 'int256': {
