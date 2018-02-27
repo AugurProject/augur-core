@@ -272,7 +272,7 @@ def test_finalized_fork_migration(localFixture, universe, market, categoricalMar
     proceedToFork(localFixture, market, universe)
     finalizeFork(localFixture, market, universe)
 
-    # The categorical market is finazlied and cannot be migrated to the new universe
+    # The categorical market is finalized and cannot be migrated to the new universe
     with raises(TransactionFailed):
         categoricalMarket.migrateThroughOneFork()
 
