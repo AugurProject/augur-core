@@ -251,7 +251,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     function getOrCreateDisputeCrowdsourcer(bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) private returns (IDisputeCrowdsourcer) {
         IDisputeCrowdsourcer _crowdsourcer = IDisputeCrowdsourcer(crowdsourcers.getAsAddressOrZero(_payoutDistributionHash));
         if (_crowdsourcer == IDisputeCrowdsourcer(0)) {
-            uint256 _size = getTotalStake().mul(2).sub(getStakeInOutcome(_payoutDistributionHash).mul(3));
+            uint256 _size = getParticipantStake().mul(2).sub(getStakeInOutcome(_payoutDistributionHash).mul(3));
             DisputeCrowdsourcerFactory _disputeCrowdsourcerFactory = DisputeCrowdsourcerFactory(controller.lookup("DisputeCrowdsourcerFactory"));
             _crowdsourcer = _disputeCrowdsourcerFactory.createDisputeCrowdsourcer(controller, this, _size, _payoutDistributionHash, _payoutNumerators, _invalid);
             crowdsourcers.add(_payoutDistributionHash, address(_crowdsourcer));
@@ -320,7 +320,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function getTotalStake() public view returns (uint256) {
+    function getParticipantStake() public view returns (uint256) {
         uint256 _sum;
         // Participants is implicitly bounded by the floor of the initial report REP cost to be no more than 21
         for (uint256 i = 0; i < participants.length; ++i) {

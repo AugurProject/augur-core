@@ -390,7 +390,7 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     # dispute the first market
     chosenPayoutNumerators = [market.getNumTicks(), 0]
     chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
-    amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
+    amount = 2 * market.getParticipantStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
     assert market.contribute(chosenPayoutNumerators, False, amount)
     newFeeWindowAddress = market.getFeeWindow()
     assert newFeeWindowAddress != feeWindow
@@ -398,7 +398,7 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     # dispute the second market with an invalid outcome
     chosenPayoutNumerators = [categoricalMarket.getNumTicks() / 3, categoricalMarket.getNumTicks() / 3, categoricalMarket.getNumTicks() / 3]
     chosenPayoutHash = categoricalMarket.derivePayoutDistributionHash(chosenPayoutNumerators, True)
-    amount = 2 * categoricalMarket.getTotalStake() - 3 * categoricalMarket.getStakeInOutcome(chosenPayoutHash)
+    amount = 2 * categoricalMarket.getParticipantStake() - 3 * categoricalMarket.getStakeInOutcome(chosenPayoutHash)
     assert categoricalMarket.contribute(chosenPayoutNumerators, True, amount)
     assert categoricalMarket.getFeeWindow() != feeWindow
 

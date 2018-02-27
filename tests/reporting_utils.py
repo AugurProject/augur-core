@@ -41,7 +41,7 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
             chosenPayoutNumerators = payoutNumerators if not firstReportWinning else payoutNumerators[::-1]
 
         chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
-        amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
+        amount = 2 * market.getParticipantStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
         with PrintGasUsed(fixture, "Contribute:", 0):
             market.contribute(chosenPayoutNumerators, False, amount, startgas=long(6.7 * 10**7), sender=contributor)
         assert market.getForkingMarket() or market.getFeeWindow() != feeWindow

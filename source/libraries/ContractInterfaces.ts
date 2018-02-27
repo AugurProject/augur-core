@@ -48,7 +48,7 @@
         }
     }
 
-    
+
     export class Controlled extends Contract {
         public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
             super(connector, accountManager, address, defaultGasPrice);
@@ -3127,9 +3127,9 @@
             return <string>result[0];
         }
 
-        public getTotalStake_ = async( options?: { sender?: string }): Promise<BN> => {
+        public getParticipantStake_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getTotalStake","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getParticipantStake","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
         }
@@ -5770,4 +5770,3 @@
     export function ContractFactory(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN): Controlled {
         return new Controlled(connector, accountManager, address, defaultGasPrice);
     }
-    

@@ -101,7 +101,7 @@ def test_contribute(localFixture, universe, cash, market):
         market.contribute([0, market.getNumTicks()], False, 1)
 
     with PrintGasUsed(localFixture, "Market.contribute", FIRST_COMPLETED_CONTRIBUTE):
-        market.contribute([0, market.getNumTicks()], False, market.getTotalStake())
+        market.contribute([0, market.getNumTicks()], False, market.getParticipantStake())
 
     for i in range(9):
         proceedToNextRound(localFixture, market, randomPayoutNumerators = True)
@@ -110,7 +110,7 @@ def test_contribute(localFixture, universe, cash, market):
         proceedToNextRound(localFixture, market, randomPayoutNumerators = True)
 
     with PrintGasUsed(localFixture, "Market.contribute", FORKING_CONTRIBUTE):
-        market.contribute([market.getNumTicks() / 2, market.getNumTicks() / 2], False, market.getTotalStake(), startgas=long(6.7 * 10**6))
+        market.contribute([market.getNumTicks() / 2, market.getNumTicks() / 2], False, market.getParticipantStake(), startgas=long(6.7 * 10**6))
 
 def test_redeem(localFixture, universe, cash, market):
     # Initial report

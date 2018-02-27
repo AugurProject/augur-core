@@ -45,7 +45,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
 
     function migrateOut(IReputationToken _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(_attotokens > 0);
-        assertReputationTokenIsLegit(_destination);
+        assertReputationTokenIsLegitSibling(_destination);
         burn(msg.sender, _attotokens);
         _destination.migrateIn(msg.sender, _attotokens);
         return true;
@@ -111,7 +111,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function assertReputationTokenIsLegit(IReputationToken _shadyReputationToken) private view returns (bool) {
+    function assertReputationTokenIsLegitSibling(IReputationToken _shadyReputationToken) private view returns (bool) {
         IUniverse _shadyUniverse = _shadyReputationToken.getUniverse();
         require(universe.isParentOf(_shadyUniverse));
         IUniverse _legitUniverse = _shadyUniverse;
