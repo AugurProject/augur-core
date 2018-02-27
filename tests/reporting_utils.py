@@ -118,7 +118,9 @@ def finalizeFork(fixture, market, universe, finalizeByMigration = True):
     with TokenDelta(yesUniverseReputationToken, amountAdded, tester.a0, "reputation migration bonus did not work correctly"):
         reputationToken.migrateOut(yesUniverseReputationToken.address, amount)
 
-    assert market.finalizeFork()
+    # Finalize fork cannot be called again
+    with raises(TransactionFailed):
+        market.finalizeFork()
 
 def generateFees(fixture, universe, market):
     completeSets = fixture.contracts['CompleteSets']
