@@ -201,7 +201,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
         IReportingParticipant _reportingParticipant;
 
-        // Initial pass is to liquidate losers so we have sufficient REP to pay the winners
+        // Initial pass is to liquidate losers so we have sufficient REP to pay the winners. Participants is implicitly bounded by the floor of the initial report REP cost to be no more than 21
         for (uint256 i = 0; i < participants.length; i++) {
             _reportingParticipant = participants[i];
             if (_reportingParticipant.getPayoutDistributionHash() != winningPayoutDistributionHash) {
@@ -211,7 +211,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
         IReputationToken _reputationToken = getReputationToken();
 
-        // Now redistribute REP
+        // Now redistribute REP. Participants is implicitly bounded by the floor of the initial report REP cost to be no more than 21
         for (uint256 j = 0; j < participants.length; j++) {
             _reportingParticipant = participants[j];
             if (_reportingParticipant.getPayoutDistributionHash() == winningPayoutDistributionHash) {
@@ -323,6 +323,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function getTotalStake() public view returns (uint256) {
         uint256 _sum;
+        // Participants is implicitly bounded by the floor of the initial report REP cost to be no more than 21
         for (uint256 i = 0; i < participants.length; ++i) {
             _sum += participants[i].getStake();
         }
@@ -331,6 +332,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
     function getStakeInOutcome(bytes32 _payoutDistributionHash) public view returns (uint256) {
         uint256 _sum;
+        // Participants is implicitly bounded by the floor of the initial report REP cost to be no more than 21
         for (uint256 i = 0; i < participants.length; ++i) {
             if (participants[i].getPayoutDistributionHash() != _payoutDistributionHash) {
                 continue;
@@ -464,6 +466,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
         if (crowdsourcers.getAsAddressOrZero(_shadyReportingParticipant.getPayoutDistributionHash()) == address(_shadyReportingParticipant)) {
             return true;
         }
+        // Participants is implicitly bounded by the floor of the initial report REP cost to be no more than 21
         for (uint256 i = 0; i < participants.length; i++) {
             if (_shadyReportingParticipant == participants[i]) {
                 return true;
