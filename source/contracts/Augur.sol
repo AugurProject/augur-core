@@ -12,11 +12,10 @@ import 'reporting/IReportingParticipant.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';
 import 'trading/IShareToken.sol';
 import 'trading/Order.sol';
-import 'libraries/Extractable.sol';
 
 
 // Centralized approval authority and event emissions
-contract Augur is Controlled, Extractable, IAugur {
+contract Augur is Controlled, IAugur {
 
     enum TokenType{
         ReputationToken,
@@ -349,9 +348,5 @@ contract Augur is Controlled, Extractable, IAugur {
         require(_universe.isContainerForMarket(_market));
         InitialReporterTransferred(_universe, _market, _from, _to);
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

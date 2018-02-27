@@ -12,10 +12,9 @@ import 'reporting/IMarket.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';
 import 'libraries/math/SafeMathUint256.sol';
-import 'libraries/Extractable.sol';
 
 
-contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable, VariableSupplyToken, IReputationToken {
+contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IReputationToken {
     using SafeMathUint256 for uint256;
 
     string constant public name = "Reputation";
@@ -171,9 +170,5 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
         controller.getAugur().logReputationTokenBurned(universe, _target, _amount);
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

@@ -12,10 +12,9 @@ import 'trading/ICreateOrder.sol';
 import 'trading/IOrders.sol';
 import 'trading/IFillOrder.sol';
 import 'libraries/CashAutoConverter.sol';
-import 'libraries/Extractable.sol';
 
 
-contract Trade is CashAutoConverter, Extractable, ReentrancyGuard, MarketValidator {
+contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
     uint256 private constant MINIMUM_GAS_NEEDED = 500000;
 
     function publicBuy(IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bytes32) {
@@ -76,9 +75,5 @@ contract Trade is CashAutoConverter, Extractable, ReentrancyGuard, MarketValidat
             }
         }
         return _bestFxpAmount;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

@@ -10,7 +10,6 @@ import 'reporting/IMarket.sol';
 import 'trading/ICash.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/Reporting.sol';
-import 'libraries/Extractable.sol';
 
 
 // AUDIT: Ensure that a malicious market can't subversively cause share tokens to be paid out incorrectly.
@@ -18,7 +17,7 @@ import 'libraries/Extractable.sol';
  * @title ClaimTradingProceeds
  * @dev This allows users to claim their money from a market by exchanging their shares
  */
-contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard, MarketValidator, IClaimTradingProceeds {
+contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValidator, IClaimTradingProceeds {
     using SafeMathUint256 for uint256;
 
     function claimTradingProceeds(IMarket _market, address _shareHolder) marketIsLegit(_market) onlyInGoodTimes nonReentrant external returns(bool) {
@@ -86,9 +85,5 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
     function calculateCreatorFee(IMarket _market, uint256 _amount) public view returns (uint256) {
         uint256 _creatorFeeDivisor = _market.getMarketCreatorSettlementFeeDivisor();
         return _amount.div(_creatorFeeDivisor);
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }
