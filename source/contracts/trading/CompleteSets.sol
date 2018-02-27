@@ -21,14 +21,14 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
     /**
      * Buys `_amount` shares of every outcome in the specified market.
     **/
-    function publicBuyCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) payable convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
+    function publicBuyCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) payable convertToAndFromCash onlyInGoodTimes returns (bool) {
         this.buyCompleteSets(msg.sender, _market, _amount);
         controller.getAugur().logCompleteSetsPurchased(_market.getUniverse(), _market, msg.sender, _amount);
         _market.assertBalances();
         return true;
     }
 
-    function buyCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (bool) {
+    function buyCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers nonReentrant returns (bool) {
         require(_sender != address(0));
 
         uint256 _numOutcomes = _market.getNumberOfOutcomes();
@@ -46,14 +46,14 @@ contract CompleteSets is Controlled, Extractable, CashAutoConverter, ReentrancyG
         return true;
     }
 
-    function publicSellCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes nonReentrant returns (bool) {
+    function publicSellCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bool) {
         this.sellCompleteSets(msg.sender, _market, _amount);
         controller.getAugur().logCompleteSetsSold(_market.getUniverse(), _market, msg.sender, _amount);
         _market.assertBalances();
         return true;
     }
 
-    function sellCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers returns (uint256 _creatorFee, uint256 _reportingFee) {
+    function sellCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers nonReentrant returns (uint256 _creatorFee, uint256 _reportingFee) {
         require(_sender != address(0));
 
         uint256 _numOutcomes = _market.getNumberOfOutcomes();
