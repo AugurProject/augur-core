@@ -157,6 +157,7 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
             universe.fork();
         } else {
             feeWindow = universe.getOrCreateNextFeeWindow();
+            // Participants is implicitly bounded by the floor of the initial report REP cost to be no more than 21
             for (uint256 i = 0; i < participants.length; i++) {
                 participants[i].migrate();
             }
