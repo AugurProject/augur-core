@@ -16,10 +16,9 @@ import 'reporting/Reporting.sol';
 import 'reporting/IRepPriceOracle.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'IAugur.sol';
-import 'libraries/Extractable.sol';
 
 
-contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniverse {
+contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     using SafeMathUint256 for uint256;
 
     IUniverse private parentUniverse;
@@ -475,9 +474,5 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         }
 
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

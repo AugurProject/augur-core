@@ -5,10 +5,9 @@ import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/BaseReportingParticipant.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/DelegationTarget.sol';
-import 'libraries/Extractable.sol';
 
 
-contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractable, BaseReportingParticipant, IDisputeCrowdsourcer, Initializable {
+contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseReportingParticipant, IDisputeCrowdsourcer, Initializable {
     function initialize(IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
@@ -105,12 +104,5 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, Extractab
 
     function getReputationToken() public view returns (IReputationToken) {
         return reputationToken;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        address[] memory _protectedTokens = new address[](2);
-        _protectedTokens[0] = feeWindow;
-        _protectedTokens[1] = reputationToken;
-        return _protectedTokens;
     }
 }

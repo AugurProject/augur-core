@@ -5,11 +5,10 @@ import 'libraries/DelegationTarget.sol';
 import 'reporting/IInitialReporter.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/BaseReportingParticipant.sol';
-import 'libraries/Extractable.sol';
 import 'libraries/Ownable.sol';
 
 
-contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportingParticipant, Initializable, IInitialReporter {
+contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant, Initializable, IInitialReporter {
     address private designatedReporter;
     address private actualReporter;
     uint256 private reportTimestamp;
@@ -120,12 +119,5 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
             owner = _newOwner;
         }
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        address[] memory _protectedTokens = new address[](2);
-        _protectedTokens[0] = feeWindow;
-        _protectedTokens[1] = reputationToken;
-        return _protectedTokens;
     }
 }

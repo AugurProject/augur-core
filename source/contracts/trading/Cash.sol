@@ -4,7 +4,6 @@ import 'trading/ICash.sol';
 import 'Controlled.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/token/VariableSupplyToken.sol';
-import 'libraries/Extractable.sol';
 import 'libraries/DelegationTarget.sol';
 
 
@@ -12,7 +11,7 @@ import 'libraries/DelegationTarget.sol';
  * @title Cash
  * @dev ETH wrapper contract to make it look like an ERC20 token.
  */
-contract Cash is DelegationTarget, Extractable, ITyped, VariableSupplyToken, ICash {
+contract Cash is DelegationTarget, ITyped, VariableSupplyToken, ICash {
 
     string constant public name = "Cash";
     string constant public symbol = "CASH";
@@ -56,10 +55,6 @@ contract Cash is DelegationTarget, Extractable, ITyped, VariableSupplyToken, ICa
 
     function onBurn(address, uint256) internal returns (bool) {
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 
     function onTokenTransfer(address, address, uint256) internal returns (bool) {

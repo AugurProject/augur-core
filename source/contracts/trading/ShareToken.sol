@@ -7,10 +7,9 @@ import 'libraries/token/VariableSupplyToken.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'reporting/IMarket.sol';
-import 'libraries/Extractable.sol';
 
 
-contract ShareToken is DelegationTarget, Extractable, ITyped, Initializable, VariableSupplyToken, IShareToken {
+contract ShareToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IShareToken {
 
     //FIXME: Delegated contracts cannot currently use string values, so we will need to find a workaround if this hasn't been fixed before we release
     string constant public name = "Shares";
@@ -77,9 +76,5 @@ contract ShareToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
         controller.getAugur().logShareTokenBurned(market.getUniverse(), _target, _amount);
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

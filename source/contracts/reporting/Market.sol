@@ -19,14 +19,13 @@ import 'factories/MapFactory.sol';
 import 'libraries/token/ERC20Basic.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/SafeMathInt256.sol';
-import 'libraries/Extractable.sol';
 import 'factories/MailboxFactory.sol';
 import 'reporting/IMailbox.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IInitialReporter.sol';
 
 
-contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable, IMarket {
+contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     using SafeMathUint256 for uint256;
     using SafeMathInt256 for int256;
 
@@ -490,18 +489,5 @@ contract Market is DelegationTarget, Extractable, ITyped, Initializable, Ownable
 
         assert(cash.balanceOf(this) >= _expectedBalance);
         return true;
-    }
-
-    // Markets hold the initial fees paid by the creator in ETH and REP, so we dissallow ETH and REP extraction by the controller
-    function getProtectedTokens() internal returns (address[] memory) {
-        address[] memory _protectedTokens = new address[](numOutcomes + 3);
-        for (uint256 i = 0; i < numOutcomes; i++) {
-            _protectedTokens[i] = shareTokens[i];
-        }
-        // address(1) is the sentinel value for Ether extraction
-        _protectedTokens[numOutcomes] = address(1);
-        _protectedTokens[numOutcomes + 1] = getReputationToken();
-        _protectedTokens[numOutcomes + 2] = cash;
-        return _protectedTokens;
     }
 }
