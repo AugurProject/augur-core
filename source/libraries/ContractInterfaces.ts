@@ -921,13 +921,6 @@
             const result = await this.localCall(abi, [key], options.sender);
             return <string>result[0];
         }
-
-        public assertOnlySpecifiedCaller_ = async(caller: string, allowedCaller: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_caller","type":"address"},{"name":"_allowedCaller","type":"bytes32"}],"name":"assertOnlySpecifiedCaller","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [caller, allowedCaller], options.sender);
-            return <boolean>result[0];
-        }
     }
 
 

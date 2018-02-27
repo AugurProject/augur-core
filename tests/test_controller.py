@@ -38,13 +38,6 @@ def test_registry(localFixture, controller, decentralizedController):
         assert controller.registerContract(key1, 123, garbageBytes20, garbageBytes32, sender = tester.k0)
 
     assert controller.lookup(key1, sender = tester.k2) == longToHexString(123)
-    with raises(TransactionFailed): controller.assertOnlySpecifiedCaller(tester.a1, key2, sender = tester.k2)
-    assert controller.registerContract(key2, tester.a1, garbageBytes20, garbageBytes32, sender = tester.k0)
-    assert controller.assertOnlySpecifiedCaller(tester.a1, key2, sender = tester.k2)
-    # dev mode special
-    assert controller.assertOnlySpecifiedCaller(tester.a1, key2, sender = tester.k0)
-    with raises(TransactionFailed): decentralizedController.assertOnlySpecifiedCaller(tester.a2, key2, sender = tester.k0)
-    with raises(TransactionFailed): controller.assertOnlySpecifiedCaller(tester.a2, key2, sender = tester.k2)
 
 def test_suicide(controller, decentralizedController, controllerUser):
     with raises(TransactionFailed): controller.suicideFunds(controllerUser.address, tester.a0, [tester.a2], sender = tester.k2)

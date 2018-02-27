@@ -103,11 +103,6 @@ contract Controller is IController {
         return registry[_key].contractAddress;
     }
 
-    function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) public view returns (bool) {
-        require(registry[_allowedCaller].contractAddress == _caller || (msg.sender == owner && whitelist[owner]));
-        return true;
-    }
-
     /*
      * Contract Administration [dev mode can use it]
      */
