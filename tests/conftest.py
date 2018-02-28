@@ -127,7 +127,7 @@ class ContractsFixture:
                 },
                 'outputSelection': {
                     "*": {
-                        '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
+                        '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap', 'abi' ]
                     }
                 }
             }

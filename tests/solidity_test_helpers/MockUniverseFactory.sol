@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'libraries/Delegator.sol';
@@ -22,7 +22,7 @@ contract MockUniverseFactory {
     function getCreateUniverseParentPayoutDistributionHashValue() public returns(bytes32) {
         return createUniverseParentPayoutDistributionHashValue;
     }
-    
+
     function createUniverse(IController _controller, IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
         createUniverseParentUniverseValue = _parentUniverse;
         createUniverseParentPayoutDistributionHashValue = _parentPayoutDistributionHash;

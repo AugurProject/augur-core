@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'libraries/Delegator.sol';
@@ -21,7 +21,7 @@ contract MockFeeTokenFactory {
     function getCreateFeeTokenFeeWindowValue() public returns(IFeeWindow) {
         return createFeeTokenFeeWindowValue;
     }
-    
+
     function createFeeToken(IController _controller, IFeeWindow _feeWindow) public returns (IFeeToken) {
         createFeeTokenFeeWindowValue = _feeWindow;
         return setCreateFeeTokenValue;

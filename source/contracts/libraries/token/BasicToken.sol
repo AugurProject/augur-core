@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'libraries/token/ERC20Basic.sol';
@@ -27,7 +27,7 @@ contract BasicToken is ERC20Basic {
     /**
     * @dev allows internal token transfers
     * @param _from The source address
-    * @param _to The destination address 
+    * @param _to The destination address
     */
     function internalTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
         balances[_from] = balances[_from].sub(_value);
@@ -55,5 +55,5 @@ contract BasicToken is ERC20Basic {
     }
 
     // Subclasses of this token generally want to send additional logs through the centralized Augur log emitter contract
-    function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool); 
+    function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool);
 }
