@@ -31,7 +31,11 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
         for (uint256 _outcome = 0; _outcome < _market.getNumberOfOutcomes(); ++_outcome) {
             IShareToken _shareToken = _market.getShareToken(_outcome);
             uint256 _numberOfShares = _shareToken.balanceOf(_shareHolder);
-            var (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _outcome, _numberOfShares);
+            uint256 _proceeds;
+            uint256 _shareHolderShare;
+            uint256 _creatorShare;
+            uint256 _reporterShare;
+            (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _outcome, _numberOfShares);
 
             if (_proceeds > 0) {
                 _market.getUniverse().decrementOpenInterest(_proceeds);
