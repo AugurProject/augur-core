@@ -134,3 +134,13 @@ def test_transfrom_more_than_total_supply(testStandardTokenFixture):
     with raises(TransactionFailed):
         standardToken.transfer(tester.a1, 21)
 
+def test_approval_increments(testStandardTokenFixture):
+    standardToken = testStandardTokenFixture.contracts['StandardTokenHelper']
+
+    assert standardToken.approve(tester.a0, 100, sender=tester.k1)
+    assert standardToken.allowance(tester.a1, tester.a0) == 100
+    assert standardToken.increaseApproval(tester.a0, 1, sender=tester.k1)
+    assert standardToken.allowance(tester.a1, tester.a0) == 101
+    assert standardToken.decreaseApproval(tester.a0, 2, sender=tester.k1)
+    assert standardToken.allowance(tester.a1, tester.a0) == 99
+
