@@ -61,6 +61,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         endInitialization();
         require(MIN_OUTCOMES <= _numOutcomes && _numOutcomes <= MAX_OUTCOMES);
         require(_numTicks > 0);
+        require(_designatedReporterAddress != NULL_ADDRESS);
         require((_numTicks.isMultipleOf(_numOutcomes)));
         require(_feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);

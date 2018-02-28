@@ -398,7 +398,7 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
         }
 
         logOrderFilled(_tradeData, _marketCreatorFees, _reporterFees, _tradeGroupId);
-        _tradeData.contracts.orders.fillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
+        _tradeData.contracts.orders.recordFillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
         return _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);
     }
 

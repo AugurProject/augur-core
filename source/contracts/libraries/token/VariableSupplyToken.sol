@@ -19,6 +19,7 @@ contract VariableSupplyToken is StandardToken {
         balances[_target] = balances[_target].add(_amount);
         supply = supply.add(_amount);
         Mint(_target, _amount);
+        Transfer(address(0), _target, _amount);
         onMint(_target, _amount);
         return true;
     }
@@ -32,6 +33,7 @@ contract VariableSupplyToken is StandardToken {
         balances[_target] = balances[_target].sub(_amount);
         supply = supply.sub(_amount);
         Burn(_target, _amount);
+        Transfer(_target, address(0), _amount);
         onBurn(_target, _amount);
         return true;
     }

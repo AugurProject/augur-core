@@ -30,16 +30,18 @@ contract Cash is DelegationTarget, ITyped, VariableSupplyToken, ICash {
     }
 
     function withdrawEther(uint256 _amount) external returns(bool) {
-        require(_amount > 0 && _amount <= balances[msg.sender]);
-        burn(msg.sender, _amount);
-        require(msg.sender.call.value(_amount)());
-        assert(this.balance >= totalSupply());
+        withdrawEtherInternal(msg.sender, msg.sender, _amount);
         return true;
     }
 
     function withdrawEtherTo(address _to, uint256 _amount) external returns(bool) {
-        require(_amount > 0 && _amount <= balances[msg.sender]);
-        burn(msg.sender, _amount);
+        withdrawEtherInternal(msg.sender, _to, _amount);
+        return true;
+    }
+
+    function withdrawEtherInternal(address _from, address _to, uint256 _amount) private returns(bool) {
+        require(_amount > 0 && _amount <= balances[_from]);
+        burn(_from, _amount);
         require(_to.call.value(_amount)());
         assert(this.balance >= totalSupply());
         return true;
