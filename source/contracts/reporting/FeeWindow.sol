@@ -6,7 +6,6 @@ pragma solidity 0.4.18;
 import 'reporting/IFeeWindow.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/Initializable.sol';
-import 'libraries/collections/Set.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IMarket.sol';
@@ -23,8 +22,11 @@ import 'factories/FeeTokenFactory.sol';
 
 contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFeeWindow {
     using SafeMathUint256 for uint256;
-    using Set for Set.Data;
     using RunningAverage for RunningAverage.Data;
+
+    string constant public name = "Participation Token";
+    string constant public symbol = "PT";
+    uint8 constant public decimals = 0;
 
     IUniverse private universe;
     uint256 private startTime;

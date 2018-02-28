@@ -62,8 +62,6 @@ library Trade {
     //
 
     function create(IController _controller, bytes32 _orderId, address _fillerAddress, uint256 _fillerSize) internal view returns (Data) {
-        // TODO: data validation
-
         Contracts memory _contracts = getContracts(_controller, _orderId);
         FilledOrder memory _order = getOrder(_contracts, _orderId);
         Order.Types _orderOrderType = _contracts.orders.getOrderType(_orderId);
@@ -392,7 +390,6 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
             _tradeData.contracts.denominationToken.withdrawEtherTo(_tradeData.creator.participantAddress, _creatorCashBalance);
         }
 
-        // AUDIT: is there a reentry risk here?  we execute all of the above code, which includes transferring tokens around, before we mark the order as filled
         logOrderFilled(_tradeData, _marketCreatorFees, _reporterFees, _tradeGroupId);
         _tradeData.contracts.orders.fillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
         return _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);

@@ -19,7 +19,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
 
     string constant public name = "Reputation";
     string constant public symbol = "REP";
-    uint256 constant public decimals = 18;
+    uint8 constant public decimals = 18;
     IUniverse private universe;
     uint256 private totalMigrated;
     mapping(address => uint256) migratedToSibling;
@@ -45,7 +45,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
 
     function migrateOut(IReputationToken _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(_attotokens > 0);
-        assertReputationTokenIsLegit(_destination);
+        assertReputationTokenIsLegitSibling(_destination);
         burn(msg.sender, _attotokens);
         _destination.migrateIn(msg.sender, _attotokens);
         return true;
@@ -87,31 +87,27 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(IUniverse(msg.sender) == universe);
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForMarket(IMarket(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function assertReputationTokenIsLegit(IReputationToken _shadyReputationToken) private view returns (bool) {
+    function assertReputationTokenIsLegitSibling(IReputationToken _shadyReputationToken) private view returns (bool) {
         IUniverse _shadyUniverse = _shadyReputationToken.getUniverse();
         require(universe.isParentOf(_shadyUniverse));
         IUniverse _legitUniverse = _shadyUniverse;

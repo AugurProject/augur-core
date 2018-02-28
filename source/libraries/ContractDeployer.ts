@@ -206,6 +206,7 @@ Deploying to: ${networkConfiguration.networkName}
         const promises: Array<Promise<any>> = [];
         for (let contract of this.contracts) {
             if (!contract.relativeFilePath.startsWith("trading/")) continue;
+            if (contract.contractName === 'ShareToken') continue;
             if (contract.address === undefined) throw new Error(`Attempted to whitelist ${contract.contractName} but it has not yet been uploaded.`);
             // Skip if already whitelisted (happens if this contract was previously uploaded)
             if (await this.controller.whitelist_(contract.address)) {

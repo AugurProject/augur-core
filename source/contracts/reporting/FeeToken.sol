@@ -7,6 +7,11 @@ import 'libraries/token/VariableSupplyToken.sol';
 
 
 contract FeeToken is DelegationTarget, VariableSupplyToken, IFeeToken {
+
+    string constant public name = "FeeToken";
+    string constant public symbol = "FEE";
+    uint8 constant public decimals = 0;
+
     IFeeWindow private feeWindow;
 
     function initialize(IFeeWindow _feeWindow) public beforeInitialized returns (bool) {

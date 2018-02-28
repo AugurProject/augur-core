@@ -25,7 +25,6 @@ contract Controller is IController {
 
     address public owner;
     mapping(address => bool) public whitelist;
-    // TODO: remove the registry in favor of registeredContracts
     mapping(bytes32 => ContractDetails) public registry;
     bool public stopped = false;
 
@@ -102,11 +101,6 @@ contract Controller is IController {
 
     function lookup(bytes32 _key) public view returns (address) {
         return registry[_key].contractAddress;
-    }
-
-    function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) public view returns (bool) {
-        require(registry[_allowedCaller].contractAddress == _caller || (msg.sender == owner && whitelist[owner]));
-        return true;
     }
 
     /*

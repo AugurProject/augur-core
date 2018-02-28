@@ -106,7 +106,7 @@ def test_failed_crowdsourcer_fees(finalize, localFixture, universe, market, cash
     generateFees(localFixture, universe, market)
 
     # We'll have testers contribute to a dispute but not reach the target
-    amount = market.getTotalStake()
+    amount = market.getParticipantStake()
 
     with TokenDelta(reputationToken, -amount + 1, tester.a1, "Disputing did not reduce REP balance correctly"):
         assert market.contribute([1, market.getNumTicks()-1], False, amount - 1, sender=tester.k1, startgas=long(6.7 * 10**6))
@@ -149,7 +149,7 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
     generateFees(localFixture, universe, market)
 
     # We'll have testers push markets into the next round by funding dispute crowdsourcers
-    amount = 2 * market.getTotalStake()
+    amount = 2 * market.getParticipantStake()
     with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
         assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k1, startgas=long(6.7 * 10**6))
 
@@ -171,7 +171,7 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
     expectedTotalFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
 
     expectedFees = expectedTotalFees * 2 / 3
-    expectedRep = market.getTotalStake()
+    expectedRep = market.getParticipantStake()
     assert expectedRep == long(marketDisputeCrowdsourcer.getStake() + marketDisputeCrowdsourcer.getStake() / 2)
     disputeCrowdsourcerRedeemedLog = {
         "reporter": bytesToHexString(tester.a1),
@@ -271,7 +271,7 @@ def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market,
     generateFees(localFixture, universe, market)
 
     # We'll have testers push markets into the next round by funding dispute crowdsourcers
-    amount = market.getTotalStake()
+    amount = market.getParticipantStake()
     with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
         assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k1, startgas=long(6.7 * 10**6))
     with TokenDelta(reputationToken, -amount, tester.a2, "Disputing did not reduce REP balance correctly"):

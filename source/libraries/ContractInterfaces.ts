@@ -48,7 +48,7 @@
         }
     }
 
-    
+
     export class Controlled extends Contract {
         public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
             super(connector, accountManager, address, defaultGasPrice);
@@ -920,13 +920,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_key","type":"bytes32"}],"name":"lookup","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [key], options.sender);
             return <string>result[0];
-        }
-
-        public assertOnlySpecifiedCaller_ = async(caller: string, allowedCaller: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_caller","type":"address"},{"name":"_allowedCaller","type":"bytes32"}],"name":"assertOnlySpecifiedCaller","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [caller, allowedCaller], options.sender);
-            return <boolean>result[0];
         }
     }
 
@@ -3127,9 +3120,9 @@
             return <string>result[0];
         }
 
-        public getTotalStake_ = async( options?: { sender?: string }): Promise<BN> => {
+        public getParticipantStake_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getTotalStake","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getParticipantStake","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
         }
@@ -5770,4 +5763,3 @@
     export function ContractFactory(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN): Controlled {
         return new Controlled(connector, accountManager, address, defaultGasPrice);
     }
-    
