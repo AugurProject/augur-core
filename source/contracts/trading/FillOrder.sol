@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'trading/IFillOrder.sol';
@@ -93,7 +93,9 @@ library Trade {
         }
 
         // sell complete sets
-        var (_marketCreatorFees, _reporterFees) = _data.contracts.completeSets.sellCompleteSets(this, _data.contracts.market, _numberOfCompleteSets);
+        uint256 _marketCreatorFees;
+        uint256 _reporterFees;
+        (_marketCreatorFees, _reporterFees) = _data.contracts.completeSets.sellCompleteSets(this, _data.contracts.market, _numberOfCompleteSets);
 
         // distribute payout proportionately (fees will have been deducted)
         uint256 _payout = _data.contracts.denominationToken.balanceOf(this);
@@ -272,7 +274,10 @@ library Trade {
     }
 
     function getOrder(Contracts _contracts, bytes32 _orderId) private view returns (FilledOrder memory) {
-        var (_sharePriceRange, _sharePriceLong, _sharePriceShort) = getSharePriceDetails(_contracts.market, _contracts.orders, _orderId);
+        uint256 _sharePriceRange;
+        uint256 _sharePriceLong;
+        uint256 _sharePriceShort;
+        (_sharePriceRange, _sharePriceLong, _sharePriceShort) = getSharePriceDetails(_contracts.market, _contracts.orders, _orderId);
         return FilledOrder({
             orderId: _orderId,
             outcome: _contracts.orders.getOutcome(_orderId),
@@ -379,7 +384,9 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
 
     function fillOrder(address _filler, bytes32 _orderId, uint256 _amountFillerWants, bytes32 _tradeGroupId) external onlyWhitelistedCallers nonReentrant returns (uint256) {
         Trade.Data memory _tradeData = Trade.create(controller, _orderId, _filler, _amountFillerWants);
-        var (_marketCreatorFees, _reporterFees) = _tradeData.tradeMakerSharesForFillerShares();
+        uint256 _marketCreatorFees;
+        uint256 _reporterFees;
+        (_marketCreatorFees, _reporterFees) = _tradeData.tradeMakerSharesForFillerShares();
         _tradeData.tradeMakerSharesForFillerTokens();
         _tradeData.tradeMakerTokensForFillerShares();
         _tradeData.tradeMakerTokensForFillerTokens();

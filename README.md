@@ -17,7 +17,7 @@ docker-compose -f support/test/integration/docker-compose.yml up --build --force
 
 ## Installation
 
-You need system-wide installations of Python 2.7.6+, Node.js 8+, and [Solidity 0.4.18](https://github.com/ethereum/solidity/releases/tag/v0.4.18).  (Or Docker; see below.)  Install the dependencies:
+You need system-wide installations of Python 2.7.6+, Node.js 8+, and [Solidity 0.4.20](https://github.com/ethereum/solidity/releases/tag/v0.4.20).  (Or Docker; see below.)  Install the dependencies:
 
 ```bash
 npm install npx

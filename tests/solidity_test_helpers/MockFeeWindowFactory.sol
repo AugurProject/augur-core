@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'IController.sol';
@@ -22,7 +22,7 @@ contract MockFeeWindowFactory {
     function getCreatefeeWindowIdValue() public returns(uint256) {
         return createfeeWindowIdValue;
     }
-    
+
     function setCreateFeeWindowValue(IFeeWindow _feeWindowValue) public {
         createFeeWindowValue = _feeWindowValue;
     }

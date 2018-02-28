@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 import 'reporting/IFeeToken.sol';
 import 'reporting/IFeeWindow.sol';
@@ -85,7 +85,7 @@ contract MockFeeToken is DelegationTarget, MockVariableSupplyToken, IFeeToken {
     function getOnMintTargetValue() public returns (address) { return onMintTargetValue;}
 
     function getOnMintAmountValue() public returns (uint256) { return onMintAmountValue;}
-    
+
     function getOnBurnTargetValue() public returns (address) { return onBurnTargetValue;}
 
     function getOnBurnAmountValue() public returns (uint256) { return onBurnAmountValue;}
@@ -96,7 +96,7 @@ contract MockFeeToken is DelegationTarget, MockVariableSupplyToken, IFeeToken {
         onBurnAmountValue = _amount;
         return true;
     }
-    
+
     function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
         onTokenTransferValue = true;
         onTokenTransferFromValue = _from;
