@@ -80,10 +80,10 @@ contract Controller is IController {
     }
 
     /*
-     * Registry for lookups [whitelisted augur contracts and dev mode can use it]
+     * Contract Administration [dev mode can use it]
      */
 
-    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyOwnerCaller returns (bool) {
+    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public devModeOwnerOnly returns (bool) {
         registry[_key] = ContractDetails(_key, _address, _commitHash, _bytecodeHash);
         getAugur().logContractAddedToRegistry(_key, _address, _commitHash, _bytecodeHash);
         return true;
@@ -94,7 +94,7 @@ contract Controller is IController {
         return (_details.contractAddress, _details.commitHash, _details.bytecodeHash);
     }
 
-    function unregisterContract(bytes32 _key) public onlyOwnerCaller returns (bool) {
+    function unregisterContract(bytes32 _key) public devModeOwnerOnly returns (bool) {
         delete registry[_key];
         return true;
     }
@@ -102,10 +102,6 @@ contract Controller is IController {
     function lookup(bytes32 _key) public view returns (address) {
         return registry[_key].contractAddress;
     }
-
-    /*
-     * Contract Administration [dev mode can use it]
-     */
 
     function suicideFunds(IControlled _target, address _destination, ERC20Basic[] _tokens) public devModeOwnerOnly returns (bool) {
         _target.suicideFunds(_destination, _tokens);
