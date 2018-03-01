@@ -5,6 +5,8 @@ source/libraries/token/ERC20.sol
 source/libraries/token/ERC20Basic.sol
 source/libraries/token/StandardToken.sol
 
+Additionally attribution for the MonolithDAO Token.sol contract was given in their StandardToken contract for the incremental approval functions
+
 The MIT License (MIT)
 
 Copyright (c) 2016 Smart Contract Solutions, Inc.
