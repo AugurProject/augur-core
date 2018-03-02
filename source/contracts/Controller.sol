@@ -141,6 +141,7 @@ contract Controller is IController {
         return true;
     }
 
+    // WARNING: This should only be called in a development or experimental context. Once the emergency stop has been called funds can be withdrawn in a way that will leave our system broken and unusable. After the emergency stop has been used we need to actually do a full redeploy with a new controller in order to get the system running again.
     function release() public onlyOwnerCaller onlyInBadTimes returns (bool) {
         stopped = false;
         return true;

@@ -52,7 +52,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function fork() public onlyInGoodTimes afterInitialized returns (bool) {
-        require(forkingMarket == IMarket(0));
+        require(!isForking());
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
         forkEndTime = controller.getTimestamp().add(Reporting.getForkDurationSeconds());
@@ -197,7 +197,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function getWinningChildUniverse() public view returns (IUniverse) {
-        require(forkingMarket != IMarket(0));
+        require(isForking());
         require(tentativeWinningChildUniversePayoutDistributionHash != bytes32(0));
         IUniverse _tentativeWinningUniverse = getChildUniverse(tentativeWinningChildUniversePayoutDistributionHash);
         uint256 _winningAmount = _tentativeWinningUniverse.getReputationToken().getTotalMigrated();

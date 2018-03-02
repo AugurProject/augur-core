@@ -29,9 +29,10 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
         redeemForAllFeeWindows();
         uint256 _reputationSupply = reputationToken.balanceOf(this);
         uint256 _cashSupply = cash.balanceOf(this);
+        uint256 _supply = totalSupply();
         uint256 _amount = balances[_redeemer];
-        uint256 _feeShare = _cashSupply.mul(_amount).div(supply);
-        uint256 _reputationShare = _reputationSupply.mul(_amount).div(supply);
+        uint256 _feeShare = _cashSupply.mul(_amount).div(_supply);
+        uint256 _reputationShare = _reputationSupply.mul(_amount).div(_supply);
         burn(_redeemer, _amount);
         reputationToken.transfer(_redeemer, _reputationShare);
         if (_feeShare > 0) {
@@ -62,7 +63,8 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
     function withdrawInEmergency() public onlyInBadTimes returns (bool) {
         uint256 _reputationSupply = reputationToken.balanceOf(this);
         uint256 _attotokens = balances[msg.sender];
-        uint256 _reputationShare = _reputationSupply.mul(_attotokens).div(supply);
+        uint256 _supply = totalSupply();
+        uint256 _reputationShare = _reputationSupply.mul(_attotokens).div(_supply);
         burn(msg.sender, _attotokens);
         if (_reputationShare != 0) {
             reputationToken.transfer(msg.sender, _reputationShare);

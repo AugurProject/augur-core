@@ -68,7 +68,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(controller.getTimestamp() < _endTime);
         require(address(_cash) == controller.lookup("Cash"));
         universe = _universe;
-        require(getForkingMarket() == IMarket(0));
+        require(!universe.isForking());
         owner = _creator;
         assessFees();
         endTime = _endTime;
@@ -174,7 +174,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
         require(getInitialReporter().getReportTimestamp() != 0);
         require(feeWindow.isOver());
-        require(universe.getForkingMarket() == IMarket(0));
+        require(!universe.isForking());
         winningPayoutDistributionHash = participants[participants.length-1].getPayoutDistributionHash();
         feeWindow.onMarketFinalized();
         redistributeLosingReputation();
@@ -300,8 +300,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function disavowCrowdsourcers() public onlyInGoodTimes returns (bool) {
+        require(universe.isForking());
         IMarket _forkingMarket = getForkingMarket();
-        require(_forkingMarket != IMarket(0));
         require(_forkingMarket != this);
         require(!isFinalized());
         IInitialReporter _initialParticipant = getInitialReporter();
