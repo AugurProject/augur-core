@@ -3,7 +3,7 @@ pragma solidity 0.4.20;
 /**
  * The Controller is used to manage whitelisting of contracts and and halt the normal use of Augur’s contracts (e.g., if there is a vulnerability found in Augur).  There is only one instance of the Controller, and it gets uploaded to the blockchain before all of the other contracts.  The `owner` attribute of the Controller is set to the address that called the constructor of the Controller.  The Augur team can then call functions from this address to interact with the Controller.
  *
- * If Augur needs to be halted for some reason (such as a bug being found that needs to be fixed before trading can continue), the `owner` address can call the `emergencyStop` function (and later the `release` function) to make the system stop/resume.  When in the stopped state, users can only call the `withdrawInEmergency` function on dispute bonds, markets, participation tokens, and stake tokens to withdraw any funds they have in Augur as REP.  All other functionality in Augur is disabled when it is in the stopped state.  (Additionally, the `withdrawInEmergency` function cannot be called when Augur is not in the stopped state.)  The modifier `onlyInGoodTimes` is used for functions that should only be useable when Augur is not stopped, and the modifier `onlyInBadTimes` is used for functions that should only be useable when Augur is stopped.
+ * If Augur needs to be halted for some reason (such as a bug being found that needs to be fixed before trading can continue), the dev `owner` address can upload a contract to the key "EmergencyStop" which will halt all normal activity on the platform.  When in the stopped state, users can only call the `withdrawInEmergency` function on dispute bonds, markets, participation tokens, and stake tokens to withdraw any funds they have in Augur as REP.  All other functionality in Augur is disabled when it is in the stopped state.  (Additionally, the `withdrawInEmergency` function cannot be called when Augur is not in the stopped state.)  The modifier `onlyInGoodTimes` is used for functions that should only be useable when Augur is not stopped, and the modifier `onlyInBadTimes` is used for functions that should only be useable when Augur is stopped.
  *
  * Initially, Augur will have a “dev mode” that that can be enabled to allow Augur’s team to suicide funds, extract Ether or Tokens from a specific contract (in case funds inadvertently get sent somewhere they shouldn’t have), and update the Controller of a target contract to a new Controller.  Eventually, the plan is to remove this mode so that this functionality will no longer be available to anyone, including the Augur team.  At that point, the `owner` address will only be able to the `emergencyStop` and `release` functions.
  */
@@ -26,7 +26,6 @@ contract Controller is IController {
     address public owner;
     mapping(address => bool) public whitelist;
     mapping(bytes32 => ContractDetails) public registry;
-    bool public stopped = false;
 
     modifier onlyWhitelistedCallers {
         assertIsWhitelisted(msg.sender);
@@ -45,12 +44,12 @@ contract Controller is IController {
     }
 
     modifier onlyInBadTimes {
-        require(stopped);
+        require(isStopped());
         _;
     }
 
     modifier onlyInGoodTimes {
-        require(!stopped);
+        require(!isStopped());
         _;
     }
 
@@ -127,7 +126,7 @@ contract Controller is IController {
         return true;
     }
 
-    function switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed() public devModeOwnerOnly returns (bool) {
+    function switchModeToDecentralized() public devModeOwnerOnly returns (bool) {
         whitelist[owner] = false;
         return true;
     }
@@ -136,15 +135,9 @@ contract Controller is IController {
      * Emergency Stop Functions [dev can use it anytime in or out of dev mode]
      */
 
-    function emergencyStop() public onlyOwnerCaller onlyInGoodTimes returns (bool) {
-        stopped = true;
-        return true;
-    }
-
-    // WARNING: This should only be called in a development or experimental context. Once the emergency stop has been called funds can be withdrawn in a way that will leave our system broken and unusable. After the emergency stop has been used we need to actually do a full redeploy with a new controller in order to get the system running again.
-    function release() public onlyOwnerCaller onlyInBadTimes returns (bool) {
-        stopped = false;
-        return true;
+    // The emergency stop hatch check is performed and controlled in this unusual way to avoid it simply being a boolean in storage that dev mode owner can manipulate. This is entirely a stipulation of legal that we need to do it this way and it is admittedly very silly.
+    function isStopped() public view returns (bool) {
+        return registry["EmergencyStop"].contractAddress != address(0);
     }
 
     function stopInEmergency() public view onlyInGoodTimes returns (bool) {
