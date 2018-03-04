@@ -135,7 +135,7 @@ contract Controller is IController {
      * Emergency Stop Functions [dev can use it anytime in or out of dev mode]
      */
 
-    // The emergency stop hatch check is performed and controlled in this unusual way to avoid it simply being a boolean in storage that dev mode owner can manipulate. This is entirely a stipulation of legal that we need to do it this way and it is admittedly very silly.
+    // The emergency stop hatch check is performed and controlled in this unusual way to avoid it simply being a boolean in storage that dev mode owner can manipulate..
     function isStopped() public view returns (bool) {
         return registry["EmergencyStop"].contractAddress != address(0);
     }
