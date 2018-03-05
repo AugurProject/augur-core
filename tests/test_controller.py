@@ -11,9 +11,7 @@ def test_whitelists(localFixture, controller):
     with raises(TransactionFailed): controller.addToWhitelist(tester.a1, sender = tester.k1)
     with raises(TransactionFailed): controller.addToWhitelist(tester.a1, sender = tester.k2)
 
-    whitelistAdditionLog = {"addition": bytesToHexString(tester.a1)}
-    with AssertLog(localFixture, "WhitelistAddition", whitelistAdditionLog):
-        assert controller.addToWhitelist(tester.a1, sender = tester.k0)
+    assert controller.addToWhitelist(tester.a1, sender = tester.k0)
 
     assert controller.assertIsWhitelisted(tester.a1, sender = tester.k2)
     with raises(TransactionFailed): controller.assertIsWhitelisted(tester.a2, sender = tester.k2)
@@ -28,14 +26,7 @@ def test_registry(localFixture, controller, decentralizedController):
     assert controller.lookup(key1, sender = tester.k2) == longToHexString(0)
     assert controller.addToWhitelist(tester.a1, sender = tester.k0)
 
-    registryAdditionLog = {
-        "key": key1,
-        "addition": longToHexString(123),
-        "commitHash": garbageBytes20,
-        "bytecodeHash": garbageBytes32
-    }
-    with AssertLog(localFixture, "RegistryAddition", registryAdditionLog):
-        assert controller.registerContract(key1, 123, garbageBytes20, garbageBytes32, sender = tester.k0)
+    assert controller.registerContract(key1, 123, garbageBytes20, garbageBytes32, sender = tester.k0)
 
     assert controller.lookup(key1, sender = tester.k2) == longToHexString(123)
 

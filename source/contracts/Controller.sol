@@ -115,15 +115,15 @@ contract Controller is IController {
     function transferOwnership(address _newOwner) public onlyOwnerCaller returns (bool) {
         // if in dev mode, blacklist old owner and whitelist new owner
         if (whitelist[owner]) {
-            removeFromWhitelist(owner);
-            addToWhitelist(_newOwner);
+            whitelist[owner] = false;
+            whitelist[_newOwner] = true;
         }
         owner = _newOwner;
         return true;
     }
 
     function switchOffDevMode() public devModeOwnerOnly returns (bool) {
-        removeFromWhitelist(owner);
+        whitelist[owner] = false;
         return true;
     }
 
