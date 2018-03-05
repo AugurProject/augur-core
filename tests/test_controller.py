@@ -78,8 +78,8 @@ def test_emergencyStop(controller):
     assert controller.stopInEmergency(sender = tester.k2)
     with raises(TransactionFailed): controller.onlyInEmergency(sender = tester.k2)
 
-def test_switchToCentralizedMode_failures(controller):
-    with raises(TransactionFailed): controller.switchToCentralizedMode(sender = tester.k2)
+def test_switchOffDevMode_failures(controller):
+    with raises(TransactionFailed): controller.switchOffDevMode(sender = tester.k2)
 
 def test_getContractDetails(controller):
     key = stringToBytes('lookup key')
@@ -97,7 +97,7 @@ def localSnapshot(fixture, controllerSnapshot):
     fixture.upload('solidity_test_helpers/ControllerUser.sol')
     fixture.uploadAugur()
     decentralizedController = fixture.upload('../source/contracts/Controller.sol', 'decentralizedController')
-    decentralizedController.switchToCentralizedMode(sender = tester.k0)
+    decentralizedController.switchOffDevMode(sender = tester.k0)
     return fixture.createSnapshot()
 
 @fixture

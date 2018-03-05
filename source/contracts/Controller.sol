@@ -124,7 +124,7 @@ contract Controller is IController {
         return true;
     }
 
-    function switchToCentralizedMode() public devModeOwnerOnly returns (bool) {
+    function switchOffDevMode() public devModeOwnerOnly returns (bool) {
         whitelist[owner] = false;
         return true;
     }
