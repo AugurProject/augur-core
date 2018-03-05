@@ -117,7 +117,7 @@ contract Controller is IController {
     function transferOwnership(address _newOwner) public onlyOwnerCaller returns (bool) {
         // if in dev mode, blacklist old owner and whitelist new owner
         if (whitelist[owner]) {
-            whitelist[owner] = false;
+            removeFromWhitelist(owner);
             whitelist[_newOwner] = true;
         }
         owner = _newOwner;
@@ -125,7 +125,7 @@ contract Controller is IController {
     }
 
     function switchOffDevMode() public devModeOwnerOnly returns (bool) {
-        whitelist[owner] = false;
+        removeFromWhitelist(owner);
         return true;
     }
 
