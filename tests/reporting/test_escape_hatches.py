@@ -10,7 +10,7 @@ def test_market_escape_hatch_all_fees(localFixture, controller, market, reputati
         market.withdrawInEmergency()
 
     # Emergency Stop
-    assert controller.emergencyStop()
+    assert controller.registerContract("EmergencyStop", 1, "0", "0")
 
     # Now we can call the market escape hatch and get back all the fees paid in creation
     with EtherDelta(localFixture.chain.head_state.get_balance(market.address), market.getOwner(), localFixture.chain, "ETH balance was not given to the market owner"):
@@ -23,7 +23,7 @@ def test_market_escape_hatch_partial_fees(localFixture, market, reputationToken,
     proceedToNextRound(localFixture, market, contributor = tester.k1)
 
     # Emergency Stop
-    assert controller.emergencyStop()
+    assert controller.registerContract("EmergencyStop", 1, "0", "0")
 
     # We will only get back the validity bond since our REP bond and first reporter bond were forfeit already
     with EtherDelta(constants.DEFAULT_VALIDITY_BOND(), market.getOwner(), localFixture.chain, "Remaining ETH balance was not given to the market owner"):
@@ -42,7 +42,7 @@ def test_participation_token_escape_hatch(localFixture, universe, reputationToke
         feeWindow.withdrawInEmergency()
 
     # Emergency Stop
-    assert controller.emergencyStop()
+    assert controller.registerContract("EmergencyStop", 1, "0", "0")
 
     # We can redeem any participation tokens purchased
     with TokenDelta(reputationToken, amount, tester.a0, "REP was not given back"):
@@ -71,12 +71,12 @@ def test_reporting_participant_escape_hatch(localFixture, controller, reputation
         crowdsourcer2.withdrawInEmergency()
 
     # Emergency Stop
-    assert controller.emergencyStop()
+    assert controller.registerContract("EmergencyStop", 1, "0", "0")
 
     # We can now call the escape hatch
     with TokenDelta(reputationToken, reputationToken.balanceOf(initialReporter.address), tester.a0, "REP was not given back"):
         assert initialReporter.withdrawInEmergency()
-    
+
     with TokenDelta(reputationToken, reputationToken.balanceOf(crowdsourcer1.address), tester.a0, "REP was not given back"):
         assert crowdsourcer1.withdrawInEmergency()
 

@@ -48,8 +48,6 @@ contract Augur is Controlled, IAugur {
     event TokensBurned(address indexed universe, address indexed token, address indexed target, uint256 amount, TokenType tokenType, address market);
     event FeeWindowCreated(address indexed universe, address feeWindow, uint256 startTime, uint256 endTime, uint256 id);
     event InitialReporterTransferred(address indexed universe, address indexed market, address from, address to);
-    event WhitelistAddition(address addition);
-    event RegistryAddition(bytes32 key, address addition, bytes20 commitHash, bytes32 bytecodeHash);
     event TimestampSet(uint256 newTimestamp);
 
     mapping(address => bool) private universes;
@@ -324,16 +322,6 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
         TokensMinted(_universe, msg.sender, _target, _amount, TokenType.FeeToken, 0);
-        return true;
-    }
-
-    function logContractAddedToWhitelist(address _addition) public onlyControllerCaller returns (bool) {
-        WhitelistAddition(_addition);
-        return true;
-    }
-
-    function logContractAddedToRegistry(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyControllerCaller returns (bool) {
-        RegistryAddition(_key, _address, _commitHash, _bytecodeHash);
         return true;
     }
 
