@@ -1,9 +1,7 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 /**
  * The Controller is used to manage whitelisting of contracts and and halt the normal use of Augur’s contracts (e.g., if there is a vulnerability found in Augur).  There is only one instance of the Controller, and it gets uploaded to the blockchain before all of the other contracts.  The `owner` attribute of the Controller is set to the address that called the constructor of the Controller.  The Augur team can then call functions from this address to interact with the Controller.
- *
- * If Augur needs to be halted for some reason (such as a bug being found that needs to be fixed before trading can continue), the `owner` address can call the `emergencyStop` function (and later the `release` function) to make the system stop/resume.  When in the stopped state, users can only call the `withdrawInEmergency` function on dispute bonds, markets, participation tokens, and stake tokens to withdraw any funds they have in Augur as REP.  All other functionality in Augur is disabled when it is in the stopped state.  (Additionally, the `withdrawInEmergency` function cannot be called when Augur is not in the stopped state.)  The modifier `onlyInGoodTimes` is used for functions that should only be useable when Augur is not stopped, and the modifier `onlyInBadTimes` is used for functions that should only be useable when Augur is stopped.
  *
  * Initially, Augur will have a “dev mode” that that can be enabled to allow Augur’s team to suicide funds, extract Ether or Tokens from a specific contract (in case funds inadvertently get sent somewhere they shouldn’t have), and update the Controller of a target contract to a new Controller.  Eventually, the plan is to remove this mode so that this functionality will no longer be available to anyone, including the Augur team.  At that point, the `owner` address will only be able to the `emergencyStop` and `release` functions.
  */
@@ -12,7 +10,6 @@ import 'IAugur.sol';
 import 'IController.sol';
 import 'IControlled.sol';
 import 'libraries/token/ERC20Basic.sol';
-import 'libraries/Extractable.sol';
 import 'ITime.sol';
 
 
@@ -26,9 +23,7 @@ contract Controller is IController {
 
     address public owner;
     mapping(address => bool) public whitelist;
-    // TODO: remove the registry in favor of registeredContracts
     mapping(bytes32 => ContractDetails) public registry;
-    bool public stopped = false;
 
     modifier onlyWhitelistedCallers {
         assertIsWhitelisted(msg.sender);
@@ -47,12 +42,12 @@ contract Controller is IController {
     }
 
     modifier onlyInBadTimes {
-        require(stopped);
+        require(isStopped());
         _;
     }
 
     modifier onlyInGoodTimes {
-        require(!stopped);
+        require(!isStopped());
         _;
     }
 
@@ -67,7 +62,6 @@ contract Controller is IController {
 
     function addToWhitelist(address _target) public onlyWhitelistedCallers returns (bool) {
         whitelist[_target] = true;
-        getAugur().logContractAddedToWhitelist(_target);
         return true;
     }
 
@@ -82,12 +76,11 @@ contract Controller is IController {
     }
 
     /*
-     * Registry for lookups [whitelisted augur contracts and dev mode can use it]
+     * Contract Administration [dev mode can use it]
      */
 
-    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyOwnerCaller returns (bool) {
+    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public devModeOwnerOnly returns (bool) {
         registry[_key] = ContractDetails(_key, _address, _commitHash, _bytecodeHash);
-        getAugur().logContractAddedToRegistry(_key, _address, _commitHash, _bytecodeHash);
         return true;
     }
 
@@ -96,7 +89,7 @@ contract Controller is IController {
         return (_details.contractAddress, _details.commitHash, _details.bytecodeHash);
     }
 
-    function unregisterContract(bytes32 _key) public onlyOwnerCaller returns (bool) {
+    function unregisterContract(bytes32 _key) public devModeOwnerOnly returns (bool) {
         delete registry[_key];
         return true;
     }
@@ -105,27 +98,8 @@ contract Controller is IController {
         return registry[_key].contractAddress;
     }
 
-    function assertOnlySpecifiedCaller(address _caller, bytes32 _allowedCaller) public view returns (bool) {
-        require(registry[_allowedCaller].contractAddress == _caller || (msg.sender == owner && whitelist[owner]));
-        return true;
-    }
-
-    /*
-     * Contract Administration [dev mode can use it]
-     */
-
     function suicideFunds(IControlled _target, address _destination, ERC20Basic[] _tokens) public devModeOwnerOnly returns (bool) {
         _target.suicideFunds(_destination, _tokens);
-        return true;
-    }
-
-    function extractEther(Extractable _target, address _destination) public devModeOwnerOnly returns (bool) {
-        _target.extractEther(_destination);
-        return true;
-    }
-
-    function extractTokens(Extractable _target, address _destination, ERC20Basic _token) public devModeOwnerOnly returns (bool) {
-        _target.extractTokens(_destination, _token);
         return true;
     }
 
@@ -148,22 +122,8 @@ contract Controller is IController {
         return true;
     }
 
-    function switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed() public devModeOwnerOnly returns (bool) {
+    function switchOffDevMode() public devModeOwnerOnly returns (bool) {
         whitelist[owner] = false;
-        return true;
-    }
-
-    /*
-     * Emergency Stop Functions [dev can use it anytime in or out of dev mode]
-     */
-
-    function emergencyStop() public onlyOwnerCaller onlyInGoodTimes returns (bool) {
-        stopped = true;
-        return true;
-    }
-
-    function release() public onlyOwnerCaller onlyInBadTimes returns (bool) {
-        stopped = false;
         return true;
     }
 
@@ -173,6 +133,10 @@ contract Controller is IController {
 
     function onlyInEmergency() public view onlyInBadTimes returns (bool) {
         return true;
+    }
+
+    function isStopped() public view returns (bool) {
+        return registry["EmergencyStop"].contractAddress != address(0);
     }
 
     /*

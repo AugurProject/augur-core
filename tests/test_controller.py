@@ -11,9 +11,7 @@ def test_whitelists(localFixture, controller):
     with raises(TransactionFailed): controller.addToWhitelist(tester.a1, sender = tester.k1)
     with raises(TransactionFailed): controller.addToWhitelist(tester.a1, sender = tester.k2)
 
-    whitelistAdditionLog = {"addition": bytesToHexString(tester.a1)}
-    with AssertLog(localFixture, "WhitelistAddition", whitelistAdditionLog):
-        assert controller.addToWhitelist(tester.a1, sender = tester.k0)
+    assert controller.addToWhitelist(tester.a1, sender = tester.k0)
 
     assert controller.assertIsWhitelisted(tester.a1, sender = tester.k2)
     with raises(TransactionFailed): controller.assertIsWhitelisted(tester.a2, sender = tester.k2)
@@ -28,23 +26,9 @@ def test_registry(localFixture, controller, decentralizedController):
     assert controller.lookup(key1, sender = tester.k2) == longToHexString(0)
     assert controller.addToWhitelist(tester.a1, sender = tester.k0)
 
-    registryAdditionLog = {
-        "key": key1,
-        "addition": longToHexString(123),
-        "commitHash": garbageBytes20,
-        "bytecodeHash": garbageBytes32
-    }
-    with AssertLog(localFixture, "RegistryAddition", registryAdditionLog):
-        assert controller.registerContract(key1, 123, garbageBytes20, garbageBytes32, sender = tester.k0)
+    assert controller.registerContract(key1, 123, garbageBytes20, garbageBytes32, sender = tester.k0)
 
     assert controller.lookup(key1, sender = tester.k2) == longToHexString(123)
-    with raises(TransactionFailed): controller.assertOnlySpecifiedCaller(tester.a1, key2, sender = tester.k2)
-    assert controller.registerContract(key2, tester.a1, garbageBytes20, garbageBytes32, sender = tester.k0)
-    assert controller.assertOnlySpecifiedCaller(tester.a1, key2, sender = tester.k2)
-    # dev mode special
-    assert controller.assertOnlySpecifiedCaller(tester.a1, key2, sender = tester.k0)
-    with raises(TransactionFailed): decentralizedController.assertOnlySpecifiedCaller(tester.a2, key2, sender = tester.k0)
-    with raises(TransactionFailed): controller.assertOnlySpecifiedCaller(tester.a2, key2, sender = tester.k2)
 
 def test_suicide(controller, decentralizedController, controllerUser):
     with raises(TransactionFailed): controller.suicideFunds(controllerUser.address, tester.a0, [tester.a2], sender = tester.k2)
@@ -74,19 +58,19 @@ def test_transferOwnership(controller, decentralizedController):
     assert decentralizedController.owner() == bytesToHexString(tester.a1)
 
 def test_emergencyStop(controller):
-    with raises(TransactionFailed): controller.emergencyStop(sender = tester.k2)
-    with raises(TransactionFailed): controller.release(sender = tester.k2)
+    with raises(TransactionFailed): controller.registerContract("EmergencyStop", 1, "0", "0", sender = tester.k2)
+    with raises(TransactionFailed): controller.unregisterContract("EmergencyStop", sender = tester.k2)
     assert controller.stopInEmergency(sender = tester.k2)
     with raises(TransactionFailed): controller.onlyInEmergency(sender = tester.k2)
-    assert controller.emergencyStop(sender = tester.k0)
+    assert controller.registerContract("EmergencyStop", 1, "0", "0", sender = tester.k0)
     assert controller.onlyInEmergency(sender = tester.k2)
     with raises(TransactionFailed): controller.stopInEmergency(sender = tester.k2)
-    assert controller.release(sender = tester.k0)
+    assert controller.unregisterContract("EmergencyStop", sender = tester.k0)
     assert controller.stopInEmergency(sender = tester.k2)
     with raises(TransactionFailed): controller.onlyInEmergency(sender = tester.k2)
 
-def test_switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed_failures(controller):
-    with raises(TransactionFailed): controller.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k2)
+def test_switchOffDevMode_failures(controller):
+    with raises(TransactionFailed): controller.switchOffDevMode(sender = tester.k2)
 
 def test_getContractDetails(controller):
     key = stringToBytes('lookup key')
@@ -104,7 +88,7 @@ def localSnapshot(fixture, controllerSnapshot):
     fixture.upload('solidity_test_helpers/ControllerUser.sol')
     fixture.uploadAugur()
     decentralizedController = fixture.upload('../source/contracts/Controller.sol', 'decentralizedController')
-    decentralizedController.switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed(sender = tester.k0)
+    decentralizedController.switchOffDevMode(sender = tester.k0)
     return fixture.createSnapshot()
 
 @fixture

@@ -5,7 +5,7 @@
 # that this image's build will fail earlier for compiling contracts than
 # for other pieces
 FROM python:2.7.13
-ARG SOLC_VERSION=v0.4.18
+ARG SOLC_VERSION=v0.4.20
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
 	&& apt-get install -y nodejs
@@ -22,6 +22,7 @@ RUN pip install --upgrade pip setuptools \
 
 # Install basics of the application
 COPY .soliumrc.json /app/.soliumrc.json
+COPY .soliumignore /app/.soliumignore
 COPY tsconfig.json /app/tsconfig.json
 COPY typings/ /app/typings/
 COPY source/contracts/ /app/source/contracts/
@@ -33,6 +34,9 @@ COPY source/libraries/ContractCompiler.ts /app/source/libraries/ContractCompiler
 COPY package.json /app/package.json
 
 RUN npm install
+
+# Lint
+RUN npm run lint
 
 # Build first chunk
 RUN npm run build:source

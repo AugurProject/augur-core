@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'libraries/Delegator.sol';
@@ -9,7 +9,7 @@ import 'IController.sol';
 
 
 contract MarketFactory {
-    function createMarket(IController _controller, IUniverse _universe, uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint8 _numOutcomes, uint256 _numTicks) public payable returns (IMarket _market) {
+    function createMarket(IController _controller, IUniverse _universe, uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint256 _numOutcomes, uint256 _numTicks) public payable returns (IMarket _market) {
         Delegator _delegator = new Delegator(_controller, "Market");
         _market = IMarket(_delegator);
         IReputationToken _reputationToken = _universe.getReputationToken();

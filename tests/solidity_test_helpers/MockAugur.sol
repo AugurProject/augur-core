@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'Controlled.sol';
@@ -63,7 +63,7 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logInitialReporterTransfered(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool) {
+    function logInitialReporterTransferred(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool) {
         return true;
     }
 
@@ -185,14 +185,6 @@ contract MockAugur is Controlled {
     }
 
     function logDisputeCrowdsourcerCompleted(IUniverse _universe, address _market, address _disputeCrowdsourcer) public returns (bool) {
-        return true;
-    }
-
-    function logContractAddedToWhitelist(address _addition) public returns (bool) {
-        return true;
-    }
-
-    function logContractAddedToRegistry(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public returns (bool) {
         return true;
     }
 

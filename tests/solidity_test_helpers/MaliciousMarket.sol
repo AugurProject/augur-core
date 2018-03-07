@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 import 'reporting/IMarket.sol';
 import 'reporting/IUniverse.sol';
@@ -14,11 +14,11 @@ contract MaliciousMarket {
         victimMarket = _market;
     }
 
-    function getShareToken(uint8 _outcome)  public view returns (IShareToken) {
+    function getShareToken(uint256 _outcome)  public view returns (IShareToken) {
         return victimMarket.getShareToken(_outcome);
     }
 
-    function getNumberOfOutcomes() public view returns (uint8) {
+    function getNumberOfOutcomes() public view returns (uint256) {
         return victimMarket.getNumberOfOutcomes();
     }
 

@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'reporting/IUniverse.sol';
@@ -16,10 +16,9 @@ import 'reporting/Reporting.sol';
 import 'reporting/IRepPriceOracle.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'IAugur.sol';
-import 'libraries/Extractable.sol';
 
 
-contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniverse {
+contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     using SafeMathUint256 for uint256;
 
     IUniverse private parentUniverse;
@@ -53,7 +52,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function fork() public onlyInGoodTimes afterInitialized returns (bool) {
-        require(forkingMarket == IMarket(0));
+        require(!isForking());
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
         forkEndTime = controller.getTimestamp().add(Reporting.getForkDurationSeconds());
@@ -185,7 +184,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         IUniverse _updatedUniverse = getChildUniverse(_parentPayoutDistributionHash);
         uint256 _currentTentativeWinningChildUniverseRepMigrated = 0;
         if (_tentativeWinningUniverse != IUniverse(0)) {
-            _tentativeWinningUniverse.getReputationToken().getTotalMigrated();
+            _currentTentativeWinningChildUniverseRepMigrated = _tentativeWinningUniverse.getReputationToken().getTotalMigrated();
         }
         uint256 _updatedUniverseRepMigrated = _updatedUniverse.getReputationToken().getTotalMigrated();
         if (_updatedUniverseRepMigrated > _currentTentativeWinningChildUniverseRepMigrated) {
@@ -198,7 +197,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function getWinningChildUniverse() public view returns (IUniverse) {
-        require(forkingMarket != IMarket(0));
+        require(isForking());
         require(tentativeWinningChildUniversePayoutDistributionHash != bytes32(0));
         IUniverse _tentativeWinningUniverse = getChildUniverse(tentativeWinningChildUniversePayoutDistributionHash);
         uint256 _winningAmount = _tentativeWinningUniverse.getReputationToken().getTotalMigrated();
@@ -293,12 +292,12 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
 
     function getRepMarketCapInAttoeth() public view returns (uint256) {
         uint256 _attorepPerEth = IRepPriceOracle(controller.lookup("RepPriceOracle")).getRepPriceInAttoEth();
-        uint256 _repMarketCapInAttoeth = getReputationToken().totalSupply() * _attorepPerEth;
+        uint256 _repMarketCapInAttoeth = getReputationToken().totalSupply().mul(_attorepPerEth);
         return _repMarketCapInAttoeth;
     }
 
     function getTargetRepMarketCapInAttoeth() public view returns (uint256) {
-        return getOpenInterestInAttoEth() * Reporting.getTargetRepMarketCapMultiplier() / Reporting.getTargetRepMarketCapDivisor();
+        return getOpenInterestInAttoEth().mul(Reporting.getTargetRepMarketCapMultiplier()).div(Reporting.getTargetRepMarketCapDivisor());
     }
 
     function getOrCacheValidityBond() public onlyInGoodTimes returns (uint256) {
@@ -361,24 +360,25 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         }
 
         // Modify the amount based on the previous amount and the number of markets fitting the failure criteria. We want the amount to be somewhere in the range of 0.5 to 2 times its previous value where ALL markets with the condition results in 2x and 0 results in 0.5x.
+        // Safe math div is redundant so we avoid here as we're at the stack limit.
         if (_badMarkets <= _totalMarkets / _targetDivisor) {
             // FXP formula: previous_amount * actual_percent / (2 * target_percent) + 0.5;
             _newValue = _badMarkets
                 .mul(_previousValue)
-                .mul(_targetDivisor)
-                .div(_totalMarkets)
-                .div(2) + _previousValue / 2;
+                .mul(_targetDivisor);
+            _newValue = _newValue / _totalMarkets;
+            _newValue = _newValue / 2;
+            _newValue = _newValue.add(_previousValue / 2);
         } else {
             // FXP formula: previous_amount * (1/(1 - target_percent)) * (actual_percent - target_percent) + 1;
             _newValue = _targetDivisor
                 .mul(_previousValue
                     .mul(_badMarkets)
                     .div(_totalMarkets)
-                    .sub(_previousValue
-                        .div(_targetDivisor)))
-                .div(_targetDivisor - 1) + _previousValue;
+                .sub(_previousValue / _targetDivisor));
+            _newValue = _newValue / (_targetDivisor - 1);
+            _newValue = _newValue.add(_previousValue);
         }
-
         _newValue = _newValue.max(_floor);
 
         return _newValue;
@@ -400,7 +400,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         if (_targetRepMarketCapInAttoeth == 0) {
             _currentFeeDivisor = Reporting.getMaximumReportingFeeDivisor();
         } else {
-            _currentFeeDivisor = _previousFeeDivisor * _repMarketCapInAttoeth / _targetRepMarketCapInAttoeth;
+            _currentFeeDivisor = _previousFeeDivisor.mul(_repMarketCapInAttoeth).div(_targetRepMarketCapInAttoeth);
         }
 
         _currentFeeDivisor = _currentFeeDivisor
@@ -422,7 +422,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         uint256 _avgGasPrice = _previousFeeWindow.getAvgReportingGasPrice();
         _getGasToReport = Reporting.getGasToReport();
         // we double it to try and ensure we have more than enough rather than not enough
-        targetReporterGasCosts[_feeWindow] = _getGasToReport * _avgGasPrice * 2;
+        targetReporterGasCosts[_feeWindow] = _getGasToReport.mul(_avgGasPrice).mul(2);
         return targetReporterGasCosts[_feeWindow];
     }
 
@@ -443,7 +443,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
 
     function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(bytes(_description).length > 0);
-        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint8(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint8(_outcomes.length)));
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint256(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint256(_outcomes.length)));
         controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, _outcomes, 0, 1 ether, IMarket.MarketType.CATEGORICAL);
         return _newMarket;
     }
@@ -456,7 +456,7 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
         return _newMarket;
     }
 
-    function createMarketInternal(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint8 _numOutcomes, uint256 _numTicks) private onlyInGoodTimes afterInitialized returns (IMarket _newMarket) {
+    function createMarketInternal(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint256 _numOutcomes, uint256 _numTicks) private onlyInGoodTimes afterInitialized returns (IMarket _newMarket) {
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
         getReputationToken().trustedUniverseTransfer(_sender, _marketFactory, getOrCacheDesignatedReportNoShowBond());
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, _sender, _numOutcomes, _numTicks);
@@ -465,18 +465,14 @@ contract Universe is DelegationTarget, Extractable, ITyped, Initializable, IUniv
     }
 
     function redeemStake(IReportingParticipant[] _reportingParticipants, IFeeWindow[] _feeWindows) public onlyInGoodTimes returns (bool) {
-        for (uint8 i=0; i < _reportingParticipants.length; i++) {
+        for (uint256 i=0; i < _reportingParticipants.length; i++) {
             _reportingParticipants[i].redeem(msg.sender);
         }
 
-        for (uint8 k=0; k < _feeWindows.length; k++) {
+        for (uint256 k=0; k < _feeWindows.length; k++) {
             _feeWindows[k].redeem(msg.sender);
         }
 
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

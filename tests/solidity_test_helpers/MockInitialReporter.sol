@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 import 'reporting/IInitialReporter.sol';
 import 'reporting/IMarket.sol';
@@ -90,7 +90,7 @@ contract MockInitialReporter is IInitialReporter {
         return true;
     }
 
-    function getPayoutNumerator(uint8 _outcome) public view returns (uint256) {
+    function getPayoutNumerator(uint256 _outcome) public view returns (uint256) {
         return 0;
     }
 

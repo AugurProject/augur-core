@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.20;
 
 import 'TEST/MockStandardToken.sol';
 
@@ -44,7 +44,7 @@ contract MockVariableSupplyToken is MockStandardToken {
     }
 
     function getTransferValueFor(address _to) public returns(uint256) {
-        for (uint8 j = 0; j < transferAddresses.length; j++) {
+        for (uint256 j = 0; j < transferAddresses.length; j++) {
             if (transferAddresses[j] == _to) {
                 return transferAmounts[j];
             }
@@ -82,7 +82,7 @@ contract MockVariableSupplyToken is MockStandardToken {
     }
 
     function balanceOf(address _owner) public view returns (uint256) {
-        for (uint8 j = 0; j < balanceOfAddresses.length; j++) {
+        for (uint256 j = 0; j < balanceOfAddresses.length; j++) {
             if (balanceOfAddresses[j] == _owner) {
                 return balanceOfAmounts[j];
             }

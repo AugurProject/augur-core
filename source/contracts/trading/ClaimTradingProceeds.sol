@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'trading/IClaimTradingProceeds.sol';
@@ -10,15 +10,13 @@ import 'reporting/IMarket.sol';
 import 'trading/ICash.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/Reporting.sol';
-import 'libraries/Extractable.sol';
 
 
-// AUDIT: Ensure that a malicious market can't subversively cause share tokens to be paid out incorrectly.
 /**
  * @title ClaimTradingProceeds
  * @dev This allows users to claim their money from a market by exchanging their shares
  */
-contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard, MarketValidator, IClaimTradingProceeds {
+contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValidator, IClaimTradingProceeds {
     using SafeMathUint256 for uint256;
 
     function claimTradingProceeds(IMarket _market, address _shareHolder) marketIsLegit(_market) onlyInGoodTimes nonReentrant external returns(bool) {
@@ -30,10 +28,14 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
 
         ICash _denominationToken = _market.getDenominationToken();
 
-        for (uint8 _outcome = 0; _outcome < _market.getNumberOfOutcomes(); ++_outcome) {
+        for (uint256 _outcome = 0; _outcome < _market.getNumberOfOutcomes(); ++_outcome) {
             IShareToken _shareToken = _market.getShareToken(_outcome);
             uint256 _numberOfShares = _shareToken.balanceOf(_shareHolder);
-            var (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _outcome, _numberOfShares);
+            uint256 _proceeds;
+            uint256 _shareHolderShare;
+            uint256 _creatorShare;
+            uint256 _reporterShare;
+            (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _outcome, _numberOfShares);
 
             if (_proceeds > 0) {
                 _market.getUniverse().decrementOpenInterest(_proceeds);
@@ -56,6 +58,8 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
             }
         }
 
+        _market.assertBalances();
+
         return true;
     }
 
@@ -63,7 +67,7 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
         controller.getAugur().logTradingProceedsClaimed(_market.getUniverse(), _shareToken, _sender, _market, _numShares, _numPayoutTokens, _sender.balance.add(_numPayoutTokens));
     }
 
-    function divideUpWinnings(IMarket _market, uint8 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
+    function divideUpWinnings(IMarket _market, uint256 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
         _proceeds = calculateProceeds(_market, _outcome, _numberOfShares);
         _creatorShare = calculateCreatorFee(_market, _proceeds);
         _reporterShare = calculateReportingFee(_market, _proceeds);
@@ -71,7 +75,7 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
         return (_proceeds, _shareHolderShare, _creatorShare, _reporterShare);
     }
 
-    function calculateProceeds(IMarket _market, uint8 _outcome, uint256 _numberOfShares) public view returns (uint256) {
+    function calculateProceeds(IMarket _market, uint256 _outcome, uint256 _numberOfShares) public view returns (uint256) {
         uint256 _payoutNumerator = _market.getWinningPayoutNumerator(_outcome);
         return _numberOfShares.mul(_payoutNumerator);
     }
@@ -84,9 +88,5 @@ contract ClaimTradingProceeds is CashAutoConverter, Extractable, ReentrancyGuard
     function calculateCreatorFee(IMarket _market, uint256 _amount) public view returns (uint256) {
         uint256 _creatorFeeDivisor = _market.getMarketCreatorSettlementFeeDivisor();
         return _amount.div(_creatorFeeDivisor);
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

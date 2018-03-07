@@ -1,12 +1,11 @@
 // Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'reporting/IFeeWindow.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/Initializable.sol';
-import 'libraries/collections/Set.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IMarket.sol';
@@ -16,16 +15,18 @@ import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/RunningAverage.sol';
 import 'reporting/IFeeWindow.sol';
-import 'libraries/Extractable.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/IFeeToken.sol';
 import 'factories/FeeTokenFactory.sol';
 
 
-contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initializable, IFeeWindow {
+contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFeeWindow {
     using SafeMathUint256 for uint256;
-    using Set for Set.Data;
     using RunningAverage for RunningAverage.Data;
+
+    string constant public name = "Participation Token";
+    string constant public symbol = "PT";
+    uint8 constant public decimals = 0;
 
     IUniverse private universe;
     uint256 private startTime;
@@ -94,7 +95,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
 
         uint256 _attoParticipationTokens = balances[_sender];
         uint256 _attoFeeTokens = feeToken.balanceOf(_sender);
-        uint256 _totalTokens = _attoParticipationTokens + _attoFeeTokens;
+        uint256 _totalTokens = _attoParticipationTokens.add(_attoFeeTokens);
 
         uint256 _totalFeeStake = getTotalFeeStake();
 
@@ -226,13 +227,5 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Extractable, Initia
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
         controller.getAugur().logFeeWindowBurned(universe, _target, _amount);
         return true;
-    }
-
-    // Disallow Cash and REP extraction
-    function getProtectedTokens() internal returns (address[] memory) {
-        address[] memory _protectedTokens = new address[](2);
-        _protectedTokens[0] = controller.lookup("Cash");
-        _protectedTokens[1] = getReputationToken();
-        return _protectedTokens;
     }
 }

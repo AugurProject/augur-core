@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 import 'reporting/IUniverse.sol';
 import 'libraries/token/ERC20.sol';
@@ -44,8 +44,6 @@ contract IAugur {
     function logFeeTokenTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool);
     function logFeeTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool);
     function logFeeTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool);
-    function logContractAddedToWhitelist(address _addition) public returns (bool);
-    function logContractAddedToRegistry(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public returns (bool);
     function logTimestampSet(uint256 _newTimestamp) public returns (bool);
-    function logInitialReporterTransfered(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool);
+    function logInitialReporterTransferred(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool);
 }

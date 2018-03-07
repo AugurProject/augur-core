@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'trading/IShareToken.sol';
@@ -7,20 +7,18 @@ import 'libraries/token/VariableSupplyToken.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'reporting/IMarket.sol';
-import 'libraries/Extractable.sol';
 
 
-contract ShareToken is DelegationTarget, Extractable, ITyped, Initializable, VariableSupplyToken, IShareToken {
+contract ShareToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IShareToken {
 
-    //FIXME: Delegated contracts cannot currently use string values, so we will need to find a workaround if this hasn't been fixed before we release
     string constant public name = "Shares";
-    uint256 constant public decimals = 0;
+    uint8 constant public decimals = 0;
     string constant public symbol = "SHARE";
 
     IMarket private market;
-    uint8 private outcome;
+    uint256 private outcome;
 
-    function initialize(IMarket _market, uint8 _outcome) external beforeInitialized returns(bool) {
+    function initialize(IMarket _market, uint256 _outcome) external beforeInitialized returns(bool) {
         endInitialization();
         market = _market;
         outcome = _outcome;
@@ -56,7 +54,7 @@ contract ShareToken is DelegationTarget, Extractable, ITyped, Initializable, Var
         return market;
     }
 
-    function getOutcome() external view returns(uint8) {
+    function getOutcome() external view returns(uint256) {
         return outcome;
     }
 
@@ -77,9 +75,5 @@ contract ShareToken is DelegationTarget, Extractable, ITyped, Initializable, Var
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
         controller.getAugur().logShareTokenBurned(market.getUniverse(), _target, _amount);
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

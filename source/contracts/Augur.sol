@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 import 'Controlled.sol';
 import 'IAugur.sol';
@@ -12,11 +12,10 @@ import 'reporting/IReportingParticipant.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';
 import 'trading/IShareToken.sol';
 import 'trading/Order.sol';
-import 'libraries/Extractable.sol';
 
 
 // Centralized approval authority and event emissions
-contract Augur is Controlled, Extractable, IAugur {
+contract Augur is Controlled, IAugur {
 
     enum TokenType{
         ReputationToken,
@@ -48,9 +47,7 @@ contract Augur is Controlled, Extractable, IAugur {
     event TokensMinted(address indexed universe, address indexed token, address indexed target, uint256 amount, TokenType tokenType, address market);
     event TokensBurned(address indexed universe, address indexed token, address indexed target, uint256 amount, TokenType tokenType, address market);
     event FeeWindowCreated(address indexed universe, address feeWindow, uint256 startTime, uint256 endTime, uint256 id);
-    event InitialReporterTransfered(address indexed universe, address indexed market, address from, address to);
-    event WhitelistAddition(address addition);
-    event RegistryAddition(bytes32 key, address addition, bytes20 commitHash, bytes32 bytecodeHash);
+    event InitialReporterTransferred(address indexed universe, address indexed market, address from, address to);
     event TimestampSet(uint256 newTimestamp);
 
     mapping(address => bool) private universes;
@@ -328,30 +325,16 @@ contract Augur is Controlled, Extractable, IAugur {
         return true;
     }
 
-    function logContractAddedToWhitelist(address _addition) public onlyControllerCaller returns (bool) {
-        WhitelistAddition(_addition);
-        return true;
-    }
-
-    function logContractAddedToRegistry(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyControllerCaller returns (bool) {
-        RegistryAddition(_key, _address, _commitHash, _bytecodeHash);
-        return true;
-    }
-
     function logTimestampSet(uint256 _newTimestamp) public returns (bool) {
         require(msg.sender == controller.lookup("Time"));
         TimestampSet(_newTimestamp);
         return true;
     }
 
-    function logInitialReporterTransfered(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool) {
+    function logInitialReporterTransferred(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(_market));
-        InitialReporterTransfered(_universe, _market, _from, _to);
+        InitialReporterTransferred(_universe, _market, _from, _to);
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

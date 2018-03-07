@@ -127,7 +127,7 @@ class ContractsFixture:
                 },
                 'outputSelection': {
                     "*": {
-                        '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap' ]
+                        '*': [ 'metadata', 'evm.bytecode', 'evm.sourceMap', 'abi' ]
                     }
                 }
             }
@@ -297,6 +297,7 @@ class ContractsFixture:
             name = path.splitext(filename)[0]
             extension = path.splitext(filename)[1]
             if extension != '.sol': continue
+            if name == "ShareToken": continue
             if not name in self.contracts: continue
             self.contracts['Controller'].addToWhitelist(self.contracts[name].address)
 

@@ -96,6 +96,20 @@
             super(connector, accountManager, address, defaultGasPrice);
         }
 
+        public logDisputeCrowdsourcerRedeemed = async(universe: string, reporter: string, market: string, amountRedeemed: BN, repReceived: BN, reportingFeesReceived: BN, payoutNumerators: Array<BN>, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_reporter","type":"address"},{"name":"_market","type":"address"},{"name":"_amountRedeemed","type":"uint256"},{"name":"_repReceived","type":"uint256"},{"name":"_reportingFeesReceived","type":"uint256"},{"name":"_payoutNumerators","type":"uint256[]"}],"name":"logDisputeCrowdsourcerRedeemed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [universe, reporter, market, amountRedeemed, repReceived, reportingFeesReceived, payoutNumerators], "logDisputeCrowdsourcerRedeemed", options.sender, options.gasPrice);
+            return;
+        }
+
+        public logDisputeCrowdsourcerRedeemed_ = async(universe: string, reporter: string, market: string, amountRedeemed: BN, repReceived: BN, reportingFeesReceived: BN, payoutNumerators: Array<BN>, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_reporter","type":"address"},{"name":"_market","type":"address"},{"name":"_amountRedeemed","type":"uint256"},{"name":"_repReceived","type":"uint256"},{"name":"_reportingFeesReceived","type":"uint256"},{"name":"_payoutNumerators","type":"uint256[]"}],"name":"logDisputeCrowdsourcerRedeemed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [universe, reporter, market, amountRedeemed, repReceived, reportingFeesReceived, payoutNumerators], options.sender);
+            return <boolean>result[0];
+        }
+
         public logMarketCreated = async(topic: string, description: string, extraInfo: string, universe: string, market: string, marketCreator: string, outcomes: Array<string>, minPrice: BN, maxPrice: BN, marketType: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_topic","type":"bytes32"},{"name":"_description","type":"string"},{"name":"_extraInfo","type":"string"},{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_marketCreator","type":"address"},{"name":"_outcomes","type":"bytes32[]"},{"name":"_minPrice","type":"int256"},{"name":"_maxPrice","type":"int256"},{"name":"_marketType","type":"uint8"}],"name":"logMarketCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -215,6 +229,20 @@
             return <boolean>result[0];
         }
 
+        public logFeeWindowRedeemed = async(universe: string, reporter: string, amountRedeemed: BN, reportingFeesReceived: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_reporter","type":"address"},{"name":"_amountRedeemed","type":"uint256"},{"name":"_reportingFeesReceived","type":"uint256"}],"name":"logFeeWindowRedeemed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [universe, reporter, amountRedeemed, reportingFeesReceived], "logFeeWindowRedeemed", options.sender, options.gasPrice);
+            return;
+        }
+
+        public logFeeWindowRedeemed_ = async(universe: string, reporter: string, amountRedeemed: BN, reportingFeesReceived: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_reporter","type":"address"},{"name":"_amountRedeemed","type":"uint256"},{"name":"_reportingFeesReceived","type":"uint256"}],"name":"logFeeWindowRedeemed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [universe, reporter, amountRedeemed, reportingFeesReceived], options.sender);
+            return <boolean>result[0];
+        }
+
         public logReputationTokenBurned = async(universe: string, target: string, amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_target","type":"address"},{"name":"_amount","type":"uint256"}],"name":"logReputationTokenBurned","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -257,20 +285,6 @@
             return <boolean>result[0];
         }
 
-        public logContractAddedToWhitelist = async(addition: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_addition","type":"address"}],"name":"logContractAddedToWhitelist","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [addition], "logContractAddedToWhitelist", options.sender, options.gasPrice);
-            return;
-        }
-
-        public logContractAddedToWhitelist_ = async(addition: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_addition","type":"address"}],"name":"logContractAddedToWhitelist","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [addition], options.sender);
-            return <boolean>result[0];
-        }
-
         public logDisputeCrowdsourcerTokensTransferred = async(universe: string, from: string, to: string, value: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"logDisputeCrowdsourcerTokensTransferred","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -310,20 +324,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_target","type":"address"},{"name":"_amount","type":"uint256"}],"name":"logFeeWindowBurned","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [universe, target, amount], options.sender);
-            return <boolean>result[0];
-        }
-
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
             return <boolean>result[0];
         }
 
@@ -408,20 +408,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_target","type":"address"},{"name":"_amount","type":"uint256"}],"name":"logReputationTokenMinted","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [universe, target, amount], options.sender);
-            return <boolean>result[0];
-        }
-
-        public logWinningStakeRedeemed = async(universe: string, reporter: string, market: string, reportingParticipant: string, amountRedeemed: BN, reportingFeesReceived: BN, payoutNumerators: Array<BN>, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_reporter","type":"address"},{"name":"_market","type":"address"},{"name":"_reportingParticipant","type":"address"},{"name":"_amountRedeemed","type":"uint256"},{"name":"_reportingFeesReceived","type":"uint256"},{"name":"_payoutNumerators","type":"uint256[]"}],"name":"logWinningStakeRedeemed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [universe, reporter, market, reportingParticipant, amountRedeemed, reportingFeesReceived, payoutNumerators], "logWinningStakeRedeemed", options.sender, options.gasPrice);
-            return;
-        }
-
-        public logWinningStakeRedeemed_ = async(universe: string, reporter: string, market: string, reportingParticipant: string, amountRedeemed: BN, reportingFeesReceived: BN, payoutNumerators: Array<BN>, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_reporter","type":"address"},{"name":"_market","type":"address"},{"name":"_reportingParticipant","type":"address"},{"name":"_amountRedeemed","type":"uint256"},{"name":"_reportingFeesReceived","type":"uint256"},{"name":"_payoutNumerators","type":"uint256[]"}],"name":"logWinningStakeRedeemed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [universe, reporter, market, reportingParticipant, amountRedeemed, reportingFeesReceived, payoutNumerators], options.sender);
             return <boolean>result[0];
         }
 
@@ -544,6 +530,20 @@
             return <boolean>result[0];
         }
 
+        public logCompleteSetsPurchased = async(universe: string, market: string, account: string, numCompleteSets: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_account","type":"address"},{"name":"_numCompleteSets","type":"uint256"}],"name":"logCompleteSetsPurchased","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [universe, market, account, numCompleteSets], "logCompleteSetsPurchased", options.sender, options.gasPrice);
+            return;
+        }
+
+        public logCompleteSetsPurchased_ = async(universe: string, market: string, account: string, numCompleteSets: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_account","type":"address"},{"name":"_numCompleteSets","type":"uint256"}],"name":"logCompleteSetsPurchased","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [universe, market, account, numCompleteSets], options.sender);
+            return <boolean>result[0];
+        }
+
         public logTimestampSet = async(newTimestamp: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_newTimestamp","type":"uint256"}],"name":"logTimestampSet","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -586,17 +586,31 @@
             return <string>result[0];
         }
 
-        public logContractAddedToRegistry = async(key: string, address: string, commitHash: string, bytecodeHash: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public logInitialReporterTransferred = async(universe: string, market: string, from: string, to: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_key","type":"bytes32"},{"name":"_address","type":"address"},{"name":"_commitHash","type":"bytes20"},{"name":"_bytecodeHash","type":"bytes32"}],"name":"logContractAddedToRegistry","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [key, address, commitHash, bytecodeHash], "logContractAddedToRegistry", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_from","type":"address"},{"name":"_to","type":"address"}],"name":"logInitialReporterTransferred","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [universe, market, from, to], "logInitialReporterTransferred", options.sender, options.gasPrice);
             return;
         }
 
-        public logContractAddedToRegistry_ = async(key: string, address: string, commitHash: string, bytecodeHash: string, options?: { sender?: string }): Promise<boolean> => {
+        public logInitialReporterTransferred_ = async(universe: string, market: string, from: string, to: string, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_key","type":"bytes32"},{"name":"_address","type":"address"},{"name":"_commitHash","type":"bytes20"},{"name":"_bytecodeHash","type":"bytes32"}],"name":"logContractAddedToRegistry","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [key, address, commitHash, bytecodeHash], options.sender);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_from","type":"address"},{"name":"_to","type":"address"}],"name":"logInitialReporterTransferred","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [universe, market, from, to], options.sender);
+            return <boolean>result[0];
+        }
+
+        public logInitialReporterRedeemed = async(universe: string, reporter: string, market: string, amountRedeemed: BN, repReceived: BN, reportingFeesReceived: BN, payoutNumerators: Array<BN>, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_reporter","type":"address"},{"name":"_market","type":"address"},{"name":"_amountRedeemed","type":"uint256"},{"name":"_repReceived","type":"uint256"},{"name":"_reportingFeesReceived","type":"uint256"},{"name":"_payoutNumerators","type":"uint256[]"}],"name":"logInitialReporterRedeemed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [universe, reporter, market, amountRedeemed, repReceived, reportingFeesReceived, payoutNumerators], "logInitialReporterRedeemed", options.sender, options.gasPrice);
+            return;
+        }
+
+        public logInitialReporterRedeemed_ = async(universe: string, reporter: string, market: string, amountRedeemed: BN, repReceived: BN, reportingFeesReceived: BN, payoutNumerators: Array<BN>, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_reporter","type":"address"},{"name":"_market","type":"address"},{"name":"_amountRedeemed","type":"uint256"},{"name":"_repReceived","type":"uint256"},{"name":"_reportingFeesReceived","type":"uint256"},{"name":"_payoutNumerators","type":"uint256[]"}],"name":"logInitialReporterRedeemed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [universe, reporter, market, amountRedeemed, repReceived, reportingFeesReceived, payoutNumerators], options.sender);
             return <boolean>result[0];
         }
 
@@ -628,17 +642,17 @@
             return <boolean>result[0];
         }
 
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public logCompleteSetsSold = async(universe: string, market: string, account: string, numCompleteSets: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_account","type":"address"},{"name":"_numCompleteSets","type":"uint256"}],"name":"logCompleteSetsSold","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [universe, market, account, numCompleteSets], "logCompleteSetsSold", options.sender, options.gasPrice);
             return;
         }
 
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
+        public logCompleteSetsSold_ = async(universe: string, market: string, account: string, numCompleteSets: BN, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_account","type":"address"},{"name":"_numCompleteSets","type":"uint256"}],"name":"logCompleteSetsSold","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [universe, market, account, numCompleteSets], options.sender);
             return <boolean>result[0];
         }
 
@@ -663,20 +677,6 @@
             super(connector, accountManager, address, defaultGasPrice);
         }
 
-        public switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed", options.sender, options.gasPrice);
-            return;
-        }
-
-        public switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed_ = async( options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"switchModeSoOnlyEmergencyStopsAndEscapeHatchesCanBeUsed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
-            return <boolean>result[0];
-        }
-
         public unregisterContract = async(key: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_key","type":"bytes32"}],"name":"unregisterContract","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -691,17 +691,17 @@
             return <boolean>result[0];
         }
 
-        public extractEther = async(target: string, destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public switchOffDevMode = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [target, destination], "extractEther", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"switchOffDevMode","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [], "switchOffDevMode", options.sender, options.gasPrice);
             return;
         }
 
-        public extractEther_ = async(target: string, destination: string, options?: { sender?: string }): Promise<boolean> => {
+        public switchOffDevMode_ = async( options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [target, destination], options.sender);
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"switchOffDevMode","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
             return <boolean>result[0];
         }
 
@@ -754,25 +754,18 @@
             return <boolean>result[0];
         }
 
+        public isStopped_ = async( options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"isStopped","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <boolean>result[0];
+        }
+
         public getAugur_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getAugur","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
-        }
-
-        public extractTokens = async(target: string, destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [target, destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(target: string, destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [target, destination, token], options.sender);
-            return <boolean>result[0];
         }
 
         public updateController = async(target: string, newController: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -789,46 +782,11 @@
             return <boolean>result[0];
         }
 
-        public emergencyStop = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"emergencyStop","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "emergencyStop", options.sender, options.gasPrice);
-            return;
-        }
-
-        public emergencyStop_ = async( options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"emergencyStop","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
-            return <boolean>result[0];
-        }
-
-        public stopped_ = async( options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"stopped","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
-            return <boolean>result[0];
-        }
-
         public registry_ = async(arg0: string, options?: { sender?: string }): Promise<Array<string>> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"","type":"bytes32"}],"name":"registry","outputs":[{"name":"name","type":"bytes32"},{"name":"contractAddress","type":"address"},{"name":"commitHash","type":"bytes20"},{"name":"bytecodeHash","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [arg0], options.sender);
             return <Array<string>>result;
-        }
-
-        public release = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"release","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "release", options.sender, options.gasPrice);
-            return;
-        }
-
-        public release_ = async( options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"release","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
-            return <boolean>result[0];
         }
 
         public removeFromWhitelist = async(target: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -906,13 +864,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_key","type":"bytes32"}],"name":"lookup","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [key], options.sender);
             return <string>result[0];
-        }
-
-        public assertOnlySpecifiedCaller_ = async(caller: string, allowedCaller: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_caller","type":"address"},{"name":"_allowedCaller","type":"bytes32"}],"name":"assertOnlySpecifiedCaller","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [caller, allowedCaller], options.sender);
-            return <boolean>result[0];
         }
     }
 
@@ -992,6 +943,20 @@
             return <BN>result[0];
         }
 
+        public decreaseApproval = async(spender: string, subtractedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, subtractedValue], "decreaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public decreaseApproval_ = async(spender: string, subtractedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, subtractedValue], options.sender);
+            return <boolean>result[0];
+        }
+
         public balanceOf_ = async(owner: string, options?: { sender?: string }): Promise<BN> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -1017,6 +982,20 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [to, value], options.sender);
+            return <boolean>result[0];
+        }
+
+        public increaseApproval = async(spender: string, addedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, addedValue], "increaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public increaseApproval_ = async(spender: string, addedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, addedValue], options.sender);
             return <boolean>result[0];
         }
 
@@ -1069,20 +1048,6 @@
             return <string>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public setController = async(controller: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -1102,20 +1067,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getTypeName","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
         }
     }
 
@@ -1151,20 +1102,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getController","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
-        }
-
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
         }
 
         public getOwner_ = async( options?: { sender?: string }): Promise<string> => {
@@ -1221,20 +1158,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getTypeName","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
         }
 
         public transferOwnership = async(newOwner: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -1386,14 +1309,14 @@
 
         public createMarket = async(controller: string, universe: string, endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, sender: string, numOutcomes: BN, numTicks: BN, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_sender","type":"address"},{"name":"_numOutcomes","type":"uint8"},{"name":"_numTicks","type":"uint256"}],"name":"createMarket","outputs":[{"name":"_market","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_sender","type":"address"},{"name":"_numOutcomes","type":"uint256"},{"name":"_numTicks","type":"uint256"}],"name":"createMarket","outputs":[{"name":"_market","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
             await this.remoteCall(abi, [controller, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, sender, numOutcomes, numTicks], "createMarket", options.sender, options.gasPrice, options.attachedEth);
             return;
         }
 
         public createMarket_ = async(controller: string, universe: string, endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporterAddress: string, sender: string, numOutcomes: BN, numTicks: BN, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_sender","type":"address"},{"name":"_numOutcomes","type":"uint8"},{"name":"_numTicks","type":"uint256"}],"name":"createMarket","outputs":[{"name":"_market","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInWei","type":"uint256"},{"name":"_denominationToken","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_sender","type":"address"},{"name":"_numOutcomes","type":"uint256"},{"name":"_numTicks","type":"uint256"}],"name":"createMarket","outputs":[{"name":"_market","type":"address"}],"payable":true,"stateMutability":"payable","type":"function"};
             const result = await this.localCall(abi, [controller, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, sender, numOutcomes, numTicks], options.sender, options.attachedEth);
             return <string>result[0];
         }
@@ -1428,14 +1351,14 @@
 
         public createShareToken = async(controller: string, market: string, outcome: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"}],"name":"createShareToken","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"createShareToken","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             await this.remoteCall(abi, [controller, market, outcome], "createShareToken", options.sender, options.gasPrice);
             return;
         }
 
         public createShareToken_ = async(controller: string, market: string, outcome: BN, options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"}],"name":"createShareToken","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"createShareToken","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [controller, market, outcome], options.sender);
             return <string>result[0];
         }
@@ -1720,13 +1643,6 @@
             return <BN>result[0];
         }
 
-        public getPayoutNumerator_ = async(outcome: BN, options?: { sender?: string }): Promise<BN> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_outcome","type":"uint8"}],"name":"getPayoutNumerator","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [outcome], options.sender);
-            return <BN>result[0];
-        }
-
         public disavow = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[],"name":"disavow","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -1790,20 +1706,6 @@
             return <boolean>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public ETERNAL_APPROVAL_VALUE_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"ETERNAL_APPROVAL_VALUE","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -1815,6 +1717,20 @@
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"isDisavowed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
+            return <boolean>result[0];
+        }
+
+        public decreaseApproval = async(spender: string, subtractedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, subtractedValue], "decreaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public decreaseApproval_ = async(spender: string, subtractedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, subtractedValue], options.sender);
             return <boolean>result[0];
         }
 
@@ -1937,6 +1853,27 @@
             return <boolean>result[0];
         }
 
+        public increaseApproval = async(spender: string, addedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, addedValue], "increaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public increaseApproval_ = async(spender: string, addedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, addedValue], options.sender);
+            return <boolean>result[0];
+        }
+
+        public getPayoutNumerator_ = async(outcome: BN, options?: { sender?: string }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_outcome","type":"uint256"}],"name":"getPayoutNumerator","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [outcome], options.sender);
+            return <BN>result[0];
+        }
+
         public allowance_ = async(owner: string, spender: string, options?: { sender?: string }): Promise<BN> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -1956,20 +1893,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
         }
 
         public getInitialized_ = async( options?: { sender?: string }): Promise<boolean> => {
@@ -2012,6 +1935,13 @@
     export class FeeToken extends Controlled {
         public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
             super(connector, accountManager, address, defaultGasPrice);
+        }
+
+        public name_ = async( options?: { sender?: string }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <string>result[0];
         }
 
         public approve = async(spender: string, value: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -2070,18 +2000,11 @@
             return <string>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public decimals_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <BN>result[0];
         }
 
         public ETERNAL_APPROVAL_VALUE_ = async( options?: { sender?: string }): Promise<BN> => {
@@ -2089,6 +2012,20 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"ETERNAL_APPROVAL_VALUE","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
+        }
+
+        public decreaseApproval = async(spender: string, subtractedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, subtractedValue], "decreaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public decreaseApproval_ = async(spender: string, subtractedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, subtractedValue], options.sender);
+            return <boolean>result[0];
         }
 
         public balanceOf_ = async(owner: string, options?: { sender?: string }): Promise<BN> => {
@@ -2110,6 +2047,13 @@
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [controller], options.sender);
             return <boolean>result[0];
+        }
+
+        public symbol_ = async( options?: { sender?: string }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <string>result[0];
         }
 
         public mintForReportingParticipant = async(target: string, amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -2161,25 +2105,25 @@
             return <boolean>result[0];
         }
 
+        public increaseApproval = async(spender: string, addedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, addedValue], "increaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public increaseApproval_ = async(spender: string, addedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, addedValue], options.sender);
+            return <boolean>result[0];
+        }
+
         public allowance_ = async(owner: string, spender: string, options?: { sender?: string }): Promise<BN> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [owner, spender], options.sender);
             return <BN>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
         }
 
         public getInitialized_ = async( options?: { sender?: string }): Promise<boolean> => {
@@ -2222,6 +2166,13 @@
     export class FeeWindow extends Controlled {
         public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
             super(connector, accountManager, address, defaultGasPrice);
+        }
+
+        public name_ = async( options?: { sender?: string }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <string>result[0];
         }
 
         public approve = async(spender: string, value: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -2301,6 +2252,13 @@
             return <string>result[0];
         }
 
+        public decimals_ = async( options?: { sender?: string }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <BN>result[0];
+        }
+
         public noteInitialReportingGasPrice = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[],"name":"noteInitialReportingGasPrice","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -2322,34 +2280,6 @@
             return <BN>result[0];
         }
 
-        public migrateOutByPayout = async(payoutNumerators: Array<BN>, invalid: boolean, attotokens: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_invalid","type":"bool"},{"name":"_attotokens","type":"uint256"}],"name":"migrateOutByPayout","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [payoutNumerators, invalid, attotokens], "migrateOutByPayout", options.sender, options.gasPrice);
-            return;
-        }
-
-        public migrateOutByPayout_ = async(payoutNumerators: Array<BN>, invalid: boolean, attotokens: BN, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_invalid","type":"bool"},{"name":"_attotokens","type":"uint256"}],"name":"migrateOutByPayout","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [payoutNumerators, invalid, attotokens], options.sender);
-            return <boolean>result[0];
-        }
-
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public getTotalFeeStake_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getTotalFeeStake","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -2362,6 +2292,20 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"ETERNAL_APPROVAL_VALUE","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
+        }
+
+        public decreaseApproval = async(spender: string, subtractedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, subtractedValue], "decreaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public decreaseApproval_ = async(spender: string, subtractedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, subtractedValue], options.sender);
+            return <boolean>result[0];
         }
 
         public balanceOf_ = async(owner: string, options?: { sender?: string }): Promise<BN> => {
@@ -2418,6 +2362,13 @@
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_sender","type":"address"}],"name":"redeem","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [sender], options.sender);
             return <boolean>result[0];
+        }
+
+        public symbol_ = async( options?: { sender?: string }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <string>result[0];
         }
 
         public getNumIncorrectDesignatedReportMarkets_ = async( options?: { sender?: string }): Promise<BN> => {
@@ -2539,6 +2490,20 @@
             return <BN>result[0];
         }
 
+        public increaseApproval = async(spender: string, addedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, addedValue], "increaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public increaseApproval_ = async(spender: string, addedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, addedValue], options.sender);
+            return <boolean>result[0];
+        }
+
         public buy = async(attotokens: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_attotokens","type":"uint256"}],"name":"buy","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -2581,20 +2546,6 @@
             return <BN>result[0];
         }
 
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
-        }
-
         public getInitialized_ = async( options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getInitialized","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -2635,13 +2586,6 @@
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_tokens","type":"address[]"}],"name":"suicideFunds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [target, tokens], options.sender);
             return <boolean>result[0];
-        }
-
-        public getPayoutNumerator_ = async(outcome: BN, options?: { sender?: string }): Promise<BN> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_outcome","type":"uint8"}],"name":"getPayoutNumerator","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [outcome], options.sender);
-            return <BN>result[0];
         }
 
         public liquidateLosing = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -2725,20 +2669,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_designatedReporter","type":"address"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [market, designatedReporter], options.sender);
-            return <boolean>result[0];
-        }
-
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
             return <boolean>result[0];
         }
 
@@ -2861,6 +2791,13 @@
             return <boolean>result[0];
         }
 
+        public getPayoutNumerator_ = async(outcome: BN, options?: { sender?: string }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_outcome","type":"uint256"}],"name":"getPayoutNumerator","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [outcome], options.sender);
+            return <BN>result[0];
+        }
+
         public getPayoutDistributionHash_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getPayoutDistributionHash","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -2873,20 +2810,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
         }
 
         public getInitialized_ = async( options?: { sender?: string }): Promise<boolean> => {
@@ -2973,20 +2896,6 @@
             return <boolean>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public withdrawEther = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[],"name":"withdrawEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -3054,20 +2963,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_owner","type":"address"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [owner], options.sender);
-            return <boolean>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
             return <boolean>result[0];
         }
 
@@ -3169,25 +3064,25 @@
             return <string>result[0];
         }
 
+        public getMarketCreatorSettlementFeeDivisor_ = async( options?: { sender?: string }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getMarketCreatorSettlementFeeDivisor","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <BN>result[0];
+        }
+
         public initialize = async(universe: string, endTime: BN, feePerEthInAttoeth: BN, cash: string, designatedReporterAddress: string, creator: string, numOutcomes: BN, numTicks: BN, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInAttoeth","type":"uint256"},{"name":"_cash","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_creator","type":"address"},{"name":"_numOutcomes","type":"uint8"},{"name":"_numTicks","type":"uint256"}],"name":"initialize","outputs":[{"name":"_success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInAttoeth","type":"uint256"},{"name":"_cash","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_creator","type":"address"},{"name":"_numOutcomes","type":"uint256"},{"name":"_numTicks","type":"uint256"}],"name":"initialize","outputs":[{"name":"_success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"};
             await this.remoteCall(abi, [universe, endTime, feePerEthInAttoeth, cash, designatedReporterAddress, creator, numOutcomes, numTicks], "initialize", options.sender, options.gasPrice, options.attachedEth);
             return;
         }
 
         public initialize_ = async(universe: string, endTime: BN, feePerEthInAttoeth: BN, cash: string, designatedReporterAddress: string, creator: string, numOutcomes: BN, numTicks: BN, options?: { sender?: string, attachedEth?: BN }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInAttoeth","type":"uint256"},{"name":"_cash","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_creator","type":"address"},{"name":"_numOutcomes","type":"uint8"},{"name":"_numTicks","type":"uint256"}],"name":"initialize","outputs":[{"name":"_success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInAttoeth","type":"uint256"},{"name":"_cash","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_creator","type":"address"},{"name":"_numOutcomes","type":"uint256"},{"name":"_numTicks","type":"uint256"}],"name":"initialize","outputs":[{"name":"_success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"};
             const result = await this.localCall(abi, [universe, endTime, feePerEthInAttoeth, cash, designatedReporterAddress, creator, numOutcomes, numTicks], options.sender, options.attachedEth);
             return <boolean>result[0];
-        }
-
-        public getMarketCreatorSettlementFeeDivisor_ = async( options?: { sender?: string }): Promise<BN> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getMarketCreatorSettlementFeeDivisor","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
-            return <BN>result[0];
         }
 
         public derivePayoutDistributionHash_ = async(payoutNumerators: Array<BN>, invalid: boolean, options?: { sender?: string }): Promise<string> => {
@@ -3199,16 +3094,16 @@
 
         public getNumberOfOutcomes_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getNumberOfOutcomes","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getNumberOfOutcomes","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
         }
 
-        public getShareToken_ = async(outcome: BN, options?: { sender?: string }): Promise<string> => {
+        public getParticipantStake_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_outcome","type":"uint8"}],"name":"getShareToken","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [outcome], options.sender);
-            return <string>result[0];
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getParticipantStake","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <BN>result[0];
         }
 
         public getController_ = async( options?: { sender?: string }): Promise<string> => {
@@ -3230,6 +3125,13 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"designatedReporterShowed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <boolean>result[0];
+        }
+
+        public getWinningPayoutNumerator_ = async(outcome: BN, options?: { sender?: string }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_outcome","type":"uint256"}],"name":"getWinningPayoutNumerator","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [outcome], options.sender);
+            return <BN>result[0];
         }
 
         public getEndTime_ = async( options?: { sender?: string }): Promise<BN> => {
@@ -3274,20 +3176,6 @@
             return <boolean>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public contribute = async(payoutNumerators: Array<BN>, invalid: boolean, amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_invalid","type":"bool"},{"name":"_amount","type":"uint256"}],"name":"contribute","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -3306,6 +3194,13 @@
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getDesignatedReporter","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
+            return <string>result[0];
+        }
+
+        public getShareToken_ = async(outcome: BN, options?: { sender?: string }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_outcome","type":"uint256"}],"name":"getShareToken","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [outcome], options.sender);
             return <string>result[0];
         }
 
@@ -3328,13 +3223,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getWinningReportingParticipant","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
-        }
-
-        public getTotalStake_ = async( options?: { sender?: string }): Promise<BN> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getTotalStake","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
-            return <BN>result[0];
         }
 
         public getWinningPayoutDistributionHash_ = async( options?: { sender?: string }): Promise<string> => {
@@ -3407,18 +3295,18 @@
             return <BN>result[0];
         }
 
+        public assertBalances_ = async( options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"assertBalances","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <boolean>result[0];
+        }
+
         public getFinalizationTime_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getFinalizationTime","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
-        }
-
-        public getReportingParticipant_ = async(index: BN, options?: { sender?: string }): Promise<string> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_index","type":"uint8"}],"name":"getReportingParticipant","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [index], options.sender);
-            return <string>result[0];
         }
 
         public getReputationToken_ = async( options?: { sender?: string }): Promise<string> => {
@@ -3433,6 +3321,13 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getNumTicks","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
+        }
+
+        public getReportingParticipant_ = async(index: BN, options?: { sender?: string }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_index","type":"uint256"}],"name":"getReportingParticipant","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [index], options.sender);
+            return <string>result[0];
         }
 
         public controllerLookupName_ = async( options?: { sender?: string }): Promise<string> => {
@@ -3505,20 +3400,6 @@
             return <string>result[0];
         }
 
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
-        }
-
         public getInitialized_ = async( options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getInitialized","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -3538,13 +3419,6 @@
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_newOwner","type":"address"}],"name":"transferOwnership","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [newOwner], options.sender);
             return <boolean>result[0];
-        }
-
-        public getWinningPayoutNumerator_ = async(outcome: BN, options?: { sender?: string }): Promise<BN> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_outcome","type":"uint8"}],"name":"getWinningPayoutNumerator","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [outcome], options.sender);
-            return <BN>result[0];
         }
 
         public isContainerForReportingParticipant_ = async(shadyReportingParticipant: string, options?: { sender?: string }): Promise<boolean> => {
@@ -3570,23 +3444,9 @@
     }
 
 
-    export class RepPriceOracle extends Controlled {
+    export class RepPriceOracle extends Contract {
         public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
             super(connector, accountManager, address, defaultGasPrice);
-        }
-
-        public suicideFunds = async(target: string, tokens: Array<string>, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_tokens","type":"address[]"}],"name":"suicideFunds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [target, tokens], "suicideFunds", options.sender, options.gasPrice);
-            return;
-        }
-
-        public suicideFunds_ = async(target: string, tokens: Array<string>, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_tokens","type":"address[]"}],"name":"suicideFunds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [target, tokens], options.sender);
-            return <boolean>result[0];
         }
 
         public getRepPriceInAttoEth_ = async( options?: { sender?: string }): Promise<BN> => {
@@ -3596,46 +3456,11 @@
             return <BN>result[0];
         }
 
-        public getController_ = async( options?: { sender?: string }): Promise<string> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getController","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
-            return <string>result[0];
-        }
-
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public getOwner_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getOwner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
-        }
-
-        public setController = async(controller: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [controller], "setController", options.sender, options.gasPrice);
-            return;
-        }
-
-        public setController_ = async(controller: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [controller], options.sender);
-            return <boolean>result[0];
         }
 
         public setRepPriceInAttoEth = async(repPriceInAttoEth: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -3650,20 +3475,6 @@
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_repPriceInAttoEth","type":"uint256"}],"name":"setRepPriceInAttoEth","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [repPriceInAttoEth], options.sender);
             return <BN>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
         }
 
         public transferOwnership = async(newOwner: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -3759,7 +3570,7 @@
 
         public decimals_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
         }
@@ -3778,25 +3589,25 @@
             return <boolean>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public ETERNAL_APPROVAL_VALUE_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"ETERNAL_APPROVAL_VALUE","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
+        }
+
+        public decreaseApproval = async(spender: string, subtractedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, subtractedValue], "decreaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public decreaseApproval_ = async(spender: string, subtractedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, subtractedValue], options.sender);
+            return <boolean>result[0];
         }
 
         public migrateOut = async(destination: string, attotokens: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -3960,6 +3771,20 @@
             return <boolean>result[0];
         }
 
+        public increaseApproval = async(spender: string, addedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, addedValue], "increaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public increaseApproval_ = async(spender: string, addedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, addedValue], options.sender);
+            return <boolean>result[0];
+        }
+
         public updateSiblingMigrationTotal = async(token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_token","type":"address"}],"name":"updateSiblingMigrationTotal","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -4000,20 +3825,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [owner, spender], options.sender);
             return <BN>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
         }
 
         public getInitialized_ = async( options?: { sender?: string }): Promise<boolean> => {
@@ -4181,20 +3992,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_shadyShareToken","type":"address"}],"name":"isContainerForShareToken","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [shadyShareToken], options.sender);
-            return <boolean>result[0];
-        }
-
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
             return <boolean>result[0];
         }
 
@@ -4632,20 +4429,6 @@
             return <string>result[0];
         }
 
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
-        }
-
         public getNextFeeWindow_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getNextFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -4744,20 +4527,6 @@
             return <string>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public cancelOrder = async(orderId: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_orderId","type":"bytes32"}],"name":"cancelOrder","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -4783,20 +4552,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [controller], options.sender);
-            return <boolean>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
             return <boolean>result[0];
         }
     }
@@ -4886,7 +4641,7 @@
 
         public decimals_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
         }
@@ -4919,25 +4674,25 @@
             return <boolean>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public ETERNAL_APPROVAL_VALUE_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"ETERNAL_APPROVAL_VALUE","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
+        }
+
+        public decreaseApproval = async(spender: string, subtractedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, subtractedValue], "decreaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public decreaseApproval_ = async(spender: string, subtractedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, subtractedValue], options.sender);
+            return <boolean>result[0];
         }
 
         public balanceOf_ = async(owner: string, options?: { sender?: string }): Promise<BN> => {
@@ -5003,6 +4758,20 @@
             return <string>result[0];
         }
 
+        public increaseApproval = async(spender: string, addedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, addedValue], "increaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public increaseApproval_ = async(spender: string, addedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, addedValue], options.sender);
+            return <boolean>result[0];
+        }
+
         public getTypeName_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getTypeName","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -5015,20 +4784,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [owner, spender], options.sender);
             return <BN>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
         }
 
         public getBalance_ = async(address: string, options?: { sender?: string }): Promise<BN> => {
@@ -5073,20 +4828,6 @@
             return <string>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public calculateReportingFee = async(market: string, amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"}],"name":"calculateReportingFee","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -5115,6 +4856,20 @@
             return <boolean>result[0];
         }
 
+        public divideUpWinnings = async(market: string, outcome: BN, numberOfShares: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_numberOfShares","type":"uint256"}],"name":"divideUpWinnings","outputs":[{"name":"_proceeds","type":"uint256"},{"name":"_shareHolderShare","type":"uint256"},{"name":"_creatorShare","type":"uint256"},{"name":"_reporterShare","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [market, outcome, numberOfShares], "divideUpWinnings", options.sender, options.gasPrice);
+            return;
+        }
+
+        public divideUpWinnings_ = async(market: string, outcome: BN, numberOfShares: BN, options?: { sender?: string }): Promise<Array<string>> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_numberOfShares","type":"uint256"}],"name":"divideUpWinnings","outputs":[{"name":"_proceeds","type":"uint256"},{"name":"_shareHolderShare","type":"uint256"},{"name":"_creatorShare","type":"uint256"},{"name":"_reporterShare","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [market, outcome, numberOfShares], options.sender);
+            return <Array<string>>result;
+        }
+
         public claimTradingProceeds = async(market: string, shareHolder: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_shareHolder","type":"address"}],"name":"claimTradingProceeds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -5129,37 +4884,9 @@
             return <boolean>result[0];
         }
 
-        public divideUpWinnings = async(market: string, outcome: BN, numberOfShares: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_numberOfShares","type":"uint256"}],"name":"divideUpWinnings","outputs":[{"name":"_proceeds","type":"uint256"},{"name":"_shareHolderShare","type":"uint256"},{"name":"_creatorShare","type":"uint256"},{"name":"_reporterShare","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [market, outcome, numberOfShares], "divideUpWinnings", options.sender, options.gasPrice);
-            return;
-        }
-
-        public divideUpWinnings_ = async(market: string, outcome: BN, numberOfShares: BN, options?: { sender?: string }): Promise<Array<string>> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_numberOfShares","type":"uint256"}],"name":"divideUpWinnings","outputs":[{"name":"_proceeds","type":"uint256"},{"name":"_shareHolderShare","type":"uint256"},{"name":"_creatorShare","type":"uint256"},{"name":"_reporterShare","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [market, outcome, numberOfShares], options.sender);
-            return <Array<string>>result;
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
-        }
-
         public calculateProceeds_ = async(market: string, outcome: BN, numberOfShares: BN, options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_numberOfShares","type":"uint256"}],"name":"calculateProceeds","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_numberOfShares","type":"uint256"}],"name":"calculateProceeds","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [market, outcome, numberOfShares], options.sender);
             return <BN>result[0];
         }
@@ -5204,20 +4931,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getController","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
-        }
-
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
         }
 
         public setController = async(controller: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -5275,20 +4988,6 @@
             const result = await this.localCall(abi, [market, amount], options.sender);
             return <boolean>result[0];
         }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
-        }
     }
 
 
@@ -5311,20 +5010,6 @@
             return <boolean>result[0];
         }
 
-        public createOrder = async(creator: string, type: BN, attoshares: BN, displayPrice: BN, market: string, outcome: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_creator","type":"address"},{"name":"_type","type":"uint8"},{"name":"_attoshares","type":"uint256"},{"name":"_displayPrice","type":"uint256"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"createOrder","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [creator, type, attoshares, displayPrice, market, outcome, betterOrderId, worseOrderId, tradeGroupId], "createOrder", options.sender, options.gasPrice);
-            return;
-        }
-
-        public createOrder_ = async(creator: string, type: BN, attoshares: BN, displayPrice: BN, market: string, outcome: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string }): Promise<string> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_creator","type":"address"},{"name":"_type","type":"uint8"},{"name":"_attoshares","type":"uint256"},{"name":"_displayPrice","type":"uint256"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"createOrder","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [creator, type, attoshares, displayPrice, market, outcome, betterOrderId, worseOrderId, tradeGroupId], options.sender);
-            return <string>result[0];
-        }
-
         public getController_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getController","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -5332,18 +5017,18 @@
             return <string>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public publicCreateOrder = async(type: BN, attoshares: BN, displayPrice: BN, market: string, outcome: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_type","type":"uint8"},{"name":"_attoshares","type":"uint256"},{"name":"_displayPrice","type":"uint256"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicCreateOrder","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            await this.remoteCall(abi, [type, attoshares, displayPrice, market, outcome, betterOrderId, worseOrderId, tradeGroupId], "publicCreateOrder", options.sender, options.gasPrice, options.attachedEth);
             return;
         }
 
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
+        public publicCreateOrder_ = async(type: BN, attoshares: BN, displayPrice: BN, market: string, outcome: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_type","type":"uint8"},{"name":"_attoshares","type":"uint256"},{"name":"_displayPrice","type":"uint256"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicCreateOrder","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const result = await this.localCall(abi, [type, attoshares, displayPrice, market, outcome, betterOrderId, worseOrderId, tradeGroupId], options.sender, options.attachedEth);
+            return <string>result[0];
         }
 
         public setController = async(controller: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -5360,31 +5045,17 @@
             return <boolean>result[0];
         }
 
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public createOrder = async(creator: string, type: BN, attoshares: BN, displayPrice: BN, market: string, outcome: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_creator","type":"address"},{"name":"_type","type":"uint8"},{"name":"_attoshares","type":"uint256"},{"name":"_displayPrice","type":"uint256"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"createOrder","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [creator, type, attoshares, displayPrice, market, outcome, betterOrderId, worseOrderId, tradeGroupId], "createOrder", options.sender, options.gasPrice);
             return;
         }
 
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
+        public createOrder_ = async(creator: string, type: BN, attoshares: BN, displayPrice: BN, market: string, outcome: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
-        }
-
-        public publicCreateOrder = async(type: BN, attoshares: BN, displayPrice: BN, market: string, outcome: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_type","type":"uint8"},{"name":"_attoshares","type":"uint256"},{"name":"_displayPrice","type":"uint256"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicCreateOrder","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
-            await this.remoteCall(abi, [type, attoshares, displayPrice, market, outcome, betterOrderId, worseOrderId, tradeGroupId], "publicCreateOrder", options.sender, options.gasPrice, options.attachedEth);
-            return;
-        }
-
-        public publicCreateOrder_ = async(type: BN, attoshares: BN, displayPrice: BN, market: string, outcome: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_type","type":"uint8"},{"name":"_attoshares","type":"uint256"},{"name":"_displayPrice","type":"uint256"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicCreateOrder","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
-            const result = await this.localCall(abi, [type, attoshares, displayPrice, market, outcome, betterOrderId, worseOrderId, tradeGroupId], options.sender, options.attachedEth);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_creator","type":"address"},{"name":"_type","type":"uint8"},{"name":"_attoshares","type":"uint256"},{"name":"_displayPrice","type":"uint256"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"createOrder","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [creator, type, attoshares, displayPrice, market, outcome, betterOrderId, worseOrderId, tradeGroupId], options.sender);
             return <string>result[0];
         }
     }
@@ -5430,20 +5101,6 @@
             return <string>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public setController = async(controller: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -5470,20 +5127,6 @@
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_orderId","type":"bytes32"},{"name":"_amountFillerWants","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicFillOrder","outputs":[{"name":"","type":"uint256"}],"payable":true,"stateMutability":"payable","type":"function"};
             const result = await this.localCall(abi, [orderId, amountFillerWants, tradeGroupId], options.sender, options.attachedEth);
             return <BN>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
         }
     }
 
@@ -5514,6 +5157,13 @@
             return <BN>result[0];
         }
 
+        public getOrderId_ = async(type: BN, market: string, amount: BN, price: BN, sender: string, blockNumber: BN, outcome: BN, moneyEscrowed: BN, sharesEscrowed: BN, options?: { sender?: string }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_sender","type":"address"},{"name":"_blockNumber","type":"uint256"},{"name":"_outcome","type":"uint256"},{"name":"_moneyEscrowed","type":"uint256"},{"name":"_sharesEscrowed","type":"uint256"}],"name":"getOrderId","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"pure","type":"function"};
+            const result = await this.localCall(abi, [type, market, amount, price, sender, blockNumber, outcome, moneyEscrowed, sharesEscrowed], options.sender);
+            return <string>result[0];
+        }
+
         public assertIsNotBetterPrice_ = async(type: BN, price: BN, betterOrderId: string, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"}],"name":"assertIsNotBetterPrice","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -5521,11 +5171,46 @@
             return <boolean>result[0];
         }
 
-        public getOrderId_ = async(type: BN, market: string, amount: BN, price: BN, sender: string, blockNumber: BN, outcome: BN, moneyEscrowed: BN, sharesEscrowed: BN, options?: { sender?: string }): Promise<string> => {
+        public incrementTotalEscrowed = async(market: string, amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_sender","type":"address"},{"name":"_blockNumber","type":"uint256"},{"name":"_outcome","type":"uint8"},{"name":"_moneyEscrowed","type":"uint256"},{"name":"_sharesEscrowed","type":"uint256"}],"name":"getOrderId","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [type, market, amount, price, sender, blockNumber, outcome, moneyEscrowed, sharesEscrowed], options.sender);
-            return <string>result[0];
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"}],"name":"incrementTotalEscrowed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [market, amount], "incrementTotalEscrowed", options.sender, options.gasPrice);
+            return;
+        }
+
+        public incrementTotalEscrowed_ = async(market: string, amount: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"}],"name":"incrementTotalEscrowed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [market, amount], options.sender);
+            return <boolean>result[0];
+        }
+
+        public recordFillOrder = async(orderId: string, sharesFilled: BN, tokensFilled: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_orderId","type":"bytes32"},{"name":"_sharesFilled","type":"uint256"},{"name":"_tokensFilled","type":"uint256"}],"name":"recordFillOrder","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [orderId, sharesFilled, tokensFilled], "recordFillOrder", options.sender, options.gasPrice);
+            return;
+        }
+
+        public recordFillOrder_ = async(orderId: string, sharesFilled: BN, tokensFilled: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_orderId","type":"bytes32"},{"name":"_sharesFilled","type":"uint256"},{"name":"_tokensFilled","type":"uint256"}],"name":"recordFillOrder","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [orderId, sharesFilled, tokensFilled], options.sender);
+            return <boolean>result[0];
+        }
+
+        public setPrice = async(market: string, outcome: BN, price: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_price","type":"uint256"}],"name":"setPrice","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [market, outcome, price], "setPrice", options.sender, options.gasPrice);
+            return;
+        }
+
+        public setPrice_ = async(market: string, outcome: BN, price: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_price","type":"uint256"}],"name":"setPrice","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [market, outcome, price], options.sender);
+            return <boolean>result[0];
         }
 
         public getController_ = async( options?: { sender?: string }): Promise<string> => {
@@ -5539,6 +5224,13 @@
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_orderId","type":"bytes32"}],"name":"getPrice","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [orderId], options.sender);
+            return <BN>result[0];
+        }
+
+        public getTotalEscrowed_ = async(market: string, options?: { sender?: string }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_market","type":"address"}],"name":"getTotalEscrowed","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [market], options.sender);
             return <BN>result[0];
         }
 
@@ -5563,27 +5255,6 @@
             return <BN>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
-        public getBestOrderId_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<string> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"}],"name":"getBestOrderId","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [type, market, outcome], options.sender);
-            return <string>result[0];
-        }
-
         public isBetterPrice_ = async(type: BN, price: BN, orderId: string, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_price","type":"uint256"},{"name":"_orderId","type":"bytes32"}],"name":"isBetterPrice","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -5593,23 +5264,37 @@
 
         public getOutcome_ = async(orderId: string, options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_orderId","type":"bytes32"}],"name":"getOutcome","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_orderId","type":"bytes32"}],"name":"getOutcome","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [orderId], options.sender);
             return <BN>result[0];
         }
 
-        public fillOrder = async(orderId: string, sharesFilled: BN, tokensFilled: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public saveOrder = async(type: BN, market: string, amount: BN, price: BN, sender: string, outcome: BN, moneyEscrowed: BN, sharesEscrowed: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_orderId","type":"bytes32"},{"name":"_sharesFilled","type":"uint256"},{"name":"_tokensFilled","type":"uint256"}],"name":"fillOrder","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [orderId, sharesFilled, tokensFilled], "fillOrder", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_sender","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_moneyEscrowed","type":"uint256"},{"name":"_sharesEscrowed","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"saveOrder","outputs":[{"name":"_orderId","type":"bytes32"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [type, market, amount, price, sender, outcome, moneyEscrowed, sharesEscrowed, betterOrderId, worseOrderId, tradeGroupId], "saveOrder", options.sender, options.gasPrice);
             return;
         }
 
-        public fillOrder_ = async(orderId: string, sharesFilled: BN, tokensFilled: BN, options?: { sender?: string }): Promise<boolean> => {
+        public saveOrder_ = async(type: BN, market: string, amount: BN, price: BN, sender: string, outcome: BN, moneyEscrowed: BN, sharesEscrowed: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_orderId","type":"bytes32"},{"name":"_sharesFilled","type":"uint256"},{"name":"_tokensFilled","type":"uint256"}],"name":"fillOrder","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [orderId, sharesFilled, tokensFilled], options.sender);
-            return <boolean>result[0];
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_sender","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_moneyEscrowed","type":"uint256"},{"name":"_sharesEscrowed","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"saveOrder","outputs":[{"name":"_orderId","type":"bytes32"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [type, market, amount, price, sender, outcome, moneyEscrowed, sharesEscrowed, betterOrderId, worseOrderId, tradeGroupId], options.sender);
+            return <string>result[0];
+        }
+
+        public getBestOrderId_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"getBestOrderId","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [type, market, outcome], options.sender);
+            return <string>result[0];
+        }
+
+        public getLastOutcomePrice_ = async(market: string, outcome: BN, options?: { sender?: string }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"getLastOutcomePrice","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [market, outcome], options.sender);
+            return <BN>result[0];
         }
 
         public getWorseOrderId_ = async(orderId: string, options?: { sender?: string }): Promise<string> => {
@@ -5619,18 +5304,11 @@
             return <string>result[0];
         }
 
-        public getLastOutcomePrice_ = async(market: string, outcome: BN, options?: { sender?: string }): Promise<BN> => {
+        public getWorstOrderId_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"}],"name":"getLastOutcomePrice","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [market, outcome], options.sender);
-            return <BN>result[0];
-        }
-
-        public getVolume_ = async(market: string, options?: { sender?: string }): Promise<BN> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_market","type":"address"}],"name":"getVolume","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [market], options.sender);
-            return <BN>result[0];
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"getWorstOrderId","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [type, market, outcome], options.sender);
+            return <string>result[0];
         }
 
         public setController = async(controller: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -5654,25 +5332,18 @@
             return <string>result[0];
         }
 
-        public saveOrder = async(type: BN, market: string, amount: BN, price: BN, sender: string, outcome: BN, moneyEscrowed: BN, sharesEscrowed: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public decrementTotalEscrowed = async(market: string, amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_sender","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_moneyEscrowed","type":"uint256"},{"name":"_sharesEscrowed","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"saveOrder","outputs":[{"name":"_orderId","type":"bytes32"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [type, market, amount, price, sender, outcome, moneyEscrowed, sharesEscrowed, betterOrderId, worseOrderId, tradeGroupId], "saveOrder", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"}],"name":"decrementTotalEscrowed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [market, amount], "decrementTotalEscrowed", options.sender, options.gasPrice);
             return;
         }
 
-        public saveOrder_ = async(type: BN, market: string, amount: BN, price: BN, sender: string, outcome: BN, moneyEscrowed: BN, sharesEscrowed: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string }): Promise<string> => {
+        public decrementTotalEscrowed_ = async(market: string, amount: BN, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_sender","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_moneyEscrowed","type":"uint256"},{"name":"_sharesEscrowed","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"saveOrder","outputs":[{"name":"_orderId","type":"bytes32"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [type, market, amount, price, sender, outcome, moneyEscrowed, sharesEscrowed, betterOrderId, worseOrderId, tradeGroupId], options.sender);
-            return <string>result[0];
-        }
-
-        public getWorstOrderId_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<string> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"}],"name":"getWorstOrderId","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [type, market, outcome], options.sender);
-            return <string>result[0];
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"}],"name":"decrementTotalEscrowed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [market, amount], options.sender);
+            return <boolean>result[0];
         }
 
         public controllerLookupName_ = async( options?: { sender?: string }): Promise<string> => {
@@ -5696,20 +5367,6 @@
             return <BN>result[0];
         }
 
-        public setPrice = async(market: string, outcome: BN, price: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_price","type":"uint256"}],"name":"setPrice","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [market, outcome, price], "setPrice", options.sender, options.gasPrice);
-            return;
-        }
-
-        public setPrice_ = async(market: string, outcome: BN, price: BN, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_price","type":"uint256"}],"name":"setPrice","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [market, outcome, price], options.sender);
-            return <boolean>result[0];
-        }
-
         public isWorsePrice_ = async(type: BN, price: BN, orderId: string, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_price","type":"uint256"},{"name":"_orderId","type":"bytes32"}],"name":"isWorsePrice","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -5729,20 +5386,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_orderId","type":"bytes32"}],"name":"getOrderSharesEscrowed","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [orderId], options.sender);
             return <BN>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
         }
 
         public removeOrder = async(orderId: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -5808,20 +5451,6 @@
             return <Array<string>>result;
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public setController = async(controller: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -5833,20 +5462,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [controller], options.sender);
-            return <boolean>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
             return <boolean>result[0];
         }
 
@@ -5943,7 +5558,7 @@
 
         public decimals_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
         }
@@ -5962,25 +5577,25 @@
             return <boolean>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
         public ETERNAL_APPROVAL_VALUE_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"ETERNAL_APPROVAL_VALUE","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
+        }
+
+        public decreaseApproval = async(spender: string, subtractedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, subtractedValue], "decreaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public decreaseApproval_ = async(spender: string, subtractedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, subtractedValue], options.sender);
+            return <boolean>result[0];
         }
 
         public balanceOf_ = async(owner: string, options?: { sender?: string }): Promise<BN> => {
@@ -6020,7 +5635,7 @@
 
         public getOutcome_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getOutcome","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getOutcome","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
         }
@@ -6036,20 +5651,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [controller], options.sender);
-            return <boolean>result[0];
-        }
-
-        public initialize = async(market: string, outcome: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [market, outcome], "initialize", options.sender, options.gasPrice);
-            return;
-        }
-
-        public initialize_ = async(market: string, outcome: BN, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [market, outcome], options.sender);
             return <boolean>result[0];
         }
 
@@ -6088,6 +5689,20 @@
             return <string>result[0];
         }
 
+        public initialize = async(market: string, outcome: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [market, outcome], "initialize", options.sender, options.gasPrice);
+            return;
+        }
+
+        public initialize_ = async(market: string, outcome: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [market, outcome], options.sender);
+            return <boolean>result[0];
+        }
+
         public destroyShares = async(owner: string, fxpValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_owner","type":"address"},{"name":"_fxpValue","type":"uint256"}],"name":"destroyShares","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -6099,6 +5714,20 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_owner","type":"address"},{"name":"_fxpValue","type":"uint256"}],"name":"destroyShares","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [owner, fxpValue], options.sender);
+            return <boolean>result[0];
+        }
+
+        public increaseApproval = async(spender: string, addedValue: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [spender, addedValue], "increaseApproval", options.sender, options.gasPrice);
+            return;
+        }
+
+        public increaseApproval_ = async(spender: string, addedValue: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [spender, addedValue], options.sender);
             return <boolean>result[0];
         }
 
@@ -6114,20 +5743,6 @@
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [owner, spender], options.sender);
             return <BN>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
         }
 
         public getInitialized_ = async( options?: { sender?: string }): Promise<boolean> => {
@@ -6158,20 +5773,6 @@
             super(connector, accountManager, address, defaultGasPrice);
         }
 
-        public publicSell = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicSell","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
-            await this.remoteCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], "publicSell", options.sender, options.gasPrice, options.attachedEth);
-            return;
-        }
-
-        public publicSell_ = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicSell","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
-            const result = await this.localCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], options.sender, options.attachedEth);
-            return <string>result[0];
-        }
-
         public suicideFunds = async(target: string, tokens: Array<string>, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_tokens","type":"address[]"}],"name":"suicideFunds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -6186,17 +5787,17 @@
             return <boolean>result[0];
         }
 
-        public publicBuy = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
+        public publicTrade = async(direction: BN, market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicBuy","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
-            await this.remoteCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], "publicBuy", options.sender, options.gasPrice, options.attachedEth);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicTrade","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            await this.remoteCall(abi, [direction, market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], "publicTrade", options.sender, options.gasPrice, options.attachedEth);
             return;
         }
 
-        public publicBuy_ = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
+        public publicTrade_ = async(direction: BN, market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicBuy","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
-            const result = await this.localCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], options.sender, options.attachedEth);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicTrade","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const result = await this.localCall(abi, [direction, market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], options.sender, options.attachedEth);
             return <string>result[0];
         }
 
@@ -6204,34 +5805,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getController","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
-            return <string>result[0];
-        }
-
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
-        }
-
-        public publicTrade = async(direction: BN, market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicTrade","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
-            await this.remoteCall(abi, [direction, market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], "publicTrade", options.sender, options.gasPrice, options.attachedEth);
-            return;
-        }
-
-        public publicTrade_ = async(direction: BN, market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicTrade","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
-            const result = await this.localCall(abi, [direction, market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], options.sender, options.attachedEth);
             return <string>result[0];
         }
 
@@ -6249,32 +5822,46 @@
             return <boolean>result[0];
         }
 
+        public publicSell = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicSell","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            await this.remoteCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], "publicSell", options.sender, options.gasPrice, options.attachedEth);
+            return;
+        }
+
+        public publicSell_ = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicSell","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const result = await this.localCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], options.sender, options.attachedEth);
+            return <string>result[0];
+        }
+
         public publicTakeBestOrder = async(direction: BN, market: string, outcome: BN, fxpAmount: BN, price: BN, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicTakeBestOrder","outputs":[{"name":"","type":"uint256"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicTakeBestOrder","outputs":[{"name":"","type":"uint256"}],"payable":true,"stateMutability":"payable","type":"function"};
             await this.remoteCall(abi, [direction, market, outcome, fxpAmount, price, tradeGroupId], "publicTakeBestOrder", options.sender, options.gasPrice, options.attachedEth);
             return;
         }
 
         public publicTakeBestOrder_ = async(direction: BN, market: string, outcome: BN, fxpAmount: BN, price: BN, tradeGroupId: string, options?: { sender?: string, attachedEth?: BN }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint8"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicTakeBestOrder","outputs":[{"name":"","type":"uint256"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicTakeBestOrder","outputs":[{"name":"","type":"uint256"}],"payable":true,"stateMutability":"payable","type":"function"};
             const result = await this.localCall(abi, [direction, market, outcome, fxpAmount, price, tradeGroupId], options.sender, options.attachedEth);
             return <BN>result[0];
         }
 
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public publicBuy = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicBuy","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            await this.remoteCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], "publicBuy", options.sender, options.gasPrice, options.attachedEth);
             return;
         }
 
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
+        public publicBuy_ = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
-            return <boolean>result[0];
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicBuy","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const result = await this.localCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId], options.sender, options.attachedEth);
+            return <string>result[0];
         }
     }
 
@@ -6305,18 +5892,18 @@
             return <string>result[0];
         }
 
-        public extractEther = async(destination: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public getFrozenShareValueInMarket = async(market: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination], "extractEther", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"}],"name":"getFrozenShareValueInMarket","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [market], "getFrozenShareValueInMarket", options.sender, options.gasPrice);
             return;
         }
 
-        public extractEther_ = async(destination: string, options?: { sender?: string }): Promise<boolean> => {
+        public getFrozenShareValueInMarket_ = async(market: string, options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"}],"name":"extractEther","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination], options.sender);
-            return <boolean>result[0];
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"}],"name":"getFrozenShareValueInMarket","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [market], options.sender);
+            return <BN>result[0];
         }
 
         public setController = async(controller: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
@@ -6351,20 +5938,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"}],"name":"claimSharesInUpdate","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [market], options.sender);
-            return <boolean>result[0];
-        }
-
-        public extractTokens = async(destination: string, token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [destination, token], "extractTokens", options.sender, options.gasPrice);
-            return;
-        }
-
-        public extractTokens_ = async(destination: string, token: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_destination","type":"address"},{"name":"_token","type":"address"}],"name":"extractTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [destination, token], options.sender);
             return <boolean>result[0];
         }
     }

@@ -101,7 +101,7 @@ def test_initialReport_transfer_ownership(localFixture, universe, market, cash, 
         "from": bytesToHexString(tester.a1),
         "to": initialReporter.getDesignatedReporter(),
     }
-    with AssertLog(localFixture, "InitialReporterTransfered", transferLog):
+    with AssertLog(localFixture, "InitialReporterTransferred", transferLog):
         assert initialReporter.transferOwnership(initialReporter.getDesignatedReporter(), sender=tester.k1)
 
     # The market still correctly indicates the designated reporter did not show up
@@ -259,6 +259,35 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
 
     assert scalarMarket.finalize()
 
+def test_finalized_fork_migration(localFixture, universe, market, categoricalMarket):
+    # Make the categorical market finalized
+    proceedToNextRound(localFixture, categoricalMarket)
+    feeWindow = localFixture.applySignature('FeeWindow', categoricalMarket.getFeeWindow())
+
+    # Time marches on and the market can be finalized
+    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    assert categoricalMarket.finalize()
+
+    # Proceed to Forking for the binary market and finalize it
+    proceedToFork(localFixture, market, universe)
+    finalizeFork(localFixture, market, universe)
+
+    # The categorical market is finalized and cannot be migrated to the new universe
+    with raises(TransactionFailed):
+        categoricalMarket.migrateThroughOneFork()
+
+    # We also can't disavow the crowdsourcers for this market
+    with raises(TransactionFailed):
+        categoricalMarket.disavowCrowdsourcers()
+
+    # The forking market may not migrate or disavow crowdsourcers either
+    with raises(TransactionFailed):
+        market.migrateThroughOneFork()
+
+    with raises(TransactionFailed):
+        market.disavowCrowdsourcers()
+
+
 def test_forking_values(localFixture, universe, market, cash):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
 
@@ -361,7 +390,7 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     # dispute the first market
     chosenPayoutNumerators = [market.getNumTicks(), 0]
     chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
-    amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
+    amount = 2 * market.getParticipantStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
     assert market.contribute(chosenPayoutNumerators, False, amount)
     newFeeWindowAddress = market.getFeeWindow()
     assert newFeeWindowAddress != feeWindow
@@ -369,7 +398,7 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     # dispute the second market with an invalid outcome
     chosenPayoutNumerators = [categoricalMarket.getNumTicks() / 3, categoricalMarket.getNumTicks() / 3, categoricalMarket.getNumTicks() / 3]
     chosenPayoutHash = categoricalMarket.derivePayoutDistributionHash(chosenPayoutNumerators, True)
-    amount = 2 * categoricalMarket.getTotalStake() - 3 * categoricalMarket.getStakeInOutcome(chosenPayoutHash)
+    amount = 2 * categoricalMarket.getParticipantStake() - 3 * categoricalMarket.getStakeInOutcome(chosenPayoutHash)
     assert categoricalMarket.contribute(chosenPayoutNumerators, True, amount)
     assert categoricalMarket.getFeeWindow() != feeWindow
 

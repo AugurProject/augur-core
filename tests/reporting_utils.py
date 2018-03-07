@@ -41,7 +41,7 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
             chosenPayoutNumerators = payoutNumerators if not firstReportWinning else payoutNumerators[::-1]
 
         chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
-        amount = 2 * market.getTotalStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
+        amount = 2 * market.getParticipantStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
         with PrintGasUsed(fixture, "Contribute:", 0):
             market.contribute(chosenPayoutNumerators, False, amount, startgas=long(6.7 * 10**7), sender=contributor)
         assert market.getForkingMarket() or market.getFeeWindow() != feeWindow
@@ -118,7 +118,9 @@ def finalizeFork(fixture, market, universe, finalizeByMigration = True):
     with TokenDelta(yesUniverseReputationToken, amountAdded, tester.a0, "reputation migration bonus did not work correctly"):
         reputationToken.migrateOut(yesUniverseReputationToken.address, amount)
 
-    assert market.finalizeFork()
+    # Finalize fork cannot be called again
+    with raises(TransactionFailed):
+        market.finalizeFork()
 
 def generateFees(fixture, universe, market):
     completeSets = fixture.contracts['CompleteSets']

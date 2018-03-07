@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.20;
 
 import 'reporting/IReputationToken.sol';
 import 'libraries/DelegationTarget.sol';
@@ -174,7 +174,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
     function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
         return true;
     }
-    
+
     function mintForReportingParticipant(uint256 _amountMigrated) public returns (bool) {
         return true;
     }

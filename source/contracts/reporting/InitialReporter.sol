@@ -1,15 +1,14 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 import 'libraries/Initializable.sol';
 import 'libraries/DelegationTarget.sol';
 import 'reporting/IInitialReporter.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/BaseReportingParticipant.sol';
-import 'libraries/Extractable.sol';
 import 'libraries/Ownable.sol';
 
 
-contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportingParticipant, Initializable, IInitialReporter {
+contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant, Initializable, IInitialReporter {
     address private designatedReporter;
     address private actualReporter;
     uint256 private reportTimestamp;
@@ -116,16 +115,9 @@ contract InitialReporter is DelegationTarget, Ownable, Extractable, BaseReportin
 
     function transferOwnership(address _newOwner) public onlyOwner returns (bool) {
         if (_newOwner != address(0)) {
-            controller.getAugur().logInitialReporterTransfered(market.getUniverse(), market, owner, _newOwner);
+            controller.getAugur().logInitialReporterTransferred(market.getUniverse(), market, owner, _newOwner);
             owner = _newOwner;
         }
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        address[] memory _protectedTokens = new address[](2);
-        _protectedTokens[0] = feeWindow;
-        _protectedTokens[1] = reputationToken;
-        return _protectedTokens;
     }
 }

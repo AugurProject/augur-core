@@ -1,13 +1,17 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 import 'reporting/IFeeToken.sol';
 import 'reporting/IFeeWindow.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/token/VariableSupplyToken.sol';
-import 'libraries/Extractable.sol';
 
 
-contract FeeToken is DelegationTarget, Extractable, VariableSupplyToken, IFeeToken {
+contract FeeToken is DelegationTarget, VariableSupplyToken, IFeeToken {
+
+    string constant public name = "FeeToken";
+    string constant public symbol = "FEE";
+    uint8 constant public decimals = 0;
+
     IFeeWindow private feeWindow;
 
     function initialize(IFeeWindow _feeWindow) public beforeInitialized returns (bool) {
@@ -45,9 +49,5 @@ contract FeeToken is DelegationTarget, Extractable, VariableSupplyToken, IFeeTok
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
         controller.getAugur().logFeeTokenBurned(feeWindow.getUniverse(), _target, _amount);
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

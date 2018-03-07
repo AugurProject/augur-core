@@ -2,7 +2,7 @@
  * Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
  */
 
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'trading/IOrdersFetcher.sol';
@@ -10,13 +10,12 @@ import 'Controlled.sol';
 import 'trading/Order.sol';
 import 'reporting/IMarket.sol';
 import 'trading/IOrders.sol';
-import 'libraries/Extractable.sol';
 
 
 /**
  * @title OrdersFetcher
  */
-contract OrdersFetcher is Controlled, Extractable, IOrdersFetcher {
+contract OrdersFetcher is Controlled, IOrdersFetcher {
     function ascendOrderList(Order.Types _type, uint256 _price, bytes32 _lowestOrderId) public view returns (bytes32 _betterOrderId, bytes32 _worseOrderId) {
         _worseOrderId = _lowestOrderId;
         bool _isWorstPrice;
@@ -106,9 +105,5 @@ contract OrdersFetcher is Controlled, Extractable, IOrdersFetcher {
             return (ascendOrderList(_type, _price, _worseOrderId));
         }
         return (_betterOrderId, _worseOrderId);
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

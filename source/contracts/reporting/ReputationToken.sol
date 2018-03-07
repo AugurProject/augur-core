@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.20;
 
 
 import 'reporting/IReputationToken.sol';
@@ -12,15 +12,14 @@ import 'reporting/IMarket.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';
 import 'libraries/math/SafeMathUint256.sol';
-import 'libraries/Extractable.sol';
 
 
-contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable, VariableSupplyToken, IReputationToken {
+contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IReputationToken {
     using SafeMathUint256 for uint256;
 
     string constant public name = "Reputation";
     string constant public symbol = "REP";
-    uint256 constant public decimals = 18;
+    uint8 constant public decimals = 18;
     IUniverse private universe;
     uint256 private totalMigrated;
     mapping(address => uint256) migratedToSibling;
@@ -46,7 +45,7 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
 
     function migrateOut(IReputationToken _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(_attotokens > 0);
-        assertReputationTokenIsLegit(_destination);
+        assertReputationTokenIsLegitSibling(_destination);
         burn(msg.sender, _attotokens);
         _destination.migrateIn(msg.sender, _attotokens);
         return true;
@@ -82,37 +81,33 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
         IUniverse _parentUniverse = universe.getParentUniverse();
         IReportingParticipant _reportingParticipant = IReportingParticipant(msg.sender);
         require(_parentUniverse.isContainerForReportingParticipant(_reportingParticipant));
-        uint256 _bonus = _amountMigrated / 2;
+        uint256 _bonus = _amountMigrated.div(2);
         mint(_reportingParticipant, _bonus);
         totalTheoreticalSupply += _bonus;
         return true;
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(IUniverse(msg.sender) == universe);
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForMarket(IMarket(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    // AUDIT: check for reentrancy issues here, _source and _destination will be called as contracts during validation
     function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
         require(universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function assertReputationTokenIsLegit(IReputationToken _shadyReputationToken) private view returns (bool) {
+    function assertReputationTokenIsLegitSibling(IReputationToken _shadyReputationToken) private view returns (bool) {
         IUniverse _shadyUniverse = _shadyReputationToken.getUniverse();
         require(universe.isParentOf(_shadyUniverse));
         IUniverse _legitUniverse = _shadyUniverse;
@@ -171,9 +166,5 @@ contract ReputationToken is DelegationTarget, Extractable, ITyped, Initializable
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
         controller.getAugur().logReputationTokenBurned(universe, _target, _amount);
         return true;
-    }
-
-    function getProtectedTokens() internal returns (address[] memory) {
-        return new address[](0);
     }
 }

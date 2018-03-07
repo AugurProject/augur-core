@@ -11,10 +11,10 @@ from reporting_utils import proceedToNextRound, proceedToFork, finalizeFork, pro
 MARKET_CREATION =               3127331
 MARKET_FINALIZATION =           228345
 INITIAL_REPORT =                1498320
-FIRST_CONTRIBUTE =              1013764
-FIRST_COMPLETED_CONTRIBUTE =    344335
-LAST_COMPLETED_CONTRIBUTE =     4311878
-FORKING_CONTRIBUTE =            1188336
+FIRST_CONTRIBUTE =              1037377
+FIRST_COMPLETED_CONTRIBUTE =    369810
+LAST_COMPLETED_CONTRIBUTE =     4398805
+FORKING_CONTRIBUTE =            1212533
 
 # Redemption
 REPORTING_WINDOW_CREATE =           848027
@@ -23,9 +23,9 @@ CROWDSOURCER_REDEMPTION =           432903
 PARTICIPATION_TOKEN_REDEMPTION =    93737
 
 # Trading
-CREATE_ORDER =      466686
-FILL_ORDER =        777836
-CLAIM_PROCEEDS =    2146962
+CREATE_ORDER =      551929
+FILL_ORDER =        828536
+CLAIM_PROCEEDS =    2171595
 
 pytestmark = mark.skip(reason="Just for testing gas cost")
 
@@ -101,7 +101,7 @@ def test_contribute(localFixture, universe, cash, market):
         market.contribute([0, market.getNumTicks()], False, 1)
 
     with PrintGasUsed(localFixture, "Market.contribute", FIRST_COMPLETED_CONTRIBUTE):
-        market.contribute([0, market.getNumTicks()], False, market.getTotalStake())
+        market.contribute([0, market.getNumTicks()], False, market.getParticipantStake())
 
     for i in range(9):
         proceedToNextRound(localFixture, market, randomPayoutNumerators = True)
@@ -110,7 +110,7 @@ def test_contribute(localFixture, universe, cash, market):
         proceedToNextRound(localFixture, market, randomPayoutNumerators = True)
 
     with PrintGasUsed(localFixture, "Market.contribute", FORKING_CONTRIBUTE):
-        market.contribute([market.getNumTicks() / 2, market.getNumTicks() / 2], False, market.getTotalStake(), startgas=long(6.7 * 10**6))
+        market.contribute([market.getNumTicks() / 2, market.getNumTicks() / 2], False, market.getParticipantStake(), startgas=long(6.7 * 10**6))
 
 def test_redeem(localFixture, universe, cash, market):
     # Initial report

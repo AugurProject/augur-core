@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.20;
 
 import 'reporting/IMarket.sol';
 import 'reporting/Reporting.sol';
@@ -30,8 +30,8 @@ contract Constants {
     uint256 public constant INITIAL_REP_SUPPLY = Reporting.getInitialREPSupply();
     uint256 public constant FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR = Reporting.getForkMigrationPercentageBonusDivisor();
 
-    uint8 public constant BID = uint8(Order.Types.Bid);
-    uint8 public constant ASK = uint8(Order.Types.Ask);
-    uint8 public constant LONG = uint8(Order.TradeDirections.Long);
-    uint8 public constant SHORT = uint8(Order.TradeDirections.Short);
+    uint256 public constant BID = uint256(Order.Types.Bid);
+    uint256 public constant ASK = uint256(Order.Types.Ask);
+    uint256 public constant LONG = uint256(Order.TradeDirections.Long);
+    uint256 public constant SHORT = uint256(Order.TradeDirections.Short);
 }
