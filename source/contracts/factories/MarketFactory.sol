@@ -13,7 +13,7 @@ contract MarketFactory {
         Delegator _delegator = new Delegator(_controller, "Market");
         _market = IMarket(_delegator);
         IReputationToken _reputationToken = _universe.getReputationToken();
-        _reputationToken.transfer(_market, _reputationToken.balanceOf(this));
+        require(_reputationToken.transfer(_market, _reputationToken.balanceOf(this)));
         _market.initialize.value(msg.value)(_universe, _endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, _sender, _numOutcomes, _numTicks);
         return _market;
     }

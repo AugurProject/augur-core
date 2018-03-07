@@ -72,7 +72,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     function migrateFromLegacyReputationToken() public onlyInGoodTimes afterInitialized returns (bool) {
         ERC20 _legacyRepToken = ERC20(controller.lookup("LegacyReputationToken"));
         uint256 _legacyBalance = _legacyRepToken.balanceOf(msg.sender);
-        _legacyRepToken.transferFrom(msg.sender, address(0), _legacyBalance);
+        require(_legacyRepToken.transferFrom(msg.sender, address(0), _legacyBalance));
         mint(msg.sender, _legacyBalance);
         return true;
     }

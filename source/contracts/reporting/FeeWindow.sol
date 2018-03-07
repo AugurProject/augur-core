@@ -101,7 +101,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
 
         if (_attoParticipationTokens != 0) {
             burn(_sender, _attoParticipationTokens);
-            getReputationToken().transfer(_sender, _attoParticipationTokens);
+            require(getReputationToken().transfer(_sender, _attoParticipationTokens));
         }
 
         if (_attoFeeTokens != 0) {
@@ -120,7 +120,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
         if (_feePayoutShare > 0) {
             // We can't use the cash.withdrawEtherTo method as the ReportingParticipants are delegated and the fallback function has special behavior that will fail
             if (_isReportingParticipant) {
-                _cash.transfer(_sender, _feePayoutShare);
+                require(_cash.transfer(_sender, _feePayoutShare));
             } else {
                 _cash.withdrawEtherTo(_sender, _feePayoutShare);
             }
@@ -135,7 +135,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
         uint256 _attotokens = balances[msg.sender];
         if (_attotokens != 0) {
             burn(msg.sender, _attotokens);
-            getReputationToken().transfer(msg.sender, _attotokens);
+            require(getReputationToken().transfer(msg.sender, _attotokens));
         }
         return true;
     }

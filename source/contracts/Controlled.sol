@@ -56,7 +56,7 @@ contract Controlled is IControlled {
         }
 
         // Transfer Eth to target
-        require(_target.call.value(this.balance)());
+        _target.transfer(this.balance);
         return true;
     }
 }

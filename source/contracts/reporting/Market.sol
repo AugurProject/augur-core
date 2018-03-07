@@ -87,7 +87,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         // If the value was not at least equal to the sum of these fees this will throw. The addition here cannot overflow as these fees are capped
         uint256 _refund = msg.value.sub(reporterGasCostsFeeAttoeth + validityBondAttoeth);
         if (_refund > 0) {
-            require(owner.call.value(_refund)());
+            owner.transfer(_refund);
         }
         return true;
     }
@@ -107,10 +107,10 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     function approveSpenders() public onlyInGoodTimes returns (bool) {
         bytes32[5] memory _names = [bytes32("CancelOrder"), bytes32("CompleteSets"), bytes32("FillOrder"), bytes32("TradingEscapeHatch"), bytes32("ClaimTradingProceeds")];
         for (uint256 i = 0; i < _names.length; i++) {
-            cash.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT);
+            require(cash.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT));
         }
         for (uint256 j = 0; j < numOutcomes; j++) {
-            shareTokens[j].approve(controller.lookup("FillOrder"), APPROVAL_AMOUNT);
+            require(shareTokens[j].approve(controller.lookup("FillOrder"), APPROVAL_AMOUNT));
         }
         return true;
     }
@@ -215,7 +215,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         for (uint256 j = 0; j < participants.length; j++) {
             _reportingParticipant = participants[j];
             if (_reportingParticipant.getPayoutDistributionHash() == winningPayoutDistributionHash) {
-                _reputationToken.transfer(_reportingParticipant, _reportingParticipant.getSize().div(2));
+                require(_reputationToken.transfer(_reportingParticipant, _reportingParticipant.getSize().div(2)));
             }
         }
         return true;
@@ -226,10 +226,10 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         uint256 _repBalance = _reputationToken.balanceOf(this);
         // If the designated reporter showed up return the no show bond to the market creator. Otherwise it will be used as stake in the first report.
         if (_reporter == _initialReporter.getDesignatedReporter()) {
-            _reputationToken.transfer(owner, _repBalance);
+            require(_reputationToken.transfer(owner, _repBalance));
             marketCreatorMailbox.depositEther.value(reporterGasCostsFeeAttoeth)();
         } else {
-            _reputationToken.transfer(_initialReporter, _repBalance);
+            require(_reputationToken.transfer(_initialReporter, _repBalance));
             cash.depositEtherFor.value(reporterGasCostsFeeAttoeth)(_initialReporter);
         }
         return true;
@@ -314,9 +314,9 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     function withdrawInEmergency() public onlyInBadTimes onlyOwner returns (bool) {
         IReputationToken _reputationToken = getReputationToken();
         uint256 _repBalance = _reputationToken.balanceOf(this);
-        _reputationToken.transfer(msg.sender, _repBalance);
+        require(_reputationToken.transfer(msg.sender, _repBalance));
         if (this.balance > 0) {
-            require(msg.sender.call.value(this.balance)());
+            msg.sender.transfer(this.balance);
         }
         return true;
     }
