@@ -29,7 +29,7 @@ contract Mailbox is DelegationTarget, Ownable, Initializable, IMailbox {
         }
         // Withdraw any ETH balance
         if (this.balance > 0) {
-            require(owner.call.value(this.balance)());
+            owner.transfer(this.balance);
         }
         return true;
     }

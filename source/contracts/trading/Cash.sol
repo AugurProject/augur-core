@@ -42,7 +42,7 @@ contract Cash is DelegationTarget, ITyped, VariableSupplyToken, ICash {
     function withdrawEtherInternal(address _from, address _to, uint256 _amount) private returns(bool) {
         require(_amount > 0 && _amount <= balances[_from]);
         burn(_from, _amount);
-        require(_to.call.value(_amount)());
+        _to.transfer(_amount);
         assert(this.balance >= totalSupply());
         return true;
     }

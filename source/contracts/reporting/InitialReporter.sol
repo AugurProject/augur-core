@@ -29,7 +29,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         }
         redeemForAllFeeWindows();
         uint256 _repBalance = reputationToken.balanceOf(this);
-        reputationToken.transfer(owner, _repBalance);
+        require(reputationToken.transfer(owner, _repBalance));
         uint256 _cashBalance = cash.balanceOf(this);
         if (_cashBalance > 0) {
             cash.withdrawEtherTo(owner, _cashBalance);
@@ -56,7 +56,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
     }
 
     function withdrawInEmergency() public onlyInBadTimes returns (bool) {
-        reputationToken.transfer(owner, reputationToken.balanceOf(this));
+        require(reputationToken.transfer(owner, reputationToken.balanceOf(this)));
         uint256 _cashBalance = cash.balanceOf(this);
         if (_cashBalance > 0) {
             cash.withdrawEtherTo(owner, _cashBalance);

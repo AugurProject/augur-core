@@ -169,22 +169,22 @@ library Trade {
         uint256 _creatorTokensToCover = getTokensToCover(_data, _data.creator.direction, _numberOfCompleteSets);
         uint256 _fillerTokensToCover = getTokensToCover(_data, _data.filler.direction, _numberOfCompleteSets);
 
-        _data.contracts.denominationToken.transferFrom(_data.contracts.market, this, _creatorTokensToCover);
+        require(_data.contracts.denominationToken.transferFrom(_data.contracts.market, this, _creatorTokensToCover));
         _data.contracts.augur.trustedTransfer(_data.contracts.denominationToken, _data.filler.participantAddress, this, _fillerTokensToCover);
 
         // buy complete sets
         uint256 _cost = _numberOfCompleteSets.mul(_data.contracts.market.getNumTicks());
         if (_data.contracts.denominationToken.allowance(this, _data.contracts.augur) < _cost) {
-            _data.contracts.denominationToken.approve(_data.contracts.augur, _cost);
+            require(_data.contracts.denominationToken.approve(_data.contracts.augur, _cost));
         }
         _data.contracts.completeSets.buyCompleteSets(this, _data.contracts.market, _numberOfCompleteSets);
 
         // distribute shares to participants
         address _longBuyer = getLongShareBuyerDestination(_data);
         address _shortBuyer = getShortShareBuyerDestination(_data);
-        _data.contracts.longShareToken.transfer(_longBuyer, _numberOfCompleteSets);
+        require(_data.contracts.longShareToken.transfer(_longBuyer, _numberOfCompleteSets));
         for (uint256 _i = 0; _i < _data.contracts.shortShareTokens.length; ++_i) {
-            _data.contracts.shortShareTokens[_i].transfer(_shortBuyer, _numberOfCompleteSets);
+            require(_data.contracts.shortShareTokens[_i].transfer(_shortBuyer, _numberOfCompleteSets));
         }
 
         _data.creator.sharesToBuy -= _numberOfCompleteSets;
