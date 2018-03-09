@@ -121,31 +121,26 @@ def test_contribute(localFixture, initializedMarket, mockNextFeeWindow, mockInit
     assert mockDisputeCrowdsourcer.getContributeParticipant() == bytesToHexString(tester.a0)
     assert mockDisputeCrowdsourcer.getContributeAmount() == 1
 
-    assert mockDisputeCrowdsourcer.callFinishedCrowdsourcingDisputeBond(initializedMarket.address) == True
 
-
-def test_market_finish_crowdsourceing_dispute_bond_fork(localFixture, initializedMarket, mockDisputeCrowdsourcer, mockNextFeeWindow, mockUniverse):
-    with raises(TransactionFailed, message="needs to be called from reporting participant"):
-        initializedMarket.finishedCrowdsourcingDisputeBond()
-
-    with raises(TransactionFailed, message="must be in markets reporting participant container"):
-        mockDisputeCrowdsourcer.callFinishedCrowdsourcingDisputeBond()
-
+def test_market_finish_crowdsourcing_dispute_bond_fork(localFixture, initializedMarket, mockDisputeCrowdsourcer, mockNextFeeWindow, mockUniverse):
     localFixture.contracts["Time"].setTimestamp(initializedMarket.getEndTime() + 1)
     assert initializedMarket.doInitialReport([initializedMarket.getNumTicks(), 0, 0, 0, 0], False, sender=tester.k1)
     mockNextFeeWindow.setIsActive(True)
-    assert initializedMarket.contribute([0, 0, 0, 0, initializedMarket.getNumTicks()], False, 1)
 
     mockUniverse.setDisputeThresholdForFork(200)
+    mockDisputeCrowdsourcer.setTotalSupply(1)
     mockDisputeCrowdsourcer.setSize(200)
 
-    assert mockDisputeCrowdsourcer.callFinishedCrowdsourcingDisputeBond(initializedMarket.address) == True
-    assert mockUniverse.getForkCalled() == True
-    mockUniverse.reset()
+    assert initializedMarket.contribute([0, 0, 0, 0, initializedMarket.getNumTicks()], False, 1)
 
-    mockUniverse.setDisputeThresholdForFork(500)
-    assert mockDisputeCrowdsourcer.callFinishedCrowdsourcingDisputeBond(initializedMarket.address) == True
     assert mockUniverse.getForkCalled() == False
+
+    mockDisputeCrowdsourcer.setTotalSupply(200)
+
+    assert initializedMarket.contribute([0, 0, 0, 0, initializedMarket.getNumTicks()], False, 1)
+
+    assert mockUniverse.getForkCalled() == True
+
     assert mockUniverse.getOrCreateNextFeeWindowWasCalled() == True
 
 def test_market_finalize_fork(localFixture, initializedMarket, mockUniverse):

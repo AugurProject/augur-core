@@ -87,8 +87,4 @@ contract MockDisputeCrowdsourcer is IDisputeCrowdsourcer, MockVariableSupplyToke
     function getSize() public view returns (uint256) {
         return setSizeValue;
     }
-
-    function callFinishedCrowdsourcingDisputeBond(IMarket _market) public returns(bool) {
-        return _market.finishedCrowdsourcingDisputeBond();
-    }
 }

@@ -40,7 +40,6 @@ contract IMarket is ITyped, IOwnable {
     function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool);
     function isInvalid() public view returns (bool);
     function finalize() public returns (bool);
-    function finishedCrowdsourcingDisputeBond() public returns (bool);
     function designatedReporterWasCorrect() public view returns (bool);
     function designatedReporterShowed() public view returns (bool);
     function isFinalized() public view returns (bool);
