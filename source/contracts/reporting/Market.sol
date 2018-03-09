@@ -144,16 +144,17 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         IDisputeCrowdsourcer _crowdsourcer = getOrCreateDisputeCrowdsourcer(_payoutDistributionHash, _payoutNumerators, _invalid);
         uint256 _actualAmount = _crowdsourcer.contribute(msg.sender, _amount);
         controller.getAugur().logDisputeCrowdsourcerContribution(universe, msg.sender, this, _crowdsourcer, _actualAmount);
+        if (_crowdsourcer.totalSupply() == _crowdsourcer.getSize()) {
+            finishedCrowdsourcingDisputeBond(_crowdsourcer);
+        }
         return true;
     }
 
-    function finishedCrowdsourcingDisputeBond() public onlyInGoodTimes returns (bool) {
-        IReportingParticipant _reportingParticipant = IReportingParticipant(msg.sender);
-        require(isContainerForReportingParticipant(_reportingParticipant));
+    function finishedCrowdsourcingDisputeBond(IReportingParticipant _reportingParticipant) private returns (bool) {
         participants.push(_reportingParticipant);
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this); // disavow other crowdsourcers
         controller.getAugur().logDisputeCrowdsourcerCompleted(universe, this, _reportingParticipant);
-        if (IDisputeCrowdsourcer(msg.sender).getSize() >= universe.getDisputeThresholdForFork()) {
+        if (IDisputeCrowdsourcer(_reportingParticipant).getSize() >= universe.getDisputeThresholdForFork()) {
             universe.fork();
         } else {
             feeWindow = universe.getOrCreateNextFeeWindow();

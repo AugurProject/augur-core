@@ -102,10 +102,6 @@ contract MockInitialReporter is IInitialReporter {
         return 0;
     }
 
-    function callFinishedCrowdsourcingDisputeBond(IMarket _market) public returns(bool) {
-        return _market.finishedCrowdsourcingDisputeBond();
-    }
-
     function migrateREP() public returns (bool) {
         return true;
     }

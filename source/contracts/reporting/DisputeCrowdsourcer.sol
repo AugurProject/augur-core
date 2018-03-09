@@ -53,9 +53,6 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
         reputationToken.trustedReportingParticipantTransfer(_participant, this, _amount);
         feeWindow.mintFeeTokens(_amount);
         mint(_participant, _amount);
-        if (totalSupply() == size) {
-            market.finishedCrowdsourcingDisputeBond();
-        }
         assert(reputationToken.balanceOf(this) >= totalSupply());
         return _amount;
     }
