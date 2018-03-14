@@ -22,7 +22,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         return true;
     }
 
-    function redeem(address /*TEST*/) public returns (bool) {
+    function redeem(address) public returns (bool) {
         bool _isDisavowed = isDisavowed();
         if (!_isDisavowed && !market.isFinalized()) {
             market.finalize();
