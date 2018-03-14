@@ -23,7 +23,7 @@ def test_escapeHatch(contractsFixture, cash, market):
     assert orderID
 
     # fill order with cash using on-chain matcher
-    assert trade.publicTakeBestOrder(LONG, market.address, YES, fix(1), 6000, sender=tester.k2, value=fix('1', '6000')) == 0
+    assert trade.publicFillBestOrder(LONG, market.address, YES, fix(1), 6000, sender=tester.k2, value=fix('1', '6000')) == 0
 
     # assert starting values
     assert cash.balanceOf(market.address) == fix('10000')

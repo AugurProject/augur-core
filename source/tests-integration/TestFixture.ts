@@ -104,12 +104,12 @@ export class TestFixture {
         }
         const ethValue = numShares.mul(actualPrice);
 
-        const bestPriceAmount = await trade.publicTakeBestOrder_(type, marketAddress, outcome, numShares, price, tradeGroupID, { attachedEth: ethValue });
+        const bestPriceAmount = await trade.publicFillBestOrder_(type, marketAddress, outcome, numShares, price, tradeGroupID, { attachedEth: ethValue });
         if (bestPriceAmount == new BN(0)) {
             throw new Error("Could not take best Order");
         }
 
-        await trade.publicTakeBestOrder(type, marketAddress, outcome, numShares, price, tradeGroupID, { attachedEth: ethValue });
+        await trade.publicFillBestOrder(type, marketAddress, outcome, numShares, price, tradeGroupID, { attachedEth: ethValue });
         return;
     }
 
