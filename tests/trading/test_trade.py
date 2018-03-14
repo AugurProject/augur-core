@@ -678,7 +678,7 @@ def test_take_best_order(contractsFixture, cash, market, universe):
     assert orderID
 
     # fill order with cash using on-chain matcher
-    assert trade.publicTakeBestOrder(BID, market.address, YES, fix(1), 6000, "43", sender=tester.k2, value=fix('1', '6000')) == 0
+    assert trade.publicFillBestOrder(BID, market.address, YES, fix(1), 6000, "43", sender=tester.k2, value=fix('1', '6000')) == 0
 
     assert len(logs) == 6
     log1 = logs[5]
@@ -721,7 +721,7 @@ def test_take_best_order_multiple_orders(contractsFixture, cash, market, univers
 
     # fill orders with cash using on-chain matcher
     price = 6000 + numOrders
-    assert trade.publicTakeBestOrder(BID, market.address, YES, fix(numOrders), price, "43", sender=tester.k2, value=fix(numOrders, price), startgas=long(6.7 * 10**7)) == 0
+    assert trade.publicFillBestOrder(BID, market.address, YES, fix(numOrders), price, "43", sender=tester.k2, value=fix(numOrders, price), startgas=long(6.7 * 10**7)) == 0
 
     assert len(logs) == numOrders + numOrders * 5
 
@@ -765,7 +765,7 @@ def test_take_best_order_with_shares_escrowed_buy_with_cash(contractsFixture, ca
     assert orderID
 
     # fill order with cash using on-chain matcher
-    assert trade.publicTakeBestOrder(BID, market.address, YES, fix(1), 6000, "43", sender=tester.k2, value=fix('1', '6000')) == 0
+    assert trade.publicFillBestOrder(BID, market.address, YES, fix(1), 6000, "43", sender=tester.k2, value=fix('1', '6000')) == 0
 
     assert len(logs) == 4
     log1 = logs[3]
@@ -822,7 +822,7 @@ def test_take_best_order_with_shares_escrowed_buy_with_shares_categorical(contra
     expectedTester2Payout = totalProceeds * (numTicks - 6000) / numTicks
     with EtherDelta(expectedTester1Payout, tester.a1, contractsFixture.chain, "Tester 1 ETH delta wrong"):
         with EtherDelta(expectedTester2Payout, tester.a2, contractsFixture.chain, "Tester 2 ETH delta wrong"):
-            assert trade.publicTakeBestOrder(BID, market.address, 0, fix(1), 6000, "43", sender=tester.k2) == 0
+            assert trade.publicFillBestOrder(BID, market.address, 0, fix(1), 6000, "43", sender=tester.k2) == 0
 
     assert firstShareToken.balanceOf(tester.a1) == 0
     assert secondShareToken.balanceOf(tester.a1) == fix(1)
