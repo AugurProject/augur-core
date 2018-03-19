@@ -146,7 +146,7 @@ contract MockAugur is Controlled {
 
     function logUniverseCreatedCalled() public returns(bool) { return logUniverseCreatedCalledValue;}
 
-    function logUniverseCreated(IUniverse _childUniverse, uint256[] _payoutNumerators) public returns (bool) {
+    function logUniverseCreated(IUniverse _childUniverse, uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
         logUniverseCreatedCalledValue = true;
         return true;
     }
