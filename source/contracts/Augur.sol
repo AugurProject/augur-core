@@ -35,7 +35,7 @@ contract Augur is Controlled, IAugur {
     event FeeWindowRedeemed(address indexed universe, address indexed reporter, address indexed feeWindow, uint256 amountRedeemed, uint256 reportingFeesReceived);
     event MarketFinalized(address indexed universe, address indexed market);
     event UniverseForked(address indexed universe);
-    event UniverseCreated(address indexed parentUniverse, address indexed childUniverse);
+    event UniverseCreated(address indexed parentUniverse, address indexed childUniverse, uint256[] payoutNumerators);
     event OrderCanceled(address indexed universe, address indexed shareToken, address indexed sender, bytes32 orderId, Order.Types orderType, uint256 tokenRefund, uint256 sharesRefund);
     // The ordering here is to match functions higher in the call chain to avoid stack depth issues
     event OrderCreated(Order.Types orderType, uint256 amount, uint256 price, address indexed creator, uint256 moneyEscrowed, uint256 sharesEscrowed, bytes32 tradeGroupId, bytes32 orderId, address indexed universe, address indexed shareToken);
@@ -200,11 +200,11 @@ contract Augur is Controlled, IAugur {
         return true;
     }
 
-    function logUniverseCreated(IUniverse _childUniverse) public returns (bool) {
+    function logUniverseCreated(IUniverse _childUniverse, uint256[] _payoutNumerators) public returns (bool) {
         require(universes[msg.sender]);
         IUniverse _parentUniverse = IUniverse(msg.sender);
         require(_parentUniverse.isParentOf(_childUniverse));
-        UniverseCreated(_parentUniverse, _childUniverse);
+        UniverseCreated(_parentUniverse, _childUniverse, _payoutNumerators);
         return true;
     }
 
