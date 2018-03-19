@@ -174,7 +174,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         if (_childUniverse == IUniverse(0)) {
             _childUniverse = _augur.createChildUniverse(_parentPayoutDistributionHash);
             childUniverses[_parentPayoutDistributionHash] = _childUniverse;
-            _augur.logUniverseCreated(_childUniverse);
+            _augur.logUniverseCreated(_childUniverse, _parentPayoutNumerators, _parentInvalid);
         }
         return _childUniverse;
     }
