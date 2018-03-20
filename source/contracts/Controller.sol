@@ -24,15 +24,10 @@ contract Controller is IController {
     address public owner;
     mapping(address => bool) public whitelist;
     mapping(bytes32 => ContractDetails) public registry;
+    bool public stopped = false;
 
     modifier onlyWhitelistedCallers {
         assertIsWhitelisted(msg.sender);
-        _;
-    }
-
-    modifier devModeOwnerOnly {
-        require(msg.sender == owner);
-        require(whitelist[owner]);
         _;
     }
 
@@ -42,30 +37,30 @@ contract Controller is IController {
     }
 
     modifier onlyInBadTimes {
-        require(isStopped());
+        require(stopped);
         _;
     }
 
     modifier onlyInGoodTimes {
-        require(!isStopped());
+        require(!stopped);
         _;
     }
 
     function Controller() public {
         owner = msg.sender;
-        whitelist[owner] = true;
+        whitelist[msg.sender] = true;
     }
 
     /*
-     * Whitelisting [whitelisted augur contracts and dev mode can use it]
+     * Contract Administration
      */
 
-    function addToWhitelist(address _target) public onlyWhitelistedCallers returns (bool) {
+    function addToWhitelist(address _target) public onlyOwnerCaller returns (bool) {
         whitelist[_target] = true;
         return true;
     }
 
-    function removeFromWhitelist(address _target) public onlyWhitelistedCallers returns (bool) {
+    function removeFromWhitelist(address _target) public onlyOwnerCaller returns (bool) {
         whitelist[_target] = false;
         return true;
     }
@@ -75,11 +70,8 @@ contract Controller is IController {
         return true;
     }
 
-    /*
-     * Contract Administration [dev mode can use it]
-     */
-
-    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public devModeOwnerOnly returns (bool) {
+    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyOwnerCaller returns (bool) {
+        require(registry[_key].contractAddress == address(0));
         registry[_key] = ContractDetails(_key, _address, _commitHash, _bytecodeHash);
         return true;
     }
@@ -89,7 +81,7 @@ contract Controller is IController {
         return (_details.contractAddress, _details.commitHash, _details.bytecodeHash);
     }
 
-    function unregisterContract(bytes32 _key) public devModeOwnerOnly returns (bool) {
+    function unregisterContract(bytes32 _key) public onlyOwnerCaller returns (bool) {
         delete registry[_key];
         return true;
     }
@@ -98,32 +90,18 @@ contract Controller is IController {
         return registry[_key].contractAddress;
     }
 
-    function suicideFunds(IControlled _target, address _destination, ERC20Basic[] _tokens) public devModeOwnerOnly returns (bool) {
-        _target.suicideFunds(_destination, _tokens);
-        return true;
-    }
-
-    function updateController(IControlled _target, Controller _newController) public devModeOwnerOnly returns (bool) {
-        _target.setController(_newController);
-        return true;
-    }
-
-     /*
-     * Controller Administration [dev can transfer ownership anytime, mode can only switched from dev mode -> decentralized]
-     */
-
     function transferOwnership(address _newOwner) public onlyOwnerCaller returns (bool) {
-        // if in dev mode, blacklist old owner and whitelist new owner
-        if (whitelist[owner]) {
-            whitelist[owner] = false;
-            whitelist[_newOwner] = true;
-        }
         owner = _newOwner;
         return true;
     }
 
-    function switchOffDevMode() public devModeOwnerOnly returns (bool) {
-        whitelist[owner] = false;
+    function emergencyStop() public onlyOwnerCaller onlyInGoodTimes returns (bool) {
+        stopped = true;
+        return true;
+    }
+
+    function release() public onlyOwnerCaller onlyInBadTimes returns (bool) {
+        stopped = false;
         return true;
     }
 
@@ -133,10 +111,6 @@ contract Controller is IController {
 
     function onlyInEmergency() public view onlyInBadTimes returns (bool) {
         return true;
-    }
-
-    function isStopped() public view returns (bool) {
-        return registry["EmergencyStop"].contractAddress != address(0);
     }
 
     /*

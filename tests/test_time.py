@@ -31,21 +31,18 @@ def test_default_controlled_time(localFixture, controller, time):
     assert time.getTimestamp() == controller.getTimestamp() == newTime + 1
 
 def test_real_time(localFixture, controller):
-    # Let's replace our default controlled Time with a real Time provider implementation
-    time = localFixture.uploadAndAddToController("../source/contracts/Time.sol", lookupKey="Time", force=True)
+    # Let's test a real Time provider implementation
+    time = localFixture.uploadAndAddToController("../source/contracts/Time.sol", lookupKey="RealTime")
 
     # We can verify that it is the controller version of time
-    assert controller.lookup("Time") == time.address
+    assert controller.lookup("RealTime") == time.address
 
     assert time.getTypeName() == stringToBytes("Time")
-
-    # We can get the current time
-    assert time.getTimestamp() == controller.getTimestamp() > 0
 
     # If we change the block timestamp it will be reflected in the new time
     localFixture.chain.head_state.timestamp = 500
 
-    assert time.getTimestamp() == controller.getTimestamp() == 500
+    assert time.getTimestamp() == 500
 
 
 @pytest_fixture(scope="session")
