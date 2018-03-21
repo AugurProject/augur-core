@@ -320,7 +320,7 @@ contract MockUniverse is Initializable, IUniverse {
         return setDesignatedReportNoShowBondValue;
     }
 
-    function getOrCacheReportingFeeDivisor() public returns (uint256) {
+    function getOrCacheReportingFeeDivisor() public view returns (uint256) {
         return setReportingFeeDivisorValue;
     }
 

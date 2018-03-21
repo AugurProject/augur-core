@@ -33,7 +33,7 @@ contract IUniverse is ITyped {
     function getOrCacheValidityBond() public returns (uint256);
     function getOrCacheDesignatedReportStake() public returns (uint256);
     function getOrCacheDesignatedReportNoShowBond() public returns (uint256);
-    function getOrCacheReportingFeeDivisor() public returns (uint256);
+    function getOrCacheReportingFeeDivisor() public view returns (uint256);
     function getDisputeThresholdForFork() public view returns (uint256);
     function getInitialReportMinValue() public view returns (uint256);
     function calculateFloatingValue(uint256 _badMarkets, uint256 _totalMarkets, uint256 _targetDivisor, uint256 _previousValue, uint256 _defaultValue, uint256 _floor) public pure returns (uint256 _newValue);

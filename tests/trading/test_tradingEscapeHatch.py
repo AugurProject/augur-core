@@ -33,7 +33,7 @@ def test_escapeHatch(contractsFixture, cash, market):
         tradingEscapeHatch.claimSharesInUpdate(market.address)
 
     # emergency stop and then have everyone liquidate their position
-    controller.registerContract("EmergencyStop", 1, "0", "0")
+    controller.emergencyStop()
     assert tradingEscapeHatch.claimSharesInUpdate(market.address, sender = tester.k1)
     assert tradingEscapeHatch.claimSharesInUpdate(market.address, sender = tester.k2)
 

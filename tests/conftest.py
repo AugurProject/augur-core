@@ -196,18 +196,18 @@ class ContractsFixture:
             testers[i] = getattr(tester, ch + "%d" % i)
         return testers
 
-    def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[], force = False):
+    def uploadAndAddToController(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
-        contract = self.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs, force)
+        contract = self.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs)
         if not contract: return None
         self.contracts['Controller'].registerContract(lookupKey.ljust(32, '\x00'), contract.address, garbageBytes20, garbageBytes32)
         return(contract)
 
-    def upload(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[], force = False):
+    def upload(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         resolvedPath = resolveRelativePath(relativeFilePath)
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(resolvedPath))[0]
         signatureKey = signatureKey if signatureKey else lookupKey
-        if lookupKey in self.contracts and not force:
+        if lookupKey in self.contracts:
             return(self.contracts[lookupKey])
         compiledCode = ContractsFixture.getCompiledCode(resolvedPath)
         # abstract contracts have a 0-length array for bytecode
@@ -428,7 +428,7 @@ def baseSnapshot(fixture):
 @pytest.fixture(scope="session")
 def controllerSnapshot(fixture, baseSnapshot):
     fixture.resetToSnapshot(baseSnapshot)
-    controller = fixture.upload('../source/contracts/Controller.sol')
+    controller = fixture.upload('../tests/solidity_test_helpers/TestController.sol', lookupKey="Controller")
     assert fixture.contracts['Controller'].owner() == bytesToHexString(tester.a0)
     return fixture.createSnapshot()
 
