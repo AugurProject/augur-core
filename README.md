@@ -105,6 +105,16 @@ https://github.com/AugurProject/augur-core/blob/7272124d985a4c38a2b4f6f599cc1601
 
 If the contracts aren't changing, after the first run you can add "AUGUR_CONTROLLER_ADDRESS": "..." to the env and it will even skip re-uploading the contracts with each run of the integration tests.
 
+## Running Oyente ##
+
+Install Oyente locally. This can be done by following the instructions on their GitHub: https://github.com/melonproject/oyente
+
+Run the oyente script with this command to get the output for all contracts:
+
+```
+python source/tools/runOyente.py -p
+```
+
 ## Source code organization
 
 Augur's smart contracts are organized into four folders:
