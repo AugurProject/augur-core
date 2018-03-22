@@ -1,11 +1,9 @@
 from oyente.oyente import run_solidity_analysis
 from oyente.input_helper import InputHelper
 from oyente.source_map import SourceMap
-from os import path, walk, makedirs, listdir
-from pprint import pprint
+from os import path, walk
 
 import argparse
-import json
 import logging
 import sys
 
@@ -16,7 +14,7 @@ def resolveRelativePath(relativeFilePath):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-a", "--analyze", help="Do some sort of programattic analysis. Right now nothing interesting. Later!", action="store_true")
+    parser.add_argument("-a", "--analyze", help="Do some sort of programatic analysis. Right now nothing interesting. Later!", action="store_true")
     parser.add_argument("-p", "--prettyprint", help="Pretty print results of the run like the oyente tool typically does", action="store_true")
     parser.add_argument("-v", "--verbose", help="Print verbose output", action="store_true")
 
