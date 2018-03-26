@@ -85,6 +85,10 @@ contract MockAugur is Controlled {
         return true;
     }
 
+    function logMarketMigrated(IMarket _market) public returns (bool) {
+        return true;
+    }
+
     function logOrderCanceled(IUniverse _universe, address _shareToken, address _sender, bytes32 _orderId, Order.Types _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public onlyWhitelistedCallers returns (bool) {
         return true;
     }
