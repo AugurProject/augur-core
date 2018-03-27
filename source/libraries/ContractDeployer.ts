@@ -148,7 +148,7 @@ Deploying to: ${networkConfiguration.networkName}
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
         if (contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) return;
         // Check to see if we have already uploded this version of the contract
-        if (await this.shouldUpgradeContract(contract, contractsToDelegate[contractName])) {
+        if (typeof this.configuration.controllerAddress !== "undefined" && await this.shouldUpgradeContract(contract, contractsToDelegate[contractName])) {
             console.log(`Using existing contract for ${contractName}`);
             contract.address = await this.getExistingContractAddress(contractName);
         } else {
