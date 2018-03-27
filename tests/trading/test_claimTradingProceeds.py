@@ -64,14 +64,14 @@ def test_helpers(kitchenSinkFixture, scalarMarket):
     finalizeMarket(kitchenSinkFixture, market, [0,40*10**4])
 
     assert claimTradingProceeds.calculateCreatorFee(market.address, fix('3')) == fix('0.03')
-    assert claimTradingProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.0005')
+    assert claimTradingProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.05')
     assert claimTradingProceeds.calculateProceeds(market.address, YES, 7) == 7 * market.getNumTicks()
     assert claimTradingProceeds.calculateProceeds(market.address, NO, fix('11')) == fix('0')
     (proceeds, shareholderShare, creatorShare, reporterShare) = claimTradingProceeds.divideUpWinnings(market.address, YES, 13)
     assert proceeds == 13.0 * market.getNumTicks()
-    assert reporterShare == 13.0 * market.getNumTicks() * 0.0001
-    assert creatorShare == 13.0 * market.getNumTicks() * .01
-    assert shareholderShare == 13.0 * market.getNumTicks() * 0.9899
+    assert reporterShare == 13.0 * market.getNumTicks() * 0.01
+    assert creatorShare == 13.0 * market.getNumTicks() * 0.01
+    assert shareholderShare == 13.0 * market.getNumTicks() * 0.98
 
 def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, market):
     claimTradingProceeds = kitchenSinkFixture.contracts['ClaimTradingProceeds']
@@ -131,7 +131,7 @@ def test_redeem_shares_in_categorical_market(kitchenSinkFixture, universe, cash,
     shareToken1 = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(1))
     shareToken0 = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(0))
     expectedValue = 1 * market.getNumTicks()
-    expectedSettlementFees = expectedValue * 0.0101
+    expectedSettlementFees = expectedValue * 0.02
     expectedPayout = long(expectedValue - expectedSettlementFees)
 
     assert universe.getOpenInterestInAttoEth() == 0
@@ -168,7 +168,7 @@ def test_redeem_shares_in_scalar_market(kitchenSinkFixture, universe, cash, scal
     yesShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(NO))
     expectedValue = 1 * market.getNumTicks()
-    expectedSettlementFees = expectedValue * 0.0101
+    expectedSettlementFees = expectedValue * 0.02
     expectedPayout = long(expectedValue - expectedSettlementFees)
 
     assert universe.getOpenInterestInAttoEth() == 0

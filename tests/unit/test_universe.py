@@ -211,7 +211,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
 
     multiplier = localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_MULTIPLIER() / float(localFixture.contracts['Constants'].TARGET_REP_MARKET_CAP_DIVISOR())
     # default value
-    defaultValue = 10000
+    defaultValue = 100
     assert populatedUniverse.getRepMarketCapInAttoeth() == 0
     assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue
 

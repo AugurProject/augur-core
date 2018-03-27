@@ -133,7 +133,7 @@ def execute_bidOrder_tests(fixture, kitchenSinkSnapshot, universe, market, fxpAm
     longCost = long(fxpAmount * fxpPrice)
     shortCost = long(fxpAmount * (numTicks - fxpPrice))
     totalProceeds = long(fxpAmount * numTicks)
-    completeSetFees = totalProceeds / 10000 + totalProceeds / 100
+    completeSetFees = totalProceeds / 100 + totalProceeds / 100
     shortFee = Decimal(completeSetFees * shortCost) / Decimal(longCost + shortCost)
     longFee = completeSetFees - shortFee
 
@@ -237,7 +237,7 @@ def execute_askOrder_tests(fixture, kitchenSinkSnapshot, universe, market, fxpAm
     longCost = long(fxpAmount * fxpPrice)
     shortCost = long(fxpAmount * (numTicks - fxpPrice))
     totalProceeds = long(fxpAmount * numTicks)
-    completeSetFees = totalProceeds / 10000 + totalProceeds / 100
+    completeSetFees = totalProceeds / 100 + totalProceeds / 100
     longFee = Decimal(completeSetFees * longCost) / Decimal(longCost + shortCost)
     shortFee = completeSetFees - longFee
 
