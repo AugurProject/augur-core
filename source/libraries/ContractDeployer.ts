@@ -148,7 +148,7 @@ Deploying to: ${networkConfiguration.networkName}
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
         if (contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) return;
         // Check to see if we have already uploded this version of the contract
-        if (await this.shouldUpgradeContract(contract, contractsToDelegate[contractName])) {
+        if (typeof this.configuration.controllerAddress !== "undefined" && await this.shouldSkipUploadingContract(contract, contractsToDelegate[contractName])) {
             console.log(`Using existing contract for ${contractName}`);
             contract.address = await this.getExistingContractAddress(contractName);
         } else {
@@ -159,7 +159,7 @@ Deploying to: ${networkConfiguration.networkName}
         }
     }
 
-    private async shouldUpgradeContract(contract: Contract, isDelegated: boolean): Promise<boolean> {
+    private async shouldSkipUploadingContract(contract: Contract, isDelegated: boolean): Promise<boolean> {
         const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
         const key = stringTo32ByteHex(isDelegated ? `${contract.contractName}Target` : contract.contractName);
         const contractDetails = await this.controller.getContractDetails_(key);
