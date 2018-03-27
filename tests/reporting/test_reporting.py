@@ -216,6 +216,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
     marketMigratedLog = {
         "market": categoricalMarket.address,
         "newUniverse": newUniverseAddress,
+        "originalUniverse": universe.address,
     }
     with AssertLog(localFixture, "MarketMigrated", marketMigratedLog):
         assert categoricalMarket.migrateThroughOneFork()

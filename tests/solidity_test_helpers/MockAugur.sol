@@ -85,7 +85,7 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logMarketMigrated(IMarket _market) public returns (bool) {
+    function logMarketMigrated(IMarket _market, IUniverse _originalUniverse) public returns (bool) {
         return true;
     }
 
