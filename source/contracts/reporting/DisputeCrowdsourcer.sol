@@ -69,6 +69,12 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
         return true;
     }
 
+    function forkAndRedeem() public onlyInGoodTimes returns (bool) {
+        fork();
+        redeem(msg.sender);
+        return true;
+    }
+
     function disavow() public onlyInGoodTimes returns (bool) {
         require(IMarket(msg.sender) == market);
         market = IMarket(0);

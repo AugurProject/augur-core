@@ -85,6 +85,12 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         return true;
     }
 
+    function forkAndRedeem() public onlyInGoodTimes returns (bool) {
+        fork();
+        redeem(msg.sender);
+        return true;
+    }
+
     function getStake() public view returns (uint256) {
         return size;
     }

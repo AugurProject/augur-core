@@ -349,6 +349,56 @@ def test_forking(localFixture, universe, market, categoricalMarket, cash, reputa
             with TokenDelta(newReputationToken, expectedRep, account, "Redeeming didn't increase REP correctly"):
                 reportingParticipant.redeem(account, startgas=long(6.7 * 10**6))
 
+def test_forkAndRedeem(localFixture, universe, market, categoricalMarket, cash, reputationToken):
+    # Let's do some initial disputes for the categorical market
+    proceedToNextRound(localFixture, categoricalMarket, tester.k1, moveTimeForward = False)
+
+    # Get to a fork
+    testers = [tester.k0, tester.k1, tester.k2, tester.k3]
+    testerIndex = 1
+    while (market.getForkingMarket() == longToHexString(0)):
+        proceedToNextRound(localFixture, market, testers[testerIndex], True)
+        testerIndex += 1
+        testerIndex = testerIndex % len(testers)
+
+    # Have the participants fork and create new child universes
+    for i in range(market.getNumParticipants()):
+        reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
+
+    # Finalize the fork
+    finalizeFork(localFixture, market, universe)
+
+    categoricalDisputeCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", categoricalMarket.getReportingParticipant(1))
+
+    # Migrate the categorical market into the winning universe. This will disavow the dispute crowdsourcer on it, letting us redeem for original universe rep and eth
+    assert categoricalMarket.migrateThroughOneFork()
+
+    expectedRep = categoricalDisputeCrowdsourcer.getStake()
+    expectedEth = getExpectedFees(localFixture, cash, categoricalDisputeCrowdsourcer, 2)
+    with EtherDelta(expectedEth, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
+        with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't increase REP correctly"):
+            categoricalDisputeCrowdsourcer.redeem(tester.a1, startgas=long(6.7 * 10**6))
+
+    noPayoutNumerators = [0] * market.getNumberOfOutcomes()
+    noPayoutNumerators[0] = market.getNumTicks()
+    yesPayoutNumerators = noPayoutNumerators[::-1]
+    noUniverse =  localFixture.applySignature('Universe', universe.createChildUniverse(noPayoutNumerators, False))
+    yesUniverse =  localFixture.applySignature('Universe', universe.createChildUniverse(yesPayoutNumerators, False))
+    noUniverseReputationToken = localFixture.applySignature('ReputationToken', noUniverse.getReputationToken())
+    yesUniverseReputationToken = localFixture.applySignature('ReputationToken', yesUniverse.getReputationToken())
+
+    # Now we'll fork and redeem the reporting participants
+    for i in range(market.getNumParticipants()):
+        account = localFixture.testerAddress[i % 4]
+        key = localFixture.testerKey[i % 4]
+        reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
+        expectedRep = reportingParticipant.getStake()
+        expectedRep += expectedRep / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+        expectedRep += reportingParticipant.getStake() / 2
+        repToken = noUniverseReputationToken if i % 2 == 0 else yesUniverseReputationToken
+        with TokenDelta(repToken, expectedRep, account, "Redeeming didn't increase REP correctly for " + str(i)):
+            assert reportingParticipant.forkAndRedeem(startgas=long(6.7 * 10**6), sender=key)
+
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
