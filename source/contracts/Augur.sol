@@ -34,6 +34,7 @@ contract Augur is Controlled, IAugur {
     event DisputeCrowdsourcerRedeemed(address indexed universe, address indexed reporter, address indexed market, address disputeCrowdsourcer, uint256 amountRedeemed, uint256 repReceived, uint256 reportingFeesReceived, uint256[] payoutNumerators);
     event FeeWindowRedeemed(address indexed universe, address indexed reporter, address indexed feeWindow, uint256 amountRedeemed, uint256 reportingFeesReceived);
     event MarketFinalized(address indexed universe, address indexed market);
+    event MarketMigrated(address indexed market, address indexed originalUniverse, address indexed newUniverse);
     event UniverseForked(address indexed universe);
     event UniverseCreated(address indexed parentUniverse, address indexed childUniverse, uint256[] payoutNumerators, bool invalid);
     event OrderCanceled(address indexed universe, address indexed shareToken, address indexed sender, bytes32 orderId, Order.Types orderType, uint256 tokenRefund, uint256 sharesRefund);
@@ -161,6 +162,13 @@ contract Augur is Controlled, IAugur {
         IMarket _market = IMarket(msg.sender);
         require(_universe.isContainerForMarket(_market));
         MarketFinalized(_universe, _market);
+        return true;
+    }
+
+    function logMarketMigrated(IMarket _market, IUniverse _originalUniverse) public returns (bool) {
+        IUniverse _newUniverse = IUniverse(msg.sender);
+        require(isKnownUniverse(_newUniverse));
+        MarketMigrated(_market, _originalUniverse, _newUniverse);
         return true;
     }
 

@@ -212,7 +212,14 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
         categoricalMarket.contribute([2,2,categoricalMarket.getNumTicks()-4], False, 1)
 
     # The categorical market can be migrated to the winning universe
-    assert categoricalMarket.migrateThroughOneFork()
+    newUniverseAddress = universe.getWinningChildUniverse()
+    marketMigratedLog = {
+        "market": categoricalMarket.address,
+        "newUniverse": newUniverseAddress,
+        "originalUniverse": universe.address,
+    }
+    with AssertLog(localFixture, "MarketMigrated", marketMigratedLog):
+        assert categoricalMarket.migrateThroughOneFork()
 
     # The dispute crowdsourcer has been disavowed
     newUniverse = localFixture.applySignature("Universe", categoricalMarket.getUniverse())

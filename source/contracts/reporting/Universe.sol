@@ -229,6 +229,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     function addMarketTo() public returns (bool) {
         require(parentUniverse.isContainerForMarket(IMarket(msg.sender)));
         markets[msg.sender] = true;
+        controller.getAugur().logMarketMigrated(IMarket(msg.sender), parentUniverse);
         return true;
     }
 
