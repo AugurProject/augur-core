@@ -68,11 +68,9 @@ def finalizeFork(fixture, market, universe, finalizeByMigration = True):
     # The universe forks and there is now a universe where NO and YES are the respective outcomes of each
     noPayoutNumerators = [0] * market.getNumberOfOutcomes()
     noPayoutNumerators[0] = market.getNumTicks()
-    noPayoutHash = market.derivePayoutDistributionHash(noPayoutNumerators, False)
     yesPayoutNumerators = noPayoutNumerators[::-1]
-    yesPayoutHash = market.derivePayoutDistributionHash(yesPayoutNumerators, False)
-    noUniverse =  fixture.applySignature('Universe', universe.getChildUniverse(noPayoutHash))
-    yesUniverse =  fixture.applySignature('Universe', universe.getChildUniverse(yesPayoutHash))
+    noUniverse =  fixture.applySignature('Universe', universe.createChildUniverse(noPayoutNumerators, False))
+    yesUniverse =  fixture.applySignature('Universe', universe.createChildUniverse(yesPayoutNumerators, False))
     noUniverseReputationToken = fixture.applySignature('ReputationToken', noUniverse.getReputationToken())
     yesUniverseReputationToken = fixture.applySignature('ReputationToken', yesUniverse.getReputationToken())
     assert noUniverse.address != universe.address
@@ -87,8 +85,8 @@ def finalizeFork(fixture, market, universe, finalizeByMigration = True):
     # A Tester moves some of their REP to the YES universe
     amount = 10 ** 6 * 10 ** 18
     bonus = amount / fixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
-    reputationToken.migrateOut(yesUniverseReputationToken.address, amount)
-    assert yesUniverseReputationToken.balanceOf(tester.a0) == amount + bonus
+    with TokenDelta(yesUniverseReputationToken, amount + bonus, tester.a0, "Yes REP token balance was no correct"):
+        reputationToken.migrateOut(yesUniverseReputationToken.address, amount)
 
     # Attempting to finalize the fork now will not succeed as a majority or REP has not yet migrated and fork end time has not been reached
     with raises(TransactionFailed):
@@ -98,9 +96,9 @@ def finalizeFork(fixture, market, universe, finalizeByMigration = True):
         # Tester 0 moves more than 50% of REP
         amount = reputationToken.balanceOf(tester.a0) - 20
         bonus = amount / fixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
-        reputationToken.migrateOut(noUniverseReputationToken.address, amount)
+        with TokenDelta(noUniverseReputationToken, amount + bonus, tester.a0, "No REP token balance was no correct"):
+            reputationToken.migrateOut(noUniverseReputationToken.address, amount)
         assert reputationToken.balanceOf(tester.a0) == 20
-        assert noUniverseReputationToken.balanceOf(tester.a0) == amount + bonus
         assert market.getWinningPayoutDistributionHash() == noUniverse.getParentPayoutDistributionHash()
     else:
         # Time marches on past the fork end time
