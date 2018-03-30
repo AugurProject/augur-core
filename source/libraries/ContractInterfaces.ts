@@ -110,20 +110,6 @@
             return <boolean>result[0];
         }
 
-        public logUniverseCreated = async(childUniverse: string, payoutNumerators: Array<BN>, invalid: boolean, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_childUniverse","type":"address"},{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_invalid","type":"bool"}],"name":"logUniverseCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [childUniverse, payoutNumerators, invalid], "logUniverseCreated", options.sender, options.gasPrice);
-            return;
-        }
-
-        public logUniverseCreated_ = async(childUniverse: string, payoutNumerators: Array<BN>, invalid: boolean, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_childUniverse","type":"address"},{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_invalid","type":"bool"}],"name":"logUniverseCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [childUniverse, payoutNumerators, invalid], options.sender);
-            return <boolean>result[0];
-        }
-
         public logMarketCreated = async(topic: string, description: string, extraInfo: string, universe: string, market: string, marketCreator: string, outcomes: Array<string>, minPrice: BN, maxPrice: BN, marketType: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_topic","type":"bytes32"},{"name":"_description","type":"string"},{"name":"_extraInfo","type":"string"},{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_marketCreator","type":"address"},{"name":"_outcomes","type":"bytes32[]"},{"name":"_minPrice","type":"int256"},{"name":"_maxPrice","type":"int256"},{"name":"_marketType","type":"uint8"}],"name":"logMarketCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -453,6 +439,20 @@
             return <boolean>result[0];
         }
 
+        public createChildUniverse = async(parentPayoutDistributionHash: string, parentPayoutNumerators: Array<BN>, parentInvalid: boolean, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_parentPayoutDistributionHash","type":"bytes32"},{"name":"_parentPayoutNumerators","type":"uint256[]"},{"name":"_parentInvalid","type":"bool"}],"name":"createChildUniverse","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [parentPayoutDistributionHash, parentPayoutNumerators, parentInvalid], "createChildUniverse", options.sender, options.gasPrice);
+            return;
+        }
+
+        public createChildUniverse_ = async(parentPayoutDistributionHash: string, parentPayoutNumerators: Array<BN>, parentInvalid: boolean, options?: { sender?: string }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_parentPayoutDistributionHash","type":"bytes32"},{"name":"_parentPayoutNumerators","type":"uint256[]"},{"name":"_parentInvalid","type":"bool"}],"name":"createChildUniverse","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [parentPayoutDistributionHash, parentPayoutNumerators, parentInvalid], options.sender);
+            return <string>result[0];
+        }
+
         public isKnownUniverse_ = async(universe: string, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_universe","type":"address"}],"name":"isKnownUniverse","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -598,20 +598,6 @@
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_disputeCrowdsourcer","type":"address"},{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_size","type":"uint256"},{"name":"_invalid","type":"bool"}],"name":"logDisputeCrowdsourcerCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [universe, market, disputeCrowdsourcer, payoutNumerators, size, invalid], options.sender);
             return <boolean>result[0];
-        }
-
-        public createChildUniverse = async(parentPayoutDistributionHash: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_parentPayoutDistributionHash","type":"bytes32"}],"name":"createChildUniverse","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [parentPayoutDistributionHash], "createChildUniverse", options.sender, options.gasPrice);
-            return;
-        }
-
-        public createChildUniverse_ = async(parentPayoutDistributionHash: string, options?: { sender?: string }): Promise<string> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_parentPayoutDistributionHash","type":"bytes32"}],"name":"createChildUniverse","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [parentPayoutDistributionHash], options.sender);
-            return <string>result[0];
         }
 
         public logInitialReporterTransferred = async(universe: string, market: string, from: string, to: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
