@@ -172,9 +172,8 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         IUniverse _childUniverse = getChildUniverse(_parentPayoutDistributionHash);
         IAugur _augur = controller.getAugur();
         if (_childUniverse == IUniverse(0)) {
-            _childUniverse = _augur.createChildUniverse(_parentPayoutDistributionHash);
+            _childUniverse = _augur.createChildUniverse(_parentPayoutDistributionHash, _parentPayoutNumerators, _parentInvalid);
             childUniverses[_parentPayoutDistributionHash] = _childUniverse;
-            _augur.logUniverseCreated(_childUniverse, _parentPayoutNumerators, _parentInvalid);
         }
         return _childUniverse;
     }

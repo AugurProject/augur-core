@@ -58,19 +58,20 @@ contract Augur is Controlled, IAugur {
     //
 
     function createGenesisUniverse() public returns (IUniverse) {
-        return createUniverse(IUniverse(0), bytes32(0));
+        return createUniverse(IUniverse(0), bytes32(0), new uint256[](0), false);
     }
 
-    function createChildUniverse(bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
+    function createChildUniverse(bytes32 _parentPayoutDistributionHash, uint256[] _parentPayoutNumerators, bool _parentInvalid) public returns (IUniverse) {
         IUniverse _parentUniverse = IUniverse(msg.sender);
         require(isKnownUniverse(_parentUniverse));
-        return createUniverse(_parentUniverse, _parentPayoutDistributionHash);
+        return createUniverse(_parentUniverse, _parentPayoutDistributionHash, _parentPayoutNumerators, _parentInvalid);
     }
 
-    function createUniverse(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) private returns (IUniverse) {
+    function createUniverse(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash, uint256[] _parentPayoutNumerators, bool _parentInvalid) private returns (IUniverse) {
         UniverseFactory _universeFactory = UniverseFactory(controller.lookup("UniverseFactory"));
         IUniverse _newUniverse = _universeFactory.createUniverse(controller, _parentUniverse, _parentPayoutDistributionHash);
         universes[_newUniverse] = true;
+        UniverseCreated(_parentUniverse, _newUniverse, _parentPayoutNumerators, _parentInvalid);
         return _newUniverse;
     }
 
@@ -205,14 +206,6 @@ contract Augur is Controlled, IAugur {
     function logUniverseForked() public returns (bool) {
         require(universes[msg.sender]);
         UniverseForked(msg.sender);
-        return true;
-    }
-
-    function logUniverseCreated(IUniverse _childUniverse, uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
-        require(universes[msg.sender]);
-        IUniverse _parentUniverse = IUniverse(msg.sender);
-        require(_parentUniverse.isParentOf(_childUniverse));
-        UniverseCreated(_parentUniverse, _childUniverse, _payoutNumerators, _invalid);
         return true;
     }
 
