@@ -16,7 +16,7 @@ def test_create_ask_with_shares_fill_with_shares(contractsFixture, cash, market)
 
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
-    completeSetFees = fix('12', '0.0101') * market.getNumTicks()
+    completeSetFees = fix('12', '0.02') * market.getNumTicks()
 
     # 1. both accounts buy a complete set
     assert completeSets.publicBuyCompleteSets(market.address, fix(12), sender = tester.k1, value=fix('12', market.getNumTicks()))
@@ -311,34 +311,34 @@ def placeholder_context():
 @mark.parametrize('type,outcome,displayPrice,orderSize,creatorYesShares,creatorNoShares,creatorCost,fillSize,fillerYesShares,fillerNoShares,fillerCost,expectMakeRaise,expectedMakerYesShares,expectedMakerNoShares,expectedMakerPayout,expectTakeRaise,expectedFillerYesShares,expectedFillerNoShares,expectedFillerPayout', [
     # | ------ ORDER ------ |   | ------ CREATOR START ------ |   | ------ FILLER START ------ |  | ------- CREATOR FINISH -------  |    | ------- FILLER FINISH -------  |
     #   type,outcome,  price,   size,    yes,     no,   cost,   size,    yes,     no,   cost,  raise,    yes,     no,      pay,    raise,    yes,     no,      pay,
-    (    BID,    YES,  '0.6',  '12',    '0',    '0', '7.2',  '12',  '12',    '0',    '0',  False,  '12',    '0',       '0',    False,    '0',    '0',    '7.2'),
-    (    BID,    YES,  '0.6',  '12',    '0',  '12',    '0',  '12',  '12',    '0',    '0',  False,    '0',    '0','4.75152',    False,    '0',    '0','7.12728'),
-    (    BID,    YES,  '0.6',  '12',    '0',    '0', '7.2',  '12',    '0',    '0', '4.8',  False,  '12',    '0',       '0',    False,    '0',  '12',       '0'),
-    (    BID,    YES,  '0.6',  '12',    '0',  '12',    '0',  '12',    '0',    '0', '4.8',  False,    '0',    '0',    '4.8',    False,    '0',  '12',       '0'),
+    (    BID,    YES,  '0.6',  '12',    '0',    '0',  '7.2',  '12',   '12',    '0',    '0',  False,   '12',    '0',       '0',    False,    '0',    '0',     '7.2'),
+    (    BID,    YES,  '0.6',  '12',    '0',   '12',    '0',  '12',   '12',    '0',    '0',  False,    '0',    '0',   '4.704',    False,    '0',    '0',   '7.056'),
+    (    BID,    YES,  '0.6',  '12',    '0',    '0',  '7.2',  '12',    '0',    '0',  '4.8',  False,   '12',    '0',       '0',    False,    '0',   '12',       '0'),
+    (    BID,    YES,  '0.6',  '12',    '0',   '12',    '0',  '12',    '0',    '0',  '4.8',  False,    '0',    '0',     '4.8',    False,    '0',   '12',       '0'),
 
-    (    BID,    YES,  '0.6',  '24',    '0',  '12', '7.2',  '24',  '24',    '0',    '0',  False,  '12',    '0','4.75152',    False,    '0',    '0','14.32728'),
-    (    BID,    YES,  '0.6',  '24',    '0',  '12', '7.2',  '24',    '0',    '0', '9.6',  False,  '12',    '0',    '4.8',    False,    '0',  '24',       '0'),
-    (    BID,    YES,  '0.6',  '24',    '0',    '0', '14.4',  '24',  '12',    '0', '4.8',  False,  '24',    '0',       '0',    False,    '0',  '12',    '7.2'),
-    (    BID,    YES,  '0.6',  '24',    '0',  '24',    '0',  '24',  '12',    '0', '4.8',  False,    '0',    '0','9.55152',    False,    '0',  '12','7.12728'),
+    (    BID,    YES,  '0.6',  '24',    '0',   '12',  '7.2',  '24',   '24',    '0',    '0',  False,   '12',    '0',   '4.704',    False,    '0',    '0',  '14.256'),
+    (    BID,    YES,  '0.6',  '24',    '0',   '12',  '7.2',  '24',    '0',    '0',  '9.6',  False,   '12',    '0',     '4.8',    False,    '0',   '24',       '0'),
+    (    BID,    YES,  '0.6',  '24',    '0',    '0', '14.4',  '24',   '12',    '0',  '4.8',  False,   '24',    '0',       '0',    False,    '0',   '12',     '7.2'),
+    (    BID,    YES,  '0.6',  '24',    '0',   '24',    '0',  '24',   '12',    '0',  '4.8',  False,    '0',    '0',   '9.504',    False,    '0',   '12',   '7.056'),
 
-    (    BID,    YES,  '0.6',  '24',    '0',  '12', '7.2',  '24',  '12',    '0', '4.8',  False,  '12',    '0','4.75152',    False,    '0',  '12','7.12728'),
+    (    BID,    YES,  '0.6',  '24',    '0',   '12',  '7.2',  '24',   '12',    '0',  '4.8',  False,   '12',    '0',   '4.704',    False,    '0',   '12',   '7.056'),
 
-    (    BID,     NO,  '0.6',  '12',    '0',    '0', '7.2',  '12',    '0',  '12',    '0',  False,    '0',  '12',       '0',    False,    '0',    '0',    '7.2'),
-    (    BID,     NO,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',  '12',    '0',  False,    '0',    '0','4.75152',    False,    '0',    '0','7.12728'),
-    (    BID,     NO,  '0.6',  '12',    '0',    '0', '7.2',  '12',    '0',    '0', '4.8',  False,    '0',  '12',       '0',    False,  '12',    '0',       '0'),
-    (    BID,     NO,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',    '0', '4.8',  False,    '0',    '0',    '4.8',    False,  '12',    '0',       '0'),
+    (    BID,     NO,  '0.6',  '12',    '0',    '0',  '7.2',  '12',    '0',   '12',    '0',  False,    '0',   '12',       '0',    False,    '0',    '0',     '7.2'),
+    (    BID,     NO,  '0.6',  '12',   '12',    '0',    '0',  '12',    '0',   '12',    '0',  False,    '0',    '0',   '4.704',    False,    '0',    '0',   '7.056'),
+    (    BID,     NO,  '0.6',  '12',    '0',    '0',  '7.2',  '12',    '0',    '0',  '4.8',  False,    '0',   '12',       '0',    False,   '12',    '0',       '0'),
+    (    BID,     NO,  '0.6',  '12',   '12',    '0',    '0',  '12',    '0',    '0',  '4.8',  False,    '0',    '0',     '4.8',    False,   '12',    '0',       '0'),
 
-    (    BID,     NO,  '0.6',  '24',  '12',    '0', '7.2',  '24',    '0',  '24',    '0',  False,    '0',  '12','4.75152',    False,    '0',    '0','14.32728'),
-    (    BID,     NO,  '0.6',  '24',  '12',    '0', '7.2',  '24',    '0',    '0', '9.6',  False,    '0',  '12',    '4.8',    False,  '24',    '0',       '0'),
-    (    BID,     NO,  '0.6',  '24',    '0',    '0', '14.4',  '24',    '0',  '12', '4.8',  False,    '0',  '24',       '0',    False,  '12',    '0',    '7.2'),
-    (    BID,     NO,  '0.6',  '24',  '24',    '0',    '0',  '24',    '0',  '12', '4.8',  False,    '0',    '0','9.55152',    False,  '12',    '0','7.12728'),
+    (    BID,     NO,  '0.6',  '24',   '12',    '0',  '7.2',  '24',    '0',   '24',    '0',  False,    '0',   '12',   '4.704',    False,    '0',    '0',  '14.256'),
+    (    BID,     NO,  '0.6',  '24',   '12',    '0',  '7.2',  '24',    '0',    '0',  '9.6',  False,    '0',   '12',     '4.8',    False,   '24',    '0',       '0'),
+    (    BID,     NO,  '0.6',  '24',    '0',    '0', '14.4',  '24',    '0',   '12',  '4.8',  False,    '0',   '24',       '0',    False,   '12',    '0',     '7.2'),
+    (    BID,     NO,  '0.6',  '24',   '24',    '0',    '0',  '24',    '0',   '12',  '4.8',  False,    '0',    '0',   '9.504',    False,   '12',    '0',   '7.056'),
 
-    (    BID,     NO,  '0.6',  '24',  '12',    '0', '7.2',  '24',    '0',  '12', '4.8',  False,    '0',  '12','4.75152',    False,  '12',    '0','7.12728'),
+    (    BID,     NO,  '0.6',  '24',   '12',    '0',  '7.2',  '24',    '0',   '12',  '4.8',  False,    '0',   '12',   '4.704',    False,   '12',    '0',   '7.056'),
 
-    (    ASK,    YES,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',    '0', '7.2',  False,    '0',    '0',    '7.2',    False,  '12',    '0',       '0'),
-    (    ASK,    YES,  '0.6',  '12',    '0',    '0', '4.8',  '12',    '0',    '0', '7.2',  False,    '0',  '12',       '0',    False,  '12',    '0',       '0'),
-    (    ASK,    YES,  '0.6',  '12',  '12',    '0',    '0',  '12',    '0',  '12',    '0',  False,    '0',    '0','7.12728',    False,    '0',    '0','4.75152'),
-    (    ASK,    YES,  '0.6',  '12',    '0',    '0', '4.8',  '12',    '0',  '12',    '0',  False,    '0',  '12',       '0',    False,    '0',    '0',    '4.8'),
+    (    ASK,    YES,  '0.6',  '12',   '12',    '0',    '0',  '12',    '0',    '0',  '7.2',  False,    '0',    '0',     '7.2',    False,   '12',    '0',       '0'),
+    (    ASK,    YES,  '0.6',  '12',    '0',    '0',  '4.8',  '12',    '0',    '0',  '7.2',  False,    '0',   '12',       '0',    False,   '12',    '0',       '0'),
+    (    ASK,    YES,  '0.6',  '12',   '12',    '0',    '0',  '12',    '0',   '12',    '0',  False,    '0',    '0',   '7.056',    False,    '0',    '0',   '4.704'),
+    (    ASK,    YES,  '0.6',  '12',    '0',    '0',  '4.8',  '12',    '0',   '12',    '0',  False,    '0',   '12',       '0',    False,    '0',    '0',     '4.8'),
 ])
 def test_parametrized(type, outcome, displayPrice, orderSize, creatorYesShares, creatorNoShares, creatorCost, fillSize, fillerYesShares, fillerNoShares, fillerCost, expectMakeRaise, expectedMakerYesShares, expectedMakerNoShares, expectedMakerPayout, expectTakeRaise, expectedFillerYesShares, expectedFillerNoShares, expectedFillerPayout, contractsFixture, cash, market):
     fixture = contractsFixture

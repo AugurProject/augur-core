@@ -387,7 +387,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
     // Hardcode the reporting fee until we implement the auction feature or some other decentralized REP price oracle
     function getOrCacheReportingFeeDivisor() public view returns (uint256) {
-        return Reporting.getMaximumReportingFeeDivisor();
+        return Reporting.getDefaultReportingFeeDivisor();
     }
 
     function getOrCacheTargetReporterGasCosts() public onlyInGoodTimes returns (uint256) {
