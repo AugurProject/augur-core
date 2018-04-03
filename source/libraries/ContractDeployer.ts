@@ -152,8 +152,10 @@ Deploying to: ${networkConfiguration.networkName}
         if (contractName === 'Controller') return;
         if (contractName === 'Delegator') return;
         if (contractName === 'TimeControlled') return;
+        if (contractName === 'TestNetReputationToken') return;
         if (contractName === 'Augur') return;
-        if (contractName === 'Time') contract = this.configuration.useNormalTime ? contract: this.contracts.get('TimeControlled');
+        if (contractName === 'Time') contract = this.configuration.useNormalTime ? contract : this.contracts.get('TimeControlled');
+        if (contractName === 'ReputationToken') contract = this.configuration.isProduction ? contract : this.contracts.get('TestNetReputationToken');
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
         if (contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) return;
         // Check to see if we have already uploded this version of the contract
