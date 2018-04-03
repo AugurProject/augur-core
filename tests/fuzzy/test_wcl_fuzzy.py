@@ -57,11 +57,6 @@ def execute(fixture, snapshot, universe, market, orderType, orderSize, orderPric
     legacyReputationToken.faucet(long(11 * 10**6 * 10**18))
     fixture.chain.head_state.timestamp += 15000
 
-    # Get the reputation token for this universe and migrate legacy REP to it
-    reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
-    legacyReputationToken.approve(reputationToken.address, 11 * 10**6 * 10**18)
-    reputationToken.migrateFromLegacyReputationToken()
-
     orders = fixture.contracts['Orders']
     createOrder = fixture.contracts['CreateOrder']
     fillOrder = fixture.contracts['FillOrder']

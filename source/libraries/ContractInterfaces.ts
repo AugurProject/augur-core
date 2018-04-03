@@ -3631,17 +3631,31 @@
             return <BN>result[0];
         }
 
-        public migrateFromLegacyReputationToken = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public getLegacyRepToken_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"migrateFromLegacyReputationToken","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "migrateFromLegacyReputationToken", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getLegacyRepToken","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <string>result[0];
+        }
+
+        public getIsMigratingFromLegacy_ = async( options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getIsMigratingFromLegacy","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <boolean>result[0];
+        }
+
+        public migrateBalancesFromLegacyRep = async(holders: Array<string>, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_holders","type":"address[]"}],"name":"migrateBalancesFromLegacyRep","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [holders], "migrateBalancesFromLegacyRep", options.sender, options.gasPrice);
             return;
         }
 
-        public migrateFromLegacyReputationToken_ = async( options?: { sender?: string }): Promise<boolean> => {
+        public migrateBalancesFromLegacyRep_ = async(holders: Array<string>, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"migrateFromLegacyReputationToken","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_holders","type":"address[]"}],"name":"migrateBalancesFromLegacyRep","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [holders], options.sender);
             return <boolean>result[0];
         }
 
@@ -3824,6 +3838,27 @@
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [owner, spender], options.sender);
+            return <BN>result[0];
+        }
+
+        public migrateAllowancesFromLegacyRep = async(owners: Array<string>, spenders: Array<string>, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_owners","type":"address[]"},{"name":"_spenders","type":"address[]"}],"name":"migrateAllowancesFromLegacyRep","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [owners, spenders], "migrateAllowancesFromLegacyRep", options.sender, options.gasPrice);
+            return;
+        }
+
+        public migrateAllowancesFromLegacyRep_ = async(owners: Array<string>, spenders: Array<string>, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_owners","type":"address[]"},{"name":"_spenders","type":"address[]"}],"name":"migrateAllowancesFromLegacyRep","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [owners, spenders], options.sender);
+            return <boolean>result[0];
+        }
+
+        public getTargetSupply_ = async( options?: { sender?: string }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getTargetSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
         }
 

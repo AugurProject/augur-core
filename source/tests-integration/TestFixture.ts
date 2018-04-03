@@ -7,7 +7,7 @@ import { ContractDeployer } from '../libraries/ContractDeployer';
 import { CompilerConfiguration } from '../libraries/CompilerConfiguration';
 import { DeployerConfiguration } from '../libraries/DeployerConfiguration';
 import { NetworkConfiguration } from '../libraries/NetworkConfiguration';
-import { FeeWindow, ShareToken, CompleteSets, TimeControlled, LegacyReputationToken, Cash, Universe, ReputationToken, Market, CreateOrder, Orders, Trade, CancelOrder } from '../libraries/ContractInterfaces';
+import { FeeWindow, ShareToken, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
 
 export class TestFixture {
@@ -52,16 +52,6 @@ export class TestFixture {
     }
 
     public async createMarket(universe: Universe, outcomes: string[], endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporter: string): Promise<Market> {
-        const legacyReputationToken = new LegacyReputationToken(this.connector, this.accountManager, this.contractDeployer.getContract('LegacyReputationToken').address, TestFixture.GAS_PRICE);
-        const reputationTokenAddress = await universe.getReputationToken_();
-        const reputationToken = new ReputationToken(this.connector, this.accountManager, reputationTokenAddress, TestFixture.GAS_PRICE);
-
-        // get some REP
-        // TODO: just get enough REP to cover the bonds rather than over-allocating
-        await legacyReputationToken.faucet(new BN(0));
-        await legacyReputationToken.approve(reputationTokenAddress, new BN(2).pow(new BN(256)).sub(new BN(1)));
-        await reputationToken.migrateFromLegacyReputationToken();
-
         const marketCreationFee = await universe.getOrCacheMarketCreationCost_();
 
         const marketAddress = await universe.createCategoricalMarket_(endTime, feePerEthInWei, denominationToken, designatedReporter, outcomes, stringTo32ByteHex(" "), 'description', '', { attachedEth: marketCreationFee });
