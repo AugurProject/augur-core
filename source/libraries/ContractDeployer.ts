@@ -256,7 +256,11 @@ Deploying to: ${networkConfiguration.networkName}
 
     private async initializeLegacyRep(): Promise<void> {
         const legacyReputationToken = new LegacyReputationToken(this.connector, this.accountManager, this.getContract('LegacyReputationToken').address, this.connector.gasPrice);
-        await legacyReputationToken.faucet(new BN(11000000));
+        await legacyReputationToken.faucet(new BN(10).pow(new BN(18)).mul(new BN(11000000)));
+        const legacyBalance = await legacyReputationToken.balanceOf_(this.accountManager.defaultAddress);
+        if (!legacyBalance || legacyBalance == new BN(0)) {
+            throw new Error("Faucet call to Legacy REP failed");
+        }
     }
 
     private async createGenesisUniverse(): Promise<Universe> {
@@ -280,6 +284,14 @@ Deploying to: ${networkConfiguration.networkName}
         const reputationTokenAddress = await this.universe.getReputationToken_();
         const reputationToken = new ReputationToken(this.connector, this.accountManager, reputationTokenAddress, this.connector.gasPrice);
         await reputationToken.migrateBalancesFromLegacyRep([this.accountManager.defaultAddress]);
+        const balance = await reputationToken.balanceOf_(this.accountManager.defaultAddress);
+        if (!balance || balance == new BN(0)) {
+            throw new Error("Migration from Legacy REP failed");
+        }
+        const migrationOngoing = await reputationToken.getIsMigratingFromLegacy_();
+        if (migrationOngoing) {
+            throw new Error("Still migrating from Legacy REP");
+        }
     }
 
     private async generateAddressMapping(): Promise<string> {
