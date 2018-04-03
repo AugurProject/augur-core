@@ -65,7 +65,7 @@ Deploying to: ${networkConfiguration.networkName}
             this.universe = await this.createGenesisUniverse();
 
             if (!this.configuration.isProduction) {
-                this.migrateFromlegacyRep();
+                this.migrateFromLegacyRep();
             }
         }
 
@@ -282,7 +282,7 @@ Deploying to: ${networkConfiguration.networkName}
         return universe;
     }
 
-    private async migrateFromlegacyRep(): Promise<void> {
+    private async migrateFromLegacyRep(): Promise<void> {
         const reputationTokenAddress = await this.universe.getReputationToken_();
         const reputationToken = new ReputationToken(this.connector, this.accountManager, reputationTokenAddress, this.connector.gasPrice);
         await reputationToken.migrateBalancesFromLegacyRep([this.accountManager.defaultAddress]);
