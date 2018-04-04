@@ -8,8 +8,10 @@ export class DeployerConfiguration {
     public readonly controllerAddress: string|undefined;
     public readonly createGenesisUniverse: boolean;
     public readonly useNormalTime: boolean;
+    public readonly isProduction: boolean;
 
     public constructor(contractInputRoot: string, artifactOutputRoot: string, controllerAddress: string|undefined, createGenesisUniverse: boolean=true, isProduction: boolean=false, useNormalTime: boolean=true) {
+        this.isProduction = isProduction;
         this.controllerAddress = controllerAddress;
         this.createGenesisUniverse = createGenesisUniverse;
         this.useNormalTime = isProduction || useNormalTime;

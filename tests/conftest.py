@@ -182,13 +182,9 @@ class ContractsFixture:
         self.testerAddressToKey = dict(zip(self.testerAddress.values(), self.testerKey.values()))
 
     def distributeRep(self, universe):
-        legacyReputationToken = self.contracts['LegacyReputationToken']
-        legacyReputationToken.faucet(11 * 10**6 * 10**18)
-
         # Get the reputation token for this universe and migrate legacy REP to it
         reputationToken = self.applySignature('ReputationToken', universe.getReputationToken())
-        legacyReputationToken.approve(reputationToken.address, 11 * 10**6 * 10**18)
-        reputationToken.migrateFromLegacyReputationToken()
+        reputationToken.migrateBalancesFromLegacyRep([tester.a0])
 
     def generateTesterMap(self, ch):
         testers = {}
@@ -455,6 +451,8 @@ def augurInitializedWithMocksSnapshot(fixture, augurInitializedSnapshot):
 def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
     fixture.resetToSnapshot(augurInitializedSnapshot)
     # TODO: remove assignments to the fixture as they don't get rolled back, so can bleed across tests.  We should be accessing things via `fixture.contracts[...]`
+    legacyReputationToken = fixture.contracts['LegacyReputationToken']
+    legacyReputationToken.faucet(11 * 10**6 * 10**18)
     universe = fixture.createUniverse()
     cash = fixture.getSeededCash()
     augur = fixture.contracts['Augur']
@@ -516,4 +514,9 @@ def sessionFixture(fixture, kitchenSinkSnapshot):
 @pytest.fixture
 def contractsFixture(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
+    return fixture
+
+@pytest.fixture
+def augurInitializedFixture(fixture, augurInitializedSnapshot):
+    fixture.resetToSnapshot(augurInitializedSnapshot)
     return fixture

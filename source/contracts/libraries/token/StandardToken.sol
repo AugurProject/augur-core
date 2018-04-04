@@ -42,8 +42,7 @@ contract StandardToken is ERC20, BasicToken {
     * @param _value The amount of tokens to be spent.
     */
     function approve(address _spender, uint256 _value) public returns (bool) {
-        allowed[msg.sender][_spender] = _value;
-        Approval(msg.sender, _spender, _value);
+        approveInternal(msg.sender, _spender, _value);
         return true;
     }
 
@@ -65,8 +64,7 @@ contract StandardToken is ERC20, BasicToken {
    * @param _addedValue The amount of tokens to increase the allowance by.
    */
     function increaseApproval(address _spender, uint _addedValue) public returns (bool) {
-        allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_addedValue);
-        Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+        approveInternal(msg.sender, _spender, allowed[msg.sender][_spender].add(_addedValue));
         return true;
     }
 
@@ -80,11 +78,16 @@ contract StandardToken is ERC20, BasicToken {
     function decreaseApproval(address _spender, uint _subtractedValue) public returns (bool) {
         uint oldValue = allowed[msg.sender][_spender];
         if (_subtractedValue > oldValue) {
-            allowed[msg.sender][_spender] = 0;
+            approveInternal(msg.sender, _spender, 0);
         } else {
-            allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
+            approveInternal(msg.sender, _spender, oldValue.sub(_subtractedValue));
         }
-        Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+        return true;
+    }
+
+    function approveInternal(address _owner, address _spender, uint256 _value) internal returns (bool) {
+        allowed[_owner][_spender] = _value;
+        Approval(_owner, _spender, _value);
         return true;
     }
 }
