@@ -1,3 +1,4 @@
+import BN = require('bn.js');
 import { hash } from 'crypto-promise';
 import { exists, readFile, writeFile } from "async-file";
 import { exec } from 'child_process';
@@ -8,7 +9,7 @@ import { CompilerOutput } from "solc";
 import { Abi, AbiFunction } from 'ethereum';
 import { DeployerConfiguration } from './DeployerConfiguration';
 import { Connector } from './Connector';
-import { Augur, ContractFactory, Controller, Controlled, Universe } from './ContractInterfaces';
+import { Augur, ContractFactory, Controller, Controlled, Universe, ReputationToken, LegacyReputationToken } from './ContractInterfaces';
 import { NetworkConfiguration } from './NetworkConfiguration';
 import { AccountManager } from './AccountManager';
 import { Contracts, Contract } from './Contracts';
@@ -57,7 +58,15 @@ Deploying to: ${networkConfiguration.networkName}
         await this.whitelistTradingContracts();
 
         if(this.configuration.createGenesisUniverse) {
+            if (!this.configuration.isProduction) {
+                this.initializeLegacyRep();
+            }
+
             this.universe = await this.createGenesisUniverse();
+
+            if (!this.configuration.isProduction) {
+                this.migrateFromLegacyRep();
+            }
         }
 
         await this.generateUploadBlockNumberFile(blockNumber);
@@ -143,8 +152,10 @@ Deploying to: ${networkConfiguration.networkName}
         if (contractName === 'Controller') return;
         if (contractName === 'Delegator') return;
         if (contractName === 'TimeControlled') return;
+        if (contractName === 'TestNetReputationToken') return;
         if (contractName === 'Augur') return;
-        if (contractName === 'Time') contract = this.configuration.useNormalTime ? contract: this.contracts.get('TimeControlled');
+        if (contractName === 'Time') contract = this.configuration.useNormalTime ? contract : this.contracts.get('TimeControlled');
+        if (contractName === 'ReputationToken') contract = this.configuration.isProduction ? contract : this.contracts.get('TestNetReputationToken');
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
         if (contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) return;
         // Check to see if we have already uploded this version of the contract
@@ -245,6 +256,15 @@ Deploying to: ${networkConfiguration.networkName}
         await this.getContract(contractName).setController(this.controller.address);
     }
 
+    private async initializeLegacyRep(): Promise<void> {
+        const legacyReputationToken = new LegacyReputationToken(this.connector, this.accountManager, this.getContract('LegacyReputationToken').address, this.connector.gasPrice);
+        await legacyReputationToken.faucet(new BN(10).pow(new BN(18)).mul(new BN(11000000)));
+        const legacyBalance = await legacyReputationToken.balanceOf_(this.accountManager.defaultAddress);
+        if (!legacyBalance || legacyBalance == new BN(0)) {
+            throw new Error("Faucet call to Legacy REP failed");
+        }
+    }
+
     private async createGenesisUniverse(): Promise<Universe> {
         console.log('Creating genesis universe...');
         const augur = new Augur(this.connector, this.accountManager, this.getContract("Augur").address, this.connector.gasPrice);
@@ -258,7 +278,22 @@ Deploying to: ${networkConfiguration.networkName}
         if (await universe.getTypeName_() !== stringTo32ByteHex("Universe")) {
             throw new Error("Unable to create genesis universe. Get type name failed");
         }
+
         return universe;
+    }
+
+    private async migrateFromLegacyRep(): Promise<void> {
+        const reputationTokenAddress = await this.universe.getReputationToken_();
+        const reputationToken = new ReputationToken(this.connector, this.accountManager, reputationTokenAddress, this.connector.gasPrice);
+        await reputationToken.migrateBalancesFromLegacyRep([this.accountManager.defaultAddress]);
+        const balance = await reputationToken.balanceOf_(this.accountManager.defaultAddress);
+        if (!balance || balance == new BN(0)) {
+            throw new Error("Migration from Legacy REP failed");
+        }
+        const migrationOngoing = await reputationToken.getIsMigratingFromLegacy_();
+        if (migrationOngoing) {
+            throw new Error("Still migrating from Legacy REP");
+        }
     }
 
     private async generateAddressMapping(): Promise<string> {

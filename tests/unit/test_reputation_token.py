@@ -30,22 +30,12 @@ def test_reputation_token_migrate_in(localFixture, mockUniverse, initializedRepu
 
     parentUniverse.setForkingMarket(mockMarket.address)
 
-    assert initializedReputationToken.totalSupply() == 0
-    mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a1, 100)
     assert initializedReputationToken.totalSupply() == 100
-
-    mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a2, 100)
+    mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a1, 100)
     assert initializedReputationToken.totalSupply() == 200
 
-def test_reputation_token_migrate_from_legacy_reputationToken(localFixture, initializedReputationToken, mockLegacyReputationToken):
-    mockLegacyReputationToken.setBalanceOf(100)
-    mockLegacyReputationToken.getFaucetAmountValue() == 0
-    assert initializedReputationToken.migrateFromLegacyReputationToken(sender=tester.k2)
-    assert mockLegacyReputationToken.getFaucetAmountValue() == 0
-    assert mockLegacyReputationToken.getTransferFromFromValue() == bytesToHexString(tester.a2)
-    assert mockLegacyReputationToken.getTransferFromToValue() == longToHexString(0)
-    assert mockLegacyReputationToken.getTransferFromValueValue() == 100
-    assert initializedReputationToken.totalSupply() == 100
+    mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a2, 100)
+    assert initializedReputationToken.totalSupply() == 300
 
 def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializedReputationToken, mockMarket, mockFeeWindow, mockLegacyReputationToken):
     with raises(TransactionFailed, message="universe does not contain fee window and caller has to be a IFeeWindow"):
@@ -65,10 +55,10 @@ def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializ
         mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
 
-    assert initializedReputationToken.totalSupply() == 0
+    assert initializedReputationToken.totalSupply() == 100
     assert initializedReputationToken.balanceOf(tester.a1) == 0
-    give_some_rep_to(mockLegacyReputationToken, initializedReputationToken, tester.k1, 35)
-    assert initializedReputationToken.totalSupply() == 35
+    assert initializedReputationToken.transfer(tester.a1, 35)
+    assert initializedReputationToken.totalSupply() == 100
     assert initializedReputationToken.balanceOf(tester.a2) == 0
     assert initializedReputationToken.balanceOf(tester.a1) == 35
 
@@ -77,13 +67,9 @@ def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializ
 
     assert mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 35)
     # TODO find out why total supply grows
-    assert initializedReputationToken.totalSupply() == 35
+    assert initializedReputationToken.totalSupply() == 100
     assert initializedReputationToken.balanceOf(tester.a2) == 35
     assert initializedReputationToken.balanceOf(tester.a1) == 0
-
-def give_some_rep_to(mockLegacyReputationToken, targetReputationToken, userAccount, amount):
-    mockLegacyReputationToken.setBalanceOf(amount)
-    assert targetReputationToken.migrateFromLegacyReputationToken(sender=userAccount)
 
 @fixture(scope="session")
 def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
@@ -91,6 +77,8 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     controller = fixture.contracts['Controller']
     mockLegacyReputationToken = fixture.contracts['MockLegacyReputationToken']
     controller.registerContract(stringToBytes('LegacyReputationToken'), mockLegacyReputationToken.address, twentyZeros, thirtyTwoZeros)
+    mockLegacyReputationToken.setTotalSupply(100)
+    mockLegacyReputationToken.setBalanceOfValueFor(tester.a0, 100)
     return fixture.createSnapshot()
 
 @fixture
@@ -134,4 +122,6 @@ def initializedReputationToken(localFixture, mockUniverse):
     reputationToken = localFixture.upload('../source/contracts/reporting/ReputationToken.sol', 'reputationToken')
     reputationToken.setController(localFixture.contracts['Controller'].address)
     assert reputationToken.initialize(mockUniverse.address)
+    assert reputationToken.migrateBalancesFromLegacyRep([tester.a0])
+    assert reputationToken.getIsMigratingFromLegacy() == False
     return reputationToken
