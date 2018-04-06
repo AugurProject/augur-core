@@ -9,7 +9,7 @@ import { CompilerOutput } from "solc";
 import { Abi, AbiFunction } from 'ethereum';
 import { DeployerConfiguration } from './DeployerConfiguration';
 import { Connector } from './Connector';
-import { Augur, ContractFactory, Controller, Controlled, Universe, ReputationToken, LegacyReputationToken } from './ContractInterfaces';
+import { Augur, ContractFactory, Controller, Controlled, Universe, ReputationToken, LegacyReputationToken, TimeControlled } from './ContractInterfaces';
 import { NetworkConfiguration } from './NetworkConfiguration';
 import { AccountManager } from './AccountManager';
 import { Contracts, Contract } from './Contracts';
@@ -56,6 +56,10 @@ Deploying to: ${networkConfiguration.networkName}
         await this.uploadAllContracts();
         await this.initializeAllContracts();
         await this.whitelistTradingContracts();
+
+        if (!this.configuration.useNormalTime) {
+          await this.resetTimeControlled();
+        }
 
         if(this.configuration.createGenesisUniverse) {
             if (!this.configuration.isProduction) {
@@ -263,6 +267,12 @@ Deploying to: ${networkConfiguration.networkName}
         if (!legacyBalance || legacyBalance == new BN(0)) {
             throw new Error("Faucet call to Legacy REP failed");
         }
+    }
+    private async resetTimeControlled(): Promise<boolean> {
+      console.log('Resetting Timestamp for false time...');
+      const time = new TimeControlled(this.connector, this.accountManager, this.getContract("TimeControlled").address, this.connector.gasPrice);
+      const currentTimestamp = await time.getTimestamp_();
+      return time.setTimestamp_(currentTimestamp);
     }
 
     private async createGenesisUniverse(): Promise<Universe> {
