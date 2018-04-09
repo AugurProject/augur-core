@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs, EtherDelta, TokenDelta
+from utils import longTo32Bytes, captureFilteredLogs, EtherDelta, TokenDelta, AssertLog
 from reporting_utils import proceedToNextRound
 
 def test_market_escape_hatch_all_fees(localFixture, controller, market, reputationToken):
@@ -10,12 +10,22 @@ def test_market_escape_hatch_all_fees(localFixture, controller, market, reputati
         market.withdrawInEmergency()
 
     # Emergency Stop
-    assert controller.emergencyStop()
+    escapeHatchChangedLog = {
+        "isOn": True,
+    }
+    with AssertLog(localFixture, "EscapeHatchChanged", escapeHatchChangedLog):
+        assert controller.emergencyStop()
 
     # Now we can call the market escape hatch and get back all the fees paid in creation
     with EtherDelta(localFixture.chain.head_state.get_balance(market.address), market.getOwner(), localFixture.chain, "ETH balance was not given to the market owner"):
         with TokenDelta(reputationToken, reputationToken.balanceOf(market.address), market.getOwner(), "REP balance was not given to the market owner"):
             assert market.withdrawInEmergency()
+
+    escapeHatchChangedLog = {
+        "isOn": False,
+    }
+    with AssertLog(localFixture, "EscapeHatchChanged", escapeHatchChangedLog):
+        assert controller.release()
 
 def test_market_escape_hatch_partial_fees(localFixture, market, reputationToken, constants, controller):
     reputationToken.transfer(tester.a1, 1 * 10**6 * 10**18)
