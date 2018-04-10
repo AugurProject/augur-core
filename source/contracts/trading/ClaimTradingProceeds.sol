@@ -20,10 +20,6 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
     using SafeMathUint256 for uint256;
 
     function claimTradingProceeds(IMarket _market, address _shareHolder) marketIsLegit(_market) onlyInGoodTimes nonReentrant external returns(bool) {
-        if (!_market.isFinalized()) {
-            _market.finalize();
-        }
-
         require(controller.getTimestamp() > _market.getFinalizationTime().add(Reporting.getClaimTradingProceedsWaitTime()));
 
         ICash _denominationToken = _market.getDenominationToken();
