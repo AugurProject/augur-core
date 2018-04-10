@@ -106,14 +106,14 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
             claimTradingProceeds.claimTradingProceeds(market.address, tester.a2)
 
     # Confirm claim proceeds logging works correctly
-    assert len(logs) == 5
-    assert logs[2]['_event_type'] == 'TradingProceedsClaimed'
-    assert logs[2]['market'] == market.address
-    assert logs[2]['shareToken'] == yesShareToken.address
-    assert logs[2]['numPayoutTokens'] == expectedPayout
-    assert logs[2]['numShares'] == 1
-    assert logs[2]['sender'] == bytesToHexString(tester.a1)
-    assert logs[2]['finalTokenBalance'] == initialLongHolderETH + expectedPayout
+    assert len(logs) == 6
+    assert logs[3]['_event_type'] == 'TradingProceedsClaimed'
+    assert logs[3]['market'] == market.address
+    assert logs[3]['shareToken'] == yesShareToken.address
+    assert logs[3]['numPayoutTokens'] == expectedPayout
+    assert logs[3]['numShares'] == 1
+    assert logs[3]['sender'] == bytesToHexString(tester.a1)
+    assert logs[3]['finalTokenBalance'] == initialLongHolderETH + expectedPayout
 
     # assert a1 ends up with cash (minus fees) and a2 does not
     assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout
