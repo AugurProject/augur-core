@@ -384,9 +384,30 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _newValue;
     }
 
-    // Hardcode the reporting fee until we implement the auction feature or some other decentralized REP price oracle
-    function getOrCacheReportingFeeDivisor() public view returns (uint256) {
-        return Reporting.getDefaultReportingFeeDivisor();
+    function getOrCacheReportingFeeDivisor() public onlyInGoodTimes returns (uint256) {
+        IFeeWindow _feeWindow = getOrCreateCurrentFeeWindow();
+        IFeeWindow _previousFeeWindow = getOrCreatePreviousFeeWindow();
+        uint256 _currentFeeDivisor = shareSettlementFeeDivisor[_feeWindow];
+        if (_currentFeeDivisor != 0) {
+            return _currentFeeDivisor;
+        }
+        uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth();
+        uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth();
+        uint256 _previousFeeDivisor = shareSettlementFeeDivisor[_previousFeeWindow];
+        if (_previousFeeDivisor == 0) {
+            _currentFeeDivisor = Reporting.getDefaultReportingFeeDivisor();
+        } else if (_targetRepMarketCapInAttoeth == 0) {
+            _currentFeeDivisor = Reporting.getDefaultReportingFeeDivisor();
+        } else {
+            _currentFeeDivisor = _previousFeeDivisor.mul(_repMarketCapInAttoeth).div(_targetRepMarketCapInAttoeth);
+        }
+
+        _currentFeeDivisor = _currentFeeDivisor
+            .max(Reporting.getMinimumReportingFeeDivisor())
+            .min(Reporting.getMaximumReportingFeeDivisor());
+
+        shareSettlementFeeDivisor[_feeWindow] = _currentFeeDivisor;
+        return _currentFeeDivisor;
     }
 
     function getOrCacheTargetReporterGasCosts() public onlyInGoodTimes returns (uint256) {
