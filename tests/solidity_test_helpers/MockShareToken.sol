@@ -65,6 +65,7 @@ contract MockShareToken is DelegationTarget, ITyped, Initializable, MockVariable
         endInitialization();
         initializeMarketValue = _market;
         initializeOutcomeValue = _outcome;
+        return true;
     }
 
     function createShares(address _owner, uint256 _fxpValue) external onlyWhitelistedCallers returns(bool) {
