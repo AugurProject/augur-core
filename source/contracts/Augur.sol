@@ -49,6 +49,7 @@ contract Augur is Controlled, IAugur {
     event TokensBurned(address indexed universe, address indexed token, address indexed target, uint256 amount, TokenType tokenType, address market);
     event FeeWindowCreated(address indexed universe, address feeWindow, uint256 startTime, uint256 endTime, uint256 id);
     event InitialReporterTransferred(address indexed universe, address indexed market, address from, address to);
+    event EscapeHatchChanged(bool isOn);
     event TimestampSet(uint256 newTimestamp);
 
     mapping(address => bool) private universes;
@@ -336,6 +337,12 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(_market));
         InitialReporterTransferred(_universe, _market, _from, _to);
+        return true;
+    }
+
+    function logEscapeHatchChanged(bool _isOn) public returns (bool) {
+        require(msg.sender == address(controller));
+        EscapeHatchChanged(_isOn);
         return true;
     }
 }

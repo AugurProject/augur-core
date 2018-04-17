@@ -20,10 +20,6 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
     using SafeMathUint256 for uint256;
 
     function claimTradingProceeds(IMarket _market, address _shareHolder) marketIsLegit(_market) onlyInGoodTimes nonReentrant external returns(bool) {
-        if (!_market.isFinalized()) {
-            _market.finalize();
-        }
-
         require(controller.getTimestamp() > _market.getFinalizationTime().add(Reporting.getClaimTradingProceedsWaitTime()));
 
         ICash _denominationToken = _market.getDenominationToken();
@@ -68,7 +64,7 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
         return true;
     }
 
-    function divideUpWinnings(IMarket _market, uint256 _outcome, uint256 _numberOfShares) public view returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
+    function divideUpWinnings(IMarket _market, uint256 _outcome, uint256 _numberOfShares) public returns (uint256 _proceeds, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) {
         _proceeds = calculateProceeds(_market, _outcome, _numberOfShares);
         _creatorShare = calculateCreatorFee(_market, _proceeds);
         _reporterShare = calculateReportingFee(_market, _proceeds);
@@ -81,7 +77,7 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
         return _numberOfShares.mul(_payoutNumerator);
     }
 
-    function calculateReportingFee(IMarket _market, uint256 _amount) public view returns (uint256) {
+    function calculateReportingFee(IMarket _market, uint256 _amount) public returns (uint256) {
         uint256 _reportingFeeDivisor = _market.getUniverse().getOrCacheReportingFeeDivisor();
         return _amount.div(_reportingFeeDivisor);
     }
