@@ -22,6 +22,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         uint256 _balance = feeWindow.getFeeToken().balanceOf(this);
         feeWindow = market.getFeeWindow();
         feeWindow.mintFeeTokens(_balance);
+        return true;
     }
 
     function liquidateLosing() public onlyInGoodTimes returns (bool) {

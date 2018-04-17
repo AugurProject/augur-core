@@ -22,6 +22,7 @@ contract ShareToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         endInitialization();
         market = _market;
         outcome = _outcome;
+        return true;
     }
 
     function createShares(address _owner, uint256 _fxpValue) external onlyWhitelistedCallers returns(bool) {

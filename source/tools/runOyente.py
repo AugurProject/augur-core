@@ -1,6 +1,7 @@
 from oyente.oyente import run_solidity_analysis
 from oyente.input_helper import InputHelper
 from oyente.source_map import SourceMap
+from oyente import global_params
 from os import path, walk
 
 import argparse
@@ -32,6 +33,8 @@ def main():
             root.setLevel(logging.INFO)
             ch.setLevel(logging.INFO)
         root.addHandler(ch)
+
+    global_params.CHECK_ASSERTIONS = 1
 
     results, exit_code = run_solidity_analysis(inputs)
 

@@ -119,7 +119,7 @@ def test_universe_rep_price_oracle(localFixture, populatedUniverse, mockReputati
     mockReputationToken.setTotalSupply(0)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 0
     mockReputationToken.setTotalSupply(1)
-    repPriceOracle.setRepPriceInAttoEth(100)
+    assert repPriceOracle.setRepPriceInAttoEth(100)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 100
     mockReputationToken.setTotalSupply(12)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 1200
@@ -228,7 +228,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
 
     # _currentFeeDivisor > 0
     mockReputationToken.setTotalSupply(0)
-    repPriceOracle.setRepPriceInAttoEth(0)
+    assert repPriceOracle.setRepPriceInAttoEth(0)
     populatedUniverse.incrementOpenInterest(10)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 0
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 10 * multiplier
@@ -241,7 +241,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     localFixture.contracts["Time"].incrementTimestamp(populatedUniverse.getDisputeRoundDurationInSeconds())
 
     mockReputationToken.setTotalSupply(105)
-    repPriceOracle.setRepPriceInAttoEth(10)
+    assert repPriceOracle.setRepPriceInAttoEth(10)
     populatedUniverse.incrementOpenInterest(10)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 105 * 10
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 20 * multiplier
@@ -253,7 +253,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     localFixture.contracts["Time"].incrementTimestamp(populatedUniverse.getDisputeRoundDurationInSeconds())
 
     mockReputationToken.setTotalSupply(1)
-    repPriceOracle.setRepPriceInAttoEth(1)
+    assert repPriceOracle.setRepPriceInAttoEth(1)
     populatedUniverse.decrementOpenInterest(10)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 1
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 10 * multiplier
