@@ -77,7 +77,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
         return _bestFxpAmount;
     }
 
-    function getMinGasNeeded() internal returns (uint256) {
+    function getMinGasNeeded() internal pure returns (uint256) {
         return MINIMUM_GAS_NEEDED;
     }
 }
