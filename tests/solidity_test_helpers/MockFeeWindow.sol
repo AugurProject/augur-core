@@ -369,7 +369,7 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         return true;
     }
 
-    function getController() public constant returns (IController) {
+    function getController() public view returns (IController) {
         return IController(0);
     }
 

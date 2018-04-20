@@ -2,23 +2,22 @@ from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
-from utils import stringToBytes, captureFilteredLogs, bytesToHexString
+from utils import stringToBytes, AssertLog, bytesToHexString, AssertLog
 
 tester.STARTGAS = long(6.7 * 10**6)
 
 def test_market_creation(contractsFixture, universe, cash, market):
     numTicks = market.getNumTicks()
 
-    logs = []
-    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    market = contractsFixture.createReasonableBinaryMarket(universe, cash, extraInfo="so extra")
+    market = None
 
-    assert len(logs) == 3
-    assert logs[2]['_event_type'] == 'MarketCreated'
-    assert logs[2]['extraInfo'] == 'so extra'
-    assert logs[2]['marketCreationFee'] == universe.getOrCacheMarketCreationCost()
-    assert logs[2]['market'] == market.address
-    assert logs[2]['marketCreator'] == bytesToHexString(tester.a0)
+    marketCreatedLog = {
+        "extraInfo": 'so extra',
+        "marketCreationFee": universe.getOrCacheMarketCreationCost(),
+        "marketCreator": bytesToHexString(tester.a0),
+    }
+    with AssertLog(contractsFixture, "MarketCreated", marketCreatedLog):
+        market = contractsFixture.createReasonableBinaryMarket(universe, cash, extraInfo="so extra")
 
     assert market.getUniverse() == universe.address
     assert market.getNumberOfOutcomes() == 2

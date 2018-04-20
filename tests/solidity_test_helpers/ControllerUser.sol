@@ -10,7 +10,7 @@ contract ControllerUser is IControlled {
     address public suicideFundsDestination;
     ERC20Basic[] public suicideFundsTokens;
 
-    function getController() public constant returns (IController) {
+    function getController() public view returns (IController) {
         return IController(0);
     }
 

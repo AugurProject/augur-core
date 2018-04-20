@@ -6,14 +6,39 @@ from ethereum.tools.tester import Chain
 from ethereum.abi import ContractTranslator
 from ethereum.tools.tester import ABIContract
 from ethereum.config import config_metropolis, Env
+from ethereum import utils
+from ethereum import vm
+import ethereum
 from io import open as io_open
-from json import dump as json_dump, load as json_load
-from os import path, walk, makedirs, listdir
+from json import dump as json_dump, load as json_load, dumps as json_dumps
+from os import path, walk, makedirs, listdir, remove as remove_file
 import pytest
 from re import findall
 from solc import compile_standard
 from utils import bytesToHexString, bytesToLong, longToHexString, stringToBytes, garbageBytes20, garbageBytes32, twentyZeros, thirtyTwoZeros
 from copy import deepcopy
+
+from ethereum.slogging import get_logger
+
+# Make TXs free.
+ethereum.opcodes.GCONTRACTBYTE = 0
+ethereum.opcodes.GTXDATAZERO = 0
+ethereum.opcodes.GTXDATANONZERO = 0
+
+# Monkeypatch to bypass the contract size limit
+def monkey_post_spurious_dragon_hardfork():
+    return False
+
+original_create_contract = ethereum.messages.create_contract
+
+def new_create_contract(ext, msg):
+    old_post_spurious_dragon_hardfork_check = ext.post_spurious_dragon_hardfork
+    ext.post_spurious_dragon_hardfork = monkey_post_spurious_dragon_hardfork
+    res, gas, dat = original_create_contract(ext, msg)
+    ext.post_spurious_dragon_hardfork = old_post_spurious_dragon_hardfork_check
+    return res, gas, dat
+
+ethereum.messages.create_contract = new_create_contract
 
 # used to resolve relative paths
 BASE_PATH = path.dirname(path.abspath(__file__))
@@ -29,6 +54,14 @@ class bcolors:
 CONTRACT_SIZE_LIMIT = 24576.0
 CONTRACT_SIZE_WARN_LEVEL = CONTRACT_SIZE_LIMIT * 0.75
 
+def pytest_addoption(parser):
+    parser.addoption("--cover", action="store_true", help="Use the coverage enabled contracts. Meant to be used with the tools/generateCoverageReport.js script")
+
+def pytest_configure(config):
+    # register an additional marker
+    config.addinivalue_line("markers",
+        "cover: use coverage contracts")
+
 class ContractsFixture:
     signatures = {}
     compiledCode = {}
@@ -42,8 +75,7 @@ class ContractsFixture:
         if not path.exists(COMPILATION_CACHE):
             makedirs(COMPILATION_CACHE)
 
-    @staticmethod
-    def generateSignature(relativeFilePath):
+    def generateSignature(self, relativeFilePath):
         ContractsFixture.ensureCacheDirectoryExists()
         filename = path.basename(relativeFilePath)
         name = path.splitext(filename)[0]
@@ -54,7 +86,7 @@ class ContractsFixture:
             extension = path.splitext(filename)[1]
             signature = None
             if extension == '.sol':
-                signature = ContractsFixture.compileSolidity(relativeFilePath)['abi']
+                signature = self.compileSolidity(relativeFilePath)['abi']
             else:
                 raise
             with open(outputPath, mode='w') as file:
@@ -65,14 +97,13 @@ class ContractsFixture:
             signature = json_load(file)
         return(signature)
 
-    @staticmethod
-    def getCompiledCode(relativeFilePath):
+    def getCompiledCode(self, relativeFilePath):
         filename = path.basename(relativeFilePath)
         name = path.splitext(filename)[0]
         if name in ContractsFixture.compiledCode:
             return ContractsFixture.compiledCode[name]
         dependencySet = set()
-        ContractsFixture.getAllDependencies(relativeFilePath, dependencySet)
+        self.getAllDependencies(relativeFilePath, dependencySet)
         ContractsFixture.ensureCacheDirectoryExists()
         compiledOutputPath = path.join(COMPILATION_CACHE, name)
         lastCompilationTime = path.getmtime(compiledOutputPath) if path.isfile(compiledOutputPath) else 0
@@ -86,7 +117,7 @@ class ContractsFixture:
             extension = path.splitext(filename)[1]
             compiledCode = None
             if extension == '.sol':
-                compiledCode = bytearray.fromhex(ContractsFixture.compileSolidity(relativeFilePath)['evm']['bytecode']['object'])
+                compiledCode = bytearray.fromhex(self.compileSolidity(relativeFilePath)['evm']['bytecode']['object'])
             else:
                 raise
             with io_open(compiledOutputPath, mode='wb') as file:
@@ -105,8 +136,7 @@ class ContractsFixture:
             ContractsFixture.compiledCode[name] = compiledCode
             return(compiledCode)
 
-    @staticmethod
-    def compileSolidity(relativeFilePath):
+    def compileSolidity(self, relativeFilePath):
         absoluteFilePath = resolveRelativePath(relativeFilePath)
         filename = path.basename(relativeFilePath)
         contractName = path.splitext(filename)[0]
@@ -120,7 +150,7 @@ class ContractsFixture:
             },
             'settings': {
                 # TODO: Remove 'remappings' line below and update 'sources' line above
-                'remappings': [ '=%s/' % resolveRelativePath("../source/contracts"), 'TEST=%s/' % resolveRelativePath("solidity_test_helpers") ],
+                'remappings': [ '=%s/' % resolveRelativePath(self.relativeContractsPath), 'TEST=%s/' % resolveRelativePath(self.relativeTestContractsPath) ],
                 'optimizer': {
                     'enabled': True,
                     'runs': 500
@@ -134,8 +164,7 @@ class ContractsFixture:
         }
         return compile_standard(compilerParameter, allow_paths=resolveRelativePath("../"))['contracts'][absoluteFilePath][contractName]
 
-    @staticmethod
-    def getAllDependencies(filePath, knownDependencies):
+    def getAllDependencies(self, filePath, knownDependencies):
         knownDependencies.add(filePath)
         fileDirectory = path.dirname(filePath)
         with open(filePath, 'r') as file:
@@ -144,21 +173,21 @@ class ContractsFixture:
         for match in matches:
             dependencyPath = path.abspath(path.join(fileDirectory, match))
             if not dependencyPath in knownDependencies:
-                ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
+                self.getAllDependencies(dependencyPath, knownDependencies)
         matches = findall("create\('(.*?)'\)", fileContents)
         for match in matches:
             dependencyPath = path.abspath(path.join(fileDirectory, match))
             if not dependencyPath in knownDependencies:
-                ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
+                self.getAllDependencies(dependencyPath, knownDependencies)
         matches = findall("import ['\"](.*?)['\"]", fileContents)
         for match in matches:
-            dependencyPath = path.join(BASE_PATH, '..', 'source/contracts', match)
+            dependencyPath = path.join(BASE_PATH, self.relativeContractsPath, match)
             if "TEST" in dependencyPath:
-                dependencyPath = path.join(BASE_PATH, 'solidity_test_helpers', match).replace("TEST/", "")
+                dependencyPath = path.join(BASE_PATH, self.relativeTestContractsPath, match).replace("TEST/", "")
             if not path.isfile(dependencyPath):
                 raise Exception("Could not resolve dependency file path: %s" % dependencyPath)
             if not dependencyPath in knownDependencies:
-                ContractsFixture.getAllDependencies(dependencyPath, knownDependencies)
+                self.getAllDependencies(dependencyPath, knownDependencies)
         return(knownDependencies)
 
     ####
@@ -167,6 +196,7 @@ class ContractsFixture:
 
     def __init__(self):
         tester.GASPRICE = 0
+        tester.STARTGAS = long(6.7 * 10**7)
         config_metropolis['GASLIMIT_ADJMAX_FACTOR'] = .000000000001
         config_metropolis['GENESIS_GAS_LIMIT'] = 2**60
         config_metropolis['MIN_GAS_LIMIT'] = 2**60
@@ -180,6 +210,20 @@ class ContractsFixture:
         self.testerAddress = self.generateTesterMap('a')
         self.testerKey = self.generateTesterMap('k')
         self.testerAddressToKey = dict(zip(self.testerAddress.values(), self.testerKey.values()))
+        if path.isfile('./allFiredEvents'):
+            remove_file('./allFiredEvents')
+        self.relativeContractsPath = '../source/contracts'
+        self.relativeTestContractsPath = 'solidity_test_helpers'
+        self.coverageMode = pytest.config.option.cover
+        if self.coverageMode:
+            self.chain.head_state.log_listeners.append(self.writeLogToFile)
+            self.relativeContractsPath = '../coverageEnv/contracts'
+            self.relativeTestContractsPath = '../coverageEnv/solidity_test_helpers'
+
+
+    def writeLogToFile(self, message):
+        with open('./allFiredEvents', 'a') as logsFile:
+            logsFile.write(json_dumps(message.to_dict()) + '\n')
 
     def distributeRep(self, universe):
         # Get the reputation token for this universe and migrate legacy REP to it
@@ -201,11 +245,13 @@ class ContractsFixture:
 
     def upload(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         resolvedPath = resolveRelativePath(relativeFilePath)
+        if self.coverageMode:
+            resolvedPath = resolvedPath.replace("tests", "coverageEnv").replace("source/", "coverageEnv/")
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(resolvedPath))[0]
         signatureKey = signatureKey if signatureKey else lookupKey
         if lookupKey in self.contracts:
             return(self.contracts[lookupKey])
-        compiledCode = ContractsFixture.getCompiledCode(resolvedPath)
+        compiledCode = self.getCompiledCode(resolvedPath)
         # abstract contracts have a 0-length array for bytecode
         if len(compiledCode) == 0:
             if ("libraries" in relativeFilePath or lookupKey.startswith("I") or lookupKey.startswith("Base")):
@@ -214,12 +260,12 @@ class ContractsFixture:
                 raise Exception("Contract: " + lookupKey + " has no bytecode, but this is not expected. It probably doesn't implement all its abstract methods")
             return None
         if signatureKey not in ContractsFixture.signatures:
-            ContractsFixture.signatures[signatureKey] = ContractsFixture.generateSignature(resolvedPath)
+            ContractsFixture.signatures[signatureKey] = self.generateSignature(resolvedPath)
         signature = ContractsFixture.signatures[signatureKey]
         contractTranslator = ContractTranslator(signature)
         if len(constructorArgs) > 0:
             compiledCode += contractTranslator.encode_constructor_arguments(constructorArgs)
-        contractAddress = bytesToHexString(self.chain.contract(compiledCode, language='evm', startgas=long(6.7 * 10**6)))
+        contractAddress = bytesToHexString(self.chain.contract(compiledCode, language='evm'))
         contract = ABIContract(self.chain, contractTranslator, contractAddress)
         self.contracts[lookupKey] = contract
         return(contract)
@@ -244,6 +290,8 @@ class ContractsFixture:
         if not 'state' in snapshot: raise "snapshot is missing 'state'"
         if not 'contracts' in snapshot: raise "snapshot is missing 'contracts'"
         self.chain = Chain(genesis=snapshot['state'], env=Env(config=config_metropolis))
+        if self.coverageMode:
+            self.chain.head_state.log_listeners.append(self.writeLogToFile)
         self.contracts = {}
         for contractName in snapshot['contracts']:
             contract = snapshot['contracts'][contractName]
@@ -254,7 +302,7 @@ class ContractsFixture:
     ####
 
     def uploadAllContracts(self):
-        for directory, _, filenames in walk(resolveRelativePath('../source/contracts')):
+        for directory, _, filenames in walk(resolveRelativePath(self.relativeContractsPath)):
             # skip the legacy reputation directory since it is unnecessary and we don't support uploads of contracts with constructors yet
             if 'legacy_reputation' in directory: continue
             for filename in filenames:
@@ -272,11 +320,13 @@ class ContractsFixture:
                     self.contracts[name] = self.applySignature(name, self.contracts[name].address)
                 elif name == "TimeControlled":
                     self.uploadAndAddToController(path.join(directory, filename), lookupKey = "Time", signatureKey = "TimeControlled")
+                elif name == "Trade":
+                    self.uploadAndAddToController("solidity_test_helpers/TestTrade.sol", lookupKey = "Trade", signatureKey = "Trade")
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 
     def uploadAllMockContracts(self):
-        for directory, _, filenames in walk(resolveRelativePath('solidity_test_helpers')):
+        for directory, _, filenames in walk(resolveRelativePath(self.relativeTestContractsPath)):
             for filename in filenames:
                 name = path.splitext(filename)[0]
                 extension = path.splitext(filename)[1]
@@ -359,7 +409,7 @@ class ContractsFixture:
 
     def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, sender=tester.k0, topic="", description="description", extraInfo=""):
         marketCreationFee = universe.getOrCacheMarketCreationCost()
-        marketAddress = universe.createBinaryMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, topic, description, extraInfo, value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
+        marketAddress = universe.createBinaryMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, topic, description, extraInfo, value = marketCreationFee, sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
@@ -367,14 +417,14 @@ class ContractsFixture:
     def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, sender=tester.k0, topic="", description="description", extraInfo=""):
         marketCreationFee = universe.getOrCacheMarketCreationCost()
         outcomes = [" "] * numOutcomes
-        marketAddress = universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, outcomes, topic, description, extraInfo, value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
+        marketAddress = universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, outcomes, topic, description, extraInfo, value = marketCreationFee, sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
     def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, maxPrice, minPrice, numTicks, designatedReporterAddress, sender=tester.k0):
         marketCreationFee = universe.getOrCacheMarketCreationCost()
-        marketAddress = universe.createScalarMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, minPrice, maxPrice, numTicks, "", "description", "", value = marketCreationFee, startgas=long(6.7 * 10**6), sender=sender)
+        marketAddress = universe.createScalarMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, minPrice, maxPrice, numTicks, "", "description", "", value = marketCreationFee, sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
@@ -424,7 +474,7 @@ def baseSnapshot(fixture):
 @pytest.fixture(scope="session")
 def controllerSnapshot(fixture, baseSnapshot):
     fixture.resetToSnapshot(baseSnapshot)
-    controller = fixture.upload('../tests/solidity_test_helpers/TestController.sol', lookupKey="Controller")
+    controller = fixture.upload('solidity_test_helpers/TestController.sol', lookupKey="Controller")
     assert fixture.contracts['Controller'].owner() == bytesToHexString(tester.a0)
     return fixture.createSnapshot()
 

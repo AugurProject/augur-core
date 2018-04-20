@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
-from utils import captureFilteredLogs, bytesToHexString
+from utils import AssertLog, bytesToHexString
 
 def test_init(contractsFixture, universe):
     reputationTokenFactory = contractsFixture.contracts['ReputationTokenFactory']
@@ -16,32 +16,23 @@ def test_init(contractsFixture, universe):
 def test_reputation_token_logging(contractsFixture, universe):
     reputationToken = contractsFixture.applySignature("ReputationToken", universe.getReputationToken())
 
-    logs = []
-    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
+    tokensTransferredLog = {
+        'from': bytesToHexString(tester.a0),
+        'to': bytesToHexString(tester.a1),
+        'token': reputationToken.address,
+        'universe': universe.address,
+        'tokenType': 0,
+        'value': 8,
+    }
 
-    assert reputationToken.transfer(tester.a1, 8)
-
-    assert len(logs) == 1
-    assert logs[0]['_event_type'] == 'TokensTransferred'
-    assert logs[0]['from'] == bytesToHexString(tester.a0)
-    assert logs[0]['to'] == bytesToHexString(tester.a1)
-    assert logs[0]['token'] == reputationToken.address
-    assert logs[0]['universe'] == universe.address
-    assert logs[0]['tokenType'] == 0
-    assert logs[0]['value'] == 8
+    with AssertLog(contractsFixture, 'TokensTransferred', tokensTransferredLog):
+        assert reputationToken.transfer(tester.a1, 8)
 
     assert reputationToken.approve(tester.a2, 12)
 
-    assert reputationToken.transferFrom(tester.a0, tester.a1, 12, sender=tester.k2)
-
-    assert len(logs) == 2
-    assert logs[1]['_event_type'] == 'TokensTransferred'
-    assert logs[1]['from'] == bytesToHexString(tester.a0)
-    assert logs[1]['to'] == bytesToHexString(tester.a1)
-    assert logs[1]['token'] == reputationToken.address
-    assert logs[1]['universe'] == universe.address
-    assert logs[0]['tokenType'] == 0
-    assert logs[1]['value'] == 12
+    tokensTransferredLog['value'] = 12
+    with AssertLog(contractsFixture, 'TokensTransferred', tokensTransferredLog):
+        assert reputationToken.transferFrom(tester.a0, tester.a1, 12, sender=tester.k2)
 
 def test_legacy_migration(augurInitializedFixture):
     # Initialize the legacy REP contract with some balances

@@ -15,7 +15,7 @@ import 'libraries/CashAutoConverter.sol';
 
 
 contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
-    uint256 private constant MINIMUM_GAS_NEEDED = 500000;
+    uint256 internal constant MINIMUM_GAS_NEEDED = 500000;
 
     function publicBuy(IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bytes32) {
         bytes32 _result = trade(msg.sender, Order.TradeDirections.Long, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
@@ -47,7 +47,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
         if (_bestFxpAmount == 0) {
             return bytes32(1);
         }
-        if (msg.gas < MINIMUM_GAS_NEEDED) {
+        if (msg.gas < getMinGasNeeded()) {
             return bytes32(1);
         }
         Order.Types _type = Order.getOrderTradingTypeFromMakerDirection(_direction);
@@ -60,7 +60,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
         IOrders _orders = IOrders(controller.lookup("Orders"));
         bytes32 _orderId = _orders.getBestOrderId(_type, _market, _outcome);
         _bestFxpAmount = _fxpAmount;
-        while (_orderId != 0 && _bestFxpAmount > 0 && msg.gas >= MINIMUM_GAS_NEEDED) {
+        while (_orderId != 0 && _bestFxpAmount > 0 && msg.gas >= getMinGasNeeded()) {
             uint256 _orderPrice = _orders.getPrice(_orderId);
             // If the price is acceptable relative to the trade type
             if (_type == Order.Types.Bid ? _orderPrice >= _price : _orderPrice <= _price) {
@@ -75,5 +75,9 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
             }
         }
         return _bestFxpAmount;
+    }
+
+    function getMinGasNeeded() internal returns (uint256) {
+        return MINIMUM_GAS_NEEDED;
     }
 }

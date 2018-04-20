@@ -1,7 +1,7 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from utils import longToHexString, stringToBytes, captureFilteredLogs, twentyZeros, thirtyTwoZeros
+from utils import longToHexString, stringToBytes, twentyZeros, thirtyTwoZeros, AssertLog
 from pytest import fixture, raises
 
 
@@ -25,15 +25,15 @@ def test_basic_token_transfer(localFixture, chain, mockToken):
     with raises(TransactionFailed, message="can not cause user to overflow balance"):
         mockToken.callInternalTransfer(tester.a1, tester.a2, value)
 
-def test_basic_token_emit(localFixture, chain, mockToken):
-    logs = []
+def test_basic_token_emit(localFixture, mockToken):
     assert mockToken.mint(tester.a1, 101)
-    captureFilteredLogs(chain.head_state, mockToken, logs)
-    assert mockToken.callInternalTransfer(tester.a1, tester.a2, 101)
+    transferLog = {
+        'value': 101L
+    }
+    with AssertLog(localFixture, "Transfer", transferLog, contract=mockToken):
+        assert mockToken.callInternalTransfer(tester.a1, tester.a2, 101)
+
     assert mockToken.balanceOf(tester.a2) == 101
-    assert len(logs) == 1
-    assert logs[0]['_event_type'] == 'Transfer'
-    assert logs[0]['value'] == 101L
 
 
 @fixture

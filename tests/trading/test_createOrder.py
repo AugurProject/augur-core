@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
-from utils import bytesToLong, longTo32Bytes, longToHexString, bytesToHexString, fix, unfix, captureFilteredLogs, EtherDelta, stringToBytes
+from utils import bytesToLong, longTo32Bytes, longToHexString, bytesToHexString, fix, unfix, AssertLog, EtherDelta, stringToBytes
 from uuid import uuid4
 from constants import BID, ASK, YES, NO
 
@@ -51,7 +51,6 @@ def test_publicCreateOrder_ask(contractsFixture, cash, market):
 def test_publicCreateOrder_bid2(contractsFixture, cash, market, universe):
     orders = contractsFixture.contracts['Orders']
     createOrder = contractsFixture.contracts['CreateOrder']
-    logs = []
 
     orderType = BID
     amount = fix(1)
@@ -60,9 +59,19 @@ def test_publicCreateOrder_bid2(contractsFixture, cash, market, universe):
     tradeGroupID = "42"
 
     marketInitialCash = cash.balanceOf(market.address)
-    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
     creatorInitialETH = contractsFixture.chain.head_state.get_balance(tester.a1)
-    orderID = createOrder.publicCreateOrder(orderType, amount, fxpPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('1', '4000'))
+
+    orderID = None
+    shareToken = contractsFixture.getShareToken(market, 0)
+
+    orderCreatedLog = {
+        'creator': bytesToHexString(tester.a1),
+        'shareToken': shareToken.address,
+        'tradeGroupId': stringToBytes("42"),
+    }
+
+    with AssertLog(contractsFixture, "OrderCreated", orderCreatedLog):
+        orderID = createOrder.publicCreateOrder(orderType, amount, fxpPrice, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('1', '4000'))
     assert orderID != bytearray(32), "Order ID should be non-zero"
 
     assert orders.getAmount(orderID) == amount
@@ -73,13 +82,6 @@ def test_publicCreateOrder_bid2(contractsFixture, cash, market, universe):
     assert cash.balanceOf(tester.a1) == 0
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == creatorInitialETH - long(4000 * 10**18)
     assert cash.balanceOf(market.address) - marketInitialCash == 4000 * 10**18
-    shareToken = contractsFixture.getShareToken(market, 0)
-    assert len(logs) == 1
-    assert logs[0]['_event_type'] == 'OrderCreated'
-    assert logs[0]['creator'] == bytesToHexString(tester.a1)
-    assert logs[0]['shareToken'] == shareToken.address
-    assert logs[0]['tradeGroupId'] == stringToBytes("42")
-    assert logs[0]['orderId'] == orderID
 
 def test_createOrder_failure(contractsFixture, universe, cash, market):
     orders = contractsFixture.contracts['Orders']
@@ -130,7 +132,6 @@ def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     completeSets = contractsFixture.contracts['CompleteSets']
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
-    logs = []
 
     # buy fix(2) complete sets
     assert completeSets.publicBuyCompleteSets(market.address, fix(2), sender = tester.k1, value= fix(2, market.getNumTicks()))
@@ -138,23 +139,18 @@ def test_ask_withPartialShares(contractsFixture, universe, cash, market):
     assert yesShareToken.balanceOf(tester.a1) == fix(2)
     assert noShareToken.balanceOf(tester.a1) == fix(2)
 
-    logs = []
-    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
+    orderID = None
 
-    # create ASK order for fix(3) shares with a mix of shares and cash
-    assert yesShareToken.approve(createOrder.address, fix('2'), sender = tester.k1)
-    orderID = createOrder.publicCreateOrder(ASK, fix(3), 4000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender=tester.k1, value=fix('6000'))
+    orderCreatedLog = {
+        'creator': bytesToHexString(tester.a1),
+        'shareToken': yesShareToken.address,
+        'tradeGroupId': stringToBytes("42"),
+    }
+    with AssertLog(contractsFixture, "OrderCreated", orderCreatedLog):
+        orderID = createOrder.publicCreateOrder(ASK, fix(3), 4000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender=tester.k1, value=fix('6000'))
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a1) == fix(2)
-
-    # Confirm create order logging works correctly
-    assert len(logs) == 2
-    assert logs[1]['_event_type'] == 'OrderCreated'
-    assert logs[1]['creator'] == bytesToHexString(tester.a1)
-    assert logs[1]['shareToken'] == yesShareToken.address
-    assert logs[1]['tradeGroupId'] == stringToBytes("42")
-    assert logs[1]['orderId'] == orderID
 
     # validate the order contains expected results
     assert orderID != bytearray(32), "Order ID should be non-zero"
