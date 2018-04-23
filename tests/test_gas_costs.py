@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs, PrintGasUsed, fix
+from utils import longTo32Bytes, PrintGasUsed, fix
 from constants import BID, ASK, YES, NO
 from datetime import timedelta
 from trading.test_claimTradingProceeds import acquireLongShares, finalizeMarket
@@ -48,7 +48,7 @@ def test_marketCreation(localFixture, universe, cash):
     numOutcomes = 2
 
     with PrintGasUsed(localFixture, "FeeWindow:createMarket", MARKET_CREATION):
-        marketAddress = universe.createBinaryMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "description", "", value = marketCreationFee, startgas=long(6.7 * 10**6))
+        marketAddress = universe.createBinaryMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "description", "", value = marketCreationFee)
 
 def test_marketFinalization(localFixture, universe, market):
     proceedToNextRound(localFixture, market)
@@ -110,7 +110,7 @@ def test_contribute(localFixture, universe, cash, market):
         proceedToNextRound(localFixture, market, randomPayoutNumerators = True)
 
     with PrintGasUsed(localFixture, "Market.contribute", FORKING_CONTRIBUTE):
-        market.contribute([market.getNumTicks() / 2, market.getNumTicks() / 2], False, market.getParticipantStake(), startgas=long(6.7 * 10**6))
+        market.contribute([market.getNumTicks() / 2, market.getNumTicks() / 2], False, market.getParticipantStake())
 
 def test_redeem(localFixture, universe, cash, market):
     # Initial report

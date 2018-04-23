@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, mark
-from utils import longTo32Bytes, fix, captureFilteredLogs
+from utils import longTo32Bytes, fix, AssertLog
 from constants import BID, ASK, YES, NO
 
 tester.STARTGAS = long(6.7 * 10**6)
@@ -183,18 +183,16 @@ def test_create_bid_with_shares_fill_with_shares(contractsFixture, cash, market,
     initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
     assert yesShareToken.approve(fillOrder.address, fix(12), sender = tester.k2)
 
-    logs = []
-    captureFilteredLogs(contractsFixture.chain.head_state, contractsFixture.contracts['Augur'], logs)
-    leftoverInOrder = fillOrder.publicFillOrder(orderID, fix(12), sender = tester.k2)
-
-    orderFilledLog = logs[5]
-    assert orderFilledLog['_event_type'] == 'OrderFilled'
-    assert orderFilledLog['marketCreatorFees'] == marketCreatorFee
-    assert orderFilledLog['reporterFees'] == reporterFee
+    orderFilledLog = {
+        'marketCreatorFees': marketCreatorFee,
+        'reporterFees': reporterFee,
+    }
+    with AssertLog(contractsFixture, 'OrderFilled', orderFilledLog):
+        leftoverInOrder = fillOrder.publicFillOrder(orderID, fix(12), sender = tester.k2)
+        assert leftoverInOrder == 0
 
     creatorFee = completeSetFees * 0.4
     fillerFee = completeSetFees * 0.6
-    assert leftoverInOrder == 0
     creatorPayment = fix('12', '4000') - long(creatorFee)
     fillerPayment = fix('12', '6000') - long(fillerFee)
     assert cash.balanceOf(tester.a1) == 0

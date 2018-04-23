@@ -5,7 +5,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, mark, raises
 from datetime import timedelta
-from utils import captureFilteredLogs, bytesToHexString, longToHexString, PrintGasUsed, TokenDelta, EtherDelta
+from utils import bytesToHexString, longToHexString, PrintGasUsed, TokenDelta, EtherDelta
 
 def proceedToDesignatedReporting(fixture, market):
     fixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
@@ -43,7 +43,7 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
         chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
         amount = 2 * market.getParticipantStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
         with PrintGasUsed(fixture, "Contribute:", 0):
-            market.contribute(chosenPayoutNumerators, False, amount, startgas=long(6.7 * 10**7), sender=contributor)
+            market.contribute(chosenPayoutNumerators, False, amount, sender=contributor)
         assert market.getForkingMarket() or market.getFeeWindow() != feeWindow
 
     if (doGenerateFees):

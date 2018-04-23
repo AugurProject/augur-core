@@ -100,15 +100,18 @@ class PrintGasUsed():
 
 class AssertLog():
 
-    def __init__(self, fixture, eventName, data, skip=0):
+    def __init__(self, fixture, eventName, data, skip=0, contract=None):
         self.fixture = fixture
         self.eventName = eventName
         self.data = data
         self.skip = skip
+        self.contract = contract
+        if not self.contract:
+            self.contract = fixture.contracts['Augur']
         self.logs = []
 
     def __enter__(self):
-        captureFilteredLogs(self.fixture.chain.head_state, self.fixture.contracts['Augur'], self.logs)
+        captureFilteredLogs(self.fixture.chain.head_state, self.contract, self.logs)
 
     def __exit__(self, *args):
         if args[1]:

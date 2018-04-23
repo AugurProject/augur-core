@@ -4,7 +4,7 @@ from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
-from utils import fix, captureFilteredLogs, bytesToHexString, EtherDelta, TokenDelta
+from utils import fix, AssertLog, bytesToHexString, EtherDelta, TokenDelta
 from constants import YES, NO
 
 
@@ -93,27 +93,25 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
     finalizeMarket(kitchenSinkFixture, market, [0,10**4])
 
-    logs = []
-    captureFilteredLogs(kitchenSinkFixture.chain.head_state, kitchenSinkFixture.contracts['Augur'], logs)
+    initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
+    initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
+
+    tradingProceedsClaimedLog = {
+        'market': market.address,
+        'shareToken': yesShareToken.address,
+        'numPayoutTokens': expectedPayout,
+        'numShares': 1,
+        'sender': bytesToHexString(tester.a1),
+        'finalTokenBalance': initialLongHolderETH + expectedPayout,
+    }
 
     with TokenDelta(cash, expectedMarketCreatorFees, market.getMarketCreatorMailbox(), "Market creator fees not paid"):
         with TokenDelta(cash, expectedReporterFees, universe.getOrCreateNextFeeWindow(), "Reporter fees not paid"):
             # redeem shares with a1
-            initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
-            claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
+            with AssertLog(kitchenSinkFixture, "TradingProceedsClaimed", tradingProceedsClaimedLog):
+                claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
             # redeem shares with a2
-            initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
             claimTradingProceeds.claimTradingProceeds(market.address, tester.a2)
-
-    # Confirm claim proceeds logging works correctly
-    assert len(logs) == 6
-    assert logs[3]['_event_type'] == 'TradingProceedsClaimed'
-    assert logs[3]['market'] == market.address
-    assert logs[3]['shareToken'] == yesShareToken.address
-    assert logs[3]['numPayoutTokens'] == expectedPayout
-    assert logs[3]['numShares'] == 1
-    assert logs[3]['sender'] == bytesToHexString(tester.a1)
-    assert logs[3]['finalTokenBalance'] == initialLongHolderETH + expectedPayout
 
     # assert a1 ends up with cash (minus fees) and a2 does not
     assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout

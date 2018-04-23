@@ -1,7 +1,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
-from utils import longTo32Bytes, captureFilteredLogs, EtherDelta, TokenDelta, AssertLog
+from utils import longTo32Bytes, EtherDelta, TokenDelta, AssertLog
 from reporting_utils import proceedToNextRound
 
 def test_market_escape_hatch_all_fees(localFixture, controller, market, reputationToken):

@@ -46,6 +46,11 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage.json
+coverageEnv
+coverage
+allFiredEvents
+scTopics
 
 # Translations
 *.mo

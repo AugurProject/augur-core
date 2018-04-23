@@ -76,6 +76,18 @@ pytest path/to/test_file.py -k 'name_of_test'
 
 When writing tests, it is highly recommended to make use of the ContractFixtures class for "placeholder" variables. Python's unit testing framework comes handy here; encapsulate tests within functions that start with "test\_", and use `assert` statements when testing for certain values. Parameterized tests are recommended as well to test various possibilities and edge cases.
 
+## Coverage Report
+
+To generate a coverage report simply run the command:
+
+```
+node --max-old-space-size=12288 source/tools/generateCoverageReport.js
+```
+
+The results will be displayed on the command line and a much richer HTML output will be generated in the `coverage` folder of the project.
+
+Make sure you actually have enough memory to run the command above. The coverage tool being used will pull a massive file into memory to generate the report and will fail with an OOM exception if not enough is available. Since tests take about 40 minutes to run with coverage enabled this will be a sad event.
+
 ## Docker
 
 augur-core can optionally be built, run, and tested using Docker.  A number of Docker commands are included as npm scripts, which map to the non-Dockerized versions where this makes sense. Docker commands beginning with `docker:run` execute the command within the Docker image. Docker commands without `run` (e.g. `docker:test`) first build the image, then execute `docker:run:<command>`.

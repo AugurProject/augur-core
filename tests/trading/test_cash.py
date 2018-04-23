@@ -58,8 +58,6 @@ def test_transfer(contractsFixture, cash):
     startingBalance0 = cash.balanceOf(tester.a0)
     startingBalance1 = cash.balanceOf(tester.a1)
     startingSupply = cash.totalSupply()
-    logs = []
-    contractsFixture.chain.head_state.log_listeners.append(lambda x: logs.append(cash.translator.listen(x)))
 
     assert cash.transfer(tester.a0, 5, sender = tester.k0)
     assert cash.transfer(tester.a1, 5, sender = tester.k0)
@@ -69,12 +67,6 @@ def test_transfer(contractsFixture, cash):
     assert startingBalance0 - 7 == cash.balanceOf(tester.a0)
     assert startingBalance1 + 7 == cash.balanceOf(tester.a1)
     assert startingSupply == cash.totalSupply()
-    assert logs == [
-        { "_event_type": "Transfer", "from": '0x'+tester.a0.encode("hex"), "to": '0x'+tester.a0.encode("hex"), "value": 5L },
-        { "_event_type": "Transfer", "from": '0x'+tester.a0.encode("hex"), "to": '0x'+tester.a1.encode("hex"), "value": 5L },
-        { "_event_type": "Transfer", "from": '0x'+tester.a0.encode("hex"), "to": '0x'+tester.a1.encode("hex"), "value": 2L },
-        { "_event_type": "Transfer", "from": '0x'+tester.a0.encode("hex"), "to": '0x'+tester.a1.encode("hex"), "value": 0L },
-    ]
 
 def test_transfer_failures(contractsFixture, cash):
     cash.depositEther(value = 7, sender = tester.k0)
@@ -86,18 +78,11 @@ def test_transfer_failures(contractsFixture, cash):
 
 def test_approve(contractsFixture, cash):
     cash.depositEther(value = 7, sender = tester.k0)
-    logs = []
-    contractsFixture.chain.head_state.log_listeners.append(lambda x: logs.append(cash.translator.listen(x)))
 
     assert cash.approve(tester.a1, 10, sender = tester.k0)
     assert 10 == cash.allowance(tester.a0, tester.a1)
     assert cash.approve(tester.a1, 2**256 - 1, sender = tester.k0)
     assert 2**256 - 1 == cash.allowance(tester.a0, tester.a1)
-
-    assert logs == [
-        { "_event_type": "Approval", "owner": '0x'+tester.a0.encode("hex"), "spender": '0x'+tester.a1.encode("hex"), "value": 10L },
-        { "_event_type": "Approval", "owner": '0x'+tester.a0.encode("hex"), "spender": '0x'+tester.a1.encode("hex"), "value": 2**256L-1L }
-    ]
 
 def test_transferFrom(contractsFixture, cash):
     cash.depositEther(value = 7, sender = tester.k0)
@@ -105,15 +90,12 @@ def test_transferFrom(contractsFixture, cash):
     startingBalance0 = cash.balanceOf(tester.a0)
     startingBalance1 = cash.balanceOf(tester.a1)
     startingSupply = cash.totalSupply()
-    logs = []
-    contractsFixture.chain.head_state.log_listeners.append(lambda x: logs.append(cash.translator.listen(x)))
 
     assert cash.transferFrom(tester.a0, tester.a2, 5, sender = tester.k1)
 
     assert startingBalance0 - 5 == cash.balanceOf(tester.a0)
     assert startingBalance1 + 5 == cash.balanceOf(tester.a2)
     assert startingSupply == cash.totalSupply()
-    assert logs == [ { "_event_type": "Transfer", "from": '0x'+tester.a0.encode("hex"), "to": '0x'+tester.a2.encode("hex"), "value": 5 } ]
 
 def test_transferFrom_failures(contractsFixture, cash):
     cash.depositEther(value = 7, sender = tester.k0)
