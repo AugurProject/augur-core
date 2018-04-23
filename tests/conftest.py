@@ -18,8 +18,6 @@ from solc import compile_standard
 from utils import bytesToHexString, bytesToLong, longToHexString, stringToBytes, garbageBytes20, garbageBytes32, twentyZeros, thirtyTwoZeros
 from copy import deepcopy
 
-from ethereum.slogging import get_logger
-
 # Make TXs free.
 ethereum.opcodes.GCONTRACTBYTE = 0
 ethereum.opcodes.GTXDATAZERO = 0

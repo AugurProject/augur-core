@@ -2,7 +2,7 @@ from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
-from utils import stringToBytes, AssertLog, bytesToHexString, AssertLog
+from utils import stringToBytes, AssertLog, bytesToHexString
 
 tester.STARTGAS = long(6.7 * 10**6)
 

@@ -3,7 +3,6 @@
 // NOTE: Make sure to run with --max-old-space-size=12288. We're loading a massive file into memory during report generation
 
 const App = require('solidity-coverage/lib/app.js');
-const reqCwd = require('req-cwd');
 const death = require('death');
 const { execSync } = require('child_process');
 const copydir = require('copy-dir');
