@@ -313,10 +313,18 @@ def test_forking(localFixture, universe, market, categoricalMarket, cash, reputa
         testerIndex = testerIndex % len(testers)
 
     # Have the participants fork and create new child universes
-    for i in range(market.getNumParticipants()):
+    reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(0))
+    ReportingParticipantDisavowedLog = {
+        "universe": universe.address,
+        "market": market.address,
+        "reportingParticipant": reportingParticipant.address,
+    }
+    with AssertLog(localFixture, "ReportingParticipantDisavowed", ReportingParticipantDisavowedLog):
+        reportingParticipant.fork()
+
+    for i in range(1, market.getNumParticipants()):
         reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
-        with PrintGasUsed(localFixture, "Fork:", 0):
-            reportingParticipant.fork()
+        reportingParticipant.fork()
 
     # Finalize the fork
     finalizeFork(localFixture, market, universe)

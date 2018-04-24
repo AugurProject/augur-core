@@ -32,6 +32,8 @@ contract Augur is Controlled, IAugur {
     event DisputeCrowdsourcerCompleted(address indexed universe, address indexed market, address disputeCrowdsourcer);
     event InitialReporterRedeemed(address indexed universe, address indexed reporter, address indexed market, uint256 amountRedeemed, uint256 repReceived, uint256 reportingFeesReceived, uint256[] payoutNumerators);
     event DisputeCrowdsourcerRedeemed(address indexed universe, address indexed reporter, address indexed market, address disputeCrowdsourcer, uint256 amountRedeemed, uint256 repReceived, uint256 reportingFeesReceived, uint256[] payoutNumerators);
+    event ReportingParticipantDisavowed(address indexed universe, address indexed market, address reportingParticipant);
+    event MarketParticipantsDisavowed(address indexed universe, address indexed market);
     event FeeWindowRedeemed(address indexed universe, address indexed reporter, address indexed feeWindow, uint256 amountRedeemed, uint256 reportingFeesReceived);
     event MarketFinalized(address indexed universe, address indexed market);
     event MarketMigrated(address indexed market, address indexed originalUniverse, address indexed newUniverse);
@@ -149,6 +151,21 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         DisputeCrowdsourcerRedeemed(_universe, _reporter, _market, msg.sender, _amountRedeemed, _repReceived, _reportingFeesReceived, _payoutNumerators);
+        return true;
+    }
+
+    function logReportingParticipantDisavowed(IUniverse _universe, IMarket _market) public returns (bool) {
+        require(isKnownUniverse(_universe));
+        require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
+        ReportingParticipantDisavowed(_universe, _market, msg.sender);
+        return true;
+    }
+
+    function logMarketParticipantsDisavowed(IUniverse _universe) public returns (bool) {
+        require(isKnownUniverse(_universe));
+        IMarket _market = IMarket(msg.sender);
+        require(_universe.isContainerForMarket(_market));
+        MarketParticipantsDisavowed(_universe, _market);
         return true;
     }
 

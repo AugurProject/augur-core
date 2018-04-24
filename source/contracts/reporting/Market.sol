@@ -309,6 +309,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         delete participants;
         participants.push(_initialParticipant);
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
+        controller.getAugur().logMarketParticipantsDisavowed(universe);
         return true;
     }
 

@@ -51,6 +51,14 @@ contract MockAugur is Controlled {
         return true;
     }
 
+    function logReportingParticipantDisavowed(IUniverse _universe, IMarket _market) public returns (bool) {
+        return true;
+    }
+
+    function logMarketParticipantsDisavowed(IUniverse _universe) public returns (bool) {
+        return true;
+    }
+
     function logInitialReporterRedeemed(IUniverse _universe, address _reporter, address _market, uint256 _amountRedeemed, uint256 _repReceived, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
         return true;
     }
