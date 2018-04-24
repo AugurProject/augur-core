@@ -42,6 +42,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         reputationToken.migrateOut(_newReputationToken, _balance);
         _newReputationToken.mintForReportingParticipant(_balance);
         reputationToken = _newReputationToken;
+        controller.getAugur().logReportingParticipantDisavowed(market.getUniverse(), market);
         market = IMarket(0);
         return true;
     }

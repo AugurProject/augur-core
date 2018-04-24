@@ -190,7 +190,12 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
     categoricalDisputeCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", categoricalMarket.getReportingParticipant(1))
 
     if manuallyDisavow:
-        assert categoricalMarket.disavowCrowdsourcers()
+        marketParticipantsDisavowedLog = {
+            "universe": universe.address,
+            "market": categoricalMarket.address,
+        }
+        with AssertLog(localFixture, "MarketParticipantsDisavowed", marketParticipantsDisavowedLog):
+            assert categoricalMarket.disavowCrowdsourcers()
         # We can redeem before the fork finalizes since disavowal has occured
         assert categoricalDisputeCrowdsourcer.redeem(tester.a0)
 
