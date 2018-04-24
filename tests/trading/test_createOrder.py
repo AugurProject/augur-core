@@ -48,6 +48,31 @@ def test_publicCreateOrder_ask(contractsFixture, cash, market):
     assert orders.getWorseOrderId(orderID) == bytearray(32)
     assert cash.balanceOf(market.address) == fix(1, 6000)
 
+def test_publicCreateOrder_List_Logic(contractsFixture, cash, market):
+    orders = contractsFixture.contracts['Orders']
+    createOrder = contractsFixture.contracts['CreateOrder']
+
+    orderID_10 = createOrder.publicCreateOrder(BID, fix(1), 4010, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), "1", value = fix(1, 4010))
+    orderID_8 = createOrder.publicCreateOrder(BID, fix(1), 4008, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), "2", value = fix(1, 4008))
+    orderID_6 = createOrder.publicCreateOrder(BID, fix(1), 4006, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), "3", value = fix(1, 4006))
+    orderID_2 = createOrder.publicCreateOrder(BID, fix(1), 4002, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), "4", value = fix(1, 4002))
+    orderID_1 = createOrder.publicCreateOrder(BID, fix(1), 4001, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), "5", value = fix(1, 4001))
+
+    orderID_7 = createOrder.publicCreateOrder(BID, fix(1), 4007, market.address, 1, orderID_10, orderID_1, "6", value = fix(1, 4007))
+    assert orderID_7
+    assert orders.getBetterOrderId(orderID_7) == orderID_8
+    assert orders.getWorseOrderId(orderID_7) == orderID_6
+
+    orderID_5 = createOrder.publicCreateOrder(BID, fix(1), 4005, market.address, 1, orderID_6, orderID_1, "7", value = fix(1, 4005))
+    assert orderID_5
+    assert orders.getBetterOrderId(orderID_5) == orderID_6
+    assert orders.getWorseOrderId(orderID_5) == orderID_2
+
+    orderID_3 = createOrder.publicCreateOrder(BID, fix(1), 4003, market.address, 1, orderID_5, orderID_2, "8", value = fix(1, 4003))
+    assert orderID_3
+    assert orders.getBetterOrderId(orderID_3) == orderID_5
+    assert orders.getWorseOrderId(orderID_3) == orderID_2
+
 def test_publicCreateOrder_bid2(contractsFixture, cash, market, universe):
     orders = contractsFixture.contracts['Orders']
     createOrder = contractsFixture.contracts['CreateOrder']
