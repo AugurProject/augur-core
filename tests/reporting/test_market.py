@@ -26,7 +26,7 @@ def test_market_creation(contractsFixture, universe, cash, market):
     assert market.getWinningPayoutDistributionHash() == stringToBytes("")
     assert market.getInitialized()
 
-    with raises(TransactionFailed, message="Cannot create a market with an edn date in the past"):
+    with raises(TransactionFailed, message="Cannot create a market with an end date in the past"):
         contractsFixture.createBinaryMarket(universe, 0, 1, cash, tester.a0)
 
 def test_description_requirement(contractsFixture, universe, cash):
