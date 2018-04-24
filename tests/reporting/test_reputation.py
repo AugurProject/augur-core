@@ -47,9 +47,19 @@ def test_legacy_migration(augurInitializedFixture):
     universe = augurInitializedFixture.createUniverse()
     reputationToken = augurInitializedFixture.applySignature("ReputationToken", universe.getReputationToken())
 
+    assert reputationToken.getTargetSupply() == 11 * 10**6 * 10**18
+
     # We'll only partially migrate right now
     reputationToken.migrateBalancesFromLegacyRep([tester.a1])
     assert reputationToken.balanceOf(tester.a1) == 100
+
+    # Doing again is a noop
+    reputationToken.migrateBalancesFromLegacyRep([tester.a1])
+    assert reputationToken.balanceOf(tester.a1) == 100
+
+    # Doing with an account which has no legacy REP is a noop
+    reputationToken.migrateBalancesFromLegacyRep([tester.a6])
+    assert reputationToken.balanceOf(tester.a6) == 0
 
     # Since the migration has not completed we can't transfer or do normal token actions
     assert reputationToken.getIsMigratingFromLegacy()

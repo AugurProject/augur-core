@@ -77,6 +77,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
         return _bestFxpAmount;
     }
 
+    // COVERAGE: This is not covered and cannot be. We need to use a different minimum gas while running coverage since the additional logging make the cost rise a great deal
     function getMinGasNeeded() internal pure returns (uint256) {
         return MINIMUM_GAS_NEEDED;
     }

@@ -210,10 +210,6 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
         return controller.getTimestamp() >= getEndTime();
     }
 
-    function isForkingMarketFinalized() public afterInitialized view returns (bool) {
-        return universe.getForkingMarket().isFinalized();
-    }
-
     function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
         controller.getAugur().logFeeWindowTransferred(universe, _from, _to, _value);
         return true;

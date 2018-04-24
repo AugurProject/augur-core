@@ -72,7 +72,7 @@ def test_initialReportHappyPath(reportByDesignatedReporter, localFixture, univer
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.finalize()
 
-def test_initialReport_transfer_ownership(localFixture, universe, market, cash, constants):
+def test_initialReport_methods(localFixture, universe, market, cash, constants):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
 
     # proceed to the initial reporting period
@@ -104,8 +104,21 @@ def test_initialReport_transfer_ownership(localFixture, universe, market, cash, 
     with AssertLog(localFixture, "InitialReporterTransferred", transferLog):
         assert initialReporter.transferOwnership(initialReporter.getDesignatedReporter(), sender=tester.k1)
 
+    # Transfering to the owner is a noop
+    assert initialReporter.transferOwnership(initialReporter.getDesignatedReporter())
+
     # The market still correctly indicates the designated reporter did not show up
     assert not market.designatedReporterShowed()
+
+    # confirm we cannot call protected methods on the initial reporter which only the market may use
+    with raises(TransactionFailed):
+        initialReporter.report(tester.a0, "", [], False)
+
+    with raises(TransactionFailed):
+        initialReporter.resetReportTimestamp()
+
+    with raises(TransactionFailed):
+        initialReporter.migrateREP()
 
     # When we redeem the initialReporter it goes to the correct party as well
     expectedRep = initialReporter.getStake()
@@ -171,7 +184,7 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
     (True, False),
     (False, False),
 ])
-def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, market, categoricalMarket, scalarMarket):
+def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, cash, market, categoricalMarket, scalarMarket):
     # Let's go into the one dispute round for the categorical market
     proceedToNextRound(localFixture, categoricalMarket)
     proceedToNextRound(localFixture, categoricalMarket)
@@ -179,8 +192,15 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
     # proceed to forking
     proceedToFork(localFixture, market, universe)
 
+    with raises(TransactionFailed):
+        universe.fork()
+
     with raises(TransactionFailed, message="We cannot migrate until the fork is finalized"):
         categoricalMarket.migrateThroughOneFork()
+
+    with raises(TransactionFailed, message="We cannot create markets during a fork"):
+        time = localFixture.contracts["Time"].getTimestamp()
+        localFixture.createBinaryMarket(universe, time + 1000, 1, cash, tester.a0)
 
     # confirm that we can manually create a child universe from an outcome no one asserted was true during dispute
     numTicks = market.getNumTicks()
@@ -188,6 +208,18 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, m
 
     # confirm that before the fork is finalized we can redeem stake in other markets crowdsourcers, which are disavowable
     categoricalDisputeCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", categoricalMarket.getReportingParticipant(1))
+
+    # confirm we cannot migrate it
+    with raises(TransactionFailed):
+        categoricalDisputeCrowdsourcer.migrate()
+
+    # confirm we cannot liquidate it
+    with raises(TransactionFailed):
+        categoricalDisputeCrowdsourcer.liquidateLosing()
+
+    # confirm we cannot fork it
+    with raises(TransactionFailed):
+        categoricalDisputeCrowdsourcer.fork()
 
     if manuallyDisavow:
         marketParticipantsDisavowedLog = {
@@ -443,6 +475,9 @@ def test_rep_migration_convenience_function(localFixture, universe, market):
 
     # We'll use the convenience function for migrating REP instead of manually creating a child universe
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
+
+    with raises(TransactionFailed):
+        reputationToken.migrateOutByPayout(payoutNumerators, False, 0)
 
     assert reputationToken.migrateOutByPayout(payoutNumerators, False, 10)
 

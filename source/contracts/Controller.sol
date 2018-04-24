@@ -26,11 +26,6 @@ contract Controller is IController {
     mapping(bytes32 => ContractDetails) public registry;
     bool public stopped = false;
 
-    modifier onlyWhitelistedCallers {
-        assertIsWhitelisted(msg.sender);
-        _;
-    }
-
     modifier onlyOwnerCaller {
         require(msg.sender == owner);
         _;
@@ -79,11 +74,6 @@ contract Controller is IController {
     function getContractDetails(bytes32 _key) public view returns (address, bytes20, bytes32) {
         ContractDetails storage _details = registry[_key];
         return (_details.contractAddress, _details.commitHash, _details.bytecodeHash);
-    }
-
-    function unregisterContract(bytes32 _key) public onlyOwnerCaller returns (bool) {
-        delete registry[_key];
-        return true;
     }
 
     function lookup(bytes32 _key) public view returns (address) {

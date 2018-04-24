@@ -297,10 +297,6 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         return setIsContainerForMarketValue;
     }
 
-    function isForkingMarketFinalized() public view returns (bool) {
-        return setIsForkingMarketFinalizedValue;
-    }
-
     function isDisputeActive() public view returns (bool) {
         return setIsDisputeActiveValue;
     }

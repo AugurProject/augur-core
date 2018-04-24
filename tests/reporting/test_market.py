@@ -24,6 +24,35 @@ def test_market_creation(contractsFixture, universe, cash, market):
     assert numTicks == 10000
     assert market.getReputationToken() == universe.getReputationToken()
     assert market.getWinningPayoutDistributionHash() == stringToBytes("")
+    assert market.getInitialized()
+
+    with raises(TransactionFailed, message="Cannot create a market with an end date in the past"):
+        contractsFixture.createBinaryMarket(universe, 0, 1, cash, tester.a0)
+
+def test_description_requirement(contractsFixture, universe, cash):
+    endTime = contractsFixture.contracts["Time"].getTimestamp() + 1
+
+    with raises(TransactionFailed):
+        contractsFixture.createBinaryMarket(universe, endTime, 1, cash, tester.a0, description="")
+
+    with raises(TransactionFailed):
+        contractsFixture.createCategoricalMarket(universe, 2, endTime, 1, cash, tester.a0, description="")
+
+    with raises(TransactionFailed):
+        contractsFixture.createScalarMarket(universe, endTime, 1, cash, 0, 1, 10000, tester.a0, description="")
+
+def test_categorical_market_creation(contractsFixture, universe, cash):
+    endTime = contractsFixture.contracts["Time"].getTimestamp() + 1
+
+    with raises(TransactionFailed):
+        contractsFixture.createCategoricalMarket(universe, 1, endTime, 1, cash, tester.a0)
+
+    assert contractsFixture.createCategoricalMarket(universe, 3, endTime, 1, cash, tester.a0)
+    assert contractsFixture.createCategoricalMarket(universe, 4, endTime, 1, cash, tester.a0)
+    assert contractsFixture.createCategoricalMarket(universe, 5, endTime, 1, cash, tester.a0)
+    assert contractsFixture.createCategoricalMarket(universe, 6, endTime, 1, cash, tester.a0)
+    assert contractsFixture.createCategoricalMarket(universe, 7, endTime, 1, cash, tester.a0)
+    assert contractsFixture.createCategoricalMarket(universe, 8, endTime, 1, cash, tester.a0)
 
 def test_num_ticks_validation(contractsFixture, universe, cash):
     # Require numTicks != 0

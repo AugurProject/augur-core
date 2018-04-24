@@ -196,14 +196,6 @@ library Trade {
     // Helpers
     //
 
-    function getLongShareBuyerSource(Data _data) internal pure returns (address) {
-        return (_data.creator.direction == Direction.Long) ? _data.contracts.market : _data.filler.participantAddress;
-    }
-
-    function getShortShareBuyerSource(Data _data) internal pure returns (address) {
-        return (_data.creator.direction == Direction.Short) ? _data.contracts.market : _data.filler.participantAddress;
-    }
-
     function getLongShareBuyerDestination(Data _data) internal pure returns (address) {
         return (_data.creator.direction == Direction.Long) ? _data.creator.participantAddress : _data.filler.participantAddress;
     }
@@ -338,12 +330,6 @@ library Trade {
         return (_numTicks, _orderPrice, _sharePriceShort);
     }
 
-    function getDirections(IOrders _orders, bytes32 _orderId) private view returns (Direction _creatorDirection, Direction _fillerDirection) {
-        return (_orders.getOrderType(_orderId) == Order.Types.Bid)
-            ? (Direction.Long, Direction.Short)
-            : (Direction.Short, Direction.Long);
-    }
-
     function getFillerSharesToSell(IShareToken _longShareToken, IShareToken[] memory _shortShareTokens, address _filler, Direction _fillerDirection, uint256 _fillerSize) private view returns (uint256) {
         uint256 _sharesAvailable = SafeMathUint256.getUint256Max();
         if (_fillerDirection == Direction.Short) {
@@ -358,21 +344,9 @@ library Trade {
 }
 
 
-library DirectionExtensions {
-    function toOrderType(Trade.Direction _direction) internal pure returns (Order.Types) {
-        if (_direction == Trade.Direction.Long) {
-            return Order.Types.Bid;
-        } else {
-            return Order.Types.Ask;
-        }
-    }
-}
-
-
 contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
     using SafeMathUint256 for uint256;
     using Trade for Trade.Data;
-    using DirectionExtensions for Trade.Direction;
 
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
     function publicFillOrder(bytes32 _orderId, uint256 _amountFillerWants, bytes32 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes returns (uint256) {

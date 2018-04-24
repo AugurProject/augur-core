@@ -1,6 +1,6 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from utils import longToHexString, stringToBytes, twentyZeros, thirtyTwoZeros
+from utils import longToHexString, stringToBytes, twentyZeros, thirtyTwoZeros, bytesToHexString
 from pytest import fixture, raises
 
 def test_universe_creation(localFixture, mockReputationToken, mockReputationTokenFactory, mockUniverse, mockUniverseFactory, mockAugur):
@@ -123,6 +123,8 @@ def test_universe_rep_price_oracle(localFixture, populatedUniverse, mockReputati
     assert populatedUniverse.getRepMarketCapInAttoeth() == 100
     mockReputationToken.setTotalSupply(12)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 1200
+    assert repPriceOracle.transferOwnership(tester.a1)
+    assert repPriceOracle.getOwner() == bytesToHexString(tester.a1)
 
 def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse, mockFeeWindow, mockFeeWindowFactory):
     timestamp = localFixture.contracts["Time"].getTimestamp()
@@ -225,6 +227,9 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
 
     # push fee window forward
     localFixture.contracts["Time"].incrementTimestamp(populatedUniverse.getDisputeRoundDurationInSeconds())
+
+    # check previousDivisor > 0 and getRepMarketCapInAttoeth == 0
+    assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue
 
     # _currentFeeDivisor > 0
     mockReputationToken.setTotalSupply(0)

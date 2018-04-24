@@ -34,6 +34,10 @@ def test_escapeHatch(contractsFixture, cash, market):
 
     # emergency stop and then have everyone liquidate their position
     controller.emergencyStop()
+
+    curTester1Balance = contractsFixture.chain.head_state.get_balance(tester.a1)
+    assert tradingEscapeHatch.getFrozenShareValueInMarket(market.address, sender = tester.k1) == initialTester1ETH - curTester1Balance
+
     assert tradingEscapeHatch.claimSharesInUpdate(market.address, sender = tester.k1)
     assert tradingEscapeHatch.claimSharesInUpdate(market.address, sender = tester.k2)
 

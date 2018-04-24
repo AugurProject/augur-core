@@ -3,15 +3,16 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
-from utils import AssertLog, bytesToHexString, garbageBytes20, garbageBytes32
+from utils import AssertLog, bytesToHexString, garbageBytes20, garbageBytes32, stringToBytes
 
 def test_init(contractsFixture, market):
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
 
-    # FIXME: enable after we fix Delegated contract string handling
-    # assert shareToken.name() == "Shares", "currency name"
+    assert shareToken.name() == "Shares", "currency name"
     assert shareToken.decimals() == 0, "number of decimals"
-    # assert shareToken.symbol() == "SHARE", "currency symbol"
+    assert shareToken.symbol() == "SHARE", "currency symbol"
+
+    assert shareToken.getTypeName() == stringToBytes("ShareToken")
 
 def test_createShares(contractsFixture, market):
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())

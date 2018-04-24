@@ -105,6 +105,9 @@ def test_failed_crowdsourcer_fees(finalize, localFixture, universe, market, cash
     # We'll have testers contribute to a dispute but not reach the target
     amount = market.getParticipantStake()
 
+    # confirm we can contribute 0
+    assert market.contribute([1, market.getNumTicks()-1], False, 0, sender=tester.k1)
+
     with TokenDelta(reputationToken, -amount + 1, tester.a1, "Disputing did not reduce REP balance correctly"):
         assert market.contribute([1, market.getNumTicks()-1], False, amount - 1, sender=tester.k1)
 
@@ -115,6 +118,10 @@ def test_failed_crowdsourcer_fees(finalize, localFixture, universe, market, cash
 
     payoutDistributionHash = market.derivePayoutDistributionHash([1, market.getNumTicks()-1], False)
     failedCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", market.getCrowdsourcer(payoutDistributionHash))
+
+    # confirm we cannot contribute directly to a crowdsourcer without going through the market
+    with raises(TransactionFailed):
+        failedCrowdsourcer.contribute(tester.a0, 1)
 
     if finalize:
         # Fast forward time until the fee window is over and we can redeem to recieve the REP back and fees

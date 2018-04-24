@@ -267,14 +267,6 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return getChildUniverse(_parentPayoutDistributionHash) == _shadyChild;
     }
 
-    function getOrCreateFeeWindowForForkEndTime() public returns (IFeeWindow) {
-        return getOrCreateFeeWindowByTimestamp(getForkEndTime());
-    }
-
-    function getFeeWindowForForkEndTime() public view returns (IFeeWindow) {
-        return getFeeWindowByTimestamp(getForkEndTime());
-    }
-
     function decrementOpenInterest(uint256 _amount) public onlyInGoodTimes onlyWhitelistedCallers returns (bool) {
         openInterestInAttoEth = openInterestInAttoEth.sub(_amount);
         return true;
@@ -303,10 +295,6 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     function getOrCacheValidityBond() public onlyInGoodTimes returns (uint256) {
         IFeeWindow _feeWindow = getOrCreateCurrentFeeWindow();
         IFeeWindow  _previousFeeWindow = getOrCreatePreviousFeeWindow();
-        // If the windows haven't been created yet return 0 to indicate this
-        if (_feeWindow == IFeeWindow(0) || _previousFeeWindow == IFeeWindow(0)) {
-            return 0;
-        }
         uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_feeWindow];
         if (_currentValidityBondInAttoeth != 0) {
             return _currentValidityBondInAttoeth;

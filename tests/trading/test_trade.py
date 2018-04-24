@@ -61,7 +61,11 @@ def test_one_bid_on_books_buy_full_order(contractsFixture, cash, market, univers
     assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
 
 
-def test_one_bid_on_books_buy_partial_order(contractsFixture, cash, market, universe):
+@mark.parametrize('useTrade', [
+    True,
+    False
+])
+def test_one_bid_on_books_buy_partial_order(useTrade, contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
@@ -72,7 +76,11 @@ def test_one_bid_on_books_buy_partial_order(contractsFixture, cash, market, univ
     orderID = createOrder.publicCreateOrder(BID, fix(2), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('2', '6000'))
 
     # fill best order
-    fillOrderID = trade.publicSell(market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('1', '4000'))
+    fillOrderID = None
+    if useTrade:
+        fillOrderID = trade.publicTrade(1, market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('1', '4000'))
+    else:
+        fillOrderID = trade.publicSell(market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('1', '4000'))
 
     assert orders.getAmount(orderID) == fix(1)
     assert orders.getPrice(orderID) == 6000
