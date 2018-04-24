@@ -26,7 +26,6 @@ contract IUniverse is ITyped {
     function getOrCreateFeeWindowByTimestamp(uint256 _timestamp) public returns (IFeeWindow);
     function getOrCreateCurrentFeeWindow() public returns (IFeeWindow);
     function getOrCreateNextFeeWindow() public returns (IFeeWindow);
-    function getOrCreateFeeWindowForForkEndTime() public returns (IFeeWindow);
     function getOpenInterestInAttoEth() public view returns (uint256);
     function getRepMarketCapInAttoeth() public view returns (uint256);
     function getTargetRepMarketCapInAttoeth() public view returns (uint256);

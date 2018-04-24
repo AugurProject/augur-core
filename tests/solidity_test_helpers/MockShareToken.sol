@@ -57,10 +57,6 @@ contract MockShareToken is DelegationTarget, ITyped, Initializable, MockVariable
         setOutcomeValue = _outcome;
     }
 
-    function setIsShareToken(bool _isShareToken) public {
-        setIsShareTokenValue = _isShareToken;
-    }
-
     function initialize(IMarket _market, uint256 _outcome) external beforeInitialized returns(bool) {
         endInitialization();
         initializeMarketValue = _market;
@@ -90,10 +86,6 @@ contract MockShareToken is DelegationTarget, ITyped, Initializable, MockVariable
 
     function getOutcome() external view returns(uint256) {
         return setOutcomeValue;
-    }
-
-    function isShareToken() public returns(bool) {
-        return setIsShareTokenValue;
     }
 
     function trustedOrderTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {

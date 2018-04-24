@@ -4,6 +4,7 @@ from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
+from utils import stringToBytes
 
 tester.GASPRICE = 0
 
@@ -11,6 +12,8 @@ def test_init(cash):
     assert cash.name() == 'Cash'
     assert cash.decimals() == 18
     assert cash.symbol() == 'CASH'
+
+    assert cash.getTypeName() == stringToBytes('Cash')
 
 def test_depositEther(contractsFixture, cash):
     startingUserEthBalance = contractsFixture.chain.head_state.get_balance(tester.a0)

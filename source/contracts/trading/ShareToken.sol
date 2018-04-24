@@ -59,10 +59,6 @@ contract ShareToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return outcome;
     }
 
-    function isShareToken() public pure returns(bool) {
-        return true;
-    }
-
     function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
         controller.getAugur().logShareTokensTransferred(market.getUniverse(), _from, _to, _value);
         return true;

@@ -420,9 +420,9 @@ class ContractsFixture:
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, maxPrice, minPrice, numTicks, designatedReporterAddress, sender=tester.k0):
+    def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, maxPrice, minPrice, numTicks, designatedReporterAddress, sender=tester.k0, description="description", extraInfo=""):
         marketCreationFee = universe.getOrCacheMarketCreationCost()
-        marketAddress = universe.createScalarMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, minPrice, maxPrice, numTicks, "", "description", "", value = marketCreationFee, sender=sender)
+        marketAddress = universe.createScalarMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, minPrice, maxPrice, numTicks, "", description, extraInfo, value = marketCreationFee, sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market

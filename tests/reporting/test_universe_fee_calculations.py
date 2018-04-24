@@ -92,6 +92,25 @@ def test_initial_reporter_gas_costs(numReports, gasPrice, reportingFixture, univ
     targetReporterGasCosts = universe.getOrCacheTargetReporterGasCosts()
     assert targetReporterGasCosts == expectedTargetReporterGasCost
 
+def test_reporter_fees(contractsFixture, universe, market):
+    defaultValue = 100
+    completeSets = contractsFixture.contracts['CompleteSets']
+
+    assert universe.getOrCacheReportingFeeDivisor() == defaultValue
+
+    # Generate OI
+    assert universe.getOpenInterestInAttoEth() == 0
+    cost = 10 * market.getNumTicks()
+    completeSets.publicBuyCompleteSets(market.address, 10, sender = tester.k1, value = cost)
+    assert universe.getOpenInterestInAttoEth() > 0
+
+    # Move fee window forward
+    feeWindow = contractsFixture.applySignature('FeeWindow', universe.getCurrentFeeWindow())
+    contractsFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+
+    assert universe.getOrCacheReportingFeeDivisor() != defaultValue
+
+
 @fixture(scope="session")
 def reportingSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)

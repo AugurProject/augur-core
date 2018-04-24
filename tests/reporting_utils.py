@@ -85,6 +85,10 @@ def finalizeFork(fixture, market, universe, finalizeByMigration = True):
     # A Tester moves some of their REP to the YES universe
     amount = 10 ** 6 * 10 ** 18
     bonus = amount / fixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
+
+    with raises(TransactionFailed):
+        reputationToken.migrateOut(yesUniverseReputationToken.address, 0)
+
     with TokenDelta(yesUniverseReputationToken, amount + bonus, tester.a0, "Yes REP token balance was no correct"):
         reputationToken.migrateOut(yesUniverseReputationToken.address, amount)
 

@@ -143,4 +143,6 @@ def test_approval_increments(testStandardTokenFixture):
     assert standardToken.allowance(tester.a1, tester.a0) == 101
     assert standardToken.decreaseApproval(tester.a0, 2, sender=tester.k1)
     assert standardToken.allowance(tester.a1, tester.a0) == 99
+    assert standardToken.decreaseApproval(tester.a0, 1000, sender=tester.k1)
+    assert standardToken.allowance(tester.a1, tester.a0) == 0
 

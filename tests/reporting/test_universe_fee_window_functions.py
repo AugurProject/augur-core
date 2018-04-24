@@ -46,6 +46,8 @@ def test_designated_report_stake(kitchenSinkFixture):
     stake = universe.getOrCacheDesignatedReportStake()
     assert stake > 0
 
+    assert universe.getInitialReportStakeSize() == stake
+
 def test_designated_report_no_show_bond(kitchenSinkFixture):
     universe = kitchenSinkFixture.createUniverse()
 

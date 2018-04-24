@@ -22,7 +22,7 @@ ADDRESS = longToHexString(1)
 
 def test_map(testerContractsFixture):
     mapTester = testerContractsFixture.contracts['MapHelper']
-    
+
     # Initially the map has no data
     assert mapTester.getCount() == 0
     assert mapTester.getValueOrZero(KEY1) == NULL_VALUE
@@ -33,6 +33,8 @@ def test_map(testerContractsFixture):
     # Add a value
     assert mapTester.add(KEY1, VALUE1)
 
+    assert not mapTester.add(KEY1, VALUE1)
+
     # Confirm the value is present
     assert mapTester.getCount() == 1
     assert mapTester.getValueOrZero(KEY1) == VALUE1
@@ -41,6 +43,8 @@ def test_map(testerContractsFixture):
 
     # Remove the value
     assert mapTester.remove(KEY1)
+
+    assert not mapTester.remove(KEY1)
 
     # Confirm the value is gone
     assert mapTester.getCount() == 0
