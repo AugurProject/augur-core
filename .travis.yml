@@ -18,6 +18,9 @@ script: docker pull $IMAGE_BUILD;
         npm run docker:run:test:integration:geth;
         elif [[ "$TESTS" == "integration:parity" ]]; then
         npm run docker:run:test:integration:parity;
+        elif [[ "$TESTS" == "security:mythril" ]]; then
+        npm run docker:run:test:security:mythril;
+        cat source/contracts/test-result.log;
         else
           npm run docker:run:test:unit -- $TESTS;
         fi
@@ -73,4 +76,4 @@ env:
     - TESTS="tests/unit"
     - TESTS="integration:geth"
     - TESTS="integration:parity"
-
+    - TESTS="security:mythril"
