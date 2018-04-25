@@ -20,7 +20,7 @@ script: docker pull $IMAGE_BUILD;
         npm run docker:run:test:integration:parity;
         elif [[ "$TESTS" == "security:mythril" ]]; then
         npm run docker:run:test:security:mythril;
-        cat source/contracts/test-result.log;
+        cat source/contracts/test-results.log;
         else
           npm run docker:run:test:unit -- $TESTS;
         fi
