@@ -159,3 +159,4 @@ There are no floating-point numbers in the EVM, only integers.  Therefore, Ether
 ### Worst-case-loss escrow for trades
 
 - [Some notes on worst-case-loss/value-at-risk](https://github.com/AugurProject/augur-core/blob/master/tests/wcl.txt)
+
