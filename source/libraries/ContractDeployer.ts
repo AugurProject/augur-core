@@ -268,11 +268,11 @@ Deploying to: ${networkConfiguration.networkName}
             throw new Error("Faucet call to Legacy REP failed");
         }
     }
-    private async resetTimeControlled(): Promise<boolean> {
+    private async resetTimeControlled(): Promise<void> {
       console.log('Resetting Timestamp for false time...');
       const time = new TimeControlled(this.connector, this.accountManager, this.getContract("TimeControlled").address, this.connector.gasPrice);
       const currentTimestamp = await time.getTimestamp_();
-      return time.setTimestamp_(currentTimestamp);
+      return time.setTimestamp(currentTimestamp);
     }
 
     private async createGenesisUniverse(): Promise<Universe> {
