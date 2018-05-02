@@ -191,6 +191,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         IUniverse _winningUniverse = universe.getWinningChildUniverse();
         winningPayoutDistributionHash = _winningUniverse.getParentPayoutDistributionHash();
         finalizationTime = controller.getTimestamp();
+        controller.getAugur().logMarketFinalized(universe);
         return true;
     }
 
