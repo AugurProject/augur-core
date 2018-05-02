@@ -242,7 +242,12 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
         feeWindow.buy(1)
 
     # finalize the fork
-    finalizeFork(localFixture, market, universe, finalizeByMigration)
+    marketFinalizedLog = {
+        "universe": universe.address,
+        "market": market.address,
+    }
+    with AssertLog(localFixture, "MarketFinalized", marketFinalizedLog):
+        finalizeFork(localFixture, market, universe, finalizeByMigration)
 
     # We cannot contribute to a crowdsourcer in a forked universe
     with raises(TransactionFailed):
