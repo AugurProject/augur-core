@@ -63,4 +63,8 @@ contract Map is DelegationTarget, Ownable, Initializable {
     function getCount() public view returns (uint256) {
         return count;
     }
+
+    function onTransferOwnership(address, address) internal returns (bool) {
+        return true;
+    }
 }

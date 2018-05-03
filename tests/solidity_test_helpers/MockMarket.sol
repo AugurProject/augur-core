@@ -394,4 +394,12 @@ contract MockMarket is IMarket {
     function finalize() public returns (bool) {
         return true;
     }
+
+    function onTransferOwnership(address, address) internal returns (bool) {
+        return true;
+    }
+
+    function getInitialReporterAddress() public view returns (address) {
+        return address(0);
+    }
 }

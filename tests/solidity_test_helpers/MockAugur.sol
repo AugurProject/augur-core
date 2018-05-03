@@ -203,4 +203,12 @@ contract MockAugur is Controlled {
     function logTimestampSet(uint256 _newTimestamp) public returns (bool) {
         return true;
     }
+
+    function logMarketTransferred(IUniverse _universe, address _from, address _to) public returns (bool) {
+        return true;
+    }
+
+    function logMarketMailboxTransferred(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool) {
+        return true;
+    }
 }

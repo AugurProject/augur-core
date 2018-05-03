@@ -58,3 +58,25 @@ def test_num_ticks_validation(contractsFixture, universe, cash):
     # Require numTicks != 0
     with raises(TransactionFailed):
        market = contractsFixture.createReasonableScalarMarket(universe, 30, -10, 0, cash)
+
+def test_transfering_ownership(contractsFixture, universe, market):
+
+    transferLog = {
+        "universe": universe.address,
+        "market": market.address,
+        "from": bytesToHexString(tester.a0),
+        "to": bytesToHexString(tester.a1),
+    }
+    with AssertLog(contractsFixture, "MarketTransferred", transferLog):
+        assert market.transferOwnership(tester.a1)
+
+    mailbox = contractsFixture.applySignature('Mailbox', market.getMarketCreatorMailbox())
+
+    transferLog = {
+        "universe": universe.address,
+        "market": market.address,
+        "from": bytesToHexString(tester.a0),
+        "to": bytesToHexString(tester.a1),
+    }
+    with AssertLog(contractsFixture, "MarketMailboxTransferred", transferLog):
+        assert mailbox.transferOwnership(tester.a1)

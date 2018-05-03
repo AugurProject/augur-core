@@ -119,11 +119,8 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         return payoutDistributionHash == market.getWinningPayoutDistributionHash();
     }
 
-    function transferOwnership(address _newOwner) public onlyOwner returns (bool) {
-        if (_newOwner != address(0)) {
-            controller.getAugur().logInitialReporterTransferred(market.getUniverse(), market, owner, _newOwner);
-            owner = _newOwner;
-        }
+    function onTransferOwnership(address _owner, address _newOwner) internal returns (bool) {
+        controller.getAugur().logInitialReporterTransferred(market.getUniverse(), market, owner, _newOwner);
         return true;
     }
 }

@@ -16,4 +16,8 @@ contract RepPriceOracle is Ownable, IRepPriceOracle {
     function getRepPriceInAttoEth() external view returns (uint256) {
         return repPriceInAttoEth;
     }
+
+    function onTransferOwnership(address, address) internal returns (bool) {
+        return true;
+    }
 }
