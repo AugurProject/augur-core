@@ -10,6 +10,8 @@ import 'reporting/IFeeWindow.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingParticipant.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';
+import 'reporting/IInitialReporter.sol';
+import 'reporting/IMailbox.sol';
 import 'trading/IShareToken.sol';
 import 'trading/Order.sol';
 
@@ -51,6 +53,8 @@ contract Augur is Controlled, IAugur {
     event TokensBurned(address indexed universe, address indexed token, address indexed target, uint256 amount, TokenType tokenType, address market);
     event FeeWindowCreated(address indexed universe, address feeWindow, uint256 startTime, uint256 endTime, uint256 id);
     event InitialReporterTransferred(address indexed universe, address indexed market, address from, address to);
+    event MarketTransferred(address indexed universe, address indexed market, address from, address to);
+    event MarketMailboxTransferred(address indexed universe, address indexed market, address indexed mailbox, address from, address to);
     event EscapeHatchChanged(bool isOn);
     event TimestampSet(uint256 newTimestamp);
 
@@ -353,7 +357,24 @@ contract Augur is Controlled, IAugur {
     function logInitialReporterTransferred(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(_market));
+        require(msg.sender == _market.getInitialReporterAddress());
         InitialReporterTransferred(_universe, _market, _from, _to);
+        return true;
+    }
+
+    function logMarketTransferred(IUniverse _universe, address _from, address _to) public returns (bool) {
+        require(isKnownUniverse(_universe));
+        IMarket _market = IMarket(msg.sender);
+        require(_universe.isContainerForMarket(_market));
+        MarketTransferred(_universe, _market, _from, _to);
+        return true;
+    }
+
+    function logMarketMailboxTransferred(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool) {
+        require(isKnownUniverse(_universe));
+        require(_universe.isContainerForMarket(_market));
+        require(IMailbox(msg.sender) == _market.getMarketCreatorMailbox());
+        MarketMailboxTransferred(_universe, _market, msg.sender, _from, _to);
         return true;
     }
 

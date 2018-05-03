@@ -78,7 +78,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         cash = _cash;
         InitialReporterFactory _initialReporterFactory = InitialReporterFactory(controller.lookup("InitialReporterFactory"));
         participants.push(_initialReporterFactory.createInitialReporter(controller, this, _designatedReporterAddress));
-        marketCreatorMailbox = MailboxFactory(controller.lookup("MailboxFactory")).createMailbox(controller, owner);
+        marketCreatorMailbox = MailboxFactory(controller.lookup("MailboxFactory")).createMailbox(controller, owner, this);
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         for (uint256 _outcome = 0; _outcome < numOutcomes; _outcome++) {
             shareTokens.push(createShareToken(_outcome));
@@ -390,6 +390,10 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return IInitialReporter(participants[0]);
     }
 
+    function getInitialReporterAddress() public view returns (address) {
+        return address(participants[0]);
+    }
+
     function getReportingParticipant(uint256 _index) public view returns (IReportingParticipant) {
         return participants[_index];
     }
@@ -476,6 +480,11 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             }
         }
         return false;
+    }
+
+    function onTransferOwnership(address _owner, address _newOwner) internal returns (bool) {
+        controller.getAugur().logMarketTransferred(getUniverse(), _owner, _newOwner);
+        return true;
     }
 
     function assertBalances() public view returns (bool) {

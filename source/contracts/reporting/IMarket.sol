@@ -10,6 +10,7 @@ import 'reporting/IFeeWindow.sol';
 import 'trading/IShareToken.sol';
 import 'reporting/IReportingParticipant.sol';
 import 'reporting/IReputationToken.sol';
+//import 'reporting/IInitialReporter.sol';
 import 'reporting/IMailbox.sol';
 
 
@@ -36,6 +37,7 @@ contract IMarket is ITyped, IOwnable {
     function getWinningPayoutNumerator(uint256 _outcome) public view returns (uint256);
     function getReputationToken() public view returns (IReputationToken);
     function getFinalizationTime() public view returns (uint256);
+    function getInitialReporterAddress() public view returns (address);
     function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool);
     function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool);
     function isInvalid() public view returns (bool);
