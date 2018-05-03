@@ -120,7 +120,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
     }
 
     function onTransferOwnership(address _owner, address _newOwner) internal returns (bool) {
-        controller.getAugur().logInitialReporterTransferred(market.getUniverse(), market, owner, _newOwner);
+        controller.getAugur().logInitialReporterTransferred(market.getUniverse(), market, _owner, _newOwner);
         return true;
     }
 }

@@ -483,7 +483,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function onTransferOwnership(address _owner, address _newOwner) internal returns (bool) {
-        controller.getAugur().logMarketTransferred(getUniverse(), owner, _newOwner);
+        controller.getAugur().logMarketTransferred(getUniverse(), _owner, _newOwner);
         return true;
     }
 

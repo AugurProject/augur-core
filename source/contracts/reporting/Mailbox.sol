@@ -45,7 +45,7 @@ contract Mailbox is DelegationTarget, Ownable, Initializable, IMailbox {
     }
 
     function onTransferOwnership(address _owner, address _newOwner) internal returns (bool) {
-        controller.getAugur().logMarketMailboxTransferred(market.getUniverse(), market, owner, _newOwner);
+        controller.getAugur().logMarketMailboxTransferred(market.getUniverse(), market, _owner, _newOwner);
         return true;
     }
 }
