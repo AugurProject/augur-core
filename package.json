@@ -42,6 +42,7 @@
     "docker:run:test:integration:geth": "docker-compose -f ./source/support/test/integration/docker-compose-parity.yml up --abort-on-container-exit --force-recreate",
     "docker:run:test:integration:parity": "docker-compose -f ./source/support/test/integration/docker-compose-geth.yml up --abort-on-container-exit --force-recreate",
     "docker:run:test:security:mythril": "docker run -v `pwd`:/augur-core --workdir /augur-core/source/contracts cryptomental/augur-mythril-ci python /scripts/processor.py",
+    "docker:run:test:security:maian": "docker-compose -f ./source/support/test/integration/docker-compose-geth.yml up --abort-on-container-exit --force-recreate && docker cp integration_geth-integration-tests_1:/app/output/contracts/ contracts/ && docker run -v `pwd`/contracts:/app/output/contracts/ cryptomental/maian-augur-ci python /scripts/test_runner.py",
     "docker:run:test": "npm run docker:run:test:unit:all && npm run docker:run:test:integration",
     "docker:run:deploy:net": "bash support/deploy/run.sh docker",
     "docker:run:deploy:rinkeby": "npm run docker:run:deploy:net -- rinkeby",
