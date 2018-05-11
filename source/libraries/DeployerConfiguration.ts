@@ -31,6 +31,7 @@ export class DeployerConfiguration {
         const controllerAddress = process.env.AUGUR_CONTROLLER_ADDRESS;
         const createGenesisUniverse = (typeof process.env.CREATE_GENESIS_UNIVERSE === 'undefined') ? true : process.env.CREATE_GENESIS_UNIVERSE === 'true';
         const useNormalTime = (typeof process.env.USE_NORMAL_TIME === 'string') ? process.env.USE_NORMAL_TIME === 'true' : true;
+        isProduction = (typeof process.env.IS_PRODUCTION === 'string') ? process.env.IS_PRODUCTION === 'true' : isProduction;
 
         return new DeployerConfiguration(contractInputRoot, artifactOutputRoot, controllerAddress, createGenesisUniverse, isProduction, useNormalTime, legacyRepAddress);
     }
@@ -40,6 +41,7 @@ export class DeployerConfiguration {
         const controllerAddress = process.env.AUGUR_CONTROLLER_ADDRESS;
         const createGenesisUniverse = (typeof process.env.CREATE_GENESIS_UNIVERSE === 'undefined') ? true : process.env.CREATE_GENESIS_UNIVERSE === 'true';
         const useNormalTime = false;
+        isProduction = (typeof process.env.IS_PRODUCTION === 'string') ? process.env.IS_PRODUCTION === 'true' : isProduction;
 
         return new DeployerConfiguration(contractInputRoot, artifactOutputRoot, controllerAddress, createGenesisUniverse, isProduction, useNormalTime, legacyRepAddress);
     }
