@@ -54,11 +54,19 @@ Deploying to: ${networkConfiguration.networkName}
         this.controller = await this.uploadController();
         await this.uploadAugur();
         await this.uploadAllContracts();
+
+        if (this.configuration.isProduction) {
+            console.log(`Registering Legacy Rep Contract at ${this.configuration.legacyRepAddress}`);
+            await this.controller.registerContract(stringTo32ByteHex("LegacyReputationToken"), this.configuration.legacyRepAddress, stringTo32ByteHex(""), stringTo32ByteHex(""));
+            const contract = await this.contracts.get("LegacyReputationToken");
+            contract.address = this.configuration.legacyRepAddress;
+        }
+
         await this.initializeAllContracts();
         await this.whitelistTradingContracts();
 
         if (!this.configuration.useNormalTime) {
-          await this.resetTimeControlled();
+            await this.resetTimeControlled();
         }
 
         if(this.configuration.createGenesisUniverse) {
@@ -129,6 +137,12 @@ Deploying to: ${networkConfiguration.networkName}
         return controller;
     }
 
+    public async uploadLegacyRep(): Promise<string> {
+        const contract = await this.contracts.get("LegacyReputationToken");
+        contract.address = await this.construct(contract, [], `Uploading LegacyReputationToken`);
+        return contract.address;
+    }
+
     private async uploadAugur(): Promise<void> {
         // We have to upload and initialize Augur first so it can log the registration and whitelisting of other contracts
         const contract = await this.contracts.get("Augur");
@@ -161,6 +175,7 @@ Deploying to: ${networkConfiguration.networkName}
         if (contractName === 'Time') contract = this.configuration.useNormalTime ? contract : this.contracts.get('TimeControlled');
         if (contractName === 'ReputationToken') contract = this.configuration.isProduction ? contract : this.contracts.get('TestNetReputationToken');
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
+        if (this.configuration.isProduction && contractName === 'LegacyReputationToken') return;
         if (contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) return;
         // Check to see if we have already uploded this version of the contract
         if (typeof this.configuration.controllerAddress !== "undefined" && await this.shouldSkipUploadingContract(contract, contractsToDelegate[contractName])) {
@@ -260,7 +275,7 @@ Deploying to: ${networkConfiguration.networkName}
         await this.getContract(contractName).setController(this.controller.address);
     }
 
-    private async initializeLegacyRep(): Promise<void> {
+    public async initializeLegacyRep(): Promise<void> {
         const legacyReputationToken = new LegacyReputationToken(this.connector, this.accountManager, this.getContract('LegacyReputationToken').address, this.connector.gasPrice);
         await legacyReputationToken.faucet(new BN(10).pow(new BN(18)).mul(new BN(11000000)));
         const legacyBalance = await legacyReputationToken.balanceOf_(this.accountManager.defaultAddress);
