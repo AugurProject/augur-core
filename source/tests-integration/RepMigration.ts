@@ -1,5 +1,3 @@
-// Create market, make a trade on it, designated reporter reports, market is finalized, traders settle shares, reporters redeem tokens.
-
 import BN = require('bn.js');
 import { expect } from "chai";
 import { TestFixture } from './TestFixture';
@@ -27,7 +25,7 @@ describe("RepMigration", () => {
         };
 
         // Before we run the migration which will freeze legacy REP lets create some balances and approvals
-        for (var i = 0; i < 5; i++) {
+        for (let i = 0; i < 5; i++) {
             const amount = new BN(i + 1);
             const address = `0x000000000000000000000000000000000000000${i}`;
 
@@ -54,7 +52,7 @@ describe("RepMigration", () => {
         repLocked = await fixture.isRepMigratingFromLegacy();
         expect(repLocked).to.be.false;
 
-        for (var i = 0; i < 5; i++) {
+        for (let i = 0; i < 5; i++) {
             const amount = new BN(i + 1);
             const address = `0x000000000000000000000000000000000000000${i}`;
 
