@@ -69,6 +69,7 @@
     "@types/mkdirp": "0.5.1",
     "@types/mocha": "2.2.43",
     "@types/node": "9.6.7",
+    "@types/yargs": "11.0.0",
     "async-file": "2.0.2",
     "async-mkdirp": "1.2.0",
     "binascii": "0.0.1",
@@ -92,7 +93,8 @@
     "solidity-coverage": "0.4.15",
     "copy-dir": "0.3.0",
     "rimraf": "2.6.2",
-    "replace": "0.3.0"
+    "replace": "0.3.0",
+    "yargs": "11.0.0"
   },
   "devDependencies": {
     "solc": "0.4.20",
