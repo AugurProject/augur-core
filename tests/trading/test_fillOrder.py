@@ -30,6 +30,7 @@ def test_publicFillOrder_bid(contractsFixture, cash, market, universe):
         "reporterFees": 0,
         "shareToken": market.getShareToken(YES),
         "tradeGroupId": stringToBytes("42"),
+        "amountFilled": fix(2),
     }
     with AssertLog(contractsFixture, "OrderFilled", orderFilledLog):
         fillOrderID = fillOrder.publicFillOrder(orderID, fix(2), tradeGroupID, sender = tester.k2, value=fillerCost)
