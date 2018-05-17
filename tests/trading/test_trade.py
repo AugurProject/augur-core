@@ -78,7 +78,11 @@ def test_one_bid_on_books_buy_partial_order(useTrade, contractsFixture, cash, ma
     # fill best order
     fillOrderID = None
     if useTrade:
-        fillOrderID = trade.publicTrade(1, market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('1', '4000'))
+        orderFilledLog = {
+            "amountFilled": fix(1),
+        }
+        with AssertLog(contractsFixture, "OrderFilled", orderFilledLog):
+            fillOrderID = trade.publicTrade(1, market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('1', '4000'))
     else:
         fillOrderID = trade.publicSell(market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('1', '4000'))
 
