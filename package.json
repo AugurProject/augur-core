@@ -1,6 +1,6 @@
 {
   "name": "augur-core",
-  "version": "1.0.0-4",
+  "version": "1.0.0-5",
   "description": "Core augur contracts and deployment process",
   "author": "The Augur Developers <team@augur.net>",
   "repository": "http://github.com/AugurProject/augur-core",
@@ -42,6 +42,7 @@
     "docker:run:test:integration:geth": "docker-compose -f ./source/support/test/integration/docker-compose-parity.yml up --abort-on-container-exit --force-recreate",
     "docker:run:test:integration:parity": "docker-compose -f ./source/support/test/integration/docker-compose-geth.yml up --abort-on-container-exit --force-recreate",
     "docker:run:test:security:mythril": "docker run -v `pwd`:/augur-core --workdir /augur-core/source/contracts cryptomental/augur-mythril-ci python /scripts/processor.py",
+    "docker:run:test:security:maian": "docker-compose -f ./source/support/test/integration/docker-compose-geth.yml up --abort-on-container-exit --force-recreate && docker cp integration_geth-integration-tests_1:/app/output/contracts/ contracts/ && docker run -v `pwd`/contracts:/app/output/contracts/ cryptomental/maian-augur-ci python /scripts/test_runner.py",
     "docker:run:test": "npm run docker:run:test:unit:all && npm run docker:run:test:integration",
     "docker:run:deploy:net": "bash support/deploy/run.sh docker",
     "docker:run:deploy:rinkeby": "npm run docker:run:deploy:net -- rinkeby",
@@ -68,6 +69,7 @@
     "@types/mkdirp": "0.5.1",
     "@types/mocha": "2.2.43",
     "@types/node": "9.6.7",
+    "@types/yargs": "11.0.0",
     "async-file": "2.0.2",
     "async-mkdirp": "1.2.0",
     "binascii": "0.0.1",
@@ -91,7 +93,8 @@
     "solidity-coverage": "0.4.15",
     "copy-dir": "0.3.0",
     "rimraf": "2.6.2",
-    "replace": "0.3.0"
+    "replace": "0.3.0",
+    "yargs": "11.0.0"
   },
   "devDependencies": {
     "solc": "0.4.20",

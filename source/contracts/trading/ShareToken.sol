@@ -43,7 +43,8 @@ contract ShareToken is DelegationTarget, ITyped, Initializable, VariableSupplyTo
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedCancelOrderTransfer(address _source, address _destination, uint256 _attotokens) public onlyCaller("CancelOrder") onlyInGoodTimes afterInitialized returns (bool) {
+    // Allowed to run in bad time so orders can be canceled
+    function trustedCancelOrderTransfer(address _source, address _destination, uint256 _attotokens) public onlyCaller("CancelOrder") afterInitialized returns (bool) {
         return internalTransfer(_source, _destination, _attotokens);
     }
 

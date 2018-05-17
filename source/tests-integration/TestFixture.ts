@@ -7,16 +7,16 @@ import { ContractDeployer } from '../libraries/ContractDeployer';
 import { CompilerConfiguration } from '../libraries/CompilerConfiguration';
 import { DeployerConfiguration } from '../libraries/DeployerConfiguration';
 import { NetworkConfiguration } from '../libraries/NetworkConfiguration';
-import { FeeWindow, ShareToken, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder } from '../libraries/ContractInterfaces';
+import { FeeWindow, ShareToken, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder, LegacyReputationToken, ReputationToken } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
 
 export class TestFixture {
     private static GAS_PRICE: BN = new BN(1);
 
     private readonly connector: Connector;
-    private readonly accountManager: AccountManager;
+    public readonly accountManager: AccountManager;
     // FIXME: extract out the bits of contract deployer that we need access to, like the contracts/abis, so we can have a more targeted dependency
-    private readonly contractDeployer: ContractDeployer;
+    public readonly contractDeployer: ContractDeployer;
 
     public get universe() { return this.contractDeployer.universe; }
     public get cash() { return <Cash> this.contractDeployer.getContract('Cash'); }
@@ -27,7 +27,7 @@ export class TestFixture {
         this.contractDeployer = contractDeployer;
     }
 
-    public static create = async (): Promise<TestFixture> => {
+    public static create = async (pretendToBeProduction: boolean = false): Promise<TestFixture> => {
         const networkConfiguration = NetworkConfiguration.create();
         await TestRpc.startTestRpcIfNecessary(networkConfiguration);
 
@@ -40,7 +40,15 @@ export class TestFixture {
         const accountManager = new AccountManager(connector, networkConfiguration.privateKey);
 
         const deployerConfiguration = DeployerConfiguration.createWithControlledTime();
-        const contractDeployer = new ContractDeployer(deployerConfiguration, connector, accountManager, compiledContracts);
+        let contractDeployer = new ContractDeployer(deployerConfiguration, connector, accountManager, compiledContracts);
+
+        if (pretendToBeProduction) {
+            const legacyRepAddress = await contractDeployer.uploadLegacyRep();
+            await contractDeployer.initializeLegacyRep();
+
+            const fakeProdDeployerConfiguration = DeployerConfiguration.createWithControlledTime(legacyRepAddress, true);
+            contractDeployer = new ContractDeployer(fakeProdDeployerConfiguration, connector, accountManager, compiledContracts);
+        }
         await contractDeployer.deploy();
         return new TestFixture(connector, accountManager, contractDeployer);
     }
@@ -185,5 +193,64 @@ export class TestFixture {
     public async finalizeMarket(market: Market): Promise<void> {
         await market.finalize();
         return;
+    }
+
+    public async isLegacyRepPaused(): Promise<boolean> {
+        const legacyRepContract = await this.contractDeployer.getContract("LegacyReputationToken");
+        const legacyRep = new LegacyReputationToken(this.connector, this.accountManager, legacyRepContract.address, TestFixture.GAS_PRICE);
+        return await legacyRep.paused_();
+    }
+
+    public async getLegacyRepBalance(owner: string): Promise<BN> {
+        const legacyRepContract = await this.contractDeployer.getContract("LegacyReputationToken");
+        const legacyRep = new LegacyReputationToken(this.connector, this.accountManager, legacyRepContract.address, TestFixture.GAS_PRICE);
+        return await legacyRep.balanceOf_(owner);
+    }
+
+    public async getLegacyRepAllowance(owner: string, spender: string): Promise<BN> {
+        const legacyRepContract = await this.contractDeployer.getContract("LegacyReputationToken");
+        const legacyRep = new LegacyReputationToken(this.connector, this.accountManager, legacyRepContract.address, TestFixture.GAS_PRICE);
+        return await legacyRep.allowance_(owner, spender);
+    }
+
+    public async transferLegacyRep(to: string, amount: BN): Promise<void> {
+        const legacyRepContract = await this.contractDeployer.getContract("LegacyReputationToken");
+        const legacyRep = new LegacyReputationToken(this.connector, this.accountManager, legacyRepContract.address, TestFixture.GAS_PRICE);
+        await legacyRep.transfer(to, amount);
+        return;
+    }
+
+    public async approveLegacyRep(spender: string, amount: BN): Promise<void> {
+        const legacyRepContract = await this.contractDeployer.getContract("LegacyReputationToken");
+        const legacyRep = new LegacyReputationToken(this.connector, this.accountManager, legacyRepContract.address, TestFixture.GAS_PRICE);
+        await legacyRep.approve(spender, amount);
+        return;
+    }
+
+    public async pauseLegacyRep(): Promise<void> {
+        const legacyRepContract = await this.contractDeployer.getContract("LegacyReputationToken");
+        const legacyRep = new LegacyReputationToken(this.connector, this.accountManager, legacyRepContract.address, TestFixture.GAS_PRICE);
+        await legacyRep.pause();
+        return;
+    }
+
+    public async getReputationToken(): Promise<ReputationToken> {
+        const repContractAddress = await this.contractDeployer.universe.getReputationToken_();
+        return new ReputationToken(this.connector, this.accountManager, repContractAddress, TestFixture.GAS_PRICE);
+    }
+
+    public async isRepMigratingFromLegacy(): Promise<boolean> {
+        const rep = await this.getReputationToken();
+        return await rep.getIsMigratingFromLegacy_();
+    }
+
+    public async getRepBalance(owner: string): Promise<BN> {
+        const rep = await this.getReputationToken();
+        return await rep.balanceOf_(owner);
+    }
+
+    public async getRepAllowance(owner: string, spender: string): Promise<BN> {
+        const rep = await this.getReputationToken();
+        return await rep.allowance_(owner, spender);
     }
 }
