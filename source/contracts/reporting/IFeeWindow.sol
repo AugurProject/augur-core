@@ -30,4 +30,5 @@ contract IFeeWindow is ITyped, ERC20 {
     function redeem(address _sender) public returns (bool);
     function redeemForReportingParticipant() public returns (bool);
     function mintFeeTokens(uint256 _amount) public returns (bool);
+    function trustedUniverseBuy(address _buyer, uint256 _attotokens) public returns (bool);
 }

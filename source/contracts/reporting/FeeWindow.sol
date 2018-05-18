@@ -72,11 +72,22 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
     }
 
     function buy(uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+        buyInternal(msg.sender, _attotokens);
+        return true;
+    }
+
+    function trustedUniverseBuy(address _buyer, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+        require(IUniverse(msg.sender) == universe);
+        buyInternal(_buyer, _attotokens);
+        return true;
+    }
+
+    function buyInternal(address _buyer, uint256 _attotokens) private onlyInGoodTimes afterInitialized returns (bool) {
         require(_attotokens > 0);
         require(isActive());
         require(!universe.isForking());
-        getReputationToken().trustedFeeWindowTransfer(msg.sender, this, _attotokens);
-        mint(msg.sender, _attotokens);
+        getReputationToken().trustedFeeWindowTransfer(_buyer, this, _attotokens);
+        mint(_buyer, _attotokens);
         return true;
     }
 

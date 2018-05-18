@@ -153,7 +153,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     function finishedCrowdsourcingDisputeBond(IReportingParticipant _reportingParticipant) private returns (bool) {
         participants.push(_reportingParticipant);
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this); // disavow other crowdsourcers
-        controller.getAugur().logDisputeCrowdsourcerCompleted(universe, this, _reportingParticipant);
         if (IDisputeCrowdsourcer(_reportingParticipant).getSize() >= universe.getDisputeThresholdForFork()) {
             universe.fork();
         } else {
@@ -163,6 +162,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
                 participants[i].migrate();
             }
         }
+        controller.getAugur().logDisputeCrowdsourcerCompleted(universe, this, _reportingParticipant);
         return true;
     }
 
