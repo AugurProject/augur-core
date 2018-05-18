@@ -271,20 +271,6 @@
             return <boolean>result[0];
         }
 
-        public logOrderFilled = async(universe: string, shareToken: string, filler: string, orderId: string, numCreatorShares: BN, numCreatorTokens: BN, numFillerShares: BN, numFillerTokens: BN, marketCreatorFees: BN, reporterFees: BN, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_shareToken","type":"address"},{"name":"_filler","type":"address"},{"name":"_orderId","type":"bytes32"},{"name":"_numCreatorShares","type":"uint256"},{"name":"_numCreatorTokens","type":"uint256"},{"name":"_numFillerShares","type":"uint256"},{"name":"_numFillerTokens","type":"uint256"},{"name":"_marketCreatorFees","type":"uint256"},{"name":"_reporterFees","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"logOrderFilled","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [universe, shareToken, filler, orderId, numCreatorShares, numCreatorTokens, numFillerShares, numFillerTokens, marketCreatorFees, reporterFees, tradeGroupId], "logOrderFilled", options.sender, options.gasPrice);
-            return;
-        }
-
-        public logOrderFilled_ = async(universe: string, shareToken: string, filler: string, orderId: string, numCreatorShares: BN, numCreatorTokens: BN, numFillerShares: BN, numFillerTokens: BN, marketCreatorFees: BN, reporterFees: BN, tradeGroupId: string, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_shareToken","type":"address"},{"name":"_filler","type":"address"},{"name":"_orderId","type":"bytes32"},{"name":"_numCreatorShares","type":"uint256"},{"name":"_numCreatorTokens","type":"uint256"},{"name":"_numFillerShares","type":"uint256"},{"name":"_numFillerTokens","type":"uint256"},{"name":"_marketCreatorFees","type":"uint256"},{"name":"_reporterFees","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"logOrderFilled","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [universe, shareToken, filler, orderId, numCreatorShares, numCreatorTokens, numFillerShares, numFillerTokens, marketCreatorFees, reporterFees, tradeGroupId], options.sender);
-            return <boolean>result[0];
-        }
-
         public logFeeWindowRedeemed = async(universe: string, reporter: string, amountRedeemed: BN, reportingFeesReceived: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_reporter","type":"address"},{"name":"_amountRedeemed","type":"uint256"},{"name":"_reportingFeesReceived","type":"uint256"}],"name":"logFeeWindowRedeemed","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -464,6 +450,20 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_target","type":"address"},{"name":"_amount","type":"uint256"}],"name":"logReputationTokenMinted","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [universe, target, amount], options.sender);
+            return <boolean>result[0];
+        }
+
+        public logOrderFilled = async(universe: string, shareToken: string, filler: string, orderId: string, numCreatorShares: BN, numCreatorTokens: BN, numFillerShares: BN, numFillerTokens: BN, marketCreatorFees: BN, reporterFees: BN, amountFilled: BN, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_shareToken","type":"address"},{"name":"_filler","type":"address"},{"name":"_orderId","type":"bytes32"},{"name":"_numCreatorShares","type":"uint256"},{"name":"_numCreatorTokens","type":"uint256"},{"name":"_numFillerShares","type":"uint256"},{"name":"_numFillerTokens","type":"uint256"},{"name":"_marketCreatorFees","type":"uint256"},{"name":"_reporterFees","type":"uint256"},{"name":"_amountFilled","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"logOrderFilled","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [universe, shareToken, filler, orderId, numCreatorShares, numCreatorTokens, numFillerShares, numFillerTokens, marketCreatorFees, reporterFees, amountFilled, tradeGroupId], "logOrderFilled", options.sender, options.gasPrice);
+            return;
+        }
+
+        public logOrderFilled_ = async(universe: string, shareToken: string, filler: string, orderId: string, numCreatorShares: BN, numCreatorTokens: BN, numFillerShares: BN, numFillerTokens: BN, marketCreatorFees: BN, reporterFees: BN, amountFilled: BN, tradeGroupId: string, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_shareToken","type":"address"},{"name":"_filler","type":"address"},{"name":"_orderId","type":"bytes32"},{"name":"_numCreatorShares","type":"uint256"},{"name":"_numCreatorTokens","type":"uint256"},{"name":"_numFillerShares","type":"uint256"},{"name":"_numFillerTokens","type":"uint256"},{"name":"_marketCreatorFees","type":"uint256"},{"name":"_reporterFees","type":"uint256"},{"name":"_amountFilled","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"logOrderFilled","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [universe, shareToken, filler, orderId, numCreatorShares, numCreatorTokens, numFillerShares, numFillerTokens, marketCreatorFees, reporterFees, amountFilled, tradeGroupId], options.sender);
             return <boolean>result[0];
         }
 
