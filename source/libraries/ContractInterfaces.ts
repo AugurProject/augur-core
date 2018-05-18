@@ -2812,6 +2812,20 @@
             return <BN>result[0];
         }
 
+        public trustedUniverseBuy = async(buyer: string, attotokens: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_buyer","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedUniverseBuy","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [buyer, attotokens], "trustedUniverseBuy", options.sender, options.gasPrice);
+            return;
+        }
+
+        public trustedUniverseBuy_ = async(buyer: string, attotokens: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_buyer","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedUniverseBuy","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [buyer, attotokens], options.sender);
+            return <boolean>result[0];
+        }
+
         public getUniverse_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getUniverse","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -4510,6 +4524,20 @@
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_shadyShareToken","type":"address"}],"name":"isContainerForShareToken","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [shadyShareToken], options.sender);
+            return <boolean>result[0];
+        }
+
+        public buyParticipationTokens = async(attotokens: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_attotokens","type":"uint256"}],"name":"buyParticipationTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [attotokens], "buyParticipationTokens", options.sender, options.gasPrice);
+            return;
+        }
+
+        public buyParticipationTokens_ = async(attotokens: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_attotokens","type":"uint256"}],"name":"buyParticipationTokens","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [attotokens], options.sender);
             return <boolean>result[0];
         }
 
