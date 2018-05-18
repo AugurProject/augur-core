@@ -83,3 +83,20 @@ def test_malicious_shady_parties(contractsFixture, universe):
 
     maliciousMarketHaver.setMarket(0)
     assert not universe.isContainerForReportingParticipant(maliciousMarketHaver.address)
+
+def test_universe_buy_pts(contractsFixture, universe):
+    feeWindow = contractsFixture.applySignature('FeeWindow', universe.getCurrentFeeWindow())
+
+    # Push Time to where the current fee window doesnt exist
+    contractsFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+
+    assert universe.getCurrentFeeWindow() == "0x0000000000000000000000000000000000000000"
+
+    # auto create the fee window and buy pts through the universe
+    assert universe.buyParticipationTokens(100)
+
+    assert universe.getCurrentFeeWindow() != "0x0000000000000000000000000000000000000000"
+
+    feeWindow = contractsFixture.applySignature('FeeWindow', universe.getCurrentFeeWindow())
+
+    assert feeWindow.balanceOf(tester.a0) == 100

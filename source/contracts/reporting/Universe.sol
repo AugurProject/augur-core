@@ -462,4 +462,10 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
         return true;
     }
+
+    function buyParticipationTokens(uint256 _attotokens) public onlyInGoodTimes returns (bool) {
+        IFeeWindow _feeWindow = getOrCreateCurrentFeeWindow();
+        _feeWindow.trustedUniverseBuy(msg.sender, _attotokens);
+        return true;
+    }
 }
