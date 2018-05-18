@@ -7,7 +7,7 @@ import { DeployerConfiguration } from "../libraries/DeployerConfiguration";
 export async function deployToNetworks(networks: Array<string>) {
     // Create all network configs up front so that an error in any of them
     // causes us to die
-    const networkConfigurations = networks.map(NetworkConfiguration.create);
+    const networkConfigurations = networks.map((network) => NetworkConfiguration.create(network));
     const deployerConfiguration = DeployerConfiguration.create();
     for(let network of networkConfigurations) {
         // Deploy sequentially
