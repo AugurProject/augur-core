@@ -4,7 +4,6 @@
 // price is denominated by the specific market's numTicks
 // amount is the number of attoshares the order is for (either to buy or to sell).
 // price is the exact price you want to buy/sell at [which may not be the cost, for example to short a binary market it'll cost numTicks-price, to go long it'll cost price]
-// smallest order value is Order.MIN_ORDER_VALUE
 
 pragma solidity 0.4.20;
 
@@ -19,8 +18,6 @@ import 'trading/IOrders.sol';
 // CONSIDER: Is `price` the most appropriate name for the value being used? It does correspond 1:1 with the attoETH per share, but the range might be considered unusual?
 library Order {
     using SafeMathUint256 for uint256;
-
-    uint256 constant MIN_ORDER_VALUE = 10**14;
 
     enum Types {
         Bid, Ask
@@ -116,9 +113,6 @@ library Order {
     //
 
     function escrowFundsForBid(Order.Data _orderData) private returns (bool) {
-        uint256 _orderValueInAttotokens = _orderData.price.mul(_orderData.amount);
-        require(_orderValueInAttotokens >= MIN_ORDER_VALUE);
-
         require(_orderData.moneyEscrowed == 0);
         require(_orderData.sharesEscrowed == 0);
         uint256 _attosharesToCover = _orderData.amount;
@@ -153,9 +147,6 @@ library Order {
     }
 
     function escrowFundsForAsk(Order.Data _orderData) private returns (bool) {
-        uint256 _orderValueInAttotokens = _orderData.market.getNumTicks().sub(_orderData.price).mul(_orderData.amount);
-        require(_orderValueInAttotokens >= MIN_ORDER_VALUE);
-
         require(_orderData.moneyEscrowed == 0);
         require(_orderData.sharesEscrowed == 0);
         IShareToken _shareToken = _orderData.market.getShareToken(_orderData.outcome);
