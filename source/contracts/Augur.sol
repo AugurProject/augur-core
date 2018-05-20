@@ -59,6 +59,7 @@ contract Augur is Controlled, IAugur {
     event TimestampSet(uint256 newTimestamp);
 
     mapping(address => bool) private universes;
+    mapping(address => bool) private crowdsourcers;
 
     //
     // Universe
@@ -84,6 +85,22 @@ contract Augur is Controlled, IAugur {
 
     function isKnownUniverse(IUniverse _universe) public view returns (bool) {
         return universes[_universe];
+    }
+
+    //
+    // Crowdsourcers
+    //
+
+    function isKnownCrowdsourcer(IDisputeCrowdsourcer _crowdsourcer) public view returns (bool) {
+        return crowdsourcers[_crowdsourcer];
+    }
+
+    function disputeCrowdsourcerCreated(IUniverse _universe, address _market, address _disputeCrowdsourcer, uint256[] _payoutNumerators, uint256 _size, bool _invalid) public returns (bool) {
+        require(isKnownUniverse(_universe));
+        require(_universe.isContainerForMarket(IMarket(msg.sender)));
+        crowdsourcers[_disputeCrowdsourcer] = true;
+        DisputeCrowdsourcerCreated(_universe, _market, _disputeCrowdsourcer, _payoutNumerators, _size, _invalid);
+        return true;
     }
 
     //
@@ -123,13 +140,6 @@ contract Augur is Controlled, IAugur {
         return true;
     }
 
-    function logDisputeCrowdsourcerCreated(IUniverse _universe, address _market, address _disputeCrowdsourcer, uint256[] _payoutNumerators, uint256 _size, bool _invalid) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        require(_universe.isContainerForMarket(IMarket(msg.sender)));
-        DisputeCrowdsourcerCreated(_universe, _market, _disputeCrowdsourcer, _payoutNumerators, _size, _invalid);
-        return true;
-    }
-
     function logDisputeCrowdsourcerContribution(IUniverse _universe, address _reporter, address _market, address _disputeCrowdsourcer, uint256 _amountStaked) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
@@ -152,9 +162,9 @@ contract Augur is Controlled, IAugur {
     }
 
     function logDisputeCrowdsourcerRedeemed(IUniverse _universe, address _reporter, address _market, uint256 _amountRedeemed, uint256 _repReceived, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
-        DisputeCrowdsourcerRedeemed(_universe, _reporter, _market, msg.sender, _amountRedeemed, _repReceived, _reportingFeesReceived, _payoutNumerators);
+        IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
+        require(isKnownCrowdsourcer(_disputeCrowdsourcer));
+        DisputeCrowdsourcerRedeemed(_universe, _reporter, _market, _disputeCrowdsourcer, _amountRedeemed, _repReceived, _reportingFeesReceived, _payoutNumerators);
         return true;
     }
 
@@ -246,9 +256,8 @@ contract Augur is Controlled, IAugur {
     }
 
     function logDisputeCrowdsourcerTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        IReportingParticipant _disputeCrowdsourcer = IReportingParticipant(msg.sender);
-        require(_universe.isContainerForReportingParticipant(_disputeCrowdsourcer));
+        IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
+        require(isKnownCrowdsourcer(_disputeCrowdsourcer));
         TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.DisputeCrowdsourcer, _disputeCrowdsourcer.getMarket());
         return true;
     }
@@ -306,17 +315,15 @@ contract Augur is Controlled, IAugur {
     }
 
     function logDisputeCrowdsourcerTokensBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        IReportingParticipant _disputeCrowdsourcer = IReportingParticipant(msg.sender);
-        require(_universe.isContainerForReportingParticipant(_disputeCrowdsourcer));
+        IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
+        require(isKnownCrowdsourcer(_disputeCrowdsourcer));
         TokensBurned(_universe, msg.sender, _target, _amount, TokenType.DisputeCrowdsourcer, _disputeCrowdsourcer.getMarket());
         return true;
     }
 
     function logDisputeCrowdsourcerTokensMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        IReportingParticipant _disputeCrowdsourcer = IReportingParticipant(msg.sender);
-        require(_universe.isContainerForReportingParticipant(_disputeCrowdsourcer));
+        IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
+        require(isKnownCrowdsourcer(_disputeCrowdsourcer));
         TokensMinted(_universe, msg.sender, _target, _amount, TokenType.DisputeCrowdsourcer, _disputeCrowdsourcer.getMarket());
         return true;
     }
