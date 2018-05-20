@@ -101,6 +101,10 @@ contract MockAugur is Controlled {
         return true;
     }
 
+    function disputeCrowdsourcerCreated(IUniverse _universe, IMarket _market, IDisputeCrowdsourcer _crowdsourcer, uint256[] _payoutNumerators, uint256 _size, bool _invalid) public returns (bool) {
+        return true;
+    }
+
     function logOrderCreated(Order.Types _orderType, uint256 _amount, uint256 _price, address _creator, uint256 _moneyEscrowed, uint256 _sharesEscrowed, bytes32 _tradeGroupId, bytes32 _orderId, IUniverse _universe, address _shareToken) public onlyWhitelistedCallers returns (bool) {
         return true;
     }
