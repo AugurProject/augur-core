@@ -532,8 +532,6 @@ def test_take_best_order_with_shares_escrowed_buy_with_shares_categorical(contra
     orderID = createOrder.publicCreateOrder(ASK, fix(1), 6000, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), "42", sender=tester.k1)
     assert orderID
 
-    fillOrder = contractsFixture.contracts['FillOrder']
-
     # fill order with shares using on-chain matcher
     totalProceeds = fix(1, numTicks)
     totalProceeds -= fix(1, numTicks) / market.getMarketCreatorSettlementFeeDivisor()
@@ -543,7 +541,6 @@ def test_take_best_order_with_shares_escrowed_buy_with_shares_categorical(contra
     with EtherDelta(expectedTester1Payout, tester.a1, contractsFixture.chain, "Tester 1 ETH delta wrong"):
         with EtherDelta(expectedTester2Payout, tester.a2, contractsFixture.chain, "Tester 2 ETH delta wrong"):
             with PrintGasUsed(contractsFixture, "categoricalFill", 0):
-                fillOrder.publicFillOrder(orderID, fix(1), "43", sender=tester.k2) == 0
                 assert trade.publicFillBestOrder(BID, market.address, 0, fix(1), 6000, "43", sender=tester.k2) == 0
 
     assert firstShareToken.balanceOf(tester.a1) == 0
