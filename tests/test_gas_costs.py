@@ -27,7 +27,7 @@ CREATE_ORDER =      551929
 FILL_ORDER =        828536
 CLAIM_PROCEEDS =    2171595
 
-pytestmark = mark.skip(reason="Just for testing gas cost")
+#pytestmark = mark.skip(reason="Just for testing gas cost")
 
 tester.STARTGAS = long(6.7 * 10**6)
 
@@ -59,11 +59,11 @@ def test_marketFinalization(localFixture, universe, market):
     with PrintGasUsed(localFixture, "Market:finalize", MARKET_FINALIZATION):
         assert market.finalize()
 
-def test_orderCreation(localFixture, market):
+def test_orderCreation(localFixture, categoricalMarket):
     createOrder = localFixture.contracts['CreateOrder']
 
     with PrintGasUsed(localFixture, "CreateOrder:publicCreateOrder", CREATE_ORDER):
-        orderID = createOrder.publicCreateOrder(BID, fix(1), 4000, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, 4000))
+        orderID = createOrder.publicCreateOrder(BID, fix(1), 4000, categoricalMarket.address, 1, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, 4000))
 
 def test_orderFilling(localFixture, market):
     createOrder = localFixture.contracts['CreateOrder']
@@ -137,6 +137,7 @@ def test_redeem(localFixture, universe, cash, market):
 
     with PrintGasUsed(localFixture, "FeeWindow:redeem", PARTICIPATION_TOKEN_REDEMPTION):
         feeWindow.redeem(tester.a0)
+
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
