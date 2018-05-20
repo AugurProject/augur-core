@@ -274,6 +274,9 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         IUniverse _destinationUniverse = _currentUniverse.getChildUniverse(_winningForkPayoutDistributionHash);
 
         // follow the forking market to its universe
+        if (feeWindow != IFeeWindow(0)) {
+            feeWindow = _destinationUniverse.getOrCreateNextFeeWindow();
+        }
         _destinationUniverse.addMarketTo();
         _currentUniverse.removeMarketFrom();
         IReputationToken _oldReputationToken = getReputationToken();
@@ -281,9 +284,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
         // reset state back to Initial Reporter
         IInitialReporter _initialParticipant = getInitialReporter();
-        if (feeWindow != IFeeWindow(0)) {
-            feeWindow = universe.getOrCreateNextFeeWindow();
-        }
+
         delete participants;
         participants.push(_initialParticipant);
         _initialParticipant.resetReportTimestamp();
