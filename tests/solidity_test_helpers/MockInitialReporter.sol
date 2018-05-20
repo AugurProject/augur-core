@@ -70,7 +70,7 @@ contract MockInitialReporter is IInitialReporter {
         return true;
     }
 
-    function fork() public returns (bool) {
+    function fork() internal returns (bool) {
         return true;
     }
 
