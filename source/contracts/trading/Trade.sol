@@ -38,7 +38,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
 
     function publicFillBestOrder(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (uint256) {
         uint256 _result = fillBestOrder(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
-        //_market.assertBalances();
+        _market.assertBalances();
         return _result;
     }
 
