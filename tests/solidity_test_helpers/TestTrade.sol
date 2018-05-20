@@ -4,7 +4,10 @@ import 'trading/Trade.sol';
 
 
 contract TestTrade is Trade {
-    function getMinGasNeeded() internal pure returns (uint256) {
+    function getFillOrderMinGasNeeded() internal pure returns (uint256) {
+        return 5000000;
+    }
+    function getCreateOrderMinGasNeeded() internal pure returns (uint256) {
         return 5000000;
     }
 }
