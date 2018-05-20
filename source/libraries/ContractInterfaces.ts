@@ -453,6 +453,20 @@
             return <boolean>result[0];
         }
 
+        public disputeCrowdsourcerCreated = async(universe: string, market: string, disputeCrowdsourcer: string, payoutNumerators: Array<BN>, size: BN, invalid: boolean, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_disputeCrowdsourcer","type":"address"},{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_size","type":"uint256"},{"name":"_invalid","type":"bool"}],"name":"disputeCrowdsourcerCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [universe, market, disputeCrowdsourcer, payoutNumerators, size, invalid], "disputeCrowdsourcerCreated", options.sender, options.gasPrice);
+            return;
+        }
+
+        public disputeCrowdsourcerCreated_ = async(universe: string, market: string, disputeCrowdsourcer: string, payoutNumerators: Array<BN>, size: BN, invalid: boolean, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_disputeCrowdsourcer","type":"address"},{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_size","type":"uint256"},{"name":"_invalid","type":"bool"}],"name":"disputeCrowdsourcerCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [universe, market, disputeCrowdsourcer, payoutNumerators, size, invalid], options.sender);
+            return <boolean>result[0];
+        }
+
         public logOrderFilled = async(universe: string, shareToken: string, filler: string, orderId: string, numCreatorShares: BN, numCreatorTokens: BN, numFillerShares: BN, numFillerTokens: BN, marketCreatorFees: BN, reporterFees: BN, amountFilled: BN, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_shareToken","type":"address"},{"name":"_filler","type":"address"},{"name":"_orderId","type":"bytes32"},{"name":"_numCreatorShares","type":"uint256"},{"name":"_numCreatorTokens","type":"uint256"},{"name":"_numFillerShares","type":"uint256"},{"name":"_numFillerTokens","type":"uint256"},{"name":"_marketCreatorFees","type":"uint256"},{"name":"_reporterFees","type":"uint256"},{"name":"_amountFilled","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"logOrderFilled","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -614,6 +628,13 @@
             return <boolean>result[0];
         }
 
+        public isKnownCrowdsourcer_ = async(crowdsourcer: string, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_crowdsourcer","type":"address"}],"name":"isKnownCrowdsourcer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [crowdsourcer], options.sender);
+            return <boolean>result[0];
+        }
+
         public logCompleteSetsPurchased = async(universe: string, market: string, account: string, numCompleteSets: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_account","type":"address"},{"name":"_numCompleteSets","type":"uint256"}],"name":"logCompleteSetsPurchased","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -653,20 +674,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_newTimestamp","type":"uint256"}],"name":"logTimestampSet","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [newTimestamp], options.sender);
-            return <boolean>result[0];
-        }
-
-        public logDisputeCrowdsourcerCreated = async(universe: string, market: string, disputeCrowdsourcer: string, payoutNumerators: Array<BN>, size: BN, invalid: boolean, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_disputeCrowdsourcer","type":"address"},{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_size","type":"uint256"},{"name":"_invalid","type":"bool"}],"name":"logDisputeCrowdsourcerCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [universe, market, disputeCrowdsourcer, payoutNumerators, size, invalid], "logDisputeCrowdsourcerCreated", options.sender, options.gasPrice);
-            return;
-        }
-
-        public logDisputeCrowdsourcerCreated_ = async(universe: string, market: string, disputeCrowdsourcer: string, payoutNumerators: Array<BN>, size: BN, invalid: boolean, options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_market","type":"address"},{"name":"_disputeCrowdsourcer","type":"address"},{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_size","type":"uint256"},{"name":"_invalid","type":"bool"}],"name":"logDisputeCrowdsourcerCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [universe, market, disputeCrowdsourcer, payoutNumerators, size, invalid], options.sender);
             return <boolean>result[0];
         }
 
@@ -2203,20 +2210,6 @@
             return <string>result[0];
         }
 
-        public fork = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"fork","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "fork", options.sender, options.gasPrice);
-            return;
-        }
-
-        public fork_ = async( options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"fork","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
-            return <boolean>result[0];
-        }
-
         public ETERNAL_APPROVAL_VALUE_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"ETERNAL_APPROVAL_VALUE","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -3152,20 +3145,6 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_reporter","type":"address"},{"name":"_payoutDistributionHash","type":"bytes32"},{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_invalid","type":"bool"}],"name":"report","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [reporter, payoutDistributionHash, payoutNumerators, invalid], options.sender);
-            return <boolean>result[0];
-        }
-
-        public fork = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"fork","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "fork", options.sender, options.gasPrice);
-            return;
-        }
-
-        public fork_ = async( options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"fork","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
             return <boolean>result[0];
         }
 
