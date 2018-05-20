@@ -59,11 +59,28 @@ def test_marketFinalization(localFixture, universe, market):
     with PrintGasUsed(localFixture, "Market:finalize", MARKET_FINALIZATION):
         assert market.finalize()
 
-def test_orderCreation(localFixture, market):
+@mark.parametrize('hints', [
+    True,
+    False
+])
+def test_orderCreation(hints, localFixture, categoricalMarket):
     createOrder = localFixture.contracts['CreateOrder']
 
-    with PrintGasUsed(localFixture, "CreateOrder:publicCreateOrder", CREATE_ORDER):
-        orderID = createOrder.publicCreateOrder(BID, fix(1), 4000, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, 4000))
+    for i in range(3900, 4003):
+        createOrder.publicCreateOrder(BID, fix(1), i, categoricalMarket.address, 1, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, i))
+
+    worseOrderId = createOrder.publicCreateOrder(BID, fix(1), 4004, categoricalMarket.address, 1, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, 4004))
+    betterOrderId = createOrder.publicCreateOrder(BID, fix(1), 4006, categoricalMarket.address, 1, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, 4006))
+
+    for i in range(4007, 4107):
+        createOrder.publicCreateOrder(BID, fix(1), i, categoricalMarket.address, 1, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, i))
+
+    if not hints:
+        with PrintGasUsed(localFixture, "CreateOrder:publicCreateOrder NO Hints", CREATE_ORDER):
+            orderID = createOrder.publicCreateOrder(BID, fix(1), 4005, categoricalMarket.address, 1, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, 4005))
+    else:
+        with PrintGasUsed(localFixture, "CreateOrder:publicCreateOrder HINTS", CREATE_ORDER):
+            orderID = createOrder.publicCreateOrder(BID, fix(1), 4005, categoricalMarket.address, 1, betterOrderId, worseOrderId, "7", value = fix(1, 4005))
 
 def test_orderFilling(localFixture, market):
     createOrder = localFixture.contracts['CreateOrder']
@@ -137,6 +154,7 @@ def test_redeem(localFixture, universe, cash, market):
 
     with PrintGasUsed(localFixture, "FeeWindow:redeem", PARTICIPATION_TOKEN_REDEMPTION):
         feeWindow.redeem(tester.a0)
+
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
