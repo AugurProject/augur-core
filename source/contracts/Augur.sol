@@ -104,7 +104,7 @@ contract Augur is Controlled, IAugur {
         return true;
     }
 
-    function registerInitialReporter(IInitialReporter _initialReporter) public view returns (bool) {
+    function registerInitialReporter(IInitialReporter _initialReporter) public returns (bool) {
         IMarket _market = IMarket(msg.sender);
         IUniverse _universe = _market.getUniverse();
         require(isKnownUniverse(_universe));

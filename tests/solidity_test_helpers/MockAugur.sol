@@ -103,7 +103,7 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function registerInitialReporter(IInitialReporter _initialReporter) public view returns (bool) {
+    function registerInitialReporter(IInitialReporter _initialReporter) public returns (bool) {
         return true;
     }
 
