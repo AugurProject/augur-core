@@ -3,7 +3,6 @@ pragma solidity 0.4.20;
 import 'reporting/IUniverse.sol';
 import 'libraries/token/ERC20.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IDisputeCrowdsourcer.sol';
 import 'trading/Order.sol';
 
 
