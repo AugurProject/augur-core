@@ -219,7 +219,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
 
     # confirm we cannot fork it
     with raises(TransactionFailed):
-        categoricalDisputeCrowdsourcer.fork()
+        categoricalDisputeCrowdsourcer.forkAndRedeem()
 
     if manuallyDisavow:
         marketParticipantsDisavowedLog = {

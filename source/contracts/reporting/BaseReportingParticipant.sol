@@ -33,7 +33,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         return true;
     }
 
-    function fork() public onlyInGoodTimes returns (bool) {
+    function fork() internal onlyInGoodTimes returns (bool) {
         require(market == market.getUniverse().getForkingMarket());
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutNumerators, invalid);
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
