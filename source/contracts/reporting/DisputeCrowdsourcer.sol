@@ -5,12 +5,16 @@ import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/BaseReportingParticipant.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/DelegationTarget.sol';
+import 'reporting/IUniverse.sol';
 
 
 contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseReportingParticipant, IDisputeCrowdsourcer, Initializable {
+    IUniverse internal universe;
+
     function initialize(IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
+        universe = market.getUniverse();
         reputationToken = market.getReputationToken();
         feeWindow = market.getFeeWindow();
         cash = market.getDenominationToken();
@@ -38,9 +42,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
         if (_feeShare > 0) {
             cash.withdrawEtherTo(_redeemer, _feeShare);
         }
-        if (!_isDisavowed) {
-            controller.getAugur().logDisputeCrowdsourcerRedeemed(market.getUniverse(), _redeemer, market, _amount, _reputationShare, _feeShare, payoutNumerators);
-        }
+        controller.getAugur().logDisputeCrowdsourcerRedeemed(universe, _redeemer, market, _amount, _reputationShare, _feeShare, payoutNumerators);
         return true;
     }
 
@@ -80,20 +82,17 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
     }
 
     function onTokenTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
-        controller.getAugur().logDisputeCrowdsourcerTokensTransferred(market.getUniverse(), _from, _to, _value);
+        controller.getAugur().logDisputeCrowdsourcerTokensTransferred(universe, _from, _to, _value);
         return true;
     }
 
     function onMint(address _target, uint256 _amount) internal returns (bool) {
-        controller.getAugur().logDisputeCrowdsourcerTokensMinted(market.getUniverse(), _target, _amount);
+        controller.getAugur().logDisputeCrowdsourcerTokensMinted(universe, _target, _amount);
         return true;
     }
 
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
-        if (isDisavowed()) {
-            return true;
-        }
-        controller.getAugur().logDisputeCrowdsourcerTokensBurned(market.getUniverse(), _target, _amount);
+        controller.getAugur().logDisputeCrowdsourcerTokensBurned(universe, _target, _amount);
         return true;
     }
 
