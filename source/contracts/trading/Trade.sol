@@ -15,8 +15,8 @@ import 'libraries/CashAutoConverter.sol';
 
 
 contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
-    uint256 internal constant FILL_ORDER_MINIMUM_GAS_NEEDED = 1000000;
-    uint256 internal constant CREATE_ORDER_MINIMUM_GAS_NEEDED = 600000;
+    uint256 internal constant FILL_ORDER_MINIMUM_GAS_NEEDED = 2000000;
+    uint256 internal constant CREATE_ORDER_MINIMUM_GAS_NEEDED = 700000;
 
     function publicBuy(IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bytes32) {
         bytes32 _result = trade(msg.sender, Order.TradeDirections.Long, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
@@ -38,7 +38,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
 
     function publicFillBestOrder(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (uint256) {
         uint256 _result = fillBestOrder(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
-        _market.assertBalances();
+        //_market.assertBalances();
         return _result;
     }
 

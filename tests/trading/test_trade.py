@@ -2,7 +2,7 @@
 
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from utils import longTo32Bytes, longToHexString, bytesToHexString, fix, AssertLog, stringToBytes, EtherDelta
+from utils import longTo32Bytes, longToHexString, bytesToHexString, fix, AssertLog, stringToBytes, EtherDelta, PrintGasUsed
 from constants import ASK, BID, YES, NO
 from pytest import raises, fixture, mark
 from pprint import pprint
@@ -82,7 +82,8 @@ def test_one_bid_on_books_buy_partial_order(useTrade, contractsFixture, cash, ma
             "amountFilled": fix(1),
         }
         with AssertLog(contractsFixture, "OrderFilled", orderFilledLog):
-            fillOrderID = trade.publicTrade(1, market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('1', '4000'))
+            with PrintGasUsed(contractsFixture, "publicTrade", 0):
+                fillOrderID = trade.publicTrade(1, market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('1', '4000'))
     else:
         fillOrderID = trade.publicSell(market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('1', '4000'))
 
@@ -158,7 +159,8 @@ def test_two_bids_on_books_buy_both(contractsFixture, cash, market, universe):
     orderID2 = createOrder.publicCreateOrder(BID, fix(1), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('1', '6000'))
 
     # fill best order
-    fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('5', '4000'))
+    with PrintGasUsed(contractsFixture, "Fill two", 0):
+        fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('5', '4000'))
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -224,7 +226,8 @@ def test_two_bids_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     orderID2 = createOrder.publicCreateOrder(BID, fix(7), 5000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '5000'))
 
     # fill/create
-    fillOrderID = trade.publicSell(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '4000'))
+    with PrintGasUsed(contractsFixture, "buy one and create", 0):
+        fillOrderID = trade.publicSell(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '4000'))
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -467,7 +470,8 @@ def test_take_best_order_multiple_orders(contractsFixture, cash, market, univers
 
     # fill orders with cash using on-chain matcher
     price = 6000 + numOrders
-    assert trade.publicFillBestOrder(BID, market.address, YES, fix(numOrders), price, "43", sender=tester.k2, value=fix(numOrders, price)) == 0
+    with PrintGasUsed(contractsFixture, "fill multiple asks", 0):
+        assert trade.publicFillBestOrder(BID, market.address, YES, fix(numOrders), price, "43", sender=tester.k2, value=fix(numOrders, price)) == 0
 
     for i in range(numOrders):
         orderID = orderIDs[i]
@@ -495,7 +499,8 @@ def test_take_best_order_with_shares_escrowed_buy_with_cash(contractsFixture, ca
     assert orderID
 
     # fill order with cash using on-chain matcher
-    assert trade.publicFillBestOrder(BID, market.address, YES, fix(1), 6000, "43", sender=tester.k2, value=fix('1', '6000')) == 0
+    with PrintGasUsed(contractsFixture, "buy shares escrowed order", 0):
+        assert trade.publicFillBestOrder(BID, market.address, YES, fix(1), 6000, "43", sender=tester.k2, value=fix('1', '6000')) == 0
 
     assert orders.getAmount(orderID) == 0
     assert orders.getPrice(orderID) == 0
@@ -527,6 +532,8 @@ def test_take_best_order_with_shares_escrowed_buy_with_shares_categorical(contra
     orderID = createOrder.publicCreateOrder(ASK, fix(1), 6000, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), "42", sender=tester.k1)
     assert orderID
 
+    fillOrder = contractsFixture.contracts['FillOrder']
+
     # fill order with shares using on-chain matcher
     totalProceeds = fix(1, numTicks)
     totalProceeds -= fix(1, numTicks) / market.getMarketCreatorSettlementFeeDivisor()
@@ -535,7 +542,9 @@ def test_take_best_order_with_shares_escrowed_buy_with_shares_categorical(contra
     expectedTester2Payout = totalProceeds * (numTicks - 6000) / numTicks
     with EtherDelta(expectedTester1Payout, tester.a1, contractsFixture.chain, "Tester 1 ETH delta wrong"):
         with EtherDelta(expectedTester2Payout, tester.a2, contractsFixture.chain, "Tester 2 ETH delta wrong"):
-            assert trade.publicFillBestOrder(BID, market.address, 0, fix(1), 6000, "43", sender=tester.k2) == 0
+            with PrintGasUsed(contractsFixture, "categoricalFill", 0):
+                fillOrder.publicFillOrder(orderID, fix(1), "43", sender=tester.k2) == 0
+                assert trade.publicFillBestOrder(BID, market.address, 0, fix(1), 6000, "43", sender=tester.k2) == 0
 
     assert firstShareToken.balanceOf(tester.a1) == 0
     assert secondShareToken.balanceOf(tester.a1) == fix(1)
