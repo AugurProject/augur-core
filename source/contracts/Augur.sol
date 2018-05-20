@@ -60,6 +60,7 @@ contract Augur is Controlled, IAugur {
 
     mapping(address => bool) private universes;
     mapping(address => bool) private crowdsourcers;
+    mapping(address => bool) private initialReporters;
 
     //
     // Universe
@@ -88,7 +89,7 @@ contract Augur is Controlled, IAugur {
     }
 
     //
-    // Crowdsourcers
+    // Reporting Participants
     //
 
     function isKnownCrowdsourcer(IDisputeCrowdsourcer _crowdsourcer) public view returns (bool) {
@@ -101,6 +102,18 @@ contract Augur is Controlled, IAugur {
         crowdsourcers[_disputeCrowdsourcer] = true;
         DisputeCrowdsourcerCreated(_universe, _market, _disputeCrowdsourcer, _payoutNumerators, _size, _invalid);
         return true;
+    }
+
+    function registerInitialReporter(IInitialReporter _initialReporter) public returns (bool) {
+        IMarket _market = IMarket(msg.sender);
+        IUniverse _universe = _market.getUniverse();
+        require(isKnownUniverse(_universe));
+        require(_universe.isContainerForMarket(IMarket(msg.sender)));
+        initialReporters[_initialReporter] = true;
+    }
+
+    function isKnownInitialReporter(IInitialReporter _initialReporter) public view returns (bool) {
+        return initialReporters[_initialReporter];
     }
 
     //
@@ -155,8 +168,7 @@ contract Augur is Controlled, IAugur {
     }
 
     function logInitialReporterRedeemed(IUniverse _universe, address _reporter, address _market, uint256 _amountRedeemed, uint256 _repReceived, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
+        require(isKnownInitialReporter(IInitialReporter(msg.sender)));
         InitialReporterRedeemed(_universe, _reporter, _market, _amountRedeemed, _repReceived, _reportingFeesReceived, _payoutNumerators);
         return true;
     }

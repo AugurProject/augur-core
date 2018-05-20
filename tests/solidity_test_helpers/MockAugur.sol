@@ -8,6 +8,8 @@ import 'reporting/IMarket.sol';
 import 'reporting/IFeeWindow.sol';
 import 'reporting/IReputationToken.sol';
 import 'trading/IShareToken.sol';
+import 'reporting/IInitialReporter.sol';
+import 'reporting/IDisputeCrowdsourcer.sol';
 import 'trading/Order.sol';
 
 
@@ -98,6 +100,10 @@ contract MockAugur is Controlled {
     }
 
     function logOrderCanceled(IUniverse _universe, address _shareToken, address _sender, bytes32 _orderId, Order.Types _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public onlyWhitelistedCallers returns (bool) {
+        return true;
+    }
+
+    function registerInitialReporter(IInitialReporter _initialReporter) public returns (bool) {
         return true;
     }
 

@@ -12,11 +12,13 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
     address private designatedReporter;
     address private actualReporter;
     uint256 private reportTimestamp;
+    IUniverse private universe;
 
     function initialize(IMarket _market, address _designatedReporter) public onlyInGoodTimes beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
-        reputationToken = market.getUniverse().getReputationToken();
+        universe = market.getUniverse();
+        reputationToken = universe.getReputationToken();
         cash = market.getDenominationToken();
         designatedReporter = _designatedReporter;
         return true;
@@ -34,9 +36,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         if (_cashBalance > 0) {
             cash.withdrawEtherTo(owner, _cashBalance);
         }
-        if (!_isDisavowed) {
-            controller.getAugur().logInitialReporterRedeemed(market.getUniverse(), owner, market, size, _repBalance, _cashBalance, payoutNumerators);
-        }
+        controller.getAugur().logInitialReporterRedeemed(universe, owner, market, size, _repBalance, _cashBalance, payoutNumerators);
         return true;
     }
 
@@ -75,8 +75,8 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
 
     function migrateREP() public returns (bool) {
         require(IMarket(msg.sender) == market);
-        IUniverse _newUniverse = market.getUniverse();
-        IReputationToken _newReputationToken = _newUniverse.getReputationToken();
+        universe = market.getUniverse();
+        IReputationToken _newReputationToken = universe.getReputationToken();
         uint256 _balance = reputationToken.balanceOf(this);
         if (_balance > 0) {
             reputationToken.migrateOut(_newReputationToken, _balance);
@@ -120,7 +120,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
     }
 
     function onTransferOwnership(address _owner, address _newOwner) internal returns (bool) {
-        controller.getAugur().logInitialReporterTransferred(market.getUniverse(), market, _owner, _newOwner);
+        controller.getAugur().logInitialReporterTransferred(universe, market, _owner, _newOwner);
         return true;
     }
 }

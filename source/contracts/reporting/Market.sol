@@ -117,6 +117,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function doInitialReport(uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes returns (bool) {
         IInitialReporter _initialReporter = getInitialReporter();
+        controller.getAugur().registerInitialReporter(_initialReporter);
         uint256 _timestamp = controller.getTimestamp();
         require(_initialReporter.getReportTimestamp() == 0);
         require(_timestamp > endTime);
