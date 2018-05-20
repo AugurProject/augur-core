@@ -60,7 +60,7 @@ def proceedToFork(fixture, market, universe):
 
     for i in range(market.getNumParticipants()):
         reportingParticipant = fixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
-        reportingParticipant.fork()
+        reportingParticipant.forkAndRedeem()
 
 def finalizeFork(fixture, market, universe, finalizeByMigration = True):
     reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())

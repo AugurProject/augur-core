@@ -307,60 +307,6 @@ def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market,
         with EtherDelta(expectedFees - expectedFees / 2, tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert marketDisputeCrowdsourcer.redeem(tester.a2)
 
-def test_forking(localFixture, universe, market, categoricalMarket, cash, reputationToken):
-    # Let's do some initial disputes for the categorical market
-    proceedToNextRound(localFixture, categoricalMarket, tester.k1, moveTimeForward = False)
-
-    # Get to a fork
-    testers = [tester.k0, tester.k1, tester.k2, tester.k3]
-    testerIndex = 1
-    while (market.getForkingMarket() == longToHexString(0)):
-        proceedToNextRound(localFixture, market, testers[testerIndex], True)
-        testerIndex += 1
-        testerIndex = testerIndex % len(testers)
-
-    # Have the participants fork and create new child universes
-    reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(0))
-    ReportingParticipantDisavowedLog = {
-        "universe": universe.address,
-        "market": market.address,
-        "reportingParticipant": reportingParticipant.address,
-    }
-    with AssertLog(localFixture, "ReportingParticipantDisavowed", ReportingParticipantDisavowedLog):
-        reportingParticipant.fork()
-
-    for i in range(1, market.getNumParticipants()):
-        reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
-        reportingParticipant.fork()
-
-    # Finalize the fork
-    finalizeFork(localFixture, market, universe)
-
-    categoricalDisputeCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", categoricalMarket.getReportingParticipant(1))
-
-    # Migrate the categorical market into the winning universe. This will disavow the dispute crowdsourcer on it, letting us redeem for original universe rep and eth
-    assert categoricalMarket.migrateThroughOneFork()
-
-    expectedRep = categoricalDisputeCrowdsourcer.getStake()
-    expectedEth = getExpectedFees(localFixture, cash, categoricalDisputeCrowdsourcer, 2)
-    with EtherDelta(expectedEth, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-        with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't increase REP correctly"):
-            categoricalDisputeCrowdsourcer.redeem(tester.a1)
-
-    # Now we'll redeem the forked reporting participants
-    testers = [tester.a0, tester.a1, tester.a2, tester.a3]
-    for i in range(market.getNumParticipants()):
-        account = testers[i % 4]
-        reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
-        expectedRep = reportingParticipant.getStake()
-        expectedRep += expectedRep / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
-        expectedRep += reportingParticipant.getStake() / 2
-        expectedEth = cash.balanceOf(reportingParticipant.address)
-        newReputationToken = localFixture.applySignature("ReputationToken", reportingParticipant.getReputationToken())
-        with EtherDelta(expectedEth, account, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-            with TokenDelta(newReputationToken, expectedRep, account, "Redeeming didn't increase REP correctly"):
-                reportingParticipant.redeem(account)
-
 def test_forkAndRedeem(localFixture, universe, market, categoricalMarket, cash, reputationToken):
     # Let's do some initial disputes for the categorical market
     proceedToNextRound(localFixture, categoricalMarket, tester.k1, moveTimeForward = False)

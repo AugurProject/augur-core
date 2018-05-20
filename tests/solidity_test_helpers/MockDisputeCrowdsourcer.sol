@@ -54,7 +54,7 @@ contract MockDisputeCrowdsourcer is IDisputeCrowdsourcer, MockVariableSupplyToke
         return true;
     }
 
-    function fork() public returns (bool) {
+    function fork() internal returns (bool) {
         return true;
     }
 

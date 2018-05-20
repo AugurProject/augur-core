@@ -15,7 +15,7 @@ def test_minimum_gas_failure(contractsFixture, cash, market, universe):
     # create order
     orderID = createOrder.publicCreateOrder(BID, fix(4), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('4', '6000'))
 
-    # We need to provide a minimum gas amount or we'll get back a failure. In testing we use a much higher minimum since in some cases we alter the contracts in a way that massively increases gas cost. In production this value is 500000
+    # We need to provide a minimum gas amount or we'll get back a failure. In testing we use a much higher minimum since in some cases we alter the contracts in a way that massively increases gas cost. In production this value is 2000000
     minGas = 5000000
     fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('5', '4000'), startgas=minGas-1)
 

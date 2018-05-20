@@ -86,6 +86,9 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
     }
 
     function forkAndRedeem() public onlyInGoodTimes returns (bool) {
+        if (!isDisavowed()) {
+            controller.getAugur().logInitialReporterRedeemed(market.getUniverse(), owner, market, size, reputationToken.balanceOf(this), cash.balanceOf(this), payoutNumerators);
+        }
         fork();
         redeem(msg.sender);
         return true;
