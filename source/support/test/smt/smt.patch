@@ -1,0 +1,37 @@
+diff --git a/source/libraries/ContractCompiler.ts b/source/libraries/ContractCompiler.ts
+index 0c3cb68b..99bbdb63 100644
+--- a/source/libraries/ContractCompiler.ts
++++ b/source/libraries/ContractCompiler.ts
+@@ -3,9 +3,10 @@ import readFile = require('fs-readfile-promise');
+ import asyncMkdirp = require('async-mkdirp');
+ import * as path from "path";
+ import * as recursiveReadDir from "recursive-readdir";
+-import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
++import { CompilerInput, CompilerOutput } from "solc";
+ import { Abi } from "ethereum";
+ import { CompilerConfiguration } from './CompilerConfiguration';
++import child_process = require('child_process');
+ 
+ interface AbiOutput {
+     [contract: string]: Abi;
+@@ -38,8 +39,9 @@ export class ContractCompiler {
+ 
+         // Compile all contracts in the specified input directory
+         const compilerInputJson = await this.generateCompilerInput();
+-        const compilerOutputJson = compileStandardWrapper(JSON.stringify(compilerInputJson));
+-        const compilerOutput: CompilerOutput = JSON.parse(compilerOutputJson);
++        const compilerOutputJson = child_process.execSync('/usr/local/bin/solc --standard-json', {input: JSON.stringify(compilerInputJson), stdio: 'pipe'});
++        const compilerOutput: CompilerOutput = JSON.parse(compilerOutputJson.toString());
++        console.log(compilerOutput);
+         if (compilerOutput.errors) {
+             let errors = "";
+ 
+@@ -50,7 +52,7 @@ export class ContractCompiler {
+             }
+ 
+             if (errors.length > 0) {
+-                throw new Error("The following errors/warnings were returned by solc:\n\n" + errors);
++                console.log("The following errors/warnings were returned by solc:\n\n" + errors);
+             }
+         }
+ 
