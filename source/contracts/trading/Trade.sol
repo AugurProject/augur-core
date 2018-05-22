@@ -66,10 +66,8 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
             // If the price is acceptable relative to the trade type
             if (_type == Order.Types.Bid ? _orderPrice >= _price : _orderPrice <= _price) {
                 bytes32 _nextOrderId = _orders.getWorseOrderId(_orderId);
-                if (_orders.getOrderCreator(_orderId) != _sender) {
-                    _orders.setPrice(_market, _outcome, _orderPrice);
-                    _bestFxpAmount = IFillOrder(controller.lookup("FillOrder")).fillOrder(_sender, _orderId, _bestFxpAmount, _tradeGroupId);
-                }
+                _orders.setPrice(_market, _outcome, _orderPrice);
+                _bestFxpAmount = IFillOrder(controller.lookup("FillOrder")).fillOrder(_sender, _orderId, _bestFxpAmount, _tradeGroupId);
                 _orderId = _nextOrderId;
             } else {
                 _orderId = bytes32(0);
