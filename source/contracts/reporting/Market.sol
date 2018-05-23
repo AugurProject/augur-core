@@ -93,7 +93,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function assessFees() private onlyInGoodTimes returns (bool) {
-        require(getReputationToken().balanceOf(this) == universe.getOrCacheDesignatedReportNoShowBond());
+        require(getReputationToken().balanceOf(this) >= universe.getOrCacheDesignatedReportNoShowBond());
         reporterGasCostsFeeAttoeth = universe.getOrCacheTargetReporterGasCosts();
         validityBondAttoeth = universe.getOrCacheValidityBond();
         return true;
@@ -450,6 +450,14 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function getNumParticipants() public view returns (uint256) {
         return participants.length;
+    }
+
+    function getValidityBondAttoeth() public view returns (uint256) {
+        return validityBondAttoeth;
+    }
+
+    function getReporterGasCostsFeeAttoeth() public view returns (uint256) {
+        return reporterGasCostsFeeAttoeth;
     }
 
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {
