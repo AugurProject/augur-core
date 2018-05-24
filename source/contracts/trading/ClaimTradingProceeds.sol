@@ -33,10 +33,6 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
             uint256 _reporterShare;
             (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _outcome, _numberOfShares);
 
-            if (_proceeds > 0) {
-                _market.getUniverse().decrementOpenInterest(_proceeds);
-            }
-
             // always destroy shares as it gives a minor gas refund and is good for the network
             if (_numberOfShares > 0) {
                 _shareToken.destroyShares(_shareHolder, _numberOfShares);
@@ -83,7 +79,6 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
     }
 
     function calculateCreatorFee(IMarket _market, uint256 _amount) public view returns (uint256) {
-        uint256 _creatorFeeDivisor = _market.getMarketCreatorSettlementFeeDivisor();
-        return _amount.div(_creatorFeeDivisor);
+        return _market.deriveMarketCreatorFeeAmount(_amount);
     }
 }

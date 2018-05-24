@@ -38,6 +38,7 @@ contract IMarket is ITyped, IOwnable {
     function getReputationToken() public view returns (IReputationToken);
     function getFinalizationTime() public view returns (uint256);
     function getInitialReporterAddress() public view returns (address);
+    function deriveMarketCreatorFeeAmount(uint256 _amount) public view returns (uint256);
     function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool);
     function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool);
     function isInvalid() public view returns (bool);

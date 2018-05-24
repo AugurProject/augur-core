@@ -62,7 +62,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(MIN_OUTCOMES <= _numOutcomes && _numOutcomes <= MAX_OUTCOMES);
         require(_numTicks > 0);
         require(_designatedReporterAddress != NULL_ADDRESS);
-        require((_numTicks.isMultipleOf(_numOutcomes)));
+        require((_numTicks >= _numOutcomes));
         require(_feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(controller.getTimestamp() < _endTime);
@@ -74,7 +74,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         endTime = _endTime;
         numOutcomes = _numOutcomes;
         numTicks = _numTicks;
-        feeDivisor = 1 ether / _feePerEthInAttoeth;
+        feeDivisor = _feePerEthInAttoeth == 0 ? 0 : 1 ether / _feePerEthInAttoeth;
         cash = _cash;
         InitialReporterFactory _initialReporterFactory = InitialReporterFactory(controller.lookup("InitialReporterFactory"));
         participants.push(_initialReporterFactory.createInitialReporter(controller, this, _designatedReporterAddress));
@@ -178,6 +178,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(!universe.isForking());
         winningPayoutDistributionHash = participants[participants.length-1].getPayoutDistributionHash();
         feeWindow.onMarketFinalized();
+        universe.decrementOpenInterestFromMarket(shareTokens[0].totalSupply().mul(numTicks));
         redistributeLosingReputation();
         distributeValidityBond();
         finalizationTime = controller.getTimestamp();
@@ -241,6 +242,13 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return feeDivisor;
     }
 
+    function deriveMarketCreatorFeeAmount(uint256 _amount) public view returns (uint256) {
+        if (feeDivisor == 0) {
+            return 0;
+        }
+        return _amount / feeDivisor;
+    }
+
     function distributeValidityBond() private returns (bool) {
         // If the market resolved to invalid the bond gets sent to the fee window. Otherwise it gets returned to the market creator mailbox.
         if (!isInvalid()) {
@@ -273,6 +281,10 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         bytes32 _winningForkPayoutDistributionHash = _forkingMarket.getWinningPayoutDistributionHash();
         IUniverse _destinationUniverse = _currentUniverse.getChildUniverse(_winningForkPayoutDistributionHash);
 
+        uint256 _marketOI = shareTokens[0].totalSupply().mul(numTicks);
+
+        universe.decrementOpenInterestFromMarket(_marketOI);
+
         // follow the forking market to its universe
         if (feeWindow != IFeeWindow(0)) {
             feeWindow = _destinationUniverse.getOrCreateNextFeeWindow();
@@ -281,6 +293,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         _currentUniverse.removeMarketFrom();
         IReputationToken _oldReputationToken = getReputationToken();
         universe = _destinationUniverse;
+
+        universe.incrementOpenInterestFromMarket(_marketOI);
 
         // reset state back to Initial Reporter
         IInitialReporter _initialParticipant = getInitialReporter();
@@ -470,7 +484,11 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             require(!_invalid || _value == _previousValue);
             _previousValue = _value;
         }
-        require(_sum == numTicks);
+        if (_invalid) {
+            require(_previousValue == numTicks / numOutcomes);
+        } else {
+            require(_sum == numTicks);
+        }
         return keccak256(_payoutNumerators, _invalid);
     }
 
