@@ -108,9 +108,6 @@ def test_open_interest(localFixture, populatedUniverse):
     populatedUniverse.incrementOpenInterest(20)
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 20 * multiplier
     assert populatedUniverse.getOpenInterestInAttoEth() == 20
-    populatedUniverse.decrementOpenInterest(10)
-    assert populatedUniverse.getOpenInterestInAttoEth() == 10
-    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 10 * multiplier
 
 def test_universe_rep_price_oracle(localFixture, populatedUniverse, mockReputationToken, mockShareToken):
     controller = localFixture.contracts['Controller']
@@ -252,18 +249,6 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 20 * multiplier
     assert populatedUniverse.getOpenInterestInAttoEth() == 20
     # default because calculation is greater than 10000
-    assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue
-
-    # push fee window forward
-    localFixture.contracts["Time"].incrementTimestamp(populatedUniverse.getDisputeRoundDurationInSeconds())
-
-    mockReputationToken.setTotalSupply(1)
-    assert repPriceOracle.setRepPriceInAttoEth(1)
-    populatedUniverse.decrementOpenInterest(10)
-    assert populatedUniverse.getRepMarketCapInAttoeth() == 1
-    assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 10 * multiplier
-    assert populatedUniverse.getOpenInterestInAttoEth() == 10
-
     assert populatedUniverse.getOrCacheReportingFeeDivisor() == defaultValue
 
 def test_universe_create_market(localFixture, chain, populatedUniverse, mockMarket, mockMarketFactory, mockCash, mockReputationToken, mockAugur, mockFeeWindowFactory, mockFeeWindow):

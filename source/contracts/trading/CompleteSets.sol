@@ -57,10 +57,9 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, MarketV
 
         uint256 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _denominationToken = _market.getDenominationToken();
-        uint256 _creatorFeeDivisor = _market.getMarketCreatorSettlementFeeDivisor();
         uint256 _payout = _amount.mul(_market.getNumTicks());
         _market.getUniverse().decrementOpenInterest(_payout);
-        _creatorFee = _payout.div(_creatorFeeDivisor);
+        _creatorFee = _market.deriveMarketCreatorFeeAmount(_payout);
         uint256 _reportingFeeDivisor = _market.getUniverse().getOrCacheReportingFeeDivisor();
         _reportingFee = _payout.div(_reportingFeeDivisor);
         _payout = _payout.sub(_creatorFee).sub(_reportingFee);

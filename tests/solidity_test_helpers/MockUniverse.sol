@@ -395,17 +395,25 @@ contract MockUniverse is Initializable, IUniverse {
         return setIncrementOpenInterestValue;
     }
 
+    function incrementOpenInterestFromMarket(uint256 _amount) public returns (bool) {
+        return true;
+    }
+
+    function decrementOpenInterestFromMarket(uint256 _amount) public returns (bool) {
+        return true;
+    }
+
     function getForkReputationGoal() public view returns (uint256) {
         return setForkReputationGoalValue;
     }
 
     function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
-        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getCategoricalMarketNumTicks(2));
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, 10000);
         return _newMarket;
     }
 
     function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
-        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint256(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint256(_outcomes.length)));
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint256(_outcomes.length), 10000);
         return _newMarket;
     }
 

@@ -272,8 +272,19 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return true;
     }
 
-    // CONSIDER: It would be more correct to decrease open interest for all outstanding shares in a market when it is finalized. We aren't doing this currently since securely and correctly writing this code would require updating the Market contract, which is currently at its size limit.
+    function decrementOpenInterestFromMarket(uint256 _amount) public returns (bool) {
+        require(isContainerForMarket(IMarket(msg.sender)));
+        openInterestInAttoEth = openInterestInAttoEth.sub(_amount);
+        return true;
+    }
+
     function incrementOpenInterest(uint256 _amount) public onlyInGoodTimes onlyWhitelistedCallers returns (bool) {
+        openInterestInAttoEth = openInterestInAttoEth.add(_amount);
+        return true;
+    }
+
+    function incrementOpenInterestFromMarket(uint256 _amount) public onlyInGoodTimes returns (bool) {
+        require(isContainerForMarket(IMarket(msg.sender)));
         openInterestInAttoEth = openInterestInAttoEth.add(_amount);
         return true;
     }
@@ -423,14 +434,14 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
     function createBinaryMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(bytes(_description).length > 0);
-        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, Reporting.getCategoricalMarketNumTicks(2));
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, 10000);
         controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, 0, 1 ether, IMarket.MarketType.BINARY);
         return _newMarket;
     }
 
     function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(bytes(_description).length > 0);
-        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint256(_outcomes.length), Reporting.getCategoricalMarketNumTicks(uint256(_outcomes.length)));
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint256(_outcomes.length), 10000);
         controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, _outcomes, 0, 1 ether, IMarket.MarketType.CATEGORICAL);
         return _newMarket;
     }
@@ -438,6 +449,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     function createScalarMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, int256 _minPrice, int256 _maxPrice, uint256 _numTicks, bytes32 _topic, string _description, string _extraInfo) public onlyInGoodTimes afterInitialized payable returns (IMarket _newMarket) {
         require(bytes(_description).length > 0);
         require(_minPrice < _maxPrice);
+        require(_numTicks.isMultipleOf(2));
         _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, _numTicks);
         controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, _minPrice, _maxPrice, IMarket.MarketType.SCALAR);
         return _newMarket;
