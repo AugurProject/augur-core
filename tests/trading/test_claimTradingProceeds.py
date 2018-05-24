@@ -3,7 +3,7 @@
 from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import raises, fixture
+from pytest import raises, fixture, mark
 from utils import fix, AssertLog, bytesToHexString, EtherDelta, TokenDelta
 from constants import YES, NO
 
@@ -45,11 +45,11 @@ def acquireShortShareSet(kitchenSinkFixture, cash, market, outcome, amount, appr
         otherShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(otherOutcome))
         assert otherShareToken.approve(approvalAddress, amount, sender = sender)
 
-def finalizeMarket(fixture, market, payoutNumerators):
+def finalizeMarket(fixture, market, payoutNumerators, invalid=False):
     # set timestamp to after market end
     fixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
     # have tester.a0 submit designated report
-    market.doInitialReport(payoutNumerators, False)
+    market.doInitialReport(payoutNumerators, invalid)
     # set timestamp to after designated dispute end
     feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
     fixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
@@ -120,27 +120,40 @@ def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, mark
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a2) == 0
-    assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks() # The corresponding share for tester2's complete set has not been redeemed
 
-def test_redeem_shares_in_categorical_market(kitchenSinkFixture, universe, cash, categoricalMarket):
+@mark.parametrize('isInvalid', [
+    True,
+    False
+])
+def test_redeem_shares_in_categorical_market(isInvalid, kitchenSinkFixture, universe, cash, categoricalMarket):
     market = categoricalMarket
     claimTradingProceeds = kitchenSinkFixture.contracts['ClaimTradingProceeds']
     shareToken2 = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(2))
     shareToken1 = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(1))
     shareToken0 = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(0))
-    expectedValue = 1 * market.getNumTicks()
+    numTicks = market.getNumTicks()
+    expectedValue = numTicks if not isInvalid else numTicks / 3
     expectedSettlementFees = expectedValue * 0.02
     expectedPayout = long(expectedValue - expectedSettlementFees)
+    if (isInvalid):
+        expectedPayout += 1 # rounding errors
 
     assert universe.getOpenInterestInAttoEth() == 0
 
     # get long shares with a1
     acquireLongShares(kitchenSinkFixture, cash, market, 2, 1, claimTradingProceeds.address, sender = tester.k1)
-    assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
+    assert universe.getOpenInterestInAttoEth() == 1 * numTicks
     # get short shares with a2
     acquireShortShareSet(kitchenSinkFixture, cash, market, 2, 1, claimTradingProceeds.address, sender = tester.k2)
-    assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(kitchenSinkFixture, market, [0, 0, market.getNumTicks()])
+    assert universe.getOpenInterestInAttoEth() == 2 * numTicks
+
+    if (isInvalid):
+        invalidPayout = numTicks / 3
+        finalizeMarket(kitchenSinkFixture, market, [invalidPayout, invalidPayout, invalidPayout], True)
+    else:
+        finalizeMarket(kitchenSinkFixture, market, [0, 0, numTicks])
+
+    assert universe.getOpenInterestInAttoEth() == 0
 
     # redeem shares with a1
     initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
@@ -149,16 +162,16 @@ def test_redeem_shares_in_categorical_market(kitchenSinkFixture, universe, cash,
     initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
     claimTradingProceeds.claimTradingProceeds(market.address, tester.a2)
 
-    # assert a1 ends up with cash (minus fees) and a2 does not
-    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout + 1 # rounding errors from fees
-    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a2) == initialShortHolderETH
+    # assert both accounts are paid (or not paid) accordingly
+    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout
+    shortHolderPayout = 2 * expectedPayout if isInvalid else 0
+    assert kitchenSinkFixture.chain.head_state.get_balance(tester.a2) == initialShortHolderETH + shortHolderPayout
     assert shareToken2.balanceOf(tester.a1) == 0
     assert shareToken2.balanceOf(tester.a2) == 0
     assert shareToken1.balanceOf(tester.a1) == 0
     assert shareToken1.balanceOf(tester.a2) == 0
     assert shareToken0.balanceOf(tester.a1) == 0
     assert shareToken0.balanceOf(tester.a2) == 0
-    assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
 
 def test_redeem_shares_in_scalar_market(kitchenSinkFixture, universe, cash, scalarMarket):
     market = scalarMarket
@@ -193,7 +206,6 @@ def test_redeem_shares_in_scalar_market(kitchenSinkFixture, universe, cash, scal
     assert yesShareToken.balanceOf(tester.a2) == 0
     assert noShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a2) == 0
-    assert universe.getOpenInterestInAttoEth() == 1 * market.getNumTicks()
 
 def test_reedem_failure(kitchenSinkFixture, cash, market):
     claimTradingProceeds = kitchenSinkFixture.contracts['ClaimTradingProceeds']

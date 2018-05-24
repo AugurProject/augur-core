@@ -33,10 +33,6 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
             uint256 _reporterShare;
             (_proceeds, _shareHolderShare, _creatorShare, _reporterShare) = divideUpWinnings(_market, _outcome, _numberOfShares);
 
-            if (_proceeds > 0) {
-                _market.getUniverse().decrementOpenInterest(_proceeds);
-            }
-
             // always destroy shares as it gives a minor gas refund and is good for the network
             if (_numberOfShares > 0) {
                 _shareToken.destroyShares(_shareHolder, _numberOfShares);

@@ -180,9 +180,9 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
 
 @mark.parametrize('finalizeByMigration, manuallyDisavow', [
     (True, True),
-    (False, True),
-    (True, False),
-    (False, False),
+    #(False, True),
+    #(True, False),
+    #(False, False),
 ])
 def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, cash, market, categoricalMarket, scalarMarket):
     # Let's go into the one dispute round for the categorical market
@@ -255,6 +255,14 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
 
     # The categorical market can be migrated to the winning universe
     newUniverseAddress = universe.getWinningChildUniverse()
+
+    # buy some complete sets to change OI
+    completeSets = localFixture.contracts['CompleteSets']
+    numSets = 10
+    cost = categoricalMarket.getNumTicks() * numSets
+    assert completeSets.publicBuyCompleteSets(categoricalMarket.address, 10, sender=tester.k1, value=cost)
+    assert universe.getOpenInterestInAttoEth() == cost
+
     marketMigratedLog = {
         "market": categoricalMarket.address,
         "newUniverse": newUniverseAddress,
@@ -263,12 +271,15 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
     with AssertLog(localFixture, "MarketMigrated", marketMigratedLog):
         assert categoricalMarket.migrateThroughOneFork()
 
+    assert universe.getOpenInterestInAttoEth() == 0
+
     # The dispute crowdsourcer has been disavowed
     newUniverse = localFixture.applySignature("Universe", categoricalMarket.getUniverse())
     assert newUniverse.address != universe.address
     assert categoricalDisputeCrowdsourcer.isDisavowed()
     assert not universe.isContainerForReportingParticipant(categoricalDisputeCrowdsourcer.address)
     assert not newUniverse.isContainerForReportingParticipant(categoricalDisputeCrowdsourcer.address)
+    assert newUniverse.getOpenInterestInAttoEth() == cost
 
     # The initial report is still present however
     categoricalInitialReport = localFixture.applySignature("InitialReporter", categoricalMarket.getReportingParticipant(0))
