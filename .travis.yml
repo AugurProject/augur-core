@@ -23,6 +23,8 @@ script: docker pull $IMAGE_BUILD;
         cat source/contracts/test-results.log;
         elif [[ "$TESTS" == "security:maian" ]]; then
         npm run docker:run:test:security:maian;
+        elif [[ "$TESTS" == "security:smt" ]]; then
+        npm run docker:run:test:security:smt;
         else
           npm run docker:run:test:unit -- $TESTS;
         fi
@@ -80,3 +82,4 @@ env:
     - TESTS="integration:parity"
     - TESTS="security:mythril"
     - TESTS="security:maian"
+    - TESTS="security:smt"
