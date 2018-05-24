@@ -82,6 +82,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
     function getFillOrderMinGasNeeded() internal pure returns (uint256) {
         return FILL_ORDER_MINIMUM_GAS_NEEDED;
     }
+
     function getCreateOrderMinGasNeeded() internal pure returns (uint256) {
         return CREATE_ORDER_MINIMUM_GAS_NEEDED;
     }

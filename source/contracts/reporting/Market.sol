@@ -243,7 +243,9 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function deriveMarketCreatorFeeAmount(uint256 _amount) public view returns (uint256) {
-        if (feeDivisor == 0) return 0;
+        if (feeDivisor == 0) {
+            return 0;
+        }
         return _amount / feeDivisor;
     }
 
