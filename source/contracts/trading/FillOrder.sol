@@ -372,7 +372,7 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
         }
 
         uint256 _amountRemainingFillerWants = _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);
-        uint256 _amountFilled = _amountFillerWants - _amountRemainingFillerWants;
+        uint256 _amountFilled = _amountFillerWants.sub(_amountRemainingFillerWants);
         logOrderFilled(_tradeData, _marketCreatorFees, _reporterFees, _amountFilled, _tradeGroupId);
         _tradeData.contracts.orders.recordFillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
         return _amountRemainingFillerWants;
