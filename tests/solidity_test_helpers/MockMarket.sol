@@ -402,4 +402,8 @@ contract MockMarket is IMarket {
     function getInitialReporterAddress() public view returns (address) {
         return address(0);
     }
+
+    function deriveMarketCreatorFeeAmount(uint256 _amount) public view returns (uint256) {
+        return 0;
+    }
 }

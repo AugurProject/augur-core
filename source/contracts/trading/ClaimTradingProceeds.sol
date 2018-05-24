@@ -79,7 +79,6 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
     }
 
     function calculateCreatorFee(IMarket _market, uint256 _amount) public view returns (uint256) {
-        uint256 _creatorFeeDivisor = _market.getMarketCreatorSettlementFeeDivisor();
-        return _amount.div(_creatorFeeDivisor);
+        return _market.deriveMarketCreatorFeeAmount(_amount);
     }
 }

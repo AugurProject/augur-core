@@ -74,7 +74,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         endTime = _endTime;
         numOutcomes = _numOutcomes;
         numTicks = _numTicks;
-        feeDivisor = 1 ether / _feePerEthInAttoeth;
+        feeDivisor = _feePerEthInAttoeth == 0 ? 0 : 1 ether / _feePerEthInAttoeth;
         cash = _cash;
         InitialReporterFactory _initialReporterFactory = InitialReporterFactory(controller.lookup("InitialReporterFactory"));
         participants.push(_initialReporterFactory.createInitialReporter(controller, this, _designatedReporterAddress));
@@ -240,6 +240,11 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function getMarketCreatorSettlementFeeDivisor() public view returns (uint256) {
         return feeDivisor;
+    }
+
+    function deriveMarketCreatorFeeAmount(uint256 _amount) public view returns (uint256) {
+        if (feeDivisor == 0) return 0;
+        return _amount / feeDivisor;
     }
 
     function distributeValidityBond() private returns (bool) {
