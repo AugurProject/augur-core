@@ -27,7 +27,11 @@ def test_minimum_gas_failure(contractsFixture, cash, market, universe):
 
     assert fillOrderID != longTo32Bytes(1)
 
-def test_one_bid_on_books_buy_full_order(contractsFixture, cash, market, universe):
+@mark.parametrize('withSelf', [
+    True,
+    False
+])
+def test_one_bid_on_books_buy_full_order(withSelf, contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
@@ -35,7 +39,8 @@ def test_one_bid_on_books_buy_full_order(contractsFixture, cash, market, univers
     tradeGroupID = "42"
 
     # create order
-    orderID = createOrder.publicCreateOrder(BID, fix(2), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('2', '6000'))
+    sender = tester.k2 if withSelf else tester.k1
+    orderID = createOrder.publicCreateOrder(BID, fix(2), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = sender, value=fix('2', '6000'))
 
     # fill best order
     orderFilledLog = {
@@ -560,7 +565,11 @@ def test_take_best_order_multiple_orders(contractsFixture, cash, market, univers
         assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
         assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
 
-def test_take_best_order_with_shares_escrowed_buy_with_cash(contractsFixture, cash, market, universe):
+@mark.parametrize('withSelf', [
+    True,
+    False
+])
+def test_take_best_order_with_shares_escrowed_buy_with_cash(withSelf, contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     orders = contractsFixture.contracts['Orders']
@@ -568,11 +577,13 @@ def test_take_best_order_with_shares_escrowed_buy_with_cash(contractsFixture, ca
     yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
 
     # buy complete sets
-    assert completeSets.publicBuyCompleteSets(market.address, fix(1), sender=tester.k1, value=fix('1', '10000'))
-    assert yesShareToken.balanceOf(tester.a1) == fix(1)
+    sender = tester.k2 if withSelf else tester.k1
+    account = tester.a2 if withSelf else tester.a1
+    assert completeSets.publicBuyCompleteSets(market.address, fix(1), sender=sender, value=fix('1', '10000'))
+    assert yesShareToken.balanceOf(account) == fix(1)
 
     # create order with shares
-    orderID = createOrder.publicCreateOrder(ASK, fix(1), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender=tester.k1)
+    orderID = createOrder.publicCreateOrder(ASK, fix(1), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", sender=sender)
     assert orderID
 
     # fill order with cash using on-chain matcher
@@ -586,6 +597,7 @@ def test_take_best_order_with_shares_escrowed_buy_with_cash(contractsFixture, ca
     assert orders.getOrderSharesEscrowed(orderID) == 0
     assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
     assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
+
 
 def test_take_best_order_with_shares_escrowed_buy_with_shares_categorical(contractsFixture, cash, categoricalMarket, universe):
     market = categoricalMarket

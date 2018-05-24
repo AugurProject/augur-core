@@ -65,10 +65,8 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
             // If the price is acceptable relative to the trade type
             if (_type == Order.Types.Bid ? _orderPrice >= _price : _orderPrice <= _price) {
                 bytes32 _nextOrderId = _orders.getWorseOrderId(_orderId);
-                if (_orders.getOrderCreator(_orderId) != _sender) {
-                    _orders.setPrice(_market, _outcome, _orderPrice);
-                    _bestFxpAmount = IFillOrder(controller.lookup("FillOrder")).fillOrder(_sender, _orderId, _bestFxpAmount, _tradeGroupId);
-                }
+                _orders.setPrice(_market, _outcome, _orderPrice);
+                _bestFxpAmount = IFillOrder(controller.lookup("FillOrder")).fillOrder(_sender, _orderId, _bestFxpAmount, _tradeGroupId);
                 _orderId = _nextOrderId;
             } else {
                 _orderId = bytes32(0);
@@ -137,6 +135,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
     function getFillOrderMinGasNeeded() internal pure returns (uint256) {
         return FILL_ORDER_MINIMUM_GAS_NEEDED;
     }
+
     function getCreateOrderMinGasNeeded() internal pure returns (uint256) {
         return CREATE_ORDER_MINIMUM_GAS_NEEDED;
     }

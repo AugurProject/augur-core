@@ -50,7 +50,9 @@ contract IUniverse is ITyped {
     function addMarketTo() public returns (bool);
     function removeMarketFrom() public returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);
+    function decrementOpenInterestFromMarket(uint256 _amount) public returns (bool);
     function incrementOpenInterest(uint256 _amount) public returns (bool);
+    function incrementOpenInterestFromMarket(uint256 _amount) public returns (bool);
     function getWinningChildUniverse() public view returns (IUniverse);
     function isForking() public view returns (bool);
 }
