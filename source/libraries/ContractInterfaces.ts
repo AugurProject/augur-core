@@ -3519,6 +3519,13 @@
             return <boolean>result[0];
         }
 
+        public getReporterGasCostsFeeAttoeth_ = async( options?: { sender?: string }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getReporterGasCostsFeeAttoeth","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <BN>result[0];
+        }
+
         public doInitialReport = async(payoutNumerators: Array<BN>, invalid: boolean, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_payoutNumerators","type":"uint256[]"},{"name":"_invalid","type":"bool"}],"name":"doInitialReport","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -3699,6 +3706,13 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getWinningReportingParticipant","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
+        }
+
+        public getValidityBondAttoeth_ = async( options?: { sender?: string }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getValidityBondAttoeth","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <BN>result[0];
         }
 
         public getWinningPayoutDistributionHash_ = async( options?: { sender?: string }): Promise<string> => {
@@ -3916,6 +3930,13 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
+        }
+
+        public deriveMarketCreatorFeeAmount_ = async(amount: BN, options?: { sender?: string }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_amount","type":"uint256"}],"name":"deriveMarketCreatorFeeAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [amount], options.sender);
+            return <BN>result[0];
         }
 
         public getNumParticipants_ = async( options?: { sender?: string }): Promise<BN> => {
@@ -4387,6 +4408,20 @@
             super(connector, accountManager, address, defaultGasPrice);
         }
 
+        public incrementOpenInterestFromMarket = async(amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_amount","type":"uint256"}],"name":"incrementOpenInterestFromMarket","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [amount], "incrementOpenInterestFromMarket", options.sender, options.gasPrice);
+            return;
+        }
+
+        public incrementOpenInterestFromMarket_ = async(amount: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_amount","type":"uint256"}],"name":"incrementOpenInterestFromMarket","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [amount], options.sender);
+            return <boolean>result[0];
+        }
+
         public getOrCreateNextFeeWindow = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreateNextFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -4412,6 +4447,20 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_tokens","type":"address[]"}],"name":"suicideFunds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [target, tokens], options.sender);
+            return <boolean>result[0];
+        }
+
+        public decrementOpenInterestFromMarket = async(amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_amount","type":"uint256"}],"name":"decrementOpenInterestFromMarket","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [amount], "decrementOpenInterestFromMarket", options.sender, options.gasPrice);
+            return;
+        }
+
+        public decrementOpenInterestFromMarket_ = async(amount: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_amount","type":"uint256"}],"name":"decrementOpenInterestFromMarket","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [amount], options.sender);
             return <boolean>result[0];
         }
 
@@ -6256,6 +6305,20 @@
             super(connector, accountManager, address, defaultGasPrice);
         }
 
+        public publicSellWithLimit = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, loopLimit: BN, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"},{"name":"_loopLimit","type":"uint256"}],"name":"publicSellWithLimit","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            await this.remoteCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId, loopLimit], "publicSellWithLimit", options.sender, options.gasPrice, options.attachedEth);
+            return;
+        }
+
+        public publicSellWithLimit_ = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, loopLimit: BN, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"},{"name":"_loopLimit","type":"uint256"}],"name":"publicSellWithLimit","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const result = await this.localCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId, loopLimit], options.sender, options.attachedEth);
+            return <string>result[0];
+        }
+
         public suicideFunds = async(target: string, tokens: Array<string>, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_tokens","type":"address[]"}],"name":"suicideFunds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -6291,6 +6354,20 @@
             return <string>result[0];
         }
 
+        public publicTradeWithLimit = async(direction: BN, market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, loopLimit: BN, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"},{"name":"_loopLimit","type":"uint256"}],"name":"publicTradeWithLimit","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            await this.remoteCall(abi, [direction, market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId, loopLimit], "publicTradeWithLimit", options.sender, options.gasPrice, options.attachedEth);
+            return;
+        }
+
+        public publicTradeWithLimit_ = async(direction: BN, market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, loopLimit: BN, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"},{"name":"_loopLimit","type":"uint256"}],"name":"publicTradeWithLimit","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const result = await this.localCall(abi, [direction, market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId, loopLimit], options.sender, options.attachedEth);
+            return <string>result[0];
+        }
+
         public setController = async(controller: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -6303,6 +6380,20 @@
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"}],"name":"setController","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [controller], options.sender);
             return <boolean>result[0];
+        }
+
+        public publicFillBestOrderWithLimit = async(direction: BN, market: string, outcome: BN, fxpAmount: BN, price: BN, tradeGroupId: string, loopLimit: BN, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"},{"name":"_loopLimit","type":"uint256"}],"name":"publicFillBestOrderWithLimit","outputs":[{"name":"","type":"uint256"}],"payable":true,"stateMutability":"payable","type":"function"};
+            await this.remoteCall(abi, [direction, market, outcome, fxpAmount, price, tradeGroupId, loopLimit], "publicFillBestOrderWithLimit", options.sender, options.gasPrice, options.attachedEth);
+            return;
+        }
+
+        public publicFillBestOrderWithLimit_ = async(direction: BN, market: string, outcome: BN, fxpAmount: BN, price: BN, tradeGroupId: string, loopLimit: BN, options?: { sender?: string, attachedEth?: BN }): Promise<BN> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"},{"name":"_loopLimit","type":"uint256"}],"name":"publicFillBestOrderWithLimit","outputs":[{"name":"","type":"uint256"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const result = await this.localCall(abi, [direction, market, outcome, fxpAmount, price, tradeGroupId, loopLimit], options.sender, options.attachedEth);
+            return <BN>result[0];
         }
 
         public publicSell = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
@@ -6331,6 +6422,20 @@
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_direction","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_tradeGroupId","type":"bytes32"}],"name":"publicFillBestOrder","outputs":[{"name":"","type":"uint256"}],"payable":true,"stateMutability":"payable","type":"function"};
             const result = await this.localCall(abi, [direction, market, outcome, fxpAmount, price, tradeGroupId], options.sender, options.attachedEth);
             return <BN>result[0];
+        }
+
+        public publicBuyWithLimit = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, loopLimit: BN, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"},{"name":"_loopLimit","type":"uint256"}],"name":"publicBuyWithLimit","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            await this.remoteCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId, loopLimit], "publicBuyWithLimit", options.sender, options.gasPrice, options.attachedEth);
+            return;
+        }
+
+        public publicBuyWithLimit_ = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, loopLimit: BN, options?: { sender?: string, attachedEth?: BN }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"},{"name":"_fxpAmount","type":"uint256"},{"name":"_price","type":"uint256"},{"name":"_betterOrderId","type":"bytes32"},{"name":"_worseOrderId","type":"bytes32"},{"name":"_tradeGroupId","type":"bytes32"},{"name":"_loopLimit","type":"uint256"}],"name":"publicBuyWithLimit","outputs":[{"name":"","type":"bytes32"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const result = await this.localCall(abi, [market, outcome, fxpAmount, price, betterOrderId, worseOrderId, tradeGroupId, loopLimit], options.sender, options.attachedEth);
+            return <string>result[0];
         }
 
         public publicBuy = async(market: string, outcome: BN, fxpAmount: BN, price: BN, betterOrderId: string, worseOrderId: string, tradeGroupId: string, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
