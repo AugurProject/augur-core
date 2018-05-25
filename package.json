@@ -92,14 +92,14 @@
     "mocha": "5.1.1",
     "path": "0.12.7",
     "recursive-readdir": "2.2.1",
-    "replace": "0.3.0",
+    "replace": "1.0.0",
     "rimraf": "2.6.2",
-    "solidity-coverage": "0.4.15",
+    "solidity-coverage": "0.5.4",
     "yargs": "11.0.0"
   },
   "devDependencies": {
     "solc": "0.4.20",
-    "solium": "1.1.2",
+    "solium": "1.1.7",
     "source-map-support": "0.5.0",
     "ts-node": "3.3.0",
     "typescript": "2.6.1"
