@@ -60,6 +60,7 @@ contract Augur is Controlled, IAugur {
 
     mapping(address => bool) private universes;
     mapping(address => bool) private crowdsourcers;
+    mapping(address => bool) private shareTokens;
 
     //
     // Universe
@@ -104,6 +105,21 @@ contract Augur is Controlled, IAugur {
     }
 
     //
+    // Share Tokens
+    //
+
+    function recordMarketShareTokens(IMarket _market) public view returns (bool) {
+        uint256 _numOutcomes = _market.getNumberOfOutcomes();
+        for (uint256 _outcome = 0; _outcome < _numOutcomes; _outcome++) {
+            shareTokens[_market.getShareToken(_outcome)] = true;
+        }
+    }
+
+    function isKnownShareToken(IShareToken _token) public view returns (bool) {
+        return shareTokens[_token];
+    }
+
+    //
     // Transfer
     //
 
@@ -118,17 +134,19 @@ contract Augur is Controlled, IAugur {
     //
 
     // This signature is intended for the categorical market creation. We use two signatures for the same event because of stack depth issues which can be circumvented by maintaining order of paramaters
-    function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator, bytes32[] _outcomes, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
+    function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, IMarket _market, address _marketCreator, bytes32[] _outcomes, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe == IUniverse(msg.sender));
+        recordMarketShareTokens(_market);
         MarketCreated(_topic, _description, _extraInfo, _universe, _market, _marketCreator, _outcomes, _universe.getOrCacheMarketCreationCost(), _minPrice, _maxPrice, _marketType);
         return true;
     }
 
     // This signature is intended for binary and scalar market creation. See function comment above for explanation.
-    function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
+    function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, IMarket _market, address _marketCreator, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe == IUniverse(msg.sender));
+        recordMarketShareTokens(_market);
         MarketCreated(_topic, _description, _extraInfo, _universe, _market, _marketCreator, new bytes32[](0), _universe.getOrCacheMarketCreationCost(), _minPrice, _maxPrice, _marketType);
         return true;
     }
@@ -263,9 +281,8 @@ contract Augur is Controlled, IAugur {
     }
 
     function logShareTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
-        require(isKnownUniverse(_universe));
         IShareToken _shareToken = IShareToken(msg.sender);
-        require(_universe.isContainerForShareToken(_shareToken));
+        require(isKnownShareToken(_shareToken));
         TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.ShareToken, _shareToken.getMarket());
         return true;
     }
@@ -285,17 +302,15 @@ contract Augur is Controlled, IAugur {
     }
 
     function logShareTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isKnownUniverse(_universe));
         IShareToken _shareToken = IShareToken(msg.sender);
-        require(_universe.isContainerForShareToken(_shareToken));
+        require(isKnownShareToken(_shareToken));
         TokensBurned(_universe, msg.sender, _target, _amount, TokenType.ShareToken, _shareToken.getMarket());
         return true;
     }
 
     function logShareTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isKnownUniverse(_universe));
         IShareToken _shareToken = IShareToken(msg.sender);
-        require(_universe.isContainerForShareToken(_shareToken));
+        require(isKnownShareToken(_shareToken));
         TokensMinted(_universe, msg.sender, _target, _amount, TokenType.ShareToken, _shareToken.getMarket());
         return true;
     }
