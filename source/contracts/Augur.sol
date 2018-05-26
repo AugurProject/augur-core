@@ -108,7 +108,7 @@ contract Augur is Controlled, IAugur {
     // Share Tokens
     //
 
-    function recordMarketShareTokens(IMarket _market) public view returns (bool) {
+    function recordMarketShareTokens(IMarket _market) public returns (bool) {
         uint256 _numOutcomes = _market.getNumberOfOutcomes();
         for (uint256 _outcome = 0; _outcome < _numOutcomes; _outcome++) {
             shareTokens[_market.getShareToken(_outcome)] = true;
