@@ -72,6 +72,9 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
                 _orderId = bytes32(0);
             }
         }
+        if (_orderId != 0) {
+            return 0;
+        }
         return _bestFxpAmount;
     }
 
@@ -127,6 +130,9 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
                 _orderId = bytes32(0);
             }
             _loopLimit -= 1;
+        }
+        if (_orderId != 0) {
+            return 0;
         }
         return _bestFxpAmount;
     }

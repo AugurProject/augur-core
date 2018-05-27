@@ -245,7 +245,8 @@ def test_two_bids_on_books_buy_one_with_limit(contractsFixture, cash, market, un
 
     assert orders.getAmount(orderID2) == fix(1)
 
-    assert fillOrderID != longTo32Bytes(1)
+    # We dont create an order since an existing match is on the books
+    assert fillOrderID == longTo32Bytes(1)
 
 def test_two_bids_on_books_buy_full_and_partial(contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
