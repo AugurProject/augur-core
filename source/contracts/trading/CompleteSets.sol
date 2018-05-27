@@ -40,7 +40,9 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, MarketV
             _market.getShareToken(_outcome).createShares(_sender, _amount);
         }
 
-        _market.getUniverse().incrementOpenInterest(_cost);
+        if (!_market.isFinalized()) {
+            _market.getUniverse().incrementOpenInterest(_cost);
+        }
 
         return true;
     }
@@ -58,7 +60,9 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, MarketV
         uint256 _numOutcomes = _market.getNumberOfOutcomes();
         ICash _denominationToken = _market.getDenominationToken();
         uint256 _payout = _amount.mul(_market.getNumTicks());
-        _market.getUniverse().decrementOpenInterest(_payout);
+        if (!_market.isFinalized()) {
+            _market.getUniverse().decrementOpenInterest(_payout);
+        }
         _creatorFee = _market.deriveMarketCreatorFeeAmount(_payout);
         uint256 _reportingFeeDivisor = _market.getUniverse().getOrCacheReportingFeeDivisor();
         _reportingFee = _payout.div(_reportingFeeDivisor);
