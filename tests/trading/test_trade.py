@@ -648,3 +648,87 @@ def test_take_best_order_with_shares_escrowed_buy_with_shares_categorical(contra
     assert orders.getOrderSharesEscrowed(orderID) == 0
     assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
     assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
+
+def test_trade_with_self(contractsFixture, cash, market, universe):
+    createOrder = contractsFixture.contracts['CreateOrder']
+    trade = contractsFixture.contracts['Trade']
+    fillOrder = contractsFixture.contracts['FillOrder']
+    orders = contractsFixture.contracts['Orders']
+    tradeGroupID = "42"
+
+    # create order
+    orderID = createOrder.publicCreateOrder(BID, fix(4), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('4', '6000'))
+
+    fillOrderID = None
+
+    # fill best order
+    orderFilledLog = {
+        "filler": bytesToHexString(tester.a1),
+        "numCreatorShares": 0,
+        "numCreatorTokens": fix('4', '6000'),
+        "numFillerShares": 0,
+        "numFillerTokens": fix('4', '4000'),
+        "marketCreatorFees": 0,
+        "reporterFees": 0,
+        "shareToken": market.getShareToken(YES),
+        "tradeGroupId": stringToBytes("42"),
+    }
+    orderCreatedLog = {
+        "creator": bytesToHexString(tester.a1),
+        "shareToken": market.getShareToken(YES),
+        "tradeGroupId": stringToBytes("42"),
+    }
+    with AssertLog(contractsFixture, "OrderFilled", orderFilledLog):
+        with AssertLog(contractsFixture, "OrderCreated", orderCreatedLog):
+            fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, sender = tester.k1, value=fix('5', '4000'))
+
+    assert orders.getAmount(orderID) == 0
+    assert orders.getPrice(orderID) == 0
+    assert orders.getOrderCreator(orderID) == longToHexString(0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 0
+    assert orders.getOrderSharesEscrowed(orderID) == 0
+    assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
+
+    assert orders.getAmount(fillOrderID) == fix(1)
+    assert orders.getPrice(fillOrderID) == 6000
+    assert orders.getOrderCreator(fillOrderID) == bytesToHexString(tester.a1)
+    assert orders.getOrderMoneyEscrowed(fillOrderID) == fix(1, 4000)
+    assert orders.getOrderSharesEscrowed(fillOrderID) == 0
+    assert orders.getBetterOrderId(fillOrderID) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(fillOrderID) == longTo32Bytes(0)
+
+def test_trade_with_self_take_order_make_order(contractsFixture, cash, market, universe):
+    createOrder = contractsFixture.contracts['CreateOrder']
+    trade = contractsFixture.contracts['Trade']
+    fillOrder = contractsFixture.contracts['FillOrder']
+    orders = contractsFixture.contracts['Orders']
+    tradeGroupID = "42"
+
+    # create order
+    createCost = fix('0.003', '6000')
+    orderID = createOrder.publicCreateOrder(ASK, fix('0.003'), 4000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=createCost)
+
+    fillOrderID = None
+
+    # fill best order
+    takeCost = fix('1', '5000')
+    fillOrderID = trade.publicTrade(BID, market.address, YES, fix(1), 5000, "0", "0", tradeGroupID, sender = tester.k1, value=takeCost)
+
+    assert orders.getAmount(orderID) == 0
+    assert orders.getPrice(orderID) == 0
+    assert orders.getOrderCreator(orderID) == longToHexString(0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 0
+    assert orders.getOrderSharesEscrowed(orderID) == 0
+    assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
+
+    orderAmount = fix(1) - fix('0.003')
+    assert orders.getAmount(fillOrderID) == orderAmount
+    assert orders.getPrice(fillOrderID) == 5000
+    assert orders.getOrderCreator(fillOrderID) == bytesToHexString(tester.a1)
+    assert orders.getOrderMoneyEscrowed(fillOrderID) == fix('0.997', 5000)
+    # Note that we never ended up with the original orders shares. The ETH escrowed for those was simply returned to us for this case.
+    assert orders.getOrderSharesEscrowed(fillOrderID) == 0
+    assert orders.getBetterOrderId(fillOrderID) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(fillOrderID) == longTo32Bytes(0)
