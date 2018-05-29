@@ -99,7 +99,7 @@ library Trade {
 
         // distribute payout proportionately (fees will have been deducted)
         uint256 _payout = _data.contracts.denominationToken.balanceOf(this);
-        uint256 _longShare = _payout.mul(_data.order.sharePriceLong) / _data.order.sharePriceRange;
+        uint256 _longShare = _payout.mul(_data.order.sharePriceLong).div(_data.order.sharePriceRange);
         uint256 _shortShare = _payout.sub(_longShare);
         _data.contracts.denominationToken.transfer(getLongShareSellerDestination(_data), _longShare);
         _data.contracts.denominationToken.transfer(getShortShareSellerDestination(_data), _shortShare);
@@ -373,14 +373,13 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
 
         uint256 _amountRemainingFillerWants = _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);
         uint256 _amountFilled = _amountFillerWants.sub(_amountRemainingFillerWants);
-
         logOrderFilled(_tradeData, _marketCreatorFees, _reporterFees, _amountFilled, _tradeGroupId);
         _tradeData.contracts.orders.recordFillOrder(_orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted());
         return _amountRemainingFillerWants;
     }
 
     function logOrderFilled(Trade.Data _tradeData, uint256 _marketCreatorFees, uint256 _reporterFees, uint256 _amountFilled, bytes32 _tradeGroupId) private returns (bool) {
-        _tradeData.contracts.augur.logOrderFilled(_tradeData.contracts.market.getUniverse(), _tradeData.contracts.longShareToken, _tradeData.filler.participantAddress, _tradeData.order.orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _marketCreatorFees, _reporterFees, _amountFilled, _tradeGroupId);
+        controller.getAugur().logOrderFilled(_tradeData.contracts.market.getUniverse(), _tradeData.contracts.market.getShareToken(_tradeData.order.outcome), _tradeData.filler.participantAddress, _tradeData.order.orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _marketCreatorFees, _reporterFees, _amountFilled, _tradeGroupId);
         return true;
     }
 }
