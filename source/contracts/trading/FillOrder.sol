@@ -368,7 +368,7 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
         uint256 _creatorCashBalance = _tradeData.contracts.denominationToken.balanceOf(_tradeData.creator.participantAddress);
         if (_creatorCashBalance > 0) {
             _tradeData.contracts.augur.trustedTransfer(_tradeData.contracts.denominationToken, _tradeData.creator.participantAddress, this, _creatorCashBalance);
-            _tradeData.contracts.denominationToken.withdrawEtherTo(_tradeData.creator.participantAddress, _creatorCashBalance);
+            _tradeData.contracts.denominationToken.withdrawEtherToIfPossible(_tradeData.creator.participantAddress, _creatorCashBalance);
         }
 
         uint256 _amountRemainingFillerWants = _tradeData.filler.sharesToSell.add(_tradeData.filler.sharesToBuy);
