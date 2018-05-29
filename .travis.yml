@@ -38,12 +38,12 @@ jobs:
               docker push $IMAGE_BUILD
       env:
         - DOCKER_USERNAME=augurintegration
-        - secure: KDRY8LJYUEBq6k18IlPs3fPFHD2Le99laXvA+Qflw+oN1sJWEZtTu50W9MR5vHfQn1QhoQpuN+xhKnEnRTrz4jMQtd1wnOJq6+RrmZZBUw+bCJTQipQUFjdYrGus7ofFV7AheeCmDrqC0fOR+bRSqKDHyIJ6Jdt4beKiVSuUWz0=
+        - secure: "Pyod58zXv4R7HjAmlEOhc2HzjWTDVK2olgvZ2EZEyzNKuhbTPeL/yb+bCFkrmx2BZIEXTqFNpBQtCnjopT4f/mXm9VlAoIcLQ78FSVOEHmtg5ndyMqoTsVxeqcTOMd8QRXAz8VanKZ/+suf2+rvI5C9REU5VVPyxGBnfolDHzGQ="
     - stage: deploy
       script: skip
       env:
         - DOCKER_USERNAME=augurintegration
-        - secure: KDRY8LJYUEBq6k18IlPs3fPFHD2Le99laXvA+Qflw+oN1sJWEZtTu50W9MR5vHfQn1QhoQpuN+xhKnEnRTrz4jMQtd1wnOJq6+RrmZZBUw+bCJTQipQUFjdYrGus7ofFV7AheeCmDrqC0fOR+bRSqKDHyIJ6Jdt4beKiVSuUWz0=
+        - secure: "Pyod58zXv4R7HjAmlEOhc2HzjWTDVK2olgvZ2EZEyzNKuhbTPeL/yb+bCFkrmx2BZIEXTqFNpBQtCnjopT4f/mXm9VlAoIcLQ78FSVOEHmtg5ndyMqoTsVxeqcTOMd8QRXAz8VanKZ/+suf2+rvI5C9REU5VVPyxGBnfolDHzGQ="
         - TESTS=
       deploy: &script
         provider: script
@@ -66,11 +66,6 @@ branches:
     - /^v\d+\.\d+\.\d+(-\d+)?$/
 env:
   global:
-    - secure: ADmhKnkSyCrheJ0Vpa5X/JribTsux/07i4FbhxBTIq/YM+kkcygkO807UDPcbe8vfYWWxp4lcDTdPTYKvGbyJZIsD6yV17+V10Lp58YjexpKFVzqsqLXG7IFaTCvPvG+vqzu63QI6DNY06Z+aUjeRRXJMIG0pMpCIflzN4bkAcA=
-    - secure: eubvvOD8TapXLzjzcDe0MBgE+IGOMDLZPAUwfPc6+H5N8efZoa6nLMhm/7wVYBPpuBQAQC3T3I8YPYh/qJMU8pQ7771FOxqMUXmpvEGUHZoZQ66/Nu0uylBeKwYDc5o7u1Qj1xW+JwCMWpfcUlbCHYPgR5Av/1m62ZFPaCKoj34=
-    - secure: E6zBunUrmP6w9RzCSgIY0hS99v8u1L55AGsY1MtPr+u6uMLIkif6uMG/O881DmOkDtBgv/m60fx2Ka+bEZpxWY30ahTc08SUhjMEGC9MeRr5PvEeEzbsiOez+OFIRdngMGptHbTagqKGl3KrJPp21YsYL5GGFWil7iUZ/poent8=
-    - secure: X+oknrdo94NEw0oj5WTTkt0Qc42vZRypUhj39U+MBAwscLOReBpY7mRxpoXFjyVvxOwwxS0uj5vO+zaYn1Coz0cjhCCTcBnhGVf8tlfvGhx4r3V1/ISgSzigj/dgsigEB/BYojWX2ubX2ubOVpBb+PaDV1zCOw/6cmfKks8emcY=
-    - secure: Y/HFZpl4ivYsq/x17529XhnSvM59NajIeu8dqP2HFFNQNCNVEXaL4TbPWBp/I7ClcT+PHro8bVsHemcKYRDjqhm5sAgMcTSvR4WnuwpgEf/s86bgNOqt0pJ3lhkzc5+L0zhJ68n6JWOaUQykF6DCE9jyLH1WSMmu2VZGHoi/EYY=
     - IMAGE_BUILD=augurproject/augur-core:build.${TRAVIS_BUILD_NUMBER}
     - IMAGE_LATEST=augurproject/augur-core:latest
   matrix:
