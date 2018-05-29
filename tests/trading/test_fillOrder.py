@@ -206,3 +206,41 @@ def test_fill_buy_order_with_buy_categorical(contractsFixture, cash, categorical
     assert orders.getOrderSharesEscrowed(orderID) == 0
     assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
     assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
+
+def test_malicious_order_creator(contractsFixture, cash, market, universe):
+    createOrder = contractsFixture.contracts['CreateOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
+    orders = contractsFixture.contracts['Orders']
+    augur = contractsFixture.contracts['Augur']
+    completeSets = contractsFixture.contracts['CompleteSets']
+    firstShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
+    secondShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(1))
+
+    maliciousTrader = contractsFixture.upload('solidity_test_helpers/MaliciousTrader.sol', 'maliciousTrader')
+    maliciousTrader.approveAugur(cash.address, augur.address)
+
+    # create order with the malicious contract by escrowing shares
+    price = 6000
+    numTicks = market.getNumTicks()
+    assert completeSets.publicBuyCompleteSets(market.address, fix(1), value=fix('1', numTicks))
+    assert firstShareToken.transfer(maliciousTrader.address, fix(1))
+    assert secondShareToken.transfer(maliciousTrader.address, fix(1))
+    orderID = maliciousTrader.makeOrder(createOrder.address, BID, fix(1), price, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), "42", value=fix(1, price), sender=tester.k1)
+    assert orderID
+
+    # Make the fallback function fail
+    maliciousTrader.setEvil(True)
+
+    # fill order with cash
+    assert fillOrder.publicFillOrder(orderID, fix(1), "43", sender=tester.k2, value=fix(1, numTicks - price)) == 0
+
+    assert orders.getAmount(orderID) == 0
+    assert orders.getPrice(orderID) == 0
+    assert orders.getOrderCreator(orderID) == longToHexString(0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 0
+    assert orders.getOrderSharesEscrowed(orderID) == 0
+    assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
+
+    # The malicious contract may have just been a smart contract that has expensive and dumb fallback behavior. We do the right thing and still award them Cash in this case.
+    assert cash.balanceOf(maliciousTrader.address) == fix(1, 4000)

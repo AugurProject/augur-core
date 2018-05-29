@@ -47,6 +47,17 @@ contract Cash is DelegationTarget, ITyped, VariableSupplyToken, ICash {
         return true;
     }
 
+    function withdrawEtherToIfPossible(address _to, uint256 _amount) external returns (bool) {
+        require(_amount > 0 && _amount <= balances[msg.sender]);
+        if (_to.send(_amount)) {
+            burn(msg.sender, _amount);
+        } else {
+            internalTransfer(msg.sender, _to, _amount);
+        }
+        assert(this.balance >= totalSupply());
+        return true;
+    }
+
     function getTypeName() public view returns (bytes32) {
         return "Cash";
     }

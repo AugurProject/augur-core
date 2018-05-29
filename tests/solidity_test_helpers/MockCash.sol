@@ -63,4 +63,8 @@ contract MockCash is ITyped, MockVariableSupplyToken, ICash {
         withdrawEtherToAddressValue = _to;
         withdrawEthertoAmountValue = _amount;
     }
+
+    function withdrawEtherToIfPossible(address _to, uint256 _amount) external returns (bool) {
+        return true;
+    }
 }

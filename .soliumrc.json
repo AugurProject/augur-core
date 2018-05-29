@@ -34,7 +34,7 @@
     "security/no-assign-params": "off",
     "security/no-fixed": "error",
     "security/no-modify-for-iter-var": "error",
-    "security/no-send": "error",
+    "security/no-send": "off",
     "security/no-unreachable-code": "error",
     "security/else-after-elseif": "off",
     "security/enforce-loop-bounds": "error",
