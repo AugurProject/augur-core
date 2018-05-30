@@ -38,12 +38,12 @@ jobs:
               docker push $IMAGE_BUILD
       env:
         - DOCKER_USERNAME=augurintegration
-        - secure: "d4JqJPss18WB7vmBfVTKOyACWVy3Nh1xVkdkSPSpOU22464e2PIVR3XuTdgnzh9fXbd+U/BxXhyvr5ftsx7RUcArJlEi+Xrqsv6m8ps8D8JFZ1prqaR/AcXBp0zJ+7IbJAME1qgzuFADeKRC2ohimugdO8JaaZmhPYs7slRUyGs="
+        - secure: "E/KuY851UD21wGg82orQJBWzAiIBAvFJAvJpMX/Msce8nS4bBodNpBMVf7Ya0rQwV2hh9ngouFnzabSyv1AV1tlRfV5kp0MjfOs+AP5SonIU3Eeh8+bvXdypMuJOm5zZIKvqkVd7Sm1Er9fXWvN1PVaktq6Ls/zf3iG1I1lI8pU="
     - stage: deploy
       script: skip
       env:
         - DOCKER_USERNAME=augurintegration
-        - secure: "d4JqJPss18WB7vmBfVTKOyACWVy3Nh1xVkdkSPSpOU22464e2PIVR3XuTdgnzh9fXbd+U/BxXhyvr5ftsx7RUcArJlEi+Xrqsv6m8ps8D8JFZ1prqaR/AcXBp0zJ+7IbJAME1qgzuFADeKRC2ohimugdO8JaaZmhPYs7slRUyGs="
+        - secure: "E/KuY851UD21wGg82orQJBWzAiIBAvFJAvJpMX/Msce8nS4bBodNpBMVf7Ya0rQwV2hh9ngouFnzabSyv1AV1tlRfV5kp0MjfOs+AP5SonIU3Eeh8+bvXdypMuJOm5zZIKvqkVd7Sm1Er9fXWvN1PVaktq6Ls/zf3iG1I1lI8pU="
         - TESTS=
       deploy: &script
         provider: script
