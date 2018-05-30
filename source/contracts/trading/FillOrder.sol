@@ -169,6 +169,15 @@ library Trade {
         uint256 _creatorTokensToCover = getTokensToCover(_data, _data.creator.direction, _numberOfCompleteSets);
         uint256 _fillerTokensToCover = getTokensToCover(_data, _data.filler.direction, _numberOfCompleteSets);
 
+        // If someone is filling their own order with ETH both ways we just return the ETH
+        if (_data.creator.participantAddress == _data.filler.participantAddress) {
+            require(_data.contracts.denominationToken.transferFrom(_data.contracts.market, _data.creator.participantAddress, _creatorTokensToCover));
+
+            _data.creator.sharesToBuy -= _numberOfCompleteSets;
+            _data.filler.sharesToBuy -= _numberOfCompleteSets;
+            return true;
+        }
+
         require(_data.contracts.denominationToken.transferFrom(_data.contracts.market, this, _creatorTokensToCover));
         _data.contracts.augur.trustedTransfer(_data.contracts.denominationToken, _data.filler.participantAddress, this, _fillerTokensToCover);
 
@@ -364,9 +373,10 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
         _tradeData.tradeMakerSharesForFillerTokens();
         _tradeData.tradeMakerTokensForFillerShares();
         _tradeData.tradeMakerTokensForFillerTokens();
-        // Turn any remaining Cash balance the creator has into ETH. This is done for the filler though the use of a CashAutoConverter modifier
+        // Turn any remaining Cash balance the creator has into ETH. This is done for the filler though the use of a CashAutoConverter modifier. If someone is taking their own order we skip this step since the modifier will do it and they may need the ETH in the tx to make an order later in the context of publicTrade
         uint256 _creatorCashBalance = _tradeData.contracts.denominationToken.balanceOf(_tradeData.creator.participantAddress);
-        if (_creatorCashBalance > 0) {
+        bool _isOwnOrder = _tradeData.creator.participantAddress == _tradeData.filler.participantAddress;
+        if (_creatorCashBalance > 0 && !_isOwnOrder) {
             _tradeData.contracts.augur.trustedTransfer(_tradeData.contracts.denominationToken, _tradeData.creator.participantAddress, this, _creatorCashBalance);
             _tradeData.contracts.denominationToken.withdrawEtherToIfPossible(_tradeData.creator.participantAddress, _creatorCashBalance);
         }

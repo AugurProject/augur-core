@@ -60,6 +60,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
         IOrders _orders = IOrders(controller.lookup("Orders"));
         bytes32 _orderId = _orders.getBestOrderId(_type, _market, _outcome);
         _bestFxpAmount = _fxpAmount;
+
         while (_orderId != 0 && _bestFxpAmount > 0 && msg.gas >= getFillOrderMinGasNeeded()) {
             uint256 _orderPrice = _orders.getPrice(_orderId);
             // If the price is acceptable relative to the trade type
