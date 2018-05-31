@@ -35,7 +35,7 @@
     "artifacts": "bash support/artifacts/run.sh",
     "docker:build": "docker build --cache-from augurproject/augur-core:latest --tag augurproject/augur-core:latest -f ./source/support/Dockerfile .",
     "docker:push": "docker push augurproject/augur-core:latest",
-    "docker:run:npm": "docker run --rm -it augurproject/augur-core:latest",
+    "docker:run:npm": "docker run --rm augurproject/augur-core:latest",
     "docker:run:shell": "docker run --rm -it --entrypoint=bash augurproject/augur-core:latest",
     "docker:run:test:unit": "npm run docker:run:npm -- run test:unit",
     "docker:run:test:unit:all": "npm run docker:run:npm -- run test:unit:all",
