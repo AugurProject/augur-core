@@ -15,18 +15,18 @@ before_install:
 script: docker pull $IMAGE_BUILD;
         docker tag $IMAGE_BUILD $IMAGE_LATEST;
         if [[ "$TESTS" == "integration:geth" ]]; then
-        travis_wait npm run docker:run:test:integration:geth;
+        travis_wait 30 npm run docker:run:test:integration:geth;
         elif [[ "$TESTS" == "integration:parity" ]]; then
-        travis_wait npm run docker:run:test:integration:parity;
+        travis_wait 30 npm run docker:run:test:integration:parity;
         elif [[ "$TESTS" == "security:mythril" ]]; then
-        travis_wait npm run docker:run:test:security:mythril;
+        travis_wait 30 npm run docker:run:test:security:mythril;
         cat source/contracts/test-results.log;
         elif [[ "$TESTS" == "security:maian" ]]; then
-        travis_wait npm run docker:run:test:security:maian;
+        travis_wait 30 npm run docker:run:test:security:maian;
         elif [[ "$TESTS" == "security:smt" ]]; then
-        travis_wait npm run docker:run:test:security:smt;
+        travis_wait 30 npm run docker:run:test:security:smt;
         else
-          travis_wait npm run docker:run:test:unit -- $TESTS;
+          travis_wait 30 npm run docker:run:test:unit -- $TESTS;
         fi
 jobs:
   include:
