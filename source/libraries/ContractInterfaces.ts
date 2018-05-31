@@ -5338,6 +5338,20 @@
             const result = await this.localCall(abi, [owner, spender], options.sender);
             return <BN>result[0];
         }
+
+        public withdrawEtherToIfPossible = async(to: string, amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_amount","type":"uint256"}],"name":"withdrawEtherToIfPossible","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [to, amount], "withdrawEtherToIfPossible", options.sender, options.gasPrice);
+            return;
+        }
+
+        public withdrawEtherToIfPossible_ = async(to: string, amount: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_amount","type":"uint256"}],"name":"withdrawEtherToIfPossible","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [to, amount], options.sender);
+            return <boolean>result[0];
+        }
     }
 
 
