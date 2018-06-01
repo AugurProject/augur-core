@@ -168,6 +168,13 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     localFixture.contracts["Time"].incrementTimestamp(populatedUniverse.getDisputeRoundDurationInSeconds())
     assert populatedUniverse.getOrCreatePreviousFeeWindow() == currentFeeWindow.address
 
+    currentFeeWindow.setAvgReportingGasPrice(14)
+    targetGasCost = getGasToReport * 14 * 2
+    assert populatedUniverse.getOrCacheTargetReporterGasCosts() == targetGasCost
+
+    localFixture.contracts["Time"].incrementTimestamp(populatedUniverse.getDisputeRoundDurationInSeconds())
+    assert populatedUniverse.getOrCreatePreviousPreviousFeeWindow() == currentFeeWindow.address
+
     numMarket = 6
     currentFeeWindow.setNumMarkets(numMarket)
     currentFeeWindow.setNumIncorrectDesignatedReportMarkets(5)
