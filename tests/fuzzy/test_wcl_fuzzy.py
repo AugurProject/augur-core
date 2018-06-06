@@ -332,21 +332,21 @@ def execute_askOrder_tests(fixture, kitchenSinkSnapshot, universe, market, fxpAm
         expectedFillerTokens = 0,
         numTicks = numTicks)
 
-def test_binary(fixture, kitchenSinkSnapshot, universe, binaryMarket, randomAmount, randomNormalizedPrice):
+def test_yesNo(fixture, kitchenSinkSnapshot, universe, yesNoMarket, randomAmount, randomNormalizedPrice):
     print ""
     print 'Random amount: ' + str(randomAmount)
     print 'Random price: ' + str(randomNormalizedPrice)
     print ""
     fxpAmount = randomAmount
-    numTicks = binaryMarket.getNumTicks()
+    numTicks = yesNoMarket.getNumTicks()
     fxpPrice = long(randomNormalizedPrice * numTicks)
-    print "Start Fuzzy WCL tests - Binary Market - bidOrders."
-    execute_bidOrder_tests(fixture, kitchenSinkSnapshot, universe, binaryMarket, fxpAmount, fxpPrice, numTicks)
-    print "Finished Fuzzy WCL tests - Binary Market - bidOrders."
+    print "Start Fuzzy WCL tests - YesNo Market - bidOrders."
+    execute_bidOrder_tests(fixture, kitchenSinkSnapshot, universe, yesNoMarket, fxpAmount, fxpPrice, numTicks)
+    print "Finished Fuzzy WCL tests - YesNo Market - bidOrders."
     print ""
-    print "Start Fuzzy WCL tests - Binary Market - askOrders."
-    execute_askOrder_tests(fixture, kitchenSinkSnapshot, universe, binaryMarket, fxpAmount, fxpPrice, numTicks)
-    print "Finished Fuzzy WCL tests - Binary Market - askOrders."
+    print "Start Fuzzy WCL tests - YesNo Market - askOrders."
+    execute_askOrder_tests(fixture, kitchenSinkSnapshot, universe, yesNoMarket, fxpAmount, fxpPrice, numTicks)
+    print "Finished Fuzzy WCL tests - YesNo Market - askOrders."
     print ""
 
 def test_categorical(fixture, kitchenSinkSnapshot, universe, categoricalMarket, randomAmount, randomNormalizedPrice):

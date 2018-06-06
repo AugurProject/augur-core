@@ -73,7 +73,7 @@ def test_helpers(kitchenSinkFixture, scalarMarket):
     assert creatorShare == 13.0 * market.getNumTicks() * 0.01
     assert shareholderShare == 13.0 * market.getNumTicks() * 0.98
 
-def test_redeem_shares_in_binary_market(kitchenSinkFixture, universe, cash, market):
+def test_redeem_shares_in_yesNo_market(kitchenSinkFixture, universe, cash, market):
     claimTradingProceeds = kitchenSinkFixture.contracts['ClaimTradingProceeds']
     yesShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(YES))
     noShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(NO))

@@ -17,7 +17,7 @@ def test_market_creation(contractsFixture, universe, cash, market):
         "marketCreator": bytesToHexString(tester.a0),
     }
     with AssertLog(contractsFixture, "MarketCreated", marketCreatedLog):
-        market = contractsFixture.createReasonableBinaryMarket(universe, cash, extraInfo="so extra")
+        market = contractsFixture.createReasonableYesNoMarket(universe, cash, extraInfo="so extra")
 
     assert market.getUniverse() == universe.address
     assert market.getNumberOfOutcomes() == 2
@@ -27,13 +27,13 @@ def test_market_creation(contractsFixture, universe, cash, market):
     assert market.getInitialized()
 
     with raises(TransactionFailed, message="Cannot create a market with an end date in the past"):
-        contractsFixture.createBinaryMarket(universe, 0, 1, cash, tester.a0)
+        contractsFixture.createYesNoMarket(universe, 0, 1, cash, tester.a0)
 
 def test_description_requirement(contractsFixture, universe, cash):
     endTime = contractsFixture.contracts["Time"].getTimestamp() + 1
 
     with raises(TransactionFailed):
-        contractsFixture.createBinaryMarket(universe, endTime, 1, cash, tester.a0, description="")
+        contractsFixture.createYesNoMarket(universe, endTime, 1, cash, tester.a0, description="")
 
     with raises(TransactionFailed):
         contractsFixture.createCategoricalMarket(universe, 2, endTime, 1, cash, tester.a0, description="")

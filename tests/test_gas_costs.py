@@ -48,7 +48,7 @@ def test_marketCreation(localFixture, universe, cash):
     numOutcomes = 2
 
     with PrintGasUsed(localFixture, "FeeWindow:createMarket", MARKET_CREATION):
-        marketAddress = universe.createBinaryMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "description", "", value = marketCreationFee)
+        marketAddress = universe.createYesNoMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "description", "", value = marketCreationFee)
 
 def test_marketFinalization(localFixture, universe, market):
     proceedToNextRound(localFixture, market)
@@ -160,7 +160,7 @@ def test_redeem(localFixture, universe, cash, market):
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
     universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
-    market = ABIContract(fixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
+    market = ABIContract(fixture.chain, kitchenSinkSnapshot['yesNoMarket'].translator, kitchenSinkSnapshot['yesNoMarket'].address)
     # Give some REP to testers to make things interesting
     reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
     for testAccount in [tester.a1, tester.a2, tester.a3]:
@@ -179,7 +179,7 @@ def universe(localFixture, kitchenSinkSnapshot):
 
 @fixture
 def market(localFixture, kitchenSinkSnapshot):
-    return ABIContract(localFixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
+    return ABIContract(localFixture.chain, kitchenSinkSnapshot['yesNoMarket'].translator, kitchenSinkSnapshot['yesNoMarket'].address)
 
 @fixture
 def categoricalMarket(localFixture, kitchenSinkSnapshot):
