@@ -35,7 +35,7 @@ def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, moc
     with raises(TransactionFailed, message="forking market has to be in universe"):
         mockMarket.callForkOnUniverse(populatedUniverse.address)
 
-    assert populatedUniverse.createBinaryMarket(endTime, 1000, mockCash.address, tester.a0, "topic", "description", "info")
+    assert populatedUniverse.createYesNoMarket(endTime, 1000, mockCash.address, tester.a0, "topic", "description", "info")
     assert mockMarketFactory.getCreateMarketUniverseValue() == populatedUniverse.address
 
     assert populatedUniverse.isContainerForMarket(mockMarket.address)
@@ -94,7 +94,7 @@ def test_universe_contains(localFixture, populatedUniverse, mockMarket, chain, m
     mockMarketFactory.setMarket(mockMarket.address)
     endTime = localFixture.contracts["Time"].getTimestamp() + 30 * 24 * 60 * 60 # 30 days
 
-    assert populatedUniverse.createBinaryMarket(endTime, 1000, mockCash.address, tester.a0, "topic", "description", "info")
+    assert populatedUniverse.createYesNoMarket(endTime, 1000, mockCash.address, tester.a0, "topic", "description", "info")
     assert mockMarketFactory.getCreateMarketUniverseValue() == populatedUniverse.address
 
     assert populatedUniverse.isContainerForFeeWindow(mockFeeWindow.address) == True
@@ -276,7 +276,7 @@ def test_universe_create_market(localFixture, chain, populatedUniverse, mockMark
     assert mockAugur.logMarketCreatedCalled() == False
     mockMarketFactory.setMarket(mockMarket.address)
 
-    newMarket = populatedUniverse.createBinaryMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "description", "info")
+    newMarket = populatedUniverse.createYesNoMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "description", "info")
 
     assert mockMarketFactory.getCreateMarketUniverseValue() == populatedUniverse.address
     assert populatedUniverse.isContainerForMarket(mockMarket.address)

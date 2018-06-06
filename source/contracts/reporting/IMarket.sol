@@ -16,7 +16,7 @@ import 'reporting/IMailbox.sol';
 
 contract IMarket is ITyped, IOwnable {
     enum MarketType {
-        BINARY,
+        YES_NO,
         CATEGORICAL,
         SCALAR
     }

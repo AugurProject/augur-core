@@ -125,7 +125,7 @@ contract Augur is Controlled, IAugur {
         return true;
     }
 
-    // This signature is intended for binary and scalar market creation. See function comment above for explanation.
+    // This signature is intended for yesNo and scalar market creation. See function comment above for explanation.
     function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe == IUniverse(msg.sender));

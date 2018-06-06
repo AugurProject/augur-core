@@ -405,9 +405,9 @@ class ContractsFixture:
         childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
         return childUniverse
 
-    def createBinaryMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, sender=tester.k0, topic="", description="description", extraInfo=""):
+    def createYesNoMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, sender=tester.k0, topic="", description="description", extraInfo=""):
         marketCreationFee = universe.getOrCacheMarketCreationCost()
-        marketAddress = universe.createBinaryMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, topic, description, extraInfo, value = marketCreationFee, sender=sender)
+        marketAddress = universe.createYesNoMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, topic, description, extraInfo, value = marketCreationFee, sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
@@ -427,8 +427,8 @@ class ContractsFixture:
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createReasonableBinaryMarket(self, universe, denominationToken, sender=tester.k0, topic="", description="description", extraInfo=""):
-        return self.createBinaryMarket(
+    def createReasonableYesNoMarket(self, universe, denominationToken, sender=tester.k0, topic="", description="description", extraInfo=""):
+        return self.createYesNoMarket(
             universe = universe,
             endTime = long(self.contracts["Time"].getTimestamp() + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
@@ -505,7 +505,7 @@ def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
     cash = fixture.getSeededCash()
     augur = fixture.contracts['Augur']
     fixture.distributeRep(universe)
-    binaryMarket = fixture.createReasonableBinaryMarket(universe, cash)
+    yesNoMarket = fixture.createReasonableYesNoMarket(universe, cash)
     startingGas = fixture.chain.head_state.gas_used
     categoricalMarket = fixture.createReasonableCategoricalMarket(universe, 3, cash)
     print 'Gas Used: %s' % (fixture.chain.head_state.gas_used - startingGas)
@@ -515,7 +515,7 @@ def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
     snapshot['universe'] = universe
     snapshot['cash'] = cash
     snapshot['augur'] = augur
-    snapshot['binaryMarket'] = binaryMarket
+    snapshot['yesNoMarket'] = yesNoMarket
     snapshot['categoricalMarket'] = categoricalMarket
     snapshot['scalarMarket'] = scalarMarket
     return snapshot
@@ -539,11 +539,11 @@ def augur(kitchenSinkFixture, kitchenSinkSnapshot):
 
 @pytest.fixture
 def market(kitchenSinkFixture, kitchenSinkSnapshot):
-    return ABIContract(kitchenSinkFixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
+    return ABIContract(kitchenSinkFixture.chain, kitchenSinkSnapshot['yesNoMarket'].translator, kitchenSinkSnapshot['yesNoMarket'].address)
 
 @pytest.fixture
-def binaryMarket(kitchenSinkFixture, kitchenSinkSnapshot):
-    return ABIContract(kitchenSinkFixture.chain, kitchenSinkSnapshot['binaryMarket'].translator, kitchenSinkSnapshot['binaryMarket'].address)
+def yesNoMarket(kitchenSinkFixture, kitchenSinkSnapshot):
+    return ABIContract(kitchenSinkFixture.chain, kitchenSinkSnapshot['yesNoMarket'].translator, kitchenSinkSnapshot['yesNoMarket'].address)
 
 @pytest.fixture
 def categoricalMarket(kitchenSinkFixture, kitchenSinkSnapshot):

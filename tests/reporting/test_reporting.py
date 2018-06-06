@@ -200,7 +200,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
 
     with raises(TransactionFailed, message="We cannot create markets during a fork"):
         time = localFixture.contracts["Time"].getTimestamp()
-        localFixture.createBinaryMarket(universe, time + 1000, 1, cash, tester.a0)
+        localFixture.createYesNoMarket(universe, time + 1000, 1, cash, tester.a0)
 
     # confirm that we can manually create a child universe from an outcome no one asserted was true during dispute
     numTicks = market.getNumTicks()
@@ -328,7 +328,7 @@ def test_finalized_fork_migration(localFixture, universe, market, categoricalMar
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert categoricalMarket.finalize()
 
-    # Proceed to Forking for the binary market and finalize it
+    # Proceed to Forking for the yesNo market and finalize it
     proceedToFork(localFixture, market, universe)
     finalizeFork(localFixture, market, universe)
 
@@ -391,7 +391,7 @@ def test_forking_values(localFixture, universe, market, cash):
     assert childUniverse.getInitialReportMinValue() == long(childUniverse.getDisputeThresholdForFork() / 3L / 2**18 + 1)
 
     # Now we'll fork again and confirm it still takes only 20 dispute rounds in the worst case
-    newMarket = localFixture.createReasonableBinaryMarket(childUniverse, cash)
+    newMarket = localFixture.createReasonableYesNoMarket(childUniverse, cash)
     proceedToFork(localFixture, newMarket, childUniverse)
     assert newMarket.getNumParticipants() == 21
 
