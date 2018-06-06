@@ -6561,3 +6561,4 @@
     export function ContractFactory(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN): Controlled {
         return new Controlled(connector, accountManager, address, defaultGasPrice);
     }
+
