@@ -20,6 +20,8 @@
     "camelcase": "warning",
     "no-unused-vars": "error",
     "blank-lines": "warning",
+    "max-len": "off",
+    "emit": "off",
     "whitespace": "warning",
     "pragma-on-top": "warning",
     "function-order": "off",
