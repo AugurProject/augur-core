@@ -27,9 +27,9 @@ let argv =  yargs
 .argv;
 
 async function doWork(): Promise<void> {
-    const balancesFileContents = await fs.readFile(argv.balances);
-    const allowanceOwnersFileContents = await fs.readFile(argv.allowanceOwners);
-    const allowanceSpendersFileContents = await fs.readFile(argv.allowanceSpenders);
+    const balancesFileContents = await fs.readFile(argv.balances, 'utf8');
+    const allowanceOwnersFileContents = await fs.readFile(argv.allowanceOwners, 'utf8');
+    const allowanceSpendersFileContents = await fs.readFile(argv.allowanceSpenders, 'utf8');
 
     const balances = balancesFileContents.split('\n');
     const allowanceOwners = allowanceOwnersFileContents.split('\n');
