@@ -107,8 +107,10 @@ npm run docker:run:test:unit:all
 # Build and run all unit tests and integration tests
 npm run docker:test
 
-# Build and run just integration test
-npm run docker:test:integration
+# Build and run just integration tests (using Geth)
+npm run docker:run:test:integration:geth
+# Build and run just integration tests (using Parity)
+npm run docker:run:test:integration:parity
 ```
 
 For quicker iteration on integration tests follow the instructions here to run tests locally against a node running in docker:
