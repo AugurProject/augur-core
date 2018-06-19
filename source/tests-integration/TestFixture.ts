@@ -17,19 +17,21 @@ export class TestFixture {
     public readonly accountManager: AccountManager;
     // FIXME: extract out the bits of contract deployer that we need access to, like the contracts/abis, so we can have a more targeted dependency
     public readonly contractDeployer: ContractDeployer;
+    public readonly testRpc: TestRpc | null;
 
     public get universe() { return this.contractDeployer.universe; }
     public get cash() { return <Cash> this.contractDeployer.getContract('Cash'); }
 
-    public constructor(connector: Connector, accountManager: AccountManager, contractDeployer: ContractDeployer) {
+    public constructor(connector: Connector, accountManager: AccountManager, contractDeployer: ContractDeployer, testRpc: TestRpc | null) {
         this.connector = connector;
         this.accountManager = accountManager;
         this.contractDeployer = contractDeployer;
+        this.testRpc = testRpc;
     }
 
     public static create = async (pretendToBeProduction: boolean = false): Promise<TestFixture> => {
         const networkConfiguration = NetworkConfiguration.create();
-        await TestRpc.startTestRpcIfNecessary(networkConfiguration);
+        const testRpc = await TestRpc.startTestRpcIfNecessary(networkConfiguration);
 
         const compilerConfiguration = CompilerConfiguration.create()
         const compiledContracts = await new ContractCompiler(compilerConfiguration).compileContracts();
@@ -50,7 +52,7 @@ export class TestFixture {
             contractDeployer = new ContractDeployer(fakeProdDeployerConfiguration, connector, accountManager, compiledContracts);
         }
         await contractDeployer.deploy();
-        return new TestFixture(connector, accountManager, contractDeployer);
+        return new TestFixture(connector, accountManager, contractDeployer, testRpc);
     }
 
     public async approveCentralAuthority(): Promise<void> {
