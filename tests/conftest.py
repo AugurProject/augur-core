@@ -17,6 +17,7 @@ from re import findall
 from solc import compile_standard
 from utils import bytesToHexString, bytesToLong, longToHexString, stringToBytes, garbageBytes20, garbageBytes32, twentyZeros, thirtyTwoZeros
 from copy import deepcopy
+from reporting_utils import proceedToFork, finalizeFork
 
 # Make TXs free.
 ethereum.opcodes.GCONTRACTBYTE = 0
@@ -54,6 +55,7 @@ CONTRACT_SIZE_WARN_LEVEL = CONTRACT_SIZE_LIMIT * 0.75
 
 def pytest_addoption(parser):
     parser.addoption("--cover", action="store_true", help="Use the coverage enabled contracts. Meant to be used with the tools/generateCoverageReport.js script")
+    parser.addoption("--subFork", action="store_true", help="Use the coverage enabled contracts. Meant to be used with the tools/generateCoverageReport.js script")
 
 def pytest_configure(config):
     # register an additional marker
@@ -213,6 +215,7 @@ class ContractsFixture:
         self.relativeContractsPath = '../source/contracts'
         self.relativeTestContractsPath = 'solidity_test_helpers'
         self.coverageMode = pytest.config.option.cover
+        self.subFork = pytest.config.option.subFork
         if self.coverageMode:
             self.chain.head_state.log_listeners.append(self.writeLogToFile)
             self.relativeContractsPath = '../coverageEnv/contracts'
@@ -505,6 +508,16 @@ def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
     cash = fixture.getSeededCash()
     augur = fixture.contracts['Augur']
     fixture.distributeRep(universe)
+
+    if fixture.subFork:
+        forkingMarket = fixture.createReasonableYesNoMarket(universe, cash)
+        proceedToFork(fixture, forkingMarket, universe)
+        fixture.contracts["Time"].setTimestamp(universe.getForkEndTime() + 1)
+        reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
+        yesPayoutNumerators = [0, forkingMarket.getNumTicks()]
+        reputationToken.migrateOutByPayout(yesPayoutNumerators, False, reputationToken.balanceOf(tester.a0))
+        universe = fixture.applySignature('Universe', universe.createChildUniverse(yesPayoutNumerators, False))
+
     yesNoMarket = fixture.createReasonableYesNoMarket(universe, cash)
     startingGas = fixture.chain.head_state.gas_used
     categoricalMarket = fixture.createReasonableCategoricalMarket(universe, 3, cash)

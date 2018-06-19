@@ -73,6 +73,10 @@ env:
     - TESTS="tests/reporting"
     - TESTS="tests/fuzzy"
     - TESTS="tests/unit"
+    - TESTS="tests/test*.py tests/libraries tests/trading" --subFork
+    - TESTS="tests/reporting" --subFork
+    - TESTS="tests/fuzzy" --subFork
+    - TESTS="tests/unit" --subFork
     - TESTS="integration:geth"
     - TESTS="integration:parity"
     - TESTS="security:mythril"

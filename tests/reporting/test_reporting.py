@@ -380,9 +380,11 @@ def test_forking_values(localFixture, universe, market, cash):
     assert delta == migrationBonus - 5 # rounding error dust buildup
 
     # The universe needs to be nudged to actually update values since there are potentially unbounded universes and updating the values derived by this total is not essential as a matter of normal procedure
-    assert childUniverse.getForkReputationGoal() == universe.getForkReputationGoal()
-    assert childUniverse.getDisputeThresholdForFork() == universe.getDisputeThresholdForFork()
-    assert childUniverse.getInitialReportMinValue() == universe.getInitialReportMinValue()
+    # In a forked universe the total supply will be different so its childrens goals will not be the same initially
+    if not localFixture.subFork:
+        assert childUniverse.getForkReputationGoal() == universe.getForkReputationGoal()
+        assert childUniverse.getDisputeThresholdForFork() == universe.getDisputeThresholdForFork()
+        assert childUniverse.getInitialReportMinValue() == universe.getInitialReportMinValue()
 
     # The universe uses this theoretical total to calculate values such as the fork goal, fork dispute threshhold and the initial reporting defaults and floors
     assert childUniverse.updateForkValues()
@@ -472,12 +474,13 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     assert scalarMarket.finalize()
 
     # Now we'll confirm the record keeping was updated
-    assert feeWindow.getNumMarkets() == 2
+    # Fee Window cadence is different in the subFork Univese tests so we account for that
+    assert feeWindow.getNumMarkets() == 3 if localFixture.subFork else 2
     assert feeWindow.getNumInvalidMarkets() == 1
     assert feeWindow.getNumIncorrectDesignatedReportMarkets() == 2
 
     feeWindow = localFixture.applySignature('FeeWindow', scalarMarket.getFeeWindow())
-    assert feeWindow.getNumMarkets() == 1
+    assert feeWindow.getNumMarkets() == 3 if localFixture.subFork else 1
     assert feeWindow.getNumDesignatedReportNoShows() == 1
 
 def test_rep_migration_convenience_function(localFixture, universe, market):
