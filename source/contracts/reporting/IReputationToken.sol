@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 import 'libraries/ITyped.sol';
 import 'libraries/token/ERC20.sol';

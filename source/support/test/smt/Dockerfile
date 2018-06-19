@@ -5,7 +5,7 @@
 # that this image's build will fail earlier for compiling contracts than
 # for other pieces
 FROM python:2.7.13-stretch
-ARG SOLC_VERSION=v0.4.20
+ARG SOLC_VERSION=v0.4.24
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
 	&& apt-get install -y nodejs
@@ -42,7 +42,7 @@ RUN rgrep "pragma solidity" source/contracts/ | cut -d':' -f1 | xargs sed -i '1i
 
 # Do not run SMT on quarantined contracts
 COPY source/support/test/smt/quarantine.txt quarantine.txt
-RUN while read contract; do sed -i '/pragma experimental SMTChecker/d' ${contract}; done<quarantine.txt 
+RUN while read contract; do sed -i '/pragma experimental SMTChecker/d' ${contract}; done<quarantine.txt
 
 # Patch contract compiler to use SMT enabled solc instead of solc.js
 COPY source/support/test/smt/smt.patch smt.patch
