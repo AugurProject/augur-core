@@ -41,7 +41,7 @@ contract Controller is IController {
         _;
     }
 
-    function Controller() public {
+    constructor() public {
         owner = msg.sender;
         whitelist[msg.sender] = true;
     }

@@ -333,8 +333,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         IReputationToken _reputationToken = getReputationToken();
         uint256 _repBalance = _reputationToken.balanceOf(this);
         require(_reputationToken.transfer(msg.sender, _repBalance));
-        if (this.balance > 0) {
-            msg.sender.transfer(this.balance);
+        if (address(this).balance > 0) {
+            msg.sender.transfer(address(this).balance);
         }
         return true;
     }
@@ -489,7 +489,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         } else {
             require(_sum == numTicks);
         }
-        return keccak256(_payoutNumerators, _invalid);
+        return keccak256(abi.encodePacked(_payoutNumerators, _invalid));
     }
 
     function isContainerForShareToken(IShareToken _shadyShareToken) public view returns (bool) {

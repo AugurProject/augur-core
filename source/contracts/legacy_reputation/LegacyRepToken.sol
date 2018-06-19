@@ -24,7 +24,7 @@ contract LegacyRepToken is Initializable, PausableToken {
      * @dev Creates a new RepToken instance
      * @param _legacyReputationToken Address of the legacy ERC20Basic REP contract to migrate balances from
      */
-    function LegacyRepToken(address _legacyReputationToken, uint256 _amountUsedToFreeze, address _accountToSendFrozenRepTo) {
+    constructor(address _legacyReputationToken, uint256 _amountUsedToFreeze, address _accountToSendFrozenRepTo) {
         require(_legacyReputationToken != 0);
         legacyReputationToken = ERC20Basic(_legacyReputationToken);
         targetSupply = legacyReputationToken.totalSupply();

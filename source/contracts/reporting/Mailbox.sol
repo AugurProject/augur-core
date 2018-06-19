@@ -32,8 +32,8 @@ contract Mailbox is DelegationTarget, Ownable, Initializable, IMailbox {
             _cash.withdrawEtherTo(owner, _tokenBalance);
         }
         // Withdraw any ETH balance
-        if (this.balance > 0) {
-            owner.transfer(this.balance);
+        if (address(this).balance > 0) {
+            owner.transfer(address(this).balance);
         }
         return true;
     }

@@ -79,7 +79,7 @@ contract Augur is Controlled, IAugur {
         UniverseFactory _universeFactory = UniverseFactory(controller.lookup("UniverseFactory"));
         IUniverse _newUniverse = _universeFactory.createUniverse(controller, _parentUniverse, _parentPayoutDistributionHash);
         universes[_newUniverse] = true;
-        UniverseCreated(_parentUniverse, _newUniverse, _parentPayoutNumerators, _parentInvalid);
+        emit UniverseCreated(_parentUniverse, _newUniverse, _parentPayoutNumerators, _parentInvalid);
         return _newUniverse;
     }
 
@@ -99,7 +99,7 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
         crowdsourcers[_disputeCrowdsourcer] = true;
-        DisputeCrowdsourcerCreated(_universe, _market, _disputeCrowdsourcer, _payoutNumerators, _size, _invalid);
+        emit DisputeCrowdsourcerCreated(_universe, _market, _disputeCrowdsourcer, _payoutNumerators, _size, _invalid);
         return true;
     }
 
@@ -121,7 +121,7 @@ contract Augur is Controlled, IAugur {
     function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator, bytes32[] _outcomes, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe == IUniverse(msg.sender));
-        MarketCreated(_topic, _description, _extraInfo, _universe, _market, _marketCreator, _outcomes, _universe.getOrCacheMarketCreationCost(), _minPrice, _maxPrice, _marketType);
+        emit MarketCreated(_topic, _description, _extraInfo, _universe, _market, _marketCreator, _outcomes, _universe.getOrCacheMarketCreationCost(), _minPrice, _maxPrice, _marketType);
         return true;
     }
 
@@ -129,49 +129,49 @@ contract Augur is Controlled, IAugur {
     function logMarketCreated(bytes32 _topic, string _description, string _extraInfo, IUniverse _universe, address _market, address _marketCreator, int256 _minPrice, int256 _maxPrice, IMarket.MarketType _marketType) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe == IUniverse(msg.sender));
-        MarketCreated(_topic, _description, _extraInfo, _universe, _market, _marketCreator, new bytes32[](0), _universe.getOrCacheMarketCreationCost(), _minPrice, _maxPrice, _marketType);
+        emit MarketCreated(_topic, _description, _extraInfo, _universe, _market, _marketCreator, new bytes32[](0), _universe.getOrCacheMarketCreationCost(), _minPrice, _maxPrice, _marketType);
         return true;
     }
 
     function logInitialReportSubmitted(IUniverse _universe, address _reporter, address _market, uint256 _amountStaked, bool _isDesignatedReporter, uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
-        InitialReportSubmitted(_universe, _reporter, _market, _amountStaked, _isDesignatedReporter, _payoutNumerators, _invalid);
+        emit InitialReportSubmitted(_universe, _reporter, _market, _amountStaked, _isDesignatedReporter, _payoutNumerators, _invalid);
         return true;
     }
 
     function logDisputeCrowdsourcerContribution(IUniverse _universe, address _reporter, address _market, address _disputeCrowdsourcer, uint256 _amountStaked) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
-        DisputeCrowdsourcerContribution(_universe, _reporter, _market, _disputeCrowdsourcer, _amountStaked);
+        emit DisputeCrowdsourcerContribution(_universe, _reporter, _market, _disputeCrowdsourcer, _amountStaked);
         return true;
     }
 
     function logDisputeCrowdsourcerCompleted(IUniverse _universe, address _market, address _disputeCrowdsourcer) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(IMarket(msg.sender)));
-        DisputeCrowdsourcerCompleted(_universe, _market, _disputeCrowdsourcer);
+        emit DisputeCrowdsourcerCompleted(_universe, _market, _disputeCrowdsourcer);
         return true;
     }
 
     function logInitialReporterRedeemed(IUniverse _universe, address _reporter, address _market, uint256 _amountRedeemed, uint256 _repReceived, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
-        InitialReporterRedeemed(_universe, _reporter, _market, _amountRedeemed, _repReceived, _reportingFeesReceived, _payoutNumerators);
+        emit InitialReporterRedeemed(_universe, _reporter, _market, _amountRedeemed, _repReceived, _reportingFeesReceived, _payoutNumerators);
         return true;
     }
 
     function logDisputeCrowdsourcerRedeemed(IUniverse _universe, address _reporter, address _market, uint256 _amountRedeemed, uint256 _repReceived, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
         IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
         require(isKnownCrowdsourcer(_disputeCrowdsourcer));
-        DisputeCrowdsourcerRedeemed(_universe, _reporter, _market, _disputeCrowdsourcer, _amountRedeemed, _repReceived, _reportingFeesReceived, _payoutNumerators);
+        emit DisputeCrowdsourcerRedeemed(_universe, _reporter, _market, _disputeCrowdsourcer, _amountRedeemed, _repReceived, _reportingFeesReceived, _payoutNumerators);
         return true;
     }
 
     function logReportingParticipantDisavowed(IUniverse _universe, IMarket _market) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
-        ReportingParticipantDisavowed(_universe, _market, msg.sender);
+        emit ReportingParticipantDisavowed(_universe, _market, msg.sender);
         return true;
     }
 
@@ -179,14 +179,14 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         IMarket _market = IMarket(msg.sender);
         require(_universe.isContainerForMarket(_market));
-        MarketParticipantsDisavowed(_universe, _market);
+        emit MarketParticipantsDisavowed(_universe, _market);
         return true;
     }
 
     function logFeeWindowRedeemed(IUniverse _universe, address _reporter, uint256 _amountRedeemed, uint256 _reportingFeesReceived) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
-        FeeWindowRedeemed(_universe, _reporter, msg.sender, _amountRedeemed, _reportingFeesReceived);
+        emit FeeWindowRedeemed(_universe, _reporter, msg.sender, _amountRedeemed, _reportingFeesReceived);
         return true;
     }
 
@@ -194,71 +194,71 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         IMarket _market = IMarket(msg.sender);
         require(_universe.isContainerForMarket(_market));
-        MarketFinalized(_universe, _market);
+        emit MarketFinalized(_universe, _market);
         return true;
     }
 
     function logMarketMigrated(IMarket _market, IUniverse _originalUniverse) public returns (bool) {
         IUniverse _newUniverse = IUniverse(msg.sender);
         require(isKnownUniverse(_newUniverse));
-        MarketMigrated(_market, _originalUniverse, _newUniverse);
+        emit MarketMigrated(_market, _originalUniverse, _newUniverse);
         return true;
     }
 
     function logOrderCanceled(IUniverse _universe, address _shareToken, address _sender, bytes32 _orderId, Order.Types _orderType, uint256 _tokenRefund, uint256 _sharesRefund) public onlyWhitelistedCallers returns (bool) {
-        OrderCanceled(_universe, _shareToken, _sender, _orderId, _orderType, _tokenRefund, _sharesRefund);
+        emit OrderCanceled(_universe, _shareToken, _sender, _orderId, _orderType, _tokenRefund, _sharesRefund);
         return true;
     }
 
     function logOrderCreated(Order.Types _orderType, uint256 _amount, uint256 _price, address _creator, uint256 _moneyEscrowed, uint256 _sharesEscrowed, bytes32 _tradeGroupId, bytes32 _orderId, IUniverse _universe, address _shareToken) public onlyWhitelistedCallers returns (bool) {
-        OrderCreated(_orderType, _amount, _price, _creator, _moneyEscrowed, _sharesEscrowed, _tradeGroupId, _orderId, _universe, _shareToken);
+        emit OrderCreated(_orderType, _amount, _price, _creator, _moneyEscrowed, _sharesEscrowed, _tradeGroupId, _orderId, _universe, _shareToken);
         return true;
     }
 
     function logOrderFilled(IUniverse _universe, address _shareToken, address _filler, bytes32 _orderId, uint256 _numCreatorShares, uint256 _numCreatorTokens, uint256 _numFillerShares, uint256 _numFillerTokens, uint256 _marketCreatorFees, uint256 _reporterFees, uint256 _amountFilled, bytes32 _tradeGroupId) public onlyWhitelistedCallers returns (bool) {
-        OrderFilled(_universe, _shareToken, _filler, _orderId, _numCreatorShares, _numCreatorTokens, _numFillerShares, _numFillerTokens, _marketCreatorFees, _reporterFees, _amountFilled, _tradeGroupId);
+        emit OrderFilled(_universe, _shareToken, _filler, _orderId, _numCreatorShares, _numCreatorTokens, _numFillerShares, _numFillerTokens, _marketCreatorFees, _reporterFees, _amountFilled, _tradeGroupId);
         return true;
     }
 
     function logCompleteSetsPurchased(IUniverse _universe, IMarket _market, address _account, uint256 _numCompleteSets) public onlyWhitelistedCallers returns (bool) {
-        CompleteSetsPurchased(_universe, _market, _account, _numCompleteSets);
+        emit CompleteSetsPurchased(_universe, _market, _account, _numCompleteSets);
         return true;
     }
 
     function logCompleteSetsSold(IUniverse _universe, IMarket _market, address _account, uint256 _numCompleteSets) public onlyWhitelistedCallers returns (bool) {
-        CompleteSetsSold(_universe, _market, _account, _numCompleteSets);
+        emit CompleteSetsSold(_universe, _market, _account, _numCompleteSets);
         return true;
     }
 
     function logTradingProceedsClaimed(IUniverse _universe, address _shareToken, address _sender, address _market, uint256 _numShares, uint256 _numPayoutTokens, uint256 _finalTokenBalance) public onlyWhitelistedCallers returns (bool) {
-        TradingProceedsClaimed(_universe, _shareToken, _sender, _market, _numShares, _numPayoutTokens, _finalTokenBalance);
+        emit TradingProceedsClaimed(_universe, _shareToken, _sender, _market, _numShares, _numPayoutTokens, _finalTokenBalance);
         return true;
     }
 
     function logUniverseForked() public returns (bool) {
         require(universes[msg.sender]);
-        UniverseForked(msg.sender);
+        emit UniverseForked(msg.sender);
         return true;
     }
 
     function logFeeWindowTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
-        TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.FeeWindow, 0);
+        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.FeeWindow, 0);
         return true;
     }
 
     function logReputationTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.getReputationToken() == IReputationToken(msg.sender));
-        TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.ReputationToken, 0);
+        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.ReputationToken, 0);
         return true;
     }
 
     function logDisputeCrowdsourcerTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
         require(isKnownCrowdsourcer(_disputeCrowdsourcer));
-        TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.DisputeCrowdsourcer, _disputeCrowdsourcer.getMarket());
+        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.DisputeCrowdsourcer, _disputeCrowdsourcer.getMarket());
         return true;
     }
 
@@ -266,21 +266,21 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         IShareToken _shareToken = IShareToken(msg.sender);
         require(_universe.isContainerForShareToken(_shareToken));
-        TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.ShareToken, _shareToken.getMarket());
+        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.ShareToken, _shareToken.getMarket());
         return true;
     }
 
     function logReputationTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.getReputationToken() == IReputationToken(msg.sender));
-        TokensBurned(_universe, msg.sender, _target, _amount, TokenType.ReputationToken, 0);
+        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.ReputationToken, 0);
         return true;
     }
 
     function logReputationTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.getReputationToken() == IReputationToken(msg.sender));
-        TokensMinted(_universe, msg.sender, _target, _amount, TokenType.ReputationToken, 0);
+        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.ReputationToken, 0);
         return true;
     }
 
@@ -288,7 +288,7 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         IShareToken _shareToken = IShareToken(msg.sender);
         require(_universe.isContainerForShareToken(_shareToken));
-        TokensBurned(_universe, msg.sender, _target, _amount, TokenType.ShareToken, _shareToken.getMarket());
+        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.ShareToken, _shareToken.getMarket());
         return true;
     }
 
@@ -296,68 +296,68 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         IShareToken _shareToken = IShareToken(msg.sender);
         require(_universe.isContainerForShareToken(_shareToken));
-        TokensMinted(_universe, msg.sender, _target, _amount, TokenType.ShareToken, _shareToken.getMarket());
+        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.ShareToken, _shareToken.getMarket());
         return true;
     }
 
     function logFeeWindowBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
-        TokensBurned(_universe, msg.sender, _target, _amount, TokenType.FeeWindow, 0);
+        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.FeeWindow, 0);
         return true;
     }
 
     function logFeeWindowMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
-        TokensMinted(_universe, msg.sender, _target, _amount, TokenType.FeeWindow, 0);
+        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.FeeWindow, 0);
         return true;
     }
 
     function logDisputeCrowdsourcerTokensBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
         require(isKnownCrowdsourcer(_disputeCrowdsourcer));
-        TokensBurned(_universe, msg.sender, _target, _amount, TokenType.DisputeCrowdsourcer, _disputeCrowdsourcer.getMarket());
+        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.DisputeCrowdsourcer, _disputeCrowdsourcer.getMarket());
         return true;
     }
 
     function logDisputeCrowdsourcerTokensMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
         require(isKnownCrowdsourcer(_disputeCrowdsourcer));
-        TokensMinted(_universe, msg.sender, _target, _amount, TokenType.DisputeCrowdsourcer, _disputeCrowdsourcer.getMarket());
+        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.DisputeCrowdsourcer, _disputeCrowdsourcer.getMarket());
         return true;
     }
 
     function logFeeWindowCreated(IFeeWindow _feeWindow, uint256 _id) public returns (bool) {
         require(universes[msg.sender]);
-        FeeWindowCreated(msg.sender, _feeWindow, _feeWindow.getStartTime(), _feeWindow.getEndTime(), _id);
+        emit FeeWindowCreated(msg.sender, _feeWindow, _feeWindow.getStartTime(), _feeWindow.getEndTime(), _id);
         return true;
     }
 
     function logFeeTokenTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
-        TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.FeeToken, 0);
+        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.FeeToken, 0);
         return true;
     }
 
     function logFeeTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
-        TokensBurned(_universe, msg.sender, _target, _amount, TokenType.FeeToken, 0);
+        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.FeeToken, 0);
         return true;
     }
 
     function logFeeTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
-        TokensMinted(_universe, msg.sender, _target, _amount, TokenType.FeeToken, 0);
+        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.FeeToken, 0);
         return true;
     }
 
     function logTimestampSet(uint256 _newTimestamp) public returns (bool) {
         require(msg.sender == controller.lookup("Time"));
-        TimestampSet(_newTimestamp);
+        emit TimestampSet(_newTimestamp);
         return true;
     }
 
@@ -365,7 +365,7 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(_market));
         require(msg.sender == _market.getInitialReporterAddress());
-        InitialReporterTransferred(_universe, _market, _from, _to);
+        emit InitialReporterTransferred(_universe, _market, _from, _to);
         return true;
     }
 
@@ -373,7 +373,7 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         IMarket _market = IMarket(msg.sender);
         require(_universe.isContainerForMarket(_market));
-        MarketTransferred(_universe, _market, _from, _to);
+        emit MarketTransferred(_universe, _market, _from, _to);
         return true;
     }
 
@@ -381,13 +381,13 @@ contract Augur is Controlled, IAugur {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForMarket(_market));
         require(IMailbox(msg.sender) == _market.getMarketCreatorMailbox());
-        MarketMailboxTransferred(_universe, _market, msg.sender, _from, _to);
+        emit MarketMailboxTransferred(_universe, _market, msg.sender, _from, _to);
         return true;
     }
 
     function logEscapeHatchChanged(bool _isOn) public returns (bool) {
         require(msg.sender == address(controller));
-        EscapeHatchChanged(_isOn);
+        emit EscapeHatchChanged(_isOn);
         return true;
     }
 }

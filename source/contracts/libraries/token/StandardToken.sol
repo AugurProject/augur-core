@@ -87,7 +87,7 @@ contract StandardToken is ERC20, BasicToken {
 
     function approveInternal(address _owner, address _spender, uint256 _value) internal returns (bool) {
         allowed[_owner][_spender] = _value;
-        Approval(_owner, _spender, _value);
+        emit Approval(_owner, _spender, _value);
         return true;
     }
 }

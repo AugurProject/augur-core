@@ -12,7 +12,7 @@ contract TimeControlled is ITime, Ownable {
     uint256 private timestamp = 1;
     address private constant FOUNDATION_REP_ADDRESS = address(0xE94327D07Fc17907b4DB788E5aDf2ed424adDff6);
 
-    function TimeControlled() public {
+    constructor() public {
         // This is to confirm we are not on foundation network
         require(!FOUNDATION_REP_ADDRESS.exists());
         timestamp = block.timestamp;

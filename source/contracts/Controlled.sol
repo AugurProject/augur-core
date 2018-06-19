@@ -34,7 +34,7 @@ contract Controlled is IControlled {
         _;
     }
 
-    function Controlled() public {
+    constructor() public {
         controller = IController(msg.sender);
     }
 
@@ -56,7 +56,7 @@ contract Controlled is IControlled {
         }
 
         // Transfer Eth to target
-        _target.transfer(this.balance);
+        _target.transfer(address(this).balance);
         return true;
     }
 }
