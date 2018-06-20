@@ -81,4 +81,3 @@ env:
     - TESTS="integration:parity"
     - TESTS="security:mythril"
     - TESTS="security:maian"
-    - TESTS="security:smt"
