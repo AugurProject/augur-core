@@ -1,12 +1,14 @@
 import { URL } from 'url';
 import { NetworkConfiguration } from '../libraries/NetworkConfiguration';
-import { server as serverFactory, TestRpcServer } from 'ethereumjs-testrpc';
+import { server as serverFactory } from 'ganache-core';
 
 export class TestRpc {
     private readonly DEFAULT_TEST_ACCOUNT_BALANCE = 10**20;
     private readonly BLOCK_GAS_LIMIT = 6500000;
     private readonly networkConfiguration: NetworkConfiguration;
-    private readonly testRpcServer: TestRpcServer;
+    private readonly testRpcServer: any;
+
+    private static instance : TestRpc | null = null;
 
     constructor(networkConfiguration: NetworkConfiguration) {
         this.networkConfiguration = networkConfiguration;
@@ -20,10 +22,14 @@ export class TestRpc {
         this.testRpcServer.listen(parseInt(url.port) || 80);
     }
 
-    public static startTestRpcIfNecessary = async (networkConfiguration: NetworkConfiguration): Promise<void> => {
+    public static startTestRpcIfNecessary = async (networkConfiguration: NetworkConfiguration): Promise<TestRpc | null> => {
         if (networkConfiguration.networkName === 'testrpc') {
-            const testRpc = new TestRpc(networkConfiguration);
-            testRpc.listen();
+            if (TestRpc.instance !== null) return TestRpc.instance;
+            TestRpc.instance = new TestRpc(networkConfiguration);
+            TestRpc.instance.listen();
+            return TestRpc.instance;
+        } else {
+            return null;
         }
     }
 }
