@@ -52,6 +52,7 @@ export class TestFixture {
             contractDeployer = new ContractDeployer(fakeProdDeployerConfiguration, connector, accountManager, compiledContracts);
         }
         const addressMapping = await contractDeployer.deploy();
+
         if (testRpc !== null && compilerConfiguration.enableSdb) {
             await testRpc.linkDebugSymbols(compiledContracts, addressMapping);
         }
@@ -82,6 +83,7 @@ export class TestFixture {
         if (await market.getTypeName_() !== stringTo32ByteHex("Market")) {
             throw new Error("Unable to create new categorical market");
         }
+        await this.linkDebugSymbolsForContract('Market', market.address);
         return market;
     }
 
@@ -182,6 +184,7 @@ export class TestFixture {
 
     public async getFeeWindow(market: Market): Promise<FeeWindow> {
         const feeWindowAddress = await market.getFeeWindow_();
+        await this.linkDebugSymbolsForContract('FeeWindow', feeWindowAddress);
         return new FeeWindow(this.connector, this.accountManager, feeWindowAddress, TestFixture.GAS_PRICE);
     }
 
