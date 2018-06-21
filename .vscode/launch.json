@@ -1,7 +1,13 @@
 {
     "version": "0.2.0",
     "configurations": [
-
+        {
+            "type": "sdb",
+            "request": "launch",
+            "name": "Debug Solidity",
+            "stopOnEntry": false,
+            "port": 8455
+        },
         {
             "type": "node",
             "request": "attach",
@@ -27,6 +33,8 @@
             ],
             "env": {
                 "TESTRPC": "true",
+                "ENABLE_SOLIDITY_DEBUG": "true",
+                "SDB_PORT": "8455",
             },
             // uncomment one of the following and run `docker-compose -f support/test/integration/docker-compose.yml up --build --force-recreate --abort-on-container-exit parity-dev-node` then you can debug tests against any chain from within VSCode
             // ** Local **
@@ -64,6 +72,15 @@
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceRoot}/output/**/*"
+            ],
+        }
+    ],
+    "compounds": [
+        {
+            "name": "SDB + Test",
+            "configurations": [
+                "Integration Tests",
+                "Debug Solidity"
             ]
         }
     ]

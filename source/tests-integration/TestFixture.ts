@@ -31,9 +31,9 @@ export class TestFixture {
 
     public static create = async (pretendToBeProduction: boolean = false): Promise<TestFixture> => {
         const networkConfiguration = NetworkConfiguration.create();
-        const testRpc = await TestRpc.startTestRpcIfNecessary(networkConfiguration);
-
         const compilerConfiguration = CompilerConfiguration.create()
+        const testRpc = await TestRpc.startTestRpcIfNecessary(networkConfiguration, compilerConfiguration);
+
         const compiledContracts = await new ContractCompiler(compilerConfiguration).compileContracts();
 
         const connector = new Connector(networkConfiguration);
@@ -51,8 +51,17 @@ export class TestFixture {
             const fakeProdDeployerConfiguration = DeployerConfiguration.createWithControlledTime(legacyRepAddress, true);
             contractDeployer = new ContractDeployer(fakeProdDeployerConfiguration, connector, accountManager, compiledContracts);
         }
-        await contractDeployer.deploy();
+        const addressMapping = await contractDeployer.deploy();
+        if (testRpc !== null && compilerConfiguration.enableSdb) {
+            await testRpc.linkDebugSymbols(compiledContracts, addressMapping);
+        }
         return new TestFixture(connector, accountManager, contractDeployer, testRpc);
+    }
+
+    public async linkDebugSymbolsForContract(contractName: string, contractAddress: string): Promise<void> {
+        if (this.testRpc) {
+            await this.testRpc.linkContractAddress(contractName, contractAddress);
+        }
     }
 
     public async approveCentralAuthority(): Promise<void> {
