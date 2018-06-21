@@ -29,7 +29,8 @@
             "args": [
                 "--require", "source-map-support/register",
                 "output/tests-integration/**/*.js",
-                "--no-timeouts"
+                "--no-timeouts",
+                "--exit",
             ],
             "env": {
                 "TESTRPC": "true",
