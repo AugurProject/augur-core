@@ -29,7 +29,7 @@ Note: on macOS, you need to use [virtualenv](https://python-guide-pt-br.readthed
 
 ## Deployment
 
-Solidity contract deployment is handled by ContractDeployer.ts` and the wrapper programs located in `source/deployment`.  This deployment framework allows for incremental deploys of contracts to a given controller (specified via a configuration option).  This allows us to deploy new contracts without touching the controller, effectively upgrading the deployed system in-place.
+Solidity contract deployment is handled by `ContractDeployer.ts` and the wrapper programs located in `source/deployment`.  This deployment framework allows for incremental deploys of contracts to a given controller (specified via a configuration option).  This allows us to deploy new contracts without touching the controller, effectively upgrading the deployed system in-place.
 
 - Main Code
   - source/libraries/ContractCompiler.ts - All logic for compiling contracts, generating ABI
