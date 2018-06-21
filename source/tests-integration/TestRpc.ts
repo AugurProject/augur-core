@@ -41,7 +41,9 @@ export class TestRpc {
             if (TestRpc.instance !== null) return TestRpc.instance;
             TestRpc.instance = new TestRpc(networkConfiguration, compilerConfiguration);
             TestRpc.instance.listen();
-            await TestRpc.instance.waitForSdb();
+            if (compilerConfiguration.enableSdb) {
+                await TestRpc.instance.waitForSdb();
+            }
             return TestRpc.instance;
         } else {
             return null;

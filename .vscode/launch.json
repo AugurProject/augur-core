@@ -33,6 +33,7 @@
             ],
             "env": {
                 "TESTRPC": "true",
+                "ETHEREUM_GAS_PRICE_IN_NANOETH": "1",
                 "ENABLE_SOLIDITY_DEBUG": "true",
                 "SDB_PORT": "8455",
             },
