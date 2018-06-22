@@ -49,7 +49,7 @@ Deploying to: ${networkConfiguration.networkName}
         return this.connector.ethjsQuery.getBlockByNumber('latest', false).then( (block) => block.number.toNumber());
     }
 
-    public async deploy(): Promise<void> {
+    public async deploy(): Promise<{ [name: string]: string }> {
         const blockNumber = await this.getBlockNumber();
         this.controller = await this.uploadController();
         await this.uploadAugur();
@@ -83,6 +83,29 @@ Deploying to: ${networkConfiguration.networkName}
 
         await this.generateUploadBlockNumberFile(blockNumber);
         await this.generateAddressMappingFile();
+
+        return this.generateCompleteAddressMapping();
+    }
+
+    private generateCompleteAddressMapping(): { [name: string]: string } {
+        const mapping: { [name: string]: string } = {};
+        mapping['Controller'] = this.controller.address;
+        if (this.universe) mapping['Universe'] = this.universe.address;
+        if (this.contracts.get('Augur').address === undefined) throw new Error(`Augur not uploaded.`);
+        mapping['Augur'] = this.contracts.get('Augur').address!;
+        mapping['LegacyReputationToken'] = this.contracts.get('LegacyReputationToken').address!;
+        for (let contract of this.contracts) {
+            if (/^I[A-Z].*/.test(contract.contractName)) continue;
+            if (contract.contractName === 'TimeControlled') continue;
+            if (contract.contractName === 'TestNetReputationToken') continue;
+            if (contract.contractName === 'Time') contract = this.configuration.useNormalTime ? contract: this.contracts.get('TimeControlled');
+            if (contract.contractName === 'ReputationToken') contract = this.configuration.isProduction ? contract : this.contracts.get('TestNetReputationToken');
+            if (contract.relativeFilePath.startsWith('legacy_reputation/')) continue;
+            if (contract.contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) continue;
+            if (contract.address === undefined) throw new Error(`${contract.contractName} not uploaded.`);
+            mapping[contract.contractName] = contract.address;
+        }
+        return mapping;
     }
 
     public getContract = (contractName: string): Controlled => {
@@ -125,11 +148,13 @@ Deploying to: ${networkConfiguration.networkName}
 
     private async uploadController(): Promise<Controller> {
         console.log('Uploading controller...');
+        const contract = await this.contracts.get("Controller");
         const address = (this.configuration.controllerAddress !== undefined)
             ? this.configuration.controllerAddress
             : await this.construct(this.contracts.get('Controller'), [], `Uploading Controller.sol`);
         const controller = new Controller(this.connector, this.accountManager, address, this.connector.gasPrice);
         const ownerAddress = await controller.owner_();
+        contract.address = address;
         if (ownerAddress.toLowerCase() !== this.accountManager.defaultAddress.toLowerCase()) {
             throw new Error("Controller owner does not equal from address");
         }
@@ -220,7 +245,7 @@ Deploying to: ${networkConfiguration.networkName}
 
     private async construct(contract: Contract, constructorArgs: Array<string>, failureDetails: string): Promise<string> {
         const data = `0x${ContractDeployer.getEncodedConstructData(contract.abi, contract.bytecode, constructorArgs).toString('hex')}`;
-        // TODO: remove `gas` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
+        console.log(`Estimate gas for upload: ${contract.contractName}`);
         const gasEstimate = await this.connector.ethjsQuery.estimateGas({ from: this.accountManager.defaultAddress, data: data });
         const nonce = await this.accountManager.nonces.get(this.accountManager.defaultAddress);
         const signedTransaction = await this.accountManager.signTransaction({ gas: gasEstimate, gasPrice: this.connector.gasPrice, data: data});
@@ -350,7 +375,7 @@ Deploying to: ${networkConfiguration.networkName}
 
     private async generateAddressMappingFile(): Promise<void> {
         const addressMappingJson = await this.generateAddressMapping();
-        await writeFile(this.configuration.contractAddressesOutputPath, addressMappingJson, 'utf8')
+        await writeFile(this.configuration.contractAddressesOutputPath, addressMappingJson, 'utf8');
     }
 
     private async generateUploadBlockNumberMapping(blockNumber: number): Promise<string> {

@@ -18,22 +18,24 @@ export class TestFixture {
     // FIXME: extract out the bits of contract deployer that we need access to, like the contracts/abis, so we can have a more targeted dependency
     public readonly contractDeployer: ContractDeployer;
     public readonly testRpc: TestRpc | null;
+    public readonly sdbEnabled: boolean;
 
     public get universe() { return this.contractDeployer.universe; }
     public get cash() { return <Cash> this.contractDeployer.getContract('Cash'); }
 
-    public constructor(connector: Connector, accountManager: AccountManager, contractDeployer: ContractDeployer, testRpc: TestRpc | null) {
+    public constructor(connector: Connector, accountManager: AccountManager, contractDeployer: ContractDeployer, testRpc: TestRpc | null, sdbEnabled: boolean) {
         this.connector = connector;
         this.accountManager = accountManager;
         this.contractDeployer = contractDeployer;
         this.testRpc = testRpc;
+        this.sdbEnabled = sdbEnabled;
     }
 
     public static create = async (pretendToBeProduction: boolean = false): Promise<TestFixture> => {
         const networkConfiguration = NetworkConfiguration.create();
-        const testRpc = await TestRpc.startTestRpcIfNecessary(networkConfiguration);
-
         const compilerConfiguration = CompilerConfiguration.create()
+        const testRpc = await TestRpc.startTestRpcIfNecessary(networkConfiguration, compilerConfiguration);
+
         const compiledContracts = await new ContractCompiler(compilerConfiguration).compileContracts();
 
         const connector = new Connector(networkConfiguration);
@@ -47,12 +49,21 @@ export class TestFixture {
         if (pretendToBeProduction) {
             const legacyRepAddress = await contractDeployer.uploadLegacyRep();
             await contractDeployer.initializeLegacyRep();
-
             const fakeProdDeployerConfiguration = DeployerConfiguration.createWithControlledTime(legacyRepAddress, true);
             contractDeployer = new ContractDeployer(fakeProdDeployerConfiguration, connector, accountManager, compiledContracts);
         }
-        await contractDeployer.deploy();
-        return new TestFixture(connector, accountManager, contractDeployer, testRpc);
+        const addressMapping = await contractDeployer.deploy();
+
+        if (testRpc !== null && compilerConfiguration.enableSdb) {
+            await testRpc.linkDebugSymbols(compiledContracts, addressMapping);
+        }
+        return new TestFixture(connector, accountManager, contractDeployer, testRpc, compilerConfiguration.enableSdb);
+    }
+
+    public async linkDebugSymbolsForContract(contractName: string, contractAddress: string): Promise<void> {
+        if (this.sdbEnabled && this.testRpc !== null) {
+            await this.testRpc.linkContractAddress(contractName, contractAddress);
+        }
     }
 
     public async approveCentralAuthority(): Promise<void> {
@@ -73,6 +84,7 @@ export class TestFixture {
         if (await market.getTypeName_() !== stringTo32ByteHex("Market")) {
             throw new Error("Unable to create new categorical market");
         }
+        await this.linkDebugSymbolsForContract('Market', market.address);
         return market;
     }
 
@@ -173,6 +185,7 @@ export class TestFixture {
 
     public async getFeeWindow(market: Market): Promise<FeeWindow> {
         const feeWindowAddress = await market.getFeeWindow_();
+        await this.linkDebugSymbolsForContract('FeeWindow', feeWindowAddress);
         return new FeeWindow(this.connector, this.accountManager, feeWindowAddress, TestFixture.GAS_PRICE);
     }
 

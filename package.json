@@ -18,7 +18,8 @@
     "build:source": "npx tsc",
     "build:contracts": "node output/deployment/compileContracts.js",
     "build:interfaces": "node output/tools/generateContractInterfaces.js",
-    "build": "npm run build:source && npm run lint && npm run build:contracts && npm run build:interfaces",
+    "build": "npm run build:source && npm run lint && npm run build:contracts && npm run build:interfaces && npm run build:source",
+    "build:debug": "npm run build:source && npm run lint && npx cross-env ENABLE_SOLIDITY_DEBUG=true npm run build:interfaces && npm run build:source",
     "preversion": "npm run build",
     "version": "git add source/libraries/ContractInterfaces.ts",
     "release": "npm version prerelease && npm publish",
@@ -37,8 +38,8 @@
     "docker:push": "docker push augurproject/augur-core:latest",
     "docker:run:npm": "docker run --rm augurproject/augur-core:latest",
     "docker:run:shell": "docker run --rm -it --entrypoint=bash augurproject/augur-core:latest",
-    "docker:run:test:integration:geth": "docker-compose -f ./source/support/test/integration/docker-compose-parity.yml up --abort-on-container-exit --force-recreate",
-    "docker:run:test:integration:parity": "docker-compose -f ./source/support/test/integration/docker-compose-geth.yml up --abort-on-container-exit --force-recreate",
+    "docker:run:test:integration:geth": "docker-compose -f ./source/support/test/integration/docker-compose-geth.yml up --abort-on-container-exit --force-recreate",
+    "docker:run:test:integration:parity": "docker-compose -f ./source/support/test/integration/docker-compose-parity.yml up --abort-on-container-exit --force-recreate",
     "docker:run:test:unit": "npm run docker:run:npm -- run test:unit",
     "docker:run:test:unit:all": "npm run docker:run:npm -- run test:unit:all",
     "docker:run:test:security:mythril": "docker run -v `pwd`:/augur-core --workdir /augur-core/source/contracts cryptomental/augur-mythril-ci python /scripts/processor.py",
@@ -101,6 +102,7 @@
     "yargs": "11.0.0"
   },
   "devDependencies": {
+    "cross-env": "^5.1.3",
     "solc": "0.4.20",
     "solium": "1.1.7",
     "source-map-support": "0.5.0",
