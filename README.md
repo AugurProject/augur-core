@@ -1,6 +1,6 @@
 # augur-core
 
-[![Build Status](https://travis-ci.org/AugurProject/augur-core.svg)](https://travis-ci.org/AugurProject/augur-core)
+[![Build Status](https://travis-ci.com/AugurProject/augur-core.svg)](https://travis-ci.com/AugurProject/augur-core)
 
 Smart contracts for [Augur](https://augur.net), a decentralized prediction market platform on the [Ethereum](https://ethereum.org) blockchain.
 
