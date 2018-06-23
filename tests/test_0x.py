@@ -17,6 +17,16 @@ def test_fill_order_with_tokens(localFixture, zeroX, market, cash, controller):
 
     fillAmount = 5
 
+    # TODO assure failure without depositing Cash
+
+    assert cash.depositEther(value = 5000)
+    assert cash.approve(zeroX.address, 5000)
+    assert zeroX.deposit(cash.address, 5000)
+
+    assert cash.depositEther(value = 45000, sender=tester.k1)
+    assert cash.approve(zeroX.address, 45000, sender=tester.k1)
+    assert zeroX.deposit(cash.address, 45000, sender=tester.k1)
+
     assert zeroX.fillOrder(
           orderAddresses,
           orderValues,
@@ -26,13 +36,15 @@ def test_fill_order_with_tokens(localFixture, zeroX, market, cash, controller):
           s,
           sender = tester.k1)
 
-    # TODO assert account 0 cash
-    # TODO assert account 0 shares
-    # TODO assert account 1 cash
-    # TODO assert account 1 cash
+    yesShareAddress = market.getShareToken(YES)
+    noShareAddress = market.getShareToken(NO)
+    assert zeroX.getTokenBalance(cash.address, tester.a0) == 0
+    assert zeroX.getTokenBalance(yesShareAddress, tester.a0) == fillAmount
+    assert zeroX.getTokenBalance(cash.address, tester.a1) == 0
+    assert zeroX.getTokenBalance(noShareAddress, tester.a1) == fillAmount
 
     orderHash = zeroX.getOrderHash(orderAddresses, orderValues)
-    # TODO assert zeroX.getUnavailableAmount(orderHash) == fillAmount
+    assert zeroX.getUnavailableAmount(orderHash) == fillAmount
 
 def test_cancel_order(localFixture, zeroX, market, cash, controller):
     expirationTimestampInSec = controller.getTimestamp() + 1

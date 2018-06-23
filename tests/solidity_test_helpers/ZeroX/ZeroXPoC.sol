@@ -6,7 +6,7 @@ import 'trading/ICash.sol';
 import 'libraries/token/ERC20.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/ReentrancyGuard.sol';
-import 'trading/ICompleteSets.sol';
+import 'trading/CompleteSets.sol';
 import 'Augur.sol';
 import 'IController.sol';
 
@@ -31,8 +31,9 @@ contract ZeroXPoC is ReentrancyGuard {
     mapping (bytes32 => uint) public cancelled;
 
     Augur public augur;
-    ICompleteSets public completeSets;
+    CompleteSets public completeSets;
     IController public controller;
+    ICash public cash;
 
     event Fill(
         address taker,
@@ -52,7 +53,7 @@ contract ZeroXPoC is ReentrancyGuard {
 
     struct Order {
         address maker;
-        address market;
+        IMarket market;
         uint256 outcome;
         uint256 orderType;
         uint256 amount;
@@ -78,7 +79,9 @@ contract ZeroXPoC is ReentrancyGuard {
     function ZeroXPoC(Augur _augur) public {
         augur = _augur;
         controller = _augur.getController();
-        completeSets = ICompleteSets(controller.lookup("CompleteSets"));
+        completeSets = CompleteSets(controller.lookup("CompleteSets"));
+        cash = ICash(controller.lookup("Cash"));
+        cash.approve(augur, 2**254);
     }
 
     /*
@@ -128,7 +131,7 @@ contract ZeroXPoC is ReentrancyGuard {
     {
         Order memory order = Order({
             maker: orderAddresses[0],
-            market: orderAddresses[1],
+            market: IMarket(orderAddresses[1]),
             outcome: orderValues[0],
             orderType: orderValues[1],
             amount: orderValues[2],
@@ -151,61 +154,89 @@ contract ZeroXPoC is ReentrancyGuard {
             return false;
         }
 
-        uint remainingAmount = order.amount.sub(getUnavailableAmount(order.orderHash));
-        uint toFillAmount = fillAmount.min(remainingAmount);
-        if (toFillAmount == 0) {
+        uint _remainingAmount = order.amount.sub(getUnavailableAmount(order.orderHash));
+        uint _toFillAmount = fillAmount.min(_remainingAmount);
+        if (_toFillAmount == 0) {
             Error(uint8(Errors.ORDER_FULLY_FILLED_OR_CANCELLED), order.orderHash);
             return false;
         }
 
-        filled[order.orderHash] = filled[order.orderHash].add(toFillAmount);
+        filled[order.orderHash] = filled[order.orderHash].add(_toFillAmount);
 
         Fill(
             msg.sender,
-            toFillAmount,
+            _toFillAmount,
             order.orderHash
         );
-
-        // longShareToken =
-        // shortShareTokens = []
-
-        // shortParticipant =
-        // longParticipant =
 
         // longSharesHeldByShortParticipant = getBalance(shortParticipant, longShareToken)
         // shortSharesHeldByLongParticipant = 0;
         // for i < shortShareTokens
         //     shortSharesHeldByLongParticipant += getBalance(longParticipant, shortShareTokens[i])
 
-        // numCompleteSets = min(longSharesHeldByShortParticipant, shortSharesHeldByLongParticipant, toFillAmount)
+        // numCompleteSets = min(longSharesHeldByShortParticipant, shortSharesHeldByLongParticipant, _toFillAmount)
         // if (numCompleteSets > 0)
         //     sell complete sets
         //     update longSharesHeldByShortParticipant (decrease)
         //     update shortSharesHeldByLongParticipant (decrease)
-        //     update toFillAmount (decrease)
+        //     update _toFillAmount (decrease)
         //     update share token balances (decrease)
         //     update Cash balances (increase)
         //
-        // if (toFillAmount > 0 && longSharesHeldByShortParticipant > 0)
+        // if (_toFillAmount > 0 && longSharesHeldByShortParticipant > 0)
         //     sub from short participants long share balance
         //     add to long participants long share balance
         //     add to short participants cash balance
         //     sub from long participants cash balance
-        //     update toFillAmount (decrease)
+        //     update _toFillAmount (decrease)
         //
-        // if (toFillAmount > 0 && shortSharesHeldByLongParticipant > 0)
+        // if (_toFillAmount > 0 && shortSharesHeldByLongParticipant > 0)
         //     sub from long participants short share balances
         //     add to short participants short share balances
         //     add to long participants cash balance
         //     sub from short participants cash balance
-        //     update toFillAmount (decrease)
+        //     update _toFillAmount (decrease)
         //
-        // if (toFillAmount > 0)
-        //     buy complete sets
-        //     update share token balances (increase)
-        //     update Cash balances (decrease)
+        tradeMakerTokensForFillerTokens(order, _toFillAmount);
 
         return true;
+    }
+
+    function tradeMakerTokensForFillerTokens(Order order, uint256 _toFillAmount) private returns (bool) {
+        if (_toFillAmount < 1) {
+            return;
+        }
+        IShareToken _longShareToken = order.market.getShareToken(order.outcome);
+        IShareToken[] memory _shortShareTokens = getShortShareTokens(order.market, order.outcome);
+
+        address _shortParticipant = order.orderType == 0 ? msg.sender : order.maker;
+        address _longParticipant = order.orderType == 0 ? order.maker : msg.sender;
+
+        uint256 _shortPrice = order.orderType == 0 ? order.market.getNumTicks().sub(order.price) : order.price;
+        uint256 _longPrice = order.orderType == 0 ? order.price : order.market.getNumTicks().sub(order.price);
+
+        completeSets.publicBuyCompleteSets(order.market, _toFillAmount);
+        tokenBalances[_longShareToken][_longParticipant] = tokenBalances[_longShareToken][_longParticipant].add(_toFillAmount);
+        for (uint256 _i = 0; _i < _shortShareTokens.length; ++_i) {
+            tokenBalances[_shortShareTokens[_i]][_shortParticipant] = tokenBalances[_shortShareTokens[_i]][_shortParticipant].add(_toFillAmount);
+        }
+
+        tokenBalances[cash][_longParticipant] = tokenBalances[cash][_longParticipant].sub(_toFillAmount.mul(_longPrice));
+        tokenBalances[cash][_shortParticipant] = tokenBalances[cash][_shortParticipant].sub(_toFillAmount.mul(_shortPrice));
+
+        return true;
+    }
+
+    function getShortShareTokens(IMarket _market, uint256 _longOutcome) private view returns (IShareToken[] memory) {
+        IShareToken[] memory _shortShareTokens = new IShareToken[](_market.getNumberOfOutcomes() - 1);
+        for (uint256 _outcome = 0; _outcome < _shortShareTokens.length + 1; ++_outcome) {
+            if (_outcome == _longOutcome) {
+                continue;
+            }
+            uint256 _index = (_outcome < _longOutcome) ? _outcome : _outcome - 1;
+            _shortShareTokens[_index] = _market.getShareToken(_outcome);
+        }
+        return _shortShareTokens;
     }
 
     /// @dev Cancels the input order.
@@ -223,7 +254,7 @@ contract ZeroXPoC is ReentrancyGuard {
     {
         Order memory order = Order({
             maker: orderAddresses[0],
-            market: orderAddresses[1],
+            market: IMarket(orderAddresses[1]),
             outcome: orderValues[0],
             orderType: orderValues[1],
             amount: orderValues[2],
