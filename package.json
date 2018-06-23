@@ -26,6 +26,7 @@
     "test:unit": "pytest -vv",
     "test:unit:all": "pytest tests -vv",
     "test:integration": "TESTRPC=true npx mocha output/tests-integration/**/*.js --no-timeouts --require source-map-support/register --exit",
+    "test:integration:docker": "npx mocha output/tests-integration/**/*.js --no-timeouts --require source-map-support/register --exit",
     "deploy:net": "bash ./source/support/deploy/run.sh direct",
     "deploy:aura": "npm run deploy:net -- aura",
     "deploy:clique": "npm run deploy:net -- clique",
