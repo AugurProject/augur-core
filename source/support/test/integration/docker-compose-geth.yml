@@ -11,7 +11,7 @@ services:
       dockerfile: source/support/Dockerfile
       cache_from:
         - augurproject/augur-core:latest
-    entrypoint: [ "npm", "run", "test:integration" ]
+    entrypoint: [ "npm", "run", "test:integration:docker" ]
     # uncomment the following 3 lines to enable debugging the tests
     # command: [ "--", "--debug=0.0.0.0:9229", "--inspect-brk" ]
     # ports:
