@@ -31,7 +31,7 @@ script: docker pull $IMAGE_BUILD;
 jobs:
   include:
     - stage: build
-      script: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin;
+      script: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
               docker pull $IMAGE_LATEST;
               npm run docker:build;
               docker tag $IMAGE_LATEST $IMAGE_BUILD;
