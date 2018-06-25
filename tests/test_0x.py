@@ -4,20 +4,29 @@ from pytest import fixture, raises
 from utils import longTo32Bytes, PrintGasUsed, fix
 from constants import BID, ASK, YES, NO
 from datetime import timedelta
+from ethereum.utils import ecsign, sha3, normalize_key, int_to_32bytearray, bytearray_to_bytestr, zpad
+
 
 def test_fill_order_with_tokens(localFixture, zeroX, market, cash, controller):
     expirationTimestampInSec = controller.getTimestamp() + 1
     orderAddresses = [tester.a0, market.address]
     orderValues = [YES, BID, 10, 1000, expirationTimestampInSec, 42]
 
-    # TODO get order v,r,s
-    v = 0
-    r = longTo32Bytes(0)
-    s = longTo32Bytes(0)
+    orderHash = zeroX.getOrderHash(orderAddresses, orderValues)
+    v, r, s = createOrder(orderHash)
 
     fillAmount = 5
 
-    # TODO assure failure without depositing Cash
+    # Fail with no Cash deposited
+    with raises(TransactionFailed):
+        zeroX.fillOrder(
+            orderAddresses,
+            orderValues,
+            fillAmount,
+            v,
+            r,
+            s,
+            sender = tester.k1)
 
     assert cash.depositEther(value = 5000)
     assert cash.approve(zeroX.address, 5000)
@@ -27,14 +36,15 @@ def test_fill_order_with_tokens(localFixture, zeroX, market, cash, controller):
     assert cash.approve(zeroX.address, 45000, sender=tester.k1)
     assert zeroX.deposit(cash.address, 45000, sender=tester.k1)
 
-    assert zeroX.fillOrder(
-          orderAddresses,
-          orderValues,
-          fillAmount,
-          v,
-          r,
-          s,
-          sender = tester.k1)
+    with PrintGasUsed(localFixture, "FILL_0X"):
+        assert zeroX.fillOrder(
+            orderAddresses,
+            orderValues,
+            fillAmount,
+            v,
+            r,
+            s,
+            sender = tester.k1)
 
     yesShareAddress = market.getShareToken(YES)
     noShareAddress = market.getShareToken(NO)
@@ -42,9 +52,66 @@ def test_fill_order_with_tokens(localFixture, zeroX, market, cash, controller):
     assert zeroX.getTokenBalance(yesShareAddress, tester.a0) == fillAmount
     assert zeroX.getTokenBalance(cash.address, tester.a1) == 0
     assert zeroX.getTokenBalance(noShareAddress, tester.a1) == fillAmount
+    assert zeroX.getUnavailableAmount(orderHash) == fillAmount
+
+def test_fill_order_with_shares(localFixture, zeroX, market, cash, controller):
+    expirationTimestampInSec = controller.getTimestamp() + 1
+    orderAddresses = [tester.a0, market.address]
+    orderValues = [YES, ASK, 10, 1000, expirationTimestampInSec, 42]
 
     orderHash = zeroX.getOrderHash(orderAddresses, orderValues)
+    v, r, s = createOrder(orderHash)
+
+    fillAmount = 5
+
+    # Fail with no shares deposited
+    with raises(TransactionFailed):
+        zeroX.fillOrder(
+            orderAddresses,
+            orderValues,
+            fillAmount,
+            v,
+            r,
+            s,
+            sender = tester.k1)
+
+    yesShareAddress = market.getShareToken(YES)
+    noShareAddress = market.getShareToken(NO)
+    yesShareToken = localFixture.applySignature('ShareToken', yesShareAddress)
+    noShareToken = localFixture.applySignature('ShareToken', noShareAddress)
+    completeSets = localFixture.contracts['CompleteSets']
+    assert completeSets.publicBuyCompleteSets(market.address, fix(20), value=fix('20', market.getNumTicks()))
+    assert noShareToken.transfer(tester.a1, 10)
+
+    assert yesShareToken.approve(zeroX.address, 10)
+    assert zeroX.deposit(yesShareAddress, 10)
+
+    assert noShareToken.approve(zeroX.address, 10, sender=tester.k1)
+    assert zeroX.deposit(noShareAddress, 10, sender=tester.k1)
+
+    with PrintGasUsed(localFixture, "FILL_0X"):
+        assert zeroX.fillOrder(
+            orderAddresses,
+            orderValues,
+            fillAmount,
+            v,
+            r,
+            s,
+            sender = tester.k1)
+
+    yesShareAddress = market.getShareToken(YES)
+    noShareAddress = market.getShareToken(NO)
+    assert zeroX.getTokenBalance(cash.address, tester.a0) == 4900
+    assert zeroX.getTokenBalance(yesShareAddress, tester.a0) == 5
+    assert zeroX.getTokenBalance(cash.address, tester.a1) == 44100
+    assert zeroX.getTokenBalance(noShareAddress, tester.a1) == 5
     assert zeroX.getUnavailableAmount(orderHash) == fillAmount
+
+def test_maker_sell_shares_for_tokens(localFixture, zeroX, market, cash, controller):
+    pass
+
+def test_maker_buy_shares_for_tokens(localFixture, zeroX, market, cash, controller):
+    pass
 
 def test_cancel_order(localFixture, zeroX, market, cash, controller):
     expirationTimestampInSec = controller.getTimestamp() + 1
@@ -107,3 +174,8 @@ def cash(localFixture, kitchenSinkSnapshot):
 @fixture
 def controller(localFixture, kitchenSinkSnapshot):
     return localFixture.contracts['Controller']
+
+def createOrder(orderHash, key=tester.k0):
+    key = normalize_key(key)
+    v, r, s = ecsign(sha3("\x19Ethereum Signed Message:\n32" + orderHash), key)
+    return v, zpad(bytearray_to_bytestr(int_to_32bytearray(r)), 32), zpad(bytearray_to_bytestr(int_to_32bytearray(s)), 32)

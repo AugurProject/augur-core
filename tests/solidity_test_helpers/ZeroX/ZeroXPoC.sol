@@ -106,6 +106,8 @@ contract ZeroXPoC is ReentrancyGuard {
         return true;
     }
 
+    // TODO could add something for depositing ETH too and credit CASH
+
     /*
     / Exchange functions
     */
@@ -141,6 +143,7 @@ contract ZeroXPoC is ReentrancyGuard {
         });
 
         require(order.amount > 0 && fillAmount > 0);
+
         require(isValidSignature(
             order.maker,
             order.orderHash,
@@ -169,37 +172,87 @@ contract ZeroXPoC is ReentrancyGuard {
             order.orderHash
         );
 
-        // longSharesHeldByShortParticipant = getBalance(shortParticipant, longShareToken)
-        // shortSharesHeldByLongParticipant = 0;
-        // for i < shortShareTokens
-        //     shortSharesHeldByLongParticipant += getBalance(longParticipant, shortShareTokens[i])
+        _toFillAmount = tradeMakerSharesForFillerShares(order, _toFillAmount);
+        //_toFillAmount = tradeMakerSharesForFillerTokens(order, _toFillAmount);
+        //_toFillAmount = tradeMakerTokensForFillerShares(order, _toFillAmount);
+        tradeMakerTokensForFillerTokens(order, _toFillAmount);
 
-        // numCompleteSets = min(longSharesHeldByShortParticipant, shortSharesHeldByLongParticipant, _toFillAmount)
-        // if (numCompleteSets > 0)
-        //     sell complete sets
-        //     update longSharesHeldByShortParticipant (decrease)
-        //     update shortSharesHeldByLongParticipant (decrease)
-        //     update _toFillAmount (decrease)
-        //     update share token balances (decrease)
-        //     update Cash balances (increase)
-        //
+        return true;
+    }
+
+    function tradeMakerSharesForFillerShares(Order order, uint _toFillAmount) private returns (uint256) {
+        if (_toFillAmount < 1) {
+            return _toFillAmount;
+        }
+
+        IShareToken _longShareToken = order.market.getShareToken(order.outcome);
+        IShareToken[] memory _shortShareTokens = getShortShareTokens(order.market, order.outcome);
+
+        address _shortParticipant = order.orderType == 0 ? msg.sender : order.maker;
+        address _longParticipant = order.orderType == 0 ? order.maker : msg.sender;
+
+        uint256 longSharesHeldByShortParticipant = tokenBalances[_longShareToken][_shortParticipant];
+        uint256 shortSharesHeldByLongParticipant = 0;
+        for (uint256 _i = 0; _i < _shortShareTokens.length; ++_i) {
+            shortSharesHeldByLongParticipant = shortSharesHeldByLongParticipant.add(tokenBalances[_shortShareTokens[_i]][_longParticipant]);
+        }
+
+        uint256 numCompleteSets = longSharesHeldByShortParticipant.min(shortSharesHeldByLongParticipant).min(_toFillAmount);
+        if (numCompleteSets > 0) {
+            sellCompleteSets(order, numCompleteSets, _shortParticipant, _longParticipant, _longShareToken, _shortShareTokens);
+            _toFillAmount = _toFillAmount.sub(numCompleteSets);
+        }
+
+        return _toFillAmount;
+    }
+
+    function sellCompleteSets(Order order, uint256 _numCompleteSets, address _shortParticipant, address _longParticipant, IShareToken _longShareToken, IShareToken[] _shortShareTokens) private returns (bool) {
+        uint256 _startingBalance = this.balance;
+        completeSets.publicSellCompleteSets(order.market, _numCompleteSets);
+
+        uint256 _payout = this.balance.sub(_startingBalance);
+
+        tokenBalances[_longShareToken][_shortParticipant] = tokenBalances[_longShareToken][_shortParticipant].sub(_numCompleteSets);
+        for (uint256 _i = 0; _i < _shortShareTokens.length; ++_i) {
+            tokenBalances[_shortShareTokens[_i]][_longParticipant] = tokenBalances[_shortShareTokens[_i]][_longParticipant].sub(_numCompleteSets);
+        }
+
+        uint256 _longShare = _payout.mul(order.price).div(order.market.getNumTicks());
+
+        tokenBalances[cash][_shortParticipant] = tokenBalances[cash][_shortParticipant].add(_longShare);
+        tokenBalances[cash][_longParticipant] = tokenBalances[cash][_longParticipant].add(_payout.sub(_longShare));
+
+        return true;
+    }
+
+    function tradeMakerSharesForFillerTokens(Order order, uint _toFillAmount) private returns (uint256) {
+        if (_toFillAmount < 1) {
+            return _toFillAmount;
+        }
+
         // if (_toFillAmount > 0 && longSharesHeldByShortParticipant > 0)
         //     sub from short participants long share balance
         //     add to long participants long share balance
         //     add to short participants cash balance
         //     sub from long participants cash balance
         //     update _toFillAmount (decrease)
-        //
+
+        return _toFillAmount;
+    }
+
+    function tradeMakerTokensForFillerShares(Order order, uint _toFillAmount) private returns (uint256) {
+        if (_toFillAmount < 1) {
+            return _toFillAmount;
+        }
+
         // if (_toFillAmount > 0 && shortSharesHeldByLongParticipant > 0)
         //     sub from long participants short share balances
         //     add to short participants short share balances
         //     add to long participants cash balance
         //     sub from short participants cash balance
         //     update _toFillAmount (decrease)
-        //
-        tradeMakerTokensForFillerTokens(order, _toFillAmount);
 
-        return true;
+        return _toFillAmount;
     }
 
     function tradeMakerTokensForFillerTokens(Order order, uint256 _toFillAmount) private returns (bool) {
@@ -331,15 +384,12 @@ contract ZeroXPoC is ReentrancyGuard {
         constant
         returns (bool)
     {
-        return true;
-        /*
         return signer == ecrecover(
             keccak256("\x19Ethereum Signed Message:\n32", hash),
             v,
             r,
             s
         );
-        */
     }
 
     /// @dev Calculates the sum of values already filled and cancelled for a given order.
@@ -388,4 +438,6 @@ contract ZeroXPoC is ReentrancyGuard {
     {
         return token.allowance.gas(EXTERNAL_QUERY_GAS_LIMIT)(owner, this); // Limit gas to prevent reentrancy
     }
+
+    function () payable {}
 }
