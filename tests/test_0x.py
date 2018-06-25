@@ -108,9 +108,58 @@ def test_fill_order_with_shares(localFixture, zeroX, market, cash, controller):
     assert zeroX.getUnavailableAmount(orderHash) == fillAmount
 
 def test_maker_sell_shares_for_tokens(localFixture, zeroX, market, cash, controller):
-    pass
+    expirationTimestampInSec = controller.getTimestamp() + 1
+    orderAddresses = [tester.a0, market.address]
+    orderValues = [YES, ASK, 10, 1000, expirationTimestampInSec, 42]
+
+    orderHash = zeroX.getOrderHash(orderAddresses, orderValues)
+    v, r, s = createOrder(orderHash)
+
+    fillAmount = 5
+
+    # Fail with no shares deposited
+    with raises(TransactionFailed):
+        zeroX.fillOrder(
+            orderAddresses,
+            orderValues,
+            fillAmount,
+            v,
+            r,
+            s,
+            sender = tester.k1)
+
+    yesShareAddress = market.getShareToken(YES)
+    noShareAddress = market.getShareToken(NO)
+    yesShareToken = localFixture.applySignature('ShareToken', yesShareAddress)
+    completeSets = localFixture.contracts['CompleteSets']
+    assert completeSets.publicBuyCompleteSets(market.address, fix(20), value=fix('20', market.getNumTicks()))
+
+    assert yesShareToken.approve(zeroX.address, 10)
+    assert zeroX.deposit(yesShareAddress, 10)
+
+    assert cash.depositEther(value = 5000, sender=tester.k1)
+    assert cash.approve(zeroX.address, 5000, sender=tester.k1)
+    assert zeroX.deposit(cash.address, 5000, sender=tester.k1)
+
+    with PrintGasUsed(localFixture, "FILL_0X"):
+        assert zeroX.fillOrder(
+            orderAddresses,
+            orderValues,
+            fillAmount,
+            v,
+            r,
+            s,
+            sender = tester.k1)
+
+    yesShareAddress = market.getShareToken(YES)
+    assert zeroX.getTokenBalance(cash.address, tester.a0) == 5000
+    assert zeroX.getTokenBalance(yesShareAddress, tester.a0) == 5
+    assert zeroX.getTokenBalance(cash.address, tester.a1) == 0
+    assert zeroX.getTokenBalance(yesShareAddress, tester.a1) == 5
+    assert zeroX.getUnavailableAmount(orderHash) == fillAmount
 
 def test_maker_buy_shares_for_tokens(localFixture, zeroX, market, cash, controller):
+    # TODO
     pass
 
 def test_cancel_order(localFixture, zeroX, market, cash, controller):

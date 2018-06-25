@@ -173,8 +173,8 @@ contract ZeroXPoC is ReentrancyGuard {
         );
 
         _toFillAmount = tradeMakerSharesForFillerShares(order, _toFillAmount);
-        //_toFillAmount = tradeMakerSharesForFillerTokens(order, _toFillAmount);
-        //_toFillAmount = tradeMakerTokensForFillerShares(order, _toFillAmount);
+        _toFillAmount = tradeMakerSharesForFillerTokens(order, _toFillAmount);
+        _toFillAmount = tradeMakerTokensForFillerShares(order, _toFillAmount);
         tradeMakerTokensForFillerTokens(order, _toFillAmount);
 
         return true;
@@ -230,28 +230,31 @@ contract ZeroXPoC is ReentrancyGuard {
             return _toFillAmount;
         }
 
-        // if (_toFillAmount > 0 && longSharesHeldByShortParticipant > 0)
-        //     sub from short participants long share balance
-        //     add to long participants long share balance
-        //     add to short participants cash balance
-        //     sub from long participants cash balance
-        //     update _toFillAmount (decrease)
+        IShareToken _longShareToken = order.market.getShareToken(order.outcome);
 
-        return _toFillAmount;
-    }
+        // TODO should function in both trade directions
+        address _shortParticipant = order.orderType == 0 ? msg.sender : order.maker;
+        address _longParticipant = order.orderType == 0 ? order.maker : msg.sender;
 
-    function tradeMakerTokensForFillerShares(Order order, uint _toFillAmount) private returns (uint256) {
-        if (_toFillAmount < 1) {
+        uint256 longSharesHeldByShortParticipant = tokenBalances[_longShareToken][_shortParticipant];
+
+        if (longSharesHeldByShortParticipant < 1) {
             return _toFillAmount;
         }
 
-        // if (_toFillAmount > 0 && shortSharesHeldByLongParticipant > 0)
-        //     sub from long participants short share balances
-        //     add to short participants short share balances
-        //     add to long participants cash balance
-        //     sub from short participants cash balance
-        //     update _toFillAmount (decrease)
+        uint256 _amountToTrade = _toFillAmount.min(longSharesHeldByShortParticipant);
+        uint256 _cost = _amountToTrade.mul(order.price);
 
+        tokenBalances[_longShareToken][_shortParticipant] = tokenBalances[_longShareToken][_shortParticipant].sub(_amountToTrade);
+        tokenBalances[_longShareToken][_longParticipant] = tokenBalances[_longShareToken][_longParticipant].add(_amountToTrade);
+        tokenBalances[cash][_shortParticipant] = tokenBalances[cash][_shortParticipant].add(_cost);
+        tokenBalances[cash][_longParticipant] = tokenBalances[cash][_longParticipant].sub(_cost);
+
+        return _toFillAmount.sub(_amountToTrade);
+    }
+
+    function tradeMakerTokensForFillerShares(Order order, uint _toFillAmount) private returns (uint256) {
+        // TODO
         return _toFillAmount;
     }
 
