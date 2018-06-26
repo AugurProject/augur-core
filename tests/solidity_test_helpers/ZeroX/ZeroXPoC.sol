@@ -81,7 +81,7 @@ contract ZeroXPoC is ReentrancyGuard {
         controller = _augur.getController();
         completeSets = CompleteSets(controller.lookup("CompleteSets"));
         cash = ICash(controller.lookup("Cash"));
-        cash.approve(augur, 2**254);
+        cash.approve(augur, 2 ** 256 - 1);
     }
 
     /*
@@ -90,8 +90,8 @@ contract ZeroXPoC is ReentrancyGuard {
 
     function deposit(ERC20 _token, uint256 _amount) public nonReentrant returns (bool) {
         require(_token != ERC20(0));
-        require(_token.transferFrom(msg.sender, this, _amount));
         tokenBalances[_token][msg.sender] = tokenBalances[_token][msg.sender].add(_amount);
+        require(_token.transferFrom(msg.sender, this, _amount));
         Deposit(msg.sender, _token, _amount, tokenBalances[_token][msg.sender]);
         return true;
     }
@@ -99,9 +99,9 @@ contract ZeroXPoC is ReentrancyGuard {
     function withdraw(ERC20 _token, uint256 _amount) public nonReentrant returns (bool) {
         require(_token != ERC20(0));
         uint256 _heldAmount = tokenBalances[_token][msg.sender];
+        tokenBalances[_token][msg.sender] = _heldAmount.sub(_amount);
         require(_heldAmount >= _amount);
         require(_token.transfer(msg.sender, _amount));
-        tokenBalances[_token][msg.sender] = _heldAmount.sub(_amount);
         Withdraw(msg.sender, _token, _amount, tokenBalances[_token][msg.sender]);
         return true;
     }
@@ -181,7 +181,7 @@ contract ZeroXPoC is ReentrancyGuard {
     }
 
     function tradeMakerSharesForFillerShares(Order order, uint _toFillAmount) private returns (uint256) {
-        if (_toFillAmount < 1) {
+        if (_toFillAmount == 0) {
             return _toFillAmount;
         }
 
@@ -207,10 +207,10 @@ contract ZeroXPoC is ReentrancyGuard {
     }
 
     function sellCompleteSets(Order order, uint256 _numCompleteSets, address _shortParticipant, address _longParticipant, IShareToken _longShareToken, IShareToken[] _shortShareTokens) private returns (bool) {
-        uint256 _startingBalance = this.balance;
-        completeSets.publicSellCompleteSets(order.market, _numCompleteSets);
+        uint256 _startingBalance = cash.balanceOf(this);
+        completeSets.publicSellCompleteSetsWithCash(order.market, _numCompleteSets);
 
-        uint256 _payout = this.balance.sub(_startingBalance);
+        uint256 _payout = cash.balanceOf(this).sub(_startingBalance);
 
         tokenBalances[_longShareToken][_shortParticipant] = tokenBalances[_longShareToken][_shortParticipant].sub(_numCompleteSets);
         for (uint256 _i = 0; _i < _shortShareTokens.length; ++_i) {
@@ -226,7 +226,7 @@ contract ZeroXPoC is ReentrancyGuard {
     }
 
     function tradeMakerSharesForFillerTokens(Order order, uint _toFillAmount) private returns (uint256) {
-        if (_toFillAmount < 1) {
+        if (_toFillAmount == 0) {
             return _toFillAmount;
         }
 
@@ -238,7 +238,7 @@ contract ZeroXPoC is ReentrancyGuard {
 
         uint256 longSharesHeldByShortParticipant = tokenBalances[_longShareToken][_shortParticipant];
 
-        if (longSharesHeldByShortParticipant < 1) {
+        if (longSharesHeldByShortParticipant == 0) {
             return _toFillAmount;
         }
 
@@ -259,7 +259,7 @@ contract ZeroXPoC is ReentrancyGuard {
     }
 
     function tradeMakerTokensForFillerTokens(Order order, uint256 _toFillAmount) private returns (bool) {
-        if (_toFillAmount < 1) {
+        if (_toFillAmount == 0) {
             return;
         }
         IShareToken _longShareToken = order.market.getShareToken(order.outcome);
@@ -271,7 +271,7 @@ contract ZeroXPoC is ReentrancyGuard {
         uint256 _shortPrice = order.orderType == 0 ? order.market.getNumTicks().sub(order.price) : order.price;
         uint256 _longPrice = order.orderType == 0 ? order.price : order.market.getNumTicks().sub(order.price);
 
-        completeSets.publicBuyCompleteSets(order.market, _toFillAmount);
+        completeSets.publicBuyCompleteSetsWithCash(order.market, _toFillAmount);
         tokenBalances[_longShareToken][_longParticipant] = tokenBalances[_longShareToken][_longParticipant].add(_toFillAmount);
         for (uint256 _i = 0; _i < _shortShareTokens.length; ++_i) {
             tokenBalances[_shortShareTokens[_i]][_shortParticipant] = tokenBalances[_shortShareTokens[_i]][_shortParticipant].add(_toFillAmount);
@@ -441,6 +441,4 @@ contract ZeroXPoC is ReentrancyGuard {
     {
         return token.allowance.gas(EXTERNAL_QUERY_GAS_LIMIT)(owner, this); // Limit gas to prevent reentrancy
     }
-
-    function () payable {}
 }

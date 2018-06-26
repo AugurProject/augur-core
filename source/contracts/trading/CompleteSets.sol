@@ -27,6 +27,13 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, MarketV
         return true;
     }
 
+    function publicBuyCompleteSetsWithCash(IMarket _market, uint256 _amount) external marketIsLegit(_market) payable onlyInGoodTimes returns (bool) {
+        this.buyCompleteSets(msg.sender, _market, _amount);
+        controller.getAugur().logCompleteSetsPurchased(_market.getUniverse(), _market, msg.sender, _amount);
+        _market.assertBalances();
+        return true;
+    }
+
     function buyCompleteSets(address _sender, IMarket _market, uint256 _amount) external onlyWhitelistedCallers nonReentrant returns (bool) {
         require(_sender != address(0));
 
@@ -48,6 +55,13 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, MarketV
     }
 
     function publicSellCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bool) {
+        this.sellCompleteSets(msg.sender, _market, _amount);
+        controller.getAugur().logCompleteSetsSold(_market.getUniverse(), _market, msg.sender, _amount);
+        _market.assertBalances();
+        return true;
+    }
+
+    function publicSellCompleteSetsWithCash(IMarket _market, uint256 _amount) external marketIsLegit(_market) onlyInGoodTimes returns (bool) {
         this.sellCompleteSets(msg.sender, _market, _amount);
         controller.getAugur().logCompleteSetsSold(_market.getUniverse(), _market, msg.sender, _amount);
         _market.assertBalances();
