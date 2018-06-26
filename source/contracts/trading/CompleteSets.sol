@@ -27,7 +27,7 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, MarketV
         return true;
     }
 
-    function publicBuyCompleteSetsWithCash(IMarket _market, uint256 _amount) external marketIsLegit(_market) payable onlyInGoodTimes returns (bool) {
+    function publicBuyCompleteSetsWithCash(IMarket _market, uint256 _amount) external marketIsLegit(_market) onlyInGoodTimes returns (bool) {
         this.buyCompleteSets(msg.sender, _market, _amount);
         controller.getAugur().logCompleteSetsPurchased(_market.getUniverse(), _market, msg.sender, _amount);
         _market.assertBalances();
