@@ -25,6 +25,8 @@ script: docker pull $IMAGE_BUILD;
         travis_wait 30 npm run docker:run:test:security:maian;
         elif [[ "$TESTS" == "security:smt" ]]; then
         travis_wait 30 npm run docker:run:test:security:smt;
+        elif [[ "$TESTS" == "security:oyente" ]]; then
+        travis_wait 30 npm run docker:run:test:security:oyente;
         else
           travis_wait 30 npm run docker:run:test:unit -- $TESTS;
         fi
