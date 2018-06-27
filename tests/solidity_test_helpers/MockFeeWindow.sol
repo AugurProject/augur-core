@@ -373,10 +373,6 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         return true;
     }
 
-    function suicideFunds(address _target, ERC20Basic[] _tokens) public returns(bool) {
-        return true;
-    }
-
     function trustedUniverseBuy(address _buyer, uint256 _attotokens) public returns (bool) {
         return true;
     }

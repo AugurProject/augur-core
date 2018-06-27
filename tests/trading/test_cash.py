@@ -112,7 +112,3 @@ def test_transferFrom_failures(contractsFixture, cash):
 def test_setController_failure(contractsFixture, cash):
     with raises(TransactionFailed):
         cash.setController(tester.a1, sender = tester.k1)
-
-def test_suicideFunds_failure(contractsFixture, cash):
-    with raises(TransactionFailed):
-        cash.suicideFunds(tester.a1, [], sender = tester.k1)

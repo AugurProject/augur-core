@@ -124,9 +124,3 @@ def test_transferFrom(contractsFixture, market):
 
     with raises(TransactionFailed):
         shareToken.transferFrom(tester.a0, tester.a1, 7, sender=tester.k1)
-
-def test_suicideFunds(contractsFixture, market):
-    shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())
-
-    with raises(TransactionFailed):
-        shareToken.suicideFunds(tester.a0, [], sender=tester.k0)
