@@ -54,8 +54,7 @@ const networks: Networks = {
     testrpc: {
         isProduction: false,
         http: "http://localhost:18545",
-        gasPrice: new BN(1),
-        privateKey: process.env.ETHEREUM_PRIVATE_KEY || "0xfae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
+        gasPrice: new BN(1)
     }
 }
 
@@ -76,10 +75,7 @@ export class NetworkConfiguration {
         this.isProduction = isProduction;
     }
 
-    public static create(networkName: string='', validatePrivateKey: boolean=true): NetworkConfiguration {
-        if (networkName === '') {
-            networkName = (typeof process.env.TESTRPC === 'undefined') ? "environment" : 'testrpc';
-        }
+    public static create(networkName: string="environment", validatePrivateKey: boolean=true): NetworkConfiguration {
         const network = networks[networkName];
 
         if (network === undefined || network === null) throw new Error(`Network configuration ${networkName} not found`);
