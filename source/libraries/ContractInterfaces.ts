@@ -36,7 +36,7 @@
             const data = encodeMethod(abi, parameters);
             let gas = await this.connector.ethjsQuery.estimateGas(Object.assign({ to: this.address, from: from, data: data }, attachedEth ? { value: attachedEth } : {} ));
             // This is to address an observed bug while running against geth where occasionally gas estimates are lower than required: https://github.com/ethereum/go-ethereum/issues/15896
-            gas = BN.min(new BN(6500000), gas.add(gas.div(new BN(10))));
+            gas = BN.min(new BN(6950000), gas.add(gas.div(new BN(10))));
             gasPrice = gasPrice || this.defaultGasPrice;
             const transaction = Object.assign({ from: from, to: this.address, data: data, gasPrice: gasPrice, gas: gas }, attachedEth ? { value: attachedEth } : {});
             const signedTransaction = await this.accountManager.signTransaction(transaction);
@@ -5486,6 +5486,20 @@
             return <boolean>result[0];
         }
 
+        public publicBuyCompleteSetsWithCash = async(market: string, amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"}],"name":"publicBuyCompleteSetsWithCash","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [market, amount], "publicBuyCompleteSetsWithCash", options.sender, options.gasPrice);
+            return;
+        }
+
+        public publicBuyCompleteSetsWithCash_ = async(market: string, amount: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"}],"name":"publicBuyCompleteSetsWithCash","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [market, amount], options.sender);
+            return <boolean>result[0];
+        }
+
         public sellCompleteSets = async(sender: string, market: string, amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_sender","type":"address"},{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"}],"name":"sellCompleteSets","outputs":[{"name":"_creatorFee","type":"uint256"},{"name":"_reportingFee","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -5505,6 +5519,20 @@
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getController","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
+        }
+
+        public publicSellCompleteSetsWithCash = async(market: string, amount: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"}],"name":"publicSellCompleteSetsWithCash","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [market, amount], "publicSellCompleteSetsWithCash", options.sender, options.gasPrice);
+            return;
+        }
+
+        public publicSellCompleteSetsWithCash_ = async(market: string, amount: BN, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_market","type":"address"},{"name":"_amount","type":"uint256"}],"name":"publicSellCompleteSetsWithCash","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [market, amount], options.sender);
+            return <boolean>result[0];
         }
 
         public setController = async(controller: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {

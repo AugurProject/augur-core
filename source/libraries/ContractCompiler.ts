@@ -3,7 +3,7 @@ import readFile = require('fs-readfile-promise');
 import asyncMkdirp = require('async-mkdirp');
 import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
-import { CompilerInput, CompilerOutput, compileStandardWrapper, CompilerOutputEvmBytecode } from "solc";
+import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
 import { Abi } from "ethereum";
 import { CompilerConfiguration } from './CompilerConfiguration';
 
@@ -21,16 +21,14 @@ export class ContractCompiler {
     public async compileContracts(): Promise<CompilerOutput> {
         // Check if all contracts are cached (and thus do not need to be compiled)
         try {
-            if (!this.configuration.enableSdb) {
-                const stats = await fs.stat(this.configuration.contractOutputPath);
-                const lastCompiledTimestamp = stats.mtime;
-                const ignoreCachedFile = function(file: string, stats: fs.Stats): boolean {
-                    return (stats.isFile() && path.extname(file) !== ".sol") || (stats.isFile() && path.extname(file) === ".sol" && stats.mtime < lastCompiledTimestamp);
-                }
-                const uncachedFiles = await recursiveReadDir(this.configuration.contractSourceRoot, [ignoreCachedFile]);
-                if (uncachedFiles.length === 0) {
-                    return JSON.parse(await fs.readFile(this.configuration.contractOutputPath, "utf8"));
-                }
+            const stats = await fs.stat(this.configuration.contractOutputPath);
+            const lastCompiledTimestamp = stats.mtime;
+            const ignoreCachedFile = function(file: string, stats: fs.Stats): boolean {
+                return (stats.isFile() && path.extname(file) !== ".sol") || (stats.isFile() && path.extname(file) === ".sol" && stats.mtime < lastCompiledTimestamp);
+            }
+            const uncachedFiles = await recursiveReadDir(this.configuration.contractSourceRoot, [ignoreCachedFile]);
+            if (uncachedFiles.length === 0) {
+                return JSON.parse(await fs.readFile(this.configuration.contractOutputPath, "utf8"));
             }
         } catch {
             // Unable to read compiled contracts output file (likely because it has not been generated)
@@ -93,18 +91,8 @@ export class ContractCompiler {
             },
             sources: {}
         };
-        if (this.configuration.enableSdb) {
-            inputJson.settings.optimizer = {
-                enabled: false
-            }
-            inputJson.settings.outputSelection["*"][""] = [ "legacyAST" ];
-            inputJson.settings.outputSelection["*"]["*"].push("evm.bytecode.sourceMap");
-            inputJson.settings.outputSelection["*"]["*"].push("evm.deployedBytecode.object");
-            inputJson.settings.outputSelection["*"]["*"].push("evm.deployedBytecode.sourceMap");
-            inputJson.settings.outputSelection["*"]["*"].push("evm.methodIdentifiers");
-        }
         for (var file in files) {
-            const filePath = filePaths[file].replace(this.configuration.contractSourceRoot, "").replace(/\\/g, "/").replace(/^\//, "");
+            const filePath = filePaths[file].replace(this.configuration.contractSourceRoot, "").replace(/\\/g, "/");
             inputJson.sources[filePath] = { content : files[file] };
         }
 
@@ -119,52 +107,22 @@ export class ContractCompiler {
                 if (relativeFilePath.startsWith('libraries/') && contractName !== 'Delegator' && contractName !== 'Map') continue;
                 // don't include embedded libraries
                 if (!relativeFilePath.endsWith(`${contractName}.sol`)) continue;
-                const contract = compilerOutput.contracts[relativeFilePath][contractName];
-                const abi = contract.abi;
+                const abi = compilerOutput.contracts[relativeFilePath][contractName].abi;
                 if (abi === undefined) continue;
-                const bytecode = contract.evm.bytecode;
-                if (bytecode.object === undefined) continue;
+                const bytecode = compilerOutput.contracts[relativeFilePath][contractName].evm.bytecode.object;
+                if (bytecode === undefined) continue;
                 // don't include interfaces or Abstract contracts
                 if (/^(?:I|Base)[A-Z].*/.test(contractName)) continue;
-                if (bytecode.object.length === 0) throw new Error("Contract: " + contractName + " has no bytecode, but this is not expected. It probably doesn't implement all its abstract methods");
+                if (bytecode.length === 0) throw new Error("Contract: " + contractName + " has no bytecode, but this is not expected. It probably doesn't implement all its abstract methods");
 
                 result.contracts[relativeFilePath] = {
                     [contractName]: {
                         abi: abi,
-                        evm: { bytecode: { object: bytecode.object } }
-                    }
-                }
-
-                if (this.configuration.enableSdb) {
-                    const deployedBytecode = contract.evm.deployedBytecode;
-                    if (deployedBytecode === undefined || deployedBytecode.object === undefined || deployedBytecode.sourceMap === undefined) continue;
-                    if (bytecode.sourceMap === undefined) continue;
-                    const methodIdentifiers = contract.evm.methodIdentifiers;
-                    if (methodIdentifiers === undefined) continue;
-                    result.contracts[relativeFilePath][contractName].evm.bytecode.sourceMap = bytecode.sourceMap;
-                    result.contracts[relativeFilePath][contractName].evm.deployedBytecode = <CompilerOutputEvmBytecode> {
-                        object: deployedBytecode.object,
-                        sourceMap: deployedBytecode.sourceMap
-                    };
-                    result.contracts[relativeFilePath][contractName].evm.methodIdentifiers = JSON.parse(JSON.stringify(methodIdentifiers));
-                }
-            }
-        }
-
-        if (this.configuration.enableSdb && compilerOutput.sources !== undefined) {
-            result.sources = {};
-            for (let relativeFilePath in compilerOutput.sources) {
-                if (relativeFilePath in result.contracts) {
-                    // only legacyAST is used, but including ast to be compliant with interface
-                    result.sources[relativeFilePath] = {
-                        id: compilerOutput.sources[relativeFilePath].id,
-                        ast: JSON.parse(JSON.stringify(compilerOutput.sources[relativeFilePath].legacyAST)),
-                        legacyAST: JSON.parse(JSON.stringify(compilerOutput.sources[relativeFilePath].legacyAST))
+                        evm: { bytecode: { object: bytecode } }
                     }
                 }
             }
         }
-
         return result;
     }
 
