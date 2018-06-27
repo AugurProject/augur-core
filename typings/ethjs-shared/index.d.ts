@@ -4,8 +4,8 @@ declare module 'ethjs-shared' {
     export interface Transaction {
         from?: string;
         to?: string;
-        gas?: number | BN;
-        gasPrice?: number | BN;
+        gas?: BN;
+        gasPrice?: BN;
         value?: BN;
         data?: string;
         nonce?: BN;

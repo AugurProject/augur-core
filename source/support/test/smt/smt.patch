@@ -1,20 +1,20 @@
 diff --git a/source/libraries/ContractCompiler.ts b/source/libraries/ContractCompiler.ts
-index dde8e9d..322a255 100644
+index 0c3cb68b..99bbdb63 100644
 --- a/source/libraries/ContractCompiler.ts
 +++ b/source/libraries/ContractCompiler.ts
 @@ -3,9 +3,10 @@ import readFile = require('fs-readfile-promise');
  import asyncMkdirp = require('async-mkdirp');
  import * as path from "path";
  import * as recursiveReadDir from "recursive-readdir";
--import { CompilerInput, CompilerOutput, compileStandardWrapper, CompilerOutputEvmBytecode } from "solc";
-+import { CompilerInput, CompilerOutput, CompilerOutputEvmBytecode } from "solc";
+-import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
++import { CompilerInput, CompilerOutput } from "solc";
  import { Abi } from "ethereum";
  import { CompilerConfiguration } from './CompilerConfiguration';
 +import child_process = require('child_process');
  
  interface AbiOutput {
      [contract: string]: Abi;
-@@ -40,8 +41,9 @@ export class ContractCompiler {
+@@ -38,8 +39,9 @@ export class ContractCompiler {
  
          // Compile all contracts in the specified input directory
          const compilerInputJson = await this.generateCompilerInput();
@@ -26,7 +26,7 @@ index dde8e9d..322a255 100644
          if (compilerOutput.errors) {
              let errors = "";
  
-@@ -52,7 +54,7 @@ export class ContractCompiler {
+@@ -50,7 +52,7 @@ export class ContractCompiler {
              }
  
              if (errors.length > 0) {
