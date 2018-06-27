@@ -220,7 +220,6 @@ Deploying to: ${networkConfiguration.networkName}
 
     private async construct(contract: Contract, constructorArgs: Array<string>, failureDetails: string): Promise<string> {
         const data = `0x${ContractDeployer.getEncodedConstructData(contract.abi, contract.bytecode, constructorArgs).toString('hex')}`;
-        // TODO: remove `gas` property once https://github.com/ethereumjs/testrpc/issues/411 is fixed
         const gasEstimate = await this.connector.ethjsQuery.estimateGas({ from: this.accountManager.defaultAddress, data: data });
         const nonce = await this.accountManager.nonces.get(this.accountManager.defaultAddress);
         const signedTransaction = await this.accountManager.signTransaction({ gas: gasEstimate, gasPrice: this.connector.gasPrice, data: data});
