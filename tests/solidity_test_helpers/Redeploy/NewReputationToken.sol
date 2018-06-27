@@ -9,11 +9,12 @@ import 'libraries/token/ERC20.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/Reporting.sol';
+import 'reporting/ReputationToken.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
-contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IReputationToken {
+contract NewReputationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IReputationToken {
     using SafeMathUint256 for uint256;
 
     string constant public name = "Reputation";
@@ -30,10 +31,6 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         require(_universe != address(0));
         universe = _universe;
         updateParentTotalTheoreticalSupply();
-        ERC20 _legacyRepToken = getLegacyRepToken();
-        // Initialize migration related state. If this is Genesis universe REP the balances from the Legacy contract must be migrated before we enable usage
-        isMigratingFromLegacy = _universe.getParentUniverse() == IUniverse(0);
-        targetSupply = _legacyRepToken.totalSupply();
         return true;
     }
 
@@ -175,5 +172,11 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    // TODO Manual Migration Code
+    function migrateFromLegacyReputationToken() public onlyInGoodTimes afterInitialized returns (bool) {
+        ERC20 _legacyRepToken = ERC20(controller.lookup("LegacyReputationToken"));
+        uint256 _legacyBalance = _legacyRepToken.balanceOf(msg.sender);
+        require(_legacyRepToken.transferFrom(msg.sender, address(0), _legacyBalance));
+        mint(msg.sender, _legacyBalance);
+        return true;
+    }
 }
