@@ -61,13 +61,62 @@ describe("TradeAndReport", () => {
         await fixture.setTimestamp(feeWindowStartTime.add(new BN(1)));
 
         // Dispute the outcome. The excess REP will simply not be used.
-        await fixture.contribute(market, [new BN(0), numTicks], false, new BN(2).mul(new BN(10).pow(new BN(18))));
-        const newFeeWindow = await fixture.getFeeWindow(market);
-        expect(newFeeWindow.address).to.not.equal(feeWindow.address);
+        let disputeRound = 1;
+        let contributeAmount = new BN(2).mul(new BN(10).pow(new BN(18)));
+        let reputationToken = await fixture.getReputationToken();
+        console.log("reputationToken:", reputationToken);
+        // const targetSupply = await fixture.getTargetSupply(reputationToken);
+        const forkThreshold = new BN(550000).mul(new BN(10).pow(new BN(18)));
+        let newFeeWindow = await fixture.getFeeWindow(market);
+        let newFeeWindowStartTime = await newFeeWindow.getStartTime_();
+        // console.log("contributeAmount", contributeAmount.toString(10));
+        // console.log("forkThreshold", forkThreshold.toString(10));
+        // console.log("newFeeWindowStartTime", newFeeWindowStartTime.toString(10));
+        while (contributeAmount.lt(forkThreshold)) {
+            let payoutNumerators = (disputeRound % 2 == 1) ? [new BN(0), numTicks] : [numTicks, new BN(0)];
+            console.log("Dispute Round:", disputeRound);
+            console.log("contributeAmount", contributeAmount.toString(10));
+            console.log("Payout Numerators:");
+            console.log(payoutNumerators);
+
+            await fixture.contribute(market, payoutNumerators, false, contributeAmount);
+
+            contributeAmount = contributeAmount.mul(new BN(2));
+            disputeRound++;
+
+            newFeeWindow = await fixture.getFeeWindow(market);
+            expect(newFeeWindow.address).to.not.equal(feeWindow.address);
+            newFeeWindowStartTime = await newFeeWindow.getStartTime_();
+            console.log("newFeeWindowStartTime", newFeeWindowStartTime.toString(10));
+            await fixture.setTimestamp(newFeeWindowStartTime.add(new BN(1)));
+        }
+
+        await fixture.contribute(market, [numTicks, new BN(0)], false, new BN(287856).mul(new BN(10).pow(new BN(18))));
+
+        let isForking = await fixture.isForking();
+        if (isForking) {
+            console.log("Is forking");
+        }
+
+        // const initialReporter = await fixture.getInitialReporter(market);
+        // console.log("initialReporter", initialReporter);
+        const payoutDistributionHash = await fixture.derivePayoutDistributionHash(market, [numTicks, new BN(0)], false);
+        console.log("payoutDistributionHash", payoutDistributionHash);
+        const disputeCrowdsourcer = await fixture.getCrowdsourcer(market, payoutDistributionHash);
+        console.log("disputeCrowdsourcer", disputeCrowdsourcer);
+
+        // const forkingMarket = await fixture.getForkingMarket();
+        // console.log("forkingMarket", forkingMarket);
+
+        // reputationToken = await fixture.getReputationToken();
+        // console.log("reputationToken:", reputationToken);
+        // await fixture.migrateOutByPayout(reputationToken, [new BN(0), numTicks], false, new BN(50000000));
+
+
 
         // Finalize
-        const newFeeWindowEndTime = await newFeeWindow.getEndTime_();
-        await fixture.setTimestamp(newFeeWindowEndTime.add(new BN(1)));
-        await fixture.finalizeMarket(market);
+        // const newFeeWindowEndTime = await newFeeWindow.getEndTime_();
+        // await fixture.setTimestamp(newFeeWindowEndTime.add(new BN(1)));
+        // await fixture.finalizeMarket(market);
     });
 });

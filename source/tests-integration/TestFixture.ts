@@ -177,6 +177,44 @@ export class TestFixture {
         return;
     }
 
+    // public async getInitialReporter(market: Market) {
+    //     const initialReporter = market.getInitialReporter_();
+    //     return initialReporter;
+    // }
+
+    public async derivePayoutDistributionHash(market: Market, payoutNumerators: Array<BN>, invalid: boolean): Promise<string> {
+        return await market.derivePayoutDistributionHash_(payoutNumerators, invalid);
+    }
+
+    public async getCrowdsourcer(market: Market, payoutDistributionHash: string): Promise<string> {
+        return await market.getCrowdsourcer_(stringTo32ByteHex(payoutDistributionHash));
+    }
+
+    // public async getChildUniverse(parentPayoutDistributionHash: string): Promise<string> {
+    //     const childUniverse = await this.universe.getChildUniverse_(stringTo32ByteHex(parentPayoutDistributionHash));
+    //     return childUniverse;
+    // }
+
+    // public async getTargetSupply(reputationToken: ReputationToken): Promise<BN> {
+    //     const targetSupply = reputationToken.getTargetSupply_();
+    //     return targetSupply;
+    // }
+
+    public async isForking(): Promise<boolean> {
+        const isForking = this.universe.isForking_();
+        return isForking;
+    }
+
+    // public async getForkingMarket(): Promise<string> {
+    //     const forkingMarket = await this.universe.getForkingMarket_();
+    //     return forkingMarket;
+    // }
+
+    // public async migrateOutByPayout(reputationToken: ReputationToken, payoutNumerators: Array<BN>, invalid: boolean, attotokens: BN) {
+    //     await reputationToken.migrateOutByPayout_(payoutNumerators, invalid, attotokens);
+    //     return;
+    // }
+
     public async getNumSharesInMarket(market: Market, outcome: BN): Promise<BN> {
         const shareTokenAddress = await market.getShareToken_(outcome);
         const shareToken = new ShareToken(this.connector, this.accountManager, shareTokenAddress, TestFixture.GAS_PRICE);

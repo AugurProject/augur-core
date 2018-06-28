@@ -8,6 +8,8 @@ declare module 'bn.js' {
         mul(other: BN): BN;
         div(other: BN): BN;
         pow(other: BN): BN;
+        gt(other: BN): BN;
+        lt(other: BN): BN;
         eq(other:BN): boolean;
         isZero(): boolean;
 
