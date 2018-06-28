@@ -279,7 +279,6 @@ export class TestFixture {
     // }
 
     public async getChildUniverseReputationToken(parentPayoutDistributionHash: string) {
-        console.log("test");
         const childUniverseAddress = await this.universe.getChildUniverse_(parentPayoutDistributionHash);
         console.log("childUniverseAddress", childUniverseAddress);
         const childUniverse = new Universe(this.connector, this.accountManager, childUniverseAddress, TestFixture.GAS_PRICE);

@@ -101,17 +101,10 @@ describe("TradeAndReport", () => {
             console.log("Is forking");
         }
 
+        await fixture.migrateOutByPayout(reputationToken, [numTicks, new BN(0)], false, new BN(90000000));
+
         const payoutDistributionHash = await fixture.derivePayoutDistributionHash(market, [numTicks, new BN(0)], false);
         console.log("payoutDistributionHash", payoutDistributionHash);
-
-        // const forkingMarket = await fixture.getForkingMarket();
-        // console.log("forkingMarket", forkingMarket);
-
-        // const disputeCrowdsourcer = await fixture.getWinningReportingParticipant(market);
-        // console.log("disputeCrowdsourcer", disputeCrowdsourcer);
-console.log("Before migrateOut");
-        await fixture.migrateOutByPayout(reputationToken, [new BN(0), numTicks], false, new BN(90000000));
-console.log("After migrateOut");
         reputationToken = await fixture.getChildUniverseReputationToken(payoutDistributionHash);
         const reputationTotalMigrated = await reputationToken.getTotalMigrated_();
         console.log("reputationTotalMigrated:", reputationTotalMigrated.toString(10));
