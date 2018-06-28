@@ -39,15 +39,11 @@ def test_transferOwnership(controller):
 
 def test_emergencyStop(controller):
     with raises(TransactionFailed): controller.emergencyStop(sender = tester.k2)
-    with raises(TransactionFailed): controller.release(sender = tester.k2)
     assert controller.stopInEmergency(sender = tester.k2)
     with raises(TransactionFailed): controller.onlyInEmergency(sender = tester.k2)
     assert controller.emergencyStop(sender = tester.k0)
     assert controller.onlyInEmergency(sender = tester.k2)
     with raises(TransactionFailed): controller.stopInEmergency(sender = tester.k2)
-    assert controller.release(sender = tester.k0)
-    assert controller.stopInEmergency(sender = tester.k2)
-    with raises(TransactionFailed): controller.onlyInEmergency(sender = tester.k2)
 
 def test_getContractDetails(controller):
     key = stringToBytes('lookup key')

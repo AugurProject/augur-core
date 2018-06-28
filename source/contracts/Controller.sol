@@ -91,12 +91,6 @@ contract Controller is IController {
         return true;
     }
 
-    function release() public onlyOwnerCaller onlyInBadTimes returns (bool) {
-        getAugur().logEscapeHatchChanged(false);
-        stopped = false;
-        return true;
-    }
-
     function stopInEmergency() public view onlyInGoodTimes returns (bool) {
         return true;
     }

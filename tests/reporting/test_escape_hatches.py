@@ -21,12 +21,6 @@ def test_market_escape_hatch_all_fees(localFixture, controller, market, reputati
         with TokenDelta(reputationToken, reputationToken.balanceOf(market.address), market.getOwner(), "REP balance was not given to the market owner"):
             assert market.withdrawInEmergency()
 
-    escapeHatchChangedLog = {
-        "isOn": False,
-    }
-    with AssertLog(localFixture, "EscapeHatchChanged", escapeHatchChangedLog):
-        assert controller.release()
-
 def test_market_escape_hatch_partial_fees(localFixture, market, reputationToken, constants, controller):
     reputationToken.transfer(tester.a1, 1 * 10**6 * 10**18)
 
