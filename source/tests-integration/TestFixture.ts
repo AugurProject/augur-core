@@ -186,8 +186,8 @@ export class TestFixture {
         return await market.derivePayoutDistributionHash_(payoutNumerators, invalid);
     }
 
-    public async getCrowdsourcer(market: Market, payoutDistributionHash: string): Promise<string> {
-        return await market.getCrowdsourcer_(stringTo32ByteHex(payoutDistributionHash));
+    public async getWinningReportingParticipant(market: Market): Promise<string> {
+        return await market.getWinningReportingParticipant_();
     }
 
     // public async getChildUniverse(parentPayoutDistributionHash: string): Promise<string> {
@@ -201,8 +201,7 @@ export class TestFixture {
     // }
 
     public async isForking(): Promise<boolean> {
-        const isForking = this.universe.isForking_();
-        return isForking;
+        return this.universe.isForking_();
     }
 
     // public async getForkingMarket(): Promise<string> {
@@ -210,10 +209,10 @@ export class TestFixture {
     //     return forkingMarket;
     // }
 
-    // public async migrateOutByPayout(reputationToken: ReputationToken, payoutNumerators: Array<BN>, invalid: boolean, attotokens: BN) {
-    //     await reputationToken.migrateOutByPayout_(payoutNumerators, invalid, attotokens);
-    //     return;
-    // }
+    public async migrateOutByPayout(reputationToken: ReputationToken, payoutNumerators: Array<BN>, invalid: boolean, attotokens: BN) {
+        await reputationToken.migrateOutByPayout_(payoutNumerators, invalid, attotokens);
+        return;
+    }
 
     public async getNumSharesInMarket(market: Market, outcome: BN): Promise<BN> {
         const shareTokenAddress = await market.getShareToken_(outcome);
@@ -285,6 +284,23 @@ export class TestFixture {
         const legacyRep = new LegacyReputationToken(this.connector, this.accountManager, legacyRepContract.address, TestFixture.GAS_PRICE);
         await legacyRep.pause();
         return;
+    }
+
+    // public async getDisputeCrowdsourcerReputationToken(disputeCrowdsourcerAddress: string): Promise<ReputationToken> {
+    //     const disputeCrowdsourcer = new DisputeCrowdsourcer(this.connector, this.accountManager, disputeCrowdsourcerAddress, TestFixture.GAS_PRICE);
+    //     const repContractAddress = await disputeCrowdsourcer.getReputationToken_();
+    //     console.log("repcontract address:", repContractAddress);
+    //     return new ReputationToken(this.connector, this.accountManager, repContractAddress, TestFixture.GAS_PRICE);
+    // }
+
+    public async getChildUniverseReputationToken(parentPayoutDistributionHash: string) {
+        console.log("test");
+        const childUniverseAddress = await this.universe.getChildUniverse_(parentPayoutDistributionHash);
+        console.log("childUniverseAddress", childUniverseAddress);
+        const childUniverse = new Universe(this.connector, this.accountManager, childUniverseAddress, TestFixture.GAS_PRICE);
+        const repContractAddress = await childUniverse.getReputationToken_();
+        console.log("repContractAddress", repContractAddress);
+        return new ReputationToken(this.connector, this.accountManager, repContractAddress, TestFixture.GAS_PRICE);
     }
 
     public async getReputationToken(): Promise<ReputationToken> {

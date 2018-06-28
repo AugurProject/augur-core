@@ -64,7 +64,7 @@ describe("TradeAndReport", () => {
         let disputeRound = 1;
         let contributeAmount = new BN(2).mul(new BN(10).pow(new BN(18)));
         let reputationToken = await fixture.getReputationToken();
-        console.log("reputationToken:", reputationToken);
+        console.log("reputationToken!!!!!!:", reputationToken);
         // const targetSupply = await fixture.getTargetSupply(reputationToken);
         const forkThreshold = new BN(550000).mul(new BN(10).pow(new BN(18)));
         let newFeeWindow = await fixture.getFeeWindow(market);
@@ -91,6 +91,9 @@ describe("TradeAndReport", () => {
             await fixture.setTimestamp(newFeeWindowStartTime.add(new BN(1)));
         }
 
+        // const initialReporter = await fixture.getInitialReporter(market);
+        // console.log("initialReporter", initialReporter);
+
         await fixture.contribute(market, [numTicks, new BN(0)], false, new BN(287856).mul(new BN(10).pow(new BN(18))));
 
         let isForking = await fixture.isForking();
@@ -98,21 +101,22 @@ describe("TradeAndReport", () => {
             console.log("Is forking");
         }
 
-        // const initialReporter = await fixture.getInitialReporter(market);
-        // console.log("initialReporter", initialReporter);
         const payoutDistributionHash = await fixture.derivePayoutDistributionHash(market, [numTicks, new BN(0)], false);
         console.log("payoutDistributionHash", payoutDistributionHash);
-        const disputeCrowdsourcer = await fixture.getCrowdsourcer(market, payoutDistributionHash);
-        console.log("disputeCrowdsourcer", disputeCrowdsourcer);
 
         // const forkingMarket = await fixture.getForkingMarket();
         // console.log("forkingMarket", forkingMarket);
 
-        // reputationToken = await fixture.getReputationToken();
-        // console.log("reputationToken:", reputationToken);
-        // await fixture.migrateOutByPayout(reputationToken, [new BN(0), numTicks], false, new BN(50000000));
-
-
+        // const disputeCrowdsourcer = await fixture.getWinningReportingParticipant(market);
+        // console.log("disputeCrowdsourcer", disputeCrowdsourcer);
+console.log("Before migrateOut");
+        await fixture.migrateOutByPayout(reputationToken, [new BN(0), numTicks], false, new BN(90000000));
+console.log("After migrateOut");
+        reputationToken = await fixture.getChildUniverseReputationToken(payoutDistributionHash);
+        const reputationTotalMigrated = await reputationToken.getTotalMigrated_();
+        console.log("reputationTotalMigrated:", reputationTotalMigrated.toString(10));
+        const reputationTotalTheoreticalSupply = await reputationToken.getTotalTheoreticalSupply_();
+        console.log("reputationTotalMigrated:", reputationTotalTheoreticalSupply.toString(10));
 
         // Finalize
         // const newFeeWindowEndTime = await newFeeWindow.getEndTime_();
