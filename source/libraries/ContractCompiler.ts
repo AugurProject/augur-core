@@ -1,12 +1,12 @@
 import * as fs from "async-file";
-import asyncMkdirp = require('async-mkdirp');
 import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
-import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
+import asyncMkdirp = require('async-mkdirp');
+import { CompilerInput, CompilerOutput } from "solc";
 import { Abi } from "ethereum";
+import { ChildProcess, exec, spawn } from "child_process";
+import { format } from "util";
 import { CompilerConfiguration } from './CompilerConfiguration';
-import {exec} from "child_process";
-import {format} from "util";
 
 interface AbiOutput {
     [contract: string]: Abi;
@@ -18,9 +18,31 @@ export class ContractCompiler {
     private readonly flattenerCommand: string;
 
 
-  public constructor(configuration: CompilerConfiguration) {
+    public constructor(configuration: CompilerConfiguration) {
         this.configuration = configuration;
         this.flattenerCommand = `${this.flattenerBin} --allow-path . %s`;
+    }
+
+    private async getCommandOutputFromInput(childProcess: ChildProcess, stdin: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            let buffers: Array<Buffer> = [];
+            childProcess.stdout.on('data', function (data: Buffer) {
+                buffers.push(data);
+            });
+            childProcess.on('close', function (code) {
+                if (code > 0) return reject(new Error(`Process Exit Code ${code}`))
+                return resolve(Buffer.concat(buffers).toString());
+            });
+            childProcess.stdin.write(stdin);
+            childProcess.stdin.end();
+        })
+    }
+
+    // TODO: Use solcjs compileStandardWrapper when it works, 0.4.24 giving error: "Runtime.functionPointers[index] is not a function"
+    private async compileCustomWrapper(compilerInputJson: CompilerInput): Promise<CompilerOutput> {
+        const childProcess = spawn("solc", ["--standard-json"]);
+        const compilerOutputJson = await this.getCommandOutputFromInput(childProcess, JSON.stringify(compilerInputJson));
+        return JSON.parse(compilerOutputJson);
     }
 
     public async compileContracts(): Promise<CompilerOutput> {
@@ -28,7 +50,7 @@ export class ContractCompiler {
         try {
             const stats = await fs.stat(this.configuration.contractOutputPath);
             const lastCompiledTimestamp = stats.mtime;
-            const ignoreCachedFile = function(file: string, stats: fs.Stats): boolean {
+            const ignoreCachedFile = function (file: string, stats: fs.Stats): boolean {
                 return (stats.isFile() && path.extname(file) !== ".sol") || (stats.isFile() && path.extname(file) === ".sol" && stats.mtime < lastCompiledTimestamp);
             }
             const uncachedFiles = await recursiveReadDir(this.configuration.contractSourceRoot, [ignoreCachedFile]);
@@ -43,12 +65,8 @@ export class ContractCompiler {
 
         // Compile all contracts in the specified input directory
         const compilerInputJson = await this.generateCompilerInput();
-        console.log("DEBUG finished generating input");
-        await fs.writeFile("/tmp/input.json", JSON.stringify(compilerInputJson));
-        const compilerOutputJson = compileStandardWrapper(JSON.stringify(compilerInputJson));
-        console.log("DEBUG finished generating output");
+        const compilerOutput = await this.compileCustomWrapper(compilerInputJson);
 
-      const compilerOutput: CompilerOutput = JSON.parse(compilerOutputJson);
         if (compilerOutput.errors) {
             let errors = "";
 
@@ -78,15 +96,18 @@ export class ContractCompiler {
     }
 
     public async generateFlattenedSolidity(filePath: string): Promise<string> {
-      const relativeFilePath = filePath.replace(this.configuration.contractSourceRoot, "").replace(/\\/g, "/");
-      return new Promise<string>((resolve, reject) => {
-        exec(format(this.flattenerCommand, relativeFilePath), {encoding: "buffer", cwd: this.configuration.contractSourceRoot}, (err, stdout) => {
-          if (err) {
-            return reject(err);
-          }
-          resolve(stdout.toString());
-        });
-      })
+        const relativeFilePath = filePath.replace(this.configuration.contractSourceRoot, "").replace(/\\/g, "/");
+        return new Promise<string>((resolve, reject) => {
+            exec(format(this.flattenerCommand, relativeFilePath), {
+                encoding: "buffer",
+                cwd: this.configuration.contractSourceRoot
+            }, (err, stdout) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(stdout.toString());
+            });
+        })
     }
 
     public async generateCompilerInput(): Promise<CompilerInput> {
