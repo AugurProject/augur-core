@@ -70,7 +70,7 @@
     "docker:deploy": "npm run docker:deploy:net -- aura clique rinkeby"
   },
   "dependencies": {
-    "@types/get-port": "^3.2.0",
+    "@types/get-port": "3.2.0",
     "@types/mkdirp": "0.5.1",
     "@types/node": "9.6.7",
     "@types/yargs": "11.0.0",
@@ -79,7 +79,7 @@
     "binascii": "0.0.1",
     "bn.js": "4.11.8",
     "copy-dir": "0.3.0",
-    "crypto-promise": "^2.0.0",
+    "crypto-promise": "2.0.0",
     "ethereumjs-testrpc": "6.0.3",
     "ethjs-abi": "0.2.1",
     "ethjs-account": "0.1.4",
@@ -103,12 +103,12 @@
     "@types/mocha": "5.1.0",
     "chai": "4.1.2",
     "chai-as-promised": "7.1.1",
-    "cross-env": "^5.1.3",
+    "cross-env": "5.1.3",
     "mocha": "5.1.1",
     "solc": "0.4.24",
     "solium": "1.1.7",
     "source-map-support": "0.5.0",
-    "ts-node": "^3.3.0",
+    "ts-node": "3.3.0",
     "typescript": "2.6.1"
   }
 }
