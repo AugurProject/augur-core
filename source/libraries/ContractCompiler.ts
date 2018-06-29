@@ -123,7 +123,7 @@ export class ContractCompiler {
             settings: {
                 optimizer: {
                     enabled: true,
-                    runs: 500
+                    // runs: 500 TODO: Consider adding back if Etherscan is down with optimizer runs != 200
                 },
                 outputSelection: {
                     "*": {
