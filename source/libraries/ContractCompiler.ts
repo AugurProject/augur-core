@@ -25,12 +25,17 @@ export class ContractCompiler {
 
     private async getCommandOutputFromInput(childProcess: ChildProcess, stdin: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            let buffers: Array<Buffer> = [];
+            const buffers: Array<Buffer> = [];
             childProcess.stdout.on('data', function (data: Buffer) {
                 buffers.push(data);
             });
+            const errorBuffers: Array<Buffer> = [];
+            childProcess.stderr.on('data', function (data: Buffer) {
+                errorBuffers.push(data);
+            });
             childProcess.on('close', function (code) {
-                if (code > 0) return reject(new Error(`Process Exit Code ${code}`))
+                const errorMessage = Buffer.concat(errorBuffers).toString();
+                if (code > 0) return reject(new Error(`Process Exit Code ${code}\n${errorMessage}`))
                 return resolve(Buffer.concat(buffers).toString());
             });
             childProcess.stdin.write(stdin);
@@ -143,7 +148,7 @@ export class ContractCompiler {
                 // don't include libraries
                 if (relativeFilePath.startsWith('libraries/') && contractName !== 'Delegator' && contractName !== 'Map') continue;
                 // don't include embedded libraries
-                if (!relativeFilePath.endsWith(`${contractName}.sol`)) continue;
+                if (!(relativeFilePath === `${contractName}.sol` || relativeFilePath.endsWith(`/${contractName}.sol`))) continue;
                 const abi = compilerOutput.contracts[relativeFilePath][contractName].abi;
                 if (abi === undefined) continue;
                 const bytecode = compilerOutput.contracts[relativeFilePath][contractName].evm.bytecode.object;
