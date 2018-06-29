@@ -16,8 +16,9 @@
   "scripts": {
     "lint": "npx solium --dir source --reporter=gcc",
     "build:source": "npx tsc",
-    "build:contracts": "node output/deployment/compileContracts.js",
+    "build:contracts": "source venv/bin/activate && node output/deployment/compileContracts.js",
     "build:interfaces": "node output/tools/generateContractInterfaces.js",
+    "build:flattener": "source/tools/installSolidityFlattener",
     "build": "npm run build:source && npm run lint && npm run build:contracts && npm run build:interfaces",
     "preversion": "npm run build",
     "version": "git add source/libraries/ContractInterfaces.ts",
@@ -97,17 +98,17 @@
     "yargs": "11.0.0"
   },
   "devDependencies": {
-    "@types/mocha": "5.1.0",
     "@types/chai": "4.0.4",
     "@types/chai-as-promised": "7.1.0",
+    "@types/mocha": "5.1.0",
     "chai": "4.1.2",
     "chai-as-promised": "7.1.1",
-    "mocha": "5.1.1",
     "cross-env": "^5.1.3",
-    "solc": "0.4.20",
+    "mocha": "5.1.1",
+    "solc": "0.4.24",
     "solium": "1.1.7",
     "source-map-support": "0.5.0",
-    "ts-node": "3.3.0",
+    "ts-node": "^3.3.0",
     "typescript": "2.6.1"
   }
 }
