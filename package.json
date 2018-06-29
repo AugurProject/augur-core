@@ -75,6 +75,7 @@
     "@types/yargs": "11.0.0",
     "async-file": "2.0.2",
     "async-mkdirp": "1.2.0",
+    "async-parallel": "1.2.3",
     "binascii": "0.0.1",
     "bn.js": "4.11.8",
     "copy-dir": "0.3.0",
