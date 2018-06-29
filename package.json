@@ -16,7 +16,7 @@
   "scripts": {
     "lint": "npx solium --dir source --reporter=gcc",
     "build:source": "npx tsc",
-    "build:contracts": "npm run build:flattener && source venv/bin/activate && node output/deployment/compileContracts.js",
+    "build:contracts": "npm run build:flattener && . venv/bin/activate && node output/deployment/compileContracts.js",
     "build:interfaces": "node output/tools/generateContractInterfaces.js",
     "build:flattener": "source/tools/installSolidityFlattener",
     "build": "npm run build:source && npm run lint && npm run build:contracts && npm run build:interfaces",
