@@ -1,11 +1,12 @@
 import * as fs from "async-file";
-import readFile = require('fs-readfile-promise');
 import asyncMkdirp = require('async-mkdirp');
 import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
 import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
 import { Abi } from "ethereum";
 import { CompilerConfiguration } from './CompilerConfiguration';
+import {exec} from "child_process";
+import {format} from "util";
 
 interface AbiOutput {
     [contract: string]: Abi;
@@ -13,9 +14,13 @@ interface AbiOutput {
 
 export class ContractCompiler {
     private readonly configuration: CompilerConfiguration;
+    private readonly flattenerBin = "solidity_flattener";
+    private readonly flattenerCommand: string;
 
-    public constructor(configuration: CompilerConfiguration) {
-        this.configuration = configuration
+
+  public constructor(configuration: CompilerConfiguration) {
+        this.configuration = configuration;
+        this.flattenerCommand = `${this.flattenerBin} --allow-path . %s`;
     }
 
     public async compileContracts(): Promise<CompilerOutput> {
@@ -38,8 +43,12 @@ export class ContractCompiler {
 
         // Compile all contracts in the specified input directory
         const compilerInputJson = await this.generateCompilerInput();
+        console.log("DEBUG finished generating input");
+        await fs.writeFile("/tmp/input.json", JSON.stringify(compilerInputJson));
         const compilerOutputJson = compileStandardWrapper(JSON.stringify(compilerInputJson));
-        const compilerOutput: CompilerOutput = JSON.parse(compilerOutputJson);
+        console.log("DEBUG finished generating output");
+
+      const compilerOutput: CompilerOutput = JSON.parse(compilerOutputJson);
         if (compilerOutput.errors) {
             let errors = "";
 
@@ -68,12 +77,24 @@ export class ContractCompiler {
         return filteredCompilerOutput;
     }
 
+    public async generateFlattenedSolidity(filePath: string): Promise<string> {
+      const relativeFilePath = filePath.replace(this.configuration.contractSourceRoot, "").replace(/\\/g, "/");
+      return new Promise<string>((resolve, reject) => {
+        exec(format(this.flattenerCommand, relativeFilePath), {encoding: "buffer", cwd: this.configuration.contractSourceRoot}, (err, stdout) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(stdout.toString());
+        });
+      })
+    }
+
     public async generateCompilerInput(): Promise<CompilerInput> {
         const ignoreFile = function(file: string, stats: fs.Stats): boolean {
             return file.indexOf("legacy_reputation") > -1 || (stats.isFile() && path.extname(file) !== ".sol");
         }
         const filePaths = await recursiveReadDir(this.configuration.contractSourceRoot, [ignoreFile]);
-        const filesPromises = filePaths.map(async filePath => (await readFile(filePath)).toString('utf8'));
+        const filesPromises = filePaths.map(async filePath => (await this.generateFlattenedSolidity(filePath)));
         const files = await Promise.all(filesPromises);
 
         let inputJson: CompilerInput = {
