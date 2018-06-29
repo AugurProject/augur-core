@@ -97,17 +97,12 @@ export class ContractCompiler {
 
     public async generateFlattenedSolidity(filePath: string): Promise<string> {
         const relativeFilePath = filePath.replace(this.configuration.contractSourceRoot, "").replace(/\\/g, "/");
-        return new Promise<string>((resolve, reject) => {
-            exec(format(this.flattenerCommand, relativeFilePath), {
+
+        const childProcess = exec(format(this.flattenerCommand, relativeFilePath), {
                 encoding: "buffer",
                 cwd: this.configuration.contractSourceRoot
-            }, (err, stdout) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(stdout.toString());
             });
-        })
+        return await this.getCommandOutputFromInput(childProcess, "");
     }
 
     public async generateCompilerInput(): Promise<CompilerInput> {
