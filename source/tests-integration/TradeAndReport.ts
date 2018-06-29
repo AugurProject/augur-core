@@ -48,7 +48,7 @@ describe("TradeAndReport", () => {
         let newTimestamp = await market.getEndTime_();
         newTimestamp = newTimestamp.add(new BN(1));
         await fixture.setTimestamp(newTimestamp);
-        const timestamp = await fixture.getTimestamp();
+        let timestamp = await fixture.getTimestamp();
         expect(timestamp.toNumber()).to.equal(newTimestamp.toNumber());
 
         // Do designated report
@@ -62,19 +62,28 @@ describe("TradeAndReport", () => {
 
         // Dispute the outcome. The excess REP will simply not be used.
         let disputeRound = 1;
-        let contributeAmount = new BN(2).mul(new BN(10).pow(new BN(18)));
-        let reputationToken = await fixture.getReputationToken();
-        console.log("reputationToken!!!!!!:", reputationToken);
-        // const targetSupply = await fixture.getTargetSupply(reputationToken);
-        const forkThreshold = new BN(550000).mul(new BN(10).pow(new BN(18)));
+        let totalContributedOutcome0 =  new BN(1).mul(new BN(10).pow(new BN(18)));
+        let totalContributedOutcome1 = new BN(2).mul(new BN(10).pow(new BN(18)));
+        let contributeAmount = totalContributedOutcome0;
+        let payoutNumerators = [];
+        const reputationToken = await fixture.getReputationToken();
+        const totalTheoreticalSupply = await reputationToken.getTotalTheoreticalSupply_();
+        const forkThreshold = totalTheoreticalSupply.div(new BN(40));
         let newFeeWindow = await fixture.getFeeWindow(market);
         let newFeeWindowStartTime = await newFeeWindow.getStartTime_();
-        // console.log("contributeAmount", contributeAmount.toString(10));
-        // console.log("forkThreshold", forkThreshold.toString(10));
-        // console.log("newFeeWindowStartTime", newFeeWindowStartTime.toString(10));
-        while (contributeAmount.lt(forkThreshold)) {
-            let payoutNumerators = (disputeRound % 2 == 1) ? [new BN(0), numTicks] : [numTicks, new BN(0)];
+        while (totalContributedOutcome0.div(new BN(2)).lt(forkThreshold) && totalContributedOutcome1.div(new BN(2)).lt(forkThreshold)) {
+            if (disputeRound % 2 == 1) {
+                payoutNumerators = [new BN(0), numTicks];
+                totalContributedOutcome1 = totalContributedOutcome0.mul(new BN(2));
+                contributeAmount = totalContributedOutcome1;
+            } else {
+                payoutNumerators = [numTicks, new BN(0)];
+                totalContributedOutcome0 = totalContributedOutcome1.mul(new BN(2));
+                contributeAmount = totalContributedOutcome0;
+            }
             console.log("Dispute Round:", disputeRound);
+            console.log("totalContributedOutcome0", totalContributedOutcome0.toString(10));
+            console.log("totalContributedOutcome1", totalContributedOutcome1.toString(10));
             console.log("contributeAmount", contributeAmount.toString(10));
             console.log("Payout Numerators:");
             console.log(payoutNumerators);
@@ -87,33 +96,34 @@ describe("TradeAndReport", () => {
             newFeeWindow = await fixture.getFeeWindow(market);
             expect(newFeeWindow.address).to.not.equal(feeWindow.address);
             newFeeWindowStartTime = await newFeeWindow.getStartTime_();
-            console.log("newFeeWindowStartTime", newFeeWindowStartTime.toString(10));
             await fixture.setTimestamp(newFeeWindowStartTime.add(new BN(1)));
         }
 
-        // const initialReporter = await fixture.getInitialReporter(market);
-        // console.log("initialReporter", initialReporter);
+        const isForking = await fixture.universe.isForking_();
+        expect(isForking).to.be.true;
 
-        await fixture.contribute(market, [numTicks, new BN(0)], false, new BN(287856).mul(new BN(10).pow(new BN(18))));
-
-        let isForking = await fixture.isForking();
-        if (isForking) {
-            console.log("Is forking");
-        }
-
-        await fixture.migrateOutByPayout(reputationToken, [numTicks, new BN(0)], false, new BN(90000000));
+        const repAmountToMigrate = new BN(9000000).mul(new BN(10).pow(new BN(18)));
+        await fixture.migrateOutByPayout(reputationToken, [numTicks, new BN(0)], false, repAmountToMigrate);
 
         const payoutDistributionHash = await fixture.derivePayoutDistributionHash(market, [numTicks, new BN(0)], false);
-        console.log("payoutDistributionHash", payoutDistributionHash);
-        reputationToken = await fixture.getChildUniverseReputationToken(payoutDistributionHash);
-        const reputationTotalMigrated = await reputationToken.getTotalMigrated_();
-        console.log("reputationTotalMigrated:", reputationTotalMigrated.toString(10));
-        const reputationTotalTheoreticalSupply = await reputationToken.getTotalTheoreticalSupply_();
-        console.log("reputationTotalMigrated:", reputationTotalTheoreticalSupply.toString(10));
+        const childUniverseReputationToken = await fixture.getChildUniverseReputationToken(payoutDistributionHash);
+        const reputationTotalMigrated = await childUniverseReputationToken.getTotalMigrated_();
+        expect(reputationTotalMigrated.toString(10)).to.equal(repAmountToMigrate.toString(10));
 
-        // Finalize
-        // const newFeeWindowEndTime = await newFeeWindow.getEndTime_();
-        // await fixture.setTimestamp(newFeeWindowEndTime.add(new BN(1)));
-        // await fixture.finalizeMarket(market);
+        const forkEndTime = await fixture.getForkEndTime();
+        console.log("forkEndTime:", forkEndTime.toString(10));
+        await fixture.setTimestamp(forkEndTime.add(new BN(86400).mul(new BN(4))));
+
+        timestamp = await fixture.getTimestamp();
+        console.log("current time:", timestamp.toString(10));
+
+        const winningChildUniverse = await fixture.getWinningChildUniverse();
+        console.log("winningChildUniverse", winningChildUniverse);
+
+        const parentPayoutDistributionHash = await fixture.getParentPayoutDistributionHash(winningChildUniverse);
+        console.log("parentPayoutDistributionHash", parentPayoutDistributionHash);
+
+        console.log("before finalizeFork");
+        await fixture.finalizeFork(market);
     });
 });
