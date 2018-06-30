@@ -7,7 +7,7 @@ import { ContractDeployer } from '../libraries/ContractDeployer';
 import { CompilerConfiguration } from '../libraries/CompilerConfiguration';
 import { DeployerConfiguration } from '../libraries/DeployerConfiguration';
 import { NetworkConfiguration } from '../libraries/NetworkConfiguration';
-import { FeeWindow, ShareToken, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder, LegacyReputationToken, ReputationToken, } from '../libraries/ContractInterfaces';
+import { FeeWindow, ShareToken, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder, LegacyReputationToken, DisputeCrowdsourcer, ReputationToken, } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
 
 export class TestFixture {
@@ -185,6 +185,20 @@ export class TestFixture {
     public async getFeeWindow(market: Market): Promise<FeeWindow> {
         const feeWindowAddress = await market.getFeeWindow_();
         return new FeeWindow(this.connector, this.accountManager, feeWindowAddress, TestFixture.GAS_PRICE);
+    }
+
+    public async getReportingParticipant(reportingParticipantAddress: string): Promise<DisputeCrowdsourcer> {
+        return new DisputeCrowdsourcer(this.connector, this.accountManager, reportingParticipantAddress, TestFixture.GAS_PRICE);
+    }
+
+    public async getUniverse(market: Market): Promise<Universe> {
+        const universeAddress = await market.getUniverse_();
+        return new Universe(this.connector, this.accountManager, universeAddress, TestFixture.GAS_PRICE);
+    }
+
+    public async getWinningReportingParticipant(market: Market): Promise<DisputeCrowdsourcer> {
+        const reportingParticipantAddress = await market.getWinningReportingParticipant_();
+        return new DisputeCrowdsourcer(this.connector, this.accountManager, reportingParticipantAddress, TestFixture.GAS_PRICE);
     }
 
     public async setTimestamp(timestamp: BN): Promise<void> {
