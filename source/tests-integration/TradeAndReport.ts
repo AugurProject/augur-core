@@ -81,12 +81,12 @@ describe("TradeAndReport", () => {
                 totalContributedOutcome0 = totalContributedOutcome1.mul(new BN(2));
                 contributeAmount = totalContributedOutcome0;
             }
-            console.log("Dispute Round:", disputeRound);
-            console.log("totalContributedOutcome0", totalContributedOutcome0.toString(10));
-            console.log("totalContributedOutcome1", totalContributedOutcome1.toString(10));
-            console.log("contributeAmount", contributeAmount.toString(10));
-            console.log("Payout Numerators:");
-            console.log(payoutNumerators);
+            // console.log("Dispute Round:", disputeRound);
+            // console.log("totalContributedOutcome0", totalContributedOutcome0.toString(10));
+            // console.log("totalContributedOutcome1", totalContributedOutcome1.toString(10));
+            // console.log("contributeAmount", contributeAmount.toString(10));
+            // console.log("Payout Numerators:");
+            // console.log(payoutNumerators);
 
             await fixture.contribute(market, payoutNumerators, false, contributeAmount);
 
@@ -99,7 +99,7 @@ describe("TradeAndReport", () => {
             await fixture.setTimestamp(newFeeWindowStartTime.add(new BN(1)));
         }
 
-        const isForking = await fixture.universe.isForking_();
+        const isForking = await fixture.isForking();
         expect(isForking).to.be.true;
 
         const repAmountToMigrate = new BN(9000000).mul(new BN(10).pow(new BN(18)));
@@ -110,20 +110,7 @@ describe("TradeAndReport", () => {
         const reputationTotalMigrated = await childUniverseReputationToken.getTotalMigrated_();
         expect(reputationTotalMigrated.toString(10)).to.equal(repAmountToMigrate.toString(10));
 
-        const forkEndTime = await fixture.getForkEndTime();
-        console.log("forkEndTime:", forkEndTime.toString(10));
-        await fixture.setTimestamp(forkEndTime.add(new BN(86400).mul(new BN(4))));
-
-        timestamp = await fixture.getTimestamp();
-        console.log("current time:", timestamp.toString(10));
-
-        const winningChildUniverse = await fixture.getWinningChildUniverse();
-        console.log("winningChildUniverse", winningChildUniverse);
-
-        const parentPayoutDistributionHash = await fixture.getParentPayoutDistributionHash(winningChildUniverse);
-        console.log("parentPayoutDistributionHash", parentPayoutDistributionHash);
-
-        console.log("before finalizeFork");
-        await fixture.finalizeFork(market);
+        let isFinalized = await market.isFinalized_();
+        expect(isFinalized).to.be.true;
     });
 });

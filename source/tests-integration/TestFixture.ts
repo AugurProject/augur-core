@@ -7,7 +7,7 @@ import { ContractDeployer } from '../libraries/ContractDeployer';
 import { CompilerConfiguration } from '../libraries/CompilerConfiguration';
 import { DeployerConfiguration } from '../libraries/DeployerConfiguration';
 import { NetworkConfiguration } from '../libraries/NetworkConfiguration';
-import { FeeWindow, ShareToken, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder, LegacyReputationToken, ReputationToken } from '../libraries/ContractInterfaces';
+import { FeeWindow, ShareToken, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder, LegacyReputationToken, ReputationToken, DisputeCrowdsourcer, InitialReporter } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
 
 export class TestFixture {
@@ -174,24 +174,6 @@ export class TestFixture {
     public async migrateOutByPayout(reputationToken: ReputationToken, payoutNumerators: Array<BN>, invalid: boolean, attotokens: BN) {
         await reputationToken.migrateOutByPayout(payoutNumerators, invalid, attotokens);
         return;
-    }
-
-    public async finalizeFork(market: Market): Promise<void> {
-        await market.finalizeFork();
-        return;
-    }
-
-    public async getForkEndTime(): Promise<BN> {
-        return await this.universe.getForkEndTime_();
-    }
-
-    public async getWinningChildUniverse(): Promise<string> {
-        return await this.universe.getWinningChildUniverse_();
-    }
-
-    public async getParentPayoutDistributionHash(universeAddress: string): Promise<string> {
-        const childUniverse = new Universe(this.connector, this.accountManager, universeAddress, TestFixture.GAS_PRICE);
-        return childUniverse.getParentPayoutDistributionHash_();
     }
 
     public async getNumSharesInMarket(market: Market, outcome: BN): Promise<BN> {
