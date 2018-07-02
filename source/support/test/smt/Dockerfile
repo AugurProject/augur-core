@@ -31,6 +31,7 @@ COPY .soliumignore /app/.soliumignore
 COPY tsconfig.json /app/tsconfig.json
 COPY typings/ /app/typings/
 COPY source/contracts/ /app/source/contracts/
+COPY source/tools/installSolidityFlattener /app/source/tools/installSolidityFlattener
 COPY source/deployment/compileContracts.ts /app/source/deployment/compileContracts.ts
 COPY source/libraries/CompilerConfiguration.ts /app/source/libraries/CompilerConfiguration.ts
 COPY source/libraries/DeployerConfiguration.ts /app/source/libraries/DeployerConfiguration.ts
@@ -42,7 +43,7 @@ RUN rgrep "pragma solidity" source/contracts/ | cut -d':' -f1 | xargs sed -i '1i
 
 # Do not run SMT on quarantined contracts
 COPY source/support/test/smt/quarantine.txt quarantine.txt
-RUN while read contract; do sed -i '/pragma experimental SMTChecker/d' ${contract}; done<quarantine.txt 
+RUN while read contract; do sed -i '/pragma experimental SMTChecker/d' ${contract}; done<quarantine.txt
 
 # Patch contract compiler to use SMT enabled solc instead of solc.js
 COPY source/support/test/smt/smt.patch smt.patch

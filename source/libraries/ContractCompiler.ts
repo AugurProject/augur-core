@@ -1,10 +1,11 @@
 import * as fs from "async-file";
-import readFile = require('fs-readfile-promise');
-import asyncMkdirp = require('async-mkdirp');
 import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
-import { CompilerInput, CompilerOutput, compileStandardWrapper } from "solc";
+import asyncMkdirp = require('async-mkdirp');
+import { CompilerInput, CompilerOutput } from "solc";
 import { Abi } from "ethereum";
+import { ChildProcess, exec, spawn } from "child_process";
+import { format } from "util";
 import { CompilerConfiguration } from './CompilerConfiguration';
 
 interface AbiOutput {
@@ -13,9 +14,40 @@ interface AbiOutput {
 
 export class ContractCompiler {
     private readonly configuration: CompilerConfiguration;
+    private readonly flattenerBin = "solidity_flattener";
+    private readonly flattenerCommand: string;
+
 
     public constructor(configuration: CompilerConfiguration) {
-        this.configuration = configuration
+        this.configuration = configuration;
+        this.flattenerCommand = `${this.flattenerBin} --allow-path . %s`;
+    }
+
+    private async getCommandOutputFromInput(childProcess: ChildProcess, stdin: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const buffers: Array<Buffer> = [];
+            childProcess.stdout.on('data', function (data: Buffer) {
+                buffers.push(data);
+            });
+            const errorBuffers: Array<Buffer> = [];
+            childProcess.stderr.on('data', function (data: Buffer) {
+                errorBuffers.push(data);
+            });
+            childProcess.on('close', function (code) {
+                const errorMessage = Buffer.concat(errorBuffers).toString();
+                if (code > 0) return reject(new Error(`Process Exit Code ${code}\n${errorMessage}`))
+                return resolve(Buffer.concat(buffers).toString());
+            });
+            childProcess.stdin.write(stdin);
+            childProcess.stdin.end();
+        })
+    }
+
+    // TODO: Use solcjs compileStandardWrapper when it works, 0.4.24 giving error: "Runtime.functionPointers[index] is not a function"
+    private async compileCustomWrapper(compilerInputJson: CompilerInput): Promise<CompilerOutput> {
+        const childProcess = spawn("solc", ["--standard-json"]);
+        const compilerOutputJson = await this.getCommandOutputFromInput(childProcess, JSON.stringify(compilerInputJson));
+        return JSON.parse(compilerOutputJson);
     }
 
     public async compileContracts(): Promise<CompilerOutput> {
@@ -23,7 +55,7 @@ export class ContractCompiler {
         try {
             const stats = await fs.stat(this.configuration.contractOutputPath);
             const lastCompiledTimestamp = stats.mtime;
-            const ignoreCachedFile = function(file: string, stats: fs.Stats): boolean {
+            const ignoreCachedFile = function (file: string, stats: fs.Stats): boolean {
                 return (stats.isFile() && path.extname(file) !== ".sol") || (stats.isFile() && path.extname(file) === ".sol" && stats.mtime < lastCompiledTimestamp);
             }
             const uncachedFiles = await recursiveReadDir(this.configuration.contractSourceRoot, [ignoreCachedFile]);
@@ -38,8 +70,8 @@ export class ContractCompiler {
 
         // Compile all contracts in the specified input directory
         const compilerInputJson = await this.generateCompilerInput();
-        const compilerOutputJson = compileStandardWrapper(JSON.stringify(compilerInputJson));
-        const compilerOutput: CompilerOutput = JSON.parse(compilerOutputJson);
+        const compilerOutput = await this.compileCustomWrapper(compilerInputJson);
+
         if (compilerOutput.errors) {
             let errors = "";
 
@@ -68,12 +100,22 @@ export class ContractCompiler {
         return filteredCompilerOutput;
     }
 
+    public async generateFlattenedSolidity(filePath: string): Promise<string> {
+        const relativeFilePath = filePath.replace(this.configuration.contractSourceRoot, "").replace(/\\/g, "/");
+
+        const childProcess = exec(format(this.flattenerCommand, relativeFilePath), {
+                encoding: "buffer",
+                cwd: this.configuration.contractSourceRoot
+            });
+        return await this.getCommandOutputFromInput(childProcess, "");
+    }
+
     public async generateCompilerInput(): Promise<CompilerInput> {
         const ignoreFile = function(file: string, stats: fs.Stats): boolean {
             return file.indexOf("legacy_reputation") > -1 || (stats.isFile() && path.extname(file) !== ".sol");
         }
         const filePaths = await recursiveReadDir(this.configuration.contractSourceRoot, [ignoreFile]);
-        const filesPromises = filePaths.map(async filePath => (await readFile(filePath)).toString('utf8'));
+        const filesPromises = filePaths.map(async filePath => (await this.generateFlattenedSolidity(filePath)));
         const files = await Promise.all(filesPromises);
 
         let inputJson: CompilerInput = {
@@ -81,7 +123,7 @@ export class ContractCompiler {
             settings: {
                 optimizer: {
                     enabled: true,
-                    runs: 500
+                    // runs: 500 TODO: Consider adding back if Etherscan is down with optimizer runs != 200
                 },
                 outputSelection: {
                     "*": {
@@ -106,7 +148,7 @@ export class ContractCompiler {
                 // don't include libraries
                 if (relativeFilePath.startsWith('libraries/') && contractName !== 'Delegator' && contractName !== 'Map') continue;
                 // don't include embedded libraries
-                if (!relativeFilePath.endsWith(`${contractName}.sol`)) continue;
+                if (!(relativeFilePath === `${contractName}.sol` || relativeFilePath.endsWith(`/${contractName}.sol`))) continue;
                 const abi = compilerOutput.contracts[relativeFilePath][contractName].abi;
                 if (abi === undefined) continue;
                 const bytecode = compilerOutput.contracts[relativeFilePath][contractName].evm.bytecode.object;
