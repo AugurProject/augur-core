@@ -16,7 +16,7 @@ export class ReportingUtils {
         await fixture.setTimestamp(designatedReportingEndTime.add(new BN(1)));
     }
 
-    // TODO: Add contributor param
+    // TODO: Add contributor param to match proceedToNextRound in Python tests
     public async proceedToNextRound(fixture: TestFixture, market: Market, doGenerateFees: boolean = false, moveTimeForward: boolean = true, randomPayoutNumerators: boolean = false) {
         const currentTimestamp = await fixture.getTimestamp();
         const marketEndTime = await market.getEndTime_();
@@ -37,6 +37,28 @@ export class ReportingUtils {
             await market.doInitialReport(payoutNumerators, false);
             expect(await market.getFeeWindow_() === ZERO_ADDRESS).to.be.false;
             console.log("Submitted initial report");
+
+            // Buy and sell complete sets to generate reporting fees
+            let outcome = new BN(0);
+            let numShares = new BN(10000000000000);
+            // Buy complete sets
+            await fixture.buyCompleteSets(market, numShares);
+            let numOwnedShares = await fixture.getNumSharesInMarket(market, outcome);
+
+            let ethBalance = await fixture.getEthBalance();
+            console.log("ethBalance after buying complete set", ethBalance.toString(10));
+            console.log("numOwnedShares after buying complete set", numOwnedShares.toString(10));
+
+            // Sell Complete Sets
+            ethBalance = await fixture.getEthBalance();
+            console.log("ethBalance before selling complete set", ethBalance.toString(10));
+            let numOwnedSharesBefore = await fixture.getNumSharesInMarket(market, outcome);
+            console.log("numOwnedShares before selling complete set", numOwnedSharesBefore.toString(10));
+            await fixture.sellCompleteSets(market, numShares);
+            ethBalance = await fixture.getEthBalance();
+            console.log("ethBalance before selling complete set", ethBalance.toString(10));
+            numOwnedSharesBefore = await fixture.getNumSharesInMarket(market, outcome);
+            console.log("numOwnedShares after selling complete set", numOwnedSharesBefore.toString(10));
         } else {
             const feeWindow = await fixture.getFeeWindow(market);
             const feeWindowStartTime = await feeWindow.getStartTime_();
@@ -92,12 +114,22 @@ export class ReportingUtils {
             disputeRound++;
         }
 
+        let ethBalance = await fixture.getEthBalance();
+        console.log("ethBalance before calling forkAndRedeem", ethBalance.toString(10));
+
         const numParticipants = await market.getNumParticipants_();
         for (let i = 0; i < numParticipants.toNumber(); i++) {
             const reportingParticipantAddress = await market.getReportingParticipant_(new BN(i));
             const reportingParticipant = await fixture.getReportingParticipant(reportingParticipantAddress);
             await reportingParticipant.forkAndRedeem();
+
+            const reportingParticipantStake = await reportingParticipant.getStake_();
+            expect(reportingParticipantStake === new BN(0));
         }
+
+        ethBalance = await fixture.getEthBalance();
+        console.log("ethBalance after calling forkAndRedeem", ethBalance.toString(10));
+
         console.log("\nCalled forkAndRedeem on reporting participants");
     }
 }

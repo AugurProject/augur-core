@@ -14,6 +14,9 @@ describe("TradeAndReport", () => {
     it("#tradeAndReport", async () => {
         await fixture.approveCentralAuthority();
 
+        let ethBalance = await fixture.getEthBalance();
+        console.log("Starting ETH balance", ethBalance.toString(10));
+
         // Create a market
         const market = await fixture.createReasonableMarket(fixture.universe, fixture.cash.address, [stringTo32ByteHex(" "), stringTo32ByteHex(" ")]);
         const actualTypeName = await market.getTypeName_();
@@ -55,6 +58,7 @@ describe("TradeAndReport", () => {
         const payoutDistributionHash = await fixture.derivePayoutDistributionHash(market, [numTicks, new BN(0)], false);
         const childUniverseReputationToken = await fixture.getChildUniverseReputationToken(payoutDistributionHash);
         const initialRepTotalMigrated = await childUniverseReputationToken.getTotalMigrated_();
+        expect(initialRepTotalMigrated === new BN("366666666666666667016192")); // TODO: calculate this value instead of hard-coding it
         const repAmountToMigrate = new BN(9000000).mul(new BN(10).pow(new BN(18)));
         await fixture.migrateOutByPayout(reputationToken, [numTicks, new BN(0)], false, repAmountToMigrate);
         const finalRepTotalMigrated = await childUniverseReputationToken.getTotalMigrated_();

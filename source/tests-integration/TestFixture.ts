@@ -7,7 +7,7 @@ import { ContractDeployer } from '../libraries/ContractDeployer';
 import { CompilerConfiguration } from '../libraries/CompilerConfiguration';
 import { DeployerConfiguration } from '../libraries/DeployerConfiguration';
 import { NetworkConfiguration } from '../libraries/NetworkConfiguration';
-import { FeeWindow, ShareToken, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder, LegacyReputationToken, DisputeCrowdsourcer, ReputationToken, } from '../libraries/ContractInterfaces';
+import { FeeWindow, ShareToken, ClaimTradingProceeds, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder, LegacyReputationToken, DisputeCrowdsourcer, ReputationToken, } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
 
 export class TestFixture {
@@ -119,6 +119,13 @@ export class TestFixture {
         return;
     }
 
+    public async claimTradingProceeds(market: Market, shareholder: string): Promise<void> {
+        const claimTradingProceedsContract = await this.contractDeployer.getContract("ClaimTradingProceeds");
+        const claimTradingProceeds = new ClaimTradingProceeds(this.connector, this.accountManager, claimTradingProceedsContract.address, TestFixture.GAS_PRICE);
+        await claimTradingProceeds.claimTradingProceeds(market.address, shareholder);
+        return;
+    }
+
     public async getOrderPrice(orderID: string): Promise<BN> {
         const ordersContract = await this.contractDeployer.getContract("Orders");
         const orders = new Orders(this.connector, this.accountManager, ordersContract.address, TestFixture.GAS_PRICE);
@@ -155,6 +162,14 @@ export class TestFixture {
         const ethValue = amount.mul(numTicks);
 
         await completeSets.publicBuyCompleteSets(market.address, amount, { attachedEth: ethValue });
+        return;
+    }
+
+    public async sellCompleteSets(market: Market, amount: BN): Promise<void> {
+        const completeSetsContract = await this.contractDeployer.getContract("CompleteSets");
+        const completeSets = new CompleteSets(this.connector, this.accountManager, completeSetsContract.address, TestFixture.GAS_PRICE);
+
+        await completeSets.publicSellCompleteSets(market.address, amount);
         return;
     }
 
@@ -276,6 +291,10 @@ export class TestFixture {
     public async isRepMigratingFromLegacy(): Promise<boolean> {
         const rep = await this.getReputationToken();
         return await rep.getIsMigratingFromLegacy_();
+    }
+
+    public async getEthBalance(): Promise<BN> {
+        return await this.connector.ethjsQuery.getBalance(this.accountManager.defaultAddress);
     }
 
     public async getRepBalance(owner: string): Promise<BN> {
