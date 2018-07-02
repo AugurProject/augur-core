@@ -8,7 +8,7 @@ Smart contracts for [Augur](https://augur.net), a decentralized prediction marke
 
 If you just want to clone the repo and quickly have a couple local proof of authority networks (Geth/Clique and Parity/Aura) running with the contracts deployed then you can just clone the repo and run:
 ```
-docker-compose -f support/test/integration/docker-compose.yml up --build --force-recreate
+docker-compose -f source/support/test/integration/docker-compose-[geth/parity].yml up --build --force-recreate
 ```
 * Parity HTTP RPC will be available on localhost port `47622`.
 * Geth HTTP RPC will be available on localhost port `47624`.
