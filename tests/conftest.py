@@ -153,7 +153,7 @@ class ContractsFixture:
                 'remappings': [ '=%s/' % resolveRelativePath(self.relativeContractsPath), 'TEST=%s/' % resolveRelativePath(self.relativeTestContractsPath) ],
                 'optimizer': {
                     'enabled': True,
-                    'runs': 500
+                    'runs': 200
                 },
                 'outputSelection': {
                     "*": {
