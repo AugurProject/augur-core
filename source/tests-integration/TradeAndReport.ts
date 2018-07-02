@@ -29,6 +29,9 @@ describe("TradeAndReport", () => {
         let numShares = new BN(10000000000000);
         let price = new BN(2150);
 
+        ethBalance = await fixture.getEthBalance();
+        console.log("ethBalance before placing order & buying complete set", ethBalance.toString(10));
+
         await fixture.placeOrder(market.address, type, numShares, price, outcome, stringTo32ByteHex(""), stringTo32ByteHex(""), stringTo32ByteHex("42"));
 
         const orderID = await fixture.getBestOrderId(type, market.address, outcome)
@@ -40,6 +43,9 @@ describe("TradeAndReport", () => {
         await fixture.buyCompleteSets(market, numShares);
         const numOwnedShares = await fixture.getNumSharesInMarket(market, outcome);
         expect(numOwnedShares.toNumber()).to.equal(numShares.toNumber());
+
+        ethBalance = await fixture.getEthBalance();
+        console.log("ethBalance after placing order & buying complete set", ethBalance.toString(10));
 
         // Cancel the original rest of order
         await fixture.cancelOrder(orderID);
