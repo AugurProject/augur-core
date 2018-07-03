@@ -7,7 +7,7 @@ import { ContractDeployer } from '../libraries/ContractDeployer';
 import { CompilerConfiguration } from '../libraries/CompilerConfiguration';
 import { DeployerConfiguration } from '../libraries/DeployerConfiguration';
 import { NetworkConfiguration } from '../libraries/NetworkConfiguration';
-import { FeeWindow, ShareToken, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder, LegacyReputationToken, ReputationToken } from '../libraries/ContractInterfaces';
+import { FeeWindow, ShareToken, ClaimTradingProceeds, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder, LegacyReputationToken, DisputeCrowdsourcer, ReputationToken, } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
 
 export class TestFixture {
@@ -119,6 +119,13 @@ export class TestFixture {
         return;
     }
 
+    public async claimTradingProceeds(market: Market, shareholder: string): Promise<void> {
+        const claimTradingProceedsContract = await this.contractDeployer.getContract("ClaimTradingProceeds");
+        const claimTradingProceeds = new ClaimTradingProceeds(this.connector, this.accountManager, claimTradingProceedsContract.address, TestFixture.GAS_PRICE);
+        await claimTradingProceeds.claimTradingProceeds(market.address, shareholder);
+        return;
+    }
+
     public async getOrderPrice(orderID: string): Promise<BN> {
         const ordersContract = await this.contractDeployer.getContract("Orders");
         const orders = new Orders(this.connector, this.accountManager, ordersContract.address, TestFixture.GAS_PRICE);
@@ -158,8 +165,29 @@ export class TestFixture {
         return;
     }
 
+    public async sellCompleteSets(market: Market, amount: BN): Promise<void> {
+        const completeSetsContract = await this.contractDeployer.getContract("CompleteSets");
+        const completeSets = new CompleteSets(this.connector, this.accountManager, completeSetsContract.address, TestFixture.GAS_PRICE);
+
+        await completeSets.publicSellCompleteSets(market.address, amount);
+        return;
+    }
+
     public async contribute(market: Market, payoutNumerators: Array<BN>, invalid: boolean, amount: BN): Promise<void> {
         await market.contribute(payoutNumerators, invalid, amount);
+        return;
+    }
+
+    public async derivePayoutDistributionHash(market: Market, payoutNumerators: Array<BN>, invalid: boolean): Promise<string> {
+        return await market.derivePayoutDistributionHash_(payoutNumerators, invalid);
+    }
+
+    public async isForking(): Promise<boolean> {
+        return await this.universe.isForking_();
+    }
+
+    public async migrateOutByPayout(reputationToken: ReputationToken, payoutNumerators: Array<BN>, invalid: boolean, attotokens: BN) {
+        await reputationToken.migrateOutByPayout(payoutNumerators, invalid, attotokens);
         return;
     }
 
@@ -172,6 +200,20 @@ export class TestFixture {
     public async getFeeWindow(market: Market): Promise<FeeWindow> {
         const feeWindowAddress = await market.getFeeWindow_();
         return new FeeWindow(this.connector, this.accountManager, feeWindowAddress, TestFixture.GAS_PRICE);
+    }
+
+    public async getReportingParticipant(reportingParticipantAddress: string): Promise<DisputeCrowdsourcer> {
+        return new DisputeCrowdsourcer(this.connector, this.accountManager, reportingParticipantAddress, TestFixture.GAS_PRICE);
+    }
+
+    public async getUniverse(market: Market): Promise<Universe> {
+        const universeAddress = await market.getUniverse_();
+        return new Universe(this.connector, this.accountManager, universeAddress, TestFixture.GAS_PRICE);
+    }
+
+    public async getWinningReportingParticipant(market: Market): Promise<DisputeCrowdsourcer> {
+        const reportingParticipantAddress = await market.getWinningReportingParticipant_();
+        return new DisputeCrowdsourcer(this.connector, this.accountManager, reportingParticipantAddress, TestFixture.GAS_PRICE);
     }
 
     public async setTimestamp(timestamp: BN): Promise<void> {
@@ -234,6 +276,13 @@ export class TestFixture {
         return;
     }
 
+    public async getChildUniverseReputationToken(parentPayoutDistributionHash: string) {
+        const childUniverseAddress = await this.contractDeployer.universe.getChildUniverse_(parentPayoutDistributionHash);
+        const childUniverse = new Universe(this.connector, this.accountManager, childUniverseAddress, TestFixture.GAS_PRICE);
+        const repContractAddress = await childUniverse.getReputationToken_();
+        return new ReputationToken(this.connector, this.accountManager, repContractAddress, TestFixture.GAS_PRICE);
+    }
+
     public async getReputationToken(): Promise<ReputationToken> {
         const repContractAddress = await this.contractDeployer.universe.getReputationToken_();
         return new ReputationToken(this.connector, this.accountManager, repContractAddress, TestFixture.GAS_PRICE);
@@ -242,6 +291,11 @@ export class TestFixture {
     public async isRepMigratingFromLegacy(): Promise<boolean> {
         const rep = await this.getReputationToken();
         return await rep.getIsMigratingFromLegacy_();
+    }
+
+    // TODO: Determine why ETH balance doesn't change when buying complete sets or redeeming reporting participants
+    public async getEthBalance(): Promise<BN> {
+        return await this.connector.ethjsQuery.getBalance(this.accountManager.defaultAddress);
     }
 
     public async getRepBalance(owner: string): Promise<BN> {
