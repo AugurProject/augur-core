@@ -4,7 +4,7 @@
 # The build process is structured this way to encourage fail fast behavior so
 # that this image's build will fail earlier for compiling contracts than
 # for other pieces
-FROM python:2.7.13
+FROM augurproject/python2-and-3:latest
 ARG SOLC_VERSION=v0.4.20
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
@@ -16,9 +16,9 @@ RUN wget --quiet --output-document /usr/local/bin/solc https://github.com/ethere
 COPY requirements.txt /app/requirements.txt
 
 WORKDIR /app
-RUN pip install --upgrade pip setuptools \
-	&& pip install --upgrade pip-tools \
-	&& pip install -r requirements.txt
+RUN pip2 install --upgrade pip setuptools \
+	&& pip2 install --upgrade pip-tools \
+	&& pip2 install -r requirements.txt
 
 # Install basics of the application
 COPY .soliumrc.json /app/.soliumrc.json
@@ -31,6 +31,7 @@ COPY source/libraries/CompilerConfiguration.ts /app/source/libraries/CompilerCon
 COPY source/libraries/DeployerConfiguration.ts /app/source/libraries/DeployerConfiguration.ts
 COPY source/libraries/NetworkConfiguration.ts /app/source/libraries/NetworkConfiguration.ts
 COPY source/libraries/ContractCompiler.ts /app/source/libraries/ContractCompiler.ts
+COPY source/tools/installSolidityFlattener /app/source/tools/installSolidityFlattener
 COPY package.json /app/package.json
 
 RUN npm install
@@ -40,6 +41,7 @@ RUN npm run lint
 
 # Build first chunk
 RUN npm run build:source
+RUN npm run build:flattener
 RUN npm run build:contracts
 
 COPY source/libraries/ContractInterfacesGenerator.ts /app/source/libraries/ContractInterfacesGenerator.ts

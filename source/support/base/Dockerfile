@@ -4,7 +4,7 @@
 # The build process is strucutred this way to encourage fail fast behavior so
 # that this image's build will fail earlier for compiling contracts than
 # for other pieces
-FROM python:2.7.13
+FROM augurproject/python2-and-3:latest
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
 	&& apt-get install -y nodejs
@@ -19,7 +19,7 @@ COPY package-lock.json /app/package-lock.json
 WORKDIR /app
 RUN npm install
 
-RUN pip install --upgrade pip setuptools \
-	&& pip install --upgrade pip-tools \
-	&& pip install -r requirements.txt
+RUN pip2 install --upgrade pip setuptools \
+	&& pip2 install --upgrade pip-tools \
+	&& pip2 install -r requirements.txt
 
