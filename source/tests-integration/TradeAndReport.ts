@@ -1,5 +1,7 @@
 // Create market, make a trade on it, designated reporter reports, market is finalized, traders settle shares, reporters redeem tokens.
 
+// TODO: Add checks to ensure ETH redeemed for shares/reporting fees is correct, since fixture.getEthBalance returns the same amount every time it's called.
+
 import BN = require('bn.js');
 import { expect } from "chai";
 import { stringTo32ByteHex } from "../libraries/HelperFunctions";
@@ -29,9 +31,6 @@ describe("TradeAndReport", () => {
         let numShares = new BN(10000000000000);
         let price = new BN(2150);
 
-        ethBalance = await fixture.getEthBalance();
-        console.log("ethBalance before placing order & buying complete set", ethBalance.toString(10));
-
         await fixture.placeOrder(market.address, type, numShares, price, outcome, stringTo32ByteHex(""), stringTo32ByteHex(""), stringTo32ByteHex("42"));
 
         const orderID = await fixture.getBestOrderId(type, market.address, outcome)
@@ -39,13 +38,16 @@ describe("TradeAndReport", () => {
         const orderPrice = await fixture.getOrderPrice(orderID);
         expect(orderPrice.toNumber()).to.equal(price.toNumber());
 
+        ethBalance = await fixture.getEthBalance();
+        console.log("ethBalance before buying complete set", ethBalance.toString(10));
+
         // Buy complete sets
         await fixture.buyCompleteSets(market, numShares);
         const numOwnedShares = await fixture.getNumSharesInMarket(market, outcome);
         expect(numOwnedShares.toNumber()).to.equal(numShares.toNumber());
 
         ethBalance = await fixture.getEthBalance();
-        console.log("ethBalance after placing order & buying complete set", ethBalance.toString(10));
+        console.log("ethBalance after buying complete set", ethBalance.toString(10));
 
         // Cancel the original rest of order
         await fixture.cancelOrder(orderID);

@@ -293,6 +293,7 @@ export class TestFixture {
         return await rep.getIsMigratingFromLegacy_();
     }
 
+    // TODO: Determine why ETH balance doesn't change when buying complete sets or redeeming reporting participants
     public async getEthBalance(): Promise<BN> {
         return await this.connector.ethjsQuery.getBalance(this.accountManager.defaultAddress);
     }

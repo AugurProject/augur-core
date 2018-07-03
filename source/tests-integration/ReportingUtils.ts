@@ -16,7 +16,7 @@ export class ReportingUtils {
         await fixture.setTimestamp(designatedReportingEndTime.add(new BN(1)));
     }
 
-    // TODO: Add contributor param to match proceedToNextRound in Python tests
+    // TODO: Add `contributor` param, like `proceedToNextRound` function in Python tests
     public async proceedToNextRound(fixture: TestFixture, market: Market, doGenerateFees: boolean = false, moveTimeForward: boolean = true, randomPayoutNumerators: boolean = false) {
         const currentTimestamp = await fixture.getTimestamp();
         const marketEndTime = await market.getEndTime_();
