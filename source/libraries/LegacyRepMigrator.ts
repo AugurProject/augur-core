@@ -2,7 +2,7 @@ import { Connector } from '../libraries/Connector';
 import { AccountManager } from '../libraries/AccountManager';
 import { NetworkConfiguration } from '../libraries/NetworkConfiguration';
 import { LegacyReputationToken, ReputationToken } from '../libraries/ContractInterfaces';
-import { resolveAll } from "../libraries/HelperFunctions";
+import * as Parallel from 'async-parallel';
 
 export interface LegacyRepData {
     balances: Array<string>;
@@ -19,6 +19,8 @@ export class LegacyRepMigrator {
     private chunkedAllowanceOwners: Array<Array<string>>;
     private chunkedAllowanceSpenders: Array<Array<string>>;
     private readonly chunkSize: number;
+    private readonly sleepTimeInMS: number;
+    private readonly parallelTransactions: number;
 
     private constructor(repContract: ReputationToken, legacyRepContract: LegacyReputationToken, legacyRepData: LegacyRepData, chunkSize: number) {
         this.repContract = repContract;
@@ -33,9 +35,12 @@ export class LegacyRepMigrator {
         this.chunkedBalances = [];
         this.chunkedAllowanceOwners = [];
         this.chunkedAllowanceSpenders = [];
+        this.sleepTimeInMS = 5;
+        this.parallelTransactions = 10;
     }
 
     private async initialize(): Promise<void> {
+        console.log("Getting unmigrated data from input data");
         await this.getUnMigratedLegacyData(this.legacyRepData);
         this.chunkedBalances = this.chunk(this.unmigratedLegacyRepData.balances);
         this.chunkedAllowanceOwners = this.chunk(this.unmigratedLegacyRepData.allowanceOwners);
@@ -68,10 +73,10 @@ export class LegacyRepMigrator {
 
     public async migrateLegacyRep(): Promise<void> {
 
+        console.log(`BALANCES REMAINING: ${this.unmigratedLegacyRepData.balances.length}`);
+
         console.log("Migrating Approvals");
         await this.migrateApprovals();
-        console.log("Verifying Approvals");
-        await this.verifyApprovals();
         console.log("Migrating Approvals Complete");
 
         console.log("Migrating Balances");
@@ -84,11 +89,10 @@ export class LegacyRepMigrator {
     }
 
     private async migrateApprovals(): Promise<void> {
-        const promises: Array<Promise<any>> = [];
-        for (let i = 0; i < this.chunkedAllowanceOwners.length; i++) {
-            promises.push(this.migrateAllowances(this.chunkedAllowanceOwners[i], this.chunkedAllowanceSpenders[i]));
-        }
-        await resolveAll(promises);
+        await Parallel.each(Array.from(Array(this.chunkedAllowanceOwners.length).keys()), async i => {
+            await this.migrateAllowances(this.chunkedAllowanceOwners[i], this.chunkedAllowanceSpenders[i]);
+            if ((i*this.chunkSize) % 100 == 0) console.log(`Migrated ${i*this.chunkSize} allowances`);
+        }, this.parallelTransactions);
         return;
     }
 
@@ -98,11 +102,12 @@ export class LegacyRepMigrator {
     }
 
     private async migrateBalances(): Promise<void> {
-        const promises: Array<Promise<any>> = [];
-        for (let balancesChunk of this.chunkedBalances) {
-            promises.push(this.migrateOwners(balancesChunk));
-        }
-        await resolveAll(promises);
+        let i = 0;
+        await Parallel.each(this.chunkedBalances, async balancesChunk => {
+            await this.migrateOwners(balancesChunk);
+            i+=this.chunkSize;
+            if (i % 100 == 0) console.log(`Migrated ${i} balances`);
+        }, this.parallelTransactions);
         return;
     }
 
@@ -113,37 +118,11 @@ export class LegacyRepMigrator {
         return;
     }
 
-    private async verifyApprovals(): Promise<void> {
-        const promises: Array<Promise<any>> = [];
-
-        for (let i = 0; i < this.legacyRepData.allowanceOwners.length; i++) {
-            promises.push(this.verifyApproval(
-                this.legacyRepData.allowanceOwners[i],
-                this.legacyRepData.allowanceSpenders[i],
-            ));
-        }
-
-        await resolveAll(promises);
-        return;
-    }
-
-    private async verifyApproval(owner: string, spender: string): Promise<void> {
-        const legacyAllowance = await this.legacyRepContract.allowance_(owner, spender);
-        const allowance = await this.repContract.allowance_(owner, spender);
-        if (!allowance.eq(legacyAllowance)) {
-            throw new Error(`Allowance mismatch: OWNER: ${owner} SPENDER: ${spender} LEGACY: ${legacyAllowance} CURRENT: ${allowance}`);
-        }
-        return;
-    }
-
     private async verifyBalances(): Promise<void> {
-        const promises: Array<Promise<any>> = [];
-
-        for (let owner of this.legacyRepData.balances) {
-            promises.push(this.verifyBalance(owner));
-        }
-
-        await resolveAll(promises);
+        await Parallel.each(this.legacyRepData.balances, async owner => {
+            await this.verifyBalance(owner);
+            await Parallel.sleep(this.sleepTimeInMS);
+        }, 1);
         return;
     }
 
@@ -166,20 +145,23 @@ export class LegacyRepMigrator {
     }
 
     private async getUnMigratedLegacyData(legacyRepData: LegacyRepData): Promise<void> {
-        const promises: Array<Promise<any>> = [];
-
-        for (let i = 0; i < legacyRepData.allowanceOwners.length; i++) {
-            promises.push(this.addToAllowancesIfUnmigrated(
+        await Parallel.each(Array.from(Array(this.legacyRepData.allowanceOwners.length).keys()), async i => {
+            await this.addToAllowancesIfUnmigrated(
                 legacyRepData.allowanceOwners[i],
                 legacyRepData.allowanceSpenders[i],
-            ));
-        }
+            );
+            if (i % 100 == 0) console.log(`${i} allowances scanned`)
+            await Parallel.sleep(this.sleepTimeInMS);
+        }, 1);
 
-        for (let owner of legacyRepData.balances) {
-            promises.push(this.addToBalancesIfUnmigrated(owner));
-        }
+        let i = 0;
+        await Parallel.each(this.legacyRepData.balances, async owner => {
+            await this.addToBalancesIfUnmigrated(owner);
+            i++;
+            if (i % 100 == 0) console.log(`${i} balances scanned`)
+            await Parallel.sleep(this.sleepTimeInMS);
+        }, 1);
 
-        await resolveAll(promises);
         return;
     }
 
@@ -187,6 +169,7 @@ export class LegacyRepMigrator {
         const balance = await this.repContract.balanceOf_(address);
         if (balance.isZero()) {
             this.unmigratedLegacyRepData.balances.push(address);
+            if (this.unmigratedLegacyRepData.balances.length % 100 == 0) console.log(`${this.unmigratedLegacyRepData.balances.length} balances collected`)
         }
         return;
     }
@@ -196,6 +179,7 @@ export class LegacyRepMigrator {
         if (allowance.isZero()) {
             this.unmigratedLegacyRepData.allowanceOwners.push(owner);
             this.unmigratedLegacyRepData.allowanceSpenders.push(spender);
+            if (this.unmigratedLegacyRepData.allowanceOwners.length % 100 == 0) console.log(`${this.unmigratedLegacyRepData.allowanceOwners.length} allowances collected`)
         }
         return;
     }
