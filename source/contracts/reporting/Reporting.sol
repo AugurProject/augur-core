@@ -15,10 +15,6 @@ library Reporting {
     uint256 private constant MAXIMUM_REPORTING_FEE_DIVISOR = 10000; // Minimum .01% fees
     uint256 private constant MINIMUM_REPORTING_FEE_DIVISOR = 3; // Maximum 33.3~% fees. Note than anything less than a value of 2 here will likely result in bugs such as divide by 0 cases.
 
-    // NOTE: We need to maintain this cost to roughly match the gas cost of reporting. This was last updated 12/22/2017
-    uint256 private constant GAS_TO_REPORT = 1500000;
-    uint256 private constant DEFAULT_REPORTING_GAS_PRICE = 5000000000;
-
     uint256 private constant TARGET_INVALID_MARKETS_DIVISOR = 100; // 1% of markets are expected to be invalid
     uint256 private constant TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR = 100; // 1% of markets are expected to have an incorrect designate report
     uint256 private constant TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR = 100; // 1% of markets are expected to have an incorrect designate report
@@ -31,8 +27,6 @@ library Reporting {
     function getDisputeRoundDurationSeconds() internal pure returns (uint256) { return DISPUTE_ROUND_DURATION_SECONDS; }
     function getClaimTradingProceedsWaitTime() internal pure returns (uint256) { return CLAIM_PROCEEDS_WAIT_TIME; }
     function getForkDurationSeconds() internal pure returns (uint256) { return FORK_DURATION_SECONDS; }
-    function getGasToReport() internal pure returns (uint256) { return GAS_TO_REPORT; }
-    function getDefaultReportingGasPrice() internal pure returns (uint256) { return DEFAULT_REPORTING_GAS_PRICE; }
     function getDefaultValidityBond() internal pure returns (uint256) { return DEFAULT_VALIDITY_BOND; }
     function getValidityBondFloor() internal pure returns (uint256) { return VALIDITY_BOND_FLOOR; }
     function getTargetInvalidMarketsDivisor() internal pure returns (uint256) { return TARGET_INVALID_MARKETS_DIVISOR; }

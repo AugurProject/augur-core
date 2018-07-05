@@ -17,10 +17,6 @@ contract Constants {
     uint256 public constant MAXIMUM_REPORTING_FEE_DIVISOR = Reporting.getMaximumReportingFeeDivisor();
     uint256 public constant MINIMUM_REPORTING_FEE_DIVISOR = Reporting.getMinimumReportingFeeDivisor();
 
-    // NOTE: We need to maintain this cost to roughly match the gas cost of reporting. This was last updated 10/02/2017
-    uint256 public constant GAS_TO_REPORT = Reporting.getGasToReport();
-    uint256 public constant DEFAULT_REPORTING_GAS_PRICE = Reporting.getDefaultReportingGasPrice();
-
     uint256 public constant TARGET_INVALID_MARKETS_DIVISOR = Reporting.getTargetInvalidMarketsDivisor();
     uint256 public constant TARGET_INCORRECT_DESIGNATED_REPORT_MARKETS_DIVISOR = Reporting.getTargetIncorrectDesignatedReportMarketsDivisor();
     uint256 public constant TARGET_DESIGNATED_REPORT_NO_SHOWS_DIVISOR = Reporting.getTargetDesignatedReportNoShowsDivisor();

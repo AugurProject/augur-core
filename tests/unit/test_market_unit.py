@@ -68,7 +68,6 @@ def test_market_creation(localFixture, mockUniverse, mockFeeWindow, mockCash, ch
     assert mockShareTokenFactory.getCreateShareToken(2) == market.getShareToken(2)
     assert mockShareTokenFactory.getCreateShareToken(3) == market.getShareToken(3)
     assert mockShareTokenFactory.getCreateShareToken(4) == market.getShareToken(4)
-    assert mockUniverse.getOrCacheTargetReporterGasCostsWasCalled() == True
     assert mockUniverse.getOrCacheValidityBondWallCalled() == True
 
 def test_initial_report(localFixture, initializedMarket, mockReputationToken, mockUniverse, mockInitialReporter):

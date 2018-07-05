@@ -13,7 +13,6 @@ import 'trading/ICash.sol';
 import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
-import 'libraries/math/RunningAverage.sol';
 import 'reporting/IFeeWindow.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/IFeeToken.sol';
@@ -22,7 +21,6 @@ import 'factories/FeeTokenFactory.sol';
 
 contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFeeWindow {
     using SafeMathUint256 for uint256;
-    using RunningAverage for RunningAverage.Data;
 
     string constant public name = "Participation Token";
     string constant public symbol = "PT";
@@ -34,7 +32,6 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
     uint256 private invalidMarketsCount;
     uint256 private incorrectDesignatedReportMarketCount;
     uint256 private designatedReportNoShows;
-    RunningAverage.Data private reportingGasPrice;
     uint256 private totalWinningStake;
     uint256 private totalStake;
     IFeeToken private feeToken;
@@ -43,15 +40,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
         endInitialization();
         universe = _universe;
         startTime = _feeWindowId.mul(universe.getDisputeRoundDurationInSeconds());
-        // Initialize this to some reasonable value to handle the first market ever created without branching code
-        reportingGasPrice.record(Reporting.getDefaultReportingGasPrice());
         feeToken = FeeTokenFactory(controller.lookup("FeeTokenFactory")).createFeeToken(controller, this);
-        return true;
-    }
-
-    function noteInitialReportingGasPrice() public onlyInGoodTimes afterInitialized returns (bool) {
-        require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
-        reportingGasPrice.record(tx.gasprice);
         return true;
     }
 
@@ -161,10 +150,6 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
         uint256 _totalParticipationSupply = totalSupply();
         uint256 _totalFeeSupply = feeToken.totalSupply();
         return _totalParticipationSupply.add(_totalFeeSupply);
-    }
-
-    function getAvgReportingGasPrice() public view returns (uint256) {
-        return reportingGasPrice.currentAverage();
     }
 
     function getTypeName() public afterInitialized view returns (bytes32) {

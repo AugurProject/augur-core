@@ -50,7 +50,6 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         payoutNumerators = _payoutNumerators;
         size = reputationToken.balanceOf(this);
         feeWindow = market.getFeeWindow();
-        feeWindow.noteInitialReportingGasPrice();
         feeWindow.mintFeeTokens(size);
         return true;
     }
