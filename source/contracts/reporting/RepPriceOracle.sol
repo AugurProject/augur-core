@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.4.24;
 
 import 'libraries/Ownable.sol';
 import 'reporting/IRepPriceOracle.sol';

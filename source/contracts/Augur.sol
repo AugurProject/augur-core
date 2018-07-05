@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.4.24;
 
 import 'Controlled.sol';
 import 'IAugur.sol';
@@ -244,14 +244,14 @@ contract Augur is Controlled, IAugur {
     function logFeeWindowTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
-        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.FeeWindow, 0);
+        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.FeeWindow, address(0));
         return true;
     }
 
     function logReputationTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.getReputationToken() == IReputationToken(msg.sender));
-        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.ReputationToken, 0);
+        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.ReputationToken, address(0));
         return true;
     }
 
@@ -273,14 +273,14 @@ contract Augur is Controlled, IAugur {
     function logReputationTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.getReputationToken() == IReputationToken(msg.sender));
-        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.ReputationToken, 0);
+        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.ReputationToken, address(0));
         return true;
     }
 
     function logReputationTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.getReputationToken() == IReputationToken(msg.sender));
-        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.ReputationToken, 0);
+        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.ReputationToken, address(0));
         return true;
     }
 
@@ -303,14 +303,14 @@ contract Augur is Controlled, IAugur {
     function logFeeWindowBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
-        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.FeeWindow, 0);
+        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.FeeWindow, address(0));
         return true;
     }
 
     function logFeeWindowMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
-        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.FeeWindow, 0);
+        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.FeeWindow, address(0));
         return true;
     }
 
@@ -337,21 +337,21 @@ contract Augur is Controlled, IAugur {
     function logFeeTokenTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
-        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.FeeToken, 0);
+        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.FeeToken, address(0));
         return true;
     }
 
     function logFeeTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
-        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.FeeToken, 0);
+        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.FeeToken, address(0));
         return true;
     }
 
     function logFeeTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
-        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.FeeToken, 0);
+        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.FeeToken, address(0));
         return true;
     }
 
