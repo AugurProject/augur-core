@@ -12,7 +12,6 @@ import 'libraries/token/ERC20.sol';
 
 contract IFeeWindow is ITyped, ERC20 {
     function initialize(IUniverse _universe, uint256 _feeWindowId) public returns (bool);
-    function noteInitialReportingGasPrice() public returns (bool);
     function getUniverse() public view returns (IUniverse);
     function getReputationToken() public view returns (IReputationToken);
     function getStartTime() public view returns (uint256);
@@ -20,7 +19,6 @@ contract IFeeWindow is ITyped, ERC20 {
     function getNumMarkets() public view returns (uint256);
     function getNumInvalidMarkets() public view returns (uint256);
     function getNumIncorrectDesignatedReportMarkets() public view returns (uint256);
-    function getAvgReportingGasPrice() public view returns (uint256);
     function getNumDesignatedReportNoShows() public view returns (uint256);
     function getFeeToken() public view returns (IFeeToken);
     function isActive() public view returns (bool);

@@ -150,7 +150,6 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     noshow_default = initial_report_min
     noshow_floor = initial_report_min
 
-    getGasToReport = constants.GAS_TO_REPORT()
 
     # current fee window
     designatedStakeValue = populatedUniverse.calculateFloatingValue(0, 0, designated_divisor, 0, designated_default, designated_floor)
@@ -168,10 +167,6 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     localFixture.contracts["Time"].incrementTimestamp(populatedUniverse.getDisputeRoundDurationInSeconds())
     assert populatedUniverse.getOrCreatePreviousFeeWindow() == currentFeeWindow.address
 
-    currentFeeWindow.setAvgReportingGasPrice(14)
-    targetGasCost = getGasToReport * 14 * 2
-    assert populatedUniverse.getOrCacheTargetReporterGasCosts() == targetGasCost
-
     localFixture.contracts["Time"].incrementTimestamp(populatedUniverse.getDisputeRoundDurationInSeconds())
     assert populatedUniverse.getOrCreatePreviousPreviousFeeWindow() == currentFeeWindow.address
 
@@ -188,10 +183,7 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     assert populatedUniverse.getOrCacheValidityBond() == newValidityBondValue
     assert populatedUniverse.getOrCacheDesignatedReportNoShowBond() == newNoshowBondValue
 
-    currentFeeWindow.setAvgReportingGasPrice(14)
-    targetGasCost = getGasToReport * 14 * 2
-    assert populatedUniverse.getOrCacheTargetReporterGasCosts() == targetGasCost
-    assert populatedUniverse.getOrCacheMarketCreationCost() == targetGasCost + newValidityBondValue
+    assert populatedUniverse.getOrCacheMarketCreationCost() == newValidityBondValue
 
 def test_universe_calculate_floating_value_defaults(populatedUniverse):
     defaultValue = 12

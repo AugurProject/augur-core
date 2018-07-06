@@ -43,55 +43,6 @@ def test_floating_amount_calculation(numWithCondition, targetWithConditionPerHun
     newAmount = universe.calculateFloatingValue(numWithCondition, 100, targetDivisor, previousAmount, contractsFixture.contracts['Constants'].DEFAULT_VALIDITY_BOND(), ONE / 100)
     assert newAmount == expectedValue
 
-def test_default_target_reporter_gas_costs(contractsFixture, universe, market):
-    # The target reporter gas cost is an attempt to charge the market creator for the estimated cost of reporting that may occur for their market. With no previous fee window to base costs off of it assumes basic default values
-
-    targetReporterGasCosts = universe.getOrCacheTargetReporterGasCosts()
-    expectedTargetReporterGasCost = contractsFixture.contracts['Constants'].GAS_TO_REPORT()
-    expectedTargetReporterGasCost *= contractsFixture.contracts['Constants'].DEFAULT_REPORTING_GAS_PRICE()
-    expectedTargetReporterGasCost *= 2
-    assert targetReporterGasCosts == expectedTargetReporterGasCost
-
-@mark.parametrize('numReports, gasPrice', [
-    (1, 1),
-    (2, 1),
-    (3, 1),
-    (3, 1),
-    (2, 10),
-    (2, 20),
-    (2, 100),
-])
-def test_initial_reporter_gas_costs(numReports, gasPrice, reportingFixture, universe, market, categoricalMarket, scalarMarket):
-    markets = [market, categoricalMarket, scalarMarket]
-
-    # We'll have the markets go to initial reporting
-    proceedToInitialReporting(reportingFixture, market)
-
-    for i in range(0, numReports):
-        curMarket = markets[i]
-        payoutNumerators = [0] * curMarket.getNumberOfOutcomes()
-        payoutNumerators[0] = curMarket.getNumTicks()
-        assert curMarket.doInitialReport(payoutNumerators, False, sender=tester.k1, gasprice=gasPrice)
-
-    # The target reporter gas cost is an attempt to charge the market creator for the estimated cost of reporting that may occur for their market. It will use the previous fee window's data to estimate costs if it is available
-    feeWindow = reportingFixture.applySignature('FeeWindow', market.getFeeWindow())
-
-    # Now we'll skip ahead in time and finalize the market
-    reportingFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
-    for i in range(0, numReports):
-        assert markets[i].finalize()
-
-    actualAvgGasPrice = feeWindow.getAvgReportingGasPrice()
-    expectedAvgReportingGasCost = (reportingFixture.contracts['Constants'].DEFAULT_REPORTING_GAS_PRICE() + gasPrice * numReports) / (numReports + 1)
-    assert actualAvgGasPrice == expectedAvgReportingGasCost
-
-    # Confirm our estimated gas cost is caluclated as expected
-    expectedTargetReporterGasCost = reportingFixture.contracts['Constants'].GAS_TO_REPORT()
-    expectedTargetReporterGasCost *= expectedAvgReportingGasCost
-    expectedTargetReporterGasCost *= 2
-    targetReporterGasCosts = universe.getOrCacheTargetReporterGasCosts()
-    assert targetReporterGasCosts == expectedTargetReporterGasCost
-
 def test_reporter_fees(contractsFixture, universe, market):
     defaultValue = 100
     completeSets = contractsFixture.contracts['CompleteSets']

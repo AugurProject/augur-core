@@ -14,7 +14,6 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
     bool private setMigrateMarketInFromSiblingValue;
     bool private setMigrateMarketInFromNiblingValue;
     bool private setRemoveMarketValue;
-    bool private setNoteReportingGasPriceValue;
     bool private setUpdateMarketPhaseValue;
     IUniverse private universe;
     IReputationToken private setReputationTokenValue;
@@ -23,7 +22,6 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
     uint256 private setNumMarketsValue;
     uint256 private setNumInvalidMarketsValue;
     uint256 private setNumIncorrectDesignatedReportMarketsValue;
-    uint256 private setAvgReportingGasPriceValue;
     IFeeWindow private setNextFeeWindowValue;
     IFeeWindow private setPreviousFeeWindowValue;
     uint256 private setNumDesignatedReportNoShowsValue;
@@ -70,10 +68,6 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         return setRemoveMarketValue;
     }
 
-    function setNoteReportingGasPrice(bool _setNoteReportingGasPriceValue) public {
-        setNoteReportingGasPriceValue = _setNoteReportingGasPriceValue;
-    }
-
     function getUpdateMarketPhaseCalled() public returns(bool) {
         return setUpdateMarketPhaseValue;
     }
@@ -108,10 +102,6 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
 
     function setNumIncorrectDesignatedReportMarkets(uint256 _setNumIncorrectDesignatedReportMarketsValue) public {
         setNumIncorrectDesignatedReportMarketsValue = _setNumIncorrectDesignatedReportMarketsValue;
-    }
-
-    function setAvgReportingGasPrice(uint256 _setAvgReportingGasPriceValue) public {
-        setAvgReportingGasPriceValue = _setAvgReportingGasPriceValue;
     }
 
     function setNextFeeWindow(IFeeWindow _setNextFeeWindowValue) public {
@@ -227,10 +217,6 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         return true;
     }
 
-    function noteReportingGasPrice(IMarket _market) public returns (bool) {
-        return setNoteReportingGasPriceValue;
-    }
-
     function noteDesignatedReport() public returns (bool) {
         setNoteDesignatedReportValue = true;
         return true;
@@ -267,10 +253,6 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
 
     function getNumIncorrectDesignatedReportMarkets() public view returns (uint256) {
         return setNumIncorrectDesignatedReportMarketsValue;
-    }
-
-    function getAvgReportingGasPrice() public view returns (uint256) {
-        return setAvgReportingGasPriceValue;
     }
 
     function getOrCreateNextFeeWindow() public returns (IFeeWindow) {

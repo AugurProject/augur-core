@@ -48,7 +48,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     uint256 private numOutcomes;
     bytes32 private winningPayoutDistributionHash;
     uint256 private validityBondAttoeth;
-    uint256 private reporterGasCostsFeeAttoeth;
     IMailbox private marketCreatorMailbox;
     uint256 private finalizationTime;
 
@@ -84,8 +83,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
-        // If the value was not at least equal to the sum of these fees this will throw. The addition here cannot overflow as these fees are capped
-        uint256 _refund = msg.value.sub(reporterGasCostsFeeAttoeth + validityBondAttoeth);
+        // If the value was not at least equal to this fee this will throw. The addition here cannot overflow as these fees are capped
+        uint256 _refund = msg.value.sub(validityBondAttoeth);
         if (_refund > 0) {
             owner.transfer(_refund);
         }
@@ -94,7 +93,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function assessFees() private onlyInGoodTimes returns (bool) {
         require(getReputationToken().balanceOf(this) >= universe.getOrCacheDesignatedReportNoShowBond());
-        reporterGasCostsFeeAttoeth = universe.getOrCacheTargetReporterGasCosts();
         validityBondAttoeth = universe.getOrCacheValidityBond();
         return true;
     }
@@ -230,10 +228,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         // If the designated reporter showed up return the no show bond to the market creator. Otherwise it will be used as stake in the first report.
         if (_reporter == _initialReporter.getDesignatedReporter()) {
             require(_reputationToken.transfer(owner, _repBalance));
-            marketCreatorMailbox.depositEther.value(reporterGasCostsFeeAttoeth)();
         } else {
             require(_reputationToken.transfer(_initialReporter, _repBalance));
-            cash.depositEtherFor.value(reporterGasCostsFeeAttoeth)(_initialReporter);
         }
         return true;
     }
@@ -468,10 +464,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function getValidityBondAttoeth() public view returns (uint256) {
         return validityBondAttoeth;
-    }
-
-    function getReporterGasCostsFeeAttoeth() public view returns (uint256) {
-        return reporterGasCostsFeeAttoeth;
     }
 
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {

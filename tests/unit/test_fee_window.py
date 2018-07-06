@@ -25,17 +25,6 @@ def test_fee_window_creation(localFixture, initializedFeeWindow, mockReputationT
     assert initializedFeeWindow.isActive() == False
     assert initializedFeeWindow.isOver() == True
 
-def test_fee_window_note_initial_reporting_gas_price(localFixture, initializedFeeWindow, mockUniverse):
-    mockUniverse.setIsContainerForReportingParticipant(False)
-    with raises(TransactionFailed, message="reporting participant needs to be in fee windows universe"):
-        initializedFeeWindow.noteInitialReportingGasPrice()
-    gasPrice = 100000
-    mockUniverse.setIsContainerForReportingParticipant(True)
-    gasValue = initializedFeeWindow.getAvgReportingGasPrice()
-
-    assert initializedFeeWindow.noteInitialReportingGasPrice(gasprice=gasPrice) == True
-    assert initializedFeeWindow.getAvgReportingGasPrice() == (gasPrice + gasValue) / 2
-
 def test_fee_window_on_market_finalization(localFixture, initializedFeeWindow, mockUniverse, mockMarket):
     with raises(TransactionFailed, message="on market finalized needs to be called from market"):
         initializedFeeWindow.onMarketFinalized()

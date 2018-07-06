@@ -413,23 +413,8 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _currentFeeDivisor;
     }
 
-    function getOrCacheTargetReporterGasCosts() public onlyInGoodTimes returns (uint256) {
-        IFeeWindow _feeWindow = getOrCreateCurrentFeeWindow();
-        IFeeWindow _previousFeeWindow = getOrCreatePreviousFeeWindow();
-        uint256 _getGasToReport = targetReporterGasCosts[_feeWindow];
-        if (_getGasToReport != 0) {
-            return _getGasToReport;
-        }
-
-        uint256 _avgGasPrice = _previousFeeWindow.getAvgReportingGasPrice();
-        _getGasToReport = Reporting.getGasToReport();
-        // we double it to try and ensure we have more than enough rather than not enough
-        targetReporterGasCosts[_feeWindow] = _getGasToReport.mul(_avgGasPrice).mul(2);
-        return targetReporterGasCosts[_feeWindow];
-    }
-
     function getOrCacheMarketCreationCost() public onlyInGoodTimes returns (uint256) {
-        return getOrCacheValidityBond().add(getOrCacheTargetReporterGasCosts());
+        return getOrCacheValidityBond();
     }
 
     function getInitialReportStakeSize() public onlyInGoodTimes returns (uint256) {

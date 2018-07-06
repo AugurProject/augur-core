@@ -124,10 +124,8 @@ def test_initialReport_methods(localFixture, universe, market, cash, constants):
     expectedRep = initialReporter.getStake()
     owner = initialReporter.getOwner()
 
-    expectedGasBond = 2 * constants.GAS_TO_REPORT() * constants.DEFAULT_REPORTING_GAS_PRICE()
-    with EtherDelta(expectedGasBond, owner, localFixture.chain, "Initial reporter did not get the reporting gas cost bond"):
-        with TokenDelta(reputationToken, expectedRep, owner, "Redeeming didn't refund REP"):
-            assert initialReporter.redeem(owner)
+    with TokenDelta(reputationToken, expectedRep, owner, "Redeeming didn't refund REP"):
+        assert initialReporter.redeem(owner)
 
 @mark.parametrize('rounds', [
     2,
