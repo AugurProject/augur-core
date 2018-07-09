@@ -35,14 +35,15 @@ def main():
         root.addHandler(ch)
 
     global_params.CHECK_ASSERTIONS = 1
+    global_params.IGNORE_VULNERABILITIES = ["AssertionFailure", "MoneyConcurrency"]
+    global_params.DEBUG_MODE = 1
 
     results, exit_code = run_solidity_analysis(inputs)
 
     if input_args.analyze:
         analyze_results(results)
 
-    # We have a bunch of stuff that is erroneous at the moment
-    exit(0)
+    exit(exit_code)
 
 def generate_inputs():
     inputs = []
